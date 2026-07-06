@@ -329,6 +329,23 @@
     document.body.appendChild(sheet);
   }
 
+  function normalizeSources() {
+    document.querySelectorAll(".nb-sources li").forEach(function (li) {
+      var a = li.querySelector("a[data-nb-source]");
+      if (!a || a.textContent.trim().toLowerCase() !== "link") return;
+      var parts = [];
+      var node = li.firstChild;
+      while (node && node !== a) {
+        parts.push(node.textContent);
+        var next = node.nextSibling;
+        li.removeChild(node);
+        node = next;
+      }
+      var title = parts.join("").replace(/[.\s]+$/, "").trim();
+      if (title) a.textContent = title;
+    });
+  }
+
   function bindCitations() {
     var firstCiter = {};
     document.querySelectorAll("sup.nb-cite a").forEach(function (a, i) {
@@ -561,6 +578,7 @@
       });
     }
     document.querySelectorAll('a[href^="http"]').forEach(function (a) {
+      if (a.host === location.host) return;   /* internal: stay in-tab */
       a.target = "_blank";
       a.rel = "noopener";
     });
@@ -576,6 +594,7 @@
       if (meta.template !== "deck") buildToc(meta);
       normalizeByline();
       linkEyebrow(meta);
+      normalizeSources();
       bindCitations();
       bindSequenceNav(meta);
     }
