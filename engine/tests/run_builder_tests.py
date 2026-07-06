@@ -82,18 +82,28 @@ check("builds grouped by nb-meta date",
 check("tags index", catalog["tags"].get("equity") == ["semiconductors/micron"])
 
 newsstand = read(out, "index.html")
-check("newsstand says tonight", "Tonight’s build" in newsstand)
-check("newsstand counts tonight's editions", "2 editions" in newsstand)
-check("lead card is the longest read (dossier, 15 min)",
-      'nb-card nb-card-lead" href="library/semiconductors/micron.html"' in newsstand,
-      detail="lead selection")
+check("newsstand leads with the night's date",
+      "Monday, July 6, 2026" in newsstand)
+check("newsstand totals the night's reading",
+      "min read</span>" in newsstand and "nb-editionline" in newsstand)
+check("lead story is the longest read (dossier, 15 min)",
+      '<article class="nb-lead"><a href="library/semiconductors/micron.html">'
+      in newsstand, detail="lead selection")
 check("newsstand has appearance toggle", 'class="nb-appearance"' in newsstand)
-check("newsstand has series strips", 'class="nb-strip"' in newsstand)
-check("newsstand has date navigator", 'href="builds/2026-07-05/"' in newsstand)
+check("stories carry section kickers", 'class="nb-kicker"' in newsstand)
+check("newsstand links the previous night", 'href="builds/2026-07-05/"' in newsstand)
 check("no press-check banner on a real build", "Press check" not in newsstand)
+check("menu says Today", ">Today</a>" in newsstand)
 
-check("build page exists with prev pager",
-      'href="../2026-07-05/">← 2026-07-05' in read(out, "builds", "2026-07-06", "index.html"))
+check("build page links the previous night",
+      "← Sunday, July 5, 2026" in read(out, "builds", "2026-07-06", "index.html"))
+check("older night links forward to the newsstand",
+      'href="../../">Monday, July 6, 2026 →'
+      in read(out, "builds", "2026-07-05", "index.html"))
+sections_page = read(out, "series", "index.html")
+check("sections page lists desks", 'class="nb-desk' in sections_page
+      and "Semiconductors" in sections_page)
+check("sections page shows collection progress", "1 of 5" in sections_page)
 check("build archive groups by month",
       "July 2026" in read(out, "builds", "index.html"))
 
@@ -153,8 +163,8 @@ check("sequence page has progress bar", "nb-progress-wide" in seq_page)
 check("sequence page numbers items", ">01<" in seq_page and ">05<" in seq_page)
 check("sequence page marks continue-here on next item",
       "continue here" in seq_page and seq_page.find("TSMC") < seq_page.find("continue here"))
-check("newsstand strip shows continue target",
-      "continue: TSMC" in read(seq_out, "index.html"))
+check("sequence progress on the sections page",
+      "1 of 5" in read(seq_out, "series", "index.html"))
 
 print("== press check preview ==")
 pc = tempfile.mkdtemp()
@@ -166,7 +176,8 @@ write_edition(pc, "semiconductors", "tsmc", draft)
 pv_out = tempfile.mkdtemp()
 pv_catalog = B.build(TESTREPO, lib, pv_out, preview_root=pc, now=NOW)
 pv_index = read(pv_out, "index.html")
-check("preview banners the site", "Press check" in pv_index)
+check("preview renders identically to production (no banner)",
+      "Press check" not in pv_index)
 check("preview merges draft with published library",
       "TSMC: The Foundry" in pv_index and "Micron Technology" in pv_index)
 check("draft flagged in catalog",
@@ -175,8 +186,8 @@ check("draft flagged in catalog",
 check("published edition not flagged draft",
       not any(e.get("draft") for e in pv_catalog["editions"]
               if e["slug"] == "micron"))
-check("draft edition file carries the banner",
-      "Press check" in read(pv_out, "library", "semiconductors", "tsmc.html"))
+check("draft edition file copied verbatim",
+      read(pv_out, "library", "semiconductors", "tsmc.html") == draft)
 check("published edition file untouched",
       "Press check" not in read(pv_out, "library", "semiconductors", "micron.html"))
 
@@ -214,8 +225,8 @@ print("== stale newsstand ==")
 stale_out = tempfile.mkdtemp()
 B.build(TESTREPO, lib, stale_out,
         now=dt.datetime(2026, 7, 10, 9, 0, tzinfo=dt.timezone.utc))
-check("gap labeled honestly, not as last night",
-      "Latest build · 2026-07-06" in read(stale_out, "index.html"))
+check("a gap shows the build's true date",
+      "Monday, July 6, 2026" in read(stale_out, "index.html"))
 
 print("== theme token parity ==")
 theme_css = (REPO / "engine" / "assets" / "themes" / "newspaper.css").read_text()
@@ -235,7 +246,8 @@ empty_out = tempfile.mkdtemp()
 B.build(TESTREPO, tempfile.mkdtemp(), empty_out, now=NOW)
 empty_index = read(empty_out, "index.html")
 check("fresh-fork empty state", "The presses are ready" in empty_index)
-check("empty state still lists configured series", "nb-strip" in empty_index)
+check("empty build still renders a sections page",
+      'class="nb-desk' in read(empty_out, "series", "index.html"))
 
 print()
 print(f"{PASS} passed, {len(FAIL)} failed")

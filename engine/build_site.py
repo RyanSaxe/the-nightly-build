@@ -209,7 +209,7 @@ def build_catalog(site_cfg, series_cfgs, editions, generated):
             "count": len(by_series.get(sid, [])),
             "total": len(items) if cfg.get("mode") in ("collection", "sequence") else None,
         }
-        for key in ("templates", "cadence", "paused"):
+        for key in ("templates", "cadence", "paused", "section"):
             if cfg.get(key):
                 entry[key] = cfg[key]
         series_entries.append(entry)
@@ -270,23 +270,35 @@ APPEARANCE_BOOTSTRAP = (
     'if(m==="light"||m==="dark")document.documentElement.setAttribute("data-mode",m);'
     "}catch(e){}</script>")
 
-NAV_ITEMS = [("Tonight", ""), ("Archive", "builds/"), ("Series", "series/"),
-             ("Tags", "tags/"), ("Search", "#nb-search")]
+NAV_ITEMS = [("Today", ""), ("Sections", "series/"), ("Search", "search/"),
+             ("RSS", "feed.xml")]
 
 
-def page(site, title, body, depth=0, active=None, preview=False):
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+            "Saturday", "Sunday")
+MONTHS = ("January", "February", "March", "April", "May", "June", "July",
+          "August", "September", "October", "November", "December")
+
+
+def pretty_date(iso):
+    """2026-07-06 → Monday, July 6, 2026 (platform-independent)."""
+    try:
+        d = dt.date.fromisoformat(iso)
+    except (ValueError, TypeError):
+        return iso
+    return f"{WEEKDAYS[d.weekday()]}, {MONTHS[d.month - 1]} {d.day}, {d.year}"
+
+
+def page(site, title, body, depth=0, active=None):
+    """One page chrome for every page: two-element bar + thin bottom footer."""
     rel = "../" * depth
     mode_attr = (f' data-mode="{site["appearance"]}"'
                  if site["appearance"] in ("light", "dark") else "")
-    banner = ('<div class="nb-presscheck-banner">Press check — unpublished proof'
-              "</div>" if preview else "")
     nav_parts = []
     for label, href in NAV_ITEMS:
-        url = href if href.startswith("#") else rel + href
         current = ' aria-current="page"' if label == active else ""
-        nav_parts.append(f'<a href="{url}"{current}>{label}</a>')
+        nav_parts.append(f'<a href="{rel + href}"{current}>{label}</a>')
     nav = "".join(nav_parts)
-    date_line = site["tonight_label"]
     return f"""<!DOCTYPE html>
 <html lang="en"{mode_attr}>
 <head>
@@ -302,203 +314,178 @@ def page(site, title, body, depth=0, active=None, preview=False):
 <script defer src="{rel}assets/nb.js"></script>
 </head>
 <body>
-{banner}
-<header class="nb-masthead"><div class="nb-wrap">
-  <div class="nb-masthead-row">
-    <a class="nb-site-title" href="{rel}">{esc(site['title'])}<span class="nb-period">.</span></a>
-    <span class="nb-masthead-date">{esc(date_line)}</span>
-    <span class="nb-masthead-tools">
-      <button class="nb-appearance" type="button">◐ auto</button>
-    </span>
-  </div>
-  <nav class="nb-nav">{nav}</nav>
-  <div class="nb-search" id="nb-search">
-    <input type="search" placeholder="Search the library…" aria-label="Search">
-    <div class="nb-search-results"></div>
-  </div>
+<header class="nb-bar"><div class="nb-bar-in">
+  <a class="nb-wordmark" href="{rel}">{esc(site['title'])}<span class="nb-period">.</span></a>
+  <details class="nb-menu"><summary aria-label="Menu"><span class="nb-burger"></span></summary>
+  <nav class="nb-menu-panel">{nav}</nav></details>
 </div></header>
-<main class="nb-wrap">
+<main class="nb-shell">
 {body}
 </main>
-<footer class="nb-footer"><div class="nb-wrap">
-  <a href="{rel}feed.xml">Atom feed</a> · Built by
-  <a href="https://github.com/RyanSaxe/the-nightly-build">The Nightly Build</a>
-  — while you slept.
+<footer class="nb-footer"><div class="nb-footer-in">
+  <a href="{rel}feed.xml">RSS</a>
+  <a href="https://github.com/RyanSaxe/the-nightly-build">GitHub</a>
+  <button class="nb-appearance" type="button">◐ auto</button>
 </div></footer>
 </body></html>"""
 
 
-def card(ed, series_cfgs, depth=0, lead=False, is_new=False):
-    rel = "../" * depth
-    meta = ed["meta"]
+def kicker_text(ed, series_cfgs):
     cfg = series_cfgs.get(ed["series"], {})
     name = cfg.get("name", ed["series"])
-    total = len(cfg.get("items") or []) if cfg.get("mode") in ("collection", "sequence") else 0
-    context = esc(name)
-    if cfg.get("mode") == "sequence" and total:
-        context += f" · Ed. {ed['position']} of {total}"
-    meta_bits = []
-    if is_new:
-        meta_bits.append('<span class="nb-new-dot">●</span> new')
-    meta_bits.append(f"{ed['reading_minutes']} min read")
-    if isinstance(meta.get("sources"), int):
-        meta_bits.append(f"{meta['sources']} sources")
-    if meta.get("model"):
-        meta_bits.append(esc(str(meta["model"])))
-    draft = ' <span class="nb-draft-tag">draft</span>' if ed["draft"] else ""
-    return (
-        f'<a class="nb-card{" nb-card-lead" if lead else ""}" '
-        f'href="{rel}library/{ed["series"]}/{ed["slug"]}.html">'
-        f'<span class="nb-badge">{esc(str(meta.get("template", "")))}</span>{draft}'
-        f'<div class="nb-card-context">{context}</div>'
-        f"<h3>{esc(str(meta.get('title', ed['slug'])))}</h3>"
-        f'<p class="nb-dek">{esc(str(meta.get("dek", "")))}</p>'
-        f'<div class="nb-card-meta">{" · ".join(meta_bits)}</div>'
-        "</a>")
+    section = cfg.get("section")
+    return f"{section} — {name}" if section else name
 
 
-def cards_block(eds, series_cfgs, depth, new_dates=()):
+def item_meta_row(ed):
+    form = str(ed["meta"].get("template", "")).capitalize()
+    return (f'<div class="nb-meta"><span>{ed["reading_minutes"]} min read</span>'
+            f"<span>{esc(form)}</span></div>")
+
+
+def story_item(ed, series_cfgs, depth=0):
+    rel = "../" * depth
+    return (f'<a class="nb-item" href="{rel}library/{ed["series"]}/{ed["slug"]}.html">'
+            f'<div class="nb-kicker">{esc(kicker_text(ed, series_cfgs))}</div>'
+            f'<h3>{esc(str(ed["meta"].get("title", ed["slug"])))}</h3>'
+            f"{item_meta_row(ed)}</a>")
+
+
+def lead_story(ed, series_cfgs, depth=0):
+    rel = "../" * depth
+    meta = ed["meta"]
+    return (f'<article class="nb-lead">'
+            f'<a href="{rel}library/{ed["series"]}/{ed["slug"]}.html">'
+            f'<div class="nb-kicker">{esc(kicker_text(ed, series_cfgs))}</div>'
+            f'<h2>{esc(str(meta.get("title", ed["slug"])))}</h2>'
+            f'<p class="nb-dek">{esc(str(meta.get("dek", "")))}</p>'
+            f"{item_meta_row(ed)}</a></article>")
+
+
+def night_body(eds, series_cfgs, depth, date):
+    """One night's page: edition line, lead (longest read), ruled grid."""
+    eds = sorted(eds, key=lambda e: -e["reading_minutes"])
+    total = sum(e["reading_minutes"] for e in eds)
+    body = (f'<div class="nb-editionline"><span>{esc(pretty_date(date))}</span>'
+            f'<span class="nb-editionline-facts">{total} min read</span></div>')
     if not eds:
-        return ""
-    lead = max(eds, key=lambda e: e["reading_minutes"])
-    ordered = [lead] + [e for e in eds if e is not lead]
-    return '<div class="nb-cards">' + "".join(
-        card(e, series_cfgs, depth, lead=(e is lead),
-             is_new=e["meta"].get("date") in new_dates)
-        for e in ordered) + "</div>"
-
-
-# --------------------------------------------------------------------------- #
-# Pages
-# --------------------------------------------------------------------------- #
-
-def month_grouped_dates(dates, depth, current=None):
-    """Compact month-grouped date navigator linking to builds/<date>/."""
-    rel = "../" * depth
-    out, seen_month = [], None
-    for d in sorted(dates, reverse=True):
-        month = d[:7]
-        if month != seen_month:
-            try:
-                label = dt.date.fromisoformat(d).strftime("%B %Y")
-            except ValueError:
-                label = month
-            out.append(f'<span class="nb-month-label">{esc(label)}</span>')
-            seen_month = month
-        cur = ' aria-current="page"' if d == current else ""
-        out.append(f'<a href="{rel}builds/{d}/"{cur}>{d[8:]}</a>')
-    return f'<div class="nb-dates">{"".join(out)}</div>'
-
-
-def series_strip(sinfo, cfg, eds, depth):
-    rel = "../" * depth
-    total = sinfo.get("total")
-    count = sinfo["count"]
-    mode = sinfo.get("mode")
-    if mode == "sequence" and total:
-        items = cfg.get("items") or []
-        published = {e["slug"] for e in eds}
-        nxt = next((it for it in items if it.get("slug") not in published), None)
-        info = (f"continue: {esc(str(nxt.get('title')))}" if nxt else "complete")
-        pct = round(100 * count / total) if total else 0
-        bar = f'<span class="nb-progress"><b style="width:{pct}%"></b></span>'
-        info = f"{count} of {total} · {info}"
-    elif mode == "collection" and total:
-        pct = round(100 * count / total) if total else 0
-        bar = f'<span class="nb-progress"><b style="width:{pct}%"></b></span>'
-        info = f"{count} of {total}"
-    else:
-        bar = ""
-        latest = max((e["meta"].get("date", "") for e in eds), default=None)
-        info = f"latest: {latest}" if latest else "no editions yet"
-    return (f'<a class="nb-strip" href="{rel}series/{sinfo["id"]}/">'
-            f'<span class="nb-strip-name">{esc(sinfo["name"])}</span>{bar}'
-            f'<span class="nb-strip-info">{info}</span></a>')
+        return body + '<div class="nb-empty"><p>No editions this night.</p></div>'
+    body += lead_story(eds[0], series_cfgs, depth)
+    rest = "".join(story_item(e, series_cfgs, depth) for e in eds[1:])
+    if rest:
+        body += f'<div class="nb-grid">{rest}</div>'
+    return body
 
 
 def render_newsstand(site, catalog, series_cfgs, editions, now):
-    by_series = {}
-    for ed in editions.values():
-        by_series.setdefault(ed["series"], []).append(ed)
-
     if not editions:
         body = ('<div class="nb-empty" style="margin-top:26px">'
                 "<h2>The presses are ready</h2>"
                 "<p>Set up your first series — ask your agent to "
                 "“set me up”, then run a press check.</p></div>")
-        strips = "".join(
-            series_strip(s, series_cfgs.get(s["id"], {}), [], 0)
-            for s in catalog["series"])
-        if strips:
-            body += '<div class="nb-rule-label">Series</div>' + strips
-        return page(site, site["title"], body, active="Tonight",
-                    preview=site["preview"])
-
-    latest = max(catalog["builds"])
-    tonight = [ed for ed in editions.values() if ed["meta"].get("date") == latest]
-    try:
-        age = (now.date() - dt.date.fromisoformat(latest)).days
-    except ValueError:
-        age = None
-    if age == 0:
-        label = "Tonight’s build"
-    elif age == 1:
-        label = f"Last night’s build · {latest}"
-    else:  # an honest gap beats a stale “last night”
-        label = f"Latest build · {latest}"
-    built = now.strftime("%H:%M UTC")
-    body = (f'<div class="nb-rule-label">{label} · {len(tonight)} '
-            f'edition{"s" if len(tonight) != 1 else ""} · built {built}</div>')
-    body += cards_block(tonight, series_cfgs, 0, new_dates={latest})
-
-    strips = "".join(
-        series_strip(s, series_cfgs.get(s["id"], {}), by_series.get(s["id"], []), 0)
-        for s in catalog["series"])
-    if strips:
-        body += '<div class="nb-rule-label">Series</div>' + strips
-    body += '<div class="nb-rule-label">Past builds</div>'
-    body += month_grouped_dates(catalog["builds"], 0)
-    return page(site, site["title"], body, active="Tonight",
-                preview=site["preview"])
+        return page(site, site["title"], body, active="Today")
+    dates = sorted(catalog["builds"])
+    latest = dates[-1]
+    tonight = [ed for ed in editions.values()
+               if ed["meta"].get("date") == latest]
+    body = night_body(tonight, series_cfgs, 0, latest)
+    if len(dates) > 1:
+        prev = dates[-2]
+        body += (f'<nav class="nb-nightnav"><a href="builds/{prev}/">'
+                 f"← {esc(pretty_date(prev))}</a></nav>")
+    return page(site, site["title"], body, active="Today")
 
 
 def render_build_page(site, date, dates, editions, series_cfgs):
     eds = [e for e in editions.values() if e["meta"].get("date") == date]
-    body = (f'<div class="nb-rule-label">Build of {date} · {len(eds)} '
-            f'edition{"s" if len(eds) != 1 else ""}</div>')
-    body += cards_block(eds, series_cfgs, 2)
+    body = night_body(eds, series_cfgs, 2, date)
     ordered = sorted(dates)
     i = ordered.index(date)
     prev_d = ordered[i - 1] if i > 0 else None
     next_d = ordered[i + 1] if i < len(ordered) - 1 else None
-    body += ('<div class="nb-pager">'
-             + (f'<a href="../{prev_d}/">← {prev_d}</a>' if prev_d else "<span></span>")
-             + '<a href="../">all builds</a>'
-             + (f'<a href="../{next_d}/">{next_d} →</a>' if next_d else "<span></span>")
-             + "</div>")
-    return page(site, f"Build of {date} — {site['title']}", body, depth=2,
-                active="Archive", preview=site["preview"])
+    left = (f'<a href="../{prev_d}/">← {esc(pretty_date(prev_d))}</a>'
+            if prev_d else "<span></span>")
+    if next_d and next_d == ordered[-1]:
+        right = f'<a href="../../">{esc(pretty_date(next_d))} →</a>'
+    elif next_d:
+        right = f'<a href="../{next_d}/">{esc(pretty_date(next_d))} →</a>'
+    else:
+        right = "<span></span>"
+    body += f'<nav class="nb-nightnav">{left}{right}</nav>'
+    return page(site, f"{pretty_date(date)} — {site['title']}", body, depth=2)
 
 
 def render_build_archive(site, dates):
-    body = '<div class="nb-rule-label">Every build</div>'
-    body += (month_grouped_dates(dates, 1) if dates
-             else '<div class="nb-empty"><p>No builds yet.</p></div>')
-    return page(site, f"Archive — {site['title']}", body, depth=1,
-                active="Archive", preview=site["preview"])
+    body = ('<div class="nb-pagehead"><h1>All nights</h1>'
+            f'<span class="nb-pagehead-facts">{len(dates)} builds</span></div>')
+    if not dates:
+        body += '<div class="nb-empty"><p>No builds yet.</p></div>'
+    seen_month = None
+    for d in sorted(dates, reverse=True):
+        month = d[:7]
+        if month != seen_month:
+            try:
+                md = dt.date.fromisoformat(d)
+                label = f"{MONTHS[md.month - 1]} {md.year}"
+            except ValueError:
+                label = month
+            body += f'<span class="nb-month-label">{esc(label)}</span>'
+            seen_month = month
+        body += (f'<div class="nb-list"><a class="nb-nightnav" '
+                 f'style="padding:8px 0" href="{d}/">{esc(pretty_date(d))}'
+                 f"</a></div>")
+    return page(site, f"All nights — {site['title']}", body, depth=1)
+
+
+def desk_status(s, cfg):
+    """(status_html, is_resting) for one desk on the Sections page."""
+    mode, count, total = s.get("mode"), s["count"], s.get("total")
+    if cfg.get("paused"):
+        return "paused", True
+    if mode in ("collection", "sequence"):
+        if total and count >= total:
+            return f"complete · {count} edition{'s' if count != 1 else ''}", True
+        pct = round(100 * count / total) if total else 0
+        return (f'<span class="nb-progress"><b style="width:{pct}%"></b></span>'
+                f"{count} of {total}", False)
+    if mode == "rolling":
+        cadence = cfg.get("cadence")
+        return (esc(str(cadence)) if isinstance(cadence, str) else "nightly"), False
+    return f"{count} published", False
 
 
 def render_series_index(site, catalog, series_cfgs, editions):
-    by_series = {}
-    for ed in editions.values():
-        by_series.setdefault(ed["series"], []).append(ed)
-    body = '<div class="nb-rule-label">Series</div>'
-    strips = "".join(
-        series_strip(s, series_cfgs.get(s["id"], {}), by_series.get(s["id"], []), 1)
-        for s in catalog["series"])
-    body += strips or '<div class="nb-empty"><p>No series configured.</p></div>'
-    return page(site, f"Series — {site['title']}", body, depth=1,
-                active="Series", preview=site["preview"])
+    groups, resting, ndesks = {}, [], 0
+    for s in catalog["series"]:
+        cfg = series_cfgs.get(s["id"], {})
+        status, rests = desk_status(s, cfg)
+        row = (f'<a class="nb-desk{" nb-desk-done" if rests else ""}" '
+               f'href="{s["id"]}/">'
+               f'<span class="nb-desk-name">{esc(s.get("name", s["id"]))}</span>'
+               f'<span class="nb-desk-status">{status}</span></a>')
+        ndesks += 1
+        if rests:
+            resting.append(row)
+        else:
+            groups.setdefault(cfg.get("section") or "Desks", []).append(row)
+
+    facts = (f"{max(len(groups), 1)} section{'s' if len(groups) != 1 else ''} · "
+             f"{ndesks} desk{'s' if ndesks != 1 else ''} · "
+             f"{len(catalog['editions'])} edition"
+             f"{'s' if len(catalog['editions']) != 1 else ''}")
+    body = ('<div class="nb-pagehead"><h1>Sections</h1>'
+            f'<span class="nb-pagehead-facts">{facts}</span></div>')
+    if not groups and not resting:
+        body += '<div class="nb-empty"><p>No series configured.</p></div>'
+    for section, rows in groups.items():
+        body += (f'<div class="nb-secgroup"><div class="nb-sechead">'
+                 f"<h2>{esc(section)}</h2></div>{''.join(rows)}</div>")
+    if resting:
+        body += (f'<details class="nb-stacks"><summary>In the stacks — '
+                 f"{len(resting)} desk{'s' if len(resting) != 1 else ''}"
+                 f"</summary>{''.join(resting)}</details>")
+    return page(site, f"Sections — {site['title']}", body, depth=1,
+                active="Sections")
 
 
 def render_series_page(site, sid, cfg, eds, series_cfgs):
@@ -511,11 +498,14 @@ def render_series_page(site, sid, cfg, eds, series_cfgs):
 
     tpl_label = ", ".join(cfg.get("templates")
                           or ([cfg["template"]] if cfg.get("template") else []))
-    head = (f'<div class="nb-series-head"><h1>{esc(name)}</h1>'
-            f'<div class="nb-series-sub">{esc(mode)} · '
-            f'{esc(tpl_label)} · {len(eds)}'
-            f'{f" of {total}" if total and mode in ("collection", "sequence") else ""}'
-            " published</div></div>")
+    sub_bits = [esc(mode), esc(tpl_label)]
+    if total and mode in ("collection", "sequence"):
+        sub_bits.append(f"{len(eds)} of {total} published")
+    else:
+        sub_bits.append(f"{len(eds)} published")
+    head = (f'<div class="nb-serieshead"><h1>{esc(name)}</h1>'
+            f'<div class="nb-series-sub">{" · ".join(b for b in sub_bits if b)}'
+            "</div></div>")
 
     if mode == "sequence":
         pct = round(100 * len(eds) / total) if total else 0
@@ -531,74 +521,74 @@ def render_series_page(site, sid, cfg, eds, series_cfgs):
                     f'<span class="nb-seq-n">{i:02d}</span>'
                     f'<span class="nb-seq-t">{esc(str(title))}</span></a></li>')
             else:
-                marker = (' <a class="nb-continue" href="#">continue here</a>'
+                marker = ('<span class="nb-continue">continue here</span>'
                           if slug == continue_slug else "")
                 rows.append(
                     f'<li><span class="nb-seq-unpub">'
                     f'<span class="nb-seq-n">{i:02d}</span>'
-                    f'<span class="nb-seq-t">{esc(str(title))}{marker}</span>'
+                    f'<span class="nb-seq-t">{esc(str(title))}</span>{marker}'
                     "</span></li>")
         body = head + f'<ol class="nb-seq">{"".join(rows)}</ol>'
     elif mode in ("rolling", "open"):
+        date_of = (lambda e: e["slug"]) if mode == "rolling"             else (lambda e: e["meta"].get("date", ""))
         parts, seen_month = [], None
-        date_of = (lambda e: e["slug"]) if mode == "rolling" \
-            else (lambda e: e["meta"].get("date", ""))
         for ed in sorted(eds, key=lambda e: (date_of(e), e["slug"]), reverse=True):
             month = date_of(ed)[:7]
             if month != seen_month:
                 try:
-                    label = dt.date.fromisoformat(date_of(ed)).strftime("%B %Y")
+                    md = dt.date.fromisoformat(date_of(ed))
+                    label = f"{MONTHS[md.month - 1]} {md.year}"
                 except ValueError:
                     label = month
-                parts.append(f'<div class="nb-rule-label">{esc(label)}</div>')
+                parts.append(f'<span class="nb-month-label">{esc(label)}</span>')
                 seen_month = month
-            parts.append(card(ed, series_cfgs, 2))
-        if mode == "open":  # pending commissions surface as coming attractions
-            parts += [f'<div class="nb-card" style="color:var(--faint)">'
-                      f'<span class="nb-badge">commissioned</span>'
+            parts.append(story_item(ed, series_cfgs, 2))
+        if mode == "open":
+            parts += [f'<div class="nb-item" style="color:var(--faint);'
+                      f'padding:14px 0 12px;border-bottom:1px solid var(--hair)">'
+                      f'<div class="nb-kicker">commissioned</div>'
                       f'<h3>{esc(str(it.get("title", it.get("slug"))))}</h3>'
-                      f'<p class="nb-dek">coming</p></div>'
+                      f'<div class="nb-meta"><span>coming</span></div></div>'
                       for it in items if it.get("slug") not in published]
-        body = head + '<div class="nb-cards" style="grid-template-columns:1fr">' \
-            + "".join(parts) + "</div>" if parts else head + \
-            '<div class="nb-empty"><p>No editions yet.</p></div>'
-    else:  # collection: grid in config order
-        cards = [card(published[it["slug"]], series_cfgs, 2)
-                 for it in items if it.get("slug") in published]
-        cards += [card(e, series_cfgs, 2)
-                  for e in eds if not any(it.get("slug") == e["slug"] for it in items)]
-        unpub = [f'<div class="nb-card" style="color:var(--faint)">'
-                 f'<span class="nb-badge">{esc(str(cfg.get("template", "")))}</span>'
+        body = head + (f'<div class="nb-list">{"".join(parts)}</div>' if parts
+                       else '<div class="nb-empty"><p>No editions yet.</p></div>')
+    else:  # collection, in config order
+        rows = [story_item(published[it["slug"]], series_cfgs, 2)
+                for it in items if it.get("slug") in published]
+        rows += [story_item(e, series_cfgs, 2)
+                 for e in eds if not any(it.get("slug") == e["slug"] for it in items)]
+        rows += [f'<div class="nb-item" style="color:var(--faint);'
+                 f'padding:14px 0 12px;border-bottom:1px solid var(--hair)">'
                  f'<h3>{esc(str(it.get("title", it.get("slug"))))}</h3>'
-                 f'<p class="nb-dek">coming</p></div>'
+                 f'<div class="nb-meta"><span>coming</span></div></div>'
                  for it in items if it.get("slug") not in published]
-        body = head + f'<div class="nb-cards">{"".join(cards + unpub)}</div>'
+        body = head + f'<div class="nb-list">{"".join(rows)}</div>'
 
     return page(site, f"{name} — {site['title']}", body, depth=2,
-                active="Series", preview=site["preview"])
+                active="Sections")
 
 
 def render_tags_index(site, catalog):
-    body = '<div class="nb-rule-label">Tags</div>'
+    body = '<div class="nb-pagehead"><h1>Tags</h1></div>'
     if catalog["tags"]:
-        body += '<div class="nb-dates">' + "".join(
+        body += ('<div class="nb-chips" style="flex-wrap:wrap">' + "".join(
             f'<a href="{esc(t)}/">#{esc(t)} · {len(v)}</a>'
-            for t, v in catalog["tags"].items()) + "</div>"
+            for t, v in catalog["tags"].items()) + "</div>")
     else:
         body += '<div class="nb-empty"><p>No tags yet.</p></div>'
-    return page(site, f"Tags — {site['title']}", body, depth=1,
-                active="Tags", preview=site["preview"])
+    return page(site, f"Tags — {site['title']}", body, depth=1)
 
 
 def render_tag_page(site, tag, refs, editions, series_cfgs):
     eds = [editions[tuple(r.split("/", 1))] for r in refs
            if tuple(r.split("/", 1)) in editions]
-    body = f'<div class="nb-rule-label">#{esc(tag)} · {len(eds)} editions</div>'
-    body += cards_block(
-        sorted(eds, key=lambda e: e["meta"].get("date", ""), reverse=True),
-        series_cfgs, 2)
-    return page(site, f"#{tag} — {site['title']}", body, depth=2,
-                active="Tags", preview=site["preview"])
+    body = (f'<div class="nb-pagehead"><h1>#{esc(tag)}</h1>'
+            f'<span class="nb-pagehead-facts">{len(eds)} edition'
+            f'{"s" if len(eds) != 1 else ""}</span></div>')
+    body += '<div class="nb-list">' + "".join(
+        story_item(e, series_cfgs, 2) for e in
+        sorted(eds, key=lambda e: e["meta"].get("date", ""), reverse=True)) + "</div>"
+    return page(site, f"#{tag} — {site['title']}", body, depth=2)
 
 
 # --------------------------------------------------------------------------- #
@@ -652,36 +642,36 @@ def render_email(site_title, date, eds, series_cfgs, base_url):
         cfg = series_cfgs.get(ed["series"], {})
         url = absolute(f"/library/{ed['series']}/{ed['slug']}.html")
         rows.append(f"""
-  <div style="border-top:1px solid #E2DFD8;padding:18px 0 14px">
+  <div style="border-top:1px solid #D9E2EE;padding:18px 0 14px">
     <div style="font-family:monospace;font-size:11px;letter-spacing:1px;
-                text-transform:uppercase;color:#C63D17">
+                text-transform:uppercase;color:#8A5C08">
       {esc(str(meta.get('template', '')))} · {esc(cfg.get('name', ed['series']))}</div>
     <div style="font-family:Georgia,serif;font-size:20px;line-height:1.3;
                 margin:6px 0 4px">
-      <a href="{esc(url)}" style="color:#171614;text-decoration:none">
+      <a href="{esc(url)}" style="color:#161D28;text-decoration:none">
         {esc(str(meta.get('title', ed['slug'])))}</a></div>
     <div style="font-family:Georgia,serif;font-style:italic;font-size:14px;
-                color:#57554F;margin:0 0 6px">{esc(str(meta.get('dek', '')))}</div>
-    <div style="font-family:monospace;font-size:11px;color:#94918A">
+                color:#4E5866;margin:0 0 6px">{esc(str(meta.get('dek', '')))}</div>
+    <div style="font-family:monospace;font-size:11px;color:#8794A4">
       {ed['reading_minutes']} min read · {meta.get('sources', '?')} sources</div>
   </div>""")
     return f"""<!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#FCFBF9">
-<div style="max-width:600px;margin:0 auto;padding:28px 20px;color:#171614">
+<html><body style="margin:0;padding:0;background:#F4F7FB">
+<div style="max-width:600px;margin:0 auto;padding:28px 20px;color:#161D28">
   <div style="font-family:Georgia,serif;font-size:26px;font-weight:bold;
               letter-spacing:-0.5px">{esc(site_title)}<span
-              style="color:#C63D17">.</span></div>
-  <div style="font-family:monospace;font-size:12px;color:#57554F;
+              style="color:#8A5C08">.</span></div>
+  <div style="font-family:monospace;font-size:12px;color:#4E5866;
               text-transform:uppercase;letter-spacing:1px;margin:4px 0 10px">
     Tonight's build · {esc(date)}</div>
   <div style="font-family:Georgia,serif;font-size:15px;margin:0 0 12px">
     {len(eds)} edition{"s" if len(eds) != 1 else ""} ·
     {total_minutes} minutes of reading, built while you slept.</div>
   {"".join(rows)}
-  <div style="border-top:2px solid #171614;margin-top:16px;padding-top:12px;
-              font-family:monospace;font-size:11px;color:#94918A">
-    <a href="{esc(absolute('/') or '/')}" style="color:#33608F">the newsstand</a> ·
-    <a href="{esc(absolute('/feed.xml'))}" style="color:#33608F">feed</a> ·
+  <div style="border-top:2px solid #161D28;margin-top:16px;padding-top:12px;
+              font-family:monospace;font-size:11px;color:#8794A4">
+    <a href="{esc(absolute('/') or '/')}" style="color:#935F00">the newsstand</a> ·
+    <a href="{esc(absolute('/feed.xml'))}" style="color:#935F00">feed</a> ·
     The Nightly Build</div>
 </div>
 </body></html>
@@ -711,18 +701,10 @@ def copy_assets(repo, site_cfg, out):
 
 
 def copy_editions(editions, out, preview):
-    banner = ('<div class="nb-presscheck-banner">Press check — '
-              "unpublished proof</div>")
     for ed in editions.values():
         dst = os.path.join(out, "library", ed["series"], f"{ed['slug']}.html")
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        if preview and ed["draft"]:
-            with open(ed["file"], "r", encoding="utf-8", errors="replace") as fh:
-                raw = fh.read()
-            raw = BODY_TAG_RE.sub(lambda m: m.group(0) + banner, raw, count=1)
-            write(dst, raw)
-        else:
-            shutil.copyfile(ed["file"], dst)
+        shutil.copyfile(ed["file"], dst)
 
 
 def build(repo, library_root, out, preview_root=None, base_url="", now=None):
@@ -736,8 +718,6 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
         "title": site_cfg["title"],
         "appearance": site_cfg["appearance"],
         "preview": bool(preview_root),
-        "tonight_label": now.strftime("%A, %B %-d, %Y")
-        if os.name != "nt" else now.strftime("%A, %B %d, %Y"),
     }
 
     os.makedirs(out, exist_ok=True)
