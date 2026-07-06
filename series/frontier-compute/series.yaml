@@ -1,0 +1,30 @@
+# A collection: items publish front-to-back, one per night, until done.
+name: Frontier Compute
+mode: collection
+template: dossier
+prompt: prompt.md
+autopublish: true
+strict: false
+min_sources: 10
+items:
+  - slug: nvidia
+    title: Nvidia
+    tags: [policy]
+    # Item-level prompt: specializes the series prompt for this item only.
+    prompt: "Center the dossier on the data-center segment and the CUDA moat;
+      the debate section is export controls."
+    # Item-level consult: must-read starting points for THIS item. The agent
+    # reads these before researching elsewhere; citing them is optional.
+    consult:
+      - https://www.sec.gov/
+      - https://investor.nvidia.com/
+  # The collection continues here as you add items:
+  # - slug: tsmc
+  #   title: TSMC
+  # - slug: asml
+  #   title: ASML
+  #   # Committed source material the agent must read AND cite
+  #   # (place files under series/frontier-compute/sources/):
+  #   # required_docs:
+  #   #   - id: asml-annual-2025
+  #   #     path: sources/asml-annual-2025.txt

@@ -34,10 +34,9 @@ searchable, owned by you, served free from GitHub Pages.
    checkout. The Librarian skill clears the upstream dogfood series, interviews
    you, writes your series config, and runs `./setup.sh` (creates the `library`
    branch, seeds its trigger workflows, enables Pages and auto-merge). No agent
-   handy? Delete `series/semiconductors`, `series/ai-briefs`, and
-   `series/_tags`, configure your own `series/<id>/series.yaml` (the deleted
-   ones are complete examples — crib from them on GitHub), then run
-   `./setup.sh`.
+   handy? `rm -r series/*`, configure your own `series/<id>/series.yaml` (the
+   deleted ones are complete examples covering every mode and option — crib
+   from them on GitHub), then run `./setup.sh`.
 3. **Rehearse:** ask for a **press check** — a full research run rendered to a
    locally served newsstand, no PR, so you can tune the prompt before
    scheduling.

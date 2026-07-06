@@ -1,0 +1,15 @@
+# A sequence: editions publish in order, each building on the last.
+name: A History of Artificial Intelligence
+mode: sequence
+template: chronicle
+prompt: prompt.md
+autopublish: true
+strict: false
+items:
+  - slug: winters-and-springs
+    title: "Winters and Springs: AI from Dartmouth to Deep Learning"
+  - slug: the-scaling-era
+    title: "The Scaling Era: 2012 to Now"
+  # A sequence grows by appending items — published editions never reorder:
+  # - slug: the-agent-era
+  #   title: "The Agent Era"

@@ -16,17 +16,19 @@ plainly.
 
 ## 0. Fresh press? Clear the dogfood series first
 
-The shipped series (`series/semiconductors/`, `series/ai-briefs/`, and
-`series/_tags/`) are the **upstream project's own dogfood assignments**, not
-starter content. When setting up a fresh press, delete them before the
-interview — don't offer to keep them, and never let them reach a schedule:
+Everything shipped under `series/` is the **upstream project's own dogfood
+assignments**, not starter content. When setting up a fresh press, delete it
+all before the interview — don't offer to keep them, and never let them reach
+a schedule:
 
 ```
-rm -r series/semiconductors series/ai-briefs series/_tags
+rm -r series/*
 ```
 
-They remain readable upstream as reference examples. The only press that
-keeps them is the upstream canonical repo itself — that's its night shift.
+They remain readable upstream as reference examples (each file demonstrates
+part of the config surface, including commented-out advanced options). The
+only press that keeps them is the upstream canonical repo — that's its night
+shift.
 
 ## 1. Interview
 

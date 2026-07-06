@@ -1,0 +1,13 @@
+# A rolling series: one edition per night, slugged by UTC date. Missed
+# nights are skipped, never backfilled. No items list — the date is the item.
+name: Daily Brief
+mode: rolling
+template: brief
+prompt: prompt.md
+autopublish: true
+strict: false
+min_sources: 6
+rolling:
+  cadence: daily
+# consult:                      # optional must-read starting points
+#   - https://arxiv.org/list/cs.AI/recent
