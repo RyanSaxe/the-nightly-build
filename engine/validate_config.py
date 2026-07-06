@@ -144,7 +144,7 @@ def check_registry(repo, errors):
     return registry
 
 
-def check_series(repo, registry, errors):
+def check_series(repo, registry, *, errors):
     label = "press"
     root = os.path.join(repo, "press", "series")
     if not os.path.isdir(root):
@@ -294,7 +294,7 @@ def main(argv=None):
     errors = []
     check_site(args.repo, errors)
     registry = check_registry(args.repo, errors)
-    check_series(args.repo, registry, errors)
+    check_series(args.repo, registry, errors=errors)
 
     if errors:
         print(f"configuration INVALID — {len(errors)} problem(s):")

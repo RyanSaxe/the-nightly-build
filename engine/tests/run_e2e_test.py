@@ -36,7 +36,7 @@ PASS, FAIL = 0, []
 NS = "{http://www.w3.org/2005/Atom}"
 
 
-def check(name, condition, detail=""):
+def check(name, condition, *, detail=""):
     global PASS
     if condition:
         PASS += 1
@@ -100,7 +100,7 @@ def library_state():
     return libdir
 
 
-def night_shift_run(branch, series, slug, html, today, from_ref="library"):
+def night_shift_run(branch, series, *, slug, html, today, from_ref="library"):
     # one agent run: branch off library, add one edition, validate as CI does
     git("checkout", "-q", from_ref, cwd=root)
     git("checkout", "-qb", branch, cwd=root)
@@ -170,7 +170,10 @@ def press_run(now_iso):
     if sitedir.exists():
         shutil.rmtree(sitedir)
     return B.build(
-        maindir, library_state(), str(sitedir), now=dt.datetime.fromisoformat(now_iso)
+        maindir,
+        library_state(),
+        out=str(sitedir),
+        now=dt.datetime.fromisoformat(now_iso),
     )
 
 
@@ -178,7 +181,7 @@ def press_run(now_iso):
 print("== night 1: collection dossier + rolling brief (2026-07-05) ==")
 dossier = make_fixtures.dossier().replace("2026-07-06", "2026-07-05")
 findings, auto = night_shift_run(
-    "nb/n1-micron", "semiconductors", "micron", dossier, "2026-07-05"
+    "nb/n1-micron", "semiconductors", slug="micron", html=dossier, today="2026-07-05"
 )
 check(
     "dossier PR validates BLOCK-clean in CI mode",
@@ -193,7 +196,7 @@ pre_merge_ref = subprocess.run(
     ["git", "rev-parse", "library"], cwd=root, capture_output=True, text=True
 ).stdout.strip()
 findings, auto = night_shift_run(
-    "nb/n1-brief", "ai-briefs", "2026-07-05", brief1, "2026-07-05"
+    "nb/n1-brief", "ai-briefs", slug="2026-07-05", html=brief1, today="2026-07-05"
 )
 check(
     "brief PR validates BLOCK-clean in CI mode",
@@ -221,7 +224,12 @@ check("feed has night 1 entries", len(feed1.findall(f"{NS}entry")) == 2)
 print("== rolling race: losing PR for the same night is refused ==")
 rival = brief1.replace("Daily brief for 2026-07-05", "Rival brief for 2026-07-05")
 findings, _ = night_shift_run(
-    "nb/n1-dupe", "ai-briefs", "2026-07-05", rival, "2026-07-05", from_ref=pre_merge_ref
+    "nb/n1-dupe",
+    "ai-briefs",
+    slug="2026-07-05",
+    html=rival,
+    today="2026-07-05",
+    from_ref=pre_merge_ref,
 )
 check(
     "already-published brief is BLOCKed (B-MODE)",
@@ -234,7 +242,7 @@ git("checkout", "-q", "library", cwd=root)
 print("== night 2: rolling brief (2026-07-06) ==")
 brief2 = make_fixtures.brief("2026-07-06")
 findings, auto = night_shift_run(
-    "nb/n2-brief", "ai-briefs", "2026-07-06", brief2, "2026-07-06"
+    "nb/n2-brief", "ai-briefs", slug="2026-07-06", html=brief2, today="2026-07-06"
 )
 check(
     "night 2 brief validates BLOCK-clean",

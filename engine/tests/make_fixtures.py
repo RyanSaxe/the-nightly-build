@@ -208,7 +208,7 @@ def _count_words(body_html):
     return len(re.findall(r"\S+", text))
 
 
-def _meta(series, slug, template, title, mode, order, words, n_sources):
+def _meta(series, slug, *, template, title, mode, order, words, n_sources):
     return f"""{{
   "protocol": "1.0", "series": "{series}", "slug": "{slug}",
   "template": "{template}", "title": "{title}",
@@ -220,7 +220,7 @@ def _meta(series, slug, template, title, mode, order, words, n_sources):
 }}"""
 
 
-def _page(title, meta, body):
+def _page(title, *, meta, body):
     return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -246,7 +246,7 @@ def _sources(n):
     )
 
 
-def _cited_paras(count, n_sources, start=0):
+def _cited_paras(count, n_sources, *, start=0):
     ps = []
     for k in range(count):
         n = ((start + k) % n_sources) + 1
@@ -262,49 +262,49 @@ def lesson():
         "<li>Explain what a hash function guarantees.</li>"
         "<li>Identify where collision resistance fails.</li></ul></section>"
         f'<section data-nb-section="recap"><h2>Where we left off</h2>'
-        f"{_cited_paras(2, 8, 0)}</section>"
+        f"{_cited_paras(2, 8, start=0)}</section>"
         f'<section data-nb-section="teach"><h2>Hash functions</h2>'
-        f"{_cited_paras(6, 8, 2)}</section>"
+        f"{_cited_paras(6, 8, start=2)}</section>"
         f'<section data-nb-section="check"><h2>Check yourself</h2>'
-        f"{_cited_paras(1, 8, 0)}</section>"
+        f"{_cited_paras(1, 8, start=0)}</section>"
         f'<section data-nb-section="bridge"><h2>Next edition</h2>'
-        f"{_cited_paras(1, 8, 3)}</section>" + _sources(8)
+        f"{_cited_paras(1, 8, start=3)}</section>" + _sources(8)
     )
     meta = _meta(
         "crypto",
         "hashes",
-        "lesson",
-        "Hash Functions",
-        "sequence",
-        1,
-        _count_words(body),
-        8,
+        template="lesson",
+        title="Hash Functions",
+        mode="sequence",
+        order=1,
+        words=_count_words(body),
+        n_sources=8,
     )
-    return _page("Hash Functions", meta, body)
+    return _page("Hash Functions", meta=meta, body=body)
 
 
 def paper():
     body = (
         '<section data-nb-section="abstract"><h2>In plain language</h2>'
-        f"{_cited_paras(1, 5, 0)}</section>"
+        f"{_cited_paras(1, 5, start=0)}</section>"
         '<section data-nb-section="findings"><h2>What the paper shows</h2>'
-        f"{_cited_paras(2, 5, 1)}</section>"
+        f"{_cited_paras(2, 5, start=1)}</section>"
         '<section data-nb-section="appraisal"><h2>Appraisal</h2>'
-        f"{_cited_paras(3, 5, 2)}</section>"
+        f"{_cited_paras(3, 5, start=2)}</section>"
         '<section data-nb-section="verdict"><h2>Verdict</h2>'
-        f"{_cited_paras(1, 5, 0)}</section>" + _sources(5)
+        f"{_cited_paras(1, 5, start=0)}</section>" + _sources(5)
     )
     meta = _meta(
         "papers",
         "attention",
-        "paper",
-        "Attention Is All You Need",
-        "collection",
-        "null",
-        _count_words(body),
-        5,
+        template="paper",
+        title="Attention Is All You Need",
+        mode="collection",
+        order="null",
+        words=_count_words(body),
+        n_sources=5,
     )
-    return _page("Attention Is All You Need", meta, body)
+    return _page("Attention Is All You Need", meta=meta, body=body)
 
 
 def chronicle():
@@ -317,23 +317,23 @@ def chronicle():
     )
     body = (
         '<section data-nb-section="orientation"><h2>Orientation</h2>'
-        f"{_cited_paras(4, 8, 0)}</section>"
+        f"{_cited_paras(4, 8, start=0)}</section>"
         '<section data-nb-section="timeline"><h2>The timeline</h2>'
         f'<ol class="nb-timeline">{events}</ol></section>'
         '<section data-nb-section="echoes"><h2>Echoes today</h2>'
-        f"{_cited_paras(4, 8, 4)}</section>" + _sources(8)
+        f"{_cited_paras(4, 8, start=4)}</section>" + _sources(8)
     )
     meta = _meta(
         "histories",
         "unix",
-        "chronicle",
-        "A History of Unix",
-        "collection",
-        "null",
-        _count_words(body),
-        8,
+        template="chronicle",
+        title="A History of Unix",
+        mode="collection",
+        order="null",
+        words=_count_words(body),
+        n_sources=8,
     )
-    return _page("A History of Unix", meta, body)
+    return _page("A History of Unix", meta=meta, body=body)
 
 
 if __name__ == "__main__":

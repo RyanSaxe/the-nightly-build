@@ -29,7 +29,7 @@ PASS, FAIL = 0, []
 TESTREPO = make_fixtures.test_repo()
 
 
-def check(name, condition, detail=""):
+def check(name, condition, *, detail=""):
     global PASS
     if condition:
         PASS += 1
@@ -39,7 +39,7 @@ def check(name, condition, detail=""):
         print(f"  FAIL {name} {detail}")
 
 
-def write_edition(root, series, slug, html):
+def write_edition(root, series, *, slug, html):
     d = pathlib.Path(root) / "library" / series
     d.mkdir(parents=True, exist_ok=True)
     (d / f"{slug}.html").write_text(html)
@@ -47,9 +47,13 @@ def write_edition(root, series, slug, html):
 
 def make_full_library():
     lib = tempfile.mkdtemp()
-    write_edition(lib, "semiconductors", "micron", make_fixtures.dossier())
-    write_edition(lib, "ai-briefs", "2026-07-05", make_fixtures.brief("2026-07-05"))
-    write_edition(lib, "ai-briefs", "2026-07-06", make_fixtures.brief("2026-07-06"))
+    write_edition(lib, "semiconductors", slug="micron", html=make_fixtures.dossier())
+    write_edition(
+        lib, "ai-briefs", slug="2026-07-05", html=make_fixtures.brief("2026-07-05")
+    )
+    write_edition(
+        lib, "ai-briefs", slug="2026-07-06", html=make_fixtures.brief("2026-07-06")
+    )
     return lib
 
 
@@ -61,7 +65,7 @@ def read(out, *parts):
 print("== full build ==")
 lib = make_full_library()
 out = tempfile.mkdtemp()
-catalog = B.build(TESTREPO, lib, out, now=NOW)
+catalog = B.build(TESTREPO, lib, out=out, now=NOW)
 
 check("catalog site title", catalog["site_title"] == "The Nightly Build")
 semis = next(s for s in catalog["series"] if s["id"] == "semiconductors")
@@ -209,9 +213,9 @@ seq_lib = tempfile.mkdtemp()
 seq_ed = make_fixtures.dossier().replace(
     '"mode": "collection", "order": null', '"mode": "sequence", "order": 1'
 )
-write_edition(seq_lib, "semiconductors", "micron", seq_ed)
+write_edition(seq_lib, "semiconductors", slug="micron", html=seq_ed)
 seq_out = tempfile.mkdtemp()
-B.build(seq_repo, seq_lib, seq_out, now=NOW)
+B.build(seq_repo, seq_lib, out=seq_out, now=NOW)
 seq_page = read(seq_out, "series", "semiconductors", "index.html")
 check("sequence page has progress bar", "nb-progress-wide" in seq_page)
 check("sequence page numbers items", ">01<" in seq_page and ">05<" in seq_page)
@@ -235,9 +239,9 @@ draft = (
         "TSMC: The Foundry at the Center of the World",
     )
 )
-write_edition(pc, "semiconductors", "tsmc", draft)
+write_edition(pc, "semiconductors", slug="tsmc", html=draft)
 pv_out = tempfile.mkdtemp()
-pv_catalog = B.build(TESTREPO, lib, pv_out, preview_root=pc, now=NOW)
+pv_catalog = B.build(TESTREPO, lib, out=pv_out, preview_root=pc, now=NOW)
 pv_index = read(pv_out, "index.html")
 check(
     "preview renders identically to production (no banner)",
@@ -285,9 +289,9 @@ open_ed = (
     .replace('"mode": "collection"', '"mode": "open"')
 )
 open_lib = tempfile.mkdtemp()
-write_edition(open_lib, "wildcard", "the-cuda-moat", open_ed)
+write_edition(open_lib, "wildcard", slug="the-cuda-moat", html=open_ed)
 open_out = tempfile.mkdtemp()
-open_catalog = B.build(open_repo, open_lib, open_out, now=NOW)
+open_catalog = B.build(open_repo, open_lib, out=open_out, now=NOW)
 wc = next(s for s in open_catalog["series"] if s["id"] == "wildcard")
 check(
     "open series in catalog with choice list + cadence",
@@ -312,7 +316,10 @@ check(
 print("== stale newsstand ==")
 stale_out = tempfile.mkdtemp()
 B.build(
-    TESTREPO, lib, stale_out, now=dt.datetime(2026, 7, 10, 9, 0, tzinfo=dt.timezone.utc)
+    TESTREPO,
+    lib,
+    out=stale_out,
+    now=dt.datetime(2026, 7, 10, 9, 0, tzinfo=dt.timezone.utc),
 )
 check(
     "a gap shows the build's true date",
@@ -340,7 +347,7 @@ for i, toks in enumerate(tokens_per_block[1:], 1):
 
 print("== empty library ==")
 empty_out = tempfile.mkdtemp()
-B.build(TESTREPO, tempfile.mkdtemp(), empty_out, now=NOW)
+B.build(TESTREPO, tempfile.mkdtemp(), out=empty_out, now=NOW)
 empty_index = read(empty_out, "index.html")
 check("fresh-fork empty state", "The presses are ready" in empty_index)
 check(

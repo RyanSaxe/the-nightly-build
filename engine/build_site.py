@@ -146,7 +146,7 @@ def reading_minutes(meta):
     return max(1, round(words / WORDS_PER_MINUTE)) if words else 1
 
 
-def collect_editions(series_cfgs, library_root, preview_root=None):
+def collect_editions(series_cfgs, library_root, *, preview_root=None):
     """Load every edition under the library root, preview drafts included.
 
     Returns {(series_id, slug): edition dict} where each dict carries the
@@ -210,7 +210,7 @@ def assign_positions(editions, series_cfgs):
 # --------------------------------------------------------------------------- #
 
 
-def build_catalog(site_cfg, series_cfgs, editions, generated):
+def build_catalog(site_cfg, series_cfgs, *, editions, generated):
     by_series = {}
     for ed in editions.values():
         by_series.setdefault(ed["series"], []).append(ed)
@@ -357,7 +357,7 @@ def asset_stamp(repo):
     return h.hexdigest()[:10]
 
 
-def page(site, title, body, depth=0, active=None):
+def page(site, title, *, body, depth=0, active=None):
     rel = "../" * depth
     mode_attr = (
         f' data-mode="{site["appearance"]}"'
@@ -415,7 +415,7 @@ def item_meta_row(ed):
     )
 
 
-def story_item(ed, series_cfgs, depth=0):
+def story_item(ed, series_cfgs, *, depth=0):
     rel = "../" * depth
     dek = str(ed["meta"].get("dek", ""))
     dek_html = f'<p class="nb-dek nb-cell-dek">{esc(dek)}</p>' if dek else ""
@@ -427,7 +427,7 @@ def story_item(ed, series_cfgs, depth=0):
     )
 
 
-def lead_cell(ed, series_cfgs, depth=0):
+def lead_cell(ed, series_cfgs, *, depth=0):
     rel = "../" * depth
     meta = ed["meta"]
     return (
@@ -440,7 +440,7 @@ def lead_cell(ed, series_cfgs, depth=0):
     )
 
 
-def night_body(eds, series_cfgs, depth, date):
+def night_body(eds, series_cfgs, *, depth, date):
     """Render one night as an edition line plus a single ruled table.
 
     The longest read leads as the table's full-width first cell and the
@@ -455,13 +455,13 @@ def night_body(eds, series_cfgs, depth, date):
     )
     if not eds:
         return body + '<div class="nb-empty"><p>No editions this night.</p></div>'
-    cells = lead_cell(eds[0], series_cfgs, depth) + "".join(
-        story_item(e, series_cfgs, depth) for e in eds[1:]
+    cells = lead_cell(eds[0], series_cfgs, depth=depth) + "".join(
+        story_item(e, series_cfgs, depth=depth) for e in eds[1:]
     )
     return body + f'<div class="nb-grid">{cells}</div>'
 
 
-def render_newsstand(site, catalog, series_cfgs, editions, now):
+def render_newsstand(site, catalog, *, series_cfgs, editions, now):
     if not editions:
         body = (
             '<div class="nb-empty" style="margin-top:26px">'
@@ -469,23 +469,23 @@ def render_newsstand(site, catalog, series_cfgs, editions, now):
             "<p>Set up your first series — ask your agent to "
             "“set me up”, then run a press check.</p></div>"
         )
-        return page(site, site["title"], body, active="Today")
+        return page(site, site["title"], body=body, active="Today")
     dates = sorted(catalog["builds"])
     latest = dates[-1]
     tonight = [ed for ed in editions.values() if ed["meta"].get("date") == latest]
-    body = night_body(tonight, series_cfgs, 0, latest)
+    body = night_body(tonight, series_cfgs, depth=0, date=latest)
     if len(dates) > 1:
         prev = dates[-2]
         body += (
             f'<nav class="nb-nightnav"><a href="builds/{prev}/">'
             f"← {esc(pretty_date(prev))}</a></nav>"
         )
-    return page(site, site["title"], body, active="Today")
+    return page(site, site["title"], body=body, active="Today")
 
 
-def render_build_page(site, date, dates, editions, series_cfgs):
+def render_build_page(site, date, *, dates, editions, series_cfgs):
     eds = [e for e in editions.values() if e["meta"].get("date") == date]
-    body = night_body(eds, series_cfgs, 2, date)
+    body = night_body(eds, series_cfgs, depth=2, date=date)
     ordered = sorted(dates)
     i = ordered.index(date)
     prev_d = ordered[i - 1] if i > 0 else None
@@ -502,7 +502,7 @@ def render_build_page(site, date, dates, editions, series_cfgs):
     else:
         right = "<span></span>"
     body += f'<nav class="nb-nightnav">{left}{right}</nav>'
-    return page(site, f"{pretty_date(date)} — {site['title']}", body, depth=2)
+    return page(site, f"{pretty_date(date)} — {site['title']}", body=body, depth=2)
 
 
 def render_build_archive(site, dates):
@@ -528,7 +528,7 @@ def render_build_archive(site, dates):
             f'style="padding:8px 0" href="{d}/">{esc(pretty_date(d))}'
             f"</a></div>"
         )
-    return page(site, f"All nights — {site['title']}", body, depth=1)
+    return page(site, f"All nights — {site['title']}", body=body, depth=1)
 
 
 def desk_status(s, cfg):
@@ -559,7 +559,7 @@ def desk_status(s, cfg):
     return f"{count} published", False
 
 
-def render_series_index(site, catalog, series_cfgs, editions):
+def render_series_index(site, catalog, *, series_cfgs, editions):
     latest_by_series = {}
     for ed in editions.values():
         cur = latest_by_series.get(ed["series"])
@@ -617,10 +617,12 @@ def render_series_index(site, catalog, series_cfgs, editions):
             f"{len(resting)} desk{'s' if len(resting) != 1 else ''}"
             f"</summary>{''.join(resting)}</details>"
         )
-    return page(site, f"Sections — {site['title']}", body, depth=1, active="Sections")
+    return page(
+        site, f"Sections — {site['title']}", body=body, depth=1, active="Sections"
+    )
 
 
-def render_series_page(site, sid, cfg, eds, series_cfgs):
+def render_series_page(site, sid, *, cfg, eds, series_cfgs):
     name = cfg.get("name", sid)
     mode = cfg.get("mode", "collection")
     eds = sorted(eds, key=lambda e: e["position"])
@@ -687,7 +689,7 @@ def render_series_page(site, sid, cfg, eds, series_cfgs):
                     label = month
                 parts.append(f'<span class="nb-month-label">{esc(label)}</span>')
                 seen_month = month
-            parts.append(story_item(ed, series_cfgs, 2))
+            parts.append(story_item(ed, series_cfgs, depth=2))
         if mode == "open":
             parts += [
                 f'<div class="nb-item" style="color:var(--faint);'
@@ -705,12 +707,12 @@ def render_series_page(site, sid, cfg, eds, series_cfgs):
         )
     else:  # collection, in config order
         rows = [
-            story_item(published[it["slug"]], series_cfgs, 2)
+            story_item(published[it["slug"]], series_cfgs, depth=2)
             for it in items
             if it.get("slug") in published
         ]
         rows += [
-            story_item(e, series_cfgs, 2)
+            story_item(e, series_cfgs, depth=2)
             for e in eds
             if not any(it.get("slug") == e["slug"] for it in items)
         ]
@@ -724,7 +726,9 @@ def render_series_page(site, sid, cfg, eds, series_cfgs):
         ]
         body = head + f'<div class="nb-list">{"".join(rows)}</div>'
 
-    return page(site, f"{name} — {site['title']}", body, depth=2, active="Sections")
+    return page(
+        site, f"{name} — {site['title']}", body=body, depth=2, active="Sections"
+    )
 
 
 def render_tags_index(site, catalog):
@@ -740,10 +744,10 @@ def render_tags_index(site, catalog):
         )
     else:
         body += '<div class="nb-empty"><p>No tags yet.</p></div>'
-    return page(site, f"Tags — {site['title']}", body, depth=1)
+    return page(site, f"Tags — {site['title']}", body=body, depth=1)
 
 
-def render_tag_page(site, tag, refs, editions, series_cfgs):
+def render_tag_page(site, tag, *, refs, editions, series_cfgs):
     eds = [
         editions[tuple(r.split("/", 1))]
         for r in refs
@@ -757,12 +761,12 @@ def render_tag_page(site, tag, refs, editions, series_cfgs):
     body += (
         '<div class="nb-list">'
         + "".join(
-            story_item(e, series_cfgs, 2)
+            story_item(e, series_cfgs, depth=2)
             for e in sorted(eds, key=lambda e: e["meta"].get("date", ""), reverse=True)
         )
         + "</div>"
     )
-    return page(site, f"#{tag} — {site['title']}", body, depth=2)
+    return page(site, f"#{tag} — {site['title']}", body=body, depth=2)
 
 
 def render_search_page(site):
@@ -774,7 +778,7 @@ def render_search_page(site):
         '<div class="nb-results-count" id="nb-count"></div>'
         '<div class="nb-results" id="nb-results"></div>'
     )
-    return page(site, f"Search — {site['title']}", body, depth=1, active="Search")
+    return page(site, f"Search — {site['title']}", body=body, depth=1, active="Search")
 
 
 TEXT_STRIP_RE = re.compile(
@@ -856,7 +860,7 @@ def feed_content_html(path, base_url):
     return body if len(body) <= FEED_CONTENT_MAX else ""
 
 
-def atom_feed(site, base_url, feed_path, title, eds, generated):
+def atom_feed(base_url, feed_path, *, title, eds, generated):
     def absolute(path):
         return f"{base_url}{path}" if base_url else path
 
@@ -896,7 +900,7 @@ def atom_feed(site, base_url, feed_path, title, eds, generated):
 # --------------------------------------------------------------------------- #
 
 
-def render_email(site_title, date, eds, series_cfgs, base_url):
+def render_email(site_title, date, *, eds, series_cfgs, base_url):
     """Render the morning digest as a self-contained email document.
 
     Email clients ignore stylesheets, so every style is inline and the
@@ -962,7 +966,7 @@ def write(path, content):
         fh.write(content)
 
 
-def copy_assets(repo, site_cfg, out):
+def copy_assets(repo, site_cfg, *, out):
     src = os.path.join(repo, "engine", "assets")
     dst = os.path.join(out, "assets")
     if os.path.isdir(dst):
@@ -979,7 +983,7 @@ EDITION_ASSET_RE = re.compile(
 )
 
 
-def copy_editions(editions, out, stamp=""):
+def copy_editions(editions, out, *, stamp=""):
     """Copy editions into the site, stamping their shared-asset links.
 
     The canonical files on the library branch stay byte-exact; only the
@@ -997,12 +1001,12 @@ def copy_editions(editions, out, stamp=""):
             shutil.copyfile(ed["file"], dst)
 
 
-def build(repo, library_root, out, preview_root=None, base_url="", now=None):
+def build(repo, library_root, *, out, preview_root=None, base_url="", now=None):
     now = now or dt.datetime.now(dt.timezone.utc)
     site_cfg = load_site_config(repo)
     series_cfgs = load_series_configs(repo)
-    editions = collect_editions(series_cfgs, library_root, preview_root)
-    catalog = build_catalog(site_cfg, series_cfgs, editions, now)
+    editions = collect_editions(series_cfgs, library_root, preview_root=preview_root)
+    catalog = build_catalog(site_cfg, series_cfgs, editions=editions, generated=now)
 
     site = {
         "title": site_cfg["title"],
@@ -1019,7 +1023,9 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
     write(os.path.join(out, "catalog.json"), json.dumps(catalog, indent=2) + "\n")
     write(
         os.path.join(out, "index.html"),
-        render_newsstand(site, catalog, series_cfgs, editions, now),
+        render_newsstand(
+            site, catalog, series_cfgs=series_cfgs, editions=editions, now=now
+        ),
     )
     write(
         os.path.join(out, "builds", "index.html"),
@@ -1029,12 +1035,16 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
         write(
             os.path.join(out, "builds", date, "index.html"),
             render_build_page(
-                site, date, list(catalog["builds"]), editions, series_cfgs
+                site,
+                date,
+                dates=list(catalog["builds"]),
+                editions=editions,
+                series_cfgs=series_cfgs,
             ),
         )
     write(
         os.path.join(out, "series", "index.html"),
-        render_series_index(site, catalog, series_cfgs, editions),
+        render_series_index(site, catalog, series_cfgs=series_cfgs, editions=editions),
     )
     by_series = {}
     for ed in editions.values():
@@ -1044,7 +1054,11 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
         write(
             os.path.join(out, "series", sid, "index.html"),
             render_series_page(
-                site, sid, series_cfgs.get(sid, {}), by_series.get(sid, []), series_cfgs
+                site,
+                sid,
+                cfg=series_cfgs.get(sid, {}),
+                eds=by_series.get(sid, []),
+                series_cfgs=series_cfgs,
             ),
         )
     write(os.path.join(out, "search", "index.html"), render_search_page(site))
@@ -1056,7 +1070,9 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
     for tag, refs in catalog["tags"].items():
         write(
             os.path.join(out, "tags", tag, "index.html"),
-            render_tag_page(site, tag, refs, editions, series_cfgs),
+            render_tag_page(
+                site, tag, refs=refs, editions=editions, series_cfgs=series_cfgs
+            ),
         )
 
     all_sorted = sorted(
@@ -1066,7 +1082,9 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
     )
     write(
         os.path.join(out, "feed.xml"),
-        atom_feed(site, base_url, "feed.xml", site_cfg["title"], all_sorted, now),
+        atom_feed(
+            base_url, "feed.xml", title=site_cfg["title"], eds=all_sorted, generated=now
+        ),
     )
     for s in catalog["series"]:
         sid = s["id"]
@@ -1078,12 +1096,11 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
         write(
             os.path.join(out, "series", sid, "feed.xml"),
             atom_feed(
-                site,
                 base_url,
                 f"series/{sid}/feed.xml",
-                f"{site_cfg['title']} — {s['name']}",
-                eds,
-                now,
+                title=f"{site_cfg['title']} — {s['name']}",
+                eds=eds,
+                generated=now,
             ),
         )
 
@@ -1093,14 +1110,26 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
         eds = [e for e in editions.values() if e["meta"].get("date") == date]
         write(
             os.path.join(out, "builds", date, "email.html"),
-            render_email(site_cfg["title"], date, eds, series_cfgs, base_url),
+            render_email(
+                site_cfg["title"],
+                date,
+                eds=eds,
+                series_cfgs=series_cfgs,
+                base_url=base_url,
+            ),
         )
     latest = max(catalog["builds"], default=None)
     if latest:
         eds = [e for e in editions.values() if e["meta"].get("date") == latest]
         write(
             os.path.join(out, "email-latest.html"),
-            render_email(site_cfg["title"], latest, eds, series_cfgs, base_url),
+            render_email(
+                site_cfg["title"],
+                latest,
+                eds=eds,
+                series_cfgs=series_cfgs,
+                base_url=base_url,
+            ),
         )
         write(
             os.path.join(out, "email-latest-subject.txt"),
@@ -1108,8 +1137,8 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
             f"edition{'s' if len(eds) != 1 else ''}\n",
         )
 
-    copy_assets(repo, site_cfg, out)
-    copy_editions(editions, out, site["stamp"])
+    copy_assets(repo, site_cfg, out=out)
+    copy_editions(editions, out, stamp=site["stamp"])
     return catalog
 
 
@@ -1146,7 +1175,7 @@ def main(argv=None):
     catalog = build(
         args.repo,
         args.library,
-        args.out,
+        out=args.out,
         preview_root=args.preview,
         base_url=args.base_url.rstrip("/"),
         now=now,

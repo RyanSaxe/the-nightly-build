@@ -31,7 +31,7 @@ PASS, FAIL = 0, []
 TESTREPO = make_fixtures.test_repo()
 
 
-def run_local(html_text, series, slug=None, library=None, repo=None, today=TODAY):
+def run_local(html_text, series, *, slug=None, library=None, repo=None, today=TODAY):
     # Write html as library/<series>/<slug>.html in a temp dir and run the proof.
     repo = repo or TESTREPO
     tmp = tempfile.mkdtemp()
@@ -44,7 +44,12 @@ def run_local(html_text, series, slug=None, library=None, repo=None, today=TODAY
     cfg, _ = C.load_series(repo, series)
     rep.strict = bool(cfg and cfg.get("strict"))
     C.check_edition(
-        str(f), series, repo, library, rep, today=C._dt.date.fromisoformat(today)
+        str(f),
+        series,
+        repo=repo,
+        library_dir=library,
+        rep=rep,
+        today=C._dt.date.fromisoformat(today),
     )
     shutil.rmtree(tmp)
     return rep
@@ -55,7 +60,7 @@ def codes(rep):
     return sorted(seen)
 
 
-def expect(name, rep, must_have=(), must_not=(), blocks=None):
+def expect(name, rep, *, must_have=(), must_not=(), blocks=None):
     global PASS
     got = codes(rep)
     ok = all(c in got for c in must_have) and all(c not in got for c in must_not)
@@ -108,7 +113,7 @@ VALID = make_fixtures.dossier()
 VALID_BRIEF = make_fixtures.brief(TODAY)
 
 
-def mut(old, new, base=None):
+def mut(old, new, *, base=None):
     base = base or VALID
     assert old in base, f"mutation target not found: {old[:60]!r}"
     return base.replace(old, new)
@@ -867,7 +872,7 @@ for name, cond in [
 print("== duty.py (tonight's work list) ==")
 
 
-def duty(repo, library, date=TODAY):
+def duty(repo, library, *, date=TODAY):
     out = subprocess.run(
         [
             sys.executable,

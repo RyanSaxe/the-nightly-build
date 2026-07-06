@@ -95,6 +95,7 @@ def config_items(cfg: dict[str, object]) -> list[dict[str, object]]:
 def series_duty(
     sid: str,
     cfg: dict[str, object],
+    *,
     pub: set[str],
     pub_dates: set[str],
     date: _dt.date,
@@ -191,7 +192,9 @@ def main(argv=None) -> int:
         with open(os.path.join(root, sid, "series.yaml"), encoding="utf-8") as fh:
             cfg = yaml.safe_load(fh) or {}
         pub, pub_dates = published_state(args.library, sid)
-        is_due, entry = series_duty(sid, cfg, pub, pub_dates, date, day)
+        is_due, entry = series_duty(
+            sid, cfg, pub=pub, pub_dates=pub_dates, date=date, day=day
+        )
         (due if is_due else idle).append(entry)
 
     print(

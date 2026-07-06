@@ -55,7 +55,7 @@ SELF_COUNT_TOLERANCE = 0.20
 
 
 class Finding:
-    def __init__(self, code, level, message, suggestion=None):
+    def __init__(self, code, level, *, message, suggestion=None):
         self.code, self.level, self.message, self.suggestion = (
             code,
             level,
@@ -76,17 +76,14 @@ class Report:
         self.strict = strict
         self.notes = []
 
-    def block(self, code, msg, suggestion=None):
-        finding = Finding(code, "BLOCK", msg, suggestion)
+    def block(self, code, msg, *, suggestion=None):
+        finding = Finding(code, "BLOCK", message=msg, suggestion=suggestion)
         self.findings.append(finding)
 
-    def warn(self, code, msg, suggestion=None):
+    def warn(self, code, msg, *, suggestion=None):
         level = "BLOCK" if self.strict else "WARN"
-        finding = Finding(code, level, msg, suggestion)
+        finding = Finding(code, level, message=msg, suggestion=suggestion)
         self.findings.append(finding)
-
-    def note(self, msg):
-        self.notes.append(msg)
 
     @property
     def blocks(self):
@@ -346,7 +343,7 @@ def published_slugs(library_dir, series_id):
 
 
 def validate_meta_fields(meta, rep):
-    def need(field, typ, pattern=None, enum=None):
+    def need(field, typ, *, pattern=None, enum=None):
         v = meta.get(field)
         if v is None:
             rep.block("B-META-PARSE", f"nb-meta missing required field '{field}'")
@@ -389,7 +386,7 @@ def validate_meta_fields(meta, rep):
 
 
 def check_edition(
-    html_path, series_id, repo, library_dir, rep, pr_body_meta=None, today=None
+    html_path, series_id, *, repo, library_dir, rep, pr_body_meta=None, today=None
 ):
     today = today or _dt.date.today()
 
@@ -565,7 +562,7 @@ def check_edition(
                             f"sequence order must be item position {idx + 1}; "
                             f"nb-meta says {meta.get('order')}",
                         )
-                    rep.note(
+                    rep.notes.append(
                         "library state not provided (--library); "
                         "next-expected check skipped"
                     )
@@ -610,14 +607,14 @@ def check_edition(
             if pub is not None and slug in pub:
                 rep.block("B-MODE", f"a brief for {slug} is already published")
         if pub is None:
-            rep.note(
+            rep.notes.append(
                 "library state not provided (--library); "
                 "already-published check skipped"
             )
     elif mode == "open":
         item_cfg = next((it for it in items if it.get("slug") == slug), None)
         if pub is None:
-            rep.note(
+            rep.notes.append(
                 "library state not provided (--library); "
                 "open-mode dedupe and commission checks skipped"
             )
@@ -729,13 +726,13 @@ def check_edition(
             rep.warn(
                 "W-LENGTH-LOW",
                 f"{template_id} band is {lo}-{hi} words; found {wc}",
-                "consider deepening the thinnest section",
+                suggestion="consider deepening the thinnest section",
             )
         elif wc > hi:
             rep.warn(
                 "W-LENGTH-HIGH",
                 f"{template_id} band is {lo}-{hi} words; found {wc}",
-                "consider trimming or splitting",
+                suggestion="consider trimming or splitting",
             )
     if treg.get("items"):
         lo, hi = treg["items"]
@@ -812,7 +809,7 @@ def check_edition(
                 rep.block(
                     "B-SOURCES-EXCLUSIVE",
                     f"source outside the declared set: {s['href']}",
-                    "this series is sources_exclusive — cite only "
+                    suggestion="this series is sources_exclusive — cite only "
                     "required_docs and consult sources",
                 )
 
@@ -860,7 +857,7 @@ def parse_pr_body(path):
         return None
 
 
-def pr_changed_files(repo, base, head):
+def pr_changed_files(repo, *, base, head):
     out = subprocess.run(
         [
             "git",
@@ -885,7 +882,7 @@ def pr_changed_files(repo, base, head):
 
 def run_pr_mode(args, rep):
     try:
-        changes = pr_changed_files(args.repo, args.base, args.head)
+        changes = pr_changed_files(args.repo, base=args.base, head=args.head)
     except subprocess.CalledProcessError as e:
         rep.block("B-DIFF-SHAPE", f"git diff failed: {e.stderr or e}")
         return
@@ -924,9 +921,9 @@ def run_pr_mode(args, rep):
     check_edition(
         fs_path,
         series_id,
-        cfg_repo,
-        args.library,
-        rep,
+        repo=cfg_repo,
+        library_dir=args.library,
+        rep=rep,
         pr_body_meta=pr_body_meta,
         today=args.today and _dt.date.fromisoformat(args.today),
     )
@@ -1005,9 +1002,9 @@ def main(argv=None):
         check_edition(
             args.file,
             args.series,
-            args.repo,
-            args.library,
-            rep,
+            repo=args.repo,
+            library_dir=args.library,
+            rep=rep,
             today=args.today and _dt.date.fromisoformat(args.today),
         )
 
