@@ -44,6 +44,30 @@ else
 	ok "library branch pushed (contains only library/.gitkeep)"
 fi
 
+# 3b. Seed trigger workflows onto library ------------------------------------
+# GitHub only fires pull_request triggers from workflow files present on the
+# PR's base branch, and push triggers from files present on the pushed branch.
+# So the editor (check.yml) and the press (publish.yml) must ALSO exist on
+# library. They are pure triggers — every real instruction checks out engine
+# and templates from main — so no engine logic lands on library (§1 invariant).
+# Re-running setup.sh re-syncs them after trigger/checkout-step changes on main.
+say "syncing trigger workflows onto library"
+git fetch -q origin library
+wt="$(mktemp -d)/wt"
+git worktree add -q "$wt" library
+git -C "$wt" merge -q --ff-only origin/library 2>/dev/null || true
+mkdir -p "$wt/.github/workflows"
+cp .github/workflows/check.yml .github/workflows/publish.yml "$wt/.github/workflows/"
+if [ -n "$(git -C "$wt" status --porcelain)" ]; then
+	git -C "$wt" add .github
+	git -C "$wt" commit -qm "chore: sync trigger workflows from main [skip ci]"
+	git -C "$wt" push -q origin library
+	ok "trigger workflows seeded onto library"
+else
+	ok "trigger workflows on library already in sync"
+fi
+git worktree remove --force "$wt"
+
 # 4. GitHub Pages (Actions-based deploy; publish.yml uploads site/) ----------
 if gh api "repos/$repo/pages" >/dev/null 2>&1; then
 	gh api -X PUT "repos/$repo/pages" -f build_type=workflow >/dev/null 2>&1 ||

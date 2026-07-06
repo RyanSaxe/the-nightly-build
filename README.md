@@ -27,12 +27,16 @@ searchable, owned by you, served free from GitHub Pages.
 ## Five-minute quickstart
 
 1. **Fork** this repo (public or private — Pages on private repos needs a paid
-   GitHub plan).
+   GitHub plan). Leave GitHub's **"Copy the `main` branch only"** box checked:
+   you get the engine and the example series, never the upstream library —
+   your press starts blank.
 2. **Clone it and say "set me up"** to your agent (Claude Code, etc.) in the
-   checkout. The Librarian skill interviews you, writes your series config,
-   and runs `./setup.sh` (creates the `library` branch, enables Pages and
-   auto-merge). No agent handy? Configure `series/<id>/series.yaml` by hand —
-   `series/semiconductors/` is a complete example — then run `./setup.sh`.
+   checkout. The Librarian skill asks whether to keep or replace the example
+   series, interviews you, writes your series config, and runs `./setup.sh`
+   (creates the `library` branch, seeds its trigger workflows, enables Pages
+   and auto-merge). No agent handy? Configure `series/<id>/series.yaml` by
+   hand — `series/semiconductors/` is a complete example — then run
+   `./setup.sh`.
 3. **Rehearse:** ask for a **press check** — a full research run rendered to a
    locally served newsstand, no PR, so you can tune the prompt before
    scheduling.
@@ -74,6 +78,11 @@ templates/             the six edition layouts   engine/       check.py, build_s
 skills/                librarian + correspondent  harnesses/   claude / jules / codex adapters
 setup.sh               idempotent bootstrap      .github/      the editor + the press
 ```
+
+**This repo dogfoods itself.** The example series are the upstream night
+shift's real assignments, so the maintainer's Pages site is a live demo of
+exactly what a fork produces. Your fork inherits the example *configs* only;
+the Librarian offers to replace them with your own series on setup.
 
 MIT licensed. No accounts, no backend, no analytics — `catalog.json` and the
 Atom feeds *are* the API.

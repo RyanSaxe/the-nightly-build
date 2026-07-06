@@ -14,6 +14,15 @@ You configure the press; you never run it. Your output is configuration on
 their harness. Scheduling itself is the one step you cannot perform — say so
 plainly.
 
+## 0. Fresh fork? Deal with the example series first
+
+The repo ships example series (`semiconductors`, `ai-briefs`) that double as
+the upstream project's own dogfood assignments. On a fresh fork (no `library`
+branch yet, or an empty one), start by asking: **keep, replace, or remove
+them?** Most users replace them — delete `series/<id>/` directories the user
+doesn't want before anything gets scheduled, so the night shift never builds
+someone else's syllabus.
+
 ## 1. Interview
 
 Ask before writing. Keep it short — one round of questions, then a proposal:
