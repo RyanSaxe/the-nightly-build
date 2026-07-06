@@ -213,6 +213,36 @@
 
   /* ---------------------------------------------------------- edition chrome */
 
+  /* Editions are standalone frozen files: the bar and footer that site pages
+     get from the builder are injected here, so every edition ever published
+     wears the current chrome. Site title comes from catalog.json. */
+  function injectChrome() {
+    if (document.querySelector(".nb-bar")) return Promise.resolve();
+    return catalog().then(function (cat) {
+      var title = (cat && cat.site_title) || "The Nightly Build";
+      var bar = document.createElement("header");
+      bar.className = "nb-bar";
+      bar.innerHTML =
+        '<div class="nb-bar-in"><a class="nb-wordmark" href="' + ROOT + '">' +
+        escHtml(title) + '<span class="nb-period">.</span></a>' +
+        '<details class="nb-menu"><summary aria-label="Menu">' +
+        '<span class="nb-burger"></span></summary>' +
+        '<nav class="nb-menu-panel">' +
+        '<a href="' + ROOT + '">Today</a>' +
+        '<a href="' + ROOT + 'series/">Sections</a>' +
+        '<a href="' + ROOT + 'search/">Search</a>' +
+        '<a href="' + ROOT + 'feed.xml">RSS</a></nav></details></div>';
+      document.body.insertBefore(bar, document.body.firstChild);
+      var foot = document.createElement("footer");
+      foot.className = "nb-footer";
+      foot.innerHTML =
+        '<div class="nb-footer-in"><a href="' + ROOT + 'feed.xml">RSS</a>' +
+        '<a href="https://github.com/RyanSaxe/the-nightly-build">GitHub</a>' +
+        '<button class="nb-appearance" type="button">◐ auto</button></div>';
+      document.body.appendChild(foot);
+    });
+  }
+
   function editionMeta() {
     var el = document.getElementById("nb-meta");
     if (!el) return null;
@@ -511,14 +541,16 @@
 
   /* ------------------------------------------------------------------ init */
 
-  function init() {
+  function bindChrome() {
     document.querySelectorAll(".nb-appearance").forEach(function (btn) {
+      if (btn.dataset.nbBound) return;
+      btn.dataset.nbBound = "1";
       btn.addEventListener("click", cycleAppearance);
     });
     applyAppearance(hashMode() || getAppearance());
-
     var menu = document.querySelector(".nb-menu");
-    if (menu) {
+    if (menu && !menu.dataset.nbBound) {
+      menu.dataset.nbBound = "1";
       document.addEventListener("click", function (e) {
         if (menu.open && !(e.target.closest && e.target.closest(".nb-menu"))) {
           menu.open = false;
@@ -528,16 +560,19 @@
         if (e.key === "Escape") menu.open = false;
       });
     }
-
     document.querySelectorAll('a[href^="http"]').forEach(function (a) {
       a.target = "_blank";
       a.rel = "noopener";
     });
+  }
 
+  function init() {
+    bindChrome();
     renderCharts();
 
     var meta = editionMeta();
     if (meta) {
+      injectChrome().then(bindChrome);
       if (meta.template !== "deck") buildToc(meta);
       normalizeByline();
       linkEyebrow(meta);
