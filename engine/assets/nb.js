@@ -510,11 +510,48 @@
       return escHtml(d.e.dek || "");
     }
 
+    function renderRecent() {
+      /* empty query: the newest editions under month labels, not a dump */
+      var recent = docs.slice(0, 20);
+      if (count) count.textContent = "";
+      var seen = null;
+      out.innerHTML = recent.map(function (d) {
+        var e = d.e;
+        var month = (e.date || "").slice(0, 7);
+        var label = "";
+        if (month && month !== seen) {
+          seen = month;
+          var mm = MONTHS[parseInt(month.slice(5), 10) - 1] || month;
+          label = '<span class="nb-month-label">' + mm + " " +
+            month.slice(0, 4) + "</span>";
+        }
+        return label + resultRow(d, []);
+      }).join("");
+    }
+
+    function resultRow(d, tokens) {
+      var e = d.e;
+      var kicker = e.section
+        ? e.section + " — " + (e.series_name || e.series)
+        : (e.series_name || e.series);
+      var body = tokens.length && scope !== "titles" && d.text
+        ? snippet(d, tokens) : escHtml(e.dek || "");
+      return '<a class="nb-item" href="' + editionUrl(e) + '">' +
+        '<div class="nb-kicker">' + escHtml(kicker) + "</div>" +
+        "<h3>" + escHtml(e.title || e.slug) + "</h3>" +
+        '<p class="nb-snippet">' + body + "</p>" +
+        '<div class="nb-meta"><span>' + (e.reading_minutes || "?") +
+        " min read</span><span>" +
+        escHtml(String(e.template || "").charAt(0).toUpperCase() +
+                String(e.template || "").slice(1)) + "</span></div></a>";
+    }
+
     function render() {
       var q = (input.value || "").trim().toLowerCase();
       var tokens = q ? q.split(/\s+/) : [];
+      if (!tokens.length) return renderRecent();
       var hits = docs.map(function (d) {
-        return { d: d, score: tokens.length ? scoreDoc(d, tokens) : 1 };
+        return { d: d, score: scoreDoc(d, tokens) };
       }).filter(function (h) { return h.score > 0; });
       hits.sort(function (a, b) { return b.score - a.score; });
       if (count) {
@@ -522,20 +559,7 @@
           (docs.length !== 1 ? "s" : "");
       }
       out.innerHTML = hits.map(function (h) {
-        var e = h.d.e;
-        var kicker = e.section
-          ? e.section + " — " + (e.series_name || e.series)
-          : (e.series_name || e.series);
-        var body = tokens.length && scope !== "titles" && h.d.text
-          ? snippet(h.d, tokens) : escHtml(e.dek || "");
-        return '<a class="nb-item" href="' + editionUrl(e) + '">' +
-          '<div class="nb-kicker">' + escHtml(kicker) + "</div>" +
-          "<h3>" + escHtml(e.title || e.slug) + "</h3>" +
-          '<p class="nb-snippet">' + body + "</p>" +
-          '<div class="nb-meta"><span>' + (e.reading_minutes || "?") +
-          " min read</span><span>" +
-          escHtml(String(e.template || "").charAt(0).toUpperCase() +
-                  String(e.template || "").slice(1)) + "</span></div></a>";
+        return resultRow(h.d, tokens);
       }).join("") ||
         '<div class="nb-results-count" style="padding:20px 0">No matches.</div>';
     }

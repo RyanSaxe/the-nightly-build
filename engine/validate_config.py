@@ -63,6 +63,8 @@ def check_site(repo, errors):
         errors.append(f"{label}/site.yaml: theme file not found: {theme!r}")
     if site.get("appearance", "auto") not in ("auto", "light", "dark"):
         errors.append(f"{label}/site.yaml: 'appearance' must be auto | light | dark")
+    if site.get("front", "comfortable") not in ("comfortable", "compact"):
+        errors.append(f"{label}/site.yaml: 'front' must be comfortable | compact")
 
 
 def check_registry(repo, errors):

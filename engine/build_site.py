@@ -77,6 +77,7 @@ def load_site_config(repo):
     cfg.setdefault("title", "The Nightly Build")
     cfg.setdefault("theme", "engine/assets/themes/newspaper.css")
     cfg.setdefault("appearance", "auto")
+    cfg.setdefault("front", "comfortable")
     return cfg
 
 
@@ -329,7 +330,7 @@ def page(site, title, body, depth=0, active=None):
 {APPEARANCE_BOOTSTRAP}
 <script defer src="{rel}assets/nb.js?v={site['stamp']}"></script>
 </head>
-<body>
+<body{site['body_class']}>
 <header class="nb-bar"><div class="nb-bar-in">
   <a class="nb-wordmark" href="{rel}">{esc(site['title'])}<span class="nb-period">.</span></a>
   <details class="nb-menu"><summary aria-label="Menu"><span class="nb-burger"></span></summary>
@@ -361,10 +362,12 @@ def item_meta_row(ed):
 
 def story_item(ed, series_cfgs, depth=0):
     rel = "../" * depth
+    dek = str(ed["meta"].get("dek", ""))
+    dek_html = f'<p class="nb-dek nb-cell-dek">{esc(dek)}</p>' if dek else ""
     return (f'<a class="nb-item" href="{rel}library/{ed["series"]}/{ed["slug"]}.html">'
             f'<div class="nb-kicker">{esc(kicker_text(ed, series_cfgs))}</div>'
             f'<h3>{esc(str(ed["meta"].get("title", ed["slug"])))}</h3>'
-            f"{item_meta_row(ed)}</a>")
+            f"{dek_html}{item_meta_row(ed)}</a>")
 
 
 def lead_cell(ed, series_cfgs, depth=0):
@@ -472,13 +475,27 @@ def desk_status(s, cfg):
 
 
 def render_series_index(site, catalog, series_cfgs, editions):
+    latest_by_series = {}
+    for ed in editions.values():
+        cur = latest_by_series.get(ed["series"])
+        if cur is None or ed["meta"].get("date", "") > cur["meta"].get("date", ""):
+            latest_by_series[ed["series"]] = ed
+
     groups, resting, ndesks = {}, [], 0
     for s in catalog["series"]:
         cfg = series_cfgs.get(s["id"], {})
         status, rests = desk_status(s, cfg)
+        latest = latest_by_series.get(s["id"])
+        latest_line = ""
+        if latest:
+            latest_line = (f'<span class="nb-desk-latest">'
+                           f'{esc(str(latest["meta"].get("title", "")))} · '
+                           f'{esc(pretty_date(latest["meta"].get("date", "")))}'
+                           "</span>")
         row = (f'<a class="nb-desk{" nb-desk-done" if rests else ""}" '
                f'href="{s["id"]}/">'
                f'<span class="nb-desk-name">{esc(s.get("name", s["id"]))}</span>'
+               f"{latest_line}"
                f'<span class="nb-desk-status">{status}</span></a>')
         ndesks += 1
         if rests:
@@ -496,7 +513,9 @@ def render_series_index(site, catalog, series_cfgs, editions):
         body += '<div class="nb-empty"><p>No series configured.</p></div>'
     for section, rows in groups.items():
         body += (f'<div class="nb-secgroup"><div class="nb-sechead">'
-                 f"<h2>{esc(section)}</h2></div>{''.join(rows)}</div>")
+                 f"<h2>{esc(section)}</h2><span>{len(rows)} desk"
+                 f"{'s' if len(rows) != 1 else ''}</span></div>"
+                 f"{''.join(rows)}</div>")
     if resting:
         body += (f'<details class="nb-stacks"><summary>In the stacks — '
                  f"{len(resting)} desk{'s' if len(resting) != 1 else ''}"
@@ -837,6 +856,8 @@ def build(repo, library_root, out, preview_root=None, base_url="", now=None):
         "appearance": site_cfg["appearance"],
         "preview": bool(preview_root),
         "stamp": asset_stamp(repo),
+        "body_class": (' class="nb-front-compact"'
+                       if site_cfg.get("front") == "compact" else ""),
     }
 
     os.makedirs(out, exist_ok=True)
