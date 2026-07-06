@@ -163,7 +163,7 @@ editor_merge("nb/n1-brief")
 catalog1 = press_run("2026-07-05T09:00:00+00:00")
 front1 = (sitedir / "index.html").read_text()
 check("front page shows a multi-edition build",
-      "Tonight’s build" in front1 and "2 editions" in front1)
+      "nb-lead-cell" in front1 and 'class="nb-grid"' in front1)
 check("night 1 build page lists both editions",
       catalog1["builds"]["2026-07-05"] == ["ai-briefs/2026-07-05",
                                            "semiconductors/micron"])
@@ -194,7 +194,7 @@ editor_merge("nb/n2-brief")
 catalog2 = press_run("2026-07-06T09:00:00+00:00")
 front2 = (sitedir / "index.html").read_text()
 check("front page rolled over to night 2",
-      "Tonight’s build" in front2 and "1 edition" in front2
+      "July 6, 2026" in front2
       and "2026-07-06" in json.dumps(catalog2["builds"]))
 check("both nights preserved in the archive",
       list(catalog2["builds"]) == ["2026-07-06", "2026-07-05"])
@@ -210,8 +210,8 @@ series_feed = ET.fromstring(
     (sitedir / "series" / "ai-briefs" / "feed.xml").read_text())
 check("series feed updated to 2 entries",
       len(series_feed.findall(f"{NS}entry")) == 2)
-check("collection strip shows progress 1 of 5",
-      "1 of 5" in front2)
+check("sections page shows collection progress 1 of 5",
+      "1 of 5" in (sitedir / "series" / "index.html").read_text())
 
 print()
 print(f"{PASS} passed, {len(FAIL)} failed")

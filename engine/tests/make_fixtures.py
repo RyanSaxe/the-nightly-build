@@ -134,6 +134,9 @@ def dossier():
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Micron Technology</title>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/theme.css">
+<link rel="stylesheet" href="../../assets/nb.css">
+<script defer src="../../assets/nb.js"></script>
 <script type="application/json" id="nb-meta">
 {meta}
 </script>
@@ -286,30 +289,10 @@ def chronicle():
     return _page("A History of Unix", meta, body)
 
 
-def deck():
-    slides = ['<div class="nb-slide" data-nb-slide data-kind="title">'
-              "<h2>The Deck Title</h2></div>"]
-    for i in range(1, 8):
-        n = ((i - 1) % 5) + 1
-        slides.append(
-            f'<div class="nb-slide" data-nb-slide data-kind="content">'
-            f"<h2>Slide {i}</h2><ul><li>{LOREM}</li></ul>"
-            f'<div class="nb-slide-foot">Source '
-            f'<sup class="nb-cite"><a href="#s{n}">{n}</a></sup></div></div>')
-    slides.append('<div class="nb-slide" data-nb-slide data-kind="divider">'
-                  "<p>Part two</p></div>")
-    body = ('<section data-nb-section="slides"><div class="nb-deck">'
-            + "".join(slides) + "</div></section>" + _sources(5))
-    meta = _meta("decks", "eu-chips", "deck", "The EU Chips Act, Argued",
-                 "collection", "null", _count_words(body), 5)
-    return _page("The EU Chips Act, Argued", meta, body)
-
-
 if __name__ == "__main__":
     (FIX / "valid-dossier.html").write_text(dossier())
     (FIX / "valid-brief.html").write_text(brief())
     (FIX / "valid-lesson.html").write_text(lesson())
     (FIX / "valid-paper.html").write_text(paper())
     (FIX / "valid-chronicle.html").write_text(chronicle())
-    (FIX / "valid-deck.html").write_text(deck())
     print("fixtures written:", sorted(p.name for p in FIX.iterdir()))

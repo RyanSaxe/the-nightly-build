@@ -1,14 +1,17 @@
 /* The Nightly Build — engine-owned runtime (nb.js).
  *
  * Duties:
- *   1. Appearance toggle: ◐ auto → ○ light → ● dark, persisted in
+ *   1. Appearance: ◐ auto → ○ light → ● dark, persisted in
  *      localStorage("nb-appearance"). Base/no-JS fallback is light (see theme).
- *   2. Declarative chart renderer: finds <script type="application/json"
- *      data-nb-chart> blocks and renders them with version-pinned Chart.js from
- *      cdnjs — the ONLY third-party script, loaded here, never by editions.
- *   3. Contextual nav injected into editions (back to tonight, series progress,
- *      prev/next edition, tag links), driven by catalog.json.
- *   4. Client-side search over catalog.json from the masthead.
+ *   2. Declarative charts: renders <script type="application/json"
+ *      data-nb-chart> blocks with version-pinned Chart.js from cdnjs — the
+ *      ONLY third-party script, loaded here, never by editions.
+ *   3. Edition chrome, retrofitted onto every edition ever published:
+ *      collapsible Contents, citation source-sheets with backrefs, byline
+ *      normalization, desk-linked eyebrow, sequence prev/next from
+ *      catalog.json, external links in new tabs.
+ *   4. The Search page: scoped fuzzy search over the builder-emitted index.
+ *   5. Menu niceties (close on outside tap / Escape).
  *
  * Must degrade gracefully: with no JS the site is a clean readable document.
  */
@@ -20,6 +23,8 @@
   var APPEARANCE_KEY = "nb-appearance";
   var MODES = ["auto", "light", "dark"];
   var GLYPHS = { auto: "◐ auto", light: "○ light", dark: "● dark" };
+  var MONTHS = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
 
   /* Site root, derived from this script's own URL (…/assets/nb.js → …/). */
   var script = document.currentScript;
@@ -28,6 +33,13 @@
     : "./";
 
   /* ------------------------------------------------------------ appearance */
+
+  /* Verification hook: #light / #dark in the URL forces a mode. Used by the
+     screenshot harness; harmless for readers (citation anchors never match). */
+  function hashMode() {
+    var h = (location.hash || "").replace(/^#/, "").split("&")[0];
+    return h === "light" || h === "dark" ? h : null;
+  }
 
   function getAppearance() {
     try {
@@ -57,7 +69,11 @@
     rerenderCharts();
   }
 
-  applyAppearance(getAppearance());
+  applyAppearance(hashMode() || getAppearance());
+  window.addEventListener("hashchange", function () {
+    var m = hashMode();
+    if (m) applyAppearance(m);
+  });
 
   /* ---------------------------------------------------------------- charts */
 
@@ -195,152 +211,394 @@
     return ROOT + entry.path.replace(/^\//, "");
   }
 
-  /* --------------------------------------------- contextual nav (editions) */
+  /* ---------------------------------------------------------- edition chrome */
+
+  /* Editions are standalone frozen files: the bar and footer that site pages
+     get from the builder are injected here, so every edition ever published
+     wears the current chrome. Site title comes from catalog.json. */
+  function injectChrome() {
+    if (document.querySelector(".nb-bar")) return Promise.resolve();
+    return catalog().then(function (cat) {
+      var title = (cat && cat.site_title) || "The Nightly Build";
+      var bar = document.createElement("header");
+      bar.className = "nb-bar";
+      bar.innerHTML =
+        '<div class="nb-bar-in"><a class="nb-wordmark" href="' + ROOT + '">' +
+        escHtml(title) + '<span class="nb-period">.</span></a>' +
+        '<details class="nb-menu"><summary aria-label="Menu">' +
+        '<span class="nb-burger"></span></summary>' +
+        '<nav class="nb-menu-panel">' +
+        '<a href="' + ROOT + '">Today</a>' +
+        '<a href="' + ROOT + 'series/">Sections</a>' +
+        '<a href="' + ROOT + 'search/">Search</a>' +
+        '<a href="' + ROOT + 'feed.xml">RSS</a></nav></details></div>';
+      document.body.insertBefore(bar, document.body.firstChild);
+      var foot = document.createElement("footer");
+      foot.className = "nb-footer";
+      foot.innerHTML =
+        '<div class="nb-footer-in"><a href="' + ROOT + 'feed.xml">RSS</a>' +
+        '<a href="https://github.com/RyanSaxe/the-nightly-build">GitHub</a>' +
+        '<button class="nb-appearance" type="button">◐ auto</button></div>';
+      document.body.appendChild(foot);
+    });
+  }
 
   function editionMeta() {
     var el = document.getElementById("nb-meta");
     if (!el) return null;
     try {
-      return JSON.parse(el.textContent);
+      var meta = JSON.parse(el.textContent);
+      return typeof meta === "object" && meta ? meta : null;
     } catch (e) {
       return null;
     }
   }
 
-  function seriesEditions(cat, seriesId) {
-    return cat.editions
-      .filter(function (e) { return e.series === seriesId; })
-      .sort(function (a, b) { return (a.position || 0) - (b.position || 0); });
+  function prettyDate(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+    if (!m) return iso;
+    return MONTHS[parseInt(m[2], 10) - 1] + " " +
+      parseInt(m[3], 10) + ", " + m[1];
   }
 
-  function injectEditionNav(meta) {
+  function buildToc(meta) {
+    var items = [];
+    document.querySelectorAll("section[data-nb-section]").forEach(function (s) {
+      var h = s.querySelector("h2");
+      if (!h) return;
+      if (!s.id) s.id = "nb-" + s.getAttribute("data-nb-section");
+      items.push({ id: s.id, label: h.textContent.replace(/^\s*\d+\s*/, "").trim() });
+    });
+    if (items.length < 3) return;
+    var d = document.createElement("details");
+    d.className = "nb-toc";
+    d.innerHTML = "<summary>Contents</summary><ol>" + items.map(function (i) {
+      return '<li><a href="#' + i.id + '">' + i.label + "</a></li>";
+    }).join("") + "</ol>";
+    var byline = document.querySelector(".nb-byline");
+    if (byline && byline.parentNode) byline.parentNode.insertBefore(d, byline.nextSibling);
+  }
+
+  function normalizeByline() {
+    document.querySelectorAll(".nb-byline span").forEach(function (s) {
+      var txt = s.textContent.trim();
+      if (/min read/i.test(txt)) return;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(txt)) {
+        s.textContent = prettyDate(txt);
+        s.classList.add("nb-date");
+        return;
+      }
+      if (s.classList.contains("nb-date")) return;
+      s.classList.add("nb-hide");
+    });
+  }
+
+  function linkEyebrow(meta) {
+    var eyebrow = document.querySelector(".nb-eyebrow");
+    if (!eyebrow || !meta.series || eyebrow.querySelector("a")) return;
+    var wrap = document.createElement("a");
+    wrap.href = ROOT + "series/" + meta.series + "/";
+    while (eyebrow.firstChild) wrap.appendChild(eyebrow.firstChild);
+    eyebrow.appendChild(wrap);
+  }
+
+  /* citations: tap opens a source sheet; sources gain ↩ backrefs */
+  var veil = null;
+  function closeSheet() {
+    if (veil) { veil.remove(); veil = null; }
+    var s = document.querySelector(".nb-sheet");
+    if (s) s.remove();
+  }
+
+  function openSheet(num, li) {
+    closeSheet();
+    veil = document.createElement("div");
+    veil.className = "nb-veil";
+    veil.addEventListener("click", closeSheet);
+    var body = li.cloneNode(true);
+    body.querySelectorAll(".nb-backref").forEach(function (b) { b.remove(); });
+    body.querySelectorAll("a").forEach(function (a) {
+      a.target = "_blank";
+      a.rel = "noopener";
+    });
+    var sheet = document.createElement("div");
+    sheet.className = "nb-sheet";
+    sheet.innerHTML = '<div class="nb-sheet-label">Source ' + num + "</div>" +
+      '<div class="nb-sheet-body">' + body.innerHTML + "</div>";
+    document.body.appendChild(veil);
+    document.body.appendChild(sheet);
+  }
+
+  function normalizeSources() {
+    document.querySelectorAll(".nb-sources li").forEach(function (li) {
+      var a = li.querySelector("a[data-nb-source]");
+      if (!a || a.textContent.trim().toLowerCase() !== "link") return;
+      var parts = [];
+      var node = li.firstChild;
+      while (node && node !== a) {
+        parts.push(node.textContent);
+        var next = node.nextSibling;
+        li.removeChild(node);
+        node = next;
+      }
+      var title = parts.join("").replace(/[.\s]+$/, "").trim();
+      if (title) a.textContent = title;
+    });
+  }
+
+  function bindCitations() {
+    var firstCiter = {};
+    document.querySelectorAll("sup.nb-cite a").forEach(function (a, i) {
+      var target = (a.getAttribute("href") || "").slice(1);
+      if (!target) return;
+      if (!a.id) a.id = "cite-" + target + (firstCiter[target] ? "-" + i : "");
+      if (!firstCiter[target]) firstCiter[target] = a.id;
+      a.addEventListener("click", function (e) {
+        var li = document.getElementById(target);
+        if (!li) return;
+        e.preventDefault();
+        openSheet(a.textContent.trim(), li);
+      });
+    });
+    Object.keys(firstCiter).forEach(function (target) {
+      var li = document.getElementById(target);
+      if (!li || li.querySelector(".nb-backref")) return;
+      var back = document.createElement("a");
+      back.className = "nb-backref";
+      back.href = "#" + firstCiter[target];
+      back.textContent = "↩";
+      back.setAttribute("aria-label", "back to text");
+      li.appendChild(document.createTextNode(" "));
+      li.appendChild(back);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeSheet();
+    });
+  }
+
+  /* sequences: prev/next when a published neighbor exists; nothing else */
+  function bindSequenceNav(meta) {
+    if (meta.mode !== "sequence" || !meta.order) return;
     catalog().then(function (cat) {
       if (!cat) return;
-      var sibs = seriesEditions(cat, meta.series);
-      var idx = sibs.findIndex(function (e) { return e.slug === meta.slug; });
-      var sinfo = (cat.series || []).find(function (s) { return s.id === meta.series; });
-
+      var sibs = (cat.editions || []).filter(function (e) {
+        return e.series === meta.series && e.order;
+      });
+      var prev = sibs.find(function (e) { return e.order === meta.order - 1; });
+      var next = sibs.find(function (e) { return e.order === meta.order + 1; });
+      if (!prev && !next) return;
+      function link(e, arrow) {
+        return '<a href="' + editionUrl(e) + '">' +
+          (arrow === "l" ? "← " : "") + e.title + (arrow === "r" ? " →" : "") + "</a>";
+      }
       var nav = document.createElement("nav");
-      nav.className = "nb-context-nav nb-wrap";
-
-      var topRow = document.createElement("div");
-      topRow.className = "nb-context-row";
-      topRow.innerHTML =
-        '<a href="' + ROOT + '">← Tonight’s build</a>' +
-        '<a href="' + ROOT + "series/" + meta.series + '/">' +
-        (sinfo ? sinfo.name : meta.series) +
-        (sinfo && meta.mode === "sequence" && sinfo.total
-          ? " · Ed. " + (idx + 1) + " of " + sinfo.total
-          : "") +
-        "</a>";
-      nav.appendChild(topRow);
-
-      if (idx >= 0 && sibs.length > 1) {
-        var pager = document.createElement("div");
-        pager.className = "nb-context-row";
-        var prev = idx > 0 ? sibs[idx - 1] : null;
-        var next = idx < sibs.length - 1 ? sibs[idx + 1] : null;
-        pager.innerHTML =
-          (prev
-            ? '<a href="' + editionUrl(prev) + '">← ' + prev.title + "</a>"
-            : "<span></span>") +
-          (next
-            ? '<a href="' + editionUrl(next) + '">' + next.title + " →</a>"
-            : "<span></span>");
-        nav.appendChild(pager);
-      }
-
-      if (meta.tags && meta.tags.length) {
-        var tags = document.createElement("div");
-        tags.className = "nb-context-row";
-        tags.innerHTML = meta.tags
-          .map(function (t) {
-            return '<a href="' + ROOT + "tags/" + t + '/">#' + t + "</a>";
-          })
-          .join(" ");
-        nav.appendChild(tags);
-      }
-
-      document.body.appendChild(nav);
+      nav.className = "nb-endnav";
+      nav.innerHTML = '<div class="nb-endnav-row">' +
+        (prev ? link(prev, "l") : "<span></span>") +
+        (next ? link(next, "r") : "<span></span>") + "</div>";
+      (document.querySelector("article") || document.body).appendChild(nav);
     });
   }
 
   /* ---------------------------------------------------------------- search */
 
-  function bindSearch() {
-    var box = document.querySelector(".nb-search");
-    if (!box) return;
-    var input = box.querySelector("input");
-    var results = box.querySelector(".nb-search-results");
-    if (!input || !results) return;
+  function fuzzy(needle, hay) {
+    var i = 0;
+    for (var j = 0; j < hay.length && i < needle.length; j++) {
+      if (hay[j] === needle[i]) i++;
+    }
+    if (i < needle.length) return 0;
+    /* tightest window from the end backwards → 1.0 means a contiguous run */
+    var end = -1, start = -1;
+    i = needle.length - 1;
+    for (var k = hay.length - 1; k >= 0 && i >= 0; k--) {
+      if (hay[k] === needle[i]) {
+        if (end < 0) end = k;
+        start = k;
+        i--;
+      }
+    }
+    return needle.length / Math.max(end - start + 1, needle.length);
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function initSearch() {
+    var input = document.getElementById("nb-q");
+    var out = document.getElementById("nb-results");
+    var count = document.getElementById("nb-count");
+    if (!input || !out) return;
+    var docs = [];
+
+    fetch(ROOT + "search-index.json")
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .catch(function () { return []; })
+      .then(function (index) {
+        docs = index.map(function (e) {
+          return {
+            e: e,
+            title: (e.title || "").toLowerCase(),
+            dek: (e.dek || "").toLowerCase(),
+            desk: ((e.section || "") + " " + (e.series_name || e.series || ""))
+              .toLowerCase(),
+            tags: (e.tags || []).join(" ").toLowerCase(),
+            text: (e.text || "").toLowerCase(),
+          };
+        });
+        render();
+        prefill();
+      });
+
+    function prefill() {
+      var p = new URLSearchParams(location.search);
+      if (p.get("q")) { input.value = p.get("q"); render(); }
+      input.focus();
+    }
+
+    function scoreDoc(d, tokens) {
+      /* one search over everything: titles, deks, desks, tags, full text */
+      var total = 0;
+      for (var t = 0; t < tokens.length; t++) {
+        var q = tokens[t], s = 0;
+        if (d.title.indexOf(q) >= 0) s = Math.max(s, 6);
+        else s = Math.max(s, fuzzy(q, d.title) * 3);
+        if (d.dek.indexOf(q) >= 0) s = Math.max(s, 3);
+        if (d.desk.indexOf(q) >= 0) s = Math.max(s, 4);
+        else s = Math.max(s, fuzzy(q, d.desk) * 2);
+        if (d.tags && d.tags.indexOf(q) >= 0) s = Math.max(s, 4);
+        if (d.text && d.text.indexOf(q) >= 0) s = Math.max(s, 2);
+        if (s <= 0.34) return 0;   /* every token must land somewhere */
+        total += s;
+      }
+      return total;
+    }
+
+    function snippet(d, tokens) {
+      for (var t = 0; t < tokens.length; t++) {
+        var i = d.text.indexOf(tokens[t]);
+        if (i >= 0) {
+          var from = Math.max(0, i - 80);
+          var raw = (from > 0 ? "…" : "") +
+            (d.e.text || "").slice(from, i + 100) + "…";
+          var safe = escHtml(raw);
+          tokens.forEach(function (q) {
+            safe = safe.replace(
+              new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig"),
+              "<mark>$1</mark>");
+          });
+          return safe;
+        }
+      }
+      return escHtml(d.e.dek || "");
+    }
+
+    function renderRecent() {
+      /* empty query: the newest editions under month labels, not a dump */
+      var recent = docs.slice(0, 20);
+      if (count) count.textContent = "";
+      var seen = null;
+      out.innerHTML = recent.map(function (d) {
+        var e = d.e;
+        var month = (e.date || "").slice(0, 7);
+        var label = "";
+        if (month && month !== seen) {
+          seen = month;
+          var mm = MONTHS[parseInt(month.slice(5), 10) - 1] || month;
+          label = '<span class="nb-month-label">' + mm + " " +
+            month.slice(0, 4) + "</span>";
+        }
+        return label + resultRow(d, []);
+      }).join("");
+    }
+
+    function resultRow(d, tokens) {
+      var e = d.e;
+      var kicker = e.section
+        ? e.section + " — " + (e.series_name || e.series)
+        : (e.series_name || e.series);
+      var body = tokens.length && d.text
+        ? snippet(d, tokens) : escHtml(e.dek || "");
+      return '<a class="nb-item" href="' + editionUrl(e) + '">' +
+        '<div class="nb-kicker">' + escHtml(kicker) + "</div>" +
+        "<h3>" + escHtml(e.title || e.slug) + "</h3>" +
+        '<p class="nb-snippet">' + body + "</p>" +
+        '<div class="nb-meta"><span>' + (e.reading_minutes || "?") +
+        " min read</span><span>" +
+        escHtml(String(e.template || "").charAt(0).toUpperCase() +
+                String(e.template || "").slice(1)) + "</span></div></a>";
+    }
+
+    function render() {
+      var q = (input.value || "").trim().toLowerCase();
+      var tokens = q ? q.split(/\s+/) : [];
+      if (!tokens.length) return renderRecent();
+      var hits = docs.map(function (d) {
+        return { d: d, score: scoreDoc(d, tokens) };
+      }).filter(function (h) { return h.score > 0; });
+      hits.sort(function (a, b) { return b.score - a.score; });
+      if (count) {
+        count.textContent = hits.length + " of " + docs.length + " edition" +
+          (docs.length !== 1 ? "s" : "");
+      }
+      out.innerHTML = hits.map(function (h) {
+        return resultRow(h.d, tokens);
+      }).join("") ||
+        '<div class="nb-results-count" style="padding:20px 0">No matches.</div>';
+    }
 
     var timer = null;
     input.addEventListener("input", function () {
       clearTimeout(timer);
-      timer = setTimeout(function () {
-        var q = input.value.trim().toLowerCase();
-        if (!q) { results.innerHTML = ""; return; }
-        catalog().then(function (cat) {
-          if (!cat) return;
-          var hits = cat.editions.filter(function (e) {
-            return (
-              (e.title || "").toLowerCase().indexOf(q) >= 0 ||
-              (e.dek || "").toLowerCase().indexOf(q) >= 0 ||
-              (e.series || "").toLowerCase().indexOf(q) >= 0 ||
-              (e.tags || []).some(function (t) {
-                return t.toLowerCase().indexOf(q) >= 0;
-              })
-            );
-          }).slice(0, 12);
-          results.innerHTML = hits.length
-            ? hits.map(function (e) {
-                return (
-                  '<a href="' + editionUrl(e) + '"><span class="t">' + e.title +
-                  '</span><br><span class="m">' + e.series + " · " + e.date +
-                  "</span></a>"
-                );
-              }).join("")
-            : '<div class="nb-search-empty">no matches</div>';
-        });
-      }, 120);
-    });
-    document.addEventListener("click", function (ev) {
-      if (!box.contains(ev.target)) results.innerHTML = "";
-    });
-  }
-
-  /* ------------------------------------------------------------- deck keys */
-
-  function bindDeck() {
-    var deck = document.querySelector(".nb-deck");
-    if (!deck) return;
-    document.addEventListener("keydown", function (ev) {
-      if (ev.key !== "ArrowRight" && ev.key !== "ArrowLeft") return;
-      var slide = deck.querySelector(".nb-slide");
-      if (!slide) return;
-      ev.preventDefault();
-      var dx = slide.getBoundingClientRect().width + 14;
-      deck.scrollBy({
-        left: ev.key === "ArrowRight" ? dx : -dx,
-        behavior: "smooth",
-      });
+      timer = setTimeout(render, 90);
     });
   }
 
   /* ------------------------------------------------------------------ init */
 
-  function init() {
+  function bindChrome() {
     document.querySelectorAll(".nb-appearance").forEach(function (btn) {
+      if (btn.dataset.nbBound) return;
+      btn.dataset.nbBound = "1";
       btn.addEventListener("click", cycleAppearance);
     });
-    applyAppearance(getAppearance());
+    applyAppearance(hashMode() || getAppearance());
+    var menu = document.querySelector(".nb-menu");
+    if (menu && !menu.dataset.nbBound) {
+      menu.dataset.nbBound = "1";
+      document.addEventListener("click", function (e) {
+        if (menu.open && !(e.target.closest && e.target.closest(".nb-menu"))) {
+          menu.open = false;
+        }
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") menu.open = false;
+      });
+    }
+    document.querySelectorAll('a[href^="http"]').forEach(function (a) {
+      if (a.host === location.host) return;   /* internal: stay in-tab */
+      a.target = "_blank";
+      a.rel = "noopener";
+    });
+  }
+
+  function init() {
+    bindChrome();
+    renderCharts();
 
     var meta = editionMeta();
-    if (meta) injectEditionNav(meta);
+    if (meta) {
+      injectChrome().then(bindChrome);
+      if (meta.template !== "deck") buildToc(meta);
+      normalizeByline();
+      linkEyebrow(meta);
+      normalizeSources();
+      bindCitations();
+      bindSequenceNav(meta);
+    }
 
-    renderCharts();
-    bindSearch();
-    bindDeck();
+    initSearch();
   }
 
   if (document.readyState === "loading") {

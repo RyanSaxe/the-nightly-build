@@ -30,7 +30,7 @@ CITE_RULES = {"per-section", "per-item", "per-slide"}
 SERIES_KEYS = {"name", "mode", "template", "templates", "prompt", "autopublish",
                "strict", "min_sources", "words", "items", "tags", "consult",
                "required_docs", "sources_exclusive", "cadence", "paused",
-               "selection"}
+               "selection", "section"}
 DAY_NAMES = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 CADENCE_WORDS = {"daily", "weekdays", "weekends"}
 SELECTIONS = {"in-order", "random"}
@@ -63,6 +63,8 @@ def check_site(repo, errors):
         errors.append(f"{label}/site.yaml: theme file not found: {theme!r}")
     if site.get("appearance", "auto") not in ("auto", "light", "dark"):
         errors.append(f"{label}/site.yaml: 'appearance' must be auto | light | dark")
+    if site.get("front", "comfortable") not in ("comfortable", "compact"):
+        errors.append(f"{label}/site.yaml: 'front' must be comfortable | compact")
 
 
 def check_registry(repo, errors):
@@ -138,6 +140,10 @@ def check_series(repo, registry, errors):
                           f"weekends | a list of day names {list(DAY_NAMES)}")
         if not isinstance(cfg.get("paused", False), bool):
             errors.append(f"{where}: 'paused' must be true or false")
+        section = cfg.get("section")
+        if section is not None and (not isinstance(section, str)
+                                    or not section.strip()):
+            errors.append(f"{where}: 'section' must be a non-empty string")
         selection = cfg.get("selection")
         if selection is not None:
             if selection not in SELECTIONS:
