@@ -37,19 +37,26 @@ GitHub Actions running the editor and the press, and Pages serving the result.
 
 1. Fork (or use a test fork of) this repo; clone; run `./setup.sh`. Confirm
    the `library` branch now carries `.github/workflows/` (the seeded triggers).
-2. On the upstream repo the shipped dogfood pair is the assignment
-   (`semiconductors` = collection, `ai-briefs` = rolling). On a fork, setup
-   clears them — configure your own collection + rolling pair instead.
+2. On the upstream repo the shipped six-series stress set is the assignment —
+   one series per template, arranged so the two nights differ: night 1 = all
+   six templates (dossier, lesson №1, brief, paper, chronicle №1, deck);
+   night 2 = the continuing series only (lesson №2, chronicle №2, brief). It
+   also exercises the whole source policy: `required_docs` (ai-rules'
+   committed NIST excerpt), `consult` (frontier-compute, landmark-papers),
+   and `sources_exclusive` (ai-rules). On a fork, setup clears all of it —
+   configure your own series instead.
 3. Connect the repo at claude.ai/code, then create ONE press-level Routine per
    `harnesses/claude-code.md` — nightly cadence, the generic schedule prompt. (On a
    fork, also enable workflows once in the Actions tab.)
-4. **Night 1 checklist:** the single run opens two PRs titled `nb: …` (one per
-   series) → `nightly-build-check` passes → auto-merge → `nightly-build-publish`
-   deploys → the Pages front page shows a two-edition build → `feed.xml` has
-   both entries.
-5. **Night 2 checklist:** the rolling series publishes the new date; the
-   collection series publishes its next item; night 1's build page is
-   unchanged; feeds updated.
+4. **Night 1 checklist:** the single run opens six PRs titled `nb: …` (one per
+   series) → `nightly-build-check` passes on each → auto-merge → the press
+   deploys → the front page shows a six-edition build with every template →
+   the ai-rules deck cites ONLY its declared set, including the
+   `data-nb-required="nist-ai-rmf"` entry → `feed.xml` has all six.
+5. **Night 2 checklist:** exactly three PRs (lesson №2, chronicle №2, the new
+   date's brief); the finished series correctly publish nothing; night 1's
+   build page is unchanged; the lesson recaps lesson №1 concretely; feeds and
+   series progress updated.
 6. Delete one published edition file on `library` and confirm the next run
    rewrites it (the documented regeneration escape hatch).
 

@@ -27,13 +27,19 @@ python3 -c 'import yaml' 2>/dev/null ||
 	die "PyYAML is required: pip install pyyaml (or: uv pip install pyyaml)"
 
 # 1b. Forks must not run the upstream dogfood series --------------------------
+dogfood_series=(ai-history transformers-101 frontier-compute landmark-papers
+	ai-rules daily-brief)
 is_fork=$(gh repo view --json isFork -q .isFork 2>/dev/null || print false)
-if [[ "$is_fork" == "true" ]] &&
-	[[ -d series/semiconductors || -d series/ai-briefs ]]; then
-	warn "the upstream dogfood series are still configured on this fork."
-	warn "they are the upstream project's own assignments — remove them and"
-	warn "add your own series before scheduling anything:"
-	warn "  rm -r series/semiconductors series/ai-briefs series/_tags"
+if [[ "$is_fork" == "true" ]]; then
+	for s in "${dogfood_series[@]}"; do
+		if [[ -d "series/$s" ]]; then
+			warn "upstream dogfood series are still configured on this fork."
+			warn "they are the upstream project's own assignments — remove them"
+			warn "and add your own series before scheduling anything:"
+			warn "  rm -r series/*"
+			break
+		fi
+	done
 fi
 
 # 2. Configuration validates before anything else ----------------------------

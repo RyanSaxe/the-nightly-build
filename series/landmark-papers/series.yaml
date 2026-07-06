@@ -1,0 +1,17 @@
+# Critical appraisals of papers that defined the field.
+name: Landmark Papers
+mode: collection
+template: paper
+prompt: prompt.md
+autopublish: true
+strict: false
+consult:
+  # Series-level consult: read the paper itself before anything written about it.
+  - https://arxiv.org/
+items:
+  - slug: attention-is-all-you-need
+    title: Attention Is All You Need (2017)
+  # - slug: alphago
+  #   title: Mastering the Game of Go (2016)
+  # - slug: scaling-laws
+  #   title: Scaling Laws for Neural Language Models (2020)
