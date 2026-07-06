@@ -26,6 +26,16 @@ ok "repo: $repo"
 python3 -c 'import yaml' 2>/dev/null ||
 	die "PyYAML is required: pip install pyyaml (or: uv pip install pyyaml)"
 
+# 1b. Forks must not run the upstream dogfood series --------------------------
+is_fork=$(gh repo view --json isFork -q .isFork 2>/dev/null || print false)
+if [[ "$is_fork" == "true" ]] &&
+	[[ -d series/semiconductors || -d series/ai-briefs ]]; then
+	warn "the upstream dogfood series are still configured on this fork."
+	warn "they are the upstream project's own assignments — remove them and"
+	warn "add your own series before scheduling anything:"
+	warn "  rm -r series/semiconductors series/ai-briefs series/_tags"
+fi
+
 # 2. Configuration validates before anything else ----------------------------
 say "validating site.yaml, templates/registry.yaml, series/*/series.yaml"
 python3 engine/validate_config.py || die "fix the configuration above, then re-run"
