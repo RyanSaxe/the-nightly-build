@@ -628,18 +628,10 @@ def render_tag_page(site, tag, refs, editions, series_cfgs):
 
 
 def render_search_page(site):
-    body = ('<div class="nb-pagehead"><h1>Search</h1>'
-            '<span class="nb-pagehead-facts">the whole library, as it grows'
-            "</span></div>"
+    body = ('<div class="nb-pagehead"><h1>Search</h1></div>'
             '<div class="nb-searchbox"><input id="nb-q" type="search" '
             'placeholder="Fuzzy-search the library…" '
             'aria-label="Search the library" autocomplete="off"></div>'
-            '<div class="nb-chips" id="nb-scopes">'
-            '<a href="#" class="on" data-scope="all">Everything</a>'
-            '<a href="#" data-scope="titles">Titles &amp; deks</a>'
-            '<a href="#" data-scope="desks">Desks</a>'
-            '<a href="#" data-scope="tags">Tags</a>'
-            '<a href="#" data-scope="text">Full text</a></div>'
             '<div class="nb-results-count" id="nb-count"></div>'
             '<div class="nb-results" id="nb-results"></div>')
     return page(site, f"Search — {site['title']}", body, depth=1,

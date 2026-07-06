@@ -427,11 +427,9 @@
 
   function initSearch() {
     var input = document.getElementById("nb-q");
-    var chips = document.getElementById("nb-scopes");
     var out = document.getElementById("nb-results");
     var count = document.getElementById("nb-count");
     if (!input || !out) return;
-    var scope = "all";
     var docs = [];
 
     fetch(ROOT + "search-index.json")
@@ -455,36 +453,22 @@
 
     function prefill() {
       var p = new URLSearchParams(location.search);
-      if (p.get("scope")) setScope(p.get("scope"));
       if (p.get("q")) { input.value = p.get("q"); render(); }
       input.focus();
     }
 
-    function setScope(s) {
-      scope = s;
-      if (!chips) return;
-      chips.querySelectorAll("a").forEach(function (c) {
-        c.classList.toggle("on", c.getAttribute("data-scope") === s);
-      });
-    }
-
-    function inScope(name) { return scope === "all" || scope === name; }
-
     function scoreDoc(d, tokens) {
+      /* one search over everything: titles, deks, desks, tags, full text */
       var total = 0;
       for (var t = 0; t < tokens.length; t++) {
         var q = tokens[t], s = 0;
-        if (inScope("titles")) {
-          if (d.title.indexOf(q) >= 0) s = Math.max(s, 6);
-          else s = Math.max(s, fuzzy(q, d.title) * 3);
-          if (d.dek.indexOf(q) >= 0) s = Math.max(s, 3);
-        }
-        if (inScope("desks")) {
-          if (d.desk.indexOf(q) >= 0) s = Math.max(s, 4);
-          else s = Math.max(s, fuzzy(q, d.desk) * 2);
-        }
-        if (inScope("tags") && d.tags && d.tags.indexOf(q) >= 0) s = Math.max(s, 4);
-        if (inScope("text") && d.text && d.text.indexOf(q) >= 0) s = Math.max(s, 2);
+        if (d.title.indexOf(q) >= 0) s = Math.max(s, 6);
+        else s = Math.max(s, fuzzy(q, d.title) * 3);
+        if (d.dek.indexOf(q) >= 0) s = Math.max(s, 3);
+        if (d.desk.indexOf(q) >= 0) s = Math.max(s, 4);
+        else s = Math.max(s, fuzzy(q, d.desk) * 2);
+        if (d.tags && d.tags.indexOf(q) >= 0) s = Math.max(s, 4);
+        if (d.text && d.text.indexOf(q) >= 0) s = Math.max(s, 2);
         if (s <= 0.34) return 0;   /* every token must land somewhere */
         total += s;
       }
@@ -534,7 +518,7 @@
       var kicker = e.section
         ? e.section + " — " + (e.series_name || e.series)
         : (e.series_name || e.series);
-      var body = tokens.length && scope !== "titles" && d.text
+      var body = tokens.length && d.text
         ? snippet(d, tokens) : escHtml(e.dek || "");
       return '<a class="nb-item" href="' + editionUrl(e) + '">' +
         '<div class="nb-kicker">' + escHtml(kicker) + "</div>" +
@@ -569,15 +553,6 @@
       clearTimeout(timer);
       timer = setTimeout(render, 90);
     });
-    if (chips) {
-      chips.addEventListener("click", function (e) {
-        var a = e.target.closest && e.target.closest("[data-scope]");
-        if (!a) return;
-        e.preventDefault();
-        setScope(a.getAttribute("data-scope"));
-        render();
-      });
-    }
   }
 
   /* ------------------------------------------------------------------ init */
