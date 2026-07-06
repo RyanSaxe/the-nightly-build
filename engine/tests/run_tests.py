@@ -451,16 +451,6 @@ else:
     FAIL.append("template lookup precedence")
     print("  FAIL template lookup precedence")
 
-print("== press-example fallback ==")
-fb_repo = pathlib.Path(tempfile.mkdtemp()) / "repo"
-shutil.copytree(TESTREPO, fb_repo)
-(fb_repo / "press").rename(fb_repo / "press-example")
-expect("engine resolves press-example when press/ is absent",
-       run_local(VALID, "semiconductors", repo=str(fb_repo)), blocks=0)
-(fb_repo / "press-example").rename(fb_repo / "press")
-expect("press/ wins when both could exist",
-       run_local(VALID, "semiconductors", repo=str(fb_repo)), blocks=0)
-
 print("== PR mode (real git repo) ==")
 
 
@@ -554,7 +544,13 @@ expect("PR modifying engine code", run_pr(mutate=modify_engine),
 
 print("== validate_config ==")
 vc = REPO / "engine" / "validate_config.py"
-rc_good = subprocess.run([sys.executable, str(vc), "--repo", str(REPO)],
+# the shipped examples/ must validate when used as a press
+ex_repo = pathlib.Path(tempfile.mkdtemp()) / "repo"
+ex_repo.mkdir()
+shutil.copytree(REPO / "templates", ex_repo / "templates")
+shutil.copytree(REPO / "engine" / "assets", ex_repo / "engine" / "assets")
+shutil.copytree(REPO / "examples", ex_repo / "press")
+rc_good = subprocess.run([sys.executable, str(vc), "--repo", str(ex_repo)],
                          capture_output=True).returncode
 broken = pathlib.Path(tempfile.mkdtemp()) / "repo"
 shutil.copytree(TESTREPO, broken)
@@ -562,7 +558,7 @@ by = pathlib.Path(broken) / "press" / "series" / "semiconductors" / "series.yaml
 by.write_text(by.read_text().replace("mode: collection", "mode: rolling"))
 rc_bad = subprocess.run([sys.executable, str(vc), "--repo", broken],
                         capture_output=True).returncode
-for name, cond in [("valid repo config passes", rc_good == 0),
+for name, cond in [("shipped examples validate as a press", rc_good == 0),
                    ("illegal mode/template pairing fails", rc_bad == 1)]:
     if cond:
         PASS += 1

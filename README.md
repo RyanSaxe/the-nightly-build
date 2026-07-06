@@ -35,10 +35,10 @@ searchable, owned by you, served free from GitHub Pages.
    plan.)
 2. **Clone it and say "set me up"** to your agent in the checkout. Setup
    scaffolds your own `press/` — series, voice, title — and bootstraps the
-   press (library branch, trigger workflows, Pages, auto-merge). Nothing is
-   deleted: `press-example/` (upstream's live config) stays put as a working
-   reference. Then enable workflows once in your fork's Actions tab. No agent
-   handy? Run `./setup.sh` and edit `press/` by hand.
+   press (library branch, trigger workflows, Pages, auto-merge). A complete
+   working configuration ships in `examples/` to copy from. Then enable
+   workflows once in your fork's Actions tab. No agent handy? Run
+   `./setup.sh` and edit `press/` by hand.
 3. **Rehearse:** ask for a **press check** — a full research run rendered to
    a locally served newsstand, no PR, so you can tune prompts before
    scheduling.
@@ -87,10 +87,10 @@ python3 engine/tests/run_tests.py        # proof + builder + end-to-end suites
 python3 engine/validate_config.py        # validate press/ configuration
 ```
 
-**This repo dogfoods itself.** `press-example/` is the upstream night
-shift's real assignment sheet (the engine falls back to it when no `press/`
-exists), so the maintainer's Pages site is a live demo of exactly what a
-fork produces — and every config file in it is a working example.
+**This repo is engine-only.** It runs no press and publishes no library —
+even the maintainer dogfoods by forking it like any other user, which keeps
+the fork path honest. `examples/` ships a complete working configuration
+(six series, one per template, the full source policy) as documentation.
 
 MIT licensed. No accounts, no backend, no analytics — `catalog.json` and the
 Atom feeds *are* the API.

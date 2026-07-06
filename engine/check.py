@@ -35,8 +35,6 @@ import subprocess
 import sys
 from html.parser import HTMLParser
 
-from presspath import press_root
-
 try:
     import yaml
 except ImportError:  # pragma: no cover
@@ -272,7 +270,7 @@ def load_registry(repo):
     shipped id); entries are replaced whole, not deep-merged.
     """
     registry = load_yaml(os.path.join(repo, "templates", "registry.yaml")) or {}
-    press_path = os.path.join(press_root(repo), "templates", "registry.yaml")
+    press_path = os.path.join(repo, "press", "templates", "registry.yaml")
     if os.path.isfile(press_path):
         registry.update(load_yaml(press_path) or {})
     return registry
@@ -280,7 +278,7 @@ def load_registry(repo):
 
 def find_template(repo, template_id):
     """User templates shadow shipped ones: press/templates/ wins."""
-    for base in (os.path.join(press_root(repo), "templates"),
+    for base in (os.path.join(repo, "press", "templates"),
                  os.path.join(repo, "templates")):
         path = os.path.join(base, f"{template_id}.html")
         if os.path.isfile(path):
@@ -289,7 +287,7 @@ def find_template(repo, template_id):
 
 
 def load_series(repo, series_id):
-    path = os.path.join(press_root(repo), "series", series_id, "series.yaml")
+    path = os.path.join(repo, "press", "series", series_id, "series.yaml")
     if not os.path.isfile(path):
         return None, path
     return load_yaml(path), path

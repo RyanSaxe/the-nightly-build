@@ -35,16 +35,16 @@ Phase 6 review caught and drove four production fixes:
 What the automation cannot prove: a real harness schedule firing unattended,
 GitHub Actions running the editor and the press, and Pages serving the result.
 
-1. Fork (or use a test fork of) this repo; clone; run `./setup.sh`. Confirm
-   the `library` branch now carries `.github/workflows/` (the seeded triggers).
-2. On the upstream repo the shipped six-series stress set is the assignment —
-   one series per template, arranged so the two nights differ: night 1 = all
-   six templates (dossier, lesson №1, brief, paper, chronicle №1, deck);
+1. Fork this repo (the canonical repo is engine-only and refuses setup);
+   clone the fork; run `./setup.sh`. Confirm the `library` branch now carries
+   `.github/workflows/` (the seeded triggers).
+2. Copy the shipped stress set into the fork's press: `cp -r examples/* press/`.
+   Six series, one per template, arranged so the two nights differ: night 1 =
+   all six templates (dossier, lesson №1, brief, paper, chronicle №1, deck);
    night 2 = the continuing series only (lesson №2, chronicle №2, brief). It
    also exercises the whole source policy: `required_docs` (ai-rules'
    committed NIST excerpt), `consult` (frontier-compute, landmark-papers),
-   and `sources_exclusive` (ai-rules). On a fork, setup scaffolds `press/`
-   (press-example/ stays put) — configure your own series there instead.
+   and `sources_exclusive` (ai-rules). Commit press/ to the fork's main.
 3. Connect the repo at claude.ai/code, then create ONE press-level Routine per
    `harnesses/claude-code.md` — nightly cadence, the generic schedule prompt. (On a
    fork, also enable workflows once in the Actions tab.)

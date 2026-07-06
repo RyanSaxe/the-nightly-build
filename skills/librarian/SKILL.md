@@ -67,7 +67,7 @@ anything. Show the plan; get a yes.
 
 Then write:
 
-- `press/series/<id>/series.yaml` — crib from `press-example/series/` for
+- `press/series/<id>/series.yaml` — crib from `examples/series/` for
   the canonical shapes. Defaults: `autopublish: true`, `strict: false`.
 - `press/series/<id>/prompt.md` — the series' editorial instructions: subject
   frame, emphases, recurring angles. It specializes the voice layers; it never
@@ -115,8 +115,7 @@ Schedule prompt template (fill `<repo>`; keep ≤ ~130 words):
 
 > You are the night shift for The Nightly Build repo `<repo>`. Read
 > `PROTOCOL.md` on main and follow it exactly. Fallback summary: for every
-> series configured under `press/series/` (else `press-example/series/`) on
-> main, list `library/<series>/` on the
+> series configured under `press/series/` on main, list `library/<series>/` on the
 > `library` branch; if the series has an unpublished next item per its
 > `series.yaml`, research it deeply with cited sources; render ONE
 > self-contained HTML file from the series template with the embedded

@@ -1,8 +1,7 @@
 # Customization — look, voice, and your own templates
 
 Everything here happens inside `press/` (see [press.md](press.md)); engine
-updates never touch it. Working examples of all of it live in
-`press-example/` — upstream's own live configuration.
+updates never touch it. Working examples of all of it live in `examples/`.
 
 ## Look: themes
 

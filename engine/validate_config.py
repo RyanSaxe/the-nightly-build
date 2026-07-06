@@ -15,8 +15,6 @@ import os
 import re
 import sys
 
-from presspath import press_root
-
 try:
     import yaml
 except ImportError:  # pragma: no cover
@@ -37,9 +35,8 @@ def load(path):
 
 
 def check_site(repo, errors):
-    root = press_root(repo)
-    label = os.path.basename(root)
-    path = os.path.join(root, "site.yaml")
+    label = "press"
+    path = os.path.join(repo, "press", "site.yaml")
     if not os.path.isfile(path):
         return  # optional: the engine ships defaults
     site = load(path) or {}
@@ -60,7 +57,7 @@ def check_registry(repo, errors):
         errors.append("templates/registry.yaml is missing")
         return {}
     registry = load(path) or {}
-    press_path = os.path.join(press_root(repo), "templates", "registry.yaml")
+    press_path = os.path.join(repo, "press", "templates", "registry.yaml")
     if os.path.isfile(press_path):
         registry.update(load(press_path) or {})
     for tid, entry in registry.items():
@@ -88,7 +85,7 @@ def check_registry(repo, errors):
                     and all(isinstance(x, int) for x in band)
                     and band[0] <= band[1]):
                 errors.append(f"{where}: '{band_key}' must be [low, high] integers")
-        candidates = [os.path.join(press_root(repo), "templates", f"{tid}.html"),
+        candidates = [os.path.join(repo, "press", "templates", f"{tid}.html"),
                       os.path.join(repo, "templates", f"{tid}.html")]
         if not any(os.path.isfile(c) for c in candidates):
             errors.append(f"{where}: no {tid}.html in the press templates "
@@ -97,8 +94,8 @@ def check_registry(repo, errors):
 
 
 def check_series(repo, registry, errors):
-    label = os.path.basename(press_root(repo))
-    root = os.path.join(press_root(repo), "series")
+    label = "press"
+    root = os.path.join(repo, "press", "series")
     if not os.path.isdir(root):
         return
     for sid in sorted(os.listdir(root)):

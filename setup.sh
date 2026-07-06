@@ -26,13 +26,14 @@ ok "repo: $repo"
 python3 -c 'import yaml' 2>/dev/null ||
 	die "PyYAML is required: pip install pyyaml (or: uv pip install pyyaml)"
 
-# 1b. Scaffold press/ (your press) — never touches press-example/ -------------
-# The engine reads press/ if it exists, else press-example/ (upstream's own
-# dogfood press, which doubles as the living example). Every press except the
-# canonical upstream repo gets its own press/; press-example/ stays untouched
-# so merges from upstream remain clean.
+# 1b. This repo is a press; the canonical repo is engine-only ------------------
 UPSTREAM_REPO="RyanSaxe/the-nightly-build"
-if [[ "$repo" != "$UPSTREAM_REPO" && ! -d press ]]; then
+if [[ "$repo" == "$UPSTREAM_REPO" ]]; then
+	die "this is the engine repo — it runs no press. Fork it, then run setup there."
+fi
+
+# 1c. Scaffold press/ (your side of the repo) ---------------------------------
+if [[ ! -d press ]]; then
 	say "scaffolding press/ (your side of the repo)"
 	mkdir -p press/series press/themes press/templates
 	cat >press/site.yaml <<'YAML'
@@ -58,12 +59,10 @@ MD
 
 Everything here is yours; everything outside is the engine. Configure series
 under series/, your voice in editorial.md, your look via site.yaml and
-themes/. Crib working examples from press-example/ (upstream's own press) —
-and leave press-example/ in place: it is inert while press/ exists, and
-deleting it would make future engine merges noisier.
+themes/. Copy working examples from examples/ to get started.
 MD
 	ok "press/ scaffolded — configure it (or ask your agent to 'set me up')"
-elif [[ "$repo" != "$UPSTREAM_REPO" ]]; then
+else
 	ok "press/ exists"
 fi
 
