@@ -599,7 +599,7 @@ for sid, (mode, template, items) in TPL_SERIES.items():
         f"autopublish: true\nstrict: false\n{items}\n"
     )
 for name, fixture, sid, slug in [
-    ("chronicle-form article", make_fixtures.chronicle(), "histories", "unix"),
+    ("chronicle-shaped article", make_fixtures.chronicle(), "histories", "unix"),
 ]:
     rep = run_local(fixture, sid, slug=slug, repo=tpl_repo)
     expect(
@@ -769,7 +769,7 @@ LESSON = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>Hash Functions</title>
 <script type="application/json" id="nb-meta">
 {{"protocol": "1.0", "series": "crypto", "slug": "hashes",
-  "template": "lesson", "form": "Lesson", "title": "Hash Functions",
+  "template": "lesson", "title": "Hash Functions",
   "mode": "sequence", "order": 1, "date": "2026-07-06", "tags": [],
   "sources": 5, "words": 1560, "reading_minutes": 7, "dek": "Hashes.",
   "harness": "test-fixture", "model": "claude-fable-5"}}
@@ -791,7 +791,7 @@ expect(
 print("== flex sections (agent-named outline) ==")
 
 
-def flex_edition(sections, form="Field Notes"):
+def flex_edition(sections):
     body = "".join(
         f'<section data-nb-section="{name}"><p>{make_fixtures.LOREM * 7}'
         f"{cite}</p></section>"
@@ -803,7 +803,7 @@ def flex_edition(sections, form="Field Notes"):
 {{"protocol": "1.0", "series": "notes", "slug": "first-notes",
   "template": "fieldnotes", "title": "First Notes", "mode": "collection",
   "order": null, "date": "2026-07-06", "tags": [], "sources": 5,
-  "words": 460, "reading_minutes": 2, "dek": "Notes.", "form": "{form}",
+  "words": 460, "reading_minutes": 2, "dek": "Notes.",
   "harness": "test-fixture", "model": "claude-fable-5"}}
 </script>
 </head><body>{body}
@@ -828,7 +828,6 @@ expect(
         repo=ut_repo,
     ),
     blocks=0,
-    must_not=["W-FORM-LABEL"],
 )
 expect(
     "too few flex sections blocks",
@@ -870,20 +869,6 @@ expect(
     ),
     blocks=0,
     must_have=["W-CITE-DENSITY"],
-)
-expect(
-    "long form label warns",
-    run_local(
-        flex_edition(
-            [("the-lab", CITE1), ("the-bet", CITE2)],
-            form="A Very Long Form Label",
-        ),
-        "notes",
-        slug="first-notes",
-        repo=ut_repo,
-    ),
-    blocks=0,
-    must_have=["W-FORM-LABEL"],
 )
 expect(
     "cite_exempt exempts a registry-declared section (not just sources)",

@@ -392,15 +392,6 @@ def validate_meta_fields(meta, rep):
     need("mode", str, enum=["collection", "sequence", "rolling", "open"])
     need("date", str, pattern=DATE_RE.pattern)
     need("dek", str)
-    form = meta.get("form")
-    if form is not None:
-        if not isinstance(form, str):
-            rep.block("B-META-PARSE", "nb-meta 'form' must be a string")
-        elif len(form) > 24 or len(form.split()) > 2:
-            rep.warn(
-                "W-FORM-LABEL",
-                f"form label '{form}' should be one or two short words",
-            )
     need("sources", int)
     need("harness", str)
     need("model", str)

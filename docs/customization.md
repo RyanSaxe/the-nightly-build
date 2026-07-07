@@ -77,8 +77,8 @@ entry > press/series/<id>/prompt.md > tag fragments > item prompt
 User templates are first class: the proof enforces whatever a registry
 entry declares, so a template you define gets the same validation, CI, and
 site treatment as the shipped two. Reach for one when a desk needs
-structure enforced rather than described; for most genres, a form written
-into the series prompt on `article` is enough (see [series.md](series.md)).
+structure enforced rather than described; for most genres, describing it in
+the series prompt on `article` is enough (see [series.md](series.md)).
 
 Registry entries come in two styles:
 
@@ -120,7 +120,7 @@ walkthrough cannot drift from what the proof enforces.
 eyebrow, title, dek, byline), then lay out one
 `<section data-nb-section="...">` per declared section. The objectives
 box, check box, and bridge components in `templates/FURNITURE.md` carry
-the form. Template files shadow shipped ones by filename. The sandbox
+the lesson. Template files shadow shipped ones by filename. The sandbox
 applies unchanged: no scripts beyond the JSON blocks and the engine
 runtime, citations as `sup.nb-cite` anchors into numbered source entries.
 

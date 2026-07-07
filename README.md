@@ -11,17 +11,17 @@ a pull request can be your night shift.
 Editions are original research artifacts, not summaries. Two templates ship
 with the engine: `article` (prose in sections, with an outline the agent
 designs per topic) and `brief` (a cited item list). Genres like dossiers,
-chronicles, lessons, and appraisals are forms: prompt patterns plus shared
-furniture, labeled per edition on the front page. You can define your own
-forms in prose, and your own templates when you want structure enforced.
-Over weeks the nightly output accumulates into a permanent, searchable
-library that you own and that GitHub serves for free.
+chronicles, lessons, and appraisals live in your series prompts: a prompt
+pattern plus shared furniture on top of `article`, not a template the engine
+knows. Define your genres in prose, and your own templates when you want
+structure enforced. Over weeks the nightly output accumulates into a
+permanent, searchable library that you own and that GitHub serves for free.
 
 ## What it looks like
 
 One 800px column, a ruled front-page table, warm light and dark themes, and
-editions labeled by the form the agent chose. Rendered from the example
-configuration; regenerate after look changes.
+each edition's reading time and source count on its card. Rendered from the
+example configuration; regenerate after look changes.
 
 <p>
 <img src="assets/screenshots/front-light.png" width="49%" alt="The front page in light mode">
@@ -77,7 +77,7 @@ Series live in `press/series/<id>/` as a `series.yaml` plus a prompt file.
 Four modes: `collection` (an item list, published front to back or at
 random), `sequence` (an ordered course), `rolling` (one edition per date),
 and `open` (you describe a beat, the agent picks each night's topic and
-form). Cadence, pausing, sections, source requirements, and quality bands
+genre). Cadence, pausing, sections, source requirements, and quality bands
 are one-line settings. See [docs/series.md](docs/series.md).
 
 Sources can be constrained per series: `required_docs` are committed files
