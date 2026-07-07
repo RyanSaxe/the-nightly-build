@@ -39,8 +39,8 @@ max(1, round(words / 230)); appearance persists under the localStorage key
 """
 
 import argparse
-import hashlib
 import datetime as dt
+import hashlib
 import html
 import json
 import os
@@ -70,7 +70,7 @@ esc = html.escape
 
 
 def load_yaml(path):
-    with open(path, "r", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         return yaml.safe_load(fh) or {}
 
 
@@ -100,7 +100,7 @@ def load_series_configs(repo):
 
 
 def read_meta(path):
-    with open(path, "r", encoding="utf-8", errors="replace") as fh:
+    with open(path, encoding="utf-8", errors="replace") as fh:
         m = META_RE.search(fh.read())
     if not m:
         return None
@@ -801,7 +801,7 @@ BODY_RE = re.compile(r"<body[^>]*>([\s\S]*?)</body>", re.I)
 
 def edition_text(path):
     # Readable text of an edition, for the search index.
-    with open(path, "r", encoding="utf-8", errors="replace") as fh:
+    with open(path, encoding="utf-8", errors="replace") as fh:
         raw = fh.read()
     m = BODY_RE.search(raw)
     text = TEXT_STRIP_RE.sub(" ", m.group(1) if m else raw)
@@ -853,7 +853,7 @@ def feed_content_html(path, base_url):
     absolutized; oversized bodies return empty so the entry falls back
     to its summary.
     """
-    with open(path, "r", encoding="utf-8", errors="replace") as fh:
+    with open(path, encoding="utf-8", errors="replace") as fh:
         raw = fh.read()
     m = re.search(r"<body[^>]*>([\s\S]*?)</body>", raw, re.I)
     body = FEED_STRIP_RE.sub(" ", m.group(1) if m else raw)
@@ -1004,7 +1004,7 @@ def copy_editions(editions, out, *, stamp=""):
         dst = os.path.join(out, "library", ed["series"], f"{ed['slug']}.html")
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         if stamp:
-            with open(ed["file"], "r", encoding="utf-8", errors="replace") as fh:
+            with open(ed["file"], encoding="utf-8", errors="replace") as fh:
                 raw = fh.read()
             write(dst, EDITION_ASSET_RE.sub(rf"\1?v={stamp}\2", raw))
         else:

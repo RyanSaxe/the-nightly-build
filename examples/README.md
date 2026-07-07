@@ -24,7 +24,7 @@ every series.yaml.
 The engine never reads this folder. To use any of it, copy files into your
 `press/` and edit:
 
-```
+```sh
 cp -r examples/series/ai-history press/series/my-history
 ```
 

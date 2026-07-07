@@ -23,14 +23,24 @@
   var APPEARANCE_KEY = "nb-appearance";
   var MODES = ["auto", "light", "dark"];
   var GLYPHS = { auto: "◐ auto", light: "○ light", dark: "● dark" };
-  var MONTHS = ["January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"];
+  var MONTHS = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
   /* Site root, derived from this script's own URL (…/assets/nb.js → …/). */
   var script = document.currentScript;
-  var ROOT = script
-    ? script.src.replace(/assets\/nb\.js([?#].*)?$/, "")
-    : "./";
+  var ROOT = script ? script.src.replace(/assets\/nb\.js([?#].*)?$/, "") : "./";
 
   /* ------------------------------------------------------------ appearance */
 
@@ -45,7 +55,7 @@
     try {
       var v = localStorage.getItem(APPEARANCE_KEY);
       return MODES.indexOf(v) >= 0 ? v : "auto";
-    } catch (e) {
+    } catch {
       return "auto";
     }
   }
@@ -64,7 +74,9 @@
     var next = MODES[(MODES.indexOf(getAppearance()) + 1) % MODES.length];
     try {
       localStorage.setItem(APPEARANCE_KEY, next);
-    } catch (e) { /* private mode: toggle still works for this page */ }
+    } catch {
+      /* private mode: toggle still works for this page */
+    }
     applyAppearance(next);
     rerenderCharts();
   }
@@ -119,22 +131,35 @@
         plugins: {
           legend: {
             display: datasets.length > 1,
-            labels: { color: cssVar("--ink-soft"), font: { family: mono, size: 10 } },
+            labels: {
+              color: cssVar("--ink-soft"),
+              font: { family: mono, size: 10 },
+            },
           },
         },
         scales: {
           x: {
             grid: { color: cssVar("--hair") },
-            ticks: { color: cssVar("--faint"), font: { family: mono, size: 10 } },
+            ticks: {
+              color: cssVar("--faint"),
+              font: { family: mono, size: 10 },
+            },
           },
           y: {
             type: y.scale === "log" ? "logarithmic" : "linear",
             title: y.label
-              ? { display: true, text: y.label, color: cssVar("--faint"),
-                  font: { family: mono, size: 10 } }
+              ? {
+                  display: true,
+                  text: y.label,
+                  color: cssVar("--faint"),
+                  font: { family: mono, size: 10 },
+                }
               : undefined,
             grid: { color: cssVar("--hair") },
-            ticks: { color: cssVar("--faint"), font: { family: mono, size: 10 } },
+            ticks: {
+              color: cssVar("--faint"),
+              font: { family: mono, size: 10 },
+            },
           },
         },
       },
@@ -152,7 +177,7 @@
         var spec;
         try {
           spec = JSON.parse(block.textContent);
-        } catch (e) {
+        } catch {
           return; /* the proof blocks malformed charts; never break the page */
         }
         var wrap = canvas.parentElement;
@@ -161,20 +186,25 @@
           wrap.className = "nb-chart-box";
           wrap.style.position = "relative";
           wrap.style.height =
-            (window.matchMedia("(max-width: 640px)").matches ? 180 : 260) + "px";
+            (window.matchMedia("(max-width: 640px)").matches ? 180 : 260) +
+            "px";
           canvas.replaceWith(wrap);
           wrap.appendChild(canvas);
         }
         try {
           chartInstances.push(buildChart(canvas, spec));
-        } catch (e) { /* leave the caption; never break the page */ }
+        } catch {
+          /* leave the caption; never break the page */
+        }
       });
     });
   }
 
   function rerenderCharts() {
     if (!chartInstances.length) return;
-    chartInstances.forEach(function (c) { c.destroy(); });
+    chartInstances.forEach(function (c) {
+      c.destroy();
+    });
     chartInstances = [];
     renderCharts();
   }
@@ -191,7 +221,9 @@
         document.head.appendChild(s);
       });
     }
-    chartJsLoading.then(function () { if (window.Chart) cb(); });
+    chartJsLoading.then(function () {
+      if (window.Chart) cb();
+    });
   }
 
   /* --------------------------------------------------------------- catalog */
@@ -200,8 +232,12 @@
   function catalog() {
     if (!catalogPromise) {
       catalogPromise = fetch(ROOT + "catalog.json")
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .catch(function () { return null; });
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .catch(function () {
+          return null;
+        });
     }
     return catalogPromise;
   }
@@ -223,20 +259,33 @@
       var bar = document.createElement("header");
       bar.className = "nb-bar";
       bar.innerHTML =
-        '<div class="nb-bar-in"><a class="nb-wordmark" href="' + ROOT + '">' +
-        escHtml(title) + '<span class="nb-period">.</span></a>' +
+        '<div class="nb-bar-in"><a class="nb-wordmark" href="' +
+        ROOT +
+        '">' +
+        escHtml(title) +
+        '<span class="nb-period">.</span></a>' +
         '<details class="nb-menu"><summary aria-label="Menu">' +
         '<span class="nb-burger"></span></summary>' +
         '<nav class="nb-menu-panel">' +
-        '<a href="' + ROOT + '">Today</a>' +
-        '<a href="' + ROOT + 'series/">Sections</a>' +
-        '<a href="' + ROOT + 'search/">Search</a>' +
-        '<a href="' + ROOT + 'feed.xml">RSS</a></nav></details></div>';
+        '<a href="' +
+        ROOT +
+        '">Today</a>' +
+        '<a href="' +
+        ROOT +
+        'series/">Sections</a>' +
+        '<a href="' +
+        ROOT +
+        'search/">Search</a>' +
+        '<a href="' +
+        ROOT +
+        'feed.xml">RSS</a></nav></details></div>';
       document.body.insertBefore(bar, document.body.firstChild);
       var foot = document.createElement("footer");
       foot.className = "nb-footer";
       foot.innerHTML =
-        '<div class="nb-footer-in"><a href="' + ROOT + 'feed.xml">RSS</a>' +
+        '<div class="nb-footer-in"><a href="' +
+        ROOT +
+        'feed.xml">RSS</a>' +
         '<a href="https://github.com/RyanSaxe/the-nightly-build">GitHub</a>' +
         '<button class="nb-appearance" type="button">◐ auto</button></div>';
       document.body.appendChild(foot);
@@ -249,7 +298,7 @@
     try {
       var meta = JSON.parse(el.textContent);
       return typeof meta === "object" && meta ? meta : null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -257,26 +306,36 @@
   function prettyDate(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
     if (!m) return iso;
-    return MONTHS[parseInt(m[2], 10) - 1] + " " +
-      parseInt(m[3], 10) + ", " + m[1];
+    return (
+      MONTHS[parseInt(m[2], 10) - 1] + " " + parseInt(m[3], 10) + ", " + m[1]
+    );
   }
 
-  function buildToc(meta) {
+  function buildToc() {
     var items = [];
     document.querySelectorAll("section[data-nb-section]").forEach(function (s) {
       var h = s.querySelector("h2");
       if (!h) return;
       if (!s.id) s.id = "nb-" + s.getAttribute("data-nb-section");
-      items.push({ id: s.id, label: h.textContent.replace(/^\s*\d+\s*/, "").trim() });
+      items.push({
+        id: s.id,
+        label: h.textContent.replace(/^\s*\d+\s*/, "").trim(),
+      });
     });
     if (items.length < 3) return;
     var d = document.createElement("details");
     d.className = "nb-toc";
-    d.innerHTML = "<summary>Contents</summary><ol>" + items.map(function (i) {
-      return '<li><a href="#' + i.id + '">' + i.label + "</a></li>";
-    }).join("") + "</ol>";
+    d.innerHTML =
+      "<summary>Contents</summary><ol>" +
+      items
+        .map(function (i) {
+          return '<li><a href="#' + i.id + '">' + i.label + "</a></li>";
+        })
+        .join("") +
+      "</ol>";
     var byline = document.querySelector(".nb-byline");
-    if (byline && byline.parentNode) byline.parentNode.insertBefore(d, byline.nextSibling);
+    if (byline && byline.parentNode)
+      byline.parentNode.insertBefore(d, byline.nextSibling);
   }
 
   function normalizeByline() {
@@ -305,7 +364,10 @@
   /* citations: tap opens a source sheet; sources gain ↩ backrefs */
   var veil = null;
   function closeSheet() {
-    if (veil) { veil.remove(); veil = null; }
+    if (veil) {
+      veil.remove();
+      veil = null;
+    }
     var s = document.querySelector(".nb-sheet");
     if (s) s.remove();
   }
@@ -316,15 +378,22 @@
     veil.className = "nb-veil";
     veil.addEventListener("click", closeSheet);
     var body = li.cloneNode(true);
-    body.querySelectorAll(".nb-backref").forEach(function (b) { b.remove(); });
+    body.querySelectorAll(".nb-backref").forEach(function (b) {
+      b.remove();
+    });
     body.querySelectorAll("a").forEach(function (a) {
       a.target = "_blank";
       a.rel = "noopener";
     });
     var sheet = document.createElement("div");
     sheet.className = "nb-sheet";
-    sheet.innerHTML = '<div class="nb-sheet-label">Source ' + num + "</div>" +
-      '<div class="nb-sheet-body">' + body.innerHTML + "</div>";
+    sheet.innerHTML =
+      '<div class="nb-sheet-label">Source ' +
+      num +
+      "</div>" +
+      '<div class="nb-sheet-body">' +
+      body.innerHTML +
+      "</div>";
     document.body.appendChild(veil);
     document.body.appendChild(sheet);
   }
@@ -341,7 +410,10 @@
         li.removeChild(node);
         node = next;
       }
-      var title = parts.join("").replace(/[.\s]+$/, "").trim();
+      var title = parts
+        .join("")
+        .replace(/[.\s]+$/, "")
+        .trim();
       if (title) a.textContent = title;
     });
   }
@@ -384,18 +456,31 @@
       var sibs = (cat.editions || []).filter(function (e) {
         return e.series === meta.series && e.order;
       });
-      var prev = sibs.find(function (e) { return e.order === meta.order - 1; });
-      var next = sibs.find(function (e) { return e.order === meta.order + 1; });
+      var prev = sibs.find(function (e) {
+        return e.order === meta.order - 1;
+      });
+      var next = sibs.find(function (e) {
+        return e.order === meta.order + 1;
+      });
       if (!prev && !next) return;
       function link(e, arrow) {
-        return '<a href="' + editionUrl(e) + '">' +
-          (arrow === "l" ? "← " : "") + e.title + (arrow === "r" ? " →" : "") + "</a>";
+        return (
+          '<a href="' +
+          editionUrl(e) +
+          '">' +
+          (arrow === "l" ? "← " : "") +
+          e.title +
+          (arrow === "r" ? " →" : "") +
+          "</a>"
+        );
       }
       var nav = document.createElement("nav");
       nav.className = "nb-endnav";
-      nav.innerHTML = '<div class="nb-endnav-row">' +
+      nav.innerHTML =
+        '<div class="nb-endnav-row">' +
         (prev ? link(prev, "l") : "<span></span>") +
-        (next ? link(next, "r") : "<span></span>") + "</div>";
+        (next ? link(next, "r") : "<span></span>") +
+        "</div>";
       (document.querySelector("article") || document.body).appendChild(nav);
     });
   }
@@ -409,7 +494,8 @@
     }
     if (i < needle.length) return 0;
     /* tightest window from the end backwards → 1.0 means a contiguous run */
-    var end = -1, start = -1;
+    var end = -1,
+      start = -1;
     i = needle.length - 1;
     for (var k = hay.length - 1; k >= 0 && i >= 0; k--) {
       if (hay[k] === needle[i]) {
@@ -422,7 +508,10 @@
   }
 
   function escHtml(s) {
-    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
   }
 
   function initSearch() {
@@ -433,16 +522,23 @@
     var docs = [];
 
     fetch(ROOT + "search-index.json")
-      .then(function (r) { return r.ok ? r.json() : []; })
-      .catch(function () { return []; })
+      .then(function (r) {
+        return r.ok ? r.json() : [];
+      })
+      .catch(function () {
+        return [];
+      })
       .then(function (index) {
         docs = index.map(function (e) {
           return {
             e: e,
             title: (e.title || "").toLowerCase(),
             dek: (e.dek || "").toLowerCase(),
-            desk: ((e.section || "") + " " + (e.series_name || e.series || ""))
-              .toLowerCase(),
+            desk: (
+              (e.section || "") +
+              " " +
+              (e.series_name || e.series || "")
+            ).toLowerCase(),
             tags: (e.tags || []).join(" ").toLowerCase(),
             text: (e.text || "").toLowerCase(),
           };
@@ -453,7 +549,10 @@
 
     function prefill() {
       var p = new URLSearchParams(location.search);
-      if (p.get("q")) { input.value = p.get("q"); render(); }
+      if (p.get("q")) {
+        input.value = p.get("q");
+        render();
+      }
       input.focus();
     }
 
@@ -461,7 +560,8 @@
       /* one search over everything: titles, deks, desks, tags, full text */
       var total = 0;
       for (var t = 0; t < tokens.length; t++) {
-        var q = tokens[t], s = 0;
+        var q = tokens[t],
+          s = 0;
         if (d.title.indexOf(q) >= 0) s = Math.max(s, 6);
         else s = Math.max(s, fuzzy(q, d.title) * 3);
         if (d.dek.indexOf(q) >= 0) s = Math.max(s, 3);
@@ -469,7 +569,7 @@
         else s = Math.max(s, fuzzy(q, d.desk) * 2);
         if (d.tags && d.tags.indexOf(q) >= 0) s = Math.max(s, 4);
         if (d.text && d.text.indexOf(q) >= 0) s = Math.max(s, 2);
-        if (s <= 0.34) return 0;   /* every token must land somewhere */
+        if (s <= 0.34) return 0; /* every token must land somewhere */
         total += s;
       }
       return total;
@@ -480,13 +580,17 @@
         var i = d.text.indexOf(tokens[t]);
         if (i >= 0) {
           var from = Math.max(0, i - 80);
-          var raw = (from > 0 ? "…" : "") +
-            (d.e.text || "").slice(from, i + 100) + "…";
+          var raw =
+            (from > 0 ? "…" : "") + (d.e.text || "").slice(from, i + 100) + "…";
           var safe = escHtml(raw);
           tokens.forEach(function (q) {
             safe = safe.replace(
-              new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig"),
-              "<mark>$1</mark>");
+              new RegExp(
+                "(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")",
+                "ig",
+              ),
+              "<mark>$1</mark>",
+            );
           });
           return safe;
         }
@@ -499,52 +603,86 @@
       var recent = docs.slice(0, 20);
       if (count) count.textContent = "";
       var seen = null;
-      out.innerHTML = recent.map(function (d) {
-        var e = d.e;
-        var month = (e.date || "").slice(0, 7);
-        var label = "";
-        if (month && month !== seen) {
-          seen = month;
-          var mm = MONTHS[parseInt(month.slice(5), 10) - 1] || month;
-          label = '<span class="nb-month-label">' + mm + " " +
-            month.slice(0, 4) + "</span>";
-        }
-        return label + resultRow(d, []);
-      }).join("");
+      out.innerHTML = recent
+        .map(function (d) {
+          var e = d.e;
+          var month = (e.date || "").slice(0, 7);
+          var label = "";
+          if (month && month !== seen) {
+            seen = month;
+            var mm = MONTHS[parseInt(month.slice(5), 10) - 1] || month;
+            label =
+              '<span class="nb-month-label">' +
+              mm +
+              " " +
+              month.slice(0, 4) +
+              "</span>";
+          }
+          return label + resultRow(d, []);
+        })
+        .join("");
     }
 
     function resultRow(d, tokens) {
       var e = d.e;
       var kicker = e.section
         ? e.section + " — " + (e.series_name || e.series)
-        : (e.series_name || e.series);
-      var body = tokens.length && d.text
-        ? snippet(d, tokens) : escHtml(e.dek || "");
-      return '<a class="nb-item" href="' + editionUrl(e) + '">' +
-        '<div class="nb-kicker">' + escHtml(kicker) + "</div>" +
-        "<h3>" + escHtml(e.title || e.slug) + "</h3>" +
-        '<p class="nb-snippet">' + body + "</p>" +
-        '<div class="nb-meta"><span>' + (e.reading_minutes || "?") +
+        : e.series_name || e.series;
+      var body =
+        tokens.length && d.text ? snippet(d, tokens) : escHtml(e.dek || "");
+      return (
+        '<a class="nb-item" href="' +
+        editionUrl(e) +
+        '">' +
+        '<div class="nb-kicker">' +
+        escHtml(kicker) +
+        "</div>" +
+        "<h3>" +
+        escHtml(e.title || e.slug) +
+        "</h3>" +
+        '<p class="nb-snippet">' +
+        body +
+        "</p>" +
+        '<div class="nb-meta"><span>' +
+        (e.reading_minutes || "?") +
         " min read</span><span>" +
-        escHtml(String(e.template || "").charAt(0).toUpperCase() +
-                String(e.template || "").slice(1)) + "</span></div></a>";
+        escHtml(
+          String(e.template || "")
+            .charAt(0)
+            .toUpperCase() + String(e.template || "").slice(1),
+        ) +
+        "</span></div></a>"
+      );
     }
 
     function render() {
       var q = (input.value || "").trim().toLowerCase();
       var tokens = q ? q.split(/\s+/) : [];
       if (!tokens.length) return renderRecent();
-      var hits = docs.map(function (d) {
-        return { d: d, score: scoreDoc(d, tokens) };
-      }).filter(function (h) { return h.score > 0; });
-      hits.sort(function (a, b) { return b.score - a.score; });
+      var hits = docs
+        .map(function (d) {
+          return { d: d, score: scoreDoc(d, tokens) };
+        })
+        .filter(function (h) {
+          return h.score > 0;
+        });
+      hits.sort(function (a, b) {
+        return b.score - a.score;
+      });
       if (count) {
-        count.textContent = hits.length + " of " + docs.length + " edition" +
+        count.textContent =
+          hits.length +
+          " of " +
+          docs.length +
+          " edition" +
           (docs.length !== 1 ? "s" : "");
       }
-      out.innerHTML = hits.map(function (h) {
-        return resultRow(h.d, tokens);
-      }).join("") ||
+      out.innerHTML =
+        hits
+          .map(function (h) {
+            return resultRow(h.d, tokens);
+          })
+          .join("") ||
         '<div class="nb-results-count" style="padding:20px 0">No matches.</div>';
     }
 
@@ -577,7 +715,7 @@
       });
     }
     document.querySelectorAll('a[href^="http"]').forEach(function (a) {
-      if (a.host === location.host) return;   /* internal: stay in-tab */
+      if (a.host === location.host) return; /* internal: stay in-tab */
       a.target = "_blank";
       a.rel = "noopener";
     });
@@ -590,7 +728,7 @@
     var meta = editionMeta();
     if (meta) {
       injectChrome().then(bindChrome);
-      buildToc(meta);
+      buildToc();
       normalizeByline();
       linkEyebrow(meta);
       normalizeSources();

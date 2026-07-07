@@ -6,11 +6,11 @@ single-topic digest: cover whichever lanes actually moved today.
 Lanes (label each item with its lane; skip any lane with nothing worth
 saying):
 
-- research  papers, benchmarks, capability results
-- compute   chips, datacenters, energy, supply chain
-- industry  products, launches, money, labs
-- policy    regulation, standards, court rulings
-- wildcard  anything genuinely important beyond the usual lanes
+- research papers, benchmarks, capability results
+- compute chips, datacenters, energy, supply chain
+- industry products, launches, money, labs
+- policy regulation, standards, court rulings
+- wildcard anything genuinely important beyond the usual lanes
 
 Emphases:
 

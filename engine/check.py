@@ -275,7 +275,7 @@ class Edition(HTMLParser):
 
 
 def load_yaml(path):
-    with open(path, "r", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         return yaml.safe_load(fh)
 
 
@@ -471,7 +471,7 @@ def check_edition(
     size = os.path.getsize(html_path)
     if size > MAX_BYTES:
         rep.block("B-HTML", f"file is {size} bytes; limit is {MAX_BYTES}")
-    with open(html_path, "r", encoding="utf-8", errors="replace") as fh:
+    with open(html_path, encoding="utf-8", errors="replace") as fh:
         raw = fh.read()
 
     ed = Edition()
@@ -690,7 +690,7 @@ def check_edition(
         )
     for tag, attr in ed.bad_event_attrs:
         rep.block("B-SANDBOX", f"inline event handler {attr}= on <{tag}>")
-    for tag, url in ed.bad_js_urls:
+    for tag, _url in ed.bad_js_urls:
         rep.block("B-SANDBOX", f"javascript: URL on <{tag}>")
     for kind, url in ed.external_refs:
         if kind == "script":
@@ -842,7 +842,7 @@ PR_PATH_RE = re.compile(r"^library/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})\.html$")
 
 
 def parse_pr_body(path):
-    with open(path, "r", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         body = fh.read()
     m = re.search(r"```nb-meta\s*\n(.*?)```", body, re.S)
     if not m:

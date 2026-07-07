@@ -22,20 +22,20 @@ Enable it with two steps.
 
 1. Pick a send hour in `press/site.yaml`:
 
-```yaml
-email:
-  send_utc_hour: 12    # 12:00 UTC is 8am ET / 5am PT
-```
+   ```yaml
+   email:
+     send_utc_hour: 12 # 12:00 UTC is 8am ET / 5am PT
+   ```
 
 2. Add repo Actions secrets (Settings, Secrets and variables, Actions):
 
-| Secret | Example |
-|---|---|
-| `MAIL_TO` | `you@example.com` |
-| `MAIL_FROM` | `The Nightly Build <you@gmail.com>` |
-| `MAIL_SMTP_SERVER` | `smtp.gmail.com` |
-| `MAIL_SMTP_PORT` | `465` |
-| `MAIL_SMTP_USERNAME` | `you@gmail.com` |
+| Secret               | Example                                           |
+| -------------------- | ------------------------------------------------- |
+| `MAIL_TO`            | `you@example.com`                                 |
+| `MAIL_FROM`          | `The Nightly Build <you@gmail.com>`               |
+| `MAIL_SMTP_SERVER`   | `smtp.gmail.com`                                  |
+| `MAIL_SMTP_PORT`     | `465`                                             |
+| `MAIL_SMTP_USERNAME` | `you@gmail.com`                                   |
 | `MAIL_SMTP_PASSWORD` | a Gmail App Password, or your provider's SMTP key |
 
 Without both the config block and `MAIL_TO`, the workflow gates itself off

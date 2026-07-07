@@ -47,16 +47,16 @@ source count. The reader's front page and a single edition, on a phone:
 
 ## How it works
 
-| Piece | Where | Purpose |
-|---|---|---|
-| `PROTOCOL.md` | main | The complete agent contract |
-| the proof | `engine/check.py` | Validates editions. BLOCK findings stop publication; WARN findings drive revision |
-| the editor | `check.yml` | Validates every PR to `library`; auto-merges clean ones from `autopublish` series (otherwise a human merges); supersedes competitors |
-| the press | `engine/build_site.py` | Rebuilds the site on every merge: front page, night archive, sections, search, feeds, email digests |
-| the paperboy | `morning-mail.yml` | Optional daily email of the latest build |
-| duty | `engine/duty.py` | Deterministic nightly work selection: cadence, pauses, completion, commissions |
-| templates | `templates/` | Two citation geometries plus a shared furniture catalog. User templates in `press/templates/` are first class |
-| skills | `skills/` | Librarian (setup and curation) and Correspondent (the night shift runtime) |
+| Piece         | Where                  | Purpose                                                                                                                              |
+| ------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `PROTOCOL.md` | main                   | The complete agent contract                                                                                                          |
+| the proof     | `engine/check.py`      | Validates editions. BLOCK findings stop publication; WARN findings drive revision                                                    |
+| the editor    | `check.yml`            | Validates every PR to `library`; auto-merges clean ones from `autopublish` series (otherwise a human merges); supersedes competitors |
+| the press     | `engine/build_site.py` | Rebuilds the site on every merge: front page, night archive, sections, search, feeds, email digests                                  |
+| the paperboy  | `morning-mail.yml`     | Optional daily email of the latest build                                                                                             |
+| duty          | `engine/duty.py`       | Deterministic nightly work selection: cadence, pauses, completion, commissions                                                       |
+| templates     | `templates/`           | Two citation geometries plus a shared furniture catalog. User templates in `press/templates/` are first class                        |
+| skills        | `skills/`              | Librarian (setup and curation) and Correspondent (the night shift runtime)                                                           |
 
 Two branches with disjoint jobs: `main` holds the engine and your
 configuration, `library` holds published editions and the generated site.
@@ -89,13 +89,26 @@ Actions secrets on the trusted post-merge path.
 
 ## Development
 
-The engine is Python 3.9+ with one dependency, PyYAML. Scripts carry PEP 723
-metadata, so `uv run engine/check.py` works without any setup.
+The engine is Python 3.10+ with one runtime dependency, PyYAML. Scripts carry
+PEP 723 metadata, so `uv run engine/check.py` works without any setup.
 
-```
+```sh
 python3 engine/tests/run_tests.py    # proof, builder, and end-to-end suites
 python3 engine/validate_config.py    # validate press/ configuration
 ```
+
+Engine changes go through a lint, type-check, format, and test gate that CI
+enforces on `main`. Set it up once:
+
+```sh
+uv sync                     # Python tools: ruff, ty
+npm install                 # web tools: prettier, eslint, stylelint, markdownlint
+uv run pre-commit install   # run the same checks on every commit
+```
+
+`pre-commit` runs exactly what CI runs (the Rust drop-in `prek` reads the same
+config). The shell hooks also need `shellcheck` and `shfmt` on your PATH;
+install them from your package manager.
 
 This repository is engine-only. It runs no press and publishes no library;
 the maintainer dogfoods by copying it like any other user. `examples/`

@@ -1,4 +1,5 @@
 # The Nightly Build Agent Protocol
+
 Protocol-Version: 1.1
 
 You are one run of the night shift for this repository. This document is the complete
@@ -48,8 +49,8 @@ available, `uv run engine/<script>.py` manages the dependency itself.
      editions first (never repeat a topic, build continuity), then choose the
      template that best fits from the series' declared choices (`templates:`,
      or its single `template:`) and coin a fresh slug (`[a-z0-9-]{1,64}`).
-   **Serve only the series duty.py lists as due. If nothing is due, stop. Do
-   not open a PR. Exiting silently is correct behavior.**
+     **Serve only the series duty.py lists as due. If nothing is due, stop. Do
+     not open a PR. Exiting silently is correct behavior.**
 
 4. **Honor the source policy.** Three controls, per series and per item:
    - `required_docs`: committed files you MUST read; each must be represented
@@ -88,7 +89,7 @@ available, `uv run engine/<script>.py` manages the dependency itself.
 8. **Open one pull request per edition, targeting the `library` branch**, each
    adding exactly one file.
    - Title: `nb: <series>/<slug> - <Title>`
-   - Body: a fenced ```nb-meta``` yaml block mirroring the embedded metadata, a link to
+   - Body: a fenced `nb-meta` yaml block mirroring the embedded metadata, a link to
      your run if available, and the proof's final WARN summary.
    - Preflight the body BEFORE opening the PR: write it to a file and run the
      proof with `--pr-body`. The editor blocks any PR whose body lacks or

@@ -77,7 +77,7 @@ def cadence_is_valid(cadence):
 
 
 def load(path):
-    with open(path, "r", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         return yaml.safe_load(fh)
 
 

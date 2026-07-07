@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
   TEMPLATE: article (longread · 800-6000 words · cite_rule per-section)
   Enforced prose. The one template for anything told in sections: an
@@ -31,83 +31,125 @@
   (engine-owned).
 -->
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TITLE — SERIES NAME</title>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../assets/theme.css">
-<link rel="stylesheet" href="../../assets/nb.css">
-<script defer src="../../assets/nb.js"></script>
-<script type="application/json" id="nb-meta">
-{
-  "protocol": "1.1",
-  "series": "SERIES-ID",
-  "slug": "SLUG",
-  "template": "article",
-  "title": "TITLE",
-  "mode": "collection",
-  "order": null,
-  "date": "2026-01-01",
-  "tags": [],
-  "sources": 0,
-  "words": 0,
-  "reading_minutes": 0,
-  "dek": "ONE-SENTENCE TEASER FOR THE NEWSSTAND CARD.",
-  "harness": "HARNESS",
-  "model": "MODEL"
-}
-</script>
-</head>
-<body class="nb-edition">
-<article class="nb-reading">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TITLE — SERIES NAME</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "SERIES-ID",
+        "slug": "SLUG",
+        "template": "article",
+        "title": "TITLE",
+        "mode": "collection",
+        "order": null,
+        "date": "2026-01-01",
+        "tags": [],
+        "sources": 0,
+        "words": 0,
+        "reading_minutes": 0,
+        "dek": "ONE-SENTENCE TEASER FOR THE NEWSSTAND CARD.",
+        "harness": "HARNESS",
+        "model": "MODEL"
+      }
+    </script>
+  </head>
+  <body class="nb-edition">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">SERIES NAME</div>
+        <h1 class="nb-title">TITLE</h1>
+        <p class="nb-dekline">
+          DEK — one italic sentence framing why this matters now.
+        </p>
+        <div class="nb-byline">
+          <span>N min read</span><span>YYYY-MM-DD</span>
+        </div>
+      </header>
 
-<header>
-  <div class="nb-eyebrow">SERIES NAME</div>
-  <h1 class="nb-title">TITLE</h1>
-  <p class="nb-dekline">DEK — one italic sentence framing why this matters now.</p>
-  <div class="nb-byline">
-    <span>N min read</span><span>YYYY-MM-DD</span>
-  </div>
-</header>
+      <section data-nb-section="orientation" id="orientation">
+        <h2>ORIENTATION HEADING</h2>
+        <p>
+          Opening paragraph with a concrete, cited anchor claim.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
 
+      <section
+        data-nb-section="YOUR-FIRST-SECTION-LABEL"
+        id="YOUR-FIRST-SECTION-LABEL"
+      >
+        <h2>ITS HEADING</h2>
+        <!-- 2-6 of these, labeled for the topic. Order and count are yours. -->
+        <p>
+          Cited prose.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+      </section>
 
-<section data-nb-section="orientation" id="orientation">
-  <h2>ORIENTATION HEADING</h2>
-  <p>Opening paragraph with a concrete, cited anchor claim.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
-</section>
+      <section
+        data-nb-section="YOUR-SECOND-SECTION-LABEL"
+        id="YOUR-SECOND-SECTION-LABEL"
+      >
+        <h2>ITS HEADING</h2>
+        <p>
+          Cited prose.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+      </section>
 
-<section data-nb-section="YOUR-FIRST-SECTION-LABEL" id="YOUR-FIRST-SECTION-LABEL">
-  <h2>ITS HEADING</h2>
-  <!-- 2-6 of these, labeled for the topic. Order and count are yours. -->
-  <p>Cited prose.<sup class="nb-cite"><a href="#s2">2</a></sup></p>
-</section>
+      <section data-nb-section="go-deeper" id="go-deeper">
+        <h2>Go deeper</h2>
+        <!-- Equip independent research: primary documents, filings, lectures, data. -->
+        <p>
+          Where to go next and what to look for when you get there.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
 
-<section data-nb-section="YOUR-SECOND-SECTION-LABEL" id="YOUR-SECOND-SECTION-LABEL">
-  <h2>ITS HEADING</h2>
-  <p>Cited prose.<sup class="nb-cite"><a href="#s3">3</a></sup></p>
-</section>
-
-<section data-nb-section="go-deeper" id="go-deeper">
-  <h2>Go deeper</h2>
-  <!-- Equip independent research: primary documents, filings, lectures, data. -->
-  <p>Where to go next and what to look for when you get there.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
-</section>
-
-<section class="nb-sources" data-nb-section="sources" id="sources">
-  <h2>Sources</h2>
-  <ol>
-    <li id="s1"><a data-nb-source href="https://example.org/replace-1">PUBLISHER — TITLE</a></li>
-    <li id="s2"><a data-nb-source href="https://example.org/replace-2">PUBLISHER — TITLE</a></li>
-    <li id="s3"><a data-nb-source href="https://example.org/replace-3">PUBLISHER — TITLE</a></li>
-    <li id="s4"><a data-nb-source href="https://example.org/replace-4">PUBLISHER — TITLE</a></li>
-    <li id="s5"><a data-nb-source href="https://example.org/replace-5">PUBLISHER — TITLE</a></li>
-    <!-- Meet the series source floor. Mark required docs:
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source href="https://example.org/replace-1"
+              >PUBLISHER — TITLE</a
+            >
+          </li>
+          <li id="s2">
+            <a data-nb-source href="https://example.org/replace-2"
+              >PUBLISHER — TITLE</a
+            >
+          </li>
+          <li id="s3">
+            <a data-nb-source href="https://example.org/replace-3"
+              >PUBLISHER — TITLE</a
+            >
+          </li>
+          <li id="s4">
+            <a data-nb-source href="https://example.org/replace-4"
+              >PUBLISHER — TITLE</a
+            >
+          </li>
+          <li id="s5">
+            <a data-nb-source href="https://example.org/replace-5"
+              >PUBLISHER — TITLE</a
+            >
+          </li>
+          <!-- Meet the series source floor. Mark required docs:
          <a data-nb-source data-nb-required="DOC-ID" href="https://…">PUBLISHER — TITLE</a> -->
-  </ol>
-</section>
-
-</article>
-</body>
+        </ol>
+      </section>
+    </article>
+  </body>
 </html>

@@ -6,8 +6,8 @@ template: article
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [2000, 4500]   # a chronicle needs room for a full timeline
-min_sources: 10       # histories are source-heavy; above the longread default of 8
+words: [2000, 4500] # a chronicle needs room for a full timeline
+min_sources: 10 # histories are source-heavy; above the longread default of 8
 items:
   - slug: winters-and-springs
     title: "Winters and Springs: AI from Dartmouth to Deep Learning"

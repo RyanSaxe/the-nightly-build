@@ -25,7 +25,7 @@ updates conflict-free (see §7).
 own dogfood assignments**, not starter content. Reset them before the
 interview — don't offer to keep them, and never let them reach a schedule:
 
-```
+```sh
 rm -r press/series/*
 ```
 
@@ -59,6 +59,7 @@ choice list and a cadence so the nightly mix varies. One edition per desk per
 night is the invariant, so "six things a day" = six desks. They govern later
 with words, not YAML: commissioning drops an item into a desk's queue,
 steering edits the desk's `prompt.md`.
+
 - **Voice** (two questions, written into `press/editorial.md`): how should the
   paper sound — register, wit, language? And what should it assume they
   already know? This is a press-wide layer composed into every edition.
@@ -115,8 +116,8 @@ the night shift can reach it (the harness adapter's Connect step).
 
 ## 4. Offer a press check (default next step)
 
-Before any scheduling, offer a rehearsal: *"want to see what the first edition
-would look like tonight?"* Follow `skills/correspondent/SKILL.md` § Press
+Before any scheduling, offer a rehearsal: _"want to see what the first edition
+would look like tonight?"_ Follow `skills/correspondent/SKILL.md` § Press
 check. It consumes the same usage as a real run — it IS one, minus
 publication — and it is the editorial loop for tuning the prompt: read the
 draft, adjust `prompt.md`, re-run, compare.
@@ -158,7 +159,7 @@ Schedule prompt template (fill `<repo>`; paste it as-is, do not trim it):
 > self-contained HTML file from the series' template (whichever it declares),
 > using components from `templates/FURNITURE.md`; run
 > `python3 engine/check.py library/<series>/<slug>.html --series <id> --repo .
-> --library <checkout>` and revise until `BLOCK: 0`; then write the PR body to
+--library <checkout>` and revise until `BLOCK: 0`; then write the PR body to
 > a file and re-run check with `--pr-body <file>` so it passes too. Open ONE
 > PR per series targeting `library`, adding ONLY
 > `library/<series>/<slug>.html`, title `nb: <series>/<slug> - <Title>`, body
@@ -168,7 +169,7 @@ Schedule prompt template (fill `<repo>`; paste it as-is, do not trim it):
 ## 6. Curation verbs
 
 On request: add/remove/reorder items (reordering a sequence only reorders the
-*unpublished* tail — published editions are permanent); **pause/resume** a
+_unpublished_ tail — published editions are permanent); **pause/resume** a
 series (`paused: true` — the archive stays up, the proof refuses new
 editions); **change its rhythm** (`cadence:`); **commission** ("have the
 wildcard desk cover X next") — append an item to an open desk's `items:`
@@ -177,7 +178,7 @@ open desk** ("less policy for a while") — edit its `prompt.md` beat;
 **extra editions on demand** ("write me a piece on X right now") — make sure
 the topic has a home first (a commission, a new item, or a new series —
 the proof rejects editions for unconfigured series), then hand off to the
-correspondent's *Commissioned work* flow; let a
+correspondent's _Commissioned work_ flow; let a
 collection surprise them (`selection: random`); adjust `words:` bands (may
 tighten, never loosen below the registry floor) and `min_sources`; flip
 `autopublish` (false ⇒ the editor approves, a human merges) and `strict`
@@ -186,16 +187,16 @@ edition). Re-validate after every change.
 
 **Customization verbs:**
 
-- *"Change the look"* — copy `engine/assets/themes/newspaper.css` to
+- _"Change the look"_ — copy `engine/assets/themes/newspaper.css` to
   `press/themes/<name>.css`, edit ONLY the token variables, point
   `press/site.yaml` `theme:` at it. Never edit engine CSS.
-- *"Change the voice"* — edit `press/editorial.md`. Series-specific tone goes
+- _"Change the voice"_ — edit `press/editorial.md`. Series-specific tone goes
   in that series' prompt instead.
-- *"Make a new genre"* — usually no new template: write the genre into the
+- _"Make a new genre"_ — usually no new template: write the genre into the
   series `prompt.md` (outline conventions, furniture) and rely on `article`'s
   flex sections. That is how the examples run chronicles, lessons, and
   appraisals.
-- *"Make a new template"* — for structure the proof should ENFORCE: add an
+- _"Make a new template"_ — for structure the proof should ENFORCE: add an
   entry to `press/templates/registry.yaml` (class, band, `sections` anchors
   incl. `sources`, optional `flex_sections: [min, max]` for an agent-named
   middle, cite_rule, modes) and a `press/templates/<id>.html` scaffold (crib
@@ -207,13 +208,13 @@ edition). Re-validate after every change.
   `data-nb-why` line on each item. The build-your-own walkthrough in
   `docs/customization.md` rebuilds the classic lesson template this way.
   Validate, then press check before scheduling.
-- *"Give my paper its own furniture"* — add component classes to the press
+- _"Give my paper its own furniture"_ — add component classes to the press
   theme CSS (it restyles the whole library on every publish) and instruct
   the desks to use them in `prompt.md`; see `docs/customization.md`.
 
 ## 7. Update my engine (plain git)
 
-```
+```sh
 git remote add upstream https://github.com/RyanSaxe/the-nightly-build.git  # once
 git fetch upstream
 git merge upstream/main

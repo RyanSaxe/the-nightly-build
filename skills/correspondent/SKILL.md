@@ -28,7 +28,7 @@ ones.
 Fetch the `library` branch, then ask the duty oracle — never do calendar or
 queue math yourself:
 
-```
+```sh
 python3 engine/duty.py --repo . --library <path-to-library-checkout>
 ```
 
@@ -102,7 +102,7 @@ reading on a phone.
 
 ## 5. The proof loop
 
-```
+```sh
 python3 engine/check.py library/<series>/<slug>.html \
     --series <id> --repo . --library <path-to-library-checkout>
 ```
@@ -118,7 +118,7 @@ record beats a gamed one.
 Target the `library` branch. Add exactly one file: `library/<series>/<slug>.html`.
 
 - Title: `nb: <series>/<slug> - <Title>`
-- Body: a fenced ```nb-meta``` yaml block mirroring the embedded JSON (fields:
+- Body: a fenced `nb-meta` yaml block mirroring the embedded JSON (fields:
   series, slug, mode, template, date, title, order), your run URL if you have
   one, and the proof's final WARN summary.
 - Preflight the body before opening the PR. The editor rejects any PR whose

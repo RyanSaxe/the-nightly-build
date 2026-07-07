@@ -46,9 +46,13 @@ the token blocks, on your own prefix (`nb-` is reserved):
 ```css
 /* press/themes/mytheme.css, below the tokens */
 .rs-margin-note {
-  float: right; width: 200px; margin: 4px 0 12px 20px;
-  font-size: 13px; color: var(--ink-soft);
-  border-top: 2px solid var(--accent); padding-top: 6px;
+  float: right;
+  width: 200px;
+  margin: 4px 0 12px 20px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  border-top: 2px solid var(--accent);
+  padding-top: 6px;
 }
 ```
 
@@ -67,7 +71,7 @@ across every series. Series-specific emphasis belongs in that series'
 
 The layer order, first to last. Later layers specialize and never override:
 
-```
+```text
 PROTOCOL.md > spec/editorial.md > press/editorial.md > template registry
 entry > press/series/<id>/prompt.md > tag fragments > item prompt
 ```
@@ -94,46 +98,46 @@ ordered course, rebuilt as a press template.
 
 1. Declare it in `press/templates/registry.yaml`:
 
-```yaml
-lesson:
-  class: longread
-  words: [1500, 4000]
-  sections: [objectives, recap, teach, check, bridge, sources]
-  cite_rule: per-section
-  cite_exempt: [objectives]   # the goals box carries no citations
-  modes: [sequence]
-```
+   ```yaml
+   lesson:
+     class: longread
+     words: [1500, 4000]
+     sections: [objectives, recap, teach, check, bridge, sources]
+     cite_rule: per-section
+     cite_exempt: [objectives] # the goals box carries no citations
+     modes: [sequence]
+   ```
 
-Rules: `sections` must include `sources`. Bands are `[low, high]`.
-`cite_rule` is `per-section` or `per-item` (needs `data-nb-item` markers).
-Two optional fields let a template declare requirements the engine would
-otherwise not know: `cite_exempt: [names]` (sections that need no citations,
-on top of the always-exempt `sources`) and `require_why: true` (each
-`data-nb-item` must carry a `data-nb-why` line, as `brief` does). The engine
-reads these from the entry, so any template can use them.
-Entries here overlay the shipped registry, so reusing a shipped id
-redefines it. The test suite exercises this exact lesson entry, so the
-walkthrough cannot drift from what the proof enforces.
+   Rules: `sections` must include `sources`. Bands are `[low, high]`.
+   `cite_rule` is `per-section` or `per-item` (needs `data-nb-item` markers).
+   Two optional fields let a template declare requirements the engine would
+   otherwise not know: `cite_exempt: [names]` (sections that need no citations,
+   on top of the always-exempt `sources`) and `require_why: true` (each
+   `data-nb-item` must carry a `data-nb-why` line, as `brief` does). The engine
+   reads these from the entry, so any template can use them.
+   Entries here overlay the shipped registry, so reusing a shipped id
+   redefines it. The test suite exercises this exact lesson entry, so the
+   walkthrough cannot drift from what the proof enforces.
 
 2. Scaffold it as `press/templates/lesson.html`. Copy a shipped template's
-`<head>` and header chrome verbatim (asset links, nb-meta skeleton,
-eyebrow, title, dek, byline), then lay out one
-`<section data-nb-section="...">` per declared section. The objectives
-box, check box, and bridge components in `templates/FURNITURE.md` carry
-the lesson. Template files shadow shipped ones by filename. The sandbox
-applies unchanged: no scripts beyond the JSON blocks and the engine
-runtime, citations as `sup.nb-cite` anchors into numbered source entries.
+   `<head>` and header chrome verbatim (asset links, nb-meta skeleton,
+   eyebrow, title, dek, byline), then lay out one
+   `<section data-nb-section="...">` per declared section. The objectives
+   box, check box, and bridge components in `templates/FURNITURE.md` carry
+   the lesson. Template files shadow shipped ones by filename. The sandbox
+   applies unchanged: no scripts beyond the JSON blocks and the engine
+   runtime, citations as `sup.nb-cite` anchors into numbered source entries.
 
 3. Validate and rehearse: `python3 engine/validate_config.py`, then point a
-series at the template and run a press check before scheduling it.
+   series at the template and run a press check before scheduling it.
 
 ## site.yaml reference
 
 ```yaml
-title: "My Press"                # masthead; the accent period is added
-theme: press/themes/mytheme.css  # default: the shipped newspaper theme
-appearance: auto                 # auto | light | dark
-front: compact                   # compact (default) | comfortable (deks on story cells)
-email:                           # optional, see docs/delivery.md
+title: "My Press" # masthead; the accent period is added
+theme: press/themes/mytheme.css # default: the shipped newspaper theme
+appearance: auto # auto | light | dark
+front: compact # compact (default) | comfortable (deks on story cells)
+email: # optional, see docs/delivery.md
   send_utc_hour: 12
 ```

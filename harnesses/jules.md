@@ -19,7 +19,7 @@ Two options:
 - **Native Scheduled Tasks**: in Jules, create a Scheduled Task on your fork
   with the prompt below and a nightly cadence.
 - **jules-invoke GitHub Action**: use Google's official `jules-invoke` action
-  as a thin cloud trigger from a one-line cron workflow in a *separate* repo or
+  as a thin cloud trigger from a one-line cron workflow in a _separate_ repo or
   on `main` (never anything that runs on `library` PRs), passing the same
   prompt.
 
@@ -38,7 +38,7 @@ append `Work ONLY series <series-id>.` to the prompt.
 > self-contained HTML file from the series' template (whichever it declares),
 > using components from `templates/FURNITURE.md`; run
 > `python3 engine/check.py library/<series>/<slug>.html --series <id> --repo .
-> --library <checkout>` and revise until `BLOCK: 0`; then write the PR body to
+--library <checkout>` and revise until `BLOCK: 0`; then write the PR body to
 > a file and re-run check with `--pr-body <file>` so it passes too. Open ONE
 > PR per series targeting `library`, adding ONLY
 > `library/<series>/<slug>.html`, title `nb: <series>/<slug> - <Title>`, body

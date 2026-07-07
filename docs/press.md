@@ -15,7 +15,7 @@ documentation. The engine never reads it. Copy from it into `press/`.
 The upstream repository is engine-only. It runs no press and publishes no
 library. The maintainer dogfoods by copying it like any other user.
 
-```
+```text
 press/
   site.yaml          masthead title, theme, appearance, front density, email
   editorial.md       your voice, composed into every edition's instructions
@@ -44,7 +44,7 @@ press/
 
 ## Updating the engine
 
-```
+```sh
 git remote add upstream https://github.com/RyanSaxe/the-nightly-build.git   # once
 git fetch upstream
 git merge upstream/main

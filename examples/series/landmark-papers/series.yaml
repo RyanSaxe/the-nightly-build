@@ -6,7 +6,7 @@ template: article
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [1500, 3500]   # appraisals stay tight; the paper does the heavy lifting
+words: [1500, 3500] # appraisals stay tight; the paper does the heavy lifting
 min_sources: 8
 consult:
   # Series-level consult: read the paper itself before anything written about it.

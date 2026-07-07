@@ -18,8 +18,13 @@ Three or four load-bearing numbers. Each must be cited in nearby prose.
 
 ```html
 <div class="nb-stat-strip">
-  <div class="nb-stat"><span class="nb-stat-n">$193B</span><span class="nb-stat-l">DATA-CENTER REVENUE</span></div>
-  <div class="nb-stat"><span class="nb-stat-n">92%</span><span class="nb-stat-l">SHARE</span></div>
+  <div class="nb-stat">
+    <span class="nb-stat-n">$193B</span
+    ><span class="nb-stat-l">DATA-CENTER REVENUE</span>
+  </div>
+  <div class="nb-stat">
+    <span class="nb-stat-n">92%</span><span class="nb-stat-l">SHARE</span>
+  </div>
 </div>
 ```
 
@@ -33,9 +38,12 @@ Declarative data, rendered by the engine runtime. Types: line, bar, scatter.
   <canvas></canvas>
   <noscript>chart requires JS; data in caption and prose</noscript>
   <script type="application/json" data-nb-chart>
-  {"type": "line", "labels": ["2022", "2023"],
-   "series": [{"name": "NAME", "values": [1, 2]}],
-   "y": {"scale": "linear", "label": "UNITS"}}
+    {
+      "type": "line",
+      "labels": ["2022", "2023"],
+      "series": [{ "name": "NAME", "values": [1, 2] }],
+      "y": { "scale": "linear", "label": "UNITS" }
+    }
   </script>
 </figure>
 ```
@@ -65,7 +73,9 @@ An opening quotation, before the first section. Cite it like any claim.
 
 ```html
 <div class="nb-epigraph">
-  <p>The quotation.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
+  <p>
+    The quotation.<sup class="nb-cite"><a href="#s1">1</a></sup>
+  </p>
   <span class="nb-epigraph-who">WHO SAID IT, WHERE</span>
 </div>
 ```
@@ -86,8 +96,18 @@ order; do not use it for unordered lists.
 
 ```html
 <ol class="nb-steps">
-  <li><h3>STAGE</h3><p>What happens and why it matters.<sup class="nb-cite"><a href="#s2">2</a></sup></p></li>
-  <li><h3>NEXT STAGE</h3><p>...</p></li>
+  <li>
+    <h3>STAGE</h3>
+    <p>
+      What happens and why it matters.<sup class="nb-cite"
+        ><a href="#s2">2</a></sup
+      >
+    </p>
+  </li>
+  <li>
+    <h3>NEXT STAGE</h3>
+    <p>...</p>
+  </li>
 </ol>
 ```
 
@@ -97,7 +117,10 @@ The people and institutions in a story, one line each.
 
 ```html
 <div class="nb-cast">
-  <div><span class="nb-cast-name">NAME</span><span class="nb-cast-role">ROLE IN THIS STORY</span></div>
+  <div>
+    <span class="nb-cast-name">NAME</span
+    ><span class="nb-cast-role">ROLE IN THIS STORY</span>
+  </div>
 </div>
 ```
 
@@ -110,7 +133,11 @@ grounded in their actual cited statements. Use two or more; never one.
 <div class="nb-position">
   <span class="nb-position-who">WHO</span>
   <span class="nb-position-stance">Their position in one sentence.</span>
-  <p>What they have actually said and where.<sup class="nb-cite"><a href="#s3">3</a></sup></p>
+  <p>
+    What they have actually said and where.<sup class="nb-cite"
+      ><a href="#s3">3</a></sup
+    >
+  </p>
 </div>
 ```
 
@@ -123,7 +150,9 @@ Add class `major` for filled dots.
 <ol class="nb-timeline">
   <li class="nb-tl-event major">
     <span class="nb-tl-date">1997</span>
-    <h3>EVENT<sup class="nb-cite"><a href="#s2">2</a></sup></h3>
+    <h3>
+      EVENT<sup class="nb-cite"><a href="#s2">2</a></sup>
+    </h3>
     <p>What happened and why it mattered.</p>
   </li>
   <li class="nb-tl-interlude"><p>What the era added up to.</p></li>
@@ -137,7 +166,9 @@ What the reader will be able to do afterwards. Openers for teaching pieces.
 ```html
 <div class="nb-objectives">
   <div class="nb-objectives-label">In this edition</div>
-  <ul><li>OBJECTIVE, concrete and checkable.</li></ul>
+  <ul>
+    <li>OBJECTIVE, concrete and checkable.</li>
+  </ul>
 </div>
 ```
 
@@ -146,7 +177,11 @@ What the reader will be able to do afterwards. Openers for teaching pieces.
 Self-test exercises answerable from the edition.
 
 ```html
-<div class="nb-check-box"><ol><li>EXERCISE.</li></ol></div>
+<div class="nb-check-box">
+  <ol>
+    <li>EXERCISE.</li>
+  </ol>
+</div>
 ```
 
 ## Bridge
@@ -169,7 +204,11 @@ appraisals.
 ```html
 <div class="nb-abstract">
   <div class="nb-abstract-label">In plain language</div>
-  <p>The claim, the test, the finding.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
+  <p>
+    The claim, the test, the finding.<sup class="nb-cite"
+      ><a href="#s1">1</a></sup
+    >
+  </p>
 </div>
 ```
 
@@ -179,8 +218,18 @@ Strengths against caveats, side by side.
 
 ```html
 <div class="nb-holdsup">
-  <div class="good"><span class="nb-holdsup-label">What holds up</span><ul><li>STRENGTH.</li></ul></div>
-  <div class="careful"><span class="nb-holdsup-label">What to be careful about</span><ul><li>LIMITATION.</li></ul></div>
+  <div class="good">
+    <span class="nb-holdsup-label">What holds up</span>
+    <ul>
+      <li>STRENGTH.</li>
+    </ul>
+  </div>
+  <div class="careful">
+    <span class="nb-holdsup-label">What to be careful about</span>
+    <ul>
+      <li>LIMITATION.</li>
+    </ul>
+  </div>
 </div>
 ```
 
@@ -203,9 +252,13 @@ If a desk makes claims, later editions should grade them (see grade row).
 
 ```html
 <div class="nb-claim">
-  <h3>THE CLAIM<sup class="nb-cite"><a href="#s4">4</a></sup></h3>
+  <h3>
+    THE CLAIM<sup class="nb-cite"><a href="#s4">4</a></sup>
+  </h3>
   <p>The reasoning behind it.</p>
-  <div class="nb-claim-meta"><span>confidence 70%</span><span>resolves by 2026-12-31</span></div>
+  <div class="nb-claim-meta">
+    <span>confidence 70%</span><span>resolves by 2026-12-31</span>
+  </div>
 </div>
 ```
 
@@ -217,6 +270,10 @@ or `open`.
 ```html
 <div class="nb-grade hit">
   <span class="nb-grade-verdict">Hit</span>
-  <p>The claim, and what actually happened.<sup class="nb-cite"><a href="#s5">5</a></sup></p>
+  <p>
+    The claim, and what actually happened.<sup class="nb-cite"
+      ><a href="#s5">5</a></sup
+    >
+  </p>
 </div>
 ```

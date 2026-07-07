@@ -7,12 +7,12 @@ examples of everything below live in `examples/series/`.
 
 ## The four modes
 
-| Mode | You declare | Each night publishes | Ends |
-|---|---|---|---|
-| `collection` | an item list | the next unpublished item, or any of them with `selection: random` | when the list is done |
-| `sequence` | an ordered syllabus | the lowest-numbered missing item, building on the published ones | when the syllabus is done |
-| `rolling` | nothing; the date is the item | today's UTC date | never, until paused |
-| `open` | a beat in prompt.md | a topic the agent picks within the beat, in the template it judges fits best | never, until paused |
+| Mode         | You declare                   | Each night publishes                                                         | Ends                      |
+| ------------ | ----------------------------- | ---------------------------------------------------------------------------- | ------------------------- |
+| `collection` | an item list                  | the next unpublished item, or any of them with `selection: random`           | when the list is done     |
+| `sequence`   | an ordered syllabus           | the lowest-numbered missing item, building on the published ones             | when the syllabus is done |
+| `rolling`    | nothing; the date is the item | today's UTC date                                                             | never, until paused       |
+| `open`       | a beat in prompt.md           | a topic the agent picks within the beat, in the template it judges fits best | never, until paused       |
 
 Open mode is the hands-off paper. You describe a beat, the night shift
 reads the desk's back catalog, picks something new, and chooses its template
@@ -35,9 +35,9 @@ one-line edit with a guarantee.
 ## Rhythm and shelving
 
 ```yaml
-cadence: daily        # default | weekdays | weekends | [mon, thu]
-paused: true          # skip this series entirely; the archive stays up
-section: Foundations  # optional shelf on the Sections page and in kickers
+cadence: daily # default | weekdays | weekends | [mon, thu]
+paused: true # skip this series entirely; the archive stays up
+section: Foundations # optional shelf on the Sections page and in kickers
 ```
 
 Cadence is why one nightly schedule is enough forever: the run asks
