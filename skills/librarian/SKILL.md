@@ -147,7 +147,7 @@ On Claude Code you can create the Routine and fire that first run via
 `/schedule`; on other harnesses, pasting the schedule is the one step the
 human does, so say so plainly.
 
-Schedule prompt template (fill `<repo>`; keep ≤ ~130 words):
+Schedule prompt template (fill `<repo>`; paste it as-is, do not trim it):
 
 > You are the night shift for The Nightly Build repo `<repo>`. Read
 > `PROTOCOL.md` on main and follow it exactly. Runtime: needs Python 3.9+ and

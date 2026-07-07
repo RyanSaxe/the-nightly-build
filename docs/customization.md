@@ -17,7 +17,8 @@ if you customize: contrast is measured, and bronze #8A5C08 reads at 5.4:1
 on the shipped paper while bright amber fails at 2:1.
 
 1. Copy `engine/assets/themes/newspaper.css` to `press/themes/<name>.css`.
-2. Edit the variables in all four blocks.
+2. Edit the color variables in all four blocks (fonts and radius live only in
+   the base block).
 3. Point `press/site.yaml` at it: `theme: press/themes/<name>.css`.
 
 The builder republishes the chosen theme as `assets/theme.css` on every
