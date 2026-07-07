@@ -1,4 +1,5 @@
 # Generated / vendored / tool-owned — never format these.
+docs/agent-only/
 press-check/
 .venv/
 node_modules/
