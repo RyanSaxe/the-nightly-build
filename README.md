@@ -49,8 +49,9 @@ configuration; regenerate after look changes.
    schedule one nightly job for the whole press, and trigger it once now for
    today's first edition. Each run derives its work list from the repo, so you
    never touch the schedule again.
-5. Read. The night shift opens one PR per series, CI validates and merges,
-   the site rebuilds, and the morning email or Atom feed delivers it.
+5. Read. The night shift opens one PR per series, CI validates and (for
+   `autopublish` series, which the examples enable) merges, the site rebuilds,
+   and the morning email or Atom feed delivers it.
 
 ## How it works
 
@@ -58,7 +59,7 @@ configuration; regenerate after look changes.
 |---|---|---|
 | `PROTOCOL.md` | main | The complete agent contract |
 | the proof | `engine/check.py` | Validates editions. BLOCK findings stop publication; WARN findings drive revision |
-| the editor | `check.yml` | Validates every PR to `library`, auto-merges clean ones, supersedes competitors |
+| the editor | `check.yml` | Validates every PR to `library`; auto-merges clean ones from `autopublish` series (otherwise a human merges); supersedes competitors |
 | the press | `engine/build_site.py` | Rebuilds the site on every merge: front page, night archive, sections, search, feeds, email digests |
 | the paperboy | `morning-mail.yml` | Optional daily email of the latest build |
 | duty | `engine/duty.py` | Deterministic nightly work selection: cadence, pauses, completion, commissions |

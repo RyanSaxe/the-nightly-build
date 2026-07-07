@@ -29,10 +29,11 @@ different models): append `Work ONLY series <series-id>.` to the prompt.
 > You are the night shift for The Nightly Build repo `<repo>`. Read
 > `PROTOCOL.md` on main and follow it exactly. Runtime: needs Python 3.9+ and
 > PyYAML; if a script reports it missing, `pip install pyyaml` (or use
-> `uv run`). Check out the `library` branch and run
-> `python3 engine/duty.py --repo . --library <checkout>` for tonight's due
-> series. For each: research deeply with cited primary sources; render ONE
-> self-contained HTML file from the series template (article or brief),
+> `uv run`). Work from the `main` checkout (it carries the engine and
+> `press/`) with the `library` branch checked out separately at `<checkout>`,
+> then run `python3 engine/duty.py --repo . --library <checkout>` for tonight's
+> due series. For each: research deeply with cited primary sources; render ONE
+> self-contained HTML file from the series' template (whichever it declares),
 > setting the nb-meta `form` label and using `templates/FURNITURE.md`; run
 > `python3 engine/check.py library/<series>/<slug>.html --series <id> --repo .
 > --library <checkout>` and revise until `BLOCK: 0`; then write the PR body to
