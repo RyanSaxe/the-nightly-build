@@ -65,7 +65,16 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    fabricate a citation. Meet the source floor for your series.
 
 6. **Render exactly one self-contained HTML file** from your series' template:
-   - Fill every `data-nb-section` the registry requires for the template.
+   - Fill every anchor section the registry requires exactly once. If the
+     template declares `flex_sections: [min, max]`, add that many more
+     sections between the anchors, each named by you for the topic
+     (lowercase-hyphen `data-nb-section` labels). Every labeled section
+     needs citations per the template's cite rule.
+   - `templates/FURNITURE.md` is the catalog of shared components; any
+     component may be used in any template.
+   - Set nb-meta `form` to one or two words naming what you wrote
+     ("Dossier", "Chronicle", "Explainer"...). Reuse this series' existing
+     form labels when the form repeats; the label shows on the front page.
    - Embed the `nb-meta` JSON block (schema below).
    - Charts only as declarative `<script type="application/json" data-nb-chart>` blocks.
    - No scripts other than those JSON blocks and the template's own
@@ -99,7 +108,8 @@ Embed in `<head>`:
   "protocol": "1.0",
   "series": "semiconductors",
   "slug": "micron",
-  "template": "dossier",
+  "template": "article",
+  "form": "Dossier",
   "title": "Micron Technology: The Scarcest Commodity in AI",
   "mode": "collection",
   "order": null,
@@ -116,8 +126,9 @@ Embed in `<head>`:
 
 Field notes: `mode` is one of `collection | sequence | rolling | open`. `order` is the
 1-based item index for `sequence` mode, else null. `date` is the UTC date of your run.
-For `open` mode, `template` must be one of the series' declared choices. `sources` and
-`words` are your self-measurements (the proof recounts; >20% deviation is a WARN).
+For `open` mode, `template` must be one of the series' declared choices. `form` is
+optional free text, one or two words. `sources` and `words` are your
+self-measurements (the proof recounts; >20% deviation is a WARN).
 `harness`/`model` are honest provenance.
 
 ## Quality creed

@@ -21,6 +21,13 @@ For several varied reads a day without curating items, run several open
 desks with distinct beats. One edition per series per night is the
 invariant, so desks are how a paper gets breadth.
 
+Genres are forms, not settings. Nearly every desk runs on the `article`
+template; what makes its editions dossiers, chronicles, lessons, or
+appraisals is the series prompt: the outline conventions it keeps, the
+furniture that carries them (`templates/FURNITURE.md`), and the one-or-two
+word label the desk reuses in nb-meta `form`, which the front page shows.
+Every desk in `examples/` demonstrates a form this way.
+
 Commissioning: an open desk may still carry `items:`. That list is its
 commission queue. Anything you add must be published, in any order, before
 the desk freestyles again. The proof enforces this, so "cover X next" is a
@@ -75,6 +82,6 @@ Two rules of the road:
 ## Governing without YAML
 
 Day to day you steer by talking to your agent: "pause frontier-compute",
-"make the wildcard desk weekly", "commission a dossier on ASML", "less
+"make the wildcard desk weekly", "commission a deep dive on ASML", "less
 policy in the brief for a while" (a prompt.md edit). Every change is one
 small diff on `main`, validated by `python3 engine/validate_config.py`.

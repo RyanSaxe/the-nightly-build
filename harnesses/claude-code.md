@@ -46,8 +46,8 @@ per series): create extra Routines and append one line to the prompt:
 
 Pick the model when creating the Routine (settings on the routine); the single
 press-level Routine runs every series on that model. Deep research rewards the
-strongest model you have access to: Fable/Opus-class for longread templates
-(dossier, lesson, chronicle); Sonnet-class is serviceable for briefs. To vary
+strongest model you have access to: Fable/Opus-class for articles;
+Sonnet-class is serviceable for briefs. To vary
 the model by series, use the advanced per-series Routines above. The edition
 records whatever ran in `nb-meta.model`, so your library doubles as a model
 comparison corpus.

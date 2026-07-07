@@ -30,6 +30,30 @@ engine's own assets. Swapping families changes the chrome and new editions
 immediately; editions published earlier keep their frozen font links and
 fall back to system faces for any family they did not load.
 
+## Your own furniture
+
+Editions compose pre-designed components from the shared catalog,
+`templates/FURNITURE.md`: stat strips, timelines, pull quotes, position
+blocks, claim cards, and more. Any component works in any template.
+
+You can extend the catalog without touching the engine. The builder
+republishes your theme CSS across the whole library on every publish, so a
+class defined there restyles past editions too. Define a component below
+the token blocks, on your own prefix (`nb-` is reserved):
+
+```css
+/* press/themes/mytheme.css, below the tokens */
+.rs-margin-note {
+  float: right; width: 200px; margin: 4px 0 12px 20px;
+  font-size: 13px; color: var(--ink-soft);
+  border-top: 2px solid var(--accent); padding-top: 6px;
+}
+```
+
+Then instruct a desk in its `prompt.md`: "use `<div class=\"rs-margin-note\">`
+for asides." Editions carry the markup, your theme carries the look, and
+engine updates never touch either.
+
 ## Voice: press/editorial.md
 
 Your paper's voice, composed into every edition's instructions after the
@@ -49,33 +73,47 @@ entry > press/series/<id>/prompt.md > tag fragments > item prompt
 ## Your own templates
 
 User templates are first class: the proof enforces whatever a registry
-entry declares, so a template you invent gets the same validation, CI, and
-site treatment as the shipped five.
+entry declares, so a template you define gets the same validation, CI, and
+site treatment as the shipped two. Reach for one when a desk needs
+structure enforced rather than described; for most genres, a form written
+into the series prompt on `article` is enough (see [series.md](series.md)).
+
+Registry entries come in two styles:
+
+- Fixed outline: declare `sections` and each must appear exactly once.
+- Flexible outline: declare anchor `sections` plus
+  `flex_sections: [min, max]`, and the agent names that many additional
+  sections per edition. Either way the cite rule applies to every labeled
+  section.
+
+Worked example: the classic lesson template, five fixed sections for an
+ordered course, rebuilt as a press template.
 
 1. Declare it in `press/templates/registry.yaml`:
 
 ```yaml
-fieldnotes:
-  class: shortread
-  words: [800, 2000]
-  sections: [observations, open-questions, sources]
+lesson:
+  class: longread
+  words: [1500, 4000]
+  sections: [objectives, recap, teach, check, bridge, sources]
   cite_rule: per-section
-  modes: [rolling, collection]
+  modes: [sequence]
 ```
 
-Rules: `sections` must include `sources` and lists the required minimum
-(editions may add extra sections). Bands are `[low, high]`. `cite_rule` is
-`per-section`, `per-item` (needs `data-nb-item` markers), or `per-slide`
-(needs `data-nb-slide`). Entries here overlay the shipped registry, so
-reusing a shipped id redefines it.
+Rules: `sections` must include `sources`. Bands are `[low, high]`.
+`cite_rule` is `per-section` or `per-item` (needs `data-nb-item` markers).
+Entries here overlay the shipped registry, so reusing a shipped id
+redefines it. The test suite exercises this exact lesson entry, so the
+walkthrough cannot drift from what the proof enforces.
 
-2. Scaffold it as `press/templates/fieldnotes.html`. Copy a shipped
-template's `<head>` and header chrome verbatim (asset links, nb-meta
-skeleton, eyebrow, title, dek, byline), then lay out one
-`<section data-nb-section="...">` per declared section. Template files
-shadow shipped ones by filename. The sandbox applies unchanged: no scripts
-beyond the JSON blocks and the engine runtime, citations as `sup.nb-cite`
-anchors into numbered source entries.
+2. Scaffold it as `press/templates/lesson.html`. Copy a shipped template's
+`<head>` and header chrome verbatim (asset links, nb-meta skeleton,
+eyebrow, title, dek, byline), then lay out one
+`<section data-nb-section="...">` per declared section. The objectives
+box, check box, and bridge components in `templates/FURNITURE.md` carry
+the form. Template files shadow shipped ones by filename. The sandbox
+applies unchanged: no scripts beyond the JSON blocks and the engine
+runtime, citations as `sup.nb-cite` anchors into numbered source entries.
 
 3. Validate and rehearse: `python3 engine/validate_config.py`, then point a
 series at the template and run a press check before scheduling it.

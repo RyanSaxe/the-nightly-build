@@ -99,17 +99,11 @@ def seq_repo():
     for sub in ("press", "templates"):
         shutil.copytree(pathlib.Path(TESTREPO) / sub, pathlib.Path(tmp) / sub)
     y = pathlib.Path(tmp) / "press" / "series" / "semiconductors" / "series.yaml"
-    y.write_text(
-        y.read_text()
-        .replace("mode: collection", "mode: sequence")
-        .replace("template: dossier", "template: chronicle")
-    )
-    # chronicle allows sequence; but our fixture is a dossier — instead keep dossier
-    y.write_text(y.read_text().replace("template: chronicle", "template: dossier"))
+    y.write_text(y.read_text().replace("mode: collection", "mode: sequence"))
     return tmp
 
 
-VALID = make_fixtures.dossier()
+VALID = make_fixtures.article()
 VALID_BRIEF = make_fixtures.brief(TODAY)
 
 
@@ -120,9 +114,9 @@ def mut(old, new, *, base=None):
 
 
 print("== happy paths ==")
-expect("valid dossier is BLOCK-clean", run_local(VALID, "semiconductors"), blocks=0)
+expect("valid article is BLOCK-clean", run_local(VALID, "semiconductors"), blocks=0)
 expect(
-    "valid dossier has zero warns too",
+    "valid article has zero warns too",
     run_local(VALID, "semiconductors"),
     must_not=["W-LENGTH-LOW", "W-SOURCES-MIN", "W-CITE-DENSITY", "W-REQ-URL"],
 )
@@ -249,7 +243,7 @@ expect(
 )
 expect(
     "meta template mismatch",
-    run_local(mut('"template": "dossier"', '"template": "lesson"'), "semiconductors"),
+    run_local(mut('"template": "article"', '"template": "brief"'), "semiconductors"),
     must_have=["B-META-MATCH"],
 )
 
@@ -257,7 +251,8 @@ print("== B-HTML ==")
 expect(
     "missing required section",
     run_local(
-        mut('data-nb-section="debate"', 'data-nb-section="argument"'), "semiconductors"
+        mut('data-nb-section="orientation"', 'data-nb-section="intro"'),
+        "semiconductors",
     ),
     must_have=["B-HTML"],
 )
@@ -266,7 +261,7 @@ expect(
     run_local(
         VALID.replace(
             '<section data-nb-section="go-deeper">',
-            '<section data-nb-section="debate">',
+            '<section data-nb-section="orientation">',
             1,
         ),
         "semiconductors",
@@ -387,7 +382,7 @@ expect(
 
 print("== WARN tier ==")
 short = VALID
-for _ in range(6):
+for _ in range(9):
     short = short.replace(make_fixtures.LOREM, "Short. ", 20)
 expect(
     "W-LENGTH-LOW",
@@ -414,7 +409,9 @@ expect(
     blocks=0,
 )
 # strip cites only inside debate section
-m = _re.search(r'(<section data-nb-section="debate">.*?</section>)', VALID, _re.S)
+m = _re.search(
+    r'(<section data-nb-section="bull-versus-bear">.*?</section>)', VALID, _re.S
+)
 assert m is not None
 deb = m.group(1)
 deb_stripped = _re.sub(r'<sup class="nb-cite">.*?</sup>', "", deb)
@@ -552,18 +549,7 @@ print("== templates: sample editions pass the proof ==")
 tpl_repo = tempfile.mkdtemp()
 shutil.copytree(REPO / "templates", pathlib.Path(tpl_repo) / "templates")
 TPL_SERIES = {
-    "crypto": (
-        "sequence",
-        "lesson",
-        "items:\n  - {slug: hashes, title: Hash Functions}\n"
-        "  - {slug: signatures, title: Signatures}",
-    ),
-    "papers": (
-        "collection",
-        "paper",
-        "items:\n  - {slug: attention, title: Attention}",
-    ),
-    "histories": ("collection", "chronicle", "items:\n  - {slug: unix, title: Unix}"),
+    "histories": ("collection", "article", "items:\n  - {slug: unix, title: Unix}"),
 }
 for sid, (mode, template, items) in TPL_SERIES.items():
     d = pathlib.Path(tpl_repo) / "press" / "series" / sid
@@ -573,9 +559,7 @@ for sid, (mode, template, items) in TPL_SERIES.items():
         f"autopublish: true\nstrict: false\n{items}\n"
     )
 for name, fixture, sid, slug in [
-    ("lesson", make_fixtures.lesson(), "crypto", "hashes"),
-    ("paper", make_fixtures.paper(), "papers", "attention"),
-    ("chronicle", make_fixtures.chronicle(), "histories", "unix"),
+    ("chronicle-form article", make_fixtures.chronicle(), "histories", "unix"),
 ]:
     rep = run_local(fixture, sid, slug=slug, repo=tpl_repo)
     expect(
@@ -636,6 +620,14 @@ ut_tpl.mkdir()
     "memo:\n  class: shortread\n  words: [200, 3000]\n"
     "  sections: [note, sources]\n  cite_rule: per-section\n"
     "  modes: [collection]\n"
+    "fieldnotes:\n  class: shortread\n  words: [200, 3000]\n"
+    "  sections: [sources]\n  flex_sections: [2, 3]\n"
+    "  cite_rule: per-section\n  modes: [collection]\n"
+    # the exact registry entry from the docs/customization.md walkthrough,
+    # so the tutorial cannot drift from what the proof enforces
+    "lesson:\n  class: longread\n  words: [1500, 4000]\n"
+    "  sections: [objectives, recap, teach, check, bridge, sources]\n"
+    "  cite_rule: per-section\n  modes: [sequence]\n"
 )
 (ut_tpl / "memo.html").write_text(
     "<!DOCTYPE html><html><body>"
@@ -643,11 +635,37 @@ ut_tpl.mkdir()
     '<section data-nb-section="sources"></section>'
     "</body></html>"
 )
+(ut_tpl / "fieldnotes.html").write_text(
+    "<!DOCTYPE html><html><body>"
+    '<section data-nb-section="YOUR-LABEL"></section>'
+    '<section data-nb-section="sources"></section>'
+    "</body></html>"
+)
+(ut_tpl / "lesson.html").write_text(
+    "<!DOCTYPE html><html><body>"
+    + "".join(
+        f'<section data-nb-section="{s}"></section>'
+        for s in ("objectives", "recap", "teach", "check", "bridge", "sources")
+    )
+    + "</body></html>"
+)
 ut_series = pathlib.Path(ut_repo) / "press" / "series" / "memos"
 ut_series.mkdir()
 (ut_series / "series.yaml").write_text(
     "name: Memos\nmode: collection\ntemplate: memo\nautopublish: true\n"
     "strict: false\nitems:\n  - {slug: first, title: First Memo}\n"
+)
+fn_series = pathlib.Path(ut_repo) / "press" / "series" / "notes"
+fn_series.mkdir()
+(fn_series / "series.yaml").write_text(
+    "name: Field Notes\nmode: collection\ntemplate: fieldnotes\n"
+    "items:\n  - {slug: first-notes, title: First Notes}\n"
+)
+crypto_series = pathlib.Path(ut_repo) / "press" / "series" / "crypto"
+crypto_series.mkdir()
+(crypto_series / "series.yaml").write_text(
+    "name: Cryptography\nmode: sequence\ntemplate: lesson\n"
+    "items:\n  - {slug: hashes, title: Hash Functions}\n"
 )
 
 MEMO = f"""<!DOCTYPE html>
@@ -684,6 +702,133 @@ expect(
     ),
     must_have=["B-HTML"],
 )
+
+LESSON_SECTIONS = "".join(
+    f'<section data-nb-section="{s}"><p>{make_fixtures.LOREM * 7}'
+    f'<sup class="nb-cite"><a href="#s{i + 1}">{i + 1}</a></sup></p></section>'
+    for i, s in enumerate(("objectives", "recap", "teach", "check", "bridge"))
+)
+LESSON = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Hash Functions</title>
+<script type="application/json" id="nb-meta">
+{{"protocol": "1.0", "series": "crypto", "slug": "hashes",
+  "template": "lesson", "form": "Lesson", "title": "Hash Functions",
+  "mode": "sequence", "order": 1, "date": "2026-07-06", "tags": [],
+  "sources": 5, "words": 1560, "reading_minutes": 7, "dek": "Hashes.",
+  "harness": "test-fixture", "model": "claude-fable-5"}}
+</script>
+</head><body>{LESSON_SECTIONS}
+<section data-nb-section="sources"><ol>{
+    "".join(
+        f'<li id="s{i}"><a data-nb-source href="https://example.org/l{i}">x</a></li>'
+        for i in range(1, 6)
+    )
+}</ol></section>
+</body></html>"""
+expect(
+    "the docs walkthrough lesson template passes as a fixed user template",
+    run_local(LESSON, "crypto", slug="hashes", repo=ut_repo),
+    blocks=0,
+)
+
+print("== flex sections (agent-named outline) ==")
+
+
+def flex_edition(sections, form="Field Notes"):
+    body = "".join(
+        f'<section data-nb-section="{name}"><p>{make_fixtures.LOREM * 7}'
+        f"{cite}</p></section>"
+        for name, cite in sections
+    )
+    return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>First Notes</title>
+<script type="application/json" id="nb-meta">
+{{"protocol": "1.0", "series": "notes", "slug": "first-notes",
+  "template": "fieldnotes", "title": "First Notes", "mode": "collection",
+  "order": null, "date": "2026-07-06", "tags": [], "sources": 5,
+  "words": 460, "reading_minutes": 2, "dek": "Notes.", "form": "{form}",
+  "harness": "test-fixture", "model": "claude-fable-5"}}
+</script>
+</head><body>{body}
+<section data-nb-section="sources"><ol>{
+        "".join(
+            f'<li id="s{i}"><a data-nb-source href="https://example.org/n{i}">x</a></li>'
+            for i in range(1, 6)
+        )
+    }</ol></section>
+</body></html>"""
+
+
+CITE1 = '<sup class="nb-cite"><a href="#s1">1</a></sup>'
+CITE2 = '<sup class="nb-cite"><a href="#s2">2</a></sup>'
+CITE3 = '<sup class="nb-cite"><a href="#s3">3</a></sup>'
+expect(
+    "flex template passes with agent-named sections in band",
+    run_local(
+        flex_edition([("the-lab", CITE1), ("the-bet", CITE2)]),
+        "notes",
+        slug="first-notes",
+        repo=ut_repo,
+    ),
+    blocks=0,
+    must_not=["W-FORM-LABEL"],
+)
+expect(
+    "too few flex sections blocks",
+    run_local(
+        flex_edition([("only-one", CITE1)]),
+        "notes",
+        slug="first-notes",
+        repo=ut_repo,
+    ),
+    must_have=["B-HTML"],
+)
+expect(
+    "too many flex sections blocks",
+    run_local(
+        flex_edition([("a1", CITE1), ("a2", CITE2), ("a3", CITE3), ("a4", CITE1)]),
+        "notes",
+        slug="first-notes",
+        repo=ut_repo,
+    ),
+    must_have=["B-HTML"],
+)
+expect(
+    "duplicate flex labels block",
+    run_local(
+        flex_edition([("twice", CITE1), ("twice", CITE2)]),
+        "notes",
+        slug="first-notes",
+        repo=ut_repo,
+    ),
+    must_have=["B-HTML"],
+)
+expect(
+    "uncited flex section warns on cite density",
+    run_local(
+        flex_edition([("cited", CITE1), ("uncited", "")]),
+        "notes",
+        slug="first-notes",
+        repo=ut_repo,
+    ),
+    blocks=0,
+    must_have=["W-CITE-DENSITY"],
+)
+expect(
+    "long form label warns",
+    run_local(
+        flex_edition(
+            [("the-lab", CITE1), ("the-bet", CITE2)],
+            form="A Very Long Form Label",
+        ),
+        "notes",
+        slug="first-notes",
+        repo=ut_repo,
+    ),
+    blocks=0,
+    must_have=["W-FORM-LABEL"],
+)
+
 ut_rc = subprocess.run(
     [sys.executable, str(REPO / "engine" / "validate_config.py"), "--repo", ut_repo],
     capture_output=True,
@@ -695,7 +840,7 @@ else:
     FAIL.append("validate_config overlay")
     print(f"  FAIL validate_config overlay: {ut_rc.stdout.decode()[-300:]}")
 reg = C.load_registry(ut_repo)
-if "memo" in reg and "dossier" in reg:
+if "memo" in reg and "article" in reg:
     PASS += 1
     print("  ok   merged registry keeps shipped + adds press templates")
 else:
@@ -704,7 +849,7 @@ else:
 if (
     C.find_template(ut_repo, "memo")
     and "press" in C.find_template(ut_repo, "memo")
-    and "press" not in (C.find_template(ut_repo, "dossier") or "")
+    and "press" not in (C.find_template(ut_repo, "article") or "")
 ):
     PASS += 1
     print("  ok   template lookup: press shadows shipped")
@@ -770,7 +915,7 @@ print("== open mode (the hands-off desk) ==")
 
 OPEN_YAML = """name: Wildcard
 mode: open
-templates: [dossier, chronicle]
+templates: [article, brief]
 prompt: prompt.md
 autopublish: true
 strict: false
@@ -822,9 +967,7 @@ expect(
         "wildcard",
         slug="the-cuda-moat",
         repo=open_repo(
-            OPEN_YAML.replace(
-                "templates: [dossier, chronicle]", "templates: [chronicle]"
-            )
+            OPEN_YAML.replace("templates: [article, brief]", "templates: [brief]")
         ),
         library=olib,
     ),
@@ -854,12 +997,11 @@ for name, cond in [
     ("open series with a templates list validates", vc_rc(orepo) == 0),
     (
         "'templates' on a non-open series rejected",
-        vc_rc(patched_repo("templates: [dossier]\n")) == 1,
+        vc_rc(patched_repo("templates: [article]\n")) == 1,
     ),
     (
         "open mode without any template rejected",
-        vc_rc(open_repo(OPEN_YAML.replace("templates: [dossier, chronicle]\n", "")))
-        == 1,
+        vc_rc(open_repo(OPEN_YAML.replace("templates: [article, brief]\n", ""))) == 1,
     ),
 ]:
     if cond:
@@ -1006,7 +1148,7 @@ body.write_text("""Nightly edition.
 series: semiconductors
 slug: micron
 mode: collection
-template: dossier
+template: article
 date: "2026-07-06"
 title: "Micron Technology: The Scarcest Commodity in AI"
 order: null

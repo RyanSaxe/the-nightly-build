@@ -8,10 +8,29 @@ scheduled agent researches and publishes cited editions to your own GitHub
 Pages site every night. Git is the entire protocol: any agent that can open
 a pull request can be your night shift.
 
-Editions are original research artifacts, not summaries. Five templates ship
-with the engine (dossier, lesson, brief, paper appraisal, chronicle) and you
-can define your own. Over weeks the nightly output accumulates into a
-permanent, searchable library that you own and that GitHub serves for free.
+Editions are original research artifacts, not summaries. Two templates ship
+with the engine: `article` (prose in sections, with an outline the agent
+designs per topic) and `brief` (a cited item list). Genres like dossiers,
+chronicles, lessons, and appraisals are forms: prompt patterns plus shared
+furniture, labeled per edition on the front page. You can define your own
+forms in prose, and your own templates when you want structure enforced.
+Over weeks the nightly output accumulates into a permanent, searchable
+library that you own and that GitHub serves for free.
+
+## What it looks like
+
+One 800px column, a ruled front-page table, warm light and dark themes, and
+editions labeled by the form the agent chose. Rendered from the example
+configuration; regenerate after look changes.
+
+<p>
+<img src="assets/screenshots/front-light.png" width="49%" alt="The front page in light mode">
+<img src="assets/screenshots/front-dark.png" width="49%" alt="The front page in dark mode">
+</p>
+<p>
+<img src="assets/screenshots/edition-dark.png" width="62%" alt="An edition in dark mode">
+<img src="assets/screenshots/front-phone.png" width="36%" alt="The front page on a phone">
+</p>
 
 ## Quickstart
 
@@ -41,7 +60,7 @@ permanent, searchable library that you own and that GitHub serves for free.
 | the press | `engine/build_site.py` | Rebuilds the site on every merge: front page, night archive, sections, search, feeds, email digests |
 | the paperboy | `morning-mail.yml` | Optional daily email of the latest build |
 | duty | `engine/duty.py` | Deterministic nightly work selection: cadence, pauses, completion, commissions |
-| templates | `templates/` | Registry-defined layouts. User templates in `press/templates/` are first class |
+| templates | `templates/` | Two citation geometries plus a shared furniture catalog. User templates in `press/templates/` are first class |
 | skills | `skills/` | Librarian (setup and curation) and Correspondent (the night shift runtime) |
 
 Two branches with disjoint jobs: `main` holds the engine and your
