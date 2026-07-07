@@ -89,13 +89,26 @@ Actions secrets on the trusted post-merge path.
 
 ## Development
 
-The engine is Python 3.9+ with one dependency, PyYAML. Scripts carry PEP 723
-metadata, so `uv run engine/check.py` works without any setup.
+The engine is Python 3.10+ with one runtime dependency, PyYAML. Scripts carry
+PEP 723 metadata, so `uv run engine/check.py` works without any setup.
 
 ```sh
 python3 engine/tests/run_tests.py    # proof, builder, and end-to-end suites
 python3 engine/validate_config.py    # validate press/ configuration
 ```
+
+Engine changes go through a lint, type-check, format, and test gate that CI
+enforces on `main`. Set it up once:
+
+```sh
+uv sync                     # Python tools: ruff, ty
+npm install                 # web tools: prettier, eslint, stylelint, markdownlint
+uv run pre-commit install   # run the same checks on every commit
+```
+
+`pre-commit` runs exactly what CI runs (the Rust drop-in `prek` reads the same
+config). The shell hooks also need `shellcheck` and `shfmt` on your PATH;
+install them from your package manager.
 
 This repository is engine-only. It runs no press and publishes no library;
 the maintainer dogfoods by copying it like any other user. `examples/`
