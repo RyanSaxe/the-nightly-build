@@ -62,6 +62,7 @@ FEED_CONTENT_MAX = 150_000  # per-entry cap after stripping, bytes
 UPSTREAM_REPOSITORY = os.getenv(
     "UPSTREAM_REPOSITORY", "the-nightly-build/the-nightly-build"
 )
+NETWORK_URL = os.getenv("NETWORK_URL", "https://the-nightly-build.github.io/")
 META_RE = re.compile(r'<script[^>]*\bid="nb-meta"[^>]*>(.*?)</script>', re.S | re.I)
 
 esc = html.escape
@@ -259,9 +260,7 @@ def derive_self_repository(explicit, base_url):
     return f"{match.group(1)}/{match.group(2)}" if match else None
 
 
-def build_catalog(
-    site_cfg, series_cfgs, *, editions, generated, base_url="", repository=None
-):
+def build_catalog(site_cfg, series_cfgs, *, editions, generated, repository=None):
     by_series = {}
     for ed in editions.values():
         by_series.setdefault(ed["series"], []).append(ed)
@@ -330,24 +329,24 @@ def build_catalog(
         "footer": site_cfg.get("footer"),
         "repository": repository,
         "upstream": UPSTREAM_REPOSITORY,
+        "network_url": NETWORK_URL,
         "series": series_entries,
         "editions": edition_entries,
         "builds": builds,
         "tags": tags,
     }
+    # Listing on the directory is opt-out: a paper is listed unless it sets
+    # network.publish: false. The block carries only that signal and an optional
+    # description; the public URL is never in the catalog. The directory derives
+    # each paper's URL from GitHub identity, so no catalog field can point a
+    # reader off the paper's own site.
     network = site_cfg.get("network") or {}
-    if network.get("publish") is True:
-        # The public URL is the Pages base URL, never configured. Without one the
-        # press cannot be listed, so warn rather than emit an unreachable entry.
-        if not base_url:
-            sys.stderr.write(
-                "WARN: network.publish is true but no base URL was resolved; "
-                "the press cannot be listed without a public URL\n"
-            )
+    if network.get("publish") is False:
+        catalog["network"] = {"publish": False}
+    else:
         catalog["network"] = {
             "publish": True,
             "description": (network.get("description") or "").strip(),
-            "url": f"{base_url.rstrip('/')}/" if base_url else "",
         }
     return catalog
 
@@ -428,20 +427,20 @@ def asset_stamp(repo):
 
 def chrome_eco_links(site):
     # Ecosystem links under the hamburger nav (identical markup in nb.js). All
-    # open in a new tab. "Star this press" points at the press's own repo and is
-    # omitted when the repo is unknown; "Make your own press" recruits to the
-    # canonical repo. No network link yet: the directory site is not live.
+    # open in a new tab. "Star on GitHub" points at this press's own repo and is
+    # omitted when the repo is unknown; "Start your own" recruits to the canonical
+    # repo; "The whole newspaper" links to the network directory.
     ext = 'target="_blank" rel="noopener noreferrer"'
     links = []
     if site.get("repository"):
         links.append(
             f'<a href="https://github.com/{site["repository"]}" {ext}>'
-            f"Star this press on GitHub ↗</a>"
+            f"Star on GitHub ↗</a>"
         )
     links.append(
-        f'<a href="https://github.com/{site["upstream"]}" {ext}>'
-        f"Make your own press ↗</a>"
+        f'<a href="https://github.com/{site["upstream"]}" {ext}>Start your own ↗</a>'
     )
+    links.append(f'<a href="{NETWORK_URL}" {ext}>The whole newspaper ↗</a>')
     return "".join(links)
 
 
@@ -453,7 +452,7 @@ def chrome_imprint(site):
         return f'<span class="nb-imprint">{esc(site["footer"])}</span>'
     return (
         f'<a class="nb-imprint" href="https://github.com/{site["upstream"]}" {ext}>'
-        f"A Nightly Build press</a>"
+        f"A Nightly Build paper</a>"
     )
 
 
@@ -562,7 +561,7 @@ def night_body(eds, series_cfgs, *, depth, date):
         f'<span class="nb-editionline-facts">{total} min read</span></div>'
     )
     if not eds:
-        return body + '<div class="nb-empty"><p>No editions this night.</p></div>'
+        return body + '<div class="nb-empty"><p>No articles this night.</p></div>'
     cells = lead_cell(eds[0], series_cfgs, depth=depth) + "".join(
         story_item(e, series_cfgs, depth=depth) for e in eds[1:]
     )
@@ -652,7 +651,7 @@ def desk_status(s, cfg):
         return "paused", True
     if mode in ("collection", "sequence"):
         if total and count >= total:
-            return f"complete · {count} edition{'s' if count != 1 else ''}", True
+            return f"complete · {count} article{'s' if count != 1 else ''}", True
         if not total:  # published but not in press config (or no items yet)
             return f"{count} published", False
         pct = round(100 * count / total)
@@ -698,12 +697,12 @@ def render_series_index(site, catalog, *, series_cfgs, editions):
         if rests:
             resting.append(row)
         else:
-            groups.setdefault(cfg.get("section") or "Desks", []).append(row)
+            groups.setdefault(cfg.get("section") or "Other", []).append(row)
 
     facts = (
         f"{max(len(groups), 1)} section{'s' if len(groups) != 1 else ''} · "
-        f"{ndesks} desk{'s' if ndesks != 1 else ''} · "
-        f"{len(catalog['editions'])} edition"
+        f"{ndesks} series · "
+        f"{len(catalog['editions'])} article"
         f"{'s' if len(catalog['editions']) != 1 else ''}"
     )
     body = (
@@ -715,14 +714,13 @@ def render_series_index(site, catalog, *, series_cfgs, editions):
     for section, rows in groups.items():
         body += (
             f'<div class="nb-secgroup"><div class="nb-sechead">'
-            f"<h2>{esc(section)}</h2><span>{len(rows)} desk"
-            f"{'s' if len(rows) != 1 else ''}</span></div>"
+            f"<h2>{esc(section)}</h2><span>{len(rows)} series</span></div>"
             f"{''.join(rows)}</div>"
         )
     if resting:
         body += (
             f'<details class="nb-stacks"><summary>In the stacks — '
-            f"{len(resting)} desk{'s' if len(resting) != 1 else ''}"
+            f"{len(resting)} series"
             f"</summary>{''.join(resting)}</details>"
         )
     return page(
@@ -811,7 +809,7 @@ def render_series_page(site, sid, *, cfg, eds, series_cfgs):
         body = head + (
             f'<div class="nb-list">{"".join(parts)}</div>'
             if parts
-            else '<div class="nb-empty"><p>No editions yet.</p></div>'
+            else '<div class="nb-empty"><p>No articles yet.</p></div>'
         )
     else:  # collection, in config order
         rows = [
@@ -863,7 +861,7 @@ def render_tag_page(site, tag, *, refs, editions, series_cfgs):
     ]
     body = (
         f'<div class="nb-pagehead"><h1>#{esc(tag)}</h1>'
-        f'<span class="nb-pagehead-facts">{len(eds)} edition'
+        f'<span class="nb-pagehead-facts">{len(eds)} article'
         f"{'s' if len(eds) != 1 else ''}</span></div>"
     )
     body += (
@@ -1050,7 +1048,7 @@ def render_email(site_title, date, *, eds, series_cfgs, base_url):
               text-transform:uppercase;letter-spacing:1px;margin:4px 0 10px">
     Tonight's build · {esc(date)}</div>
   <div style="font-family:Georgia,serif;font-size:15px;margin:0 0 12px">
-    {len(eds)} edition{"s" if len(eds) != 1 else ""} ·
+    {len(eds)} article{"s" if len(eds) != 1 else ""} ·
     {total_minutes} minutes of reading, built while you slept.</div>
   {"".join(rows)}
   <div style="border-top:2px solid #161D28;margin-top:16px;padding-top:12px;
@@ -1135,7 +1133,6 @@ def build(
         series_cfgs,
         editions=editions,
         generated=now,
-        base_url=base_url,
         repository=repository,
     )
 
@@ -1267,7 +1264,7 @@ def build(
         write(
             os.path.join(out, "email-latest-subject.txt"),
             f"{site_cfg['title']} — {latest}: {len(eds)} "
-            f"edition{'s' if len(eds) != 1 else ''}\n",
+            f"article{'s' if len(eds) != 1 else ''}\n",
         )
 
     copy_assets(repo, site_cfg, out=out)
@@ -1322,7 +1319,7 @@ def main(argv=None):
     )
     n = len(catalog["editions"])
     print(
-        f"site built: {args.out} ({n} edition{'s' if n != 1 else ''}, "
+        f"site built: {args.out} ({n} article{'s' if n != 1 else ''}, "
         f"{len(catalog['builds'])} builds)"
     )
     if args.preview:
