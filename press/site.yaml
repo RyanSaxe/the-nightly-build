@@ -29,8 +29,8 @@ assets:
 # email:
 #   send_utc_hour: 12
 
-# Listed on The Nightly Build Network. The public URL is derived from this
-# press's GitHub Pages URL at build time, so description is the only field set.
-network:
-  publish: true
+# Listed in The Nightly Build directory. Listing is on by default; the public
+# URL is derived from your GitHub Pages URL, so a one-line description is the
+# only field worth setting (set publish: false to opt out).
+directory:
   description: "AI, markets, engineering, and whatever I cannot stop thinking about."
