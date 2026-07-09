@@ -5,10 +5,10 @@
  *      localStorage("nb-appearance"). Base/no-JS fallback is light (see theme).
  *   2. Declarative charts: renders <script type="application/json"
  *      data-nb-chart> blocks with version-pinned Chart.js from cdnjs — the
- *      ONLY third-party script, loaded here, never by editions.
- *   3. Edition chrome, retrofitted onto every edition ever published:
+ *      ONLY third-party script, loaded here, never by articles.
+ *   3. Article chrome, retrofitted onto every article ever published:
  *      collapsible Contents, citation source-sheets with backrefs, byline
- *      normalization, desk-linked eyebrow, sequence prev/next from
+ *      normalization, series-linked eyebrow, sequence prev/next from
  *      catalog.json, external links in new tabs.
  *   4. The Search page: scoped fuzzy search over the builder-emitted index.
  *   5. Menu niceties (close on outside tap / Escape).
@@ -242,15 +242,15 @@
     return catalogPromise;
   }
 
-  function editionUrl(entry) {
+  function articleUrl(entry) {
     /* catalog paths are site-root-relative ("/library/…"); resolve against ROOT */
     return ROOT + entry.path.replace(/^\//, "");
   }
 
-  /* ---------------------------------------------------------- edition chrome */
+  /* ---------------------------------------------------------- article chrome */
 
-  /* Editions are standalone frozen files: the bar and footer that site pages
-     get from the builder are injected here, so every edition ever published
+  /* Articles are standalone frozen files: the bar and footer that site pages
+     get from the builder are injected here, so every article ever published
      wears the current chrome. Site title comes from catalog.json. */
   function injectChrome() {
     if (document.querySelector(".nb-bar")) return Promise.resolve();
@@ -262,9 +262,9 @@
       var ext = 'target="_blank" rel="noopener noreferrer"';
       /* Ecosystem links under the nav (mirrors build_site.chrome_eco_links).
          Star on GitHub is omitted when the repo is unknown; the last link points
-         at the network directory. */
-      var network =
-        (cat && cat.network_url) || "https://the-nightly-build.github.io/";
+         at the directory directory. */
+      var directory =
+        (cat && cat.directory_url) || "https://the-nightly-build.github.io/";
       var eco = repo
         ? '<a href="https://github.com/' +
           repo +
@@ -278,7 +278,8 @@
         '" ' +
         ext +
         ">Start your own ↗</a>";
-      eco += '<a href="' + network + '" ' + ext + ">The whole newspaper ↗</a>";
+      eco +=
+        '<a href="' + directory + '" ' + ext + ">The whole newspaper ↗</a>";
       var imprint =
         cat && cat.footer
           ? '<span class="nb-imprint">' + escHtml(cat.footer) + "</span>"
@@ -324,7 +325,7 @@
     });
   }
 
-  function editionMeta() {
+  function articleMeta() {
     var el = document.getElementById("nb-meta");
     if (!el) return null;
     try {
@@ -485,7 +486,7 @@
     if (meta.mode !== "sequence" || !meta.order) return;
     catalog().then(function (cat) {
       if (!cat) return;
-      var sibs = (cat.editions || []).filter(function (e) {
+      var sibs = (cat.articles || []).filter(function (e) {
         return e.series === meta.series && e.order;
       });
       var prev = sibs.find(function (e) {
@@ -498,7 +499,7 @@
       function link(e, arrow) {
         return (
           '<a href="' +
-          editionUrl(e) +
+          articleUrl(e) +
           '">' +
           (arrow === "l" ? "← " : "") +
           e.title +
@@ -566,7 +567,7 @@
             e: e,
             title: (e.title || "").toLowerCase(),
             dek: (e.dek || "").toLowerCase(),
-            desk: (
+            series: (
               (e.section || "") +
               " " +
               (e.series_name || e.series || "")
@@ -589,7 +590,7 @@
     }
 
     function scoreDoc(d, tokens) {
-      /* one search over everything: titles, deks, desks, tags, full text */
+      /* one search over everything: titles, deks, series, tags, full text */
       var total = 0;
       for (var t = 0; t < tokens.length; t++) {
         var q = tokens[t],
@@ -597,8 +598,8 @@
         if (d.title.indexOf(q) >= 0) s = Math.max(s, 6);
         else s = Math.max(s, fuzzy(q, d.title) * 3);
         if (d.dek.indexOf(q) >= 0) s = Math.max(s, 3);
-        if (d.desk.indexOf(q) >= 0) s = Math.max(s, 4);
-        else s = Math.max(s, fuzzy(q, d.desk) * 2);
+        if (d.series.indexOf(q) >= 0) s = Math.max(s, 4);
+        else s = Math.max(s, fuzzy(q, d.series) * 2);
         if (d.tags && d.tags.indexOf(q) >= 0) s = Math.max(s, 4);
         if (d.text && d.text.indexOf(q) >= 0) s = Math.max(s, 2);
         if (s <= 0.34) return 0; /* every token must land somewhere */
@@ -631,7 +632,7 @@
     }
 
     function renderRecent() {
-      /* empty query: the newest editions under month labels, not a dump */
+      /* empty query: the newest articles under month labels, not a dump */
       var recent = docs.slice(0, 20);
       if (count) count.textContent = "";
       var seen = null;
@@ -664,7 +665,7 @@
         tokens.length && d.text ? snippet(d, tokens) : escHtml(e.dek || "");
       return (
         '<a class="nb-item" href="' +
-        editionUrl(e) +
+        articleUrl(e) +
         '">' +
         '<div class="nb-kicker">' +
         escHtml(kicker) +
@@ -757,7 +758,7 @@
     bindChrome();
     renderCharts();
 
-    var meta = editionMeta();
+    var meta = articleMeta();
     if (meta) {
       injectChrome().then(bindChrome);
       buildToc();
