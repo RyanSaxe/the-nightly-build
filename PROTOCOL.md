@@ -27,7 +27,9 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    4. The registry entry for your series' template: `templates/registry.yaml`,
       overlaid by `press/templates/registry.yaml` (your entries win). The
       template file itself is `press/templates/<t>.html` if it exists, else
-      `templates/<t>.html`.
+      `templates/<t>.html`. If the template ships an editorial brief
+      (`press/templates/<t>.md` overlaid on `templates/<t>.md`), read it as the
+      template's voice; it composes here, before the series prompt.
    5. `press/series/<id>/prompt.md`: the series' editorial instructions.
    6. Tag fragments listed in the series config, in declared order.
    7. The item-level `prompt`, if present.
@@ -139,3 +141,8 @@ self-measurements (the proof recounts; >20% deviation is a WARN).
 
 Articles teach rather than summarize. Every load-bearing claim carries a citation the
 reader can follow. The goal is to equip the reader to go deeper on their own.
+
+Every article is produced in its own context, its voice anchored to how the best real
+writers on the subject actually write, and independently edited against this bar before
+it meets the proof. The runtime skill (`skills/correspondent/SKILL.md`) carries the
+procedure; the writing-coach and editor stages are its skills.
