@@ -62,6 +62,8 @@ ALLOWED_EXTERNAL_HOSTS = frozenset({"fonts.googleapis.com", "fonts.gstatic.com"}
 ENGINE_SCRIPT_RE = re.compile(r"^(?:(?:\.\./)+|/)assets/nb\.js$")
 DEFAULT_MIN_SOURCES = {"longread": 8, "shortread": 5}
 DEFAULT_CITE_EXEMPT = ("sources",)  # a template extends this via registry cite_exempt
+EM_DASH_PER_1000 = 4.0  # soft WARN threshold: em-dashes per 1000 words of body prose
+EM_DASH_MIN_WORDS = 100  # skip the check on very short text where the rate is noisy
 SELF_COUNT_TOLERANCE = 0.20
 
 
@@ -158,6 +160,7 @@ class Article(HTMLParser):
         self.external_refs = []  # (tag, url) for script src / link href / img src
         self._capture = None  # ("meta"|"chart", buffer) while inside a JSON script
         self._text_parts = []
+        self._prose_text_parts = []  # body prose only, excludes the sources section
         self._suppress_text_depth = 0  # inside script/style
 
     # -- helpers -------------------------------------------------------------
@@ -284,6 +287,9 @@ class Article(HTMLParser):
             self._capture[1].append(data)
         elif self._suppress_text_depth == 0:
             self._text_parts.append(data)
+            sec = self._current("section")
+            if sec is None or sec.get("section") != "sources":
+                self._prose_text_parts.append(data)
 
     @property
     def word_count(self):
@@ -466,6 +472,14 @@ def is_repo_relative_source(href):
     return not is_off_origin and not normalized.startswith("/")
 
 
+_META_TYPE_NAMES = {
+    str: "a string",
+    int: "an integer",
+    list: "a list",
+    bool: "true or false",
+}
+
+
 def validate_meta_fields(meta, rep):
     def need(field, typ, *, pattern=None, enum=None):
         v = meta.get(field)
@@ -473,7 +487,10 @@ def validate_meta_fields(meta, rep):
             rep.block("B-META-PARSE", f"nb-meta missing required field '{field}'")
             return None
         if typ and not isinstance(v, typ):
-            rep.block("B-META-PARSE", f"nb-meta field '{field}' has wrong type")
+            rep.block(
+                "B-META-PARSE",
+                f"nb-meta field '{field}' must be {_META_TYPE_NAMES.get(typ, 'the right type')}",
+            )
             return None
         if pattern and not re.match(pattern, str(v)):
             rep.block(
@@ -510,7 +527,7 @@ def validate_meta_fields(meta, rep):
     tags = meta.get("tags")
     if tags is not None:
         if not isinstance(tags, list):
-            rep.block("B-META-PARSE", "nb-meta field 'tags' has wrong type")
+            rep.block("B-META-PARSE", "nb-meta field 'tags' must be a list")
         else:
             for tag in tags:
                 if not isinstance(tag, str) or not TAG_RE.match(tag):
@@ -921,11 +938,15 @@ def check_warns(ed, meta, *, series, treg, template_id, item_cfg, rep):
         n = len(ed.items)
         if n < lo:
             rep.warn(
-                "W-LENGTH-LOW", f"{template_id} expects {lo}-{hi} items; found {n}"
+                "W-LENGTH-LOW",
+                f"{template_id} expects {lo}-{hi} items; found {n}",
+                suggestion="add an item to reach the band",
             )
         elif n > hi:
             rep.warn(
-                "W-LENGTH-HIGH", f"{template_id} expects {lo}-{hi} items; found {n}"
+                "W-LENGTH-HIGH",
+                f"{template_id} expects {lo}-{hi} items; found {n}",
+                suggestion="cut the weakest item to the band",
             )
 
     # source floor
@@ -1011,13 +1032,32 @@ def check_warns(ed, meta, *, series, treg, template_id, item_cfg, rep):
         actual = len(ed.sources)
         if abs(meta["sources"] - actual) > SELF_COUNT_TOLERANCE * max(actual, 1):
             rep.warn(
-                "W-SELF-COUNT", f"nb-meta sources={meta['sources']} vs counted {actual}"
+                "W-SELF-COUNT",
+                f"nb-meta sources={meta['sources']} vs counted {actual}",
+                suggestion="update nb-meta sources to the counted total",
             )
     if isinstance(meta.get("words"), int):
         actual = ed.word_count
         if actual and abs(meta["words"] - actual) > SELF_COUNT_TOLERANCE * actual:
             rep.warn(
-                "W-SELF-COUNT", f"nb-meta words={meta['words']} vs counted {actual}"
+                "W-SELF-COUNT",
+                f"nb-meta words={meta['words']} vs counted {actual}",
+                suggestion="update nb-meta words to the counted total",
+            )
+
+    # em-dash overuse (soft): AI drafts reach for the em-dash as a default
+    # connective. WARN only, never a BLOCK; some em-dashes earn their place.
+    prose = " ".join(ed._prose_text_parts)
+    prose_words = len(re.findall(r"\S+", prose))
+    if prose_words >= EM_DASH_MIN_WORDS:
+        dashes = prose.count("—")
+        rate = dashes * 1000 / prose_words
+        if rate > EM_DASH_PER_1000:
+            rep.warn(
+                "W-EM-DASH",
+                f"{dashes} em-dashes in {prose_words} words ({rate:.1f} per 1000)",
+                suggestion="AI drafts overuse the em-dash as a default connective; "
+                "cut the reflexive ones, keep the few that earn their place",
             )
 
 
