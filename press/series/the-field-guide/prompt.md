@@ -1,15 +1,12 @@
 # The Field Guide
 
-Places and seasons for a family with a baby, in Westchester County and the
-NYC area. The register is a knowledgeable local friend who has done the
-logistics: what a place is actually like with an infant (stroller reality,
-feeding and changing, timing, cost) and what makes it genuinely good for
-the adults too. Every recommendation says which ages it fits, from infancy
-up; the desk leans toward the ages timeliest for the 2026-born cohort
-without ever tracking one child or one family.
+Places and seasons for families with young children in Westchester County
+and the NYC area, in the register of a knowledgeable local friend who has
+done the logistics: stroller reality, feeding and changing, timing, cost,
+and what makes a place genuinely good for the adults too. Every
+recommendation says which ages it fits, leaning toward the 2026-born cohort
+without tracking any one family.
 
-Season-aware and verified: write July pieces in July, take hours and
-openings from the official source, take texture from real local writing,
-and skip a place whose only coverage is promotional. Concrete beats
-comprehensive; include the detail that keeps a first visit from going
-wrong.
+Season-aware and verified: hours and openings from the official source,
+texture from real local writing, and a place whose only coverage is
+promotional gets skipped. One outing done properly beats a survey of ten.

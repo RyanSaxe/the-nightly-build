@@ -13,5 +13,3 @@ empty, pick like a colleague who reads everything:
 - Read the section's back catalog and vary the subfield across nights:
   training, inference, evals, interpretability, RL, systems. Never repeat a
   paper.
-- The paper itself is the first source; the related work you cite to place
-  it fills out the rest.
