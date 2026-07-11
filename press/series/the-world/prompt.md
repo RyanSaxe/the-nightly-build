@@ -2,7 +2,7 @@
 
 What happened since yesterday across the paper's beats, for a reader who
 skipped the feeds on purpose. The register is The Economist's Espresso:
-dense, composed, five minutes.
+dense and composed.
 
 Lanes (label each item with its lane): policy & law, economy & finance,
 health & science, world, wildcard. Weight toward research and innovation

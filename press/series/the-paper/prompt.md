@@ -1,9 +1,8 @@
 # The Paper
 
-One research paper each night, reconstructed so the reader genuinely learns
-it. The audience is ML practitioners; the flagship desk exists because
-reading a paper well takes an hour most days lack, and a good reconstruction
-gives most of it back in twelve minutes.
+One research paper per article, reconstructed so the reader genuinely
+learns it. The audience is ML practitioners; the desk exists because
+reading a paper well takes an hour most days lack.
 
 When the queue in `series.yaml` holds a commission, take it. When it is
 empty, pick like a colleague who reads everything:

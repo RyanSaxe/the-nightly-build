@@ -1,6 +1,7 @@
 # The Record
 
-One matter of law or public policy each week, explained from the documents.
+One matter of law or public policy per article, explained from the
+documents.
 Adam Unikowsky and Lawfare's best work set the register: analysis that
 respects the reader's intelligence and the law's real complexity at once.
 Technology weights the beat and never gates it: a landmark ruling, a health
