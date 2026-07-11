@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>How to Lose Part of a Message and Read It Anyway — Rabbit Holes</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "rabbit-holes",
+        "slug": "reed-solomon",
+        "template": "article",
+        "title": "How to Lose Part of a Message and Read It Anyway",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-11",
+        "tags": [],
+        "sources": 8,
+        "words": 1761,
+        "reading_minutes": 8,
+        "dek": "The polynomial algebra behind a scratched CD, a torn QR code, and Voyager's telemetry, and the decade it waited to become usable.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Rabbit Holes</div>
+        <h1 class="nb-title">How to Lose Part of a Message and Read It Anyway</h1>
+        <p class="nb-dekline">
+          The polynomial algebra behind a scratched CD, a torn QR code, and
+          Voyager's telemetry, and the decade it waited to become usable.
+        </p>
+        <div class="nb-byline">
+          <span>8 min read</span><span>2026-07-11</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A message with a hole in it</h2>
+        <p>
+          Print a company logo across the middle of a QR code, punch a hole
+          through as much as thirty percent of it, and a phone still reads it
+          without complaint. That is not tolerance for a smudge. It is exact
+          recovery of the missing bytes, guaranteed by construction, at the
+          highest of the four error-correction levels the QR standard
+          defines.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The same guarantee reads a CD through a scratch, reconstructs a file
+          when two disks in a storage array die at once, and pulls telemetry
+          out of Voyager from beyond the edge of the solar system. All of it
+          rests on a five-page paper published in 1960 by two staff members at
+          MIT Lincoln Laboratory, Irving Reed and Gustave Solomon, with a title
+          that hides how far it would travel: "Polynomial Codes over Certain
+          Finite Fields."<sup class="nb-cite"><a href="#s2">2</a></sup> The
+          idea is worth taking apart, because once you see it you cannot unsee
+          it in the machines around you.
+        </p>
+      </section>
+
+      <section data-nb-section="the-polynomial-trick" id="the-polynomial-trick">
+        <h2>Points on a curve</h2>
+        <p>
+          Start with the wasteful way to survive damage: send everything three
+          times and take a majority vote. It works, and it triples what you
+          transmit. Reed and Solomon found something far cheaper, and the whole
+          scheme turns on a fact from school algebra.
+        </p>
+        <p>
+          Two points determine a line. Three points determine a parabola. In
+          general, any <em>k</em> points with distinct positions fix exactly
+          one polynomial of degree less than <em>k</em> that passes through them
+          all. Reed and Solomon read that fact backwards. Take your <em>k</em>
+          message symbols and treat them as the numbers that define such a
+          polynomial. Then evaluate that polynomial not at <em>k</em> points but
+          at <em>n</em> of them, with <em>n</em> larger than <em>k</em>, and
+          transmit all <em>n</em> results.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          You have sent a curve, deliberately over-sampled.
+        </p>
+        <p>
+          Now the payoff. The curve was fixed by only <em>k</em> numbers, so any
+          <em>k</em> of the <em>n</em> points you sent are enough to rebuild it,
+          and from it the original message. The other <em>n − k</em> points are
+          spare. Lose them, and it costs you nothing. A codeword carrying
+          <em>n − k</em> extra points can afford to have <em>n − k</em> of its
+          symbols simply vanish and still be read exactly, because whichever
+          <em>k</em> survive still name the one curve that fits.
+        </p>
+        <div class="nb-callout">
+          <span class="nb-callout-term">Erasure vs. error</span>
+          An <em>erasure</em> is a symbol you know is missing: its slot is
+          blank. An <em>error</em> is a symbol that arrived looking perfectly
+          valid but is wrong. The first tells you where the damage is; the
+          second hides. That difference sets the price of recovery.
+        </div>
+      </section>
+
+      <section data-nb-section="errors-without-a-map" id="errors-without-a-map">
+        <h2>The hard case: errors that lie</h2>
+        <p>
+          Missing points are the easy problem. The real one is a point that
+          arrived corrupted but plausible, a value that sits off the true curve
+          while claiming to sit on it. You do not know which of the received
+          points is the impostor. You have to find both where the errors are
+          and what the right values were, using nothing but the points
+          themselves.
+        </p>
+        <p>
+          This is why redundancy pays a different rate for errors than for
+          erasures. To correct one error you need two spare symbols, not one:
+          one to notice that a point is off the curve, another to pin down which
+          point and by how much. So a code with <em>n − k</em> check symbols
+          corrects up to <em>(n − k) / 2</em> errors when their locations are
+          unknown, exactly twice as many if you happen to know which symbols to
+          throw out.<sup class="nb-cite"><a href="#s3">3</a></sup> The QR
+          standard's own documentation states the same accounting from the
+          user's side: correcting a given number of symbols costs twice that
+          many code symbols.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Reed–Solomon codes hit this trade-off at its theoretical ceiling. A
+          code that adds <em>n − k</em> check symbols can do no better than
+          guarantee that any two valid codewords differ in at least
+          <em>n − k + 1</em> places; that limit is the Singleton bound, and
+          Reed–Solomon meets it exactly, which is what earns it the name maximum
+          distance separable.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          There is no redundancy wasted. Every spare symbol buys the most error
+          tolerance the mathematics allows.
+        </p>
+        <p>
+          One catch had to be handled for any of this to be exact. Evaluate an
+          ordinary polynomial at large inputs and the numbers blow up; divide
+          during reconstruction and you get fractions and rounding. So the
+          arithmetic is not done on ordinary numbers but inside a finite field,
+          a fixed, closed set of values where addition, multiplication, and
+          division always land back inside the set with no rounding and no
+          overflow.<sup class="nb-cite"><a href="#s3">3</a></sup> Choose a field
+          of 256 elements and every symbol is exactly one byte. That is the
+          quiet reason the codes fit real hardware: the algebra was built to
+          close on the byte.
+        </p>
+      </section>
+
+      <section data-nb-section="the-decade-it-waited" id="the-decade-it-waited">
+        <h2>The idea outran the machinery</h2>
+        <p>
+          The 1960 paper defined the code and proved its properties. It did not
+          give a practical way to decode the hard case. The obvious decoder tried
+          every way of choosing which <em>k</em> of the <em>n</em> received
+          symbols to trust and checked whether they agreed, which is fine for toy
+          sizes and hopeless for real ones.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          For most of the 1960s the code was a beautiful result waiting for a
+          method to use it.
+        </p>
+        <p>
+          The method arrived in 1969, when Elwyn Berlekamp and James Massey found
+          an efficient decoder that locates the errors directly instead of
+          guessing at the good symbols.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          That closed the gap between having the code and being able to run it.
+          The first mass-market product to carry Reed–Solomon inside it did not
+          ship until 1982.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Twenty-two years from the theorem to the thing on the shelf.
+        </p>
+        <ol class="nb-timeline">
+          <li class="nb-tl-event major">
+            <span class="nb-tl-date">1960</span>
+            <h3>
+              The paper<sup class="nb-cite"><a href="#s2">2</a></sup>
+            </h3>
+            <p>
+              Reed and Solomon publish the construction in five pages. The code
+              exists; a usable decoder for the error case does not.
+            </p>
+          </li>
+          <li class="nb-tl-event major">
+            <span class="nb-tl-date">1969</span>
+            <h3>
+              A decoder that scales<sup class="nb-cite"><a href="#s3">3</a></sup>
+            </h3>
+            <p>
+              Berlekamp and Massey give an efficient algorithm that finds the
+              error locations directly. The code becomes practical.
+            </p>
+          </li>
+          <li class="nb-tl-event major">
+            <span class="nb-tl-date">1982</span>
+            <h3>
+              First on the shelf<sup class="nb-cite"><a href="#s3">3</a></sup>
+            </h3>
+            <p>
+              The compact disc becomes the first mass-produced consumer product
+              built on Reed–Solomon coding.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section data-nb-section="the-reach" id="the-reach">
+        <h2>One idea, wearing many disguises</h2>
+        <p>
+          The reach comes from how little the disguise matters. Change the
+          field, the block length, and the interleaving, and
+          the same points-on-a-curve idea reappears wherever bits have to survive
+          something physical.
+        </p>
+        <p>
+          Voyager carried it into deep space. The 1977 mission used a
+          Reed–Solomon code with a 255-symbol block containing 223 bytes of data
+          over a field of 256 elements, able to correct any 16 corrupted bytes in
+          a block, wrapped around an inner convolutional code.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          That pairing let the link reach a bit-error rate near one in a million
+          at signal levels only a few decibels above noise.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          It has to: the transmitter on a deep-space probe radiates only a few
+          watts, about the power of a dim light bulb, spread across the solar
+          system.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">16 bytes</span
+            ><span class="nb-stat-l">CORRECTED PER 255-BYTE VOYAGER BLOCK</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">2.5 mm</span
+            ><span class="nb-stat-l">CD SCRATCH FULLY CORRECTED</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">30%</span
+            ><span class="nb-stat-l">QR CODEWORDS RECOVERABLE, LEVEL H</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">2 disks</span
+            ><span class="nb-stat-l">SIMULTANEOUS FAILURES SURVIVED, RAID-6</span>
+          </div>
+        </div>
+        <p>
+          The compact disc took the harder engineering problem, which is that
+          disc damage comes in bursts: a scratch wipes out a run of consecutive
+          symbols at once. The fix, called cross-interleaved Reed–Solomon coding,
+          uses two Reed–Solomon codes with a convolutional interleaver between
+          them, so a physical burst gets scattered across many codewords, none of
+          which sees more errors than it can fix. The result corrects a burst of
+          up to about 4,000 bits, roughly 2.5 millimeters of track, and papers
+          over gaps up to about 12,000 bits, some 7.5 millimeters, by
+          interpolating the missing audio.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+        <p>
+          The QR code you scan uses the same code with four selectable strengths,
+          labeled L, M, Q, and H, that restore roughly 7, 15, 25, and 30 percent
+          of the code's symbols respectively.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Level H is why a logo can sit in the middle of one and the code still
+          scans. Storage arrays lean on the same algebra: RAID-6 protects against any
+          two drives failing at once by keeping two check quantities, an ordinary
+          parity and a second that is a Reed–Solomon symbol computed over a field
+          of 256 elements.<sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+        <p>
+          The most telling reappearance is not error correction at all. In 1979
+          Adi Shamir published a scheme to split a secret into <em>n</em> shares
+          so that any <em>k</em> of them reconstruct it and any <em>k − 1</em>
+          reveal nothing. His construction: hide the secret as one coefficient of
+          a degree <em>k − 1</em> polynomial, hand each participant one point on
+          it, and recover the secret by the same interpolation, since any
+          <em>k</em> points fix the curve.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+          It is Reed–Solomon's exact machinery turned to the opposite purpose.
+          Reed and Solomon over-sample a curve so a few lost points cannot erase
+          the message; Shamir under-samples one so a few stolen points cannot
+          reveal it. Same theorem, read from both ends.
+        </p>
+      </section>
+
+      <section data-nb-section="go-deeper" id="go-deeper">
+        <h2>Go deeper</h2>
+        <p>
+          The original paper is five pages and mostly readable to anyone
+          comfortable with polynomials; read it for how compact the founding idea
+          was, and notice what it does not contain, a fast decoder.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Then trace the two threads it left open. For the mechanism, work a tiny
+          example by hand over the field of 256 elements: encode a few bytes as a
+          polynomial, evaluate them at distinct points, erase one, and interpolate
+          it back; the whole scheme collapses into arithmetic you can do on
+          paper.<sup class="nb-cite"><a href="#s3">3</a></sup> For the reach, read
+          Shamir's three-page secret-sharing paper beside Peter Anvin's short note
+          on the algebra of RAID-6, and watch the identical polynomial idea serve
+          secrecy in one and durability in the other.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          ><sup class="nb-cite"><a href="#s7">7</a></sup> The question worth
+          carrying away is the one the 1960s answered slowly: how far a good idea
+          can travel before the machinery to use it exists.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source href="https://www.qrcode.com/en/about/error_correction.html"
+              >Denso Wave — QR Code error correction feature</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              href="https://sites.math.rutgers.edu/~zeilberg/akherim/ReedS1960.pdf"
+              >Reed &amp; Solomon (1960) — Polynomial Codes over Certain Finite
+              Fields, J. SIAM 8(2), 300–304</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              href="https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction"
+              >Wikipedia — Reed–Solomon error correction</a
+            >
+          </li>
+          <li id="s4">
+            <a data-nb-source href="https://www.mdpi.com/1099-4300/26/8/694"
+              >Entropy (MDPI) — A History of Channel Coding in Aeronautical Mobile
+              Telemetry and Deep-Space Telemetry</a
+            >
+          </li>
+          <li id="s5">
+            <a data-nb-source href="https://plus.maths.org/content/coding-theory-first-50-years"
+              >Plus Magazine — Coding theory: the first 50 years</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              href="https://en.wikipedia.org/wiki/Cross-interleaved_Reed%E2%80%93Solomon_coding"
+              >Wikipedia — Cross-interleaved Reed–Solomon coding</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              href="https://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf"
+              >H. Peter Anvin — The mathematics of RAID-6</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              href="https://web.mit.edu/6.857/OldStuff/Fall03/ref/Shamir-HowToShareASecret.pdf"
+              >Adi Shamir (1979) — How to Share a Secret, Communications of the
+              ACM 22(11), 612–613</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
