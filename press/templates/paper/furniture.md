@@ -10,8 +10,8 @@ plus the press's shared furniture plus these.
 
 The original paper's actual sentence(s), quoted at a load-bearing moment,
 with a locator into the source and a one-line gloss of what the passage does
-and does not claim. Two to five per article. The blockquote holds only the
-paper's own words, exactly.
+and does not claim. The blockquote holds only the paper's own words,
+exactly.
 
 ```html
 <figure class="rs-excerpt">

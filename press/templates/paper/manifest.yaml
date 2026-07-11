@@ -7,7 +7,7 @@ about: "A guided reconstruction of one research paper: a primer, the idea rebuil
 class: longread
 words: [1800, 3400]
 sections: [before-you-read, orientation, read-it-yourself, sources]
-flex_sections: [2, 5]
+flex_sections: [2, 6]
 cite_rule: per-section
 cite_exempt: [before-you-read, read-it-yourself]
 modes: [open]

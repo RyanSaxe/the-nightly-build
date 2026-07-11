@@ -5,12 +5,8 @@ history of a technology everyone uses and nobody examines, a piece of math
 with unreasonable reach, why an industry works the way it does, a result
 that quietly rearranged a field.
 
-Emphases:
-
-- Pick like an essayist. The test is whether the reader thinks about it in
-  the shower tomorrow.
-- Stay off the other desks' beats; this desk covers what has no beat.
-- Vary the terrain across weeks: history, math, science, economics,
-  infrastructure, culture. Read the back catalog first.
-- Depth is the one rule. A fascination that supports only surface goes back
-  in the queue until it supports more.
+Pick like an essayist; the test is whether the reader thinks about it in
+the shower tomorrow. Stay off the other desks' beats, vary the terrain
+across weeks (history, math, science, economics, infrastructure, culture),
+and read the back catalog first. Depth is the one rule: a fascination that
+supports only surface goes back in the queue until it supports more.
