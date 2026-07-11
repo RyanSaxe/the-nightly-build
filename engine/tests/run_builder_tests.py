@@ -30,14 +30,31 @@ PASS, FAIL = 0, []
 TESTREPO = make_fixtures.test_repo()
 
 
-def check(name, condition, *, detail=""):
+def snippet(haystack, needle=None, *, width=240):
+    text = haystack if isinstance(haystack, str) else str(haystack)
+    if needle:
+        i = text.find(needle if isinstance(needle, str) else str(needle))
+        if i != -1:
+            lo = max(0, i - width // 2)
+            hi = i + len(str(needle)) + width // 2
+            return ("…" if lo else "") + text[lo:hi] + ("…" if hi < len(text) else "")
+    return text[:width] + ("…" if len(text) > width else "")
+
+
+def check(name, condition, *, detail="", needle=None, haystack=None):
     global PASS
     if condition:
         PASS += 1
         print(f"  ok   {name}")
-    else:
-        FAIL.append(name)
-        print(f"  FAIL {name} {detail}")
+        return
+    FAIL.append(name)
+    print(f"  FAIL {name}")
+    if needle is not None:
+        print(f"        looked for: {needle!r}")
+    if haystack is not None:
+        print(f"        in: {snippet(haystack, needle)}")
+    if detail:
+        print(f"        {detail}")
 
 
 def write_article(root, series, *, slug, html):
@@ -61,6 +78,18 @@ def make_full_library():
 def read(out, *parts):
     path = pathlib.Path(out, *parts)
     return path.read_text()
+
+
+def find_text(elem, path):
+    node = elem.find(path)
+    assert node is not None, f"missing element: {path}"
+    return node.text or ""
+
+
+def asset_stamp_of(page_html):
+    m = re.search(r"nb\.css\?v=([0-9a-f]+)", page_html)
+    assert m is not None, "no asset stamp in page"
+    return m.group(1)
 
 
 print("== full build ==")
@@ -235,15 +264,21 @@ check(
     "sections page lists series",
     'class="nb-series' in sections_page and "Semiconductors" in sections_page,
 )
-check("sections page shows collection progress", "1 of 5" in sections_page)
+check(
+    "sections page shows collection published count",
+    "1 published" in sections_page and "1 of 5" not in sections_page,
+    haystack=sections_page,
+    needle="1 published",
+)
 check("build archive groups by month", "July 2026" in read(out, "builds", "index.html"))
 
 series_page = read(out, "series", "semiconductors", "index.html")
 check("collection page shows published card", "Micron Technology" in series_page)
 check(
-    "collection page greys unpublished items",
-    series_page.count("coming") == 4,
-    detail=f"count={series_page.count('coming')}",
+    "collection page renders no placeholder for unpublished items",
+    series_page.count("coming") == 0 and "commissioned" not in series_page,
+    haystack=series_page,
+    needle="coming",
 )
 rolling_page = read(out, "series", "ai-briefs", "index.html")
 check("rolling page groups by month", "July 2026" in rolling_page)
@@ -328,16 +363,26 @@ write_article(seq_lib, "semiconductors", slug="micron", html=seq_ed)
 seq_out = tempfile.mkdtemp()
 B.build(seq_repo, seq_lib, out=seq_out, now=NOW)
 seq_page = read(seq_out, "series", "semiconductors", "index.html")
-check("sequence page has progress bar", "nb-progress-wide" in seq_page)
-check("sequence page numbers items", ">01<" in seq_page and ">05<" in seq_page)
 check(
-    "sequence page marks continue-here on next item",
-    "continue here" in seq_page
-    and seq_page.find("TSMC") < seq_page.find("continue here"),
+    "sequence page numbers published items in config order",
+    ">01<" in seq_page and ">05<" not in seq_page,
+    haystack=seq_page,
+    needle=">01<",
 )
 check(
-    "sequence progress on the sections page",
-    "1 of 5" in read(seq_out, "series", "index.html"),
+    "sequence page renders no placeholder for unpublished items",
+    "nb-seq-unpub" not in seq_page
+    and "continue here" not in seq_page
+    and "nb-progress-wide" not in seq_page,
+    haystack=seq_page,
+    needle="nb-seq-unpub",
+)
+check(
+    "sequence sections page shows published count, not progress",
+    "1 published" in (secs := read(seq_out, "series", "index.html"))
+    and "1 of 5" not in secs,
+    haystack=secs,
+    needle="1 published",
 )
 
 print("== press check preview ==")
@@ -417,8 +462,10 @@ check(
     "July 2026" in open_page and "the-cuda-moat" in open_page,
 )
 check(
-    "pending commission shows as coming",
-    "On Commission" in open_page and "commissioned" in open_page,
+    "open series renders no placeholder for a pending commission",
+    "On Commission" not in open_page and "commissioned" not in open_page,
+    haystack=open_page,
+    needle="On Commission",
 )
 check("open series page shows the template choice list", "article, brief" in open_page)
 
@@ -516,6 +563,244 @@ check(
 check(
     "declared asset injected into article copy",
     injected in read(assets_out, "library", "semiconductors", "micron.html"),
+)
+
+print("== nb-meta reader requires the typed block ==")
+# The proof only recognizes <script type="application/json" id="nb-meta">;
+# the builder must read the same block, so an untyped decoy placed first
+# (invisible to check.py) can never override title/date/series/slug.
+decoy_dir = pathlib.Path(tempfile.mkdtemp())
+decoy_file = decoy_dir / "decoy.html"
+decoy_file.write_text(
+    "<!DOCTYPE html><html><head>"
+    '<script id="nb-meta">{"series":"EVIL","slug":"evil"}</script>'
+    '<script type="application/json" id="nb-meta">'
+    '{"series":"semiconductors","slug":"micron","date":"2026-07-06"}'
+    "</script></head><body></body></html>"
+)
+decoy_meta = B.read_meta(str(decoy_file))
+check(
+    "read_meta ignores an untyped decoy and reads the typed block",
+    decoy_meta is not None and decoy_meta.get("series") == "semiconductors",
+    detail=str(decoy_meta),
+)
+
+print("== theme edit busts the asset stamp ==")
+# The ?v= stamp must change when the resolved theme.css changes, or a theme
+# swap leaves returning readers on the cached old look.
+theme_repo = pathlib.Path(tempfile.mkdtemp()) / "repo"
+shutil.copytree(TESTREPO, theme_repo)
+B.build(str(theme_repo), make_full_library(), out=(t1 := tempfile.mkdtemp()), now=NOW)
+stamp_before = asset_stamp_of(read(t1, "index.html"))
+theme_file = theme_repo / "engine" / "assets" / "themes" / "newspaper.css"
+theme_file.write_text(theme_file.read_text() + "\n:root{--nb-test-token:1}\n")
+B.build(str(theme_repo), make_full_library(), out=(t2 := tempfile.mkdtemp()), now=NOW)
+stamp_after = asset_stamp_of(read(t2, "index.html"))
+check(
+    "a theme edit changes the cache-busting stamp",
+    stamp_before != stamp_after,
+    detail=f"{stamp_before} == {stamp_after}",
+)
+
+print("== furniture concatenates into theme.css and busts the stamp ==")
+# copy_assets folds every CSS owner — the theme, shared press furniture, and each
+# template's bespoke furniture.css — into the single assets/theme.css, and the
+# stamp must fold in the same owners so a furniture edit reaches the reader.
+furn_repo = pathlib.Path(tempfile.mkdtemp()) / "repo"
+shutil.copytree(TESTREPO, furn_repo)
+shared_css = furn_repo / "press" / "furniture" / "styles.css"
+shared_css.parent.mkdir(parents=True)
+shared_css.write_text(".rs-shared-furniture{color:rebeccapurple}\n")
+tpl_css = furn_repo / "templates" / "article" / "furniture.css"
+tpl_css.write_text(".rs-article-furniture{color:seagreen}\n")
+furn_out = tempfile.mkdtemp()
+B.build(str(furn_repo), make_full_library(), out=furn_out, now=NOW)
+theme_out = read(furn_out, "assets", "theme.css")
+check(
+    "theme.css carries the base palette",
+    "--bg" in theme_out,
+    haystack=theme_out,
+    needle="--bg",
+)
+check(
+    "theme.css carries the shared press furniture",
+    ".rs-shared-furniture" in theme_out,
+    haystack=theme_out,
+    needle=".rs-shared-furniture",
+)
+check(
+    "theme.css carries the template's bespoke furniture",
+    ".rs-article-furniture" in theme_out,
+    haystack=theme_out,
+    needle=".rs-article-furniture",
+)
+furn_stamp_before = asset_stamp_of(read(furn_out, "index.html"))
+tpl_css.write_text(".rs-article-furniture{color:crimson}\n")
+furn_out2 = tempfile.mkdtemp()
+B.build(str(furn_repo), make_full_library(), out=furn_out2, now=NOW)
+check(
+    "editing a furniture.css changes the cache-busting stamp",
+    furn_stamp_before != asset_stamp_of(read(furn_out2, "index.html")),
+)
+
+print("== dateless article does not blank the newsstand ==")
+# A missing date must not win the 'latest' sort or leave the front page empty
+# next to a real dated article; both bucket under the same 'unknown' sentinel.
+dateless_lib = tempfile.mkdtemp()
+write_article(
+    dateless_lib, "semiconductors", slug="micron", html=make_fixtures.article()
+)
+undated = (
+    make_fixtures.article()
+    .replace('"slug": "micron"', '"slug": "tsmc"')
+    .replace('"date": "2026-07-06", ', "")
+    .replace("Micron Technology: The Scarcest Commodity in AI", "TSMC (undated draft)")
+)
+write_article(dateless_lib, "semiconductors", slug="tsmc", html=undated)
+dl_out = tempfile.mkdtemp()
+dl_catalog = B.build(TESTREPO, dateless_lib, out=dl_out, now=NOW)
+dl_index = read(dl_out, "index.html")
+check(
+    "newsstand still leads with the real dated article",
+    "Micron Technology" in dl_index and "No articles this night" not in dl_index,
+)
+check(
+    "a real date wins 'latest' over the dateless bucket",
+    sorted(dl_catalog["builds"], key=B.date_sort_key)[-1] == "2026-07-06",
+    detail=str(list(dl_catalog["builds"])),
+)
+check(
+    "the dateless article still gets its own build page",
+    "TSMC (undated draft)" in read(dl_out, "builds", "unknown", "index.html"),
+)
+
+print("== atom feed ids are per-paper unique and carry an author ==")
+# Two papers must never emit byte-identical feed/entry ids; RFC 4287 wants an
+# author. xml.etree parsing here doubles as the well-formedness (xmllint) check.
+feed_a = B.atom_feed(
+    "https://alice.github.io/paper-a", "feed.xml", title="A", eds=[], generated=NOW
+)
+feed_b = B.atom_feed(
+    "https://alice.github.io/paper-b", "feed.xml", title="B", eds=[], generated=NOW
+)
+root_a, root_b = ET.fromstring(feed_a), ET.fromstring(feed_b)
+id_a, id_b = find_text(root_a, f"{NS}id"), find_text(root_b, f"{NS}id")
+check(
+    "two papers on one host get distinct feed ids",
+    id_a != id_b and id_a.startswith("tag:alice.github.io,"),
+    detail=f"{id_a} / {id_b}",
+)
+author_a = root_a.find(f"{NS}author/{NS}name")
+check(
+    "feed carries an author name from the site title",
+    author_a is not None and author_a.text == "A",
+)
+pa_out, pb_out = tempfile.mkdtemp(), tempfile.mkdtemp()
+B.build(
+    TESTREPO, make_full_library(), out=pa_out, base_url="https://a.example", now=NOW
+)
+B.build(
+    TESTREPO, make_full_library(), out=pb_out, base_url="https://b.example", now=NOW
+)
+entry_a = find_text(ET.fromstring(read(pa_out, "feed.xml")), f"{NS}entry/{NS}id")
+entry_b = find_text(ET.fromstring(read(pb_out, "feed.xml")), f"{NS}entry/{NS}id")
+check(
+    "same series/slug on two papers get distinct entry ids",
+    entry_a != entry_b and "a.example" in entry_a and "b.example" in entry_b,
+    detail=f"{entry_a} / {entry_b}",
+)
+
+print("== hostile slug/series/tag are escaped or refused ==")
+# series/slug flow raw from library dir/file names; a quote/ampersand/angle
+# must not break an href attribute or the Atom <id> text.
+hostile = {
+    "series": 'a"&b',
+    "slug": 'c"&d',
+    "reading_minutes": 3,
+    "meta": {"title": "T", "dek": "d", "sources": 2},
+}
+item_html, lead_html = B.story_item(hostile, {}), B.lead_cell(hostile, {})
+check(
+    "story_item escapes a hostile href",
+    'library/a"&b/c"&d' not in item_html and "a&quot;&amp;b/c&quot;&amp;d" in item_html,
+)
+check(
+    "lead_cell escapes a hostile href",
+    'library/a"&b/c"&d' not in lead_html and "a&quot;&amp;b/c&quot;&amp;d" in lead_html,
+)
+hostile_dir = pathlib.Path(tempfile.mkdtemp())
+(hostile_dir / "x.html").write_text("<html><body><p>hi</p></body></html>")
+hostile_ed = {
+    "series": 'a"&b',
+    "slug": 'c"&d',
+    "file": str(hostile_dir / "x.html"),
+    "reading_minutes": 3,
+    "meta": {"title": "T", "dek": "d", "date": "2026-07-06"},
+}
+hostile_feed = B.atom_feed("", "feed.xml", title="T", eds=[hostile_ed], generated=NOW)
+hostile_id = find_text(ET.fromstring(hostile_feed), f"{NS}entry/{NS}id")
+check(
+    "atom entry id with a hostile slug/series stays well-formed",
+    hostile_id == 'urn:nightly-build:library/a"&b/c"&d',
+    detail=hostile_id,
+)
+
+# tag path traversal is refused; a nested tag renders at its true depth.
+check("is_safe_tag rejects parent-traversal", not B.is_safe_tag("../../escape"))
+check("is_safe_tag rejects an absolute path", not B.is_safe_tag("/etc/passwd"))
+check("is_safe_tag rejects a backslash", not B.is_safe_tag("a\\b"))
+check("is_safe_tag accepts a plain tag", B.is_safe_tag("equity"))
+check("is_safe_tag accepts a nested tag", B.is_safe_tag("markets/equity"))
+evil_lib = tempfile.mkdtemp()
+write_article(
+    evil_lib,
+    "semiconductors",
+    slug="micron",
+    html=make_fixtures.article().replace(
+        '"tags": ["equity"]', '"tags": ["../../pwned"]'
+    ),
+)
+evil_out = pathlib.Path(tempfile.mkdtemp()) / "site"
+evil_catalog = B.build(TESTREPO, evil_lib, out=str(evil_out), now=NOW)
+check(
+    "traversal tag dropped from the catalog", "../../pwned" not in evil_catalog["tags"]
+)
+check(
+    "traversal tag created no directory outside --out",
+    not (evil_out.parent / "pwned").exists(),
+)
+nested_lib = tempfile.mkdtemp()
+write_article(
+    nested_lib,
+    "semiconductors",
+    slug="micron",
+    html=make_fixtures.article().replace(
+        '"tags": ["equity"]', '"tags": ["markets/equity"]'
+    ),
+)
+nested_out = tempfile.mkdtemp()
+B.build(TESTREPO, nested_lib, out=nested_out, now=NOW)
+nested_page = read(nested_out, "tags", "markets", "equity", "index.html")
+check(
+    "a nested tag page links assets at its true depth-3 path",
+    "../../../assets/nb.css" in nested_page,
+)
+
+print("== email digest routes sources through source_label ==")
+em = read(dl_out, "email-latest.html")
+check("email shows a well-formed source count", "8 sources" in em)
+bad_lib = tempfile.mkdtemp()
+write_article(
+    bad_lib,
+    "semiconductors",
+    slug="micron",
+    html=make_fixtures.article().replace('"sources": 8,', '"sources": "<b>x</b>",'),
+)
+bad_out = tempfile.mkdtemp()
+B.build(TESTREPO, bad_lib, out=bad_out, now=NOW)
+check(
+    "a non-int sources value never reaches the reader raw",
+    "<b>x</b>" not in read(bad_out, "email-latest.html"),
 )
 
 print()

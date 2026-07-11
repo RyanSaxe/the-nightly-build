@@ -36,6 +36,9 @@ import sys
 import urllib.error
 import urllib.request
 from html.parser import HTMLParser
+from typing import Literal
+
+import nb_meta
 
 try:
     import yaml
@@ -47,17 +50,20 @@ PROTOCOL_MAJOR = "1"
 MAX_BYTES = 2 * 1024 * 1024
 SLUG_RE = re.compile(r"^[a-z0-9-]{1,64}$")
 SERIES_RE = re.compile(r"^[a-z0-9-]{1,32}$")
+TAG_RE = re.compile(r"^[a-z0-9-]{1,32}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-ALLOWED_EXTERNAL_PREFIXES = (
-    "/assets/",
-    "https://fonts.googleapis.com",
-    "https://fonts.gstatic.com",
-)
+# Off-origin references (link/img) may load only from Google Fonts over https.
+# Matched by exact host after browser-style normalization, never by string
+# prefix — "fonts.googleapis.com.evil.example" and userinfo tricks defeat prefix
+# matching but not a real host comparison.
+ALLOWED_EXTERNAL_HOSTS = frozenset({"fonts.googleapis.com", "fonts.gstatic.com"})
 # The one executable script an article may load: the engine-owned runtime
 # (§7.4 — contextual nav + chart renderer), by relative or root-absolute path.
 ENGINE_SCRIPT_RE = re.compile(r"^(?:(?:\.\./)+|/)assets/nb\.js$")
 DEFAULT_MIN_SOURCES = {"longread": 8, "shortread": 5}
 DEFAULT_CITE_EXEMPT = ("sources",)  # a template extends this via registry cite_exempt
+EM_DASH_PER_1000 = 4.0  # soft WARN threshold: em-dashes per 1000 words of body prose
+EM_DASH_MIN_WORDS = 100  # skip the check on very short text where the rate is noisy
 SELF_COUNT_TOLERANCE = 0.20
 
 
@@ -154,6 +160,7 @@ class Article(HTMLParser):
         self.external_refs = []  # (tag, url) for script src / link href / img src
         self._capture = None  # ("meta"|"chart", buffer) while inside a JSON script
         self._text_parts = []
+        self._prose_text_parts = []  # body prose only, excludes the sources section
         self._suppress_text_depth = 0  # inside script/style
 
     # -- helpers -------------------------------------------------------------
@@ -193,12 +200,12 @@ class Article(HTMLParser):
             src = a.get("src")
             if src:
                 self.external_refs.append(("script", src))
-            stype = a.get("type", "").strip().lower()
-            if stype == "application/json":
-                if a.get("id") == "nb-meta":
-                    self._capture = ("meta", [])
-                elif "data-nb-chart" in a:
-                    self._capture = ("chart", [])
+            if nb_meta.is_meta_script(a):
+                self._capture = ("meta", [])
+            elif (a.get("type") or "").strip().lower() == "application/json" and (
+                "data-nb-chart" in a
+            ):
+                self._capture = ("chart", [])
         if tag == "link" and a.get("href"):
             self.external_refs.append(("link", a["href"]))
         if tag == "img" and a.get("src"):
@@ -280,6 +287,9 @@ class Article(HTMLParser):
             self._capture[1].append(data)
         elif self._suppress_text_depth == 0:
             self._text_parts.append(data)
+            sec = self._current("section")
+            if sec is None or sec.get("section") != "sources":
+                self._prose_text_parts.append(data)
 
     @property
     def word_count(self):
@@ -298,39 +308,48 @@ def load_yaml(path):
 
 
 def load_registry(repo):
-    """Load the shipped template registry overlaid by the press registry.
+    """Load every template's manifest, press packages shadowing shipped.
 
-    A press entry fully replaces a shipped entry of the same id, which
-    is both how users add templates and how they redefine a shipped
-    template's band press-wide.
+    A template is a folder holding a manifest.yaml (the folder name is the
+    id); the manifest carries the geometry the proof enforces. A
+    press/templates/<id> package replaces a shipped one of the same id
+    wholesale, which is both how a press adds templates and how it
+    redefines a shipped template's band press-wide. A folder without a
+    manifest.yaml is not a template and is skipped.
     """
-    registry = load_yaml(os.path.join(repo, "templates", "registry.yaml")) or {}
-    press_path = os.path.join(repo, "press", "templates", "registry.yaml")
-    if os.path.isfile(press_path):
-        registry.update(load_yaml(press_path) or {})
+    registry = {}
+    for base in (
+        os.path.join(repo, "templates"),
+        os.path.join(repo, "press", "templates"),  # press shadows shipped
+    ):
+        if not os.path.isdir(base):
+            continue
+        for name in sorted(os.listdir(base)):
+            manifest = os.path.join(base, name, "manifest.yaml")
+            if os.path.isfile(manifest):
+                registry[name] = load_yaml(manifest) or {}
     return registry
 
 
 def find_template(repo, template_id):
-    # User templates shadow shipped ones: press/templates/ wins.
     for base in (
-        os.path.join(repo, "press", "templates"),
+        os.path.join(repo, "press", "templates"),  # press/ shadows shipped templates/
         os.path.join(repo, "templates"),
     ):
-        path = os.path.join(base, f"{template_id}.html")
+        path = os.path.join(base, template_id, "skeleton.html")
         if os.path.isfile(path):
             return path
     return None
 
 
-def load_series(repo, series_id):
+def load_series(repo, series_id) -> tuple[dict | None, str]:
     path = os.path.join(repo, "press", "series", series_id, "series.yaml")
     if not os.path.isfile(path):
         return None, path
     return load_yaml(path), path
 
 
-def published_slugs(library_dir, series_id):
+def published_slugs(library_dir, series_id) -> set[str] | None:
     """Return the set of published slugs for a series.
 
     Returns None when no library checkout was provided, which callers
@@ -339,13 +358,10 @@ def published_slugs(library_dir, series_id):
     """
     if not library_dir:
         return None
-    for base in (
-        os.path.join(library_dir, "library", series_id),
-        os.path.join(library_dir, series_id),
-    ):
-        if os.path.isdir(base):
-            return {f[:-5] for f in os.listdir(base) if f.endswith(".html")}
-    return set()  # library exists but series dir doesn't => nothing published
+    base = nb_meta.series_dir(library_dir, series_id)
+    if base is None:
+        return set()  # library exists but series dir doesn't => nothing published
+    return {f[:-5] for f in os.listdir(base) if f.endswith(".html")}
 
 
 DEAD_STATUSES = frozenset((404, 410))
@@ -357,7 +373,7 @@ LINK_UA = (
 )
 
 
-def classify_link(status, error):
+def classify_link(status, error) -> Literal["dead", "ok", "unverified"]:
     """Decide whether a source link is provably dead.
 
     Only a definitive 'this does not exist' counts: a 404/410 response, or a
@@ -376,12 +392,12 @@ def classify_link(status, error):
 
 
 def _probe_link(href):
-    # GET one byte (Range) rather than HEAD: some servers 404/405 a HEAD they
-    # would serve. A browser-like UA keeps casual bot filters from lying to us.
     req = urllib.request.Request(
         href, headers={"User-Agent": LINK_UA, "Range": "bytes=0-0"}
     )
     try:
+        # A one-byte Range GET, not HEAD: some servers 404/405 a HEAD they would
+        # serve, and a browser-like UA keeps casual bot filters from lying to us.
         with urllib.request.urlopen(req, timeout=LINK_TIMEOUT_S) as resp:
             return classify_link(resp.status, None)
     except urllib.error.HTTPError as e:
@@ -431,6 +447,39 @@ def chart_spec_error(raw):
     return None
 
 
+def external_ref_allowed(normalized_url):
+    """True when an off-origin link/img reference may load.
+
+    `normalized_url` is browser-normalized (whitespace stripped, backslashes
+    folded to slashes). Requires an https scheme and a host in the font
+    allowlist, comparing the parsed host — not a string prefix, so
+    `fonts.googleapis.com.evil.example`, `fonts.googleapis.com@evil.example`,
+    and protocol-relative `//host` refs are all rejected.
+    """
+    scheme = re.match(r"(https?)://", normalized_url, re.IGNORECASE)
+    if not scheme or scheme.group(1).lower() != "https":
+        return False
+    authority = re.split(r"[/?#]", normalized_url.split("://", 1)[1], maxsplit=1)[0]
+    host = authority.rsplit("@", 1)[-1].split(":", 1)[0]
+    return host.lower() in ALLOWED_EXTERNAL_HOSTS
+
+
+def is_repo_relative_source(href):
+    if not href or re.search(r"\s", href):
+        return False
+    normalized = href.replace("\\", "/")
+    is_off_origin = "://" in normalized or normalized.startswith("//")
+    return not is_off_origin and not normalized.startswith("/")
+
+
+_META_TYPE_NAMES = {
+    str: "a string",
+    int: "an integer",
+    list: "a list",
+    bool: "true or false",
+}
+
+
 def validate_meta_fields(meta, rep):
     def need(field, typ, *, pattern=None, enum=None):
         v = meta.get(field)
@@ -438,7 +487,10 @@ def validate_meta_fields(meta, rep):
             rep.block("B-META-PARSE", f"nb-meta missing required field '{field}'")
             return None
         if typ and not isinstance(v, typ):
-            rep.block("B-META-PARSE", f"nb-meta field '{field}' has wrong type")
+            rep.block(
+                "B-META-PARSE",
+                f"nb-meta field '{field}' must be {_META_TYPE_NAMES.get(typ, 'the right type')}",
+            )
             return None
         if pattern and not re.match(pattern, str(v)):
             rep.block(
@@ -472,22 +524,28 @@ def validate_meta_fields(meta, rep):
     order = meta.get("order")
     if order is not None and (not isinstance(order, int) or order < 1):
         rep.block("B-META-PARSE", "nb-meta 'order' must be a positive integer or null")
+    tags = meta.get("tags")
+    if tags is not None:
+        if not isinstance(tags, list):
+            rep.block("B-META-PARSE", "nb-meta field 'tags' must be a list")
+        else:
+            for tag in tags:
+                if not isinstance(tag, str) or not TAG_RE.match(tag):
+                    rep.block(
+                        "B-META-PARSE",
+                        f"nb-meta tag {tag!r} must match {TAG_RE.pattern} "
+                        "(lowercase slug: a-z, 0-9, hyphen)",
+                    )
 
 
-def check_article(
-    html_path,
-    series_id,
-    *,
-    repo,
-    library_dir,
-    rep,
-    pr_body_meta=None,
-    today=None,
-    check_links=False,
-):
-    today = today or _dt.date.today()
+def resolve_series_and_template(repo, series_id, rep):
+    """B-SERIES: load the series config and resolve its template band.
 
-    # --- B-SERIES ---
+    Returns (series, registry, mode_cfg, template_id, treg, allowed_templates),
+    or None when a blocking failure means the check cannot continue. For an
+    open series template_id/treg are placeholders bound from nb-meta later and
+    allowed_templates is the per-article choice list; off open it is None.
+    """
     series, spath = load_series(repo, series_id)
     if series is None:
         rep.block("B-SERIES", f"series '{series_id}' not found at {spath}")
@@ -501,7 +559,7 @@ def check_article(
     try:
         registry = load_registry(repo)
     except (OSError, yaml.YAMLError, TypeError, ValueError) as e:
-        rep.block("B-SERIES", f"templates/registry.yaml unreadable: {e}")
+        rep.block("B-SERIES", f"template manifests unreadable: {e}")
         return None
 
     mode_cfg = series.get("mode")
@@ -515,8 +573,7 @@ def check_article(
         if not allowed_templates or unknown:
             rep.block(
                 "B-SERIES",
-                f"open series templates {unknown or 'missing'} not in "
-                f"templates/registry.yaml",
+                f"open series templates {unknown or 'missing'} are not known templates",
             )
             return None
         for t in allowed_templates:
@@ -528,25 +585,26 @@ def check_article(
                 )
         # placeholder registry entry; the real one is bound from nb-meta
         # right after it parses (or the check returns early)
-        template_id, treg = None, {}
-    else:
-        allowed_templates = []
-        template_id = series.get("template")
-        treg = (registry or {}).get(template_id)
-        if not treg:
-            rep.block(
-                "B-SERIES",
-                f"series template '{template_id}' not in templates/registry.yaml",
-            )
-            return None
-        if mode_cfg not in (treg.get("modes") or []):
-            rep.block(
-                "B-SERIES",
-                f"series mode '{mode_cfg}' not allowed for template "
-                f"'{template_id}' (allowed: {treg.get('modes')})",
-            )
+        return series, registry, mode_cfg, None, {}, allowed_templates
 
-    # --- file existence / size ---
+    template_id = series.get("template")
+    treg = (registry or {}).get(template_id)
+    if not treg:
+        rep.block(
+            "B-SERIES",
+            f"series template '{template_id}' is not a known template",
+        )
+        return None
+    if mode_cfg not in (treg.get("modes") or []):
+        rep.block(
+            "B-SERIES",
+            f"series mode '{mode_cfg}' not allowed for template "
+            f"'{template_id}' (allowed: {treg.get('modes')})",
+        )
+    return series, registry, mode_cfg, template_id, treg, None
+
+
+def read_article_source(html_path, rep):
     if not os.path.isfile(html_path):
         rep.block("B-HTML", f"file not found: {html_path}")
         return None
@@ -554,13 +612,10 @@ def check_article(
     if size > MAX_BYTES:
         rep.block("B-HTML", f"file is {size} bytes; limit is {MAX_BYTES}")
     with open(html_path, encoding="utf-8", errors="replace") as fh:
-        raw = fh.read()
+        return fh.read()
 
-    ed = Article()
-    ed.feed(raw)
-    ed.close()
 
-    # --- B-META-PARSE ---
+def parse_meta(ed, rep):
     if not ed.meta_raw:
         rep.block(
             "B-META-PARSE", 'no <script type="application/json" id="nb-meta"> block'
@@ -581,27 +636,30 @@ def check_article(
         rep.block("B-META-PARSE", f"nb-meta JSON invalid: {e}")
         return None
     validate_meta_fields(meta, rep)
+    return meta
 
-    if mode_cfg == "open":
-        template_id = meta.get("template")
-        treg = (registry or {}).get(template_id)
-        if treg is None:
-            rep.block(
-                "B-META-MATCH",
-                f"nb-meta template '{template_id}' not in templates/registry.yaml",
-            )
-            return None
-        if template_id not in allowed_templates:
-            rep.block(
-                "B-META-MATCH",
-                f"nb-meta template '{template_id}' is not one of the "
-                f"series' allowed templates {allowed_templates}",
-            )
 
-    # --- path <-> meta agreement (B-META-MATCH) ---
-    fname = os.path.basename(html_path)
-    slug_from_path = fname[:-5] if fname.endswith(".html") else fname
-    parent = os.path.basename(os.path.dirname(html_path))
+def bind_open_template(meta, registry, allowed_templates, rep):
+    template_id = meta.get("template")
+    treg = (registry or {}).get(template_id)
+    if treg is None:
+        rep.block(
+            "B-META-MATCH",
+            f"nb-meta template '{template_id}' is not a known template",
+        )
+        return None
+    if template_id not in allowed_templates:
+        rep.block(
+            "B-META-MATCH",
+            f"nb-meta template '{template_id}' is not one of the "
+            f"series' allowed templates {allowed_templates}",
+        )
+    return template_id, treg
+
+
+def check_meta_agreement(
+    meta, *, series, series_id, template_id, slug_from_path, parent, pr_body_meta, rep
+):
     if meta.get("slug") != slug_from_path:
         rep.block(
             "B-META-MATCH",
@@ -638,100 +696,118 @@ def check_article(
         if b_order != meta.get("order"):
             rep.block("B-META-MATCH", "PR body 'order' disagrees with embedded nb-meta")
 
-    # --- B-SLUG / B-MODE ---
-    mode = series.get("mode")
-    slug = meta.get("slug") or slug_from_path
-    items = series.get("items") or []
-    item_cfg = None
-    pub = published_slugs(library_dir, series_id)
 
-    if mode in ("collection", "sequence"):
-        idx = next((i for i, it in enumerate(items) if it.get("slug") == slug), None)
-        if idx is None:
+def check_sequence_slug(meta, *, items, idx, slug, pub, rep):
+    if pub is None:
+        if meta.get("order") != idx + 1:
             rep.block(
-                "B-SLUG",
-                f"slug '{slug}' is not a configured item of series '{series_id}'",
+                "B-MODE",
+                f"sequence order must be item position {idx + 1}; "
+                f"nb-meta says {meta.get('order')}",
             )
-        else:
-            item_cfg = items[idx]
-            if mode == "sequence":
-                if pub is None:
-                    if meta.get("order") != idx + 1:
-                        rep.block(
-                            "B-MODE",
-                            f"sequence order must be item position {idx + 1}; "
-                            f"nb-meta says {meta.get('order')}",
-                        )
-                    rep.notes.append(
-                        "library state not provided (--library); "
-                        "next-expected check skipped"
-                    )
-                else:
-                    expected = next(
-                        (i for i, it in enumerate(items) if it.get("slug") not in pub),
-                        None,
-                    )
-                    if expected is None:
-                        rep.block("B-MODE", "sequence is complete; nothing to publish")
-                    elif idx != expected:
-                        rep.block(
-                            "B-MODE",
-                            f"next expected sequence item is "
-                            f"'{items[expected].get('slug')}' (#{expected + 1}), "
-                            f"not '{slug}'",
-                        )
-                    elif meta.get("order") != expected + 1:
-                        rep.block(
-                            "B-MODE",
-                            f"nb-meta order must be {expected + 1}, "
-                            f"got {meta.get('order')}",
-                        )
-            else:
-                if pub is not None and slug in pub:
-                    rep.block("B-MODE", f"'{slug}' is already published")
-    elif mode == "rolling":
-        if not DATE_RE.match(slug):
-            rep.block("B-SLUG", f"rolling slug must be YYYY-MM-DD, got '{slug}'")
-        else:
-            try:
-                d = _dt.date.fromisoformat(slug)
-                if d > today:
-                    rep.block("B-SLUG", f"rolling slug {slug} is in the future")
-            except ValueError:
-                rep.block("B-SLUG", f"rolling slug '{slug}' is not a real date")
-            if meta.get("date") != slug:
-                rep.block(
-                    "B-META-MATCH",
-                    f"rolling nb-meta date '{meta.get('date')}' must equal slug",
-                )
-            if pub is not None and slug in pub:
-                rep.block("B-MODE", f"a brief for {slug} is already published")
-        if pub is None:
-            rep.notes.append(
-                "library state not provided (--library); "
-                "already-published check skipped"
-            )
-    elif mode == "open":
-        item_cfg = next((it for it in items if it.get("slug") == slug), None)
-        if pub is None:
-            rep.notes.append(
-                "library state not provided (--library); "
-                "open-mode dedupe and commission checks skipped"
-            )
-        else:
-            if slug in pub:
-                rep.block("B-MODE", f"'{slug}' is already published")
-            pending = sorted(
-                it.get("slug") for it in items if it.get("slug") not in pub
-            )
-            if pending and slug not in pending:
-                rep.block(
-                    "B-MODE",
-                    f"commissioned items pending: {pending} — publish a "
-                    f"commission before an open pick",
-                )
+        rep.notes.append(
+            "library state not provided (--library); next-expected check skipped"
+        )
+        return
+    expected = next(
+        (i for i, it in enumerate(items) if it.get("slug") not in pub), None
+    )
+    if expected is None:
+        rep.block("B-MODE", "sequence is complete; nothing to publish")
+    elif idx != expected:
+        rep.block(
+            "B-MODE",
+            f"next expected sequence item is "
+            f"'{items[expected].get('slug')}' (#{expected + 1}), not '{slug}'",
+        )
+    elif meta.get("order") != expected + 1:
+        rep.block(
+            "B-MODE",
+            f"nb-meta order must be {expected + 1}, got {meta.get('order')}",
+        )
 
-    # --- B-HTML: required sections ---
+
+def check_ordered_mode(meta, *, series_id, items, slug, pub, mode, rep):
+    idx = next((i for i, it in enumerate(items) if it.get("slug") == slug), None)
+    if idx is None:
+        rep.block(
+            "B-SLUG",
+            f"slug '{slug}' is not a configured item of series '{series_id}'",
+        )
+        return None
+    item_cfg = items[idx]
+    if mode == "sequence":
+        check_sequence_slug(meta, items=items, idx=idx, slug=slug, pub=pub, rep=rep)
+    elif pub is not None and slug in pub:
+        rep.block("B-MODE", f"'{slug}' is already published")
+    return item_cfg
+
+
+def check_rolling_mode(meta, *, slug, pub, today, rep):
+    if not DATE_RE.match(slug):
+        rep.block("B-SLUG", f"rolling slug must be YYYY-MM-DD, got '{slug}'")
+    else:
+        try:
+            d = _dt.date.fromisoformat(slug)
+            if d > today:
+                rep.block("B-SLUG", f"rolling slug {slug} is in the future")
+        except ValueError:
+            rep.block("B-SLUG", f"rolling slug '{slug}' is not a real date")
+        if meta.get("date") != slug:
+            rep.block(
+                "B-META-MATCH",
+                f"rolling nb-meta date '{meta.get('date')}' must equal slug",
+            )
+        if pub is not None and slug in pub:
+            rep.block("B-MODE", f"a brief for {slug} is already published")
+    if pub is None:
+        rep.notes.append(
+            "library state not provided (--library); already-published check skipped"
+        )
+
+
+def check_open_slug(*, items, slug, pub, rep):
+    item_cfg = next((it for it in items if it.get("slug") == slug), None)
+    if pub is None:
+        rep.notes.append(
+            "library state not provided (--library); "
+            "open-mode dedupe and commission checks skipped"
+        )
+        return item_cfg
+    if slug in pub:
+        rep.block("B-MODE", f"'{slug}' is already published")
+    pending = sorted(it.get("slug") for it in items if it.get("slug") not in pub)
+    if pending and slug not in pending:
+        rep.block(
+            "B-MODE",
+            f"commissioned items pending: {pending} — publish a "
+            f"commission before an open pick",
+        )
+    return item_cfg
+
+
+def check_mode(meta, *, series, series_id, slug, pub, today, rep):
+    mode = series.get("mode")
+    items = series.get("items") or []
+    if mode in ("collection", "sequence"):
+        return check_ordered_mode(
+            meta,
+            series_id=series_id,
+            items=items,
+            slug=slug,
+            pub=pub,
+            mode=mode,
+            rep=rep,
+        )
+    if mode == "rolling":
+        check_rolling_mode(meta, slug=slug, pub=pub, today=today, rep=rep)
+        return None
+    if mode == "open":
+        return check_open_slug(items=items, slug=slug, pub=pub, rep=rep)
+    return None
+
+
+def check_required_sections(ed, treg, rep):
     required_sections = treg.get("sections") or []
     counts = {s: ed.sections.count(s) for s in required_sections}
     for s in required_sections:
@@ -742,21 +818,24 @@ def check_article(
                 "B-HTML",
                 f"section '{s}' appears {counts[s]} times; must be exactly once",
             )
-    flex_band = treg.get("flex_sections")
-    if flex_band:
-        extras = [s for s in ed.sections if s not in required_sections]
-        dupes = sorted({s for s in extras if extras.count(s) > 1})
-        if dupes:
-            rep.block("B-HTML", f"duplicate section labels: {dupes}")
-        low, high = flex_band
-        if not (low <= len(extras) <= high):
-            rep.block(
-                "B-HTML",
-                f"{len(extras)} sections beyond the anchors; this template "
-                f"expects between {low} and {high}",
-            )
+    # Absent flex_sections means a fully fixed outline: no section beyond the
+    # anchors is allowed (V6c). Present it as [0, 0] so extras BLOCK rather than
+    # slip through unchecked.
+    flex_band = treg.get("flex_sections") or [0, 0]
+    extras = [s for s in ed.sections if s not in required_sections]
+    dupes = sorted({s for s in extras if extras.count(s) > 1})
+    if dupes:
+        rep.block("B-HTML", f"duplicate section labels: {dupes}")
+    low, high = flex_band
+    if not (low <= len(extras) <= high):
+        rep.block(
+            "B-HTML",
+            f"{len(extras)} sections beyond the anchors; this template "
+            f"expects between {low} and {high}",
+        )
 
-    # --- B-SANDBOX ---
+
+def check_sandbox(ed, rep):
     for a in ed.script_tags:
         stype = (a.get("type") or "").strip().lower()
         src = a.get("src", "")
@@ -790,14 +869,15 @@ def check_article(
         # cannot slip an off-origin load past the check.
         u = re.sub(r"[\t\n\r]", "", (url or "").strip()).replace("\\", "/")
         is_external = "://" in u or u.startswith("//")
-        if is_external and not u.startswith(ALLOWED_EXTERNAL_PREFIXES):
+        if is_external and not external_ref_allowed(u):
             rep.block("B-SANDBOX", f"external {kind} reference not on allowlist: {url}")
     for i, raw_chart in enumerate(ed.chart_raw, 1):
         err = chart_spec_error(raw_chart)
         if err is not None:
             rep.block("B-SANDBOX", f"data-nb-chart block #{i} invalid: {err}")
 
-    # --- B-SOURCES-FORM ---
+
+def check_sources(ed, rep, *, check_links):
     if not ed.sources:
         rep.block("B-SOURCES-FORM", "no source entries (a[data-nb-source]) found")
     well_formed = []
@@ -805,12 +885,13 @@ def check_article(
         href = s["href"]
         if re.match(r"^https://[^\s]+$", href or ""):
             well_formed.append(href)
+        elif s["required"] and is_repo_relative_source(href):
+            continue  # local-file citation (V6a): no public URL to probe
         else:
             rep.block(
                 "B-SOURCES-FORM", f"source href must be absolute https URL: {href!r}"
             )
-
-    # --- B-SOURCE-DEAD: each cited URL must actually resolve (editor gate) ---
+    # B-SOURCE-DEAD: each cited URL must actually resolve (editor gate)
     if check_links:
         for href in dead_source_links(well_formed):
             rep.block(
@@ -818,7 +899,8 @@ def check_article(
                 f"source link does not resolve (404 or no such domain): {href}",
             )
 
-    # --- B-CITES-RESOLVE ---
+
+def check_cites(ed, rep):
     for target in ed.cite_hrefs:
         if target not in ed.ids:
             rep.block(
@@ -830,9 +912,8 @@ def check_article(
                 f"inline citation '#{target}' does not point at a source entry",
             )
 
-    # ============================ WARN tier ============================ #
 
-    # length band
+def check_warns(ed, meta, *, series, treg, template_id, item_cfg, rep):
     band = series.get("words") or treg.get("words")
     if band:
         lo, hi = band
@@ -857,11 +938,15 @@ def check_article(
         n = len(ed.items)
         if n < lo:
             rep.warn(
-                "W-LENGTH-LOW", f"{template_id} expects {lo}-{hi} items; found {n}"
+                "W-LENGTH-LOW",
+                f"{template_id} expects {lo}-{hi} items; found {n}",
+                suggestion="add an item to reach the band",
             )
         elif n > hi:
             rep.warn(
-                "W-LENGTH-HIGH", f"{template_id} expects {lo}-{hi} items; found {n}"
+                "W-LENGTH-HIGH",
+                f"{template_id} expects {lo}-{hi} items; found {n}",
+                suggestion="cut the weakest item to the band",
             )
 
     # source floor
@@ -947,15 +1032,110 @@ def check_article(
         actual = len(ed.sources)
         if abs(meta["sources"] - actual) > SELF_COUNT_TOLERANCE * max(actual, 1):
             rep.warn(
-                "W-SELF-COUNT", f"nb-meta sources={meta['sources']} vs counted {actual}"
+                "W-SELF-COUNT",
+                f"nb-meta sources={meta['sources']} vs counted {actual}",
+                suggestion="update nb-meta sources to the counted total",
             )
     if isinstance(meta.get("words"), int):
         actual = ed.word_count
         if actual and abs(meta["words"] - actual) > SELF_COUNT_TOLERANCE * actual:
             rep.warn(
-                "W-SELF-COUNT", f"nb-meta words={meta['words']} vs counted {actual}"
+                "W-SELF-COUNT",
+                f"nb-meta words={meta['words']} vs counted {actual}",
+                suggestion="update nb-meta words to the counted total",
             )
 
+    # em-dash overuse (soft): AI drafts reach for the em-dash as a default
+    # connective. WARN only, never a BLOCK; some em-dashes earn their place.
+    prose = " ".join(ed._prose_text_parts)
+    prose_words = len(re.findall(r"\S+", prose))
+    if prose_words >= EM_DASH_MIN_WORDS:
+        dashes = prose.count("—")
+        rate = dashes * 1000 / prose_words
+        if rate > EM_DASH_PER_1000:
+            rep.warn(
+                "W-EM-DASH",
+                f"{dashes} em-dashes in {prose_words} words ({rate:.1f} per 1000)",
+                suggestion="AI drafts overuse the em-dash as a default connective; "
+                "cut the reflexive ones, keep the few that earn their place",
+            )
+
+
+def check_article(
+    html_path,
+    series_id,
+    *,
+    repo,
+    library_dir,
+    rep,
+    pr_body_meta=None,
+    today=None,
+    check_links=False,
+) -> dict | None:
+    today = today or _dt.date.today()
+
+    resolved = resolve_series_and_template(repo, series_id, rep)
+    if resolved is None:
+        return None
+    series, registry, mode_cfg, template_id, treg, allowed_templates = resolved
+
+    raw = read_article_source(html_path, rep)
+    if raw is None:
+        return None
+
+    ed = Article()
+    ed.feed(raw)
+    ed.close()
+
+    meta = parse_meta(ed, rep)
+    if meta is None:
+        return None
+
+    if mode_cfg == "open":
+        bound = bind_open_template(meta, registry, allowed_templates, rep)
+        if bound is None:
+            return None
+        template_id, treg = bound
+
+    fname = os.path.basename(html_path)
+    slug_from_path = fname[:-5] if fname.endswith(".html") else fname
+    parent = os.path.basename(os.path.dirname(html_path))
+    check_meta_agreement(
+        meta,
+        series=series,
+        series_id=series_id,
+        template_id=template_id,
+        slug_from_path=slug_from_path,
+        parent=parent,
+        pr_body_meta=pr_body_meta,
+        rep=rep,
+    )
+
+    slug = meta.get("slug") or slug_from_path
+    pub = published_slugs(library_dir, series_id)
+    item_cfg = check_mode(
+        meta,
+        series=series,
+        series_id=series_id,
+        slug=slug,
+        pub=pub,
+        today=today,
+        rep=rep,
+    )
+
+    check_required_sections(ed, treg, rep)
+    check_sandbox(ed, rep)
+    check_sources(ed, rep, check_links=check_links)
+    check_cites(ed, rep)
+    check_warns(
+        ed,
+        meta,
+        series=series,
+        treg=treg,
+        template_id=template_id,
+        item_cfg=item_cfg,
+        rep=rep,
+    )
     return meta
 
 
@@ -966,7 +1146,7 @@ def check_article(
 PR_PATH_RE = re.compile(r"^library/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})\.html$")
 
 
-def parse_pr_body(path):
+def parse_pr_body(path) -> dict | None:
     with open(path, encoding="utf-8") as fh:
         body = fh.read()
     m = re.search(r"```nb-meta\s*\n(.*?)```", body, re.S)
@@ -1009,7 +1189,7 @@ def pr_changed_files(repo, *, base, head):
     return changes
 
 
-def resolve_pr_body(pr_body_path, rep):
+def resolve_pr_body(pr_body_path, rep) -> dict | None:
     """Parse a PR body file and flag a missing or unparseable nb-meta block.
 
     Shared by CI mode and the local preflight (`--pr-body` without `--pr`), so
@@ -1158,9 +1338,9 @@ def main(argv=None):
             rep=rep,
             pr_body_meta=resolve_pr_body(args.pr_body, rep),
             today=args.today and _dt.date.fromisoformat(args.today),
+            check_links=args.check_links,
         )
 
-    # strict promotion for pr mode (series known only after path parse)
     return emit(rep, args.json)
 
 

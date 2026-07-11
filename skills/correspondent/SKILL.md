@@ -31,15 +31,12 @@ If your runtime cannot spawn subagents or worktrees, do the same work one series
 at a time, each in a fresh pass. The steps are identical; you lose only the
 isolation and the parallelism, not the pipeline.
 
-## Load your layers (in order)
+## Load your layers
 
-`PROTOCOL.md` → `spec/editorial.md` (house floor) → `press/editorial.md` (the
-paper's voice, if present) → your template's registry entry
-(`templates/registry.yaml` overlaid by `press/templates/registry.yaml`) → the
-template's editorial brief if it ships one (`press/templates/<t>.md` over
-`templates/<t>.md`) → `press/series/<id>/prompt.md` → tag fragments in declared
-order → the item's `prompt` if present. Later layers specialize; they never
-override earlier ones.
+The composed layer stack and its order live in PROTOCOL step 2: the contract, the
+house floor, the paper's voice, the template package, the series prompt, the tag
+fragments, then the item prompt. Load them in that order; later layers specialize
+and never override earlier ones.
 
 ## Select work
 
@@ -74,7 +71,11 @@ not failure.**
 Produce each due series' article by these steps, in order. Track them with your
 task or todo tool, so no stage is skipped and each stage-skill fires at its step.
 
-1. **Load the series layers** (series prompt, tags, item prompt) for this series.
+1. **Load the full layer stack** into this fresh context, in PROTOCOL step 2's
+   order. The isolated context starts empty, so load these here firsthand rather
+   than assuming the orchestrator's copy carried over: the drafter must read the
+   floor and the paper's voice directly, not only through the voice brief. Later
+   layers specialize; they never override earlier ones.
 2. **Writing coach, always.** Spawn a subagent that loads the `writing-coach`
    skill. It studies how the best real writers on this subject actually write and
    leaves a voice brief at `.nb-voice/<series>-<slug>.md`. Read the brief before
@@ -89,26 +90,37 @@ task or todo tool, so no stage is skipped and each stage-skill fires at its step
    - Every load-bearing claim gets an inline citation that links to a source
      entry. Never fabricate a citation; a dangling cite is a BLOCK.
    - Collect at least the series' source floor; aim past it.
-4. **Draft.** Render one self-contained HTML file from the template, reading the
-   voice brief as you write so the prose is anchored, not slop. Start from
-   `press/templates/<template>.html` if it exists, else
-   `templates/<template>.html`.
-   - The registry entry defines the template's geometry. **article** is enforced
-     prose: the anchor sections appear once, and where it declares `flex_sections`
-     you name that many more between them (lowercase-hyphen `data-nb-section`
-     labels, each cited). **brief** is enforced structure: 4 to 8 tagged items,
-     each cited, each with a why-it-matters line. A custom template follows its
-     own entry the same way.
-   - `templates/FURNITURE.md` is the component catalog. Use a piece when it
-     carries information better than prose; skip decoration.
-   - Fill `nb-meta` honestly (`sources`/`words` are recounted by the proof;
-     `harness`/`model` are your provenance). Charts only as `data-nb-chart` JSON
-     blocks. Keep the engine asset links; add no other scripts, styles, iframes,
-     or handlers. Write to `library/<series>/<slug>.html`.
+4. **Draft.** Render one self-contained HTML file from the template's
+   `skeleton.html`, reading the voice brief as you write so the prose is
+   anchored, not slop. Start from `press/templates/<template>/skeleton.html` if a
+   press package of that id exists, else `templates/<template>/skeleton.html`.
+   - **Fill the skeleton:** replace every ALL-CAPS placeholder and all sample
+     content, drop the one flex-slot marker once you have added the sections it
+     stands for, fill `nb-meta` honestly, and keep the engine asset
+     `<link>`/`<script>` tags exactly as they are (engine-owned). This is the
+     universal fill discipline for every template.
+   - The `manifest.yaml` defines the template's geometry; obey its counts, not any
+     number restated elsewhere. The **article** template is enforced prose: fill
+     each anchor section once, and where the manifest declares `flex_sections` add
+     that many more between the anchors (lowercase-hyphen `data-nb-section` labels,
+     each cited). The **brief** template is enforced structure: the tagged items
+     its manifest sets, each cited, each with its why-it-matters line. A custom
+     template follows its own manifest the same way.
+   - Your furniture palette is three composed scopes: the engine base catalogue
+     (`templates/FURNITURE.md`), the paper's shared furniture
+     (`press/furniture/catalog.md`) if present, and this template's bespoke
+     furniture (`<template>/furniture.md`) if it ships any. Use a piece from any
+     scope when it carries information better than prose; skip decoration.
+   - `nb-meta`: `sources`/`words` are recounted by the proof; `harness`/`model`
+     are your provenance. Charts only as `data-nb-chart` JSON blocks. Add no
+     scripts, styles, iframes, or handlers beyond the engine tags. Write to
+     `library/<series>/<slug>.html`.
 5. **Self-edit, always.** Spawn a fresh subagent that loads the `editor` skill on
-   the draft and the voice brief. Apply its surgical edits. If it requests a
-   redraft, the piece needs more than surgery: redraft from step 4 with its
-   feedback and run the editor again. Keep the loop tight, a round or two.
+   the draft and the voice brief. Apply the surgical fixes it made or returned. If
+   it requests a redraft, act on the reason: a sourcing gap or a wrong direction
+   sends you back to research (step 3) for what the claim needs, then redraft; a
+   voice or structure problem redrafts from step 4. Run the editor again. Two
+   rounds should converge.
 6. **The proof loop.**
 
    ```sh
@@ -133,7 +145,7 @@ task or todo tool, so no stage is skipped and each stage-skill fires at its step
 The voice brief stays under `.nb-voice/` (gitignored), so the PR still adds
 exactly one file. Never merge. Never push to `library` directly. Never open a
 second PR for a series. If your PR is labeled `nb-invalid`, stop; a future run
-supersedes you, and fighting the editor is not your job.
+supersedes you, and fighting the desk is not your job.
 
 ## Commissioned work (a human asks directly)
 
@@ -168,5 +180,5 @@ When a human asks for a press check of `<series>`:
    artifact. Copy the file to `library/<series>/<slug>.html` on a branch, no
    duplicate research spend, normal validation path.
 
-Tell the human once: a press check consumes the same usage as a real run. It IS
-one, minus publication.
+Tell the human once: a press check runs the full pipeline at the same usage cost
+as a real run; only the publish step is skipped.

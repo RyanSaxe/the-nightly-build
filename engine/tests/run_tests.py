@@ -9,6 +9,8 @@ throwaway git repository so the diff-shape rules face actual git output.
 Run: python3 engine/tests/run_tests.py
 """
 
+import contextlib
+import io
 import json
 import pathlib
 import re as _re
@@ -36,7 +38,6 @@ TESTREPO = make_fixtures.test_repo()
 def run_local(
     html_text, series, *, slug=None, library=None, repo=None, today=TODAY, pr_body=None
 ):
-    # Write html as library/<series>/<slug>.html in a temp dir and run the proof.
     repo = repo or TESTREPO
     tmp = tempfile.mkdtemp()
     slug = slug or "micron"
@@ -93,7 +94,6 @@ def expect(name, rep, *, must_have=(), must_not=(), blocks=None):
 
 
 def make_library(published):
-    # published: {series: [slugs]}. Returns a temp dir shaped like a library checkout.
     tmp = tempfile.mkdtemp()
     for series, slugs in published.items():
         d = pathlib.Path(tmp) / "library" / series
@@ -104,7 +104,6 @@ def make_library(published):
 
 
 def seq_repo():
-    # Copy the fixture repo and rewrite semiconductors as a sequence.
     tmp = tempfile.mkdtemp()
     for sub in ("press", "templates"):
         shutil.copytree(pathlib.Path(TESTREPO) / sub, pathlib.Path(tmp) / sub)
@@ -128,7 +127,24 @@ expect("valid article is BLOCK-clean", run_local(VALID, "semiconductors"), block
 expect(
     "valid article has zero warns too",
     run_local(VALID, "semiconductors"),
-    must_not=["W-LENGTH-LOW", "W-SOURCES-MIN", "W-CITE-DENSITY", "W-REQ-URL"],
+    must_not=["W-LENGTH-LOW", "W-SOURCES-MIN", "W-CITE-DENSITY"],
+)
+expect(
+    "clean prose does not trip the em-dash warn",
+    run_local(VALID, "semiconductors"),
+    must_not=["W-EM-DASH"],
+)
+expect(
+    "em-dash overuse trips the soft W-EM-DASH warn (never a block)",
+    run_local(
+        mut(
+            "<h2>Orientation</h2>",
+            "<h2>Orientation</h2><p>" + "clause — " * 40 + "</p>",
+        ),
+        "semiconductors",
+    ),
+    must_have=["W-EM-DASH"],
+    blocks=0,
 )
 expect(
     "valid brief is BLOCK-clean",
@@ -256,6 +272,32 @@ expect(
     run_local(mut('"template": "article"', '"template": "brief"'), "semiconductors"),
     must_have=["B-META-MATCH"],
 )
+expect(
+    "slug-style tag is accepted",
+    run_local(
+        mut('"tags": ["equity"]', '"tags": ["equity", "memory-cycle"]'),
+        "semiconductors",
+    ),
+    must_not=["B-META-PARSE"],
+    blocks=0,
+)
+expect(
+    "uppercase tag blocked (slug rule)",
+    run_local(mut('"tags": ["equity"]', '"tags": ["Equity"]'), "semiconductors"),
+    must_have=["B-META-PARSE"],
+)
+expect(
+    "path-traversal tag blocked (slug rule)",
+    run_local(
+        mut('"tags": ["equity"]', '"tags": ["../../../escape"]'), "semiconductors"
+    ),
+    must_have=["B-META-PARSE"],
+)
+expect(
+    "non-list tags blocked",
+    run_local(mut('"tags": ["equity"]', '"tags": "equity"'), "semiconductors"),
+    must_have=["B-META-PARSE"],
+)
 
 print("== B-HTML ==")
 expect(
@@ -367,6 +409,39 @@ expect(
     "google fonts allowed", run_local(VALID, "semiconductors"), must_not=["B-SANDBOX"]
 )
 expect(
+    "font-host subdomain-suffix bypass blocked",
+    run_local(
+        mut(
+            "https://fonts.googleapis.com/css2?family=Newsreader&amp;display=swap",
+            "https://fonts.googleapis.com.evil.example/pwn.css",
+        ),
+        "semiconductors",
+    ),
+    must_have=["B-SANDBOX"],
+)
+expect(
+    "font-host userinfo bypass blocked",
+    run_local(
+        mut(
+            "https://fonts.googleapis.com/css2?family=Newsreader&amp;display=swap",
+            "https://fonts.googleapis.com@evil.example/pwn.css",
+        ),
+        "semiconductors",
+    ),
+    must_have=["B-SANDBOX"],
+)
+expect(
+    "font-host lookalike TLD suffix blocked",
+    run_local(
+        mut(
+            "https://fonts.googleapis.com/css2?family=Newsreader&amp;display=swap",
+            "https://fonts.googleapis.commmm/x.css",
+        ),
+        "semiconductors",
+    ),
+    must_have=["B-SANDBOX"],
+)
+expect(
     "malformed chart json",
     run_local(mut('"type":"bar"', '"type":"pie"'), "semiconductors"),
     must_have=["B-SANDBOX"],
@@ -465,6 +540,31 @@ expect(
     must_have=["B-SOURCES-FORM"],
 )
 expect(
+    "data-nb-required source may cite a repo-relative local file (V6a)",
+    run_local(
+        mut('href="https://example.org/src1"', 'href="sources/mu-10k-2025.txt"'),
+        "semiconductors",
+    ),
+    must_not=["B-SOURCES-FORM"],
+    blocks=0,
+)
+expect(
+    "non-required source still must be absolute https",
+    run_local(
+        mut('href="https://example.org/src4"', 'href="sources/local.txt"'),
+        "semiconductors",
+    ),
+    must_have=["B-SOURCES-FORM"],
+)
+expect(
+    "off-origin path even on a required source is rejected",
+    run_local(
+        mut('href="https://example.org/src1"', 'href="//evil.example/x.txt"'),
+        "semiconductors",
+    ),
+    must_have=["B-SOURCES-FORM"],
+)
+expect(
     "dangling citation",
     run_local(mut('<a href="#s5">5</a>', '<a href="#s99">99</a>'), "semiconductors"),
     must_have=["B-CITES-RESOLVE"],
@@ -520,7 +620,7 @@ expect(
     "W-WHY-MISSING + W-CITE-DENSITY (per-item)",
     run_local(
         VALID_BRIEF.replace(
-            "<p data-nb-why><b>Why it matters</b> — it moves the larger story we track.</p>",
+            "<p data-nb-why><b>Why it matters</b>: it moves the larger story we track.</p>",
             "",
             1,
         ).replace('<sup class="nb-cite"><a href="#s2">2</a></sup>', "", 1),
@@ -572,7 +672,7 @@ expect(
         mut("https://www.sec.gov/filings/mu-10k", "https://example.org/not-sec"),
         "semiconductors",
     ),
-    must_not=["W-REQ-URL", "B-SOURCES-EXCLUSIVE"],
+    must_not=["B-SOURCES-EXCLUSIVE"],
     blocks=0,
 )
 expect(
@@ -670,14 +770,15 @@ for name, fixture, sid, slug in [
         ],
     )
 
-print("== templates: structural lint of the template files ==")
+print("== templates: structural lint of the template skeletons ==")
 registry = C.load_registry(str(REPO))
 for template_id, treg in registry.items():
     tpl_path = C.find_template(str(REPO), template_id)
     if tpl_path is None:
-        FAIL.append(f"template {template_id}.html")
+        FAIL.append(f"template {template_id}/skeleton.html")
         print(
-            f"  FAIL template {template_id}.html: no file in templates/ or press/templates/"
+            f"  FAIL template {template_id}: no skeleton.html in "
+            "templates/ or press/templates/"
         )
         continue
     src = pathlib.Path(tpl_path).read_text()
@@ -704,11 +805,11 @@ for template_id, treg in registry.items():
     ok = ok_sections and ok_meta and ok_scripts and ok_sandbox
     if ok:
         PASS += 1
-        print(f"  ok   template {template_id}.html structure")
+        print(f"  ok   template {template_id}/skeleton.html structure")
     else:
-        FAIL.append(f"template {template_id}.html")
+        FAIL.append(f"template {template_id}/skeleton.html")
         print(
-            f"  FAIL template {template_id}.html: sections={ok_sections} "
+            f"  FAIL template {template_id}/skeleton.html: sections={ok_sections} "
             f"meta={ok_meta} scripts={ok_scripts} sandbox={ok_sandbox}"
         )
 
@@ -717,50 +818,53 @@ ut_repo = tempfile.mkdtemp()
 for sub in ("press", "templates", "engine"):
     shutil.copytree(pathlib.Path(TESTREPO) / sub, pathlib.Path(ut_repo) / sub)
 ut_tpl = pathlib.Path(ut_repo) / "press" / "templates"
-ut_tpl.mkdir()
-(ut_tpl / "registry.yaml").write_text(
-    "memo:\n  class: shortread\n  words: [200, 3000]\n"
-    "  sections: [note, sources]\n  cite_rule: per-section\n"
-    "  modes: [collection]\n"
-    "fieldnotes:\n  class: shortread\n  words: [200, 3000]\n"
-    "  sections: [sources]\n  flex_sections: [2, 3]\n"
-    "  cite_rule: per-section\n  cite_exempt: [context]\n  modes: [collection]\n"
-    # the exact registry entry from the docs/customization.md walkthrough,
-    # so the tutorial cannot drift from what the proof enforces
-    "lesson:\n  class: longread\n  words: [1500, 4000]\n"
-    "  sections: [objectives, recap, teach, check, bridge, sources]\n"
-    "  cite_rule: per-section\n  cite_exempt: [objectives]\n  modes: [sequence]\n"
-    # a per-item template NOT named 'brief', to prove require_why is
-    # registry-driven rather than hardcoded to the shipped brief template
-    "digest:\n  class: shortread\n  items: [2, 4]\n"
-    "  sections: [entries, sources]\n  cite_rule: per-item\n"
-    "  require_why: true\n  modes: [collection]\n"
-)
-(ut_tpl / "memo.html").write_text(
-    "<!DOCTYPE html><html><body>"
-    '<section data-nb-section="note"></section>'
-    '<section data-nb-section="sources"></section>'
-    "</body></html>"
-)
-(ut_tpl / "fieldnotes.html").write_text(
-    "<!DOCTYPE html><html><body>"
-    '<section data-nb-section="YOUR-LABEL"></section>'
-    '<section data-nb-section="sources"></section>'
-    "</body></html>"
-)
-(ut_tpl / "lesson.html").write_text(
-    "<!DOCTYPE html><html><body>"
-    + "".join(
-        f'<section data-nb-section="{s}"></section>'
-        for s in ("objectives", "recap", "teach", "check", "bridge", "sources")
+
+
+def user_template(tid, manifest, skeleton):
+    folder = ut_tpl / tid
+    folder.mkdir(parents=True)
+    (folder / "manifest.yaml").write_text(manifest)
+    (folder / "skeleton.html").write_text(skeleton)
+
+
+def skeleton_of(*sections):
+    return (
+        "<!DOCTYPE html><html><body>"
+        + "".join(f'<section data-nb-section="{s}"></section>' for s in sections)
+        + "</body></html>"
     )
-    + "</body></html>"
+
+
+user_template(
+    "memo",
+    "class: shortread\nwords: [200, 3000]\n"
+    "sections: [note, sources]\ncite_rule: per-section\nmodes: [collection]\n",
+    skeleton_of("note", "sources"),
 )
-(ut_tpl / "digest.html").write_text(
-    "<!DOCTYPE html><html><body>"
-    '<section data-nb-section="entries"></section>'
-    '<section data-nb-section="sources"></section>'
-    "</body></html>"
+user_template(
+    "fieldnotes",
+    "class: shortread\nwords: [200, 3000]\n"
+    "sections: [sources]\nflex_sections: [2, 3]\n"
+    "cite_rule: per-section\ncite_exempt: [context]\nmodes: [collection]\n",
+    skeleton_of("YOUR-LABEL", "sources"),
+)
+# the exact manifest from the docs/customization.md walkthrough, so the tutorial
+# cannot drift from what the proof enforces
+user_template(
+    "lesson",
+    "class: longread\nwords: [1500, 4000]\n"
+    "sections: [objectives, recap, teach, check, bridge, sources]\n"
+    "cite_rule: per-section\ncite_exempt: [objectives]\nmodes: [sequence]\n",
+    skeleton_of("objectives", "recap", "teach", "check", "bridge", "sources"),
+)
+# a per-item template NOT named 'brief', to prove require_why is manifest-driven
+# rather than hardcoded to the shipped brief template
+user_template(
+    "digest",
+    "class: shortread\nitems: [2, 4]\n"
+    "sections: [entries, sources]\ncite_rule: per-item\n"
+    "require_why: true\nmodes: [collection]\n",
+    skeleton_of("entries", "sources"),
 )
 ut_series = pathlib.Path(ut_repo) / "press" / "series" / "memos"
 ut_series.mkdir()
@@ -848,6 +952,20 @@ expect(
     "the docs walkthrough lesson template passes as a fixed user template",
     run_local(LESSON, "crypto", slug="hashes", repo=ut_repo),
     blocks=0,
+)
+expect(
+    "fixed outline (no flex_sections): an undeclared extra section blocks (V6c)",
+    run_local(
+        LESSON.replace(
+            '<section data-nb-section="sources">',
+            '<section data-nb-section="rogue"><p>extra</p></section>'
+            '<section data-nb-section="sources">',
+        ),
+        "crypto",
+        slug="hashes",
+        repo=ut_repo,
+    ),
+    must_have=["B-HTML"],
 )
 
 print("== flex sections (agent-named outline) ==")
@@ -1035,10 +1153,13 @@ if "memo" in reg and "article" in reg:
 else:
     FAIL.append("registry merge")
     print(f"  FAIL registry merge: keys={sorted(reg)}")
+memo_tpl = C.find_template(ut_repo, "memo") or ""
+article_tpl = C.find_template(ut_repo, "article") or ""
 if (
-    C.find_template(ut_repo, "memo")
-    and "press" in C.find_template(ut_repo, "memo")
-    and "press" not in (C.find_template(ut_repo, "article") or "")
+    memo_tpl.endswith("memo/skeleton.html")
+    and "press" in memo_tpl
+    and article_tpl.endswith("article/skeleton.html")
+    and "press" not in article_tpl
 ):
     PASS += 1
     print("  ok   template lookup: press shadows shipped")
@@ -1050,7 +1171,6 @@ print("== rhythm & governance (cadence, paused, selection) ==")
 
 
 def patched_repo(patch, series="semiconductors"):
-    # Copy the fixture repo and append yaml to one series config.
     tmp = tempfile.mkdtemp()
     for sub in ("press", "templates", "engine"):
         shutil.copytree(pathlib.Path(TESTREPO) / sub, pathlib.Path(tmp) / sub)
@@ -1297,6 +1417,84 @@ for name, cond in [
         FAIL.append(name)
         print(f"  FAIL {name}")
 
+print("== duty.py degrades gracefully on malformed input ==")
+
+
+def overwrite_series(body, series="ai-briefs"):
+    tmp = patched_repo("", series=series)
+    y = pathlib.Path(tmp) / "press" / "series" / series / "series.yaml"
+    # Replace the series.yaml wholesale so tests can hand duty a config shape
+    # validate_config would never let through.
+    y.write_text(body)
+    return tmp
+
+
+COLLECTION_MISSING_SLUG = (
+    "name: Test\nmode: collection\ntemplate: article\n"
+    "items:\n  - {slug: alpha}\n  - {title: no-slug-here}\n  - {slug: beta}\n"
+)
+d_missing_slug = duty(
+    overwrite_series(COLLECTION_MISSING_SLUG), make_library({"ai-briefs": []})
+)
+d_bare_string = duty(overwrite_series("just a bare string\n"), empty_lib)
+d_unparseable = duty(overwrite_series("a: b: c\n"), empty_lib)
+
+bad_meta_lib = make_library({"semiconductors": []})
+(pathlib.Path(bad_meta_lib) / "library" / "semiconductors" / "micron.html").write_text(
+    '<script type="application/json" id="nb-meta">[1, 2, 3]</script>'
+)
+d_bad_meta = duty(TESTREPO, bad_meta_lib)
+
+# 2026-07-06 is a Monday; a list cadence should match case-insensitively and
+# fail open (treat as due) when no entry is a recognized day name.
+d_cad_upper = duty(patched_repo("cadence: [Mon]\n"), empty_lib)
+d_cad_unknown = duty(patched_repo("cadence: [Fortnight]\n"), empty_lib)
+
+seq_extra_lib = make_library({"semiconductors": ["micron", "hand-extra"]})
+d_seq_extra = duty(seq_repo(), seq_extra_lib)
+
+for name, cond in [
+    (
+        "a dict item without a slug is dropped, not crashed on",
+        duty_of(d_missing_slug, "ai-briefs")["candidates"] == ["alpha"],
+    ),
+    (
+        "a non-dict series.yaml idles that one series with a reason",
+        duty_of(d_bare_string, "ai-briefs")["reason"] == "series.yaml is not a mapping"
+        and duty_of(d_bare_string, "ai-briefs") in d_bare_string["idle"],
+    ),
+    (
+        "one bad series never takes down the others",
+        duty_of(d_bare_string, "semiconductors") is not None,
+    ),
+    (
+        "unparseable series.yaml idles rather than aborting the run",
+        duty_of(d_unparseable, "ai-briefs")["reason"] == "series.yaml is not a mapping",
+    ),
+    (
+        "a non-dict nb-meta payload does not crash published_state",
+        duty_of(d_bad_meta, "semiconductors")["candidates"] == ["tsmc"],
+    ),
+    (
+        "list cadence matches case-insensitively (Mon on a Monday is due)",
+        duty_of(d_cad_upper, "semiconductors") in d_cad_upper["due"],
+    ),
+    (
+        "list cadence with no recognized day fails open (due)",
+        duty_of(d_cad_unknown, "semiconductors") in d_cad_unknown["due"],
+    ),
+    (
+        "sequence progress counts syllabus items, not library extras",
+        duty_of(d_seq_extra, "semiconductors")["reason"].startswith("1 of 5 published"),
+    ),
+]:
+    if cond:
+        PASS += 1
+        print(f"  ok   {name}")
+    else:
+        FAIL.append(name)
+        print(f"  FAIL {name}")
+
 print("== PR mode (real git repo) ==")
 
 
@@ -1495,6 +1693,163 @@ for name, cond in [
         print(f"  FAIL {name}")
 
 print()
+print("== validate_config catches malformed series before an unattended run ==")
+
+
+def vc_output(repo):
+    r = subprocess.run(
+        [sys.executable, str(vc), "--repo", str(repo)],
+        capture_output=True,
+        text=True,
+    )
+    return r.returncode, r.stdout, r.stderr
+
+
+REQ_DOCS_NOT_LIST = "name: X\nmode: rolling\ntemplate: brief\nrequired_docs: nope\n"
+REQ_DOC_NOT_MAP = (
+    "name: X\nmode: collection\ntemplate: article\n"
+    "items:\n  - {slug: alpha, required_docs: [oops]}\n"
+)
+TWO_SLUGLESS = (
+    "name: X\nmode: collection\ntemplate: article\n"
+    "items:\n  - {title: one}\n  - {title: two}\n"
+)
+DUP_SLUG = (
+    "name: X\nmode: collection\ntemplate: article\n"
+    "items:\n  - {slug: alpha}\n  - {slug: alpha}\n"
+)
+
+rc_unparseable, out_unparseable, err_unparseable = vc_output(
+    overwrite_series("a: b: c\n")
+)
+rc_nonmap, out_nonmap, err_nonmap = vc_output(overwrite_series("just a bare string\n"))
+_, out_reqlist, _ = vc_output(overwrite_series(REQ_DOCS_NOT_LIST))
+_, out_reqmap, _ = vc_output(overwrite_series(REQ_DOC_NOT_MAP))
+_, out_slugless, _ = vc_output(overwrite_series(TWO_SLUGLESS))
+_, out_dup, _ = vc_output(overwrite_series(DUP_SLUG))
+
+for name, cond in [
+    (
+        "autopublish: 'false' (a truthy string) is a validation error",
+        vc_rc(patched_repo("autopublish: 'false'\n")) == 1,
+    ),
+    (
+        "strict: 'no' (a truthy string) is a validation error",
+        vc_rc(patched_repo("strict: 'no'\n")) == 1,
+    ),
+    (
+        "min_sources: lots (a string) is a validation error",
+        vc_rc(patched_repo("min_sources: lots\n")) == 1,
+    ),
+    (
+        "a well-typed min_sources still validates",
+        vc_rc(patched_repo("min_sources: 12\n")) == 0,
+    ),
+    (
+        "unparseable series.yaml is a readable error, not a traceback",
+        rc_unparseable == 1
+        and "not valid YAML" in out_unparseable
+        and "Traceback" not in err_unparseable,
+    ),
+    (
+        "a non-dict series.yaml is a readable error, not a traceback",
+        rc_nonmap == 1
+        and "must be a mapping" in out_nonmap
+        and "Traceback" not in err_nonmap,
+    ),
+    (
+        "series-level required_docs must be a list",
+        "'required_docs' must be a list" in out_reqlist,
+    ),
+    (
+        "a required_docs entry must be a mapping",
+        "required_docs entry must be a mapping" in out_reqmap,
+    ),
+    (
+        "two slugless items report two slug errors, never a false duplicate",
+        "duplicate item slug" not in out_slugless,
+    ),
+    (
+        "a genuine duplicate slug is still caught",
+        "duplicate item slug 'alpha'" in out_dup,
+    ),
+]:
+    if cond:
+        PASS += 1
+        print(f"  ok   {name}")
+    else:
+        FAIL.append(name)
+        print(f"  FAIL {name}")
+
+print()
+print("== ci_helpers.autopublish (the auto-merge gate) ==")
+
+
+def ci_autopublish(series_yaml):
+    repo = tempfile.mkdtemp()
+    sd = pathlib.Path(repo) / "press" / "series" / "foo"
+    sd.mkdir(parents=True)
+    (sd / "series.yaml").write_text(series_yaml)
+    git("init", "-q", "-b", "main", cwd=repo)
+    git("config", "user.email", "t@t", cwd=repo)
+    git("config", "user.name", "t", cwd=repo)
+    git("add", "-A", cwd=repo)
+    git("commit", "-qm", "config", cwd=repo)
+    git("checkout", "-qb", "night", cwd=repo)
+    lib = pathlib.Path(repo) / "library" / "foo"
+    lib.mkdir(parents=True)
+    (lib / "story.html").write_text("<html></html>")
+    git("add", "-A", cwd=repo)
+    git("commit", "-qm", "nb: foo/story", cwd=repo)
+    # ci_helpers reads the diff from the current working directory (check.yml
+    # runs it inside the checkout), so drive it with cwd set to the repo.
+    return subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "engine" / "ci_helpers.py"),
+            "autopublish",
+            "--repo",
+            repo,
+            "--diff-base",
+            "main",
+        ],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+for name, cond in [
+    (
+        "autopublish: true enables auto-merge",
+        ci_autopublish("autopublish: true\n") == "true",
+    ),
+    (
+        "autopublish: false disables it",
+        ci_autopublish("autopublish: false\n") == "false",
+    ),
+    ("autopublish absent disables it", ci_autopublish("mode: rolling\n") == "false"),
+    (
+        "autopublish: 'false' (string) never auto-merges",
+        ci_autopublish("autopublish: 'false'\n") == "false",
+    ),
+    (
+        "autopublish: 'true' (string) never auto-merges",
+        ci_autopublish("autopublish: 'true'\n") == "false",
+    ),
+    (
+        "autopublish: 1 (int) never auto-merges",
+        ci_autopublish("autopublish: 1\n") == "false",
+    ),
+]:
+    if cond:
+        PASS += 1
+        print(f"  ok   {name}")
+    else:
+        FAIL.append(name)
+        print(f"  FAIL {name}")
+
+print()
 print("== source link resolution classifier ==")
 # B-SOURCE-DEAD blocks only on definitive death; everything ambiguous passes,
 # so a real-but-restricted source (or an offline runner) never false-blocks.
@@ -1509,6 +1864,57 @@ link_cases = [
     ("no links to probe returns empty", C.dead_source_links([]) == []),
 ]
 for name, ok in link_cases:
+    if ok:
+        PASS += 1
+        print(f"  ok   {name}")
+    else:
+        FAIL.append(name)
+        print(f"  FAIL {name}")
+
+print()
+print("== rehearsal honors --check-links (parity with CI) ==")
+
+
+# 1.5: the local (rehearsal) branch of main() must forward --check-links, or a
+# dead citation passes the press check yet fails B-SOURCE-DEAD in CI. Every source
+# points at the reserved `.invalid` TLD (RFC 6761), which never resolves — so the
+# probe classifies it dead offline or online, making this deterministic without a
+# real network round-trip. The assertion is purely about whether main() wires the
+# flag through: links-on must surface B-SOURCE-DEAD, --no-check-links must not.
+def run_main_json(argv):
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        C.main(argv)
+    return json.loads(buf.getvalue())
+
+
+_dead_article = VALID.replace(
+    "https://example.org/", "https://nb-dead.invalid/"
+).replace("https://www.sec.gov/filings/mu-10k", "https://nb-dead.invalid/sec")
+_link_tmp = tempfile.mkdtemp()
+_art = pathlib.Path(_link_tmp) / "library" / "semiconductors" / "micron.html"
+_art.parent.mkdir(parents=True)
+_art.write_text(_dead_article)
+_common = [
+    str(_art),
+    "--series",
+    "semiconductors",
+    "--repo",
+    TESTREPO,
+    "--today",
+    TODAY,
+    "--json",
+]
+links_on = run_main_json(_common)
+links_off = run_main_json([*_common, "--no-check-links"])
+shutil.rmtree(_link_tmp)
+on_codes = {f["code"] for f in links_on["findings"]}
+off_codes = {f["code"] for f in links_off["findings"]}
+link_flag_cases = [
+    ("local mode probes links by default", "B-SOURCE-DEAD" in on_codes),
+    ("--no-check-links suppresses probing locally", "B-SOURCE-DEAD" not in off_codes),
+]
+for name, ok in link_flag_cases:
     if ok:
         PASS += 1
         print(f"  ok   {name}")
@@ -1547,17 +1953,30 @@ for name, ok in wf_cases:
         FAIL.append(name)
         print(f"  FAIL {name}")
 
-print()
-print("== builder suite (run_builder_tests.py) ==")
-builder = subprocess.run([sys.executable, str(HERE / "run_builder_tests.py")])
-if builder.returncode != 0:
-    FAIL.append("builder suite")
+
+def run_suite(script, label):
+    global PASS
+    print(f"== {label} ({script}) ==")
+    proc = subprocess.run(
+        [sys.executable, str(HERE / script)], capture_output=True, text=True
+    )
+    sys.stdout.write(proc.stdout)
+    if proc.stderr:
+        sys.stderr.write(proc.stderr)
+    # Fold the subprocess suite's own assertion counts into this runner's totals,
+    # so the summary reports real coverage instead of dropping the builder and
+    # e2e assertions.
+    m = _re.search(r"(\d+) passed, (\d+) failed", proc.stdout)
+    if m:
+        PASS += int(m.group(1))
+    if proc.returncode != 0:
+        FAIL.append(f"{label} ({m.group(2) if m else '?'} failed)")
+
 
 print()
-print("== end-to-end dress rehearsal (run_e2e_test.py) ==")
-e2e = subprocess.run([sys.executable, str(HERE / "run_e2e_test.py")])
-if e2e.returncode != 0:
-    FAIL.append("e2e suite")
+run_suite("run_builder_tests.py", "builder suite")
+print()
+run_suite("run_e2e_test.py", "end-to-end dress rehearsal")
 
 print()
 print(f"{PASS} passed, {len(FAIL)} failed")

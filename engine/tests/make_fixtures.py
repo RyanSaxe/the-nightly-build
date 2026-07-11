@@ -65,7 +65,6 @@ appearance: auto
 
 
 def test_repo():
-    # A temp repo with the fixture series plus the real templates and assets.
     root = pathlib.Path(tempfile.mkdtemp())
     shutil.copytree(REPO / "templates", root / "templates")
     shutil.copytree(REPO / "engine" / "assets", root / "engine" / "assets")
@@ -178,7 +177,7 @@ def brief(date="2026-07-06"):
             f'<sup class="nb-cite"><a href="#s{i}">{i}</a></sup></h4>'
             f"<p>Two sentences of what happened and the immediate context around it. "
             f"The specifics are grounded in the cited source.</p>"
-            f"<p data-nb-why><b>Why it matters</b> — it moves the larger story we track.</p>"
+            f"<p data-nb-why><b>Why it matters</b>: it moves the larger story we track.</p>"
             f"</div>"
         )
     src = "".join(

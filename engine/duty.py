@@ -21,8 +21,9 @@ import argparse
 import datetime as _dt
 import json
 import os
-import re
 import sys
+
+import nb_meta
 
 try:
     import yaml
@@ -31,7 +32,6 @@ except ImportError:
     sys.exit(2)
 
 DAY_NAMES = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
-META_RE = re.compile(r'<script[^>]*\bid="nb-meta"[^>]*>(.*?)</script>', re.S)
 
 
 def cadence_includes(cadence, day: str) -> bool:
@@ -42,18 +42,11 @@ def cadence_includes(cadence, day: str) -> bool:
     if cadence == "weekends":
         return day in ("sat", "sun")
     if isinstance(cadence, list):
-        return day in cadence
+        days = [str(d).lower() for d in cadence]
+        if not any(d in DAY_NAMES for d in days):
+            return True  # no recognized day name: fail open, like an unknown scalar
+        return day in days
     return True  # unknown value: validate_config flags it; never skip work here
-
-
-def series_dir_in_library(library: str, series_id: str) -> str | None:
-    for base in (
-        os.path.join(library, "library", series_id),
-        os.path.join(library, series_id),
-    ):
-        if os.path.isdir(base):
-            return base
-    return None
 
 
 def published_state(library: str, series_id: str) -> tuple[set[str], set[str]]:
@@ -63,7 +56,7 @@ def published_state(library: str, series_id: str) -> tuple[set[str], set[str]]:
     for rerun safety: an article published tonight idles its series even
     when its slug is topical rather than dated.
     """
-    base = series_dir_in_library(library, series_id)
+    base = nb_meta.series_dir(library, series_id)
     if base is None:
         return set(), set()
     slugs, dates = set(), set()
@@ -71,15 +64,10 @@ def published_state(library: str, series_id: str) -> tuple[set[str], set[str]]:
         if not fname.endswith(".html"):
             continue
         slugs.add(fname[:-5])
-        with open(os.path.join(base, fname), encoding="utf-8", errors="replace") as fh:
-            m = META_RE.search(fh.read())
-        if m:
-            try:
-                d = json.loads(m.group(1)).get("date")
-                if isinstance(d, str):
-                    dates.add(d)
-            except ValueError:
-                pass
+        meta = nb_meta.read_meta(os.path.join(base, fname))
+        date = meta.get("date") if meta else None
+        if isinstance(date, str):
+            dates.add(date)
     return slugs, dates
 
 
@@ -87,13 +75,15 @@ def config_items(cfg: dict[str, object]) -> list[dict[str, object]]:
     """Return the series' items list, defensively narrowed from parsed YAML.
 
     series.yaml is user-edited, so items may be missing or malformed.
-    Non-list values become an empty list and non-dict entries are
-    dropped, with keys normalized to strings.
+    Non-list values become an empty list, non-dict entries are dropped,
+    and entries without a string slug are dropped too — every returned
+    item is safe to index by ``slug``.
     """
     raw = cfg.get("items")
     if not isinstance(raw, list):
         return []
-    return [{str(k): v for k, v in it.items()} for it in raw if isinstance(it, dict)]
+    items = [{str(k): v for k, v in it.items()} for it in raw if isinstance(it, dict)]
+    return [it for it in items if isinstance(it.get("slug"), str)]
 
 
 def series_duty(
@@ -144,7 +134,8 @@ def series_duty(
             **entry,
             "slug": nxt,
             "order": order,
-            "reason": f"{len(pub)} of {len(items)} published; '{nxt}' is next",
+            "reason": f"{len(items) - len(unpublished)} of {len(items)} "
+            f"published; '{nxt}' is next",
         }
     if mode == "collection":
         if not unpublished:
@@ -163,7 +154,7 @@ def series_duty(
                 **entry,
                 "commissions": unpublished,
                 "reason": "commissioned items pending — publish "
-                "one of these before a freestyle pick",
+                "one of these before an open pick",
             }
         return True, {
             **entry,
@@ -203,8 +194,18 @@ def main(argv=None) -> int:
         else []
     )
     for sid in sids:
-        with open(os.path.join(root, sid, "series.yaml"), encoding="utf-8") as fh:
-            cfg = yaml.safe_load(fh) or {}
+        try:
+            with open(os.path.join(root, sid, "series.yaml"), encoding="utf-8") as fh:
+                cfg = yaml.safe_load(fh)
+        except yaml.YAMLError:
+            cfg = None
+        if not isinstance(cfg, dict):
+            # A bare string/list or unparseable series.yaml idles one series
+            # with a reason; the run still exits 0 for every other series.
+            idle.append(
+                {"series": sid, "mode": None, "reason": "series.yaml is not a mapping"}
+            )
+            continue
         pub, pub_dates = published_state(args.library, sid)
         is_due, entry = series_duty(
             sid, cfg, pub=pub, pub_dates=pub_dates, date=date, day=day

@@ -39,6 +39,7 @@ TEMPLATE_KEYS = {
     "cite_exempt",
     "require_why",
     "modes",
+    "about",
 }
 CITE_RULES = {"per-section", "per-item"}
 SERIES_KEYS = {
@@ -113,9 +114,6 @@ def check_site(repo, errors):
 
 
 def check_site_assets(assets, *, errors):
-    # Trusted external libraries a press loads on every page. Owner-authored on
-    # main, so they must be https and Subresource-Integrity-pinned: the SRI hash
-    # is what lets the browser refuse a tampered CDN response.
     if assets is None:
         return
     prefix = "press/site.yaml"
@@ -156,16 +154,15 @@ def check_site_assets(assets, *, errors):
 
 
 def check_site_directory(directory, *, errors):
-    # Directory listing is opt-out: a press is listed unless it sets
-    # directory.publish: false. The public URL is derived at build time (from the
-    # Pages base URL), never configured, and the description is optional; a 'url'
-    # key is intentionally not accepted, which the unknown-key check enforces.
     if directory is None:
         return
     prefix = "press/site.yaml"
     if not isinstance(directory, dict):
         errors.append(f"{prefix}: 'directory' must be a mapping of publish/description")
         return
+    # Directory listing is opt-out (directory.publish: false). The public URL is
+    # derived at build time from the Pages base URL, never configured, so a 'url'
+    # key is intentionally rejected here by the unknown-key check.
     unknown = set(directory) - {"publish", "description"}
     if unknown:
         errors.append(f"{prefix}: directory: unknown keys {sorted(unknown)}")
@@ -185,14 +182,28 @@ def check_site_directory(directory, *, errors):
 
 
 def check_registry(repo, errors):
-    path = os.path.join(repo, "templates", "registry.yaml")
-    if not os.path.isfile(path):
-        errors.append("templates/registry.yaml is missing")
+    registry, folders = {}, {}
+    for base in (
+        os.path.join(repo, "templates"),
+        os.path.join(repo, "press", "templates"),  # press shadows shipped
+    ):
+        if not os.path.isdir(base):
+            continue
+        for name in sorted(os.listdir(base)):
+            folder = os.path.join(base, name)
+            manifest = os.path.join(folder, "manifest.yaml")
+            if not os.path.isfile(manifest):
+                continue
+            try:
+                registry[name] = load(manifest) or {}
+                folders[name] = folder
+            except yaml.YAMLError as e:
+                errors.append(
+                    f"registry '{name}': manifest.yaml is not valid YAML: {e}"
+                )
+    if not registry:
+        errors.append("no template packages found (templates/<id>/manifest.yaml)")
         return {}
-    registry = load(path) or {}
-    press_path = os.path.join(repo, "press", "templates", "registry.yaml")
-    if os.path.isfile(press_path):
-        registry.update(load(press_path) or {})
     for tid, entry in registry.items():
         where = f"registry '{tid}'"
         if not isinstance(entry, dict):
@@ -228,15 +239,30 @@ def check_registry(repo, errors):
                 and band[0] <= band[1]
             ):
                 errors.append(f"{where}: '{band_key}' must be [low, high] integers")
-        candidates = [
-            os.path.join(repo, "press", "templates", f"{tid}.html"),
-            os.path.join(repo, "templates", f"{tid}.html"),
-        ]
-        if not any(os.path.isfile(c) for c in candidates):
-            errors.append(
-                f"{where}: no {tid}.html in the press templates folder or templates/"
-            )
+        skeleton = os.path.join(folders[tid], "skeleton.html")
+        if not os.path.isfile(skeleton):
+            errors.append(f"{where}: no skeleton.html in the {tid} template folder")
     return registry
+
+
+def check_required_docs(docs, root, sid, where, errors):
+    if docs is None:
+        return
+    if not isinstance(docs, list):
+        errors.append(f"{where}: 'required_docs' must be a list")
+        return
+    for doc in docs:
+        if not isinstance(doc, dict):
+            errors.append(
+                f"{where}: required_docs entry must be a mapping with 'id' and 'path'"
+            )
+            continue
+        dpath = os.path.join(root, sid, doc.get("path", ""))
+        if not doc.get("id") or not os.path.isfile(dpath):
+            errors.append(
+                f"{where}: required_doc "
+                f"{doc.get('id')!r} file not found: {doc.get('path')!r}"
+            )
 
 
 def check_series(repo, registry, *, errors):
@@ -254,7 +280,16 @@ def check_series(repo, registry, *, errors):
         if not os.path.isfile(path):
             errors.append(f"{where}: series.yaml is missing")
             continue
-        cfg = load(path) or {}
+        try:
+            cfg = load(path) or {}
+        except yaml.YAMLError as e:
+            errors.append(
+                f"{where}: series.yaml is not valid YAML ({e.__class__.__name__})"
+            )
+            continue
+        if not isinstance(cfg, dict):
+            errors.append(f"{where}: series.yaml must be a mapping")
+            continue
         unknown = set(cfg) - SERIES_KEYS
         if unknown:
             errors.append(
@@ -274,6 +309,14 @@ def check_series(repo, registry, *, errors):
             )
         if not isinstance(cfg.get("paused", False), bool):
             errors.append(f"{where}: 'paused' must be true or false")
+        for flag in ("autopublish", "strict"):
+            if not isinstance(cfg.get(flag, False), bool):
+                errors.append(f"{where}: '{flag}' must be true or false")
+        min_sources = cfg.get("min_sources")
+        if min_sources is not None and (
+            not isinstance(min_sources, int) or isinstance(min_sources, bool)
+        ):
+            errors.append(f"{where}: 'min_sources' must be an integer")
         section = cfg.get("section")
         if section is not None and (
             not isinstance(section, str) or not section.strip()
@@ -308,7 +351,7 @@ def check_series(repo, registry, *, errors):
         for template in allowed:
             treg = registry.get(template)
             if not treg:
-                errors.append(f"{where}: template '{template}' not in the registry")
+                errors.append(f"{where}: template '{template}' not a known template")
             else:
                 tregs.append(treg)
                 if mode in MODES and mode not in (treg.get("modes") or []):
@@ -345,21 +388,18 @@ def check_series(repo, registry, *, errors):
             errors.append(f"{where}: rolling mode must not define 'items'")
         seen = set()
         for i, item in enumerate(items):
-            slug = (item or {}).get("slug")
+            item = item or {}
+            slug = item.get("slug")
             if not isinstance(slug, str) or not SLUG_RE.match(slug):
                 errors.append(
                     f"{where}: item #{i + 1} slug {slug!r} must match {SLUG_RE.pattern}"
                 )
-            elif slug in seen:
-                errors.append(f"{where}: duplicate item slug '{slug}'")
-            seen.add(slug)
-            for doc in (item or {}).get("required_docs") or []:
-                dpath = os.path.join(root, sid, doc.get("path", ""))
-                if not doc.get("id") or not os.path.isfile(dpath):
-                    errors.append(
-                        f"{where}: required_doc "
-                        f"{doc.get('id')!r} file not found: {doc.get('path')!r}"
-                    )
+            else:
+                if slug in seen:
+                    errors.append(f"{where}: duplicate item slug '{slug}'")
+                seen.add(slug)  # only valid slugs seed the duplicate check
+            check_required_docs(item.get("required_docs"), root, sid, where, errors)
+        check_required_docs(cfg.get("required_docs"), root, sid, where, errors)
         item_consult = [p for item in items for p in (item or {}).get("consult") or []]
         for prefix in (cfg.get("consult") or []) + item_consult:
             if not str(prefix).startswith("https://"):

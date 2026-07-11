@@ -362,7 +362,13 @@
       "<summary>Contents</summary><ol>" +
       items
         .map(function (i) {
-          return '<li><a href="#' + i.id + '">' + i.label + "</a></li>";
+          return (
+            '<li><a href="#' +
+            escHtml(i.id) +
+            '">' +
+            escHtml(i.label) +
+            "</a></li>"
+          );
         })
         .join("") +
       "</ol>";
@@ -502,7 +508,7 @@
           articleUrl(e) +
           '">' +
           (arrow === "l" ? "← " : "") +
-          e.title +
+          escHtml(e.title) +
           (arrow === "r" ? " →" : "") +
           "</a>"
         );
@@ -544,7 +550,9 @@
     return String(s)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function initSearch() {

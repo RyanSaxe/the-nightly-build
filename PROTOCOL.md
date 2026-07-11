@@ -11,12 +11,12 @@ available, `uv run engine/<script>.py` manages the dependency itself.
 
 ## The contract
 
-1. **One article per series, maximum.** A run serves the whole paper, every
-   series configured under `press/series/`, unless your schedule prompt names one
-   specific series. For each series you serve, research and publish at most ONE
-   article, as its own pull request. Work series one at a time, completing each
-   PR before starting the next, so a late failure never costs an earlier series
-   its night.
+1. **One article per series, maximum.** A run is responsible for the whole paper,
+   every series configured under `press/series/`, unless your schedule prompt names
+   one; it publishes only the series the duty oracle reports due (step 3). For each
+   series you serve, research and publish at most one article, as its own pull
+   request. Serve the series independently, so a late failure never costs an earlier
+   series its night. How you isolate each one is the runtime skill's concern.
 
 2. **Read your layers, in order.** (Later layers specialize style and subject; they never
    override rules in this file.)
@@ -24,17 +24,21 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    2. `spec/editorial.md`: the house voice and quality bar.
    3. `press/editorial.md`: the author's voice, if present. It specializes
       the house style.
-   4. The registry entry for your series' template: `templates/registry.yaml`,
-      overlaid by `press/templates/registry.yaml` (your entries win). The
-      template file itself is `press/templates/<t>.html` if it exists, else
-      `templates/<t>.html`. If the template ships an editorial brief
-      (`press/templates/<t>.md` overlaid on `templates/<t>.md`), read it as the
-      template's voice; it composes here, before the series prompt.
+   4. Your series' template package: the folder `templates/<t>/`, replaced
+      wholesale by `press/templates/<t>/` if a press package of the same id
+      exists (your package wins). Read its `manifest.yaml` (the machine
+      contract this file's proof enforces) and its `skeleton.html` (the
+      scaffold you render). If the package ships an identity file
+      (`<t>/identity.md`), read it as the template's voice; it composes here,
+      before the series prompt. If the package ships bespoke furniture
+      (`<t>/furniture.md`), it joins your furniture palette (step 6).
    5. `press/series/<id>/prompt.md`: the series' editorial instructions.
    6. Tag fragments listed in the series config, in declared order.
    7. The item-level `prompt`, if present.
 
-3. **Select your work.** Fetch the `library` branch, then run the duty oracle:
+3. **Select your work.** Fetch the `library` branch and check it out to its own
+   path (a `git worktree add`, or a second clone) so the engine can read tonight's
+   published state, then run the duty oracle:
    `python3 engine/duty.py --repo . --library <path-to-library-checkout>`
    It applies every scheduling rule deterministically (per-series `cadence`,
    `paused`, completion, already-published-tonight) and prints the series due,
@@ -55,8 +59,13 @@ available, `uv run engine/<script>.py` manages the dependency itself.
      not open a PR. Exiting silently is correct behavior.**
 
 4. **Honor the source policy.** Three controls, per series and per item:
-   - `required_docs`: committed files you MUST read; each must be represented
-     by a source entry carrying `data-nb-required="<id>"`.
+   - `required_docs`: committed files you read and represent, each by a source
+     entry carrying `data-nb-required="<id>"`. Missing coverage is a WARN, a BLOCK
+     under the series' `strict`. Cite a committed file by its repo-relative path
+     (for example `press/series/<id>/brief.pdf`), never an invented URL. A
+     `data-nb-required` entry names a local artifact, so it is exempt from the
+     absolute-https rule the other sources follow. Never fabricate a public URL
+     for a file that has none.
    - `consult`: URL prefixes you MUST visit and read BEFORE researching
      elsewhere; they orient the work. Citing them is optional.
    - `sources_exclusive: true`: every source entry must come from the declared
@@ -71,13 +80,18 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    resolves. Meet the source floor for your series.
 
 6. **Render exactly one self-contained HTML file** from your series' template:
-   - Fill every anchor section the registry requires exactly once. If the
+   - Fill every anchor section the manifest requires exactly once. If the
      template declares `flex_sections: [min, max]`, add that many more
      sections between the anchors, each named by you for the topic
      (lowercase-hyphen `data-nb-section` labels). Every labeled section
      needs citations per the template's cite rule.
-   - `templates/FURNITURE.md` is the catalog of shared components; any
-     component may be used in any template.
+   - Number the source entries in the order the prose first cites them (the
+     proof warns `W-CITE-ORDER` otherwise, a BLOCK under `strict`).
+   - Your furniture palette composes three scopes: the engine base catalogue
+     (`templates/FURNITURE.md`), the paper's shared furniture
+     (`press/furniture/catalog.md`) if present, and your template's bespoke
+     furniture (`<t>/furniture.md`) if it ships any. Use a component from any of
+     them when it carries information better than prose.
    - Embed the `nb-meta` JSON block (schema below).
    - Charts only as declarative `<script type="application/json" data-nb-chart>` blocks.
    - No scripts other than those JSON blocks and the template's own
@@ -91,19 +105,19 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    Revise until `BLOCK: 0`. Treat every WARN as a revision note and address what you
    reasonably can. WARNs are the quality bar; BLOCKs are the publishing bar.
 
-8. **Open one pull request per article, targeting the `library` branch**, each
-   adding exactly one file.
+8. **Open one pull request per article, targeting the `library` branch.** Branch
+   from `library` and add exactly one file, so the PR's diff is that file alone.
    - Title: `nb: <series>/<slug> - <Title>`
    - Body: a fenced `nb-meta` yaml block mirroring the embedded metadata, a link to
      your run if available, and the proof's final WARN summary.
    - Preflight the body BEFORE opening the PR: write it to a file and run the
-     proof with `--pr-body`. The editor blocks any PR whose body lacks or
+     proof with `--pr-body`. The desk blocks any PR whose body lacks or
      contradicts that block (`B-META-MATCH`), so verify it locally:
      `python3 engine/check.py library/<series>/<slug>.html --series <id> --repo . --library <path> --pr-body body.txt`
 
 9. **Boundaries.** Never merge. Never push to `library` directly. Never modify any other
    file. Never open a second PR for the same series. If your PR is labeled
-   `nb-invalid`, a future run supersedes you; do not fight the editor.
+   `nb-invalid`, a future run supersedes you; do not fight the desk.
 
 ## nb-meta
 
