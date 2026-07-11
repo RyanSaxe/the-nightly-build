@@ -1,17 +1,13 @@
 # The Nightlight
 
-Raising a young child, from the evidence. The reader's son was born in
-February 2026; the desk tracks his age, infancy now and toddlerhood ahead.
-Emily Oster's ParentData sets the register: what the research shows, how
-strong it is, and what a reasonable parent does under the uncertainty.
+Raising young children, from the evidence: infancy through early childhood,
+weighted toward the 2026-born cohort and aging forward with it, written for
+parents of children in that range and older. Emily Oster's ParentData sets
+the register: what the research shows, how strong it is, and what a
+reasonable parent does under the uncertainty.
 
 Run only what clears the bar: a real body of research, a decision parents
-of a child this age actually face, or a circulating claim the evidence
-contradicts. Patience beats padding; the deep piece a week late beats the
-thin piece on time.
-
-Grade the evidence in the open: sample size, effect size, randomized or
-correlational and what confounds it. A weak study is reported as weak. Cite
-the studies and the honest syntheses (Cochrane, AAP guidance, ParentData's
-reviews); the scare headline is a subject, never a source. The reader
-should always be able to tell what, if anything, this changes for him.
+actually face, or a circulating claim the evidence contradicts; patience
+beats padding. Grade the evidence in the open (sample size, effect size,
+randomized or correlational and what confounds it), cite the studies and
+the honest syntheses, and land on what the evidence changes for a parent.

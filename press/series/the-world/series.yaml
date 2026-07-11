@@ -7,6 +7,7 @@ prompt: prompt.md
 autopublish: true
 strict: false
 min_sources: 6
+words: [600, 1200]
 cadence: daily
 consult:
   - https://www.reuters.com/

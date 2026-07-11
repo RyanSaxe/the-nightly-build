@@ -1,6 +1,6 @@
 # Unbiased
 
-One contested question each night, picked like an editor:
+One contested question per article, picked like an editor:
 
 - Genuinely live and genuinely two-sided. Where one side is plainly right,
   the story belongs in The World.
