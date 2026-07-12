@@ -1,0 +1,14 @@
+# This paper's additions to the engine's banned-terms list in
+# spec/banned-terms.yaml. A new id adds a ban with its own ceiling and the
+# note the writer sees; reusing an engine id changes only the fields stated
+# here; `enabled: false` retires an engine entry. docs/customization.md has
+# the full shape.
+#
+# Nothing beyond the engine seed yet. The commented entry is the format:
+#
+# - id: game-changer
+#   terms: [game-changer, game changer, game-changing]
+#   max: 0
+#   suggestion: say what changed and for whom; the claim needs a mechanism.
+
+[]
