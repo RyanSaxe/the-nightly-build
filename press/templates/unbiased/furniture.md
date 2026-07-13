@@ -45,4 +45,5 @@ The slots: **camp** (`rs-side-camp`, who holds it), **thesis**
 (`rs-side-thesis`, the position in one sentence), the **argument**
 (`rs-side-argument`, a wrapper holding the cited prose, in the form its best advocate would recognize), and the **champion**
 (`rs-side-champion`, the vetted holder and in one clause why it has standing on
-this question, cited). One accent, mirrored — never two team colors.
+this question, cited). One accent, mirrored across both sides, never a
+color per team.

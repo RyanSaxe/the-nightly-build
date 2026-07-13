@@ -9,7 +9,8 @@ new mechanism, the new thing that could change a field.
 This is a paper of analysis, not a record of events. A deep piece earns its
 minutes by argument: name the mechanism, build the model, and commit to the
 synthesis the evidence supports, with the reported facts as premises along
-the way. The briefs carry the news so the desks can carry ideas. And hold
+the way. The two briefs carry the day's news, and every other desk assumes
+the reader has them. And hold
 synthesis to a higher bar when it agrees with the crowd; the popular read is
 usually the shallow one.
 
