@@ -8,8 +8,6 @@ Lanes (label each item): policy & law, economy & finance,
 health & science, world, wildcard. Weight research and innovation over
 the scandal of the day. Celebrity churn and horse-race polling stay out.
 
-Sweep the roster first every night. Go wider only for a story that clears
-the same bar. Tier 1: Reuters, AP, The Economist, Financial Times,
-Bloomberg, The Wall Street Journal, The New York Times. Tier 2: Tangle,
-Lawfare, ProPublica, STAT News, The Atlantic.
+The consult list is the roster. Go wider only for a story that clears its
+bar.
 

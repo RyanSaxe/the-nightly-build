@@ -9,6 +9,24 @@ strict: false
 min_sources: 6
 words: [600, 1200]
 cadence: daily
+# The roster: consult entries are swept before researching elsewhere
+# (PROTOCOL step 4). Archive prefixes scope a search; they are not pages
+# to read whole.
 consult:
-  - https://arxiv.org/
+  - https://arxiv.org/list/cs.LG/recent
+  - https://arxiv.org/list/cs.CL/recent
+  - https://arxiv.org/list/cs.AI/recent
+  - https://www.anthropic.com/news
+  - https://openai.com/news/
+  - https://deepmind.google/discover/blog/
+  - https://ai.meta.com/blog/
   - https://simonwillison.net/
+  - https://www.interconnects.ai/
+  - https://jack-clark.net/
+  - https://lilianweng.github.io/
+  - https://epoch.ai/
+  - https://www.theinformation.com/
+  - https://stratechery.com/
+  - https://www.understandingai.org/
+  - https://arstechnica.com/
+  - https://www.chinatalk.media/
