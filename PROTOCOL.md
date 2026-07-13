@@ -13,12 +13,12 @@ available, `uv run engine/<script>.py` manages the dependency itself.
 
 1. **One article per series, maximum.** A run is responsible for the whole paper,
    every series configured under `press/series/`, unless your schedule prompt names
-   one; it publishes only the series the duty oracle reports due (step 3). For each
+   one. It publishes only the series the duty oracle reports due (step 3). For each
    series you serve, research and publish at most one article, as its own pull
    request. Serve the series independently, so a late failure never costs an earlier
    series its night. How you isolate each one is the runtime skill's concern.
 
-2. **Read your layers, in order.** (Later layers specialize style and subject; they never
+2. **Read your layers, in order.** (Later layers specialize style and subject. They never
    override rules in this file.)
    1. This file.
    2. `spec/editorial.md`: the house voice and quality bar.
@@ -31,7 +31,7 @@ available, `uv run engine/<script>.py` manages the dependency itself.
       exists (your package wins). Read its `manifest.yaml` (the machine
       contract this file's proof enforces) and its `skeleton.html` (the
       scaffold you render). If the package ships an identity file
-      (`<t>/identity.md`), read it as the template's voice; it composes here,
+      (`<t>/identity.md`), read it as the template's voice. It composes here,
       before the series prompt. If the package ships bespoke furniture
       (`<t>/furniture.md`), it joins your furniture palette (step 6).
    6. `press/series/<id>/prompt.md`: the series' editorial instructions.
@@ -46,9 +46,9 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    `paused`, completion, already-published-tonight) and prints the series due,
    with what to publish:
    - `collection`: one of the listed `candidates` (the next item in config
-     order; every unpublished item when the series sets `selection: random`).
+     order, or every unpublished item under `selection: random`).
    - `sequence`: the listed `slug`. You MUST read the series' already published
-     articles before writing; your article builds on them explicitly.
+     articles before writing. Your article builds on them explicitly.
    - `rolling`: today's UTC date (the listed `slug`). Missed nights are skipped,
      never backfilled.
    - `open`: an editor-run section. If `commissions` lists slugs, publish one of
@@ -68,21 +68,18 @@ available, `uv run engine/<script>.py` manages the dependency itself.
      `data-nb-required` entry names a local artifact, so it is exempt from the
      absolute-https rule the other sources follow. Never fabricate a public URL
      for a file that has none.
-   - `consult`: sources you MUST read BEFORE researching elsewhere; they orient
+   - `consult`: sources you MUST read BEFORE researching elsewhere. They orient
      the work, and citing them is optional. An entry that is a specific page
-     gets read in full; an entry that scopes an archive (an arXiv listing, a
+     gets read in full. An entry that scopes an archive (an arXiv listing, a
      court index) tells you where to search, and you read what is relevant
      under it.
    - `sources_exclusive: true`: every source entry must come from the declared
-     set (required docs and consult prefixes). Cite nothing else; an outside
+     set (required docs and consult prefixes). Cite nothing else. An outside
      source is a BLOCK.
 
-5. **Research properly.** Use web access. Verify claims against primary sources. Every
-   claim the argument rests on carries an inline citation that links to a source entry. Read the
-   passage you rely on before you cite it: cite from the primary source you actually
-   opened, not from a search result or a summary of it. If you have not read a source, do
-   not cite it. Never fabricate a citation, and never cite a URL you have not confirmed
-   resolves. Meet the source floor for your series.
+5. **Research properly.** Use web access. Verify claims against primary sources, and
+   cite them by the rules of `spec/editorial.md` § Citations. Meet the source floor
+   for your series.
 
 6. **Render exactly one self-contained HTML file** from your series' template:
    - Fill every anchor section the manifest requires exactly once. If the
@@ -100,42 +97,48 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    - Embed the `nb-meta` JSON block (schema below).
    - Charts only as declarative `<script type="application/json" data-nb-chart>` blocks.
    - No scripts other than those JSON blocks and the template's own
-     `<script src="../../assets/nb.js">` (the engine runtime; keep it, never add
-     others). No iframes/objects/embeds. No inline event handlers. No `javascript:`
+     `<script src="../../assets/nb.js">`, the engine runtime. Keep it. Never add
+     others. No iframes/objects/embeds. No inline event handlers. No `javascript:`
      URLs. External references only to the engine assets path and Google Fonts.
    - File path: `library/<series>/<slug>.html`.
 
 7. **Run the proof and iterate:**
    `python3 engine/check.py library/<series>/<slug>.html --series <id> --repo . --library <path-to-library-checkout>`
    Revise until `BLOCK: 0`. Treat every WARN as a revision note and address what you
-   reasonably can. WARNs are the quality bar; BLOCKs are the publishing bar.
+   reasonably can. WARNs are the quality bar. BLOCKs are the publishing bar.
 
 8. **Open one pull request per article, targeting the `library` branch.** Branch
    from `library` and add exactly one file, so the PR's diff is that file alone.
    - Title: `nb: <series>/<slug> - <Title>`
-   - Body: the article's production record, harness-agnostic and readable years
+   - Body: the article's production record, assembled from the run's artifacts
+     under `.nb-work/<series>/<slug>/`, harness-agnostic and readable years
      later. In order:
      - a fenced `nb-meta` yaml block mirroring the embedded metadata, a link to
-       your run if available, and the proof's final WARN summary;
-     - `## Process` — how the piece was made: the exemplars the coach studied,
-       each edit round's report, and any redraft with what forced it. A few
-       lines; write it as history, not ceremony.
-     - `## Voice brief` — the article's voice brief verbatim, inside a collapsed
-       `<details>` block in a four-backtick fence (the brief's own code fences
-       nest safely). The brief is gitignored, so the PR body is where it
-       survives.
-     - `## Also consulted` — every source read far enough to judge that did not
-       become a citation, one line each with the reason. Leave out pages you
-       merely bounced off.
-   - Preflight the body BEFORE opening the PR: write it to a file and run the
-     proof with `--pr-body`. The desk blocks any PR whose body lacks or
-     contradicts the nb-meta block (`B-META-MATCH`) and WARNs when a record
-     section is missing (`W-BODY-RECORD`), so verify it locally:
-     `python3 engine/check.py library/<series>/<slug>.html --series <id> --repo . --library <path> --pr-body body.txt`
+       your run if available, and the proof's final WARN summary.
+     - `## Task`: the commission (`task.md`).
+     - `## Process`: the editor's `requested-changes.md`, plus any redraft
+       and what forced it.
+     - `## Voice brief`: the coach's `voice.md`.
+     - `## Research`: the researcher's `research.md`.
+     - `## Also consulted`: the research log's Discarded section, one line per
+       source with the reason, plain (never collapsed).
+     Each artifact section is a one-line summary, then the artifact verbatim in
+     a collapsed `<details>` block inside a four-backtick fence (its own code
+     fences nest safely). The artifacts are gitignored, so the PR body is where
+     they survive. If the assembled body would exceed GitHub's body limit
+     (~60k characters), elide the research log's verbatim passages in place
+     with a note and post the full log as a comment after opening.
+   - Preflight BEFORE opening the PR, with the same invocation the desk's CI
+     will run. Commit your one file on the work branch, write the intended
+     body to a file, then from the library checkout:
+     `python3 engine/check.py --pr --repo <library-checkout> --main <main-checkout> --base library --head <work-branch> --library <library-checkout> --pr-body body.txt`
+     This checks everything CI checks, including the one-file diff shape and
+     the body's nb-meta match. A failure here is yours to fix before any PR
+     exists.
 
 9. **Boundaries.** Never merge. Never push to `library` directly. Never modify any other
    file. Never open a second PR for the same series. If your PR is labeled
-   `nb-invalid`, a future run supersedes you; do not fight the desk.
+   `nb-invalid`, a future run supersedes you. Do not fight the desk.
 
 ## nb-meta
 
@@ -148,7 +151,7 @@ Embed in `<head>`:
   "series": "semiconductors",
   "slug": "micron",
   "template": "article",
-  "title": "Micron Technology: The Scarcest Commodity in AI",
+  "title": "The scarcest commodity in AI is made by Micron",
   "mode": "collection",
   "order": null,
   "date": "2026-07-06",
@@ -164,17 +167,25 @@ Embed in `<head>`:
 
 Field notes: `mode` is one of `collection | sequence | rolling | open`. `order` is the
 1-based item index for `sequence` mode, else null. `date` is the UTC date of your run.
-For `open` mode, `template` must be one of the series' declared choices. `sources`
-and `words` are your
-self-measurements (the proof recounts; >20% deviation is a WARN).
-`harness`/`model` are honest provenance.
+For `open` mode, `template` must be one of the series' declared choices. `sources` and
+`words` are your self-measurements (the proof recounts, and >20% deviation is a WARN).
+`harness`/`model` are honest provenance, supplied by the orchestrator in the
+commission. A role cannot know its own runtime.
 
 ## Quality creed
 
-Articles teach rather than summarize. Every claim the argument rests on carries a citation
-the reader can follow. The goal is to equip the reader to go deeper on their own.
+Articles teach. They do not summarize. Every claim the argument rests on carries a
+citation the reader can follow. Doubt is a veto: any role may kill a claim on doubt
+alone, and a sentence runs only when every hand that touched it would sign it. Equip
+the reader to go deeper on their own.
 
-Every article is produced in its own context, its voice anchored to how the best real
-writers on the subject actually write, and independently edited against this bar before
-it meets the proof. The runtime skill (`skills/correspondent/SKILL.md`) carries the
-procedure; the writing-coach and editor stages are its skills.
+Every article is produced by a chain of roles, each in a fresh context with its own
+skill and its own artifact under `.nb-work/<series>/<slug>/`: the orchestrator
+commissions the piece (`task.md`), the coach studies how the best real writers on the
+subject actually write (`voice.md`), the researcher builds the claims-and-evidence log
+(`research.md`), the writer drafts from that log and proves the result, and the editor
+attacks it (`requested-changes.md`). No stage is licensed to skim because the night is
+long. Artifacts are written for the next agent — conclusions first, stable
+headings — and to the floor's own standard: every role tunes its ear on what
+the others wrote. The PR body is assembled from them.
+`skills/correspondent/SKILL.md` orchestrates. The stage skills carry the roles.
