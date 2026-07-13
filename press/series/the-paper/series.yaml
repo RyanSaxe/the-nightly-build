@@ -1,5 +1,5 @@
 # The annotated arXiv daily, on the press's own `paper` template. Open mode
-# with a commission queue: items publish first, in any order; an empty queue
+# with a commission queue: items publish first, in any order. An empty queue
 # means the desk picks tonight's paper itself.
 name: The Paper
 mode: open
@@ -12,7 +12,7 @@ words: [2000, 3200]
 cadence: daily
 consult:
   - https://arxiv.org/
-# The queue. Add a paper by appending an item; the item-level consult pins it.
+# The queue. Add a paper by appending an item. The item-level consult pins it.
 items:
   - slug: causal-pts-young-children
     title: "Posttraumatic stress in young children at risk for maltreatment (2026)"

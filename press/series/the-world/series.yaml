@@ -1,4 +1,4 @@
-# The general-news brief: rolling, slugged by UTC date, five minutes.
+# The general-news brief: five minutes, slugged by UTC date.
 name: The World
 mode: rolling
 section: "The Daily"
