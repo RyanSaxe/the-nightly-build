@@ -1,11 +1,4 @@
-# The unbiased template's bespoke furniture
-
-The two-sided layout this template renders, styled in `furniture.css` beside this
-file on the `rs-` prefix. Only an unbiased article puts two cases side by side, so
-it lives in the template's folder, not in `press/furniture/`. The engine
-concatenates it into `assets/theme.css` whenever this template is present. A
-drafter's palette for an unbiased article is the engine base catalogue plus the
-paper's shared furniture plus these.
+# The unbiased template's furniture
 
 ## The split (`rs-divide` + `rs-side`)
 
