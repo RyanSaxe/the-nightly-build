@@ -20,6 +20,8 @@ standing on this question.
 
 The crux is where the piece lands. Sort what still divides the sides into
 its kind: an unsettled fact, a clash of values, or a forecast. Say which
-this one is, then give the evidence: what would settle it for an undecided
-reader, and where it would first show up. Head every section for this
-question's argument, never with a stock label.
+this one is in this question's own words, never the label itself: every
+crux on this desk has said "is a forecast" where it could have said what
+the sides are each predicting. Then give the evidence: what would settle
+it for an undecided reader, and where it would first show up. Head every
+section for this question's argument, never with a stock label.
