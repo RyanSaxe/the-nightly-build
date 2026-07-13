@@ -34,19 +34,19 @@ monospace. Used by The Build.
 ## Case docket (`rs-docket`)
 
 The standing facts of a legal matter as reference data, set apart so the prose
-can argue instead of recite. Used by The Record. Open the article with it.
+can argue instead of recite. Used by The Record.
 
 ```html
 <div class="rs-docket">
-  <span class="rs-docket-case">Parties, short form</span>
-  <span class="rs-docket-court">Court · docket no.</span>
+  <span class="rs-docket-case">PARTIES, SHORT FORM</span>
+  <span class="rs-docket-court">COURT · DOCKET NO.</span>
   <dl class="rs-docket-grid">
     <dt>Stage</dt>
-    <dd>where it is now</dd>
+    <dd>WHERE IT IS NOW</dd>
     <dt>Question</dt>
-    <dd>the legal question in one line</dd>
+    <dd>THE LEGAL QUESTION IN ONE LINE</dd>
     <dt>Stakes</dt>
-    <dd>what turns on it for people who build AI</dd>
+    <dd>WHAT TURNS ON IT, FOR WHOM</dd>
   </dl>
 </div>
 ```
@@ -61,7 +61,7 @@ The Ledger.
 ```html
 <table class="rs-metrics">
   <caption>
-    FY2025, company filings.<sup class="nb-cite"><a href="#s1">1</a></sup>
+    PERIOD, SOURCE.<sup class="nb-cite"><a href="#s1">1</a></sup>
   </caption>
   <thead>
     <tr>
@@ -72,14 +72,14 @@ The Ledger.
   </thead>
   <tbody>
     <tr>
-      <td>Revenue</td>
-      <td>$59.4B</td>
-      <td>+2.7%</td>
+      <td>METRIC</td>
+      <td>VALUE</td>
+      <td>CHANGE</td>
     </tr>
     <tr>
-      <td>EBITDA margin</td>
-      <td>34.7%</td>
-      <td>+80 bps</td>
+      <td>METRIC</td>
+      <td>VALUE</td>
+      <td>CHANGE</td>
     </tr>
   </tbody>
 </table>
