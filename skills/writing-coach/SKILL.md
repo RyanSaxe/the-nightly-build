@@ -19,9 +19,9 @@ the prose to.
 
 The voice you produce must fit the paper, not float free. Read first:
 
-- The house floor (`spec/editorial.md`) and the paper's voice
-  (`press/editorial.md`). Together they are the style guide; they own register
-  and assumed knowledge.
+- The house floor (`spec/editorial.md`, and `spec/headlines.md` for titles,
+  deks, and headings) and the paper's voice (`press/editorial.md`). Together
+  they are the style guide; they own register and assumed knowledge.
 - The template identity and the series prompt: the shape and the subject.
 - The tag fragments in declared order and the item's `prompt` if present: they
   can redefine the genre and voice you are calibrating, so read them too.
@@ -69,8 +69,8 @@ opens this file for the directive, not a synopsis.
 Two rules for the brief's own prose. It specifies how to write, not what to say:
 never summarize the article's subject or restate the series and template rules,
 which the drafter already reads. And it holds to the house floor itself, because the
-drafter and editor read it: concrete words, no filler, em-dashes only where they
-earn their place.
+drafter and editor read it: concrete words, no filler, and none of the banned
+terms the proof counts.
 
 Give at least three exemplars, each its own section in the form shown: the author
 and piece title as the heading, then the source URL, the craft notes, and one short

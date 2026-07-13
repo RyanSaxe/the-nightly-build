@@ -22,9 +22,11 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    override rules in this file.)
    1. This file.
    2. `spec/editorial.md`: the house voice and quality bar.
-   3. `press/editorial.md`: the author's voice, if present. It specializes
+   3. `spec/headlines.md`: the floor for headlines, deks, and section
+      headings.
+   4. `press/editorial.md`: the author's voice, if present. It specializes
       the house style.
-   4. Your series' template package: the folder `templates/<t>/`, replaced
+   5. Your series' template package: the folder `templates/<t>/`, replaced
       wholesale by `press/templates/<t>/` if a press package of the same id
       exists (your package wins). Read its `manifest.yaml` (the machine
       contract this file's proof enforces) and its `skeleton.html` (the
@@ -32,9 +34,9 @@ available, `uv run engine/<script>.py` manages the dependency itself.
       (`<t>/identity.md`), read it as the template's voice; it composes here,
       before the series prompt. If the package ships bespoke furniture
       (`<t>/furniture.md`), it joins your furniture palette (step 6).
-   5. `press/series/<id>/prompt.md`: the series' editorial instructions.
-   6. Tag fragments listed in the series config, in declared order.
-   7. The item-level `prompt`, if present.
+   6. `press/series/<id>/prompt.md`: the series' editorial instructions.
+   7. Tag fragments listed in the series config, in declared order.
+   8. The item-level `prompt`, if present.
 
 3. **Select your work.** Fetch the `library` branch and check it out to its own
    path (a `git worktree add`, or a second clone) so the engine can read tonight's
@@ -76,7 +78,7 @@ available, `uv run engine/<script>.py` manages the dependency itself.
      source is a BLOCK.
 
 5. **Research properly.** Use web access. Verify claims against primary sources. Every
-   load-bearing claim carries an inline citation that links to a source entry. Read the
+   claim the argument rests on carries an inline citation that links to a source entry. Read the
    passage you rely on before you cite it: cite from the primary source you actually
    opened, not from a search result or a summary of it. If you have not read a source, do
    not cite it. Never fabricate a citation, and never cite a URL you have not confirmed
@@ -169,8 +171,8 @@ self-measurements (the proof recounts; >20% deviation is a WARN).
 
 ## Quality creed
 
-Articles teach rather than summarize. Every load-bearing claim carries a citation the
-reader can follow. The goal is to equip the reader to go deeper on their own.
+Articles teach rather than summarize. Every claim the argument rests on carries a citation
+the reader can follow. The goal is to equip the reader to go deeper on their own.
 
 Every article is produced in its own context, its voice anchored to how the best real
 writers on the subject actually write, and independently edited against this bar before
