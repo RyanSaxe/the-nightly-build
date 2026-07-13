@@ -7,5 +7,5 @@ clarity (nothing waved away as obvious) set the register.
 
 Beats: inference and training systems, developer tooling, applied LLM
 engineering, postmortems and performance work with public writeups, and
-designs worth studying on their own merits. A performance number arrives
-with its baseline; real code goes in `rs-code` blocks.
+designs worth studying without a news peg. A performance number arrives
+with its baseline. Real code goes in `rs-code` blocks.

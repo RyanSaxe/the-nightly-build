@@ -1,17 +1,9 @@
 # This paper's shared furniture
 
-Two components this paper adds on top of the engine's base catalogue
-(`templates/FURNITURE.md`), styled in `styles.css` beside this file on the `rs-`
-prefix (`nb-` is the engine's). They are shared: any section may reach for them,
-so they live here rather than in one template's folder. A section that uses one
-says so in its `prompt.md`. The engine concatenates this styles.css into
-`assets/theme.css` on every build, so a class defined here restyles past articles
-too.
-
 ## Code block (`rs-code`)
 
-A real code listing with a header (file · language) and an optional cited
-caption. The article writes plain `<pre><code class="language-python">`; Prism
+A code listing with a header (file · language) and an optional cited
+caption. The article writes plain `<pre><code class="language-python">`. Prism
 (declared in `site.yaml` `assets:`, loaded on every page) highlights it into
 `.token` spans and `styles.css` colors them. No-JS readers still get clean
 monospace. Used by The Build.
@@ -53,9 +45,9 @@ can argue instead of recite. Used by The Record.
 
 ## Financial metrics (`rs-metrics`)
 
-The numbers behind a business piece as reference data: a compact table of
-metric, value, and change, so the prose can argue what the numbers mean
-instead of reciting them. Cite the filing or release in the caption. Used by
+The numbers behind a business piece: a compact table of
+metric, value, and change, so the prose argues what the numbers mean.
+Cite the filing or release in the caption. Used by
 The Ledger.
 
 ```html

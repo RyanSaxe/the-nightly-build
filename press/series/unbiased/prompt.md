@@ -9,6 +9,5 @@ One contested question per article, picked like an editor:
   counts.
 - Serious, credentialed people must disagree in public, so each side can be
   quoted at its strongest from a named holder.
-- Read the section's back catalog; never re-run a question, and let the mix
-  of terrains drift across politics, economics, culture, and technology
-  rather than settling into one.
+- Let the terrain drift across politics, economics, culture, and
+  technology. Do not settle into one.
