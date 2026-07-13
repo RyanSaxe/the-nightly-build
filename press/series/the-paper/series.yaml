@@ -13,8 +13,8 @@ cadence: daily
 consult:
   - https://arxiv.org/
 # The queue. Add a paper by appending an item; the item-level consult pins it.
-# items:
-#   - slug: attention-is-all-you-need
-#     title: "Attention Is All You Need (2017)"
-#     consult:
-#       - https://arxiv.org/abs/1706.03762
+items:
+  - slug: causal-pts-young-children
+    title: "Posttraumatic stress in young children at risk for maltreatment (2026)"
+    consult:
+      - https://pmc.ncbi.nlm.nih.gov/articles/PMC13143975/

@@ -18,8 +18,8 @@ scale. Each side cites a primary statement (the filing, the transcript, the
 vote, the post under the person's own name), and its champion is a named
 holder with standing on this question.
 
-The crux is where the piece lands: what the sides truly disagree about once
-the rhetoric is stripped, and what evidence would actually move a fair
-reader. An unknown fact, a value in tension, a forecast time will settle;
-say which, and where the deciding evidence would first show up. Head every
-section for this question's argument, never with a stock label.
+The crux is where the piece lands. Sort what still divides the sides into
+its kind: an unsettled fact, a clash of values, or a forecast. Say which
+this one is, then give the evidence: what would move a fair reader toward
+one side, and where it would first show up. Head every section for this
+question's argument, never with a stock label.
