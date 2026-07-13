@@ -4,6 +4,8 @@ mode: rolling
 section: "The Daily"
 template: brief
 prompt: prompt.md
+tags:
+  roster: ../_tags/roster.md
 autopublish: true
 strict: false
 min_sources: 6

@@ -9,6 +9,5 @@ empty, pick like a colleague who reads everything:
 
 - Papers practitioners are discussing this month, or older papers that
   current work keeps citing. A real idea outranks a big number.
-- Read the section's back catalog and vary the subfield across nights:
-  training, inference, evals, interpretability, RL, systems. Never repeat a
-  paper.
+- Vary the subfield across nights: training, inference, evals,
+  interpretability, RL, systems.

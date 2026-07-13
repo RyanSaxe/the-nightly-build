@@ -8,8 +8,7 @@ outranks a loud launch.
 Lanes (label each item with its lane): research, engineering, industry,
 compute, policy.
 
-The roster, swept first every night; go wider only for what clears the same
-bar. Tier 1: arXiv (cs.LG, cs.CL, cs.AI), the lab blogs (Anthropic, OpenAI,
-Google DeepMind, Meta AI), Simon Willison's weblog, Interconnects, Import
-AI, Lil'Log, Epoch AI. Tier 2: The Information, Stratechery, Understanding
-AI, Ars Technica, ChinaTalk. Same curation and roster note as The World.
+The roster. Tier 1: arXiv (cs.LG, cs.CL, cs.AI), the lab blogs (Anthropic,
+OpenAI, Google DeepMind, Meta AI), Simon Willison's weblog, Interconnects,
+Import AI, Lil'Log, Epoch AI. Tier 2: The Information, Stratechery,
+Understanding AI, Ars Technica, ChinaTalk.

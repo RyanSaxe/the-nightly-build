@@ -6,6 +6,6 @@ with unreasonable reach, why an industry works the way it does, a result
 that quietly rearranged a field.
 
 Pick like an essayist (the test is whether the reader thinks about it in
-the shower tomorrow), stay off the other desks' beats, vary the terrain
-across weeks, and read the back catalog first. A fascination that supports
+the shower tomorrow), stay off the other desks' beats, and vary the
+terrain across weeks. A fascination that supports
 only surface goes back in the queue until it supports more.
