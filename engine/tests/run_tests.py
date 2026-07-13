@@ -1815,6 +1815,44 @@ expect(
     must_have=["B-DIFF-SHAPE"],
 )
 
+print("== chrome ==")
+
+declared = {"chrome": ['<body class="nb-article">', "<b>Why it matters</b>:"]}
+rep_ok = C.Report()
+C.check_chrome(
+    '<body class="nb-article"><b>Why it matters</b>: y</body>',
+    treg=declared,
+    rep=rep_ok,
+)
+expect("chrome intact passes", rep_ok, blocks=0)
+rep_bad = C.Report()
+C.check_chrome(
+    '<body class="nb-edition"><b>Why it matters \u2192</b> y</body>',
+    treg=declared,
+    rep=rep_bad,
+)
+expect("mutated chrome blocks", rep_bad, must_have=["B-CHROME"])
+rep_none = C.Report()
+C.check_chrome("<body></body>", treg={}, rep=rep_none)
+expect("no chrome declared, no check", rep_none, blocks=0)
+
+rep_dc = C.Report()
+C.check_classes(
+    '<body class="nb-article"><p class="nb-callout">x</p><p class="nb-callot">y</p></body>',
+    repo=str(REPO),
+    rep=rep_dc,
+)
+expect("a typo'd class trips W-DEAD-CLASS", rep_dc, must_have=["W-DEAD-CLASS"])
+rep_dc2 = C.Report()
+C.check_classes(
+    '<body class="nb-article"><p class="nb-callout">x</p><code class="language-python">y</code></body>',
+    repo=str(REPO),
+    rep=rep_dc2,
+)
+expect(
+    "defined and allowlisted classes pass", rep_dc2, blocks=0, must_not=["W-DEAD-CLASS"]
+)
+
 print("== validate_config ==")
 vc = REPO / "engine" / "validate_config.py"
 # the shipped examples/ must validate when used as a press
@@ -1929,6 +1967,17 @@ DUP_SLUG = (
     "items:\n  - {slug: alpha}\n  - {slug: alpha}\n"
 )
 
+
+def manifest_patched_repo(patch, template="article"):
+    tmp = tempfile.mkdtemp()
+    for sub in ("press", "templates", "engine"):
+        shutil.copytree(pathlib.Path(TESTREPO) / sub, pathlib.Path(tmp) / sub)
+    m = pathlib.Path(tmp) / "templates" / template / "manifest.yaml"
+    # A repeated key is fine here: yaml keeps the last one, the patch.
+    m.write_text(m.read_text() + patch)
+    return tmp
+
+
 rc_unparseable, out_unparseable, err_unparseable = vc_output(
     overwrite_series("a: b: c\n")
 )
@@ -1983,6 +2032,19 @@ for name, cond in [
         "a genuine duplicate slug is still caught",
         "duplicate item slug 'alpha'" in out_dup,
     ),
+    (
+        "chrome quoting the skeleton verbatim validates",
+        vc_rc(manifest_patched_repo("chrome: ['<body class=\"nb-article\">']\n")) == 0,
+    ),
+    (
+        "chrome the skeleton does not contain is the author's error",
+        vc_rc(manifest_patched_repo("chrome: ['<body class=\"nb-elsewhere\">']\n"))
+        == 1,
+    ),
+    (
+        "a scalar chrome is a validation error, never a vacuous pass",
+        vc_rc(manifest_patched_repo('chrome: "<h2>Sources</h2>"\n')) == 1,
+    ),
 ]:
     if cond:
         PASS += 1
@@ -1992,10 +2054,10 @@ for name, cond in [
         print(f"  FAIL {name}")
 
 print()
-print("== ci_helpers.autopublish (the auto-merge gate) ==")
+print("== ci_helpers (the workflow's facts) ==")
 
 
-def ci_autopublish(series_yaml):
+def ci_helper(cmd, series_yaml):
     repo = tempfile.mkdtemp()
     sd = pathlib.Path(repo) / "press" / "series" / "foo"
     sd.mkdir(parents=True)
@@ -2017,7 +2079,7 @@ def ci_autopublish(series_yaml):
         [
             sys.executable,
             str(REPO / "engine" / "ci_helpers.py"),
-            "autopublish",
+            cmd,
             "--repo",
             repo,
             "--diff-base",
@@ -2032,24 +2094,31 @@ def ci_autopublish(series_yaml):
 for name, cond in [
     (
         "autopublish: true enables auto-merge",
-        ci_autopublish("autopublish: true\n") == "true",
+        ci_helper("autopublish", "autopublish: true\n") == "true",
     ),
     (
         "autopublish: false disables it",
-        ci_autopublish("autopublish: false\n") == "false",
+        ci_helper("autopublish", "autopublish: false\n") == "false",
     ),
-    ("autopublish absent disables it", ci_autopublish("mode: rolling\n") == "false"),
+    (
+        "autopublish absent disables it",
+        ci_helper("autopublish", "mode: rolling\n") == "false",
+    ),
     (
         "autopublish: 'false' (string) never auto-merges",
-        ci_autopublish("autopublish: 'false'\n") == "false",
+        ci_helper("autopublish", "autopublish: 'false'\n") == "false",
     ),
     (
         "autopublish: 'true' (string) never auto-merges",
-        ci_autopublish("autopublish: 'true'\n") == "false",
+        ci_helper("autopublish", "autopublish: 'true'\n") == "false",
     ),
     (
         "autopublish: 1 (int) never auto-merges",
-        ci_autopublish("autopublish: 1\n") == "false",
+        ci_helper("autopublish", "autopublish: 1\n") == "false",
+    ),
+    (
+        "article-path prints the PR's one added article",
+        ci_helper("article-path", "autopublish: true\n") == "library/foo/story.html",
     ),
 ]:
     if cond:

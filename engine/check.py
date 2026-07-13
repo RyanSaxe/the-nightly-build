@@ -38,6 +38,7 @@ import urllib.request
 from html.parser import HTMLParser
 from typing import Literal
 
+import build_site
 import nb_meta
 
 try:
@@ -1158,6 +1159,53 @@ def check_warns(
         )
 
 
+# Classes styled by owner-declared external assets (docs/customization.md's
+# syntax-highlighter recipe), so no shipped stylesheet defines them.
+CLASS_ALLOW_PREFIXES = ("language-", "token")
+
+
+def css_class_names(repo):
+    sheets = [os.path.join(repo, "engine", "assets", "nb.css")]
+    # The page loads exactly nb.css plus theme.css, and build_site owns what
+    # concatenates into theme.css; asking it keeps this list from drifting.
+    sheets += build_site.css_owners(repo, build_site.load_site_config(repo))
+    names = set()
+    for path in sheets:
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as fh:
+                names.update(re.findall(r"\.([A-Za-z_][\w-]*)", fh.read()))
+    return names
+
+
+def check_classes(raw, *, repo, rep):
+    defined = css_class_names(repo)
+    if not defined:
+        return
+    used = set()
+    for attr in re.findall(r'class="([^"]+)"', raw):
+        used.update(attr.split())
+    dead = sorted(
+        c for c in used if c not in defined and not c.startswith(CLASS_ALLOW_PREFIXES)
+    )
+    if dead:
+        rep.warn(
+            "W-DEAD-CLASS",
+            f"classes matching no stylesheet rule: {dead}; a typo here "
+            "renders the element unstyled",
+        )
+
+
+def check_chrome(raw, *, treg, rep):
+    for piece in treg.get("chrome") or []:
+        if piece not in raw:
+            rep.block(
+                "B-CHROME",
+                f"fixed chrome missing or altered: {piece!r}. The skeleton's "
+                "chrome belongs to the template; fill the placeholders and "
+                "leave the chrome exactly as shipped.",
+            )
+
+
 def check_article(
     html_path,
     series_id,
@@ -1221,6 +1269,8 @@ def check_article(
     )
 
     check_required_sections(ed, treg, rep)
+    check_chrome(raw, treg=treg, rep=rep)
+    check_classes(raw, repo=repo, rep=rep)
     check_sandbox(ed, rep)
     check_sources(ed, rep, check_links=check_links)
     check_cites(ed, rep)
