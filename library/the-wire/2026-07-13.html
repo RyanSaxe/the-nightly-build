@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Wire · 2026-07-13</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-wire",
+        "slug": "2026-07-13",
+        "template": "brief",
+        "title": "The Cheapest Speedup Tonight Is Choosing What to Compute",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-13",
+        "tags": [],
+        "sources": 6,
+        "words": 780,
+        "reading_minutes": 4,
+        "dek": "Three papers make the same case for spending inference where it pays instead of everywhere at once, while the night's harder questions are who answers for an agent and whether open weights stay legal to run.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Wire</div>
+        <h1 class="nb-title">The Cheapest Speedup Tonight Is Choosing What to Compute</h1>
+        <p class="nb-dekline">
+          Three papers make the same case for spending inference where it pays
+          instead of everywhere at once, while the night's harder questions are
+          who answers for an agent and whether open weights stay legal to run.
+        </p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-07-13</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.09415"
+              >Long-context adaptation works only if the model picks its own
+              evidence first</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Self-Guided Test-Time Training has a long-context model first
+            identify the spans relevant to a query, then run language-modeling
+            updates only on those spans; on Qwen3-4B-Thinking and Llama-3.1-8B
+            it reports up to a 15 percent relative accuracy gain on LongBench-v2
+            and LongBench-Pro.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+            control is the whole story: test-time training on randomly sampled
+            spans hurt accuracy, while training on oracle spans lifted it, so the
+            gain rides entirely on selection quality.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: the lever for long inputs is not a wider
+            context window but teaching the model to find its own evidence before
+            it adapts. It is test-time and needs no retraining, so you can trial
+            the same span-selection step on your own long-context traffic.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.09015"
+              >A cheap surrogate can steer model routing without wrecking the
+              worst case</a
+            ><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </h3>
+          <p>
+            The paper extends contextual bandits to correlated arms and noisy
+            auxiliary signals for routing across models. Its decoupled
+            prediction-mixing keeps separate estimators for real and surrogate
+            feedback and blends them adaptively, so a reliable cheap signal, such
+            as a small model's guess, speeds learning while an unreliable one is
+            downweighted back to a reward-only worst case. The authors report
+            better sample efficiency and accuracy-cost trade-offs than static
+            routing and standard bandit baselines.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: routing is where the cost of a multi-model
+            stack is set, and cold-starting a router is expensive. This is a way
+            to bootstrap one from a cheap signal you already have without betting
+            the worst case on that signal being right.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">compute</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.08991"
+              >Set activation sparsity per token, not by a global threshold</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            SATS replaces percentile-based calibration for activation sparsity
+            with a rule that sets each layer's gate threshold from the local
+            sensitivity of its MLP output, and pairs it with a lightweight router
+            that sends each token down a base or a modified path rather than
+            sparsifying every token the same way. Across recent open-weight
+            models the authors report a better quality-throughput trade-off than
+            static thresholding and uniform modification.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: activation sparsity is a standard inference
+            saving, but one global threshold charges the same quality tax on
+            every token. Making the threshold sensitivity-aware and the path
+            per-token is the transferable idea, and it targets the open-weight
+            models teams already serve.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">engineering</span>
+          <h3>
+            <a href="https://simonwillison.net/2026/Jul/12/directly-responsible-individuals/"
+              >An agent should never be the person accountable for a project</a
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </h3>
+          <p>
+            Simon Willison argues that the Directly Responsible Individual, the
+            one person accountable for a project's success or failure (a term
+            from Apple, by way of GitLab's handbook), is a role an agent cannot
+            hold, because accountability is something only a human can carry. He
+            anchors it on a 1979 IBM training slide: a computer can never be held
+            accountable, therefore it must never make a management decision.<sup
+              class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: as agents move into real workflows, the
+            tempting move is to let one own a task end to end. The accountability
+            line says a named human still owns the outcome however much of the
+            work the agent does, which is an organizational constraint rather
+            than a capability one.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">industry</span>
+          <h3>
+            <a href="https://simonwillison.net/2026/Jul/12/bump/"
+              >Anthropic keeps Fable 5 provisional while OpenAI lifts the cap on
+              Sol</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            Anthropic extended Claude Fable 5 on paid plans through July 19, and
+            only up to half a user's weekly limit before extra credits apply,
+            saying it wants clarity on demand and available compute before
+            committing further. In the same window OpenAI temporarily removed the
+            five-hour usage cap on GPT-5.6 Sol for Plus, Business and Pro plans,
+            citing efficiency gains; Willison's read is that the hedging costs
+            Anthropic users who will simply switch.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: for anyone building on a frontier API, a
+            model's availability is now a compute-gated variable, not a stable
+            contract. A provider hedging its own capacity is telling you to plan
+            for a model you depend on being rationed or pulled.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">policy</span>
+          <h3>
+            <a href="https://www.interconnects.ai/p/6-months-to-live-for-open-models"
+              >Open weights may be six months from a capability ceiling</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            Nathan Lambert argues the most serious test yet of open models is a
+            coming U.S. capability-threshold rule that would restrict releasing
+            weights at or above roughly GPT-5.5 and Claude Opus 4.8 capability,
+            and traces the push to API-abuse evidence and licensing politics
+            rather than any open-weight incident. He scopes it to about six
+            months, and holds that only a U.S. lab shipping a comparably capable
+            open model would bend the trajectory.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: if your stack assumes frontier-level open
+            weights stay legal to fine-tune and self-host, that assumption now
+            carries a clock. The fight turns on API-security arguments, so the
+            near-term signal is policy language about capability thresholds, not
+            the next model drop.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source href="https://arxiv.org/abs/2607.09415"
+              >arXiv · Self-Guided Test-Time Training for Long-Context LLMs</a
+            >
+          </li>
+          <li id="s2">
+            <a data-nb-source href="https://arxiv.org/abs/2607.09015"
+              >arXiv · Correlation-Aware Contextual Bandits with Surrogate
+              Rewards for LLM Routing</a
+            >
+          </li>
+          <li id="s3">
+            <a data-nb-source href="https://arxiv.org/abs/2607.08991"
+              >arXiv · Sensitivity-Aware Thresholding and Token Routing for
+              Activation Sparsification in Large Language Models</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              href="https://simonwillison.net/2026/Jul/12/directly-responsible-individuals/"
+              >Simon Willison · Directly Responsible Individuals</a
+            >
+          </li>
+          <li id="s5">
+            <a data-nb-source href="https://simonwillison.net/2026/Jul/12/bump/"
+              >Simon Willison · Anthropic extends Claude Fable 5 access through
+              July 19</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              href="https://www.interconnects.ai/p/6-months-to-live-for-open-models"
+              >Interconnects · 6 months to live for open models</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
