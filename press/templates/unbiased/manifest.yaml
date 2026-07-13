@@ -11,3 +11,7 @@ sections: [orientation, crux, sources]
 flex_sections: [2, 2] # exactly two sides, rendered left vs right
 cite_rule: per-section
 modes: [open]
+chrome:
+  - '<body class="nb-article">'
+  - '<div class="rs-divide">'
+  - "<h2>Sources</h2>"
