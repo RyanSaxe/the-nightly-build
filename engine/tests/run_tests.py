@@ -336,15 +336,42 @@ MINIMAL_BODY = (
     "order: null\n"
     "```\n"
 )
-# The canonical body carries the production record PROTOCOL step 8 defines.
-GOOD_BODY = (
-    MINIMAL_BODY + "\n## Process\n"
-    "Coach studied two exemplars; one edit round, surgical fixes only.\n\n"
+# The canonical body carries the production record PROTOCOL step 8 defines: every
+# artifact the chain produced, including a voice brief that studied real writers.
+STUDIED_VOICE = (
     "## Voice brief\n"
-    "<details><summary>brief</summary>\n\n````markdown\ncalm, precise\n````\n\n"
-    "</details>\n\n"
+    "<details><summary>brief</summary>\n\n````markdown\n"
+    '## Jane Reporter, "The Cycle That Ate Memory"\n'
+    "Source: https://example.org/exemplar-1\n"
+    "Craft: leads on the number, spends the second line on the caveat.\n\n"
+    '## Sam Analyst, "What Fabs Cost"\n'
+    "Source: https://example.org/exemplar-2\n"
+    "Craft: every claim carries its denominator.\n\n"
+    '## Lee Critic, "The Capex Mirage"\n'
+    "Source: https://example.org/exemplar-3\n"
+    "Craft: names the mechanism, never the adjective.\n"
+    "````\n\n</details>\n\n"
+)
+GOOD_BODY = (
+    MINIMAL_BODY + "\n## Task\n"
+    "Commission: what Micron's cycle costs, for a public-market reader.\n\n"
+    "## Process\n"
+    "Coach studied three exemplars; one edit round, surgical fixes only.\n\n"
+    + STUDIED_VOICE
+    + "## Research\n"
+    "Nine sources read; every number checked against the filing.\n\n"
     "## Also consulted\n"
     "- https://example.org/background — context only, superseded by the filing\n"
+)
+# The 2026-07-14 forgery: an orchestrator skipped the coach and wrote the brief
+# itself. Six lines, two mastheads named, no writers, no sources, and it passed.
+FORGED_VOICE_BODY = GOOD_BODY.replace(
+    STUDIED_VOICE,
+    "## Voice brief\n"
+    "<details><summary>brief</summary>\n\n````markdown\n"
+    "The best daily writers (Economist Espresso, FT's #techFT) lead with the\n"
+    "number, then spend the second sentence on the caveat. No hype.\n"
+    "````\n\n</details>\n\n",
 )
 expect(
     "preflight passes when the PR body matches the article",
@@ -356,6 +383,29 @@ expect(
     "preflight warns when the record sections are missing",
     run_local(VALID, "semiconductors", pr_body=MINIMAL_BODY),
     blocks=0,
+    must_have=["W-BODY-RECORD"],
+)
+expect(
+    "a voice brief naming outlets instead of writers is caught as unstudied",
+    run_local(VALID, "semiconductors", pr_body=FORGED_VOICE_BODY),
+    blocks=0,
+    must_have=["W-VOICE-THIN"],
+    must_not=["W-BODY-RECORD"],
+)
+expect(
+    "a brief citing three studied writers passes",
+    run_local(VALID, "semiconductors", pr_body=GOOD_BODY),
+    must_not=["W-VOICE-THIN"],
+)
+expect(
+    "the commission and the research log are part of the record",
+    run_local(
+        VALID,
+        "semiconductors",
+        pr_body=GOOD_BODY.replace("## Task\n", "## Notes\n").replace(
+            "## Research\n", "## Notes\n"
+        ),
+    ),
     must_have=["W-BODY-RECORD"],
 )
 expect(
@@ -1612,6 +1662,118 @@ for name, cond in [
     ),
 ]:
     check(name, cond)
+
+print("== duty refuses a wrong tree ==")
+# The 2026-07-14 failure: pointed at a tree with no press, duty printed an empty
+# work list and exited 0. The night shift read that as "nothing due", went
+# looking for a configuration, and adopted the engine's examples/ folder. An
+# empty answer is an invitation. A missing press must refuse, and it must not be
+# confusable with a paper whose desks are simply all idle tonight.
+
+DUTY = [sys.executable, str(REPO / "engine" / "duty.py")]
+
+no_press = tempfile.mkdtemp()
+pathlib.Path(no_press, "engine").mkdir()
+no_press_run = subprocess.run(
+    [*DUTY, "--repo", no_press, "--library", empty_lib], capture_output=True, text=True
+)
+# the trap itself: the engine's own examples/ is a complete, working paper
+examples_as_press = tempfile.mkdtemp()
+shutil.copytree(REPO / "examples", pathlib.Path(examples_as_press) / "press")
+examples_run = subprocess.run(
+    [*DUTY, "--repo", examples_as_press, "--library", empty_lib],
+    capture_output=True,
+    text=True,
+)
+# a real press whose every series is paused: a quiet night, and a valid answer
+quiet = clone_testrepo("press", "templates")
+for sy in pathlib.Path(quiet, "press", "series").glob("*/series.yaml"):
+    sy.write_text(sy.read_text() + "paused: true\n")
+quiet_run = subprocess.run(
+    [*DUTY, "--repo", quiet, "--library", empty_lib], capture_output=True, text=True
+)
+
+check(
+    "a tree with no press refuses instead of reporting a quiet night",
+    no_press_run.returncode == 2 and not no_press_run.stdout.strip(),
+    detail=f"rc={no_press_run.returncode} stdout={no_press_run.stdout[:60]!r}",
+)
+check(
+    "the refusal says which tree, and that examples/ is not a press",
+    "no press at" in no_press_run.stderr
+    and "examples/ is documentation" in no_press_run.stderr,
+    detail=no_press_run.stderr[:160],
+)
+check(
+    "a press whose desks are all idle is a quiet night, not a refusal",
+    quiet_run.returncode == 0 and json.loads(quiet_run.stdout)["due"] == [],
+    detail=f"rc={quiet_run.returncode}",
+)
+check(
+    "examples/ copied into press/ is a real press (the trap is the path, not the folder)",
+    examples_run.returncode == 0,
+)
+
+origin_dir = tempfile.mkdtemp()
+git("init", "--bare", "-q", "-b", "main", cwd=origin_dir)
+night = clone_testrepo("press", "templates")
+git("init", "-q", "-b", "main", cwd=night)
+git("config", "user.email", "t@t", cwd=night)
+git("config", "user.name", "t", cwd=night)
+git("remote", "add", "origin", origin_dir, cwd=night)
+git("add", "-A", cwd=night)
+git("commit", "-qm", "the press as the night shift sees it", cwd=night)
+git("push", "-q", "origin", "main", cwd=night)
+
+fresh = subprocess.run(
+    [*DUTY, "--repo", night, "--library", empty_lib], capture_output=True, text=True
+)
+
+# the owner retires a series on main; the night shift's clone never hears about it
+owner = tempfile.mkdtemp()
+git("clone", "-q", origin_dir, owner, cwd=tempfile.gettempdir())
+git("config", "user.email", "t@t", cwd=owner)
+git("config", "user.name", "t", cwd=owner)
+shutil.rmtree(pathlib.Path(owner) / "press" / "series" / "ai-briefs")
+git("add", "-A", cwd=owner)
+git("commit", "-qm", "retire the old press", cwd=owner)
+git("push", "-q", "origin", "main", cwd=owner)
+
+stale = subprocess.run(
+    [*DUTY, "--repo", night, "--library", empty_lib], capture_output=True, text=True
+)
+overridden = subprocess.run(
+    [*DUTY, "--repo", night, "--library", empty_lib, "--allow-stale"],
+    capture_output=True,
+    text=True,
+)
+
+check("a checkout level with origin/main computes the work list", fresh.returncode == 0)
+check(
+    "a checkout behind origin/main refuses to compute a work list",
+    stale.returncode == 2 and not stale.stdout.strip(),
+    detail=f"rc={stale.returncode} stdout={stale.stdout[:80]!r}",
+)
+check(
+    "the refusal names the drift and the command that fixes it",
+    "stale checkout" in stale.stderr
+    and "1 commits behind" in stale.stderr
+    and "reset --hard origin/main" in stale.stderr,
+    detail=stale.stderr[:200],
+)
+check(
+    "--allow-stale is the offline escape hatch",
+    overridden.returncode == 0 and json.loads(overridden.stdout)["due"],
+)
+check(
+    "a tree with no git (press check, temp fixture) is never called stale",
+    subprocess.run(
+        [*DUTY, "--repo", TESTREPO, "--library", empty_lib],
+        capture_output=True,
+        text=True,
+    ).returncode
+    == 0,
+)
 
 print("== PR mode (real git repo) ==")
 

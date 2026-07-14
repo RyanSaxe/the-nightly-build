@@ -40,9 +40,19 @@ available, `uv run engine/<script>.py` manages the dependency itself.
 
 3. **Select your work.** Fetch the `library` branch and check it out to its own
    path (a `git worktree add`, or a second clone) so the engine can read tonight's
-   published state, then run the duty oracle:
+   published state. The branch root holds `library/<series>/<slug>.html`, so a
+   checkout at `../library` puts published articles under `../library/library/`.
+   Then run the duty oracle:
    `python3 engine/duty.py --repo . --library <path-to-library-checkout>`
-   It applies every scheduling rule deterministically (per-series `cadence`,
+   Duty exits 2 and prints nothing when the tree is wrong: no press in it, or a
+   checkout behind `origin/main`. Both mean the same thing — the press, prompts,
+   and engine you are holding are not this paper's, so every article you write
+   from them is confidently wrong. Do what duty says and run it again. Never
+   work around a refusal, and never assemble a work list from anything but
+   duty's output. **The press is `press/`. `examples/` is documentation for
+   people, never configuration for you: an article written from it names a
+   series this paper does not run, and the proof will refuse it.**
+   Duty applies every scheduling rule deterministically (per-series `cadence`,
    `paused`, completion, already-published-tonight) and prints the series due,
    with what to publish:
    - `collection`: one of the listed `candidates` (the next item in config
@@ -118,7 +128,10 @@ available, `uv run engine/<script>.py` manages the dependency itself.
      - `## Task`: the commission (`task.md`).
      - `## Process`: the editor's `requested-changes.md`, plus any redraft
        and what forced it.
-     - `## Voice brief`: the coach's `voice.md`.
+     - `## Voice brief`: the coach's `voice.md`. It cites the writers it studied,
+       at least three, each with a `Source:` line. A brief that names outlets
+       instead of writers was not studied, and the proof says so
+       (`W-VOICE-THIN`).
      - `## Research`: the researcher's `research.md`.
      - `## Also consulted`: the research log's Discarded section, one line per
        source with the reason, plain (never collapsed).
@@ -171,7 +184,7 @@ Field notes: `mode` is one of `collection | sequence | rolling | open`. `order` 
 1-based item index for `sequence` mode, else null. `date` is the UTC date of your run.
 For `open` mode, `template` must be one of the series' declared choices. `sources` and
 `words` are your self-measurements (the proof recounts, and >20% deviation is a WARN).
-`harness`/`model` are honest provenance, supplied by the orchestrator in the
+`harness`/`model` are honest provenance, supplied by the night desk in the
 commission. A role cannot know its own runtime.
 
 ## Quality creed
@@ -182,7 +195,7 @@ alone, and a sentence runs only when every hand that touched it would sign it. E
 the reader to go deeper on their own.
 
 Every article is produced by a chain of roles, each in a fresh context with its own
-skill and its own artifact under `.nb-work/<series>/<slug>/`: the orchestrator
+skill and its own artifact under `.nb-work/<series>/<slug>/`: the night desk
 commissions the piece (`task.md`), the coach studies how the best real writers on the
 subject actually write (`voice.md`), the researcher builds the claims-and-evidence log
 (`research.md`), the writer drafts from that log and proves the result, and the editor
@@ -190,4 +203,20 @@ attacks it (`requested-changes.md`). No stage is licensed to skim because the ni
 long. Artifacts are written for the next agent — conclusions first, stable
 headings — and to the floor's own standard: every role tunes its ear on what
 the others wrote. The PR body is assembled from them.
-`skills/correspondent/SKILL.md` orchestrates. The stage skills carry the roles.
+
+The chain is a division of labor, not a checklist one agent walks. An artifact
+written by anyone but the role whose name is on it is a forgery: it reads
+plausibly, it passes every automated check, and the article silently loses the
+work the role existed to do. So the night runs on two tiers.
+`skills/correspondent/SKILL.md` is the night desk: it reads duty, commissions
+every article, then hands each commission to its own `skills/desk/SKILL.md`
+subagent, launched together, each in its own worktree. A desk owns one article
+end to end and returns one open PR. Neither tier writes an artifact.
+
+A runtime that cannot spawn subagents runs the same chain in one context, and
+says so in every PR body it opens (`Production: single-context, no isolation.`)
+The pipeline survives. The fresh eyes do not, and the prose pays: an editor
+grading prose it helped write is not an editor. Never take that path silently.
+
+The skills are files in this repository, read with your file tools. They are not
+slash commands, and no runtime registers them: `/correspondent` will fail.
