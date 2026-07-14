@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thomson Reuters v. Ross: The First Appeal on AI Training and Fair Use — Docket</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "docket",
+        "slug": "thomson-reuters-v-ross",
+        "template": "article",
+        "title": "Thomson Reuters v. Ross: The First Appeal on AI Training and Fair Use",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-14",
+        "tags": ["copyright", "training-data", "fair-use"],
+        "sources": 9,
+        "words": 2270,
+        "reading_minutes": 10,
+        "dek": "A defunct legal-research startup's fight over headnote summaries is now the first case an appeals court has weighed on whether training an AI is fair use — and the whole thing turns on one factor.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Docket · AI &amp; the Law</div>
+        <h1 class="nb-title">Thomson Reuters v. Ross: The First Appeal on AI Training and Fair Use</h1>
+        <p class="nb-dekline">
+          A defunct legal-research startup's fight over headnote summaries is
+          now the first case an appeals court has weighed on whether training an
+          AI is fair use — and the whole thing turns on one factor.
+        </p>
+        <div class="nb-byline"><span>10 min read</span><span>2026-07-14</span></div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <div class="rs-docket">
+          <span class="rs-docket-case"
+            >Thomson Reuters / West Publishing v. Ross Intelligence</span
+          >
+          <span class="rs-docket-court">3d Cir. · No. 25-2153</span>
+          <dl class="rs-docket-grid">
+            <dt>Stage</dt>
+            <dd>
+              Interlocutory appeal from D. Del. No. 1:20-cv-613-SB; argued 11
+              June 2026, decision pending
+            </dd>
+            <dt>Question</dt>
+            <dd>
+              Are Westlaw's headnotes copyrightable, and was copying them to
+              build a competing legal-research AI fair use?
+            </dd>
+            <dt>Stakes</dt>
+            <dd>
+              The first appellate reading of the fair-use factor every
+              AI-training copyright case is fought on: effect on the market
+            </dd>
+          </dl>
+        </div>
+        <p>
+          On 11 June 2026 a three-judge panel of the Third Circuit sat in
+          Philadelphia to hear argument in a copyright case whose defendant no
+          longer exists.<sup class="nb-cite"><a href="#s1">1</a></sup> Ross
+          Intelligence announced its own shutdown in December 2020, blaming the
+          cost of this very lawsuit, and ceased operating a month
+          later.<sup class="nb-cite"><a href="#s2">2</a></sup> What survives the
+          company is the precedent: this is the first time a federal appeals
+          court has weighed whether copying protected text to train an
+          artificial-intelligence system can be fair use.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          Every larger suit now pending against OpenAI, Meta, Anthropic and the
+          rest is arguing the same statutory test, and this is the first time it
+          reaches an appellate bench.
+        </p>
+        <p>
+          The facts are almost quaint next to those cases — no chatbot, no
+          scraped internet, no generated prose. Ross wanted to build a
+          legal-research engine to compete with Westlaw, and to train it, it
+          used Westlaw's editorial summaries of court decisions. A trial judge
+          held that copying infringed and was not fair use. By the time you
+          finish this piece you should be able to say what the court actually
+          decided, why the case lives or dies on a single fair-use factor, why
+          even the trial judge could not make up his mind, and how far a ruling
+          either way would really reach.
+        </p>
+      </section>
+
+      <section data-nb-section="what-the-court-held" id="what-the-court-held">
+        <h2>What the district court actually held</h2>
+        <p>
+          On 11 February 2025, Judge Stephanos Bibas — a Third Circuit judge
+          sitting by designation on the Delaware trial court — granted summary
+          judgment to Thomson Reuters, finding that Ross had infringed 2,243 of
+          Westlaw's headnotes and that its copying was not protected by fair
+          use.<sup class="nb-cite"><a href="#s4">4</a></sup> Two things are worth
+          separating immediately, because the headlines blur them: the court
+          found the material copyrightable <em>and</em> found the copying
+          unlawful. Neither is the sweeping "AI training is not fair use" ruling
+          it is sometimes described as.
+        </p>
+        <div class="nb-callout">
+          <span class="nb-callout-term">Headnotes and the Key Number System</span>
+          A headnote is a short editorial summary West writes for the top of a
+          published opinion; the Key Number System is West's taxonomy that files
+          each point of law under a numbered heading. Neither is the judge's
+          own words — they are West's editorial layer on top of the public
+          decision, which is why their originality is contested at all.
+        </div>
+        <p>
+          Fair use is a defence balanced across four statutory factors: the
+          purpose and character of the use, the nature of the copyrighted work,
+          the amount used, and the effect of the use on the market for the
+          original.<sup class="nb-cite"><a href="#s5">5</a></sup> Bibas split the
+          four. Factors two and three — the nature of the headnotes and the
+          amount taken — went to Ross. Factors one and four — the purpose of the
+          use and its market effect — went to Thomson Reuters, and the court held
+          that factor four "matters more" than the others. Crucially, it found
+          Ross's use was <em>not</em> transformative: the copying did not add new
+          expression or meaning, it repurposed West's summaries to build a rival
+          to West.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          The judge then drew a line around his own ruling that most coverage
+          dropped. "Because the AI landscape is changing rapidly," he wrote, "I
+          note for readers that only non-generative AI is before me
+          today."<sup class="nb-cite"><a href="#s4">4</a></sup> Ross's system did
+          not write anything; it returned quotations from actual judicial
+          opinions in response to a legal question. That single sentence is the
+          reason careful lawyers refuse to read this case as deciding the
+          generative-AI suits — and the reason it is worth understanding on its
+          own terms.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="the-market-harm-mechanism"
+        id="the-market-harm-mechanism"
+      >
+        <h2>Why one factor carries the whole case</h2>
+        <p>
+          If you read only one part of the opinion, read the fourth factor. Under
+          section 107, factor four asks about "the effect of the use upon the
+          potential market for or value of the copyrighted work."<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          The word doing the work is <em>potential</em>. Bibas held that it did
+          not matter whether Thomson Reuters had itself built an AI product from
+          the headnotes; the harm to a potential market for training data was
+          enough, and it was Ross's burden to prove that market would not be
+          affected.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <div class="nb-pull">
+          <p>
+            The court counted a market that may not yet exist, for a product the
+            plaintiff had not built, as harm the defendant had to disprove.
+          </p>
+        </div>
+        <p>
+          That is the move on appeal. It has two edges an engineer should hold
+          apart. The first is a market for the <em>inputs</em>: if training data
+          can be licensed, then taking it without a licence displaces sales in a
+          market for training data, whether or not the rightsholder is selling
+          into it today. The second is subtler and more contested: Ross's
+          <em>outputs</em> to a user were quotations from judicial opinions,
+          which are not copyrightable at all, yet the court still treated the
+          finished tool as a "market substitute" for Westlaw.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Whether market harm can be built on outputs that themselves infringe
+          nothing is precisely what the Third Circuit was pressed on, and the two
+          sides were, in one advocate's telling, worlds apart on how to define
+          the market at all.<sup class="nb-cite"><a href="#s9">9</a></sup>
+        </p>
+        <div class="nb-position">
+          <span class="nb-position-who">Thomson Reuters, and Judge Bibas below</span>
+          <span class="nb-position-stance"
+            >Training data is a licensable market, and a competing tool built
+            from the material substitutes for it.</span
+          >
+          <p>
+            The opinion found "at least one potential derivative market is also
+            obvious: data to train legal AIs," and that Ross built its product to
+            compete directly with the source of that data — enough for factor
+            four regardless of whether the model's outputs copied
+            anything.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </p>
+        </div>
+        <div class="nb-position">
+          <span class="nb-position-who">Ross, and sceptical scholars</span>
+          <span class="nb-position-stance"
+            >You cannot count market harm from outputs that infringe nothing;
+            the "dilution" theory does not fit here.</span
+          >
+          <p>
+            Because Ross's outputs were uncopyrightable judicial opinions, critics
+            including Rebecca Tushnet argue the market-dilution reasoning imported
+            from the generative-AI cases simply does not apply, and that weighing
+            harm from non-infringing outputs is an error.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section
+        data-nb-section="the-self-reversal-and-upcodes"
+        id="the-self-reversal-and-upcodes"
+      >
+        <h2>Even the judge changed his mind</h2>
+        <p>
+          The strongest signal that this doctrine is unsettled is that the trial
+          judge decided it twice, differently. Bibas had issued an earlier
+          summary-judgment opinion in 2023 that sent the originality and fair-use
+          questions toward a jury; on reconsideration he reversed himself on both,
+          writing that his "prior opinion wrongly concluded that I had to send
+          this factor to a jury" and that he was revising "all parts of my prior
+          opinions that conflict with this one."<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Having changed his own answer, he then certified the two questions for
+          immediate appeal under 28 U.S.C. § 1292(b), noting that "given the
+          quickly growing importance of AI, the public will benefit from having
+          the Third Circuit weigh in promptly."<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+        </p>
+        <ol class="nb-timeline">
+          <li class="nb-tl-event major">
+            <span class="nb-tl-date">2020</span>
+            <h3>
+              Suit filed<sup class="nb-cite"><a href="#s2">2</a></sup>
+            </h3>
+            <p>
+              Thomson Reuters sues Ross in Delaware; Ross shuts down months
+              later, citing the litigation's cost.
+            </p>
+          </li>
+          <li class="nb-tl-event">
+            <span class="nb-tl-date">2023</span>
+            <h3>
+              First summary-judgment opinion<sup class="nb-cite"
+                ><a href="#s4">4</a></sup
+              >
+            </h3>
+            <p>Bibas sends originality and fair use toward a jury.</p>
+          </li>
+          <li class="nb-tl-event major">
+            <span class="nb-tl-date">Feb 2025</span>
+            <h3>
+              Second opinion reverses course<sup class="nb-cite"
+                ><a href="#s4">4</a></sup
+              >
+            </h3>
+            <p>
+              2,243 headnotes infringed; fair use rejected on summary judgment.
+            </p>
+          </li>
+          <li class="nb-tl-event">
+            <span class="nb-tl-date">May 2025</span>
+            <h3>
+              Questions certified<sup class="nb-cite"><a href="#s7">7</a></sup>
+            </h3>
+            <p>Originality and fair use sent up under § 1292(b).</p>
+          </li>
+          <li class="nb-tl-event">
+            <span class="nb-tl-date">Apr 2026</span>
+            <h3>
+              Supplemental briefing ordered<sup class="nb-cite"
+                ><a href="#s1">1</a></sup
+              >
+            </h3>
+            <p>
+              The panel asks both sides about its own new fair-use ruling in
+              <em>ASTM v. UpCodes</em>.
+            </p>
+          </li>
+          <li class="nb-tl-event major">
+            <span class="nb-tl-date">Jun 2026</span>
+            <h3>
+              Argued<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </h3>
+            <p>Decision pending before Judges Restrepo, Montgomery-Reeves and Bove.</p>
+          </li>
+        </ol>
+        <p>
+          The <em>UpCodes</em> detail is the one to watch. Weeks before argument,
+          the Third Circuit decided <em>ASTM v. UpCodes</em>, holding that
+          republishing privately drafted technical standards once they are
+          incorporated into law was likely fair use because the use was
+          transformative under the Supreme Court's <em>Warhol</em>
+          framework.<sup class="nb-cite"><a href="#s8">8</a></sup> The court then
+          ordered Thomson Reuters and Ross to brief what impact that decision has
+          on this appeal.<sup class="nb-cite"><a href="#s1">1</a></sup> The judge
+          who wrote <em>UpCodes</em>, Luis Felipe Restrepo, also sits on the Ross
+          panel — so the same court that just read transformativeness generously
+          in one case now has to decide whether Ross's copying clears the same
+          bar, on facts where the trial court said it does not.<sup
+            class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="for-builders" id="for-builders">
+        <h2>What an engineer should take from it</h2>
+        <p>
+          The temptation is to treat a ruling here as a verdict on AI training
+          generally. It is not, and the reasons it is not are the levers any
+          party in the bigger cases will pull to distinguish it — whichever way
+          it comes out.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <ol class="nb-steps">
+          <li>
+            <h3>The system was not generative</h3>
+            <p>
+              Bibas expressly limited his holding to non-generative AI; a model
+              that produces new text is arguing a different transformativeness
+              question than one that returns quotations.<sup class="nb-cite"
+                ><a href="#s4">4</a></sup
+              >
+            </p>
+          </li>
+          <li>
+            <h3>The copied material was low-creativity, and the copier was a
+              direct rival</h3>
+            <p>
+              Editorial summaries used to build a head-on Westlaw competitor is
+              close to the worst fact pattern for a fair-use defence; scraping
+              varied web text to train a general model is not obviously the
+              same.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            </p>
+          </li>
+          <li>
+            <h3>Watch factor four, not the headline</h3>
+            <p>
+              The operative question for your own corpus is whether there is a
+              licensable market for the data you used, because that is where
+              liability is being located — not in what the model learned.<sup
+                class="nb-cite"
+                ><a href="#s4">4</a></sup
+              >
+            </p>
+          </li>
+        </ol>
+        <p>
+          One scholar's summary of the asymmetry is worth keeping: a win for
+          Thomson Reuters "will be an easy case for the pro-AI folks to cabin,"
+          because the facts are so specific to Westlaw and a direct
+          competitor.<sup class="nb-cite"><a href="#s6">6</a></sup> The reverse is
+          also true. Until the Third Circuit rules, the safest reading is the
+          narrow one: this case is about a market for training data and a
+          head-to-head competitor, and its reach beyond those facts is exactly
+          what remains unsettled.
+        </p>
+      </section>
+
+      <section data-nb-section="go-deeper" id="go-deeper">
+        <h2>Go deeper</h2>
+        <p>
+          Start with the statute: 17 U.S.C. § 107 is a single paragraph, and
+          reading the four factors once makes every one of these cases legible.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          Then read the primary record. Judge Bibas's February 2025 opinion is
+          unusually clear for a copyright ruling and repays a full read,
+          especially its factor-four discussion;<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          the § 1292(b) certification opinion explains, in the judge's own words,
+          why he thought the questions hard enough to send up.<sup
+            class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          Read <em>ASTM v. UpCodes</em> alongside them to see how the same court
+          handles transformativeness when it wants to.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+          Then watch the Third Circuit docket for the opinion in No. 25-2153,
+          expected later this year; when it lands, the factor-four holding is the
+          first thing to read.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              href="https://www.courtlistener.com/docket/70622297/thomson-reuters-enterprise-centre-gmbh-v-ross-intelligence-inc/"
+              >CourtListener (Free Law Project) — docket, Thomson Reuters
+              Enterprise Centre GmbH v. Ross Intelligence Inc., 3d Cir. No.
+              25-2153 (argued 11 June 2026; text order of 27 April 2026 ordering
+              supplemental briefing on ASTM v. UpCodes; no opinion as of 10 July
+              2026)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              href="https://www.abajournal.com/news/article/ross-intelligence-to-shut-down-amid-thomson-reuters-lawsuit"
+              >ABA Journal — "ROSS Intelligence to shut down amid Thomson Reuters
+              lawsuit" (11 December 2020; company blames the cost of the suit and
+              ceases operations in January 2021)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              href="https://chatgptiseatingtheworld.com/2026/06/10/live-stream-for-oral-argument-in-third-circuit-in-thomson-reuters-v-ross-intelligence-1st-appeals-court-to-review-fair-use-in-ai-training/"
+              >Chat GPT Is Eating the World — "Live stream for oral argument in
+              Third Circuit in Thomson Reuters v. Ross Intelligence, 1st appeals
+              court to review fair use in AI training" (10 June 2026;
+              corroborates the first-appellate characterization and the 11 June
+              argument date)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              href="https://www.ded.uscourts.gov/sites/ded/files/opinions/20-613_5.pdf"
+              >U.S. District Court, D. Del. — Memorandum Opinion, Thomson Reuters
+              v. Ross Intelligence, No. 1:20-cv-613-SB (11 February 2025; 2,243
+              headnotes infringed; four-factor analysis; "only non-generative AI
+              is before me today"; potential market for AI training data; fair
+              use rejected)</a
+            >
+          </li>
+          <li id="s5">
+            <a data-nb-source href="https://www.law.cornell.edu/uscode/text/17/107"
+              >Legal Information Institute (Cornell Law) — 17 U.S.C. § 107, fair
+              use and its four statutory factors, including "the effect of the
+              use upon the potential market for or value of the copyrighted
+              work"</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              href="https://law.fsu.edu/sites/default/files/2026-06/First%20AI%20Copyright%20Appeal%E2%80%99s%20Reach%20Hinges%20on%20Market%20Impact%20Issue.pdf"
+              >Bloomberg Law — "First AI Copyright Appeal's Reach Hinges on
+              Market Impact Issue" (panel of Restrepo, Montgomery-Reeves and
+              Bove; the market-definition dispute; scholars Jake Linford ("easy
+              to cabin") and Rebecca Tushnet on the dilution theory and
+              non-infringing outputs)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              href="https://bpb-us-e2.wpmucdn.com/sites.uci.edu/dist/d/2220/files/2025/07/Thomson-Reuters-Enterprise-Centre-GmbH-v-Ross-Intelligence-Inc_Redacted.pdf"
+              >U.S. District Court, D. Del. — § 1292(b) certification opinion,
+              Thomson Reuters v. Ross Intelligence, 2025 WL 1488015 (23 May 2025;
+              certifies the originality and fair-use questions; "the public will
+              benefit from having the Third Circuit weigh in promptly"; notes the
+              two conflicting summary-judgment opinions)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              href="https://www.lawnext.com/wp-content/uploads/2026/04/aastm_v_upcodes_3d_cir_op.pdf"
+              >U.S. Court of Appeals, 3d Cir. — Opinion, American Society for
+              Testing and Materials v. UpCodes Inc., No. 24-2965 (7 April 2026;
+              republication of standards incorporated into law likely fair use;
+              transformative under Warhol; authored by Judge Restrepo)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              href="https://www.bakerbotts.com/thought-leadership/publications/2026/july/third-circuit-hears-oral-argument"
+              >Baker Botts — "Third Circuit Hears Oral Argument in Ross v.
+              Reuters AI Training Copyright Case" (July 2026; argument recap, the
+              parties "worlds apart" on market definition, transformativeness
+              framing)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
