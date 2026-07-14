@@ -8,9 +8,4 @@ outranks a loud launch.
 Label each item with one lane: research, engineering, industry,
 compute, policy.
 
-Sweep the roster first every night. Go wider only for what clears the same
-bar. Tier 1: arXiv (cs.LG, cs.CL, cs.AI), the lab blogs (Anthropic, OpenAI,
-Google DeepMind, Meta AI), Simon Willison's weblog, Interconnects, Import
-AI, Lil'Log, Epoch AI. Tier 2: The Information, Stratechery, Understanding
-AI, Ars Technica, ChinaTalk. Sweep the roster first every night; go wider
-only for what clears the same bar.
+The consult list is the roster. Go wider only for what clears its bar.
