@@ -5,10 +5,16 @@ section: "The Daily"
 template: brief
 prompt: prompt.md
 autopublish: true
-strict: false
+strict: true
 min_sources: 6
 words: [600, 1200]
 cadence: daily
+# In AI the primary often IS the news, and the reporting lands weeks later.
+# One document per item, and at most one outside read of it: a paper worth
+# the item does not need a second outlet to vouch for it.
+per_item_sources:
+  primary: [1, 1]
+  secondary: [0, 1]
 # The roster: consult entries are swept before researching elsewhere
 # (PROTOCOL step 4). Archive prefixes scope a search; they are not pages
 # to read whole.
