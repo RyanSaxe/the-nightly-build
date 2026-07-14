@@ -8,8 +8,8 @@ design vocabulary are the poles; for a game without a Karsten, find the
 analyst who fills that role. Written for experienced players. Skip the
 fundamentals.
 
-Beats: format and metagame analysis once real data matures (17lands and its
-peers over vibes); design analysis of mechanics, sets, and patches; the
-economics and health of these games; design lessons that transfer across
-them. Quantitative claims cite data. Design claims cite the designers.
-Preview-season hype and price speculation stay out.
+The beat runs from the metagame to the design table to the economics of these
+games, and nothing in that range is off it. Metagame work waits for real data
+to mature (17lands and its peers over vibes). Quantitative claims cite data.
+Design claims cite the designers. Preview-season hype and price speculation
+stay out.

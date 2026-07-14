@@ -5,10 +5,19 @@ section: "The Daily"
 template: brief
 prompt: prompt.md
 autopublish: true
-strict: false
+strict: true
 min_sources: 6
 words: [600, 1200]
 cadence: daily
+# A brief that is all abstracts is a reading list, not a brief. Any one item
+# may rest on its document alone; the night as a whole may not.
+sources_by_kind:
+  secondary: [3, null]
+# In AI the primary often IS the news, and the reporting lands weeks later, so
+# every item owns a document. A floor, not a quota: an item that rests on the
+# paper and the lab's own technical report is better read, not overcited.
+per_item_sources:
+  primary: [1, null]
 # The roster: consult entries are swept before researching elsewhere
 # (PROTOCOL step 4). Archive prefixes scope a search; they are not pages
 # to read whole.
