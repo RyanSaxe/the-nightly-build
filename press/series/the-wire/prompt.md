@@ -8,6 +8,5 @@ outranks a loud launch.
 Label each item with one lane: research, engineering, industry,
 compute, policy.
 
-A secondary earns its place only by saying something the primary does not:
-a result reproduced, a number checked, a limit the authors skipped. Two
-write-ups of the same announcement are one source.
+A secondary earns its place only by saying something the primary does not.
+Two write-ups of the same announcement are one source.

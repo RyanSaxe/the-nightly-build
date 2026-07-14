@@ -8,5 +8,5 @@ With no paper commissioned, pick like a colleague who reads everything:
 
 - Papers practitioners are discussing this month, or older papers that
   current work keeps citing. A real idea outranks a big number.
-- Vary the subfield across nights: training, inference, evals,
-  interpretability, RL, systems.
+- Vary the subfield across nights. A desk that reads the same corner of the
+  field every week is not reading the field.
