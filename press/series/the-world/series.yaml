@@ -8,14 +8,14 @@ autopublish: true
 strict: true
 words: [600, 1200]
 cadence: daily
-# General news lives or dies on corroboration: every item is one document that
-# owns the claim, read by two outlets with no stake in it. Two, exactly: one
-# read is not corroboration, and the second is where a different view of the
-# same document shows up. The item bands already floor the night well past any
-# min_sources worth writing down.
+# General news lives or dies on corroboration: every item rests on a document
+# that owns the claim, read by two outlets with no stake in it. Floors, both of
+# them: one read is not corroboration, and a third outlet that saw something the
+# first two missed is a better item, not a violation. The floors carry the night
+# well past any min_sources worth writing down.
 per_item_sources:
-  primary: [1, 1]
-  secondary: [2, 2]
+  primary: [1, null]
+  secondary: [2, null]
 # The roster: consult entries are swept before researching elsewhere
 # (PROTOCOL step 4). Paywalled fronts may be gated to fetchers; the
 # researcher logs them as gated, never dead.

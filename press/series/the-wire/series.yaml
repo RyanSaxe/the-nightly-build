@@ -13,12 +13,11 @@ cadence: daily
 # may rest on its document alone; the night as a whole may not.
 sources_by_kind:
   secondary: [3, null]
-# In AI the primary often IS the news, and the reporting lands weeks later.
-# One document per item, and at most one outside read of it: a paper worth
-# the item does not need a second outlet to vouch for it.
+# In AI the primary often IS the news, and the reporting lands weeks later, so
+# every item owns a document. A floor, not a quota: an item that rests on the
+# paper and the lab's own technical report is better read, not overcited.
 per_item_sources:
-  primary: [1, 1]
-  secondary: [0, 1]
+  primary: [1, null]
 # The roster: consult entries are swept before researching elsewhere
 # (PROTOCOL step 4). Archive prefixes scope a search; they are not pages
 # to read whole.
