@@ -6,14 +6,16 @@ template: brief
 prompt: prompt.md
 autopublish: true
 strict: true
-min_sources: 6
 words: [600, 1200]
 cadence: daily
-# General news lives or dies on corroboration: every item is one document
-# that owns the claim, read by two or three outlets with no stake in it.
+# General news lives or dies on corroboration: every item is one document that
+# owns the claim, read by two outlets with no stake in it. Two, exactly: one
+# read is not corroboration, and the second is where a different view of the
+# same document shows up. The item bands already floor the night well past any
+# min_sources worth writing down.
 per_item_sources:
   primary: [1, 1]
-  secondary: [2, 3]
+  secondary: [2, 2]
 # The roster: consult entries are swept before researching elsewhere
 # (PROTOCOL step 4). Paywalled fronts may be gated to fetchers; the
 # researcher logs them as gated, never dead.
