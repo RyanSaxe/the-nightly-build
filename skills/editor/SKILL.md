@@ -35,14 +35,29 @@ weaken it is a broken claim. Report it as one.
 While a source is open, verification comes free. Confirm the passage supports
 the claim, then read the rest of its sentence and the paragraph around it:
 the half the piece did not quote is the first place a broken thesis hides.
-Recompute what the numbers imply: components against the total,
-percentages against 100, millions against billions. A verbatim quote aimed at
+Recompute what the numbers imply. Do the arithmetic the draft asserted rather
+than showed, and check each figure against whatever it is a part of and against
+the figures the piece sets beside it. Check a figure against the document that
+owns it and not a convenient summary of it. An interval absent from an abstract
+is not an interval absent from the paper, and a figure you recompute yourself is
+a second estimate, not a verdict on the first. A verbatim quote aimed at
 a different object than the source's fails however clean it reads. Scale the
 check to the cost of being wrong. Any claim that could damage or credit a
 named person gets the deepest check. When the body names a primary ("per a
 Reuters report"), cite that primary. Flag any citation past the series'
 declared sources in `requested-changes.md` with the reason the piece needs
 it. A roster ignored wholesale is a finding.
+
+While the sources are open, audit what each one is labeled. Every entry declares
+a kind (`data-nb-kind`), and the proof can only count the labels: it cannot see
+that a vendor's blog is tagged `primary`, or that the "independent" read of a
+paper is the lab's own announcement of it. Verify the kinds, never trust them.
+Open each source and ask who owns the claim. A primary owns it. A secondary
+reports on a primary from outside it, by someone with no stake in it — a
+different author, which is not the same as a different website. A mislabeled
+kind is a broken claim about the sourcing, so report it as one, say whether the
+piece is short the source it pretended to have, and record in your notes that
+you checked.
 
 A miscited claim gets the right source if at hand. An unsupported claim
 gets cut. A load-bearing claim that breaks, or that outruns the log, is a
@@ -64,8 +79,12 @@ placeholders, prompt phrases, taxonomy labels.
 Then trim inside the survivors. Cut from the middles, never the end, and stop
 before a reader could point to a scar.
 
-Read the paragraph endings in sequence and against the recent nights' openers
-and closers in the library checkout. A repeated shape is a formula. Break it.
+Read the paragraph endings in sequence, then read the draft against the library
+checkout. The checkout holds the whole paper, so the comparison does too: this
+piece's openers, closers, section heading shapes, and dek against every series'
+recent nights, not only its own. Desks draft in isolation, and a catchphrase
+forms across them where one series' history shows nothing. A repeated shape is
+a formula. Break it.
 An ending gone soft usually finished a paragraph earlier. Strike everything
 after the true last line. Hold the register `voice.md` encodes throughout. The
 fix for a voiced sentence with no cargo is deletion, not flattening. Restore
@@ -77,10 +96,9 @@ Line: `Cut: N sentences; worst tell: …`
 
 Read what survives straight through, cold, as the paper's declared reader.
 Then answer in one sentence: what do I have that the sources alone would not
-give me? The answer must point at work visible in the piece: a computation
-shown, a contradiction weighed, a claim pushed to where it breaks. Only now
-open `research.md § Original work` and check the writer's sentence against
-the draft. If neither sentence survives, the article restates its sources.
+give me? The answer must point at work the draft shows, not work it claims.
+Only now open `research.md § Original work` and check the writer's sentence
+against the draft. If neither sentence survives, the article restates its sources.
 That is a redraft. Name the act of work it is missing. Judge the voice here
 too. State in `requested-changes.md` whether the prose sounds closer to the
 exemplars in `voice.md` or to a median AI summary. Last, reread the headline
