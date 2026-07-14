@@ -16,7 +16,3 @@ cadence: daily
 # article stands on, the less room there is for one shop to speak for a side.
 sources_by_kind:
   primary: [4, null]
-# The failure this desk actually has: twelve sources, five of them one side's
-# advocacy shop. Those are honest primaries — the shop owns its own reports —
-# so the kind bands cannot see it. A host cap can. Strict makes it a BLOCK.
-max_sources_per_host: 3
