@@ -465,6 +465,28 @@ def chrome_imprint(site):
     )
 
 
+def chrome_header(site, *, depth=0, active=None):
+    rel = "../" * depth
+    nav_parts = []
+    for label, href in NAV_ITEMS:
+        current = ' aria-current="page"' if label == active else ""
+        nav_parts.append(f'<a href="{rel + href}"{current}>{label}</a>')
+    nav = "".join(nav_parts)
+    eco = chrome_eco_links(site)
+    return f"""<header class="nb-bar"><div class="nb-bar-in">
+  <a class="nb-wordmark" href="{rel}">{esc(site["title"])}<span class="nb-period">.</span></a>
+  <details class="nb-menu"><summary aria-label="Menu"><span class="nb-burger"></span></summary>
+  <nav class="nb-menu-panel"><div class="nb-menu-nav">{nav}</div><div class="nb-menu-eco">{eco}</div></nav></details>
+</div></header>"""
+
+
+def chrome_footer(site):
+    return f"""<footer class="nb-footer"><div class="nb-footer-in">
+  {chrome_imprint(site)}
+  <button class="nb-appearance" type="button">◐ auto</button>
+</div></footer>"""
+
+
 def page(site, title, *, body, depth=0, active=None):
     rel = "../" * depth
     mode_attr = (
@@ -472,13 +494,6 @@ def page(site, title, *, body, depth=0, active=None):
         if site["appearance"] in ("light", "dark")
         else ""
     )
-    nav_parts = []
-    for label, href in NAV_ITEMS:
-        current = ' aria-current="page"' if label == active else ""
-        nav_parts.append(f'<a href="{rel + href}"{current}>{label}</a>')
-    nav = "".join(nav_parts)
-    eco = chrome_eco_links(site)
-    imprint = chrome_imprint(site)
     press_assets = f"\n{site['assets_html']}" if site.get("assets_html") else ""
     return f"""<!DOCTYPE html>
 <html lang="en"{mode_attr}>
@@ -495,18 +510,11 @@ def page(site, title, *, body, depth=0, active=None):
 <script defer src="{rel}assets/nb.js?v={site["stamp"]}"></script>{press_assets}
 </head>
 <body{site["body_class"]}>
-<header class="nb-bar"><div class="nb-bar-in">
-  <a class="nb-wordmark" href="{rel}">{esc(site["title"])}<span class="nb-period">.</span></a>
-  <details class="nb-menu"><summary aria-label="Menu"><span class="nb-burger"></span></summary>
-  <nav class="nb-menu-panel"><div class="nb-menu-nav">{nav}</div><div class="nb-menu-eco">{eco}</div></nav></details>
-</div></header>
+{chrome_header(site, depth=depth, active=active)}
 <main class="nb-shell">
 {body}
 </main>
-<footer class="nb-footer"><div class="nb-footer-in">
-  {imprint}
-  <button class="nb-appearance" type="button">◐ auto</button>
-</div></footer>
+{chrome_footer(site)}
 </body></html>"""
 
 
@@ -1025,68 +1033,6 @@ def atom_feed(base_url, feed_path, *, title, eds, generated, author=None):
 
 
 # --------------------------------------------------------------------------- #
-# Morning email digest (procedural — assembled from nb-meta, no model)
-# --------------------------------------------------------------------------- #
-
-
-def render_email(site_title, date, *, eds, series_cfgs, base_url):
-    """Render the morning digest as a self-contained email document.
-
-    Email clients ignore stylesheets, so every style is inline and the
-    palette is hardcoded to the light theme. Links must be absolute
-    because the mail has no base URL to resolve against.
-    """
-
-    def absolute(path):
-        return absolutize_url(base_url, path)
-
-    eds = sorted(eds, key=lambda e: -e["reading_minutes"])
-    total_minutes = sum(e["reading_minutes"] for e in eds)
-    rows = []
-    for ed in eds:
-        meta = ed["meta"]
-        cfg = series_cfgs.get(ed["series"], {})
-        url = absolute(f"/library/{ed['series']}/{ed['slug']}.html")
-        label = source_label(meta)
-        sources_line = f" · {esc(label)}" if label else ""
-        rows.append(f"""
-  <div style="border-top:1px solid #D9E2EE;padding:18px 0 14px">
-    <div style="font-family:monospace;font-size:11px;letter-spacing:1px;
-                text-transform:uppercase;color:#8A5C08">
-      {esc(cfg.get("name", ed["series"]))}</div>
-    <div style="font-family:Georgia,serif;font-size:20px;line-height:1.3;
-                margin:6px 0 4px">
-      <a href="{esc(url)}" style="color:#161D28;text-decoration:none">
-        {esc(str(meta.get("title", ed["slug"])))}</a></div>
-    <div style="font-family:Georgia,serif;font-style:italic;font-size:14px;
-                color:#4E5866;margin:0 0 6px">{esc(str(meta.get("dek", "")))}</div>
-    <div style="font-family:monospace;font-size:11px;color:#8794A4">
-      {ed["reading_minutes"]} min read{sources_line}</div>
-  </div>""")
-    return f"""<!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#F4F7FB">
-<div style="max-width:600px;margin:0 auto;padding:28px 20px;color:#161D28">
-  <div style="font-family:Georgia,serif;font-size:26px;font-weight:bold;
-              letter-spacing:-0.5px">{esc(site_title)}<span
-              style="color:#8A5C08">.</span></div>
-  <div style="font-family:monospace;font-size:12px;color:#4E5866;
-              text-transform:uppercase;letter-spacing:1px;margin:4px 0 10px">
-    Tonight's build · {esc(date)}</div>
-  <div style="font-family:Georgia,serif;font-size:15px;margin:0 0 12px">
-    {len(eds)} article{"s" if len(eds) != 1 else ""} ·
-    {total_minutes} minutes of reading, built while you slept.</div>
-  {"".join(rows)}
-  <div style="border-top:2px solid #161D28;margin-top:16px;padding-top:12px;
-              font-family:monospace;font-size:11px;color:#8794A4">
-    <a href="{esc(absolute("/") or "/")}" style="color:#935F00">the newsstand</a> ·
-    <a href="{esc(absolute("/feed.xml"))}" style="color:#935F00">feed</a> ·
-    The Nightly Build</div>
-</div>
-</body></html>
-"""
-
-
-# --------------------------------------------------------------------------- #
 # Build
 # --------------------------------------------------------------------------- #
 
@@ -1156,30 +1102,50 @@ def copy_assets(repo, site_cfg, *, out):
 ARTICLE_ASSET_RE = re.compile(
     r'((?:href|src)="(?:\.\./)*assets/(?:nb\.css|nb\.js|theme\.css))(")'
 )
+BODY_OPEN_RE = re.compile(r"<body\b[^>]*>", re.IGNORECASE)
+
+# Site copies of articles live at library/<series>/<slug>.html.
+ARTICLE_DEPTH = 2
 
 
-def copy_articles(articles, out, *, stamp="", assets_html=""):
+def dress_article(raw, site):
+    """Return the article markup with the site chrome and press assets in place.
+
+    An article is authored as a standalone page, so the bar and footer that
+    generated pages get from page() are spliced in here, at copy time: the same
+    Python builds both, and the whole back catalogue wears the current chrome on
+    the next build. Idempotent, so an article that already carries a bar (an
+    already-dressed copy handed back in) is left with exactly one.
+    """
+    if site["assets_html"]:
+        raw = raw.replace("</head>", f"{site['assets_html']}\n</head>", 1)
+    body_open = BODY_OPEN_RE.search(raw)
+    if not body_open or 'class="nb-bar"' in raw:
+        return raw
+    header = chrome_header(site, depth=ARTICLE_DEPTH)
+    at = body_open.end()
+    raw = f"{raw[:at]}\n{header}{raw[at:]}"
+    return raw.replace("</body>", f"{chrome_footer(site)}\n</body>", 1)
+
+
+def copy_articles(articles, out, *, site):
     """Copy articles into the site, stamping their shared-asset links and
-    injecting the press's declared trusted assets into each article's head.
+    dressing each copy in the site chrome.
 
     The canonical files on the library branch stay byte-exact; only the
     generated site copy gets ?v=<stamp> on nb.css, nb.js, and theme.css so
-    cached assets can never mismatch the markup, and the press assets so
-    library-backed furniture (a highlighter, say) works in every article.
+    cached assets can never mismatch the markup, the press assets so
+    library-backed furniture (a highlighter, say) works in every article, and
+    the reader chrome so an article is a page of this paper.
     """
     for ed in articles.values():
         dst = os.path.join(out, "library", ed["series"], f"{ed['slug']}.html")
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        if stamp or assets_html:
-            with open(ed["file"], encoding="utf-8", errors="replace") as fh:
-                raw = fh.read()
-            if stamp:
-                raw = ARTICLE_ASSET_RE.sub(rf"\1?v={stamp}\2", raw)
-            if assets_html:
-                raw = raw.replace("</head>", f"{assets_html}\n</head>", 1)
-            write(dst, raw)
-        else:
-            shutil.copyfile(ed["file"], dst)
+        with open(ed["file"], encoding="utf-8", errors="replace") as fh:
+            raw = fh.read()
+        if site["stamp"]:
+            raw = ARTICLE_ASSET_RE.sub(rf"\1?v={site['stamp']}\2", raw)
+        write(dst, dress_article(raw, site))
 
 
 def build(
@@ -1317,29 +1283,8 @@ def build(
             ),
         )
 
-    # email digests: one per build (permanent) + the latest at a stable path
-    # for the morning-mail workflow, reusing the latest night's render
-    latest = max(catalog["builds"], key=date_sort_key, default=None)
-    for date in catalog["builds"]:
-        eds = by_night.get(date, [])
-        rendered = render_email(
-            site_cfg["title"],
-            date,
-            eds=eds,
-            series_cfgs=series_cfgs,
-            base_url=base_url,
-        )
-        write(os.path.join(out, "builds", date, "email.html"), rendered)
-        if date == latest:
-            write(os.path.join(out, "email-latest.html"), rendered)
-            write(
-                os.path.join(out, "email-latest-subject.txt"),
-                f"{site_cfg['title']} · {latest}: {len(eds)} "
-                f"article{'s' if len(eds) != 1 else ''}\n",
-            )
-
     copy_assets(repo, site_cfg, out=out)
-    copy_articles(articles, out, stamp=site["stamp"], assets_html=site["assets_html"])
+    copy_articles(articles, out, site=site)
     return catalog
 
 

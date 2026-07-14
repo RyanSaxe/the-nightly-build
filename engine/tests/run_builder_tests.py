@@ -53,6 +53,14 @@ def read(out, *parts):
     return path.read_text()
 
 
+# Strips the chrome the builder splices into an article copy. What remains must
+# be the canonical article byte for byte, which is what the proof validates.
+CHROME_RE = re.compile(
+    r'\n<header class="nb-bar">.*?</header>|<footer class="nb-footer">.*?</footer>\n',
+    re.S,
+)
+
+
 def find_text(elem, path):
     node = elem.find(path)
     assert node is not None, f"missing element: {path}"
@@ -288,8 +296,44 @@ stamp_m = re.search(r"nb\.css\?v=([0-9a-f]+)", micron_copy)
 check("article site copies get cache-busting asset stamps", bool(stamp_m))
 stamp = stamp_m.group(1) if stamp_m else ""
 check(
+    "article copy wears the site bar, with links relative to library/<series>/",
+    all(
+        piece in micron_copy
+        for piece in (
+            '<header class="nb-bar">',
+            '<a href="../../series/">Sections</a>',
+            "The whole newspaper",
+        )
+    ),
+    haystack=micron_copy,
+    needle='<header class="nb-bar">',
+)
+check(
+    "article copy wears the footer imprint and appearance toggle",
+    '<footer class="nb-footer">' in micron_copy
+    and 'class="nb-imprint"' in micron_copy
+    and 'class="nb-appearance"' in micron_copy,
+)
+check(
+    "the canonical library file stays chrome-free, so the proof still validates it",
+    "nb-bar" not in read(lib, "library", "semiconductors", "micron.html"),
+)
+check(
     "article content otherwise untouched",
-    micron_copy.replace("?v=" + stamp, "") == make_fixtures.article(),
+    CHROME_RE.sub("", micron_copy).replace("?v=" + stamp, "")
+    == make_fixtures.article(),
+)
+chrome_site = {
+    "title": "Fixture Press",
+    "stamp": stamp,
+    "assets_html": "",
+    "footer": None,
+    "repository": None,
+    "upstream": B.UPSTREAM_REPOSITORY,
+}
+check(
+    "dressing an already-dressed article does not double the bar",
+    B.dress_article(micron_copy, chrome_site).count('<header class="nb-bar">') == 1,
 )
 check("chrome pages carry the same stamp", f"assets/nb.css?v={stamp}" in newsstand)
 index0 = json.loads(read(out, "search-index.json"))[0]
@@ -300,27 +344,6 @@ check(
 check(
     "sections page never says 'of None'",
     "of None" not in read(out, "series", "index.html"),
-)
-
-print("== email digest ==")
-email = read(out, "email-latest.html")
-check(
-    "email digest exists with article titles",
-    "Micron Technology" in email and "Daily brief for 2026-07-06" in email,
-)
-check("email digest is latest build only", "2026-07-05" not in email)
-check(
-    "email digest is inline-only (no scripts, no engine assets)",
-    "<script" not in email and "assets/" not in email,
-)
-check(
-    "email subject line",
-    read(out, "email-latest-subject.txt").strip()
-    == "The Nightly Build · 2026-07-06: 2 articles",
-)
-check(
-    "per-build digests are permanent",
-    "Daily brief for 2026-07-05" in read(out, "builds", "2026-07-05", "email.html"),
 )
 
 print("== sequence series ==")
@@ -389,8 +412,12 @@ check(
     not any(e.get("draft") for e in pv_catalog["articles"] if e["slug"] == "micron"),
 )
 check(
-    "draft article file copied modulo the asset stamp",
-    re.sub(r"\?v=[0-9a-f]+", "", read(pv_out, "library", "semiconductors", "tsmc.html"))
+    "draft article file copied modulo the asset stamp and the chrome",
+    re.sub(
+        r"\?v=[0-9a-f]+",
+        "",
+        CHROME_RE.sub("", read(pv_out, "library", "semiconductors", "tsmc.html")),
+    )
     == draft,
 )
 check(
@@ -760,9 +787,8 @@ check(
     "../../../assets/nb.css" in nested_page,
 )
 
-print("== email digest routes sources through source_label ==")
-em = read(dl_out, "email-latest.html")
-check("email shows a well-formed source count", "8 sources" in em)
+print("== source counts route through source_label ==")
+check("the front page shows a well-formed source count", "8 sources" in dl_index)
 bad_lib = tempfile.mkdtemp()
 write_article(
     bad_lib,
@@ -774,7 +800,7 @@ bad_out = tempfile.mkdtemp()
 B.build(TESTREPO, bad_lib, out=bad_out, now=NOW)
 check(
     "a non-int sources value never reaches the reader raw",
-    "<b>x</b>" not in read(bad_out, "email-latest.html"),
+    "<b>x</b>" not in read(bad_out, "index.html"),
 )
 
 sys.exit(summary())
