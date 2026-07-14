@@ -9,6 +9,10 @@ strict: true
 min_sources: 6
 words: [600, 1200]
 cadence: daily
+# A brief that is all abstracts is a reading list, not a brief. Any one item
+# may rest on its document alone; the night as a whole may not.
+sources_by_kind:
+  secondary: [3, null]
 # In AI the primary often IS the news, and the reporting lands weeks later.
 # One document per item, and at most one outside read of it: a paper worth
 # the item does not need a second outlet to vouch for it.
