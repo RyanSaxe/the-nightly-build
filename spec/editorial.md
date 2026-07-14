@@ -9,10 +9,11 @@ research-grade writing. It reads in two registers.
 
 - **Standards a paper cannot loosen.** The quality bar below: sourced claims, teach don't
   summarize, earned analysis, and prose free of fluff, slop, and run-ons.
-- **Defaults a paper may override.** Register, formality, the assumed reader and that
-  reader's background, and how far to press a judgment. These belong to
+- **Defaults a paper may override.** Everything that is taste rather than quality:
+  register, formality, the assumed reader and that reader's background, how far to
+  press a judgment, and any other choice of that kind. These belong to
   `press/editorial.md` and the series prompts. The floor sets the quality of those
-  choices.
+  choices, never the choices themselves.
 
 The floor does not legislate trivia: no house-wide rule on the Oxford comma. Be
 consistent within a piece.
@@ -46,8 +47,8 @@ verdict: an opinion meets the same bar as any analysis, cited, reasoned, shown.
 ## Citations
 
 - Every claim the argument rests on carries an inline citation linking to a source entry.
-- Prefer primary sources: filings, papers, official documentation, transcripts, data
-  providers. Secondary reporting is acceptable for context. Contested figures need a
+- Prefer primary sources: the document that owns the claim, whatever form the document
+  takes. Secondary reporting is acceptable for context. Contested figures need a
   primary source.
 - Never fabricate, pad, or decorate citations. If you cannot source a claim, cut it or
   state the uncertainty plainly.
@@ -77,9 +78,11 @@ tells of slop.
   em-dash swap: write the period, or write the list. Let the verbs carry the weight.
   Vary length for rhythm; a long sentence in control is craft.
 - **Manufactured punchlines.** Cut any sentence engineered to sound quotable while
-  carrying little ("that's the whole point", "here's the kicker"). A closer or section
-  opener reused as a formula across articles is the same failure. So is a house
-  catchphrase.
+  carrying little ("that's the whole point", "here's the kicker", "the catch is"). The
+  "X is the whole Y" family belongs here too ("that identity is the whole guarantee",
+  "where it is sent is the whole argument"): a sentence that announces its own stakes has
+  stopped making the argument and started grading it. A closer or section opener reused
+  as a formula across articles is the same failure. So is a house catchphrase.
 - **Hedged contrast.** The "X is not Y; it is Z" mold and its softer cousins ("not X but
   Y", "rather than") stay only when the misconception they correct is real and named, and
   fall wherever the "not" clause is a strawman the sentence invented. One or two earned

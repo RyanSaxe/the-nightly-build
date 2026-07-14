@@ -51,16 +51,18 @@ masthead:
 
 **The hands-off paper** (they say "just give me ~N good reads a day about X and
 surprise me"): propose a masthead of open sections instead of enumerating items.
-For example a daily rolling brief plus open sections with distinct beats (deep
-dives, explainers, history, papers, a wildcard), each with a template choice list
-and a cadence so the nightly mix varies. One article per section per night is the
+Give each section a beat of its own, a template choice list, and a cadence, so
+the nightly mix varies. The beats come from what the interview surfaced about
+this reader, and a masthead you could have written before the interview is the
+wrong one. One article per section per night is the
 invariant, so "six things a day" means six sections. They govern it later in
 prose, not YAML: commissioning drops an item into a section's queue, steering
 edits the section's `prompt.md`.
 
-- **Voice** (written into `press/editorial.md`): how should the paper sound
-  (register, wit, language), and what should it assume they already know? This is
-  a paper-wide layer composed into every article.
+- **Voice** (written into `press/editorial.md`): how should the paper sound to
+  them, and what should it assume they already know? Push until you have
+  something a stranger could not have guessed. This is a paper-wide layer
+  composed into every article.
 - Depth and per-series emphases go in the series prompt, not the voice
   file.
 - Must-read documents or must-check sites? These become `required_docs`
@@ -95,6 +97,38 @@ Then write:
   contradicts PROTOCOL.md.
 - Tag fragments under `press/series/_tags/` if shared angles apply.
 - Sources for `required_docs` under `press/series/<id>/sources/`.
+
+**A prompt carries only what the engine cannot know.** Config is not prose. The
+prompt is one layer in a stack the night shift reads in order
+(`docs/customization.md`):
+
+```text
+PROTOCOL.md > spec/editorial.md > spec/headlines.md > press/editorial.md >
+template manifest > template identity > press/series/<id>/prompt.md
+> tag fragments > item prompt
+```
+
+Every other layer already holds, and so does the config the engine reads for
+itself: `series.yaml` (`template`, `cadence`, `words`, `min_sources`, `consult`,
+`required_docs`, `strict`, `tags`), `site.yaml`, and the furniture catalogues.
+If a fact lives in any of them, the prompt relies on it and never restates it:
+not PROTOCOL's rules (read the section's published articles first, meet the
+source floor, escape the markup), not the manifest's machine contract (the anchor
+sections, the item count, the required "why it matters" line), not where a
+furniture component's markup is catalogued, not what a tag fragment already
+disciplines. A restated rule drifts from the rule it copies, and the copy has no
+owner.
+
+What belongs here is the editorial judgment no schema holds: the beat, the angle,
+the reader, the genre and the furniture that carries it, the standard a source
+must clear, what this desk refuses to do. Naming a furniture component is
+editorial; explaining its markup is not. And an open section's beat IS its
+config, so its watchlist, its rotation, and its lanes live in the prompt and
+nowhere else.
+
+Test every line before it goes in. Could the engine already know this? Then it
+does not go here. The prompts in `examples/series/` hold this standard. Keep them
+holding it.
 
 Validate: `python3 engine/validate_config.py`. Fix anything it flags before
 proceeding. Commit the configuration to `main` via the user's normal review
