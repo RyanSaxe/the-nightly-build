@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Brief — 14 July 2026</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-brief",
+        "slug": "2026-07-14",
+        "template": "brief",
+        "title": "The Brief: Who Keeps the Exhaust",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-14",
+        "tags": ["daily", "research", "industry", "compute", "policy"],
+        "sources": 8,
+        "words": 1180,
+        "reading_minutes": 5,
+        "dek": "As the model layer commoditizes on price, four of tonight's stories are really one story: the fight is moving to who owns the data underneath — trade secrets, enterprise exhaust, even ratepayer money.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Brief · The Daily</div>
+        <h1 class="nb-title">The Brief: Who Keeps the Exhaust</h1>
+        <p class="nb-dekline">
+          As the model layer commoditizes on price, four of tonight's stories
+          are really one story: the fight is moving to who owns the data
+          underneath — trade secrets, enterprise exhaust, even ratepayer money.
+        </p>
+        <div class="nb-byline"><span>5 min read</span><span>2026-07-14</span></div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research · interpretability</span>
+          <h3>
+            <a href="https://www.anthropic.com/research/claude-values-models-languages"
+              >Anthropic shows Claude's expressed values drift by model version
+              and by language</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            In work published on the 13th, Anthropic analysed 309,815 Claude.ai
+            conversations from a two-week window in May across three model
+            versions (Sonnet 4.6, Opus 4.6, Opus 4.7) and the platform's top 20
+            languages, compressing expressed behaviour onto four axes —
+            Deference–Caution, Warmth–Rigor, Depth–Brevity, Candor–Execution —
+            that explain about 15% of value variation once task and topic are
+            controlled for. Opus 4.7 leans hardest to caution (0.24σ) and depth
+            (0.23σ) while Sonnet 4.6 skews warm and brief; Claude expresses the
+            most warmth in Hindi and Arabic, the most rigour in English and
+            Russian.
+          </p>
+          <p data-nb-why>
+            <b>Why it matters →</b> This is the eval-reliability thread we have
+            tracked turned inward: a frontier lab conceding that "behaviour" is a
+            distribution that shifts by model version and even by language, not a
+            fixed property you certify once. Alignment, like the agentic scores we
+            flagged last week, is something you sample.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">industry · funding</span>
+          <h3>
+            <a
+              href="https://techcrunch.com/2026/07/13/hermes-agent-maker-nous-research-in-talks-for-new-funding-at-1-5b-valuation/"
+              >Nous Research, maker of the open Hermes agent, is in talks to raise
+              at a $1.5B valuation</a
+            ><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </h3>
+          <p>
+            The decentralised-training startup is raising at least $75M led by
+            Robot Ventures at a $1.5bn valuation, a roughly 20x markup on the
+            ~$70M it had raised to date, according to reporting on the 13th. The
+            round is in talks, not closed — the number is a term sheet, not a bank
+            balance.
+          </p>
+          <p data-nb-why>
+            <b>Why it matters →</b> A $1.5bn tag for an open-weight agent shop is a
+            bet that the durable value sits in the agent and harness layer, not
+            the base model — the same commoditisation logic driving the cost war,
+            seen from the startup side.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">industry · legal</span>
+          <h3>
+            <a href="https://techcrunch.com/2026/07/10/apple-sues-openai-over-alleged-trade-secret-theft/"
+              >Apple sues OpenAI, alleging trade-secret theft through ~400
+              ex-Apple hires</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Apple's 41-page complaint, filed on the 10th in the Northern District
+            of California, alleges OpenAI recruited about 400 former Apple staff
+            and names chief hardware figure Tang Yew Tan and an engineer who
+            allegedly kept a work laptop and used an authentication bug to pull
+            "dozens" of confidential files.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            OpenAI's reply: "We have no interest in other companies' trade
+            secrets."
+          </p>
+          <p data-nb-why>
+            <b>Why it matters →</b> As OpenAI pushes into hardware, the binding
+            constraint is not model quality but proprietary process knowledge.
+            This is the sharpest version of tonight's theme — the contest has
+            moved from who has the best model to who controls the data and IP
+            that feed it.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">compute · models</span>
+          <h3>
+            <a
+              href="https://aws.amazon.com/blogs/machine-learning/openai-gpt-5-6-sol-terra-and-luna-are-now-generally-available-on-amazon-bedrock/"
+              >GPT-5.6 goes generally available on Amazon Bedrock, four days after
+              launch</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            AWS put the whole GPT-5.6 family — Sol, Terra and Luna — on Bedrock on
+            the 13th at first-party pricing with a 90% cached-input discount. The
+            posted flagship numbers: Sol scores 80 on the Artificial Analysis
+            Coding Agent Index (2.8 ahead of the next model), 73.5% on ExploitBench
+            against 47.9% for GPT-5.5, and 53.6 on Agents' Last Exam — all
+            single-run and self-reported, so read them as vendor figures, not a
+            harness.
+          </p>
+          <p data-nb-why>
+            <b>Why it matters →</b> The cost war we have been tracking goes
+            multi-cloud: the same efficiency-per-token pitch behind GPT-5.6 and
+            Grok 4.5 now lands inside AWS's commitment-and-caching billing, where
+            price and availability, not raw capability, are the sell.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">policy · energy</span>
+          <h3>
+            <a href="https://virginiabusiness.com/white-house-rally-utilities-data-centers-ai-power-cost-pledge/"
+              >White House to press utilities and data centres to shield
+              households from AI power costs</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            Reuters reported on the 13th that the administration will convene
+            utilities, data-centre developers and state governors "in the coming
+            weeks" for a voluntary pledge that AI-driven demand will not raise
+            household bills. It extends the March "Ratepayer Protection Pledge" —
+            in which Amazon, Google, Meta, Microsoft, OpenAI, Oracle and xAI
+            agreed to finance their own generation and grid upgrades rather than
+            pass the cost to existing ratepayers.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            The event is not yet announced, and the pledge remains voluntary.
+          </p>
+          <p data-nb-why>
+            <b>Why it matters →</b> This is the political face of the compute
+            build-out behind "Meta Compute" and the gigawatt data centres: the
+            bill for the power crunch is landing on residential ratepayers, and
+            Washington's answer is a pledge, not a mandate. Watch whether
+            "voluntary" survives rising bills.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">industry · strategy</span>
+          <h3>
+            <a
+              href="https://www.theregister.com/ai-and-ml/2026/07/13/microsoft-chief-turns-hostile-on-frontier-ai-labs-warns-companies-to-guard-their-ip/5270628"
+              >Nadella warns enterprises they "pay for intelligence twice"</a
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </h3>
+          <p>
+            In a weekend post, Microsoft's chief executive argued companies pay
+            once in tokens and again by leaking proprietary knowledge — "trace by
+            trace, correction by correction, eval by eval" — to the labs whose
+            models they rent, and urged them to keep orchestration, memory and
+            evaluations inside their own tenant boundary. The obvious tension,
+            noted by reporters: Microsoft's own Copilot ingests the same
+            enterprise data.
+          </p>
+          <p data-nb-why>
+            <b>Why it matters →</b> It is the clearest statement yet of the
+            enterprise lock-in anxiety underneath the industry's "orchestration"
+            manoeuvring, and it rhymes exactly with the Apple suit and Anthropic's
+            values work: when the model is a commodity, whoever captures the data
+            exhaust keeps the advantage.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source href="https://www.anthropic.com/research/claude-values-models-languages"
+              >Anthropic — "How Claude's values vary across models and languages"
+              (13 July 2026; 309,815 conversations, three model versions, 20
+              languages, the four value axes and the per-model / per-language
+              deltas)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              href="https://techcrunch.com/2026/07/13/hermes-agent-maker-nous-research-in-talks-for-new-funding-at-1-5b-valuation/"
+              >TechCrunch — "Hermes agent maker Nous Research in talks for new
+              funding at $1.5B valuation" (13 July 2026; ≥$75M led by Robot
+              Ventures, ~20x markup, decentralised training)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              href="https://techcrunch.com/2026/07/10/apple-sues-openai-over-alleged-trade-secret-theft/"
+              >TechCrunch — "Apple sues OpenAI over alleged trade secret theft"
+              (report of Apple's 10 July complaint; ~400 ex-Apple hires; OpenAI's
+              response)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              href="https://fortune.com/2026/07/13/apple-lawsuit-against-openai-stolen-trade-secrets-wildest-claims/"
+              >Fortune — detail of Apple's complaint against OpenAI (the named
+              hardware executive and engineer, the alleged laptop and
+              authentication-bug file access, the 41-page filing)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              href="https://aws.amazon.com/blogs/machine-learning/openai-gpt-5-6-sol-terra-and-luna-are-now-generally-available-on-amazon-bedrock/"
+              >AWS Machine Learning Blog — "OpenAI GPT-5.6 Sol, Terra, and Luna
+              are now generally available on Amazon Bedrock" (13 July 2026;
+              pricing, 90% cached-input discount, the self-reported benchmark
+              figures)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              href="https://virginiabusiness.com/white-house-rally-utilities-data-centers-ai-power-cost-pledge/"
+              >Virginia Business (Reuters wire) — "White House to rally utilities,
+              data centers for AI power cost pledge, sources say" (13 July 2026;
+              the planned event for utilities, developers and governors)</a
+            >
+          </li>
+          <li id="s7">
+            <a data-nb-source href="https://www.whitehouse.gov/releases/2026/03/ratepayer-protection-pledge/"
+              >The White House — "Ratepayer Protection Pledge" (March 2026; the
+              underlying voluntary commitment and its signatories: Amazon, Google,
+              Meta, Microsoft, OpenAI, Oracle, xAI)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              href="https://www.theregister.com/ai-and-ml/2026/07/13/microsoft-chief-turns-hostile-on-frontier-ai-labs-warns-companies-to-guard-their-ip/5270628"
+              >The Register — "Microsoft chief turns hostile on frontier AI labs,
+              warns companies to guard their IP" (13 July 2026; reporting Satya
+              Nadella's post on paying for intelligence twice and keeping
+              orchestration in-tenant)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
