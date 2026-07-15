@@ -14,9 +14,9 @@ to where it was read.
 
 ## Scope
 
-Read first: `task.md` (the commission), the series' `series.yaml` (source
-policy, source floor) and its prompt with any tag and item prompts, and
-PROTOCOL steps 4–5 (the source-policy contract). Evidence is your concern.
+Read `task.md` first: its stated source policy sets the floor and mix. Then read
+the series' `series.yaml` and prompt with any tag and item prompts, and PROTOCOL
+steps 4–5 (the source-policy contract). Evidence is your concern.
 The prose floor belongs to the writer and editor.
 
 ## Procedure
@@ -54,7 +54,9 @@ The prose floor belongs to the writer and editor.
    undercuts the commission's angle is the log's most valuable line, and
    finding it is the part of the job nobody else can do for you. Record it
    under Contradictions, especially when it is inconvenient.
-6. Meet or exceed the series' source floor, and its composition if it sets one.
+6. Meet the commission's policy with sources that change the interpretation.
+   The focal document owns its claims; outside context may test, situate, or
+   complicate them, never replace them. A count does not authorize padding.
 
 ## The log
 
@@ -75,6 +77,10 @@ repeats for THIS piece, and the verbatim passages with locations (section,
 page, or an honest locator like "closing paragraph"). A repetition supports
 "the claim was made", never "it is so".
 
+When a reader could usefully inspect a precise source passage, retain an honest
+locator and direct destination when one exists. The writer uses it to enrich the
+citation sheet; a broad synthesis need not pretend it has one.
+
 ## Contradictions
 Where sources disagree with each other or with the commission. Leave it
 empty only when you looked and found nothing.
@@ -86,11 +92,11 @@ one unit counts.
 ## Figures
 For every primary document whose visual evidence could carry an argument better
 than prose, name every exact candidate worth considering, or write `None found`.
-There may be more than one. Record each figure number, what the reader can learn
-from it, and a capture route: a direct image URL, or a PDF page plus a precise
-crop, or a CSS selector for a non-exportable web figure. The writer decides
-which earn space; you make those decisions reversible and never substitute a
-publisher's decorative image.
+There may be more than one. Record its figure number, source location, what the
+reader can learn, and the visual evidence a crop must preserve. Do not prescribe
+coordinates: the writer makes the first crop and the editor judges it in the
+rendered article. The writer decides which earn space; make that decision
+reversible and never substitute a publisher's decorative image.
 
 ## Discarded
 Every source read far enough to judge that earned no place: a single

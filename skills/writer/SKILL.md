@@ -55,6 +55,10 @@ discipline, every template:
   BLOCKs, and no amount of relabeling fixes a mix that is not there. If the log
   cannot supply the primaries an item needs, that is a gap, not a labeling
   problem: send it back.
+- Keep the normal numbered citation marker. When the research log supplies that
+  detail, add `data-nb-locator` and any applicable `data-nb-url` or
+  `data-nb-note` to its anchor. They enrich the source sheet without duplicating
+  the root source in the final list. Never invent a locator or destination.
 - Furniture composes three scopes: `templates/FURNITURE.md`,
   `press/furniture/catalog.md` if present, the template's own. A piece
   earns its place by carrying information better than prose. Charts only as
@@ -65,9 +69,11 @@ discipline, every template:
   each into
   `library/<series>/<slug>/figure-N.<format>` with
   `uv run --group figure-capture engine/capture_figure.py`; use the log's
-  direct-image, PDF-crop, or web-selector route. Add the documented
-  `nb-figure` markup with useful alt text and a caption citation. Skip it when
-  the visual decorates rather than explains. Never use an external image URL.
+  source location and make the first crop yourself. Retain the evidence the
+  argument needs and remove surrounding clutter. Inspect the asset and rendered
+  article before hand-off. Add the documented `nb-figure` markup with useful alt text
+  and a caption citation. Skip it when the visual decorates rather than
+  explains. Never use an external image URL.
 - Fill `nb-meta` with the piece's actual values: real dates, real counts,
   `harness` and `model` from `task.md`, nothing inflated. Write to the path
   the commission names: on a real night, `library/<series>/<slug>.html`.

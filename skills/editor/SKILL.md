@@ -82,8 +82,10 @@ Signposts go with them: any sentence pointing where the piece has been or is
 headed. So does language leaked from the briefing stack: skeleton
 placeholders, prompt phrases, taxonomy labels.
 
-Then trim inside the survivors. Cut from the middles, never the end, and stop
-before a reader could point to a scar.
+Then trim inside the survivors. Cut from the middles, never the end. Read each
+remaining sentence against the Prose standard in `spec/editorial.md`:
+punctuation must serve the thought's pace, not add false weight or hide a
+run-on. Stop before a reader could point to a scar.
 
 Read the paragraph endings in sequence, then read the draft against the library
 checkout. The checkout holds the whole paper, so the comparison does too: this
@@ -113,11 +115,16 @@ established.
 
 Line: `Reader: this gives me …` (or `nothing beyond the sources; redraft`).
 
-If an exact source visual in `research.md § Figures` would let the reader test
-a load-bearing part of the argument better than prose alone, request it in
-`requested-changes.md`. If the log missed the needed visual, send the researcher
-back for a candidate from the cited primary document. Name the figure and the
-argument it must carry; never request decoration or a publisher image.
+Figures are evidence, never decoration. Request one when an exact source visual
+would let the reader test a load-bearing part of the argument better than prose
+alone. Request its removal when it no longer earns space. If the log missed the
+needed visual, send the researcher back for a candidate from the cited primary
+document. Name the figure and the argument it must carry.
+
+For every included source figure, compare the source, asset, and rendered page.
+It must retain the evidence the argument spends and omit surrounding clutter.
+If it does not, request a recrop in terms of what to retain or remove, never
+coordinates. The editor requests image work but never edits assets or markup.
 
 ## Surgical, never a rewrite
 

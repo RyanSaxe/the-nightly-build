@@ -27,7 +27,12 @@ uv run --group figure-capture engine/capture_figure.py web SOURCE-PAGE-URL \
   library/SERIES/SLUG/figure-1.png --selector 'CSS-SELECTOR'
 ```
 
-The helper normalizes outputs to a 2400-pixel maximum edge. The proof rejects
+The helper normalizes outputs to a 2400-pixel maximum edge. Research logs name
+the source figure, its location, its argumentative use, and the evidence a crop
+must retain; they do not prescribe coordinates. The writer makes the first crop,
+then inspects the asset and rendered article. The editor compares both with the
+source and can request a recrop that names what must remain and what must leave.
+The proof rejects
 oversized, missing, externally hosted, or uncited figures. It does not decide
 whether a visual is publishable: use only an exact primary-source figure and
 state what it shows in useful alternative text and a caption that cites the
