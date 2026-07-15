@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Capture a bounded primary-source figure into an article bundle.
+"""Capture a bounded source asset into an article bundle.
 
 Run this tool through ``uv run --group figure-capture`` after bootstrapping the
 repository's optional capture dependencies. It deliberately knows nothing about
-article prose or source policy: the writer must still choose an exact primary
-figure, describe it accurately, and cite the document in the figure caption.
+article prose or source policy: the writer must still choose an exact source
+asset, describe it accurately, and cite the document in its caption.
 """
 
 import argparse

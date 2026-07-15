@@ -115,16 +115,19 @@ established.
 
 Line: `Reader: this gives me …` (or `nothing beyond the sources; redraft`).
 
-Figures are evidence, never decoration. Request one when an exact source visual
+Source assets are evidence, never decoration. Request one when an exact source visual
 would let the reader test a load-bearing part of the argument better than prose
 alone. Request its removal when it no longer earns space. If the log missed the
 needed visual, send the researcher back for a candidate from the cited primary
-document. Name the figure and the argument it must carry.
+or public document. Name the asset and the argument it must carry.
 
-For every included source figure, compare the source, asset, and rendered page.
-It must retain the evidence the argument spends and omit surrounding clutter.
-If it does not, request a recrop in terms of what to retain or remove, never
-coordinates. The editor requests image work but never edits assets or markup.
+For every included source asset, compare the source, asset, and rendered page.
+It must retain the evidence the argument spends and omit surrounding clutter,
+including a printed source caption unless that text is itself evidence. The HTML
+caption should be a short factual label and source citation; interpretation
+belongs in the prose. If the asset fails either test, request a recrop or
+caption revision in terms of what to retain or remove, never coordinates. The
+editor requests image work but never edits assets or markup.
 
 ## Surgical, never a rewrite
 
