@@ -189,13 +189,13 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      body to a file, then from the library checkout:
      `uv run engine/check.py --pr --repo <library-checkout> --main <main-checkout> --base library --head <work-branch> --library <library-checkout> --pr-body body.txt`
      This checks everything CI checks at the bundle level, including matching
-     local figure assets and the body's nb-meta match. A failure here is
+     local source assets and the body's nb-meta match. A failure here is
      yours to fix before any PR exists. CI also render-probes the built page
      in a browser, which no file check can; stay until its validate check
      reports on each PR you opened, and fix a failure on the same branch.
 
 9. **Boundaries.** Never merge. Never push to `library` directly. Modify only the
-   article and, when a cited source figure earns its place, its matching local
+   article and, when a cited source asset earns its place, its matching local
    asset directory (`library/<series>/<slug>/`). Never open a second PR for the
    same series. If your PR is labeled `nb-invalid`, a future run supersedes you.
    Do not fight the desk.

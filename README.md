@@ -175,7 +175,7 @@ contains a complete working configuration as documentation.
 - [Scheduling: native schedulers, the universal Actions cron](docs/scheduling.md)
 - [Harnesses: which agents can run the night shift, and the cost](docs/harnesses.md)
 - [Customization: themes, voice, your own templates](docs/customization.md)
-- [Source figures: capture and article bundles](docs/figures.md)
+- [Source assets: capture and article bundles](docs/source-assets.md)
 - [Delivery: feeds, the directory, the catalog API](docs/delivery.md)
 
 Published sites are listed automatically on
