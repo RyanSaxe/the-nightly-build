@@ -57,24 +57,26 @@ Restate the data in caption and prose. The noscript line is fixed chrome.
 </figure>
 ```
 
-## Source figure
+## Source asset
 
-An exact figure from a cited primary or public document. Store the image beside
-the article at `library/<series>/<slug>/figure-N.png` (or `.jpg`/`.webp`), give
-it useful alternative text, and cite the source in the caption. Capture a
-direct source image when possible; use a precise PDF crop or a web screenshot
-only when the source cannot export the figure.
+An exact image from a cited primary or public document. It may be a figure,
+photograph, document detail, or other visual evidence. Store it beside the
+article at `library/<series>/<slug>/asset-N.png` (or `.jpg`/`.webp`), give it
+useful alternative text, and cite the source in a short factual caption. Crop
+away surrounding page furniture and printed source captions unless that text is
+itself evidence. Capture a direct source image when possible; use a precise PDF
+crop or a web screenshot only when the source cannot export the visual.
 
 ```html
 <figure class="nb-figure">
-  <img src="ARTICLE-SLUG/figure-1.png" alt="WHAT THE FIGURE SHOWS" />
+  <img src="ARTICLE-SLUG/asset-1.png" alt="WHAT THE ASSET SHOWS" />
   <figcaption>
-    Fig. 1 · THE SOURCE'S CAPTION, CONCISELY.<sup class="nb-cite"
+    Fig. 1 · A SHORT FACTUAL LABEL FOR THE ASSET.<sup class="nb-cite"
       ><a
         href="#s1"
         data-nb-locator="Fig. 1 · p. 4"
         data-nb-url="https://example.org/source.pdf#page=4"
-        data-nb-note="WHAT THIS FIGURE SUPPORTS IN THIS ARTICLE."
+        data-nb-note="WHAT THIS ASSET SUPPORTS IN THIS ARTICLE."
         >1</a
       ></sup
     >
