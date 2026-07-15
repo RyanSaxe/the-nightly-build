@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI fiction and human fiction split on narrative structure, not prose · The Paper</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-paper",
+        "slug": "narrative-tells-in-ai-fiction",
+        "template": "paper",
+        "title": "AI fiction and human fiction split on narrative structure, not prose",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-15",
+        "tags": ["nlp", "ai-detection"],
+        "sources": 8,
+        "words": 2680,
+        "reading_minutes": 12,
+        "dek": "StoryScope withholds every stylistic signal and still tells the five leading models from human authors at 93.2% macro-F1, though three plainer detectors score higher.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Paper</div>
+        <h1 class="nb-title">AI fiction and human fiction split on narrative structure, not prose</h1>
+        <p class="nb-dekline">
+          StoryScope withholds every stylistic signal and still tells the five
+          leading models from human authors at 93.2% macro-F1, though three
+          plainer detectors score higher.
+        </p>
+        <div class="nb-byline">
+          <span>12 min read</span><span>2026-07-15</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            StoryScope: Investigating idiosyncrasies in AI fiction
+          </p>
+          <p class="nb-paper-meta">
+            Jenna Russell, Rishanth Rajendhran, Chau Minh Pham, Mohit Iyyer,
+            John Wieting · arXiv:2604.03136 · 2026
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2604.03136"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            As AI-generated fiction becomes increasingly prevalent, questions of
+            authorship and originality are becoming central to how written work
+            is evaluated. While most existing work in this space focuses on
+            identifying surface-level signatures of AI writing, we ask instead
+            whether AI-generated stories can be distinguished from human ones
+            without relying on stylistic signals, focusing on discourse-level
+            narrative choices such as character agency and chronological
+            discontinuity. We propose StoryScope, a pipeline that automatically
+            induces a fine-grained, interpretable feature space of
+            discourse-level narrative features across 10 dimensions. We apply
+            StoryScope to a parallel corpus of 10,272 writing prompts, each
+            written by a human author and five LLMs, yielding 61,608 stories,
+            each ~5,000 words, and 304 extracted features per story. Narrative
+            features alone achieve 93.2% macro-F1 for human vs. AI detection and
+            68.4% macro-F1 for six-way authorship attribution, retaining over
+            97% of the performance of models that include stylistic cues. A
+            compact set of 30 core narrative features captures much of this
+            signal: AI stories over-explain themes and favor tidy, single-track
+            plots while human stories frame protagonists' choices as more
+            morally ambiguous and have increased temporal complexity. Per-model
+            fingerprint features enable six-way attribution: for example, Claude
+            produces notably flat event escalation, GPT over-indexes on dream
+            sequences, and Gemini defaults to external character description. We
+            find that AI-generated stories cluster in a shared region of
+            narrative space, while human-authored stories exhibit greater
+            diversity. More broadly, these results suggest that differences in
+            underlying narrative construction, not just writing style, can be
+            used to separate human-written original works from AI-generated
+            fiction.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The question that survives deleting the prose</h2>
+        <p>
+          Machine-text detectors read the surface. They key on word choice and
+          punctuation: the em-dash, the reach for &ldquo;delve&rdquo; and
+          &ldquo;tapestry,&rdquo; the small syntactic regularities a model
+          leaves behind. That signal works until the model changes its habits.
+          StoryScope opens on the reason to distrust it. GPT-5.4 cut its em-dash
+          use, and the paper reports that fine-tuning a model to imitate human
+          style drops one creative-writing detector from 97% to 3%,<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          drawing on work by Chakrabarty and colleagues in which readers come to
+          prefer the fine-tuned prose and its machine signature nearly
+          disappears.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          So the paper withholds style and asks what is left. Its subject is
+          discourse-level narrative choice: how a story is built above the
+          sentence, in its timeline, its handling of theme, the agency it gives
+          a protagonist, the way it stages emotion. The hypothesis is that
+          humans and machines make systematically different choices at this
+          level, and that those choices persist after every lexical tell is
+          stripped away.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          bet behind the bet is that structure is harder to edit than diction:
+          changing a timeline or a resolution is a rewrite, not a
+          find-and-replace.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <div class="nb-callout">
+          <span class="nb-callout-term">Discourse-level narrative choice</span>
+          A decision about how a story is organized and told rather than which
+          words carry it: whether the timeline runs straight, whether the
+          narrator names the moral, whether a character earns the ending. These
+          are the features StoryScope measures, with word choice and syntax held
+          out by design.
+        </div>
+      </section>
+
+      <section data-nb-section="story-to-questions" id="story-to-questions">
+        <h2>From a story to three hundred questions</h2>
+        <p>
+          StoryScope does not hand-pick the features it will measure. It induces
+          them, and the induction is its own multi-stage machine. The scaffold
+          is NarraBench, a narrative-analysis taxonomy of twelve aspects from
+          Hamilton and colleagues; StoryScope adopts ten of them (agent, social
+          network, event, plot, structure, setting, time, revelation,
+          perspective, style) and drops paratext and motivation as out of
+          scope.<sup class="nb-cite"><a href="#s3">3</a></sup> The pipeline turns
+          those ten dimensions into a bank of concrete, discrete questions asked
+          of every story.
+        </p>
+        <ol class="nb-steps">
+          <li>
+            <h3>Template each story</h3>
+            <p>
+              GPT-5.1 rewrites every story as a structured JSON template along
+              the ten dimensions, forcing later stages to reason over narrative
+              content rather than prose. An ablation confirms the step matters:
+              a template pipeline and a raw-text pipeline share only 6 of their
+              top-20 features, and the raw-text set is style-heavy where the
+              template set is structure-heavy.<sup class="nb-cite"
+                ><a href="#s1">1</a></sup
+              >
+            </p>
+          </li>
+          <li>
+            <h3>Compare across sources</h3>
+            <p>
+              A held-out discovery pool of 600 stories over 100 prompts goes to
+              GPT-5.1 in a high-reasoning mode, which writes per-source and
+              cross-source observations about how the six authors differ.<sup
+                class="nb-cite"
+                ><a href="#s1">1</a></sup
+              >
+            </p>
+          </li>
+          <li>
+            <h3>Propose and prune features</h3>
+            <p>
+              Ten expert prompts, one per dimension, ask GPT-5.1 to turn those
+              observations into closed-form questions with discrete answers,
+              constrained to five response types. Three runs yield 408
+              candidates; embedding-based deduplication merges near-identical
+              questions down to 304 final features, a mix of categorical,
+              ordinal, scale, binary, and multi-select.<sup class="nb-cite"
+                ><a href="#s1">1</a></sup
+              >
+            </p>
+          </li>
+        </ol>
+        <p>
+          A separate model does the measuring. Gemini 3 Flash scores all 304
+          features on each of the 61,608 stories, and the scoring is
+          reproducible: inter-run agreement reaches Krippendorff
+          &alpha;&nbsp;=&nbsp;0.90, and on a 240-item validation set the model
+          agrees with human annotators at Cohen &kappa;&nbsp;=&nbsp;0.84,
+          slightly above the human-to-human &kappa; of 0.74.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The corpus itself is parallel by construction. For each of 10,272
+          human short stories drawn from Books3, one of the book corpora in the
+          Pile,<sup class="nb-cite"><a href="#s4">4</a></sup> the
+          authors ask a model to infer the writing prompt, then hand that same
+          prompt to all five LLMs, so plot and premise are matched across the
+          human version and its five machine mirrors. The released artifacts
+          include the code, the 10,272 prompts, 51,336 AI narratives, and the
+          per-story features; the human stories are withheld for copyright.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="one-tell-by-hand" id="one-tell-by-hand">
+        <h2>One tell, extracted by hand</h2>
+        <p>
+          A single feature, walked on one passage, teaches what the corpus table
+          only confirms. One of the thirty core features asks a binary question of
+          each story: does the narrator explicitly state the theme? The
+          extraction is an operation on text, not a vibe. A story that closes on
+          a line naming its own lesson answers yes. A story that leaves the same
+          understanding for the reader to assemble answers no. The rule is
+          coarse enough that two readers, or a reader and a model, will usually
+          agree on the call, which is why it can be scored at scale.
+        </p>
+        <p>
+          Run it across the corpus and the two distributions pull apart in one
+          direction.
+        </p>
+        <figure class="nb-excerpt">
+          <blockquote>
+            Narrators explicitly explain the story's theme 77% of the time,
+            versus 52% for humans.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+          <figcaption>
+            <span class="nb-excerpt-loc">§4.1</span>
+            States the single-feature gap, not a detector score: machine
+            narrators spell out the theme far more often than human ones. It does
+            not claim a human story never names its moral, only that AI stories
+            do it a quarter of the time more.
+          </figcaption>
+        </figure>
+        <p>
+          That is the shape of every tell that follows. Each is a question with
+          a discrete answer, each separates the human and machine distributions
+          by some margin, and none is a rule that holds on any one story. The
+          detector's power comes from stacking many weak, legible signals, not
+          from a single giveaway.
+        </p>
+      </section>
+
+      <section data-nb-section="what-the-machine-spells-out" id="what-the-machine-spells-out">
+        <h2>The machine's tidier defaults</h2>
+        <p>
+          The core features sort into a few consistent habits, and each is a
+          signed gap between the human mean and the AI mean rather than a verdict
+          on a story. Read together they describe a single disposition, which
+          the paper calls over-determination: the machine leaves less for the
+          reader to do.
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">81% / 38%</span
+            ><span class="nb-stat-l">AI vs human: emotion shown through the body</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">8% / 29%</span
+            ><span class="nb-stat-l">AI vs human: emotion named outright</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">79% / 57%</span
+            ><span class="nb-stat-l">AI vs human: no subplots</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">24% / 47%</span
+            ><span class="nb-stat-l">AI vs human: names another text</span>
+          </div>
+        </div>
+        <p>
+          The theme is over-explained. Beyond the 77%-to-52% gap on stating it
+          outright, AI stories score higher on thematic explicitness and
+          moralizing (3.94 vs 3.28 on a five-point scale, the largest single
+          scale gap), and stage dialogue as philosophical debate more often
+          (59% vs 34%).<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          structure is streamlined. AI stories resolve through the
+          protagonist's own agency (69% vs 46%), end on internal acceptance
+          (47% vs 27%), and run without subplots (79% vs 57%), while human
+          stories carry more temporal complexity, scoring higher on
+          chronological discontinuity (2.40 vs 2.12) and nonlinear framing.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          The body is over-written. The widest gap in the whole feature set is
+          emotion conveyed through embodied metaphor, present in 81% of AI
+          stories against 38% of human ones; the mirror-image gap is that human
+          authors are three times as likely to name an emotion plainly, calling
+          a character afraid rather than tightening a throat.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          And the human stories reach outside themselves. They name real texts
+          nearly twice as often (47% vs 24%), address the reader directly more
+          often, and give the protagonist a morally ambivalent turn the machine
+          smooths over.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          throughline is not that any one of these is decisive. It is that the
+          machine consistently chooses the tidier option.
+        </p>
+      </section>
+
+      <section data-nb-section="the-number-and-its-betters" id="the-number-and-its-betters">
+        <h2>Ninety-three percent, and the detectors that beat it</h2>
+        <p>
+          Fed to an XGBoost classifier, the 257 narrative features that survive
+          a style audit separate human from AI at 93.2% macro-F1 on a held-out
+          test set of 8,301 stories, with prompts grouped across splits so no
+          story leaks between train and test.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Macro-F1 is the class-balanced average of precision and recall, so a
+          model cannot win by always guessing the larger class. Adding the
+          stylistic features back lifts the score only to 96.0%, meaning the
+          narrative-only model recovers over 97% of the full model's
+          performance from structure alone.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          The honest comparison is less flattering, and the paper makes it
+          itself. Trained classifiers that read the raw text nearly separate the
+          corpus perfectly.
+        </p>
+        <figure class="nb-chart">
+          <figcaption>
+            Fig. 1 · Binary human-vs-AI macro-F1 on the held-out test set, by
+            what the classifier is allowed to read. Higher is better; 50 is the
+            floor for this balanced task. StoryScope Table 2.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+          <canvas></canvas>
+          <noscript>chart requires JS; data in caption and prose</noscript>
+          <script type="application/json" data-nb-chart>
+            {
+              "type": "bar",
+              "labels": [
+                "Binoculars (zero-shot)",
+                "Core (30 feats)",
+                "Narrative (257)",
+                "Narrative+Style (304)",
+                "TF-IDF (raw text)",
+                "ModernBERT (raw text)"
+              ],
+              "series": [
+                {
+                  "name": "macro-F1 (%)",
+                  "values": [55.9, 84.8, 93.2, 96.0, 99.7, 99.9]
+                }
+              ],
+              "y": { "scale": "linear", "label": "macro-F1 (%)" }
+            }
+          </script>
+        </figure>
+        <p>
+          ModernBERT on raw text reaches 99.9%, a stylometric classifier 99.8%,
+          and a TF-IDF model 99.7%.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          The narrative model does not beat any of them. It loses roughly seven
+          points to the surface detectors it is meant to complement, and its
+          claim on attention is not raw catch rate. What it offers instead is a
+          decomposition a person can read and, the paper argues, a signal that
+          outlasts the style edits that would defeat the others. Against that
+          floor, the zero-shot detectors fare worst of all. Binoculars, which
+          reads how surprising a passage is to one model against another,
+          manages only 55.9% on these long stories, barely above chance.<sup
+            class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          Its family assumes that longer passages give a surprise-based detector
+          more to work with,<sup class="nb-cite"><a href="#s7">7</a></sup> an
+          assumption that plainly does not carry over to this fiction.
+        </p>
+        <p>
+          The durability claim gets one real test. The authors run LAMP, a
+          span-level rewriter built from professional editors' fixes to machine
+          prose, which strips seven AI artifact categories such as cliche and
+          unnecessary exposition,<sup class="nb-cite"><a href="#s8">8</a></sup>
+          over 278 Gemini stories, then rescore. The narrative detector barely
+          moves, from 95.5% to 93.9% macro-F1, a drop of 1.6 points, because the
+          features it reads are orthogonal to the surface artifacts LAMP
+          removes.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Editing the prose does not touch the plot, so the structure detector
+          keeps working where a stylometric one would degrade.
+        </p>
+      </section>
+
+      <section data-nb-section="five-models-one-region" id="five-models-one-region">
+        <h2>Five models, one narrow region</h2>
+        <p>
+          The same features that separate human from machine also tell the
+          machines apart, though less cleanly. Six-way authorship attribution,
+          across the human author and all five models, reaches 68.4% macro-F1
+          from narrative features alone against a 16.7% chance baseline, and
+          77.3% once style is added back.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The per-class scores show where the signal thins. Narrative-only
+          per-class F1 runs 0.89 for human and 0.77 for Claude, then falls to
+          0.60 for Gemini, 0.57 for DeepSeek, and 0.55 for Kimi, which sit in a
+          confused cluster the classifier struggles to pull apart.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          The models that are separable have signatures the paper reads off as
+          fingerprint features, meaning a feature whose weight concentrates on
+          one source.
+        </p>
+        <figure class="nb-excerpt">
+          <blockquote>
+            Claude produces notably flat event escalation, GPT over-indexes on
+            dream sequences, and Gemini defaults to external character
+            description.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+          <figcaption>
+            <span class="nb-excerpt-loc">§5</span>
+            Names three per-model tendencies as relative prevalences, not
+            absolutes: Claude escalates conflict less sharply than the others,
+            GPT stages dreams more often, Gemini describes characters from
+            outside more often. Each is a lean of the distribution, not a rule
+            every story obeys.
+          </figcaption>
+        </figure>
+        <p>
+          The counts are lopsided. Claude carries 26 fingerprint features and
+          GPT and Gemini eleven each, while Kimi has only three and sits, in the
+          paper's phrase, at the generic center of the AI distribution.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          GPT reaches for gossip as a plot mechanism (64% vs 44 to 55% for the
+          others) and subverts expectations more than its peers; Gemini defaults
+          to bleak settings (88% tagged bleak or oppressive).<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Stand back and the five converge. Their centroids sit close together
+          and far from the human one: the mean human-to-AI distance is 1.6 times
+          the mean AI-to-AI distance (6.6 vs 4.3), and even the closest
+          human-AI pair is farther apart than the most distant pair of models.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Human stories are also rarer in the feature space, landing at the
+          0.71 mean rarity percentile against the AI 0.49, and being the rarest
+          of the six versions of a prompt 57.8% of the time where chance is
+          16.7%.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="what-a-rewrite-would-erase" id="what-a-rewrite-would-erase">
+        <h2>What a determined rewrite would erase</h2>
+        <p>
+          The paper's confound work is unusually careful, and it earns the
+          benefit of the doubt on the obvious objections. Human stories run
+          longer, but a length-only classifier scores just 55.9%, and on a
+          length-matched subset the narrative model is unchanged at 93.2%, so
+          length is not the tell.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Memorization is bounded: an n-gram audit flags 0.70% of generations as
+          high-overlap with likely training text, and dropping those prompts
+          shifts every headline number by at most 0.3 points.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Topic is ruled out by a Kruskal-Wallis test across six subject
+          categories that finds no significant difference (p&nbsp;=&nbsp;0.46).<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          The weaker point is the one the paper leans on hardest. Its case for
+          narrative features over lexical ones is that structure is durable, and
+          the motivating threat is the fine-tuning that collapses style
+          detection from 97% to 3%. But that threat is never run against the
+          narrative model. The only robustness test is LAMP, which by design
+          rewrites style and leaves structure alone, so passing it shows the
+          features are orthogonal to style, not that they survive an adversary
+          who targets structure.<sup class="nb-cite"><a href="#s1">1</a></sup> A
+          writer who deliberately fragments a timeline, withholds the theme, and
+          roughens a resolution is exactly the attacker the framing invokes and
+          the experiments never build. Durability against style is measured.
+          Durability against structural editing is a hypothesis wearing the
+          measured result's clothes.
+        </p>
+        <p>
+          Two further limits bound how far the numbers travel. The whole study
+          runs over five specific 2026 models, so the tight AI cluster and the
+          attribution scores describe today's systems and carry no promise about
+          the next ones, which could diverge as easily as converge. And the
+          pipeline is circular in a way high agreement mitigates but does not
+          erase: a class of LLMs writes the stories, infers the prompts,
+          templates the narratives, proposes the features, and scores them, so
+          the tells are what one model judges about another's output.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The parallel corpus adds its own asymmetry. The AI stories are fresh
+          completions of an inferred prompt, while the human stories are
+          pre-existing published fiction, so the contrast holds plot and premise
+          fixed but not era, editorial polish, or the difference between writing
+          freely and writing to a spec.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <div class="nb-verdict">
+          <span class="nb-verdict-label">Verdict</span>
+          Take this as a strong existence proof and a weak detector. StoryScope
+          shows, with careful controls, that current models share an
+          over-determined narrative default legible without a word of style
+          analysis, and that this signal survives style editing. It does not
+          show that narrative features beat lexical ones at catching AI, and it
+          does not test the structural attacker its own motivation names. Use
+          the feature space to understand how machine fiction differs; do not
+          yet trust it as the detector that holds when the prose is
+          scrubbed.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2604.03136"
+              >arXiv · Russell, Rajendhran, Pham, Iyyer & Wieting, "StoryScope:
+              Investigating idiosyncrasies in AI fiction" (2026)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2510.13939"
+              >arXiv · Chakrabarty, Ginsburg & Dhillon, "Readers Prefer Outputs
+              of AI Trained on Copyrighted Books over Expert Human Writers"
+              (2025)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2510.09869"
+              >arXiv · Hamilton, Wilkens & Piper, "NarraBench: A Comprehensive
+              Framework for Narrative Benchmarking" (2026)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2101.00027"
+              >arXiv · Gao et al., "The Pile: An 800GB Dataset of Diverse Text
+              for Language Modeling" (source of the Books3 human corpus; 2020)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/jenna-russell/storyscope"
+              >GitHub · Russell et al., "StoryScope" code, prompts, AI narratives
+              & per-story features (2026)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2401.12070"
+              >arXiv · Hans et al., "Spotting LLMs with Binoculars: Zero-Shot
+              Detection of Machine-Generated Text" (ICML 2024)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2310.05130"
+              >arXiv · Bao et al., "Fast-DetectGPT: Efficient Zero-Shot Detection
+              of Machine-Generated Text via Conditional Probability Curvature"
+              (ICLR 2024)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2409.14509"
+              >arXiv · Chakrabarty, Laban & Wu, "Can AI writing be salvaged?
+              Mitigating Idiosyncrasies and Improving Human-AI Alignment in the
+              Writing Process through Edits" (CHI 2025)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
