@@ -8,6 +8,6 @@ Lanes (label each item): policy & law, economy & finance,
 health & science, world, wildcard. Weight research and innovation over
 the scandal of the day. Celebrity churn and horse-race polling stay out.
 
-The consult list is the roster. Go wider only for a story that clears its
-bar.
-
+A secondary earns its place only by saying something the primary does not.
+Two outlets restating the same press release are one source, not two, and an
+item corroborated only by that restatement is not corroborated.

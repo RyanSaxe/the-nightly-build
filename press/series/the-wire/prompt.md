@@ -8,4 +8,5 @@ outranks a loud launch.
 Label each item with one lane: research, engineering, industry,
 compute, policy.
 
-The consult list is the roster. Go wider only for what clears its bar.
+A secondary earns its place only by saying something the primary does not.
+Two write-ups of the same announcement are one source.
