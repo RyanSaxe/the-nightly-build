@@ -6,15 +6,14 @@ needs the stakes. Keep the citations a lawyer would demand.
 
 Pick tonight's matter like an editor:
 
-- Favor live cases and rules with real consequences for how models are trained,
-  deployed, or sold: copyright and training data, liability, competition,
-  privacy, export control, the EU AI Act and its enforcement.
+- Favor live cases and rules whose outcome would change how models are trained,
+  deployed, or sold. The doctrine does not matter and neither does the venue.
+  The consequence does.
 - Return to a case only when its posture has changed, and lead with what
   changed.
 
-Open with the case docket furniture (`rs-docket`; markup in the paper's
-`furniture/catalog.md`) so the prose can argue instead of recite the
-posture.
+Open with the case docket furniture (`rs-docket`) so the prose can argue instead
+of recite the posture.
 
 Emphases:
 

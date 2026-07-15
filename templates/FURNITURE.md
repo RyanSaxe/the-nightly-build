@@ -57,6 +57,25 @@ Restate the data in caption and prose. The noscript line is fixed chrome.
 </figure>
 ```
 
+## Source figure
+
+An exact figure from a cited primary or public document. Store the image beside
+the article at `library/<series>/<slug>/figure-N.png` (or `.jpg`/`.webp`), give
+it useful alternative text, and cite the source in the caption. Capture a
+direct source image when possible; use a precise PDF crop or a web screenshot
+only when the source cannot export the figure.
+
+```html
+<figure class="nb-figure">
+  <img src="ARTICLE-SLUG/figure-1.png" alt="WHAT THE FIGURE SHOWS" />
+  <figcaption>
+    Fig. 1 · THE SOURCE'S CAPTION, CONCISELY.<sup class="nb-cite"
+      ><a href="#s1">1</a></sup
+    >
+  </figcaption>
+</figure>
+```
+
 ## Callout
 
 A term or concept the reader must carry forward.
@@ -108,9 +127,7 @@ order. Do not use it for unordered lists.
   <li>
     <h3>STAGE</h3>
     <p>
-      WHAT HAPPENS AND WHY IT MATTERS.<sup class="nb-cite"
-        ><a href="#s2">2</a></sup
-      >
+      WHAT HAPPENS AT THIS STAGE.<sup class="nb-cite"><a href="#s2">2</a></sup>
     </p>
   </li>
   <li>
@@ -162,7 +179,7 @@ Add class `major` for filled dots.
     <h3>
       EVENT<sup class="nb-cite"><a href="#s2">2</a></sup>
     </h3>
-    <p>WHAT HAPPENED AND WHY IT MATTERED.</p>
+    <p>WHAT HAPPENED, IN ONE OR TWO SENTENCES.</p>
   </li>
   <li class="nb-tl-interlude"><p>WHAT THE ERA ADDED UP TO.</p></li>
 </ol>

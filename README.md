@@ -86,6 +86,13 @@ BLOCK (a citation outside the declared set fails the PR); a missing
 `consult` is a read-first instruction the proof does not verify (citing a
 consulted source is optional).
 
+A count says nothing about what kind of sources came in, so a series can also
+constrain the mix: `sources_by_kind` and `per_item_sources` set `[low, high]`
+bands over primary and secondary sources, and both BLOCK. The proof counts the
+kinds the article declares; whether a source is truly independent of the primary
+is a judgment the research log makes and the editor audits. See
+[docs/series.md](docs/series.md).
+
 The proof also verifies that every cited source link resolves. It probes each
 URL by default and BLOCKs only on a definitive dead link: a 404/410
 response or a domain that does not resolve. A restricted, slow, rate-limited,
@@ -120,28 +127,38 @@ script-free, so the sandbox above is unchanged. See
 
 ## Development
 
-The engine is pure Python with one runtime dependency, PyYAML. Two Python
-floors apply, by context. The night-shift scripts each carry PEP 723 metadata
-and run standalone (`uv run engine/check.py` works with no setup), so they
-target Python 3.9+ to run on whatever a headless harness provides. Local
-development and CI run the lint, type-check, and test gate through
-`pyproject.toml`, which pins 3.10+. If you only schedule a night shift you
-never touch the 3.10 toolchain; the 3.10 floor is for contributing to the
-engine.
+uv is required for every local, CI, and harness Python invocation. Install it
+from [the official installer](https://docs.astral.sh/uv/getting-started/installation/),
+then run `uv sync --group figure-capture`. The engine has one runtime dependency,
+PyYAML; its scripts
+carry PEP 723 metadata, so `uv run engine/check.py` resolves it without a
+separate environment. Local development and CI use `pyproject.toml` and target
+Python 3.10+.
 
 ```sh
-python3 engine/tests/run_tests.py    # proof, builder, and end-to-end suites
-python3 engine/validate_config.py    # validate press/ configuration
+uv run pytest                                  # proof, builder, and end-to-end suites
+uv run engine/validate_config.py --repo .      # validate press/ configuration
 ```
 
 Engine changes go through a lint, type-check, format, and test gate that CI
 enforces on `main`. Set it up once:
 
 ```sh
-uv sync                     # Python tools: ruff, ty
+uv sync --group figure-capture # Python tools and capture dependencies
 npm install                 # web tools: prettier, eslint, stylelint, markdownlint
 uv run pre-commit install   # run the same checks on every commit
 ```
+
+Figure capture is an optional authoring toolchain. Its bootstrap installs the
+repo-pinned Python packages and Playwright's Chromium browser in one step:
+
+```sh
+./scripts/install-figure-capture.sh
+```
+
+Chromium is not committed and never runs in site CI or in a reader's browser.
+Re-run the command after updating the lockfile or when Playwright reports that
+its browser revision is missing.
 
 `pre-commit` runs exactly what CI runs (the Rust drop-in `prek` reads the same
 config). The shell hooks also need `shellcheck` and `shfmt` on your PATH;
@@ -158,6 +175,7 @@ contains a complete working configuration as documentation.
 - [Scheduling: native schedulers, the universal Actions cron](docs/scheduling.md)
 - [Harnesses: which agents can run the night shift, and the cost](docs/harnesses.md)
 - [Customization: themes, voice, your own templates](docs/customization.md)
+- [Source figures: capture and article bundles](docs/figures.md)
 - [Delivery: feeds, the directory, the catalog API](docs/delivery.md)
 
 Published sites are listed automatically on

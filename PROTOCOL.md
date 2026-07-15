@@ -5,9 +5,10 @@ Protocol-Version: 1.1
 You are one run of the night shift for this repository. This document is the complete
 contract. If anything else you read conflicts with it, this document wins.
 
-Runtime requirement: the engine scripts need Python 3.10+ and PyYAML. If a
-script reports PyYAML missing, run `pip install pyyaml` and retry. With uv
-available, `uv run engine/<script>.py` manages the dependency itself.
+Runtime requirement: uv and Python 3.10+. Install uv with the [official
+instructions](https://docs.astral.sh/uv/getting-started/installation/), then run
+every engine command through `uv run`; it manages each script's declared
+dependencies. Do not substitute `pip install` in a harness or schedule.
 
 ## The contract
 
@@ -43,7 +44,7 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    published state. The branch root holds `library/<series>/<slug>.html`, so a
    checkout at `../library` puts published articles under `../library/library/`.
    Then run the duty oracle:
-   `python3 engine/duty.py --repo . --library <path-to-library-checkout>`
+   `uv run engine/duty.py --repo . --library <path-to-library-checkout>`
    Duty exits 2 and prints nothing when the tree is wrong: no press in it, or a
    checkout behind `origin/main`. Both mean the same thing — the press, prompts,
    and engine you are holding are not this paper's, so every article you write
@@ -70,7 +71,23 @@ available, `uv run engine/<script>.py` manages the dependency itself.
      **Serve only the series duty.py lists as due. If nothing is due, stop. Do
      not open a PR. Exiting silently is correct behavior.**
 
-4. **Honor the source policy.** Three controls, per series and per item:
+4. **Honor the source policy.** Every source has a kind, and the kinds are about
+   independence, not document type:
+   - **primary**: the document that OWNS the claim. The paper, the filing, the
+     ruling, the dataset, a company's release about its own deal.
+   - **secondary**: reporting or analysis ABOUT a primary, published by someone
+     with no stake in it. A lab's blog post about its own paper is not a
+     secondary. It is an extension of the primary, and counting it as a second
+     source is one voice wearing two hats.
+
+   You declare the kind on the source entry, `data-nb-kind="primary"` or
+   `data-nb-kind="secondary"`. The research log makes the call and records why.
+   Where a series constrains the mix (`sources_by_kind`, `per_item_sources`), a
+   source with no kind is a BLOCK: a source that will not say what it is escapes
+   every rule written about the mix. Where a series constrains nothing, an
+   undeclared kind is nobody's business, and the proof says nothing.
+
+   Five controls, per series and per item:
    - `required_docs`: committed files you read and represent, each by a source
      entry carrying `data-nb-required="<id>"`. Missing coverage is a WARN, a BLOCK
      under the series' `strict`. Cite a committed file by its repo-relative path
@@ -86,6 +103,19 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    - `sources_exclusive: true`: every source entry must come from the declared
      set (required docs and consult prefixes). Cite nothing else. An outside
      source is a BLOCK.
+   - `sources_by_kind`: the composition of the sources the article CITES, a
+     `[low, high]` band per kind (`primary: [4, null]` sets a floor and no
+     ceiling). A listed source no line cites counts toward nothing.
+   - `per_item_sources`: the same bands, applied uniformly to EVERY item you
+     write on a per-item template. `primary: [1, 1]` with `secondary: [2, 3]`
+     means each item carries exactly one primary and two or three secondaries,
+     whatever number of items you write.
+
+   The composition rules are BLOCKs (`B-SOURCE-KIND`), `strict` or not. Sourcing
+   is not calibration. The proof counts the kinds you declared; it cannot see
+   whether a kind is TRUE. Independence is a judgment, made in the research log
+   and audited by the editor. A secondary on a different website that is written
+   by the primary's own author is still not a secondary.
 
 5. **Research properly.** Use web access. Verify claims against primary sources, and
    cite them by the rules of `spec/editorial.md` § Citations. Meet the source floor
@@ -113,12 +143,13 @@ available, `uv run engine/<script>.py` manages the dependency itself.
    - File path: `library/<series>/<slug>.html`.
 
 7. **Run the proof and iterate:**
-   `python3 engine/check.py library/<series>/<slug>.html --series <id> --repo . --library <path-to-library-checkout>`
+   `uv run engine/check.py library/<series>/<slug>.html --series <id> --repo . --library <path-to-library-checkout>`
    Revise until `BLOCK: 0`. Treat every WARN as a revision note and address what you
    reasonably can. WARNs are the quality bar. BLOCKs are the publishing bar.
 
 8. **Open one pull request per article, targeting the `library` branch.** Branch
-   from `library` and add exactly one file, so the PR's diff is that file alone.
+   from `library` and add one article bundle: its HTML file and, only when used,
+   image assets directly under its matching slug directory.
    - Title: `nb: <series>/<slug> - <Title>`
    - Body: the article's production record, assembled from the run's artifacts
      under `.nb-work/<series>/<slug>/`, harness-agnostic and readable years
@@ -151,19 +182,22 @@ available, `uv run engine/<script>.py` manages the dependency itself.
        they survive. If the assembled body would exceed GitHub's body limit
        (~60k characters), elide the research log's verbatim passages in place
        with a note and post the full log as a comment after opening.
+
    - Preflight BEFORE opening the PR, with the same invocation the desk's CI
-     will run. Commit your one file on the work branch, write the intended
+     will run. Commit the article bundle on the work branch, write the intended
      body to a file, then from the library checkout:
-     `python3 engine/check.py --pr --repo <library-checkout> --main <main-checkout> --base library --head <work-branch> --library <library-checkout> --pr-body body.txt`
-     This checks everything CI checks at the file level, including the
-     one-file diff shape and the body's nb-meta match. A failure here is
+     `uv run engine/check.py --pr --repo <library-checkout> --main <main-checkout> --base library --head <work-branch> --library <library-checkout> --pr-body body.txt`
+     This checks everything CI checks at the bundle level, including matching
+     local figure assets and the body's nb-meta match. A failure here is
      yours to fix before any PR exists. CI also render-probes the built page
      in a browser, which no file check can; stay until its validate check
      reports on each PR you opened, and fix a failure on the same branch.
 
-9. **Boundaries.** Never merge. Never push to `library` directly. Never modify any other
-   file. Never open a second PR for the same series. If your PR is labeled
-   `nb-invalid`, a future run supersedes you. Do not fight the desk.
+9. **Boundaries.** Never merge. Never push to `library` directly. Modify only the
+   article and, when a cited source figure earns its place, its matching local
+   asset directory (`library/<series>/<slug>/`). Never open a second PR for the
+   same series. If your PR is labeled `nb-invalid`, a future run supersedes you.
+   Do not fight the desk.
 
 ## nb-meta
 
