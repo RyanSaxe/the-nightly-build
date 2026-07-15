@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Two judges in one courthouse split the law on AI training · The Record</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-record",
+        "slug": "ai-training-fair-use",
+        "template": "article",
+        "title": "Two judges in one courthouse split the law on AI training",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-15",
+        "tags": ["copyright", "ai", "fair-use"],
+        "sources": 11,
+        "words": 2794,
+        "reading_minutes": 12,
+        "dek": "Three fault lines now divide the fair-use defense for training AI, and the first federal appeal has been argued but not yet decided.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Record</div>
+        <h1 class="nb-title">Two judges in one courthouse split the law on AI training</h1>
+        <p class="nb-dekline">
+          Three fault lines now divide the fair-use defense for training AI, and the first federal appeal has been argued but not yet decided.
+        </p>
+        <div class="nb-byline">
+          <span>12 min read</span><span>2026-07-15</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Two days apart, two theories of the same factor</h2>
+        <p>
+          On June 23, 2025, Judge William Alsup held that using books to train a
+          large language model was "quintessentially transformative," and threw
+          out the authors' central theory of harm. Their worry that a trained
+          model would flood the market with competing books was, he wrote, "no
+          different than it would be if they complained that training
+          schoolchildren to write well would result in an explosion of competing
+          works," and "not the kind of competitive or creative displacement that
+          concerns the Copyright Act."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Two days later, in the same courthouse, Judge Vince Chhabria took the
+          opposite view of the same question. Market dilution, the claim that a
+          flood of machine-made books would sap demand for human-written ones
+          without any one output copying any one book, was "the most important
+          factor in the fair use analysis" and "the potentially winning argument"
+          that these particular plaintiffs had failed to make.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          He named Alsup's schoolchildren analogy and called it "inapt," "not a
+          basis for blowing off the most important factor."<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          This is not two outcomes. It is two incompatible rules about whether a
+          specific kind of market harm counts, entered forty-eight hours apart by
+          two judges of the Northern District of California. Four months
+          earlier, in Delaware, Judge Stephanos Bibas had rejected a fair-use
+          defense outright, for reasons that reach neither of them.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          The district courts that have reached the merits of training-data fair
+          use disagree less case by case than axis by axis. Three fault lines run
+          through the rulings: whether a court makes transformative purpose or
+          market substitution decisive, whether the trained system is generative
+          or not, and whether the corpus was bought or pirated. No court of
+          appeals has yet resolved any of them.
+        </p>
+      </section>
+
+      <section data-nb-section="factor-four-split" id="factor-four-split">
+        <h2>The split runs through factor four</h2>
+        <div class="rs-docket">
+          <span class="rs-docket-case">Bartz v. Anthropic PBC</span>
+          <span class="rs-docket-court">N.D. Cal. · No. 3:24-cv-05417</span>
+          <dl class="rs-docket-grid">
+            <dt>Stage</dt>
+            <dd>Summary judgment June 23, 2025; $1.5B classwide settlement, final approval pending as reported.</dd>
+            <dt>Question</dt>
+            <dd>Is training an LLM on lawfully bought books fair use, and is amassing a permanent library of pirated copies?</dd>
+            <dt>Stakes</dt>
+            <dd>Training on books held fair use; the pirated corpus sent to trial, then settled rather than appealed.</dd>
+          </dl>
+        </div>
+        <div class="rs-docket">
+          <span class="rs-docket-case">Kadrey v. Meta Platforms, Inc.</span>
+          <span class="rs-docket-court">N.D. Cal. · No. 3:23-cv-03417</span>
+          <dl class="rs-docket-grid">
+            <dt>Stage</dt>
+            <dd>Summary judgment for Meta June 25, 2025; motion to certify the ruling for interlocutory appeal denied July 8, 2026.</dd>
+            <dt>Question</dt>
+            <dd>The same core question as Bartz, litigated on a market-harm record by thirteen named authors.</dd>
+            <dt>Stakes</dt>
+            <dd>Meta won the judgment; the reasoning favors the next plaintiff who builds a dilution record.</dd>
+          </dl>
+        </div>
+        <p>
+          Bibas gave Thomson Reuters both of the factors that matter most. He held
+          Ross's use non-transformative because it served the same purpose as
+          Westlaw, "to make it easier to develop a competing legal research tool,"
+          and he found the fourth factor for Thomson Reuters on a market that did
+          not yet exist: "the effect on a potential market for AI training data is
+          enough," whether or not Thomson Reuters had entered it.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Factors one and four, he wrote, "weigh most heavily."<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          Alsup and Chhabria both gave the developer the first factor and agreed
+          the training was transformative. Alsup called it "spectacularly so";
+          Chhabria called Meta's use "highly transformative."<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+          They split on the fourth. Alsup treated the dilution theory as a
+          category the Copyright Act does not recognize, and rejected the
+          lost-licensing theory in the same stroke: a market for training licenses
+          "is not one the Copyright Act entitles Authors to exploit."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Chhabria treated dilution as not only cognizable but usually decisive.
+          "It seems likely that market dilution will often cause plaintiffs to
+          decisively win the fourth factor — and thus win the fair use question
+          overall — in cases like this," he wrote.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Meta won anyway, because its plaintiffs "made the wrong arguments and
+          failed to develop a record in support of the right one."<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The developers' losing scenario, at its strongest, runs like this. A
+          model trained on an author's work can generate an unbounded supply of
+          near-substitutes at almost no cost, displacing that author's market as
+          surely as verbatim copying would, without ever reproducing a sentence.
+          Chhabria found that
+          argument strong enough to predict developers "will often" lose on it.
+          Alsup found it outside the statute. The facts narrow the gap a
+          little: Ross was a direct Westlaw competitor copying Westlaw's own
+          curated product, while Meta trained a general model on books it did not
+          compete with. But the stated rules still point in opposite directions on
+          whether a training-license market counts, and neither opinion pretends
+          otherwise.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          For a rightsholder, the split sets the burden. Before a judge who
+          follows Chhabria, dilution is the winning theory, but it has to be built
+          with evidence, the survey and expert testimony the Kadrey plaintiffs
+          never produced. Before a judge who follows Alsup, the same evidence is
+          beside the point.
+        </p>
+      </section>
+
+      <section data-nb-section="generative-line" id="generative-line">
+        <h2>The generative line that saved Anthropic and sank Ross</h2>
+        <div class="rs-docket">
+          <span class="rs-docket-case">Thomson Reuters v. Ross Intelligence</span>
+          <span class="rs-docket-court">D. Del. · No. 1:20-cv-613 · 3d Cir. No. 25-2153</span>
+          <dl class="rs-docket-grid">
+            <dt>Stage</dt>
+            <dd>Summary judgment against fair use Feb. 11, 2025; argued at the Third Circuit June 11, 2026, undecided.</dd>
+            <dt>Question</dt>
+            <dd>Is copying Westlaw headnotes to train a non-generative legal-search rival a fair use?</dd>
+            <dt>Stakes</dt>
+            <dd>First federal appellate test of AI-training fair use; how far its reasoning reaches into generative training is what the appeal decides.</dd>
+          </dl>
+        </div>
+        <p>
+          Ross turned on a distinction the other cases barely had to discuss. "It
+          is undisputed that Ross's AI is not generative AI," Bibas wrote, meaning
+          AI "that writes new content itself."<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Ross's tool answered a legal query by returning existing judicial
+          opinions rather than composing new text, and it had been trained on
+          Westlaw headnotes, the short summaries Westlaw writes for each decision.
+          Bibas cabined his holding to that fact: "Because the AI landscape is
+          changing rapidly, I note for readers that only non-generative AI is
+          before me today."<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          Alsup took him at his word and used the line to distinguish Ross. The
+          Ross court, he noted, "twice emphasized" that what was trained "was not
+          generative AI," and "that was not transformative."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Training a model to generate new text was a different use, closer to a
+          2014 decision that found fair use when a company copied lawyers' briefs
+          to build a searchable database of them.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Chhabria's Llama analysis ran the same way: the model was "highly
+          transformative" because it was built to generate diverse new text, a
+          purpose the books themselves did not serve.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          So the generative fact does opposite work depending on the corpus,
+          clearing the first factor for Anthropic and Meta and sinking Ross. That
+          matters for the appeal now pending, because a ruling that trumpets
+          its own limits is hard to extend. If the Third Circuit affirms on
+          Bibas's reasoning, it affirms a holding that on its face governs only
+          non-generative systems, and the generative cases keep whatever
+          protection the first factor gave them. For a company building a
+          non-generative tool that repackages a rival's curated data, Ross is
+          already a loss. For a company training a generative model, Ross is a
+          case about someone else.
+        </p>
+      </section>
+
+      <section data-nb-section="pirated-corpus" id="pirated-corpus">
+        <h2>Where the books came from splits the same two judges</h2>
+        <p>
+          Alsup split Anthropic's conduct in three. Training on books was fair
+          use. Converting purchased print books to digital was fair use for a
+          narrower reason, since Anthropic destroyed the print copy and kept the
+          file as a one-for-one replacement. But downloading and permanently
+          keeping more than seven million pirated books from shadow libraries to
+          build "a central library of all the books in the world" was not fair
+          use, and on that piece "every factor points against fair use."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          "The person who copies the textbook from a pirate site has infringed
+          already, full stop," he wrote, and buying a copy afterward "will not
+          absolve it of liability for the theft."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          That conduct went to trial with damages on the table, willfulness
+          included.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Chhabria refused to treat shadow-library sourcing as an automatic loss.
+          To say Meta's downloading "was 'piracy' and thus cannot be fair use begs
+          the question," he wrote, and the download had to be judged "in light of
+          its ultimate, highly transformative purpose," a conclusion he marked as
+          "contra Bartz."<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Same sourcing method, roughly the same shadow libraries, opposite rule
+          on whether it independently defeats the defense. Part of the distance is
+          posture: Anthropic retained its pirated files permanently and the
+          authors pressed the point, while Meta's plaintiffs under-argued it. The
+          stated legal rules conflict all the same.
+        </p>
+        <p>
+          The stakes on this axis are the most concrete in the litigation.
+          Anthropic's training holding was a clean win, but its piracy exposure
+          was large enough that the case never reached appeal on the merits. The
+          parties settled the pirated-library claims for a reported $1.5 billion,
+          and the training holding was never tested above the district
+          court.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          For a developer, the lesson is that how the corpus was obtained can
+          carry more financial risk than whether training is fair use, and a
+          favorable ruling on the second question does not touch the first.
+        </p>
+      </section>
+
+      <section data-nb-section="the-output-seam" id="the-output-seam">
+        <h2>The Times case has the fact the others lacked</h2>
+        <div class="rs-docket">
+          <span class="rs-docket-case">The New York Times Co. v. Microsoft &amp; OpenAI</span>
+          <span class="rs-docket-court">S.D.N.Y. · In re: OpenAI, MDL No. 1:25-md-03143</span>
+          <dl class="rs-docket-grid">
+            <dt>Stage</dt>
+            <dd>Motion to dismiss survived in 2025; no merits fair-use ruling; in discovery.</dd>
+            <dt>Question</dt>
+            <dd>Is training on, and allegedly reproducing, news articles fair use when the output copies the input?</dd>
+            <dt>Stakes</dt>
+            <dd>The one open merits fight, and the only one squarely on the output-substitution axis the others reserved.</dd>
+          </dl>
+        </div>
+        <p>
+          One fact unites the three completed cases and separates them from the
+          fourth. In none of them was any infringing output proven. Alsup was
+          explicit that "Authors do not allege that any LLM output provided to
+          users infringed," and that "if the outputs seen by users had been
+          infringing, Authors would have a different case."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Chhabria's record was the same: even under adversarial prompting, no
+          Llama model would reproduce more than fifty words of a plaintiff's book,
+          so "Llama cannot currently be used to read or otherwise meaningfully
+          access the plaintiffs' books."<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The New York Times case is the different case Alsup described. Its core
+          allegation is that GPT-4 and ChatGPT reproduced Times articles at length
+          to users, the regurgitation the California records lacked. The case
+          survived a motion to dismiss, with the direct and contributory
+          infringement claims allowed to go forward.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          It is now the lead matter in a consolidated proceeding, In re: OpenAI,
+          before Judge Sidney Stein in the Southern District of New York, and the
+          plaintiffs have pushed discovery into tens of millions of ChatGPT
+          conversation logs.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          In July 2026 they moved to sanction OpenAI over deleted output data, an
+          accusation OpenAI disputes and the court has not ruled on.<sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+        <p>
+          That posture is why the California holdings do not decide the Times case.
+          Both rested on the absence of infringing output. The Times pleads its
+          presence. Whether it can prove that models reproduced protected
+          expression, and that the reproduction cost it a market, is a separate
+          question the record does not yet answer. For a developer whose model can
+          be induced to emit its training text, the output seam is where the
+          favorable California reasoning stops. For a rightsholder, it is the one
+          theory the completed cases left open.
+        </p>
+      </section>
+
+      <section data-nb-section="what-is-settled" id="what-is-settled">
+        <h2>What is settled, and what an appeals court still has to decide</h2>
+        <p>
+          What is settled is narrow and almost entirely district-level. A
+          non-generative tool that copies a competitor's curated data to build a
+          rival product is not protected: that is Ross, and it is on
+          appeal.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup>
+          Training a generative model on lawfully obtained books is fair use in
+          the two courts that have ruled, and building the corpus out of pirated
+          files is not: that is Bartz.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          A generative model can be highly transformative under the first factor
+          even where the plaintiffs lose the case they should have won: that is
+          Kadrey, which formally binds only its thirteen named
+          plaintiffs.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          None of it binds beyond the deciding court.
+        </p>
+        <p>
+          What is pending is the part that would turn any of this into law. The
+          Third Circuit heard oral argument in Thomson Reuters v. Ross on June 11,
+          2026, and has not yet decided.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          The Bartz settlement went to a final fairness hearing in May 2026 and,
+          as reported, still awaits a final-approval order, so its training
+          holding stays unappealed.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          The factor-four split is not going up quickly either. On July 8, 2026,
+          Chhabria denied the Kadrey plaintiffs' Section 1292(b) motion to certify
+          the fair-use ruling for interlocutory appeal, choosing to send the
+          question up later on a final judgment, "as part of a tidy
+          package."<sup class="nb-cite"><a href="#s9">9</a></sup><sup class="nb-cite"><a href="#s10">10</a></sup>
+          The distribution claims are not set for a dispositive hearing until
+          February 2027.<sup class="nb-cite"><a href="#s11">11</a></sup>
+        </p>
+        <p>
+          What can be predicted comes with a probability and a reason, or it stays
+          out.
+        </p>
+        <div class="nb-claim">
+          <h3>
+            The Third Circuit affirms Ross, more likely than not.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Bibas's factor-one holding (same purpose, commercial, not
+            transformative) and his factor-four holding (a potential market for AI
+            training data) track the Supreme Court's Warhol same-purpose framing,
+            which the opinion leans on. The live uncertainty is narrower, mainly
+            whether Westlaw's headnotes are original enough to protect, so a
+            partial remand on originality is the real alternative to affirmance.
+            No appellate court has written in this area, which caps the
+            confidence.
+          </p>
+          <div class="nb-claim-meta">
+            <span>confidence 55-65%</span><span>resolves by 2027-06-30</span>
+          </div>
+        </div>
+        <div class="nb-claim">
+          <h3>
+            The factor-four split reaches the Ninth Circuit through a final
+            judgment in a Meta case, not an interlocutory
+            appeal.<sup class="nb-cite"><a href="#s9">9</a></sup><sup class="nb-cite"><a href="#s10">10</a></sup>
+          </h3>
+          <p>
+            Bartz settled and will not be appealed, which removes the cleanest
+            vehicle. On July 8, 2026, Chhabria denied the Kadrey plaintiffs'
+            Section 1292(b) motion and closed the interlocutory route, saying he
+            would rather send the fair-use question up on a final judgment in one
+            of the consolidated Meta cases. The distribution phase runs into 2027,
+            so a quick appellate answer on dilution is
+            unlikely.<sup class="nb-cite"><a href="#s11">11</a></sup>
+          </p>
+          <div class="nb-claim-meta">
+            <span>confidence 75%</span><span>resolves by 2027-12-31</span>
+          </div>
+        </div>
+        <div class="nb-claim">
+          <h3>
+            The Times case is not controlled by Bartz or Kadrey on the decisive
+            factor.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Both California training holdings rested expressly on the absence of
+            infringing output, the exact fact the Times pleads as present, which
+            makes them non-controlling on the Times's central theory. Whether the
+            Times proves regurgitation and market harm is a separate question, and
+            the record does not support a probability on that merits
+            outcome.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </p>
+          <div class="nb-claim-meta">
+            <span>confidence 75%</span><span>resolves by 2027-12-31</span>
+          </div>
+        </div>
+        <p>
+          It is tempting to read the four cases as a line running from a
+          pro-rightsholder pole at Ross to a pro-developer pole at Bartz and
+          Kadrey. The opinions resist it. Kadrey sits in the developer's win
+          column and reads as the sharpest argument against developers yet
+          written, a roadmap for the plaintiff who builds the dilution record
+          Meta's opponents did not. Bartz split the defense down the middle and
+          produced the largest copyright settlement on record. The honest
+          description is a fracture, not a trend: three axes decided differently by
+          trial judges who cannot bind each other, waiting on appeals courts that
+          have said nothing. Until they speak, the same training run can be fair
+          use in one courthouse and a billion-dollar liability in the next.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://fingfx.thomsonreuters.com/gfx/legaldocs/jnvwbgqlzpw/ANTHROPIC%20fair%20use.pdf"
+              >U.S. District Court, N.D. Cal. · Bartz v. Anthropic PBC, No. 3:24-cv-05417, Order on Fair Use (June 23, 2025)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://media.npr.org/assets/artslife/arts/2025/order1.pdf"
+              >U.S. District Court, N.D. Cal. · Kadrey v. Meta Platforms, No. 3:23-cv-03417, Order on Cross-Motions for Summary Judgment (June 25, 2025)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.ded.uscourts.gov/sites/ded/files/opinions/20-613_5.pdf"
+              >U.S. District Court, D. Del. · Thomson Reuters v. Ross Intelligence, No. 1:20-cv-613, Memorandum Opinion (Feb. 11, 2025)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://publishingperspectives.com/2026/05/anthropic-settlement-appears-to-cruise-through-its-final-fairness-hearing/"
+              >Publishing Perspectives · Anthropic Settlement Appears to Cruise Through Its Final Fairness Hearing (May 2026)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nysd.uscourts.gov/sites/default/files/2025-04/yf%2023cv11195%20OpenAI%20MTD%20opinion%20april%204%202025.pdf"
+              >U.S. District Court, S.D.N.Y. · The New York Times Co. v. Microsoft &amp; OpenAI, No. 1:23-cv-11195, Opinion and Order on Motions to Dismiss (Apr. 4, 2025)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://ailawsuittracker.com/cases/new-york-times-v-openai/"
+              >AI Lawsuit Tracker · The New York Times Co. v. OpenAI &amp; Microsoft</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.washingtonpost.com/business/2026/07/09/openai-new-york-times-ai-copyright-lawsuit/1f749fa0-7ba4-11f1-b194-f872dd4ec5aa_story.html"
+              >The Washington Post · News outlets urge a judge to sanction OpenAI (July 9, 2026)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.lawnext.com/2026/06/at-3rd-circuit-judges-press-ross-and-thomson-reuters-on-fair-use-ai-training-and-market-harm.html"
+              >LawSites (Robert Ambrogi) · At 3rd Circuit, Judges Press ROSS and Thomson Reuters on Fair Use, AI Training and Market Harm (June 26, 2026)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://chatgptiseatingtheworld.com/2026/07/08/judge-chhabria-denies-kadrey-book-authors-motion-to-seek-an-interlocutory-appeal-of-downloading-part-of-ruling-in-fair-use-decision/"
+              >Chat GPT Is Eating the World · Judge Chhabria denies Kadrey authors' motion to seek an interlocutory appeal, quoting N.D. Cal. Dkt. 767 (July 8, 2026)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://chatgptiseatingtheworld.com/2026/07/07/judge-chhabria-will-issue-ruling-on-interlocutory-appeal-request-of-kadrey-without-a-hearing/"
+              >Chat GPT Is Eating the World · Judge Chhabria vacates the July 16 hearing and will rule on the briefs (July 7, 2026)</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://chatgptiseatingtheworld.com/2026/03/27/kadrey-v-meta-gets-scheduling-order-summary-judgment-motion-hearing-for-distribution-claim-wont-be-heard-until-feb-25-2027/"
+              >Chat GPT Is Eating the World · Kadrey v. Meta scheduling order sets Feb. 25, 2027 distribution hearing (Mar. 27, 2026)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
