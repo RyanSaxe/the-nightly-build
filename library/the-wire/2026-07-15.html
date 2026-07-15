@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Wire · 2026-07-15</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-wire",
+        "slug": "2026-07-15",
+        "template": "brief",
+        "title": "A coding agent's bill tracks its cache, not the tokens you trim",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-15",
+        "tags": ["research", "engineering", "policy", "industry"],
+        "sources": 8,
+        "words": 918,
+        "reading_minutes": 4,
+        "dek": "Each of tonight's four developments lands one layer below its launch tweet, in the mechanism a builder operates rather than the announcement they saw.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Wire</div>
+        <h1 class="nb-title">
+          A coding agent's bill tracks its cache, not the tokens you trim
+        </h1>
+        <p class="nb-dekline">
+          Each of tonight's four developments lands one layer below its launch
+          tweet, in the mechanism a builder operates rather than the
+          announcement they saw.
+        </p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-07-15</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.12161"
+              >Cutting a coding agent's tokens barely moves its bill</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            The paper reconstructs cost on 2,848 Claude Code runs across 103
+            tasks and splits the bill into four components. Prompt caching, not
+            tool-output tokens, accounts for about 87% of that reconstructed
+            cost. Per-task token reduction barely tracks billed cost (Pearson
+            r=0.15), and one compression method removed an estimated 38% of
+            tokens while raising cost 6.8% and dropping patch success from 27 of
+            40 tasks to 15 of 40.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: the meter a builder tunes against is cache
+            traffic, so pruning tool output to save money can raise the bill and
+            corrupt the context the agent needs to finish the task. This rests on
+            a single July 13 preprint with no independent replication yet, so
+            read it as one well-instrumented result rather than a settled law. It
+            still targets the exact lever most teams pull to cut agent costs, and
+            it measures that lever pointing the wrong way.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">engineering</span>
+          <h3>
+            <a
+              href="https://github.blog/changelog/2026-07-14-dependabot-version-updates-introduce-default-package-cooldown/"
+              >Dependabot now holds a new release three days before opening a
+              version-update PR</a
+            ><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </h3>
+          <p>
+            Dependabot waits until a package has sat on its registry for at least
+            three days before it opens a version-update PR, now the default
+            across every supported ecosystem on github.com and requiring no
+            configuration; security updates still open immediately. GitHub's
+            reasoning is that a compromised or broken release often reaches
+            dependency updates before maintainers and the community have caught
+            it.<sup class="nb-cite"><a href="#s2">2</a></sup> The window governs
+            only when Dependabot proposes a change, not what a package manager
+            will install: a manual update or a regenerated lockfile can still
+            resolve a package younger than three days, and default release-age
+            gates run shorter (npm none, pnpm 10 zero, pnpm 11 and Yarn one
+            day).<sup class="nb-cite"><a href="#s3">3</a></sup> Writing in
+            January, before the default flip, security researcher Christian
+            Schneider documented 2026 supply-chain incidents caught and removed
+            within 24 to 72 hours and argued a seven-day cooldown clears that
+            window every time.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: three days sits at the low edge of the
+            detection window Schneider measured, and it covers only the surface
+            Dependabot controls. Set the same age gate in your package manager
+            and CI, or the new default guards less of the pipeline than the
+            headline suggests.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">policy</span>
+          <h3>
+            <a
+              href="https://www.governor.ny.gov/news/first-statewide-moratorium-new-hyperscale-data-centers-launched-governor-kathy-hochul"
+              >New York enacts the first statewide hyperscale data-center
+              moratorium</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            Governor Kathy Hochul signed an executive order pausing discretionary
+            state permits not already deemed complete for new hyperscale data
+            centers, for up to a year while the state develops a Generic
+            Environmental Impact Statement. The order directs the Department of
+            Public Service to make data centers either pay more for their energy
+            or supply their own, and gives Empire State Development 60 days to
+            issue a Community Investment Framework.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            Reporting pins the threshold at 50 megawatts or more, a figure the
+            governor's release does not state, and notes the order differs from a
+            one-year moratorium the legislature passed last month that Hochul has
+            not signed.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: for anyone siting US inference or training
+            capacity, New York is now the first state where a hyperscale build
+            can stall a year on a discretionary permit, and the price of grid
+            power is being written into that permit. This is an executive pause
+            pending a framework, not the legislature's separate bill, so its
+            terms can shift as the impact statement takes shape.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">industry</span>
+          <h3>
+            <a href="https://blog.cloudflare.com/introducing-precursor/"
+              >Cloudflare's Precursor scores the whole session, defeating the
+              refresh reset</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            Precursor injects a compact, per-response JavaScript bundle that
+            records pointer movement, keyboard cadence, focus changes, and
+            visibility events, then accumulates the signal across a whole session
+            instead of scoring each request on its own. Session scoping means a
+            bot cannot reset its behavioral signature by refreshing the page. The
+            tell is motor behavior over time, where
+            humans produce wrist-pivot arcs, cognitive delays, and hand-tremor
+            oscillation while automation moves in linear interpolations or
+            mathematically ideal Bézier curves that diverge from a human's the
+            longer a session runs.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            Cloudflare says it analyzes over a trillion requests a day across more
+            than 20% of the web, that automated traffic is now roughly 57% of
+            web requests, and that Precursor is free until its GA release later
+            this year.<sup class="nb-cite"><a href="#s7">7</a></sup> An
+            independent write-up flags the tradeoff the launch asserts away: this
+            behavioral telemetry, once confined to login and challenge pages, now
+            runs across ordinary browsing, with disclosure left to each site
+            operator.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          </p>
+          <p data-nb-why>
+            <b>Why it matters</b>: if you run a browsing or agentic client, the
+            evasions that beat per-request challenges (solve once, refresh, mimic
+            a human for a burst) stop working against a signal that scores the
+            session. Deploy it on your own site and you have widened your
+            client-side tracking surface, which becomes a privacy-notice update
+            rather than a checkbox.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2607.12161"
+              >arXiv · Weinberger &amp; Hozez, "Token Reduction Is Not Cost
+              Reduction"</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.blog/changelog/2026-07-14-dependabot-version-updates-introduce-default-package-cooldown/"
+              >GitHub Changelog · Dependabot version updates introduce default
+              package cooldown</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.techi.com/github-dependabot-cooldown-install-layer-gap/"
+              >TECHi · GitHub's Dependabot cooldown has an install-layer gap</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://christian-schneider.net/blog/dependency-cooldowns-supply-chain-defense/"
+              >Christian Schneider · Dependency cooldowns: a simple supply chain
+              fix</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.governor.ny.gov/news/first-statewide-moratorium-new-hyperscale-data-centers-launched-governor-kathy-hochul"
+              >Office of Governor Kathy Hochul · First statewide moratorium on
+              new hyperscale data centers</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://ny1.com/nyc/all-boroughs/politics/2026/07/14/hochul-enacts-first-statewide-data-center-moratorium"
+              >NY1 · Hochul enacts first statewide data center moratorium</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blog.cloudflare.com/introducing-precursor/"
+              >Cloudflare · Introducing Precursor: detecting agentic behavior
+              with continuous client-side signals</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://cyberinsider.com/cloudflare-expands-behavioral-tracking-to-fight-ai-bots-says-user-privacy-protected/"
+              >CyberInsider · Cloudflare expands behavioral tracking to fight AI
+              bots</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
