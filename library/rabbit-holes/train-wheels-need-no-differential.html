@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Train wheels have no differential, and steer themselves · Rabbit Holes</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "rabbit-holes",
+        "slug": "train-wheels-need-no-differential",
+        "template": "article",
+        "title": "Train wheels have no differential, and steer themselves",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-15",
+        "tags": ["mechanics", "railways", "kinematics", "curiosities"],
+        "sources": 8,
+        "words": 1861,
+        "reading_minutes": 9,
+        "dek": "A tread tapered by a few millimetres lets a rigid axle corner like a differential and steer itself back to center, and that same geometry breeds the high-speed wobble a train's suspension exists to tame.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Rabbit Holes</div>
+        <h1 class="nb-title">Train wheels have no differential, and steer themselves</h1>
+        <p class="nb-dekline">
+          A tread tapered by a few millimetres lets a rigid axle corner like a
+          differential and steer itself back to center, and that same geometry
+          breeds the high-speed wobble a train's suspension exists to tame.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-07-15</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One axle, two rails of unequal length</h2>
+        <p>
+          On a railway axle the two wheels are not free to spin on their own.
+          They are pressed onto one shaft and turn together, at one rate, like
+          the ends of a rigid barbell. The two wheels and the axle joining them
+          make a single rigid body, a wheelset. Yet the track ahead almost never
+          lets that wheelset roll equal distances on its two sides. On any curve
+          the outer rail runs longer than the inner, and a car with a
+          differential, which every road car has, would let its outer wheel turn
+          faster to cover the extra ground. The wheelset has no differential. It
+          has no gears at all. It rounds the curve anyway, and it does so without
+          the wheels scrubbing sideways or climbing off the rail. The part that
+          manages this is not a mechanism bolted on. It is the shape of the wheel
+          at the one place it touches the steel, a shape old enough that the
+          coned railway wheel counts among the earliest inventions in the
+          field.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-coned-tread" id="the-coned-tread">
+        <h2>The tread is not flat</h2>
+        <p>
+          Look at where a wheel meets the rail. The rolling surface, the tread,
+          is not a cylinder. It is gently tapered: a little fatter near the inner
+          edge by the flange, a little thinner toward the
+          outside.<sup class="nb-cite"><a href="#s2">2</a></sup> The taper is
+          slight. One common standard cuts it at one part in twenty, so across
+          the width of the tread the outer diameter runs only about a quarter
+          inch, six millimetres, smaller than the
+          inner.<sup class="nb-cite"><a href="#s3">3</a></sup> This taper is the
+          wheel's conicity, and a wheel cut this way is coned.
+        </p>
+        <div class="nb-callout">
+          <span class="nb-callout-term">Conicity</span>
+          the taper of a wheel's tread, given as a ratio of rise across the
+          tread, so a 1:20 cone rises one unit for every twenty it runs sideways.
+          It fixes how fast a wheel's working diameter changes as the wheelset
+          slides across the rail.
+        </div>
+        <p>
+          Because the tread is coned, the diameter that actually meets the rail
+          depends on where along the tread the contact sits. That contact
+          diameter has a name: the rolling radius, the radius of the circle a
+          wheel is rolling on at any instant, which for a coned tread is not
+          fixed. Slide the whole wheelset sideways and each wheel takes a
+          different rolling radius. The wheel that moves toward its fat inner edge
+          presents a larger one; its rigid twin, moving toward its thin edge,
+          presents a smaller one. Everything below follows from that single fact:
+          one shaft, one turning rate, and two wheels whose working diameter
+          changes with where they sit across the rail.
+        </p>
+      </section>
+
+      <section data-nb-section="cornering-like-a-differential" id="cornering-like-a-differential">
+        <h2>How a rigid axle takes a curve</h2>
+        <p>
+          On a curve the wheelset rides a little toward the outside of the track.
+          Now the coning pays off. The outer wheel, pushed toward its fat inner
+          edge, rolls on a larger radius; the inner wheel, riding toward its thin
+          edge, rolls on a smaller one. In one turn of the shared axle the outer
+          wheel lays down more track than the inner. That is precisely what the
+          curve asks for: more distance on the outer rail than the inner. The
+          rigid axle produces the two different wheel speeds a differential would
+          hand out, with no differential present, because for the length of the
+          curve the two wheels have quietly become two different
+          sizes.<sup class="nb-cite"><a href="#s1">1</a></sup> The engineering
+          explainer states the result flatly: the effective diameter of each
+          wheel changes in a curve, and that alone solves the problem of a wheel
+          being dragged along at the wrong
+          speed.<sup class="nb-cite"><a href="#s3">3</a></sup> Feynman, working
+          the same picture aloud, put it as the wheels sliding out on the track a
+          bit so one runs on a bigger diameter and one on a
+          smaller.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          This is the first of two jobs the cone does: on a curve, the coned
+          wheelset acts like a differential.
+        </p>
+      </section>
+
+      <section data-nb-section="the-nudge-back-to-center" id="the-nudge-back-to-center">
+        <h2>One nudge, and it steers back</h2>
+        <p>
+          The second job is a different thing, and it is the one intuition
+          usually gets wrong. Start the wheelset centered on straight, level
+          track, rolling true. Give it one small sideways nudge: a bump, a gust,
+          a flaw in the rail. The geometry that cornered the curve is now at work
+          on tangent track. The wheel shoved toward its fat edge takes a larger
+          rolling radius; its rigid twin, pulled toward its thin edge, takes a
+          smaller one. Both are keyed to one shaft turning at one rate. So on
+          every revolution the larger wheel is carried a little farther forward
+          than the smaller. The axle, advancing unevenly on its two ends, turns.
+          It yaws to point back toward the center of the track, and rolls itself
+          there.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <div class="nb-pull">
+          <p>
+            Two behaviors hide in one tapered wheel: on a curve it apes a
+            differential, and on straight track it turns a wandering axle back
+            toward the middle.
+          </p>
+        </div>
+        <p>
+          Notice what is not doing this. The flange, the lip on the inner face of
+          each wheel, is a backstop, not the steering. It comes into play in case
+          the real mechanism fails, and it keeps the train on the rails even if a
+          wheel lifts.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup>
+          The work of guidance is done a few millimetres away, in the taper of
+          the tread.
+        </p>
+      </section>
+
+      <section data-nb-section="the-sine-along-the-rail" id="the-sine-along-the-rail">
+        <h2>A sine wave drawn on the rail</h2>
+        <p>
+          "Steers back toward center" is not the same as "settles at center." A wheelset that
+          yaws back toward the middle does not stop when it gets there. It arrives
+          with its correction still turned in, overshoots, and leans the other
+          way, where the same geometry turns it back again. Left to pure rolling,
+          the wheelset traces a sine wave down the track, weaving from rail to
+          rail as it rolls forward. The oscillation was noticed on the earliest
+          railways by George Stephenson; the first analysis of it was Klingel's,
+          in 1883.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Klingel found the length of one full weave, and it depends only on the
+          geometry: the wavelength is 2&#960;&#8730;(rb/k), where r is the rolling
+          radius, b is the half-gauge (half the distance between the two contact
+          points), and k is the conicity. Put real numbers in. For a wheel of
+          half-metre radius on standard-gauge track with a one-in-twenty cone,
+          one full side-to-side weave takes about seventeen metres of
+          travel.<sup class="nb-cite"><a href="#s4">4</a></sup> That is close to
+          the sixty-foot lengths (18.3 m) British track was once laid in, and
+          about the length of an articulated bus. The surprise sits in what the
+          formula leaves out: there is no speed term. The wavelength is fixed by
+          the wheel and the rail, not by how fast the train runs. Go faster and
+          each weave keeps its seventeen metres; you simply meet the cycles
+          sooner, so the wobble's frequency in time climbs with speed while its
+          length on the ground does
+          not.<sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <figure class="nb-chart">
+          <figcaption>
+            Fig. 1 &middot; The same 17 m weave, met more often: kinematic wobble
+            frequency against speed, at a fixed Klingel wavelength (r = 0.5 m,
+            standard gauge, 1:20 cone). Frequency is speed divided by wavelength;
+            the wavelength itself does not
+            change.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </figcaption>
+          <canvas></canvas>
+          <noscript>chart requires JS; data in caption and prose</noscript>
+          <script type="application/json" data-nb-chart>
+            {
+              "type": "line",
+              "labels": ["40", "80", "120", "160", "200", "240"],
+              "series": [
+                {
+                  "name": "wobble frequency (Hz)",
+                  "values": [0.65, 1.29, 1.94, 2.58, 3.23, 3.88]
+                }
+              ],
+              "y": { "scale": "linear", "label": "cycles per second (Hz)" },
+              "x": { "label": "speed (km/h)" }
+            }
+          </script>
+        </figure>
+        <p>
+          Here the clean picture reaches its limit. Klingel's is a kinematic
+          result: it assumes the wheels roll without any slip at the contact, so
+          the whole motion is settled by geometry, with no need for forces at
+          all.<sup class="nb-cite"><a href="#s1">1</a></sup> Under that
+          assumption Antali, Stepan and Hogan showed in 2015 what the clean
+          geometry actually implies, and it is not what the intuition promises.
+          The pure geometric oscillation is neutrally stable: it neither dies
+          away nor builds up.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          cone gives a displaced wheelset a real tendency to turn back toward
+          center, but on geometry alone that tendency yields an endless,
+          fixed-size weave, not a coming-to-rest. The coning steers; it does not
+          damp. (Their analysis also shows Klingel's neat formula is itself an
+          approximation, low by two or three percent for ordinary wheel and rail
+          shapes, which is close enough to keep and worth knowing is
+          inexact.)<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="why-the-cone-needs-a-suspension" id="why-the-cone-needs-a-suspension">
+        <h2>Why the cone needs a suspension</h2>
+        <p>
+          What decides whether the weave fades or grows is the very thing Klingel
+          set aside: the small slip where wheel meets rail. The steel is not
+          perfectly rigid; it deforms and micro-slips under load, and the creep
+          forces that result, which Carter added to the analysis in 1926, are
+          what actually drain energy from the oscillation or pump energy into
+          it.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup> Below a certain speed
+          those forces damp the weave and the wheelset rides quiet. Above a
+          critical speed they feed it, and the fixed-size weave becomes a growing
+          one. That runaway has a name, hunting: an intrinsic swaying that arises
+          from the train's own forward speed together with the wheel-rail contact
+          forces.<sup class="nb-cite"><a href="#s7">7</a></sup> At its worst it
+          slams the bogies side to side hard enough to damage track and wheels,
+          and for much of railway history it set the ceiling on how fast a train
+          could safely run.<sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          Where that critical speed sits is not fixed by the cone. It is a
+          property of the whole vehicle: the axle load, the vertical stiffness of
+          the primary suspension, the lateral damping of the secondary
+          suspension all move it.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          So railways buy their speed back by design. They stiffen the constraint
+          on how a wheelset can yaw by grouping wheelsets into bogies and adding
+          elastic constraints and dampers, which raises the critical
+          speed.<sup class="nb-cite"><a href="#s5">5</a></sup> And they reprofile
+          wheels as the tread wears, since a worn tread raises the wheel's
+          equivalent conicity, and higher conicity lowers the speed at which
+          hunting begins.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <p>
+          So the tapered wheel is not the flawless self-correcting part the story
+          usually makes of it. It solves two problems for nothing, with no gears
+          and no control system: it lets a rigid axle corner like a differential,
+          and it turns a wandering axle back toward the center of the track. What
+          it cannot do on its own is keep quiet about the second favor. The cone
+          that steers also weaves, and taming that weave is the work a train's
+          suspension exists to do. The next time a train rolls past, the flange
+          catching the light is the backup. The real guidance is happening in the
+          invisible taper, a few millimetres wide, where each wheel meets the
+          rail.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.mm.bme.hu/~antali/pub/J1_Antali_2015_arch.pdf"
+              >Antali, Stepan &amp; Hogan · Kinematic oscillations of railway
+              wheelsets (Multibody System Dynamics, 2015)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.textpurr.com/transcript/hd-feynman-fun-to-imagine-complete-with-optional-chinese-subtitles"
+              >Richard Feynman · Fun to Imagine (BBC, 1983), train segment</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://practical.engineering/blog/2023/10/3/why-are-rails-shaped-like-that"
+              >Practical Engineering · Why Are Rails Shaped Like That? (2023)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.thecontactpatch.com/rail/r0418-hunting"
+              >The Contact Patch · Hunting (r0418)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://en.wikipedia.org/wiki/Hunting_oscillation"
+              >Wikipedia · Hunting oscillation</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://royalsocietypublishing.org/rspa/article/112/760/151/1989/On-the-action-of-a-locomotive-driving-wheel"
+              >F. W. Carter · On the action of a locomotive driving wheel (Proc.
+              Royal Society A, 112:151–157, 1926)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openaccess.city.ac.uk/id/eprint/29127/"
+              >Nonlinear Dynamics (2022) · On the nonlinear hunting stability of a
+              high-speed train bogie</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.mdpi.com/2076-3417/15/7/4060"
+              >Zhang, Hu, Wang &amp; Liu · The Impact of Hollow Wear on the
+              Stability of High-Speed Railway Vehicles (Applied Sciences, 15(7):4060,
+              2025)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
