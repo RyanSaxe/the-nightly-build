@@ -18,3 +18,7 @@ items:
     title: "Posttraumatic stress in young children at risk for maltreatment (2026)"
     consult:
       - https://pmc.ncbi.nlm.nih.gov/articles/PMC13143975/
+  - slug: narrative-tells-in-ai-fiction
+    title: "StoryScope: the narrative idiosyncrasies that give AI fiction away (2026)"
+    consult:
+      - https://arxiv.org/abs/2604.03136
