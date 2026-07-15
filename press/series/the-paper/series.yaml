@@ -9,6 +9,12 @@ prompt: prompt.md
 autopublish: true
 strict: false
 words: [2000, 3200]
+# One paper is the evidentiary spine. The rest must include an independent
+# account, critique, or later result that changes the reconstruction.
+min_sources: 4
+sources_by_kind:
+  primary: [1, null]
+  secondary: [1, null]
 cadence: daily
 consult:
   - https://arxiv.org/
