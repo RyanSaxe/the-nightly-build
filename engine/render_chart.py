@@ -125,7 +125,9 @@ def render(script: pathlib.Path, *, out: pathlib.Path, repo: str) -> pathlib.Pat
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(
+        description="Render an article chart: a plotly script in, a normalized PNG out."
+    )
     parser.add_argument(
         "script", type=pathlib.Path, help="chart-N.py binding a module-level `fig`"
     )
