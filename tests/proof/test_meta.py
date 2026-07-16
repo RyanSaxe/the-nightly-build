@@ -8,8 +8,9 @@ survive the writing of the piece.
 
 from collections.abc import Callable
 
-import check
 import pytest
+
+import check
 from findings import Findings, findings_of
 from press import REPO, TODAY, article, brief, mut
 

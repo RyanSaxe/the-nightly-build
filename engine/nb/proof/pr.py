@@ -4,6 +4,7 @@ import datetime as _dt
 import os
 import re
 import subprocess
+import tempfile
 
 import yaml
 
@@ -89,6 +90,27 @@ def pr_changed_files(repo, *, base, head):
         if len(parts) >= 2:
             changes.append((parts[0], parts[-1]))
     return changes
+
+
+def materialize_bundle(repo, head, changes, dest):
+    """Write the PR's files, as `head` has them, under dest.
+
+    The proof reads the bundle from disk (the article, then its figure assets
+    by size and image header), but the checkout at --repo can be on any branch:
+    the documented preflight runs it from the library checkout, where the new
+    bundle does not exist yet. What the PR would merge is the blob at head, so
+    that is what gets checked, whatever happens to be checked out.
+    """
+    for _status, relpath in changes:
+        blob = subprocess.run(
+            ["git", "-C", repo, "show", f"{head}:{relpath}"],
+            capture_output=True,
+            check=True,
+        ).stdout
+        target = os.path.join(dest, relpath)
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        with open(target, "wb") as fh:
+            fh.write(blob)
 
 
 def section_text(body, name):
@@ -200,14 +222,15 @@ def run_pr_mode(args, rep):
     series_cfg, _ = load_series(cfg_repo, series_id)
     rep.strict = bool(series_cfg and series_cfg.get("strict"))
     pr_body_meta = resolve_pr_body(args.pr_body, rep)
-    fs_path = os.path.join(args.repo, path)
-    check_article(
-        fs_path,
-        series_id,
-        repo=cfg_repo,
-        library_dir=args.library,
-        rep=rep,
-        pr_body_meta=pr_body_meta,
-        today=args.today and _dt.date.fromisoformat(args.today),
-        check_links=args.check_links,
-    )
+    with tempfile.TemporaryDirectory() as bundle_dir:
+        materialize_bundle(args.repo, args.head, changes, bundle_dir)
+        check_article(
+            os.path.join(bundle_dir, path),
+            series_id,
+            repo=cfg_repo,
+            library_dir=args.library,
+            rep=rep,
+            pr_body_meta=pr_body_meta,
+            today=args.today and _dt.date.fromisoformat(args.today),
+            check_links=args.check_links,
+        )

@@ -16,6 +16,7 @@ import pathlib
 import re
 
 import yaml
+
 from nb import meta as nb_meta
 
 ARTIFACT_SECTIONS = (

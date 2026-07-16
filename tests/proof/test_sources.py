@@ -11,8 +11,9 @@ every assertion here says so.
 import pathlib
 from collections.abc import Callable
 
-import check
 import pytest
+
+import check
 from findings import Findings
 from press import TODAY, article, mut
 

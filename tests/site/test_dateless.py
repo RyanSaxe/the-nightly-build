@@ -2,8 +2,9 @@
 
 import pathlib
 
-import build_site
 import pytest
+
+import build_site
 from pages import Site, build_press
 from press import article, write_article
 

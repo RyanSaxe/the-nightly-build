@@ -2,8 +2,9 @@
 
 import pathlib
 
-import build_site
 import pytest
+
+import build_site
 from pages import Site, asset_stamp_of, undress
 from press import article
 

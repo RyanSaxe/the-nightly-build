@@ -15,6 +15,7 @@ import tempfile
 from collections.abc import Callable
 
 import pytest
+
 from findings import Findings
 from press import OPEN_YAML, REPO, TODAY, article, brief, mut
 

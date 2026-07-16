@@ -4,6 +4,7 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
+
 from pages import Site, build_press
 from press import article, write_article
 
