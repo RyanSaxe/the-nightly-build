@@ -37,6 +37,12 @@ extra-paths = ["engine", "tests"]
 
 [tool.ruff]
 target-version = "py310"
+# The same roots the suite sees at runtime (pytest puts engine/ and each test
+# directory on sys.path), so import sorting classifies local modules as
+# first-party. Without this, `from press import ...` (tests/press.py) flips
+# between first- and third-party depending on whether a fork has a press/
+# content directory at the repo root, and lint goes red only on forks.
+src = [".", "engine", "tests", "tests/site"]
 
 [tool.ruff.lint]
 # Formatter owns line length, so E501 is off; the rest catch real defects.

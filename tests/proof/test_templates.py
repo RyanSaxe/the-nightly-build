@@ -12,8 +12,9 @@ import shutil
 import tempfile
 from collections.abc import Callable
 
-import check
 import pytest
+
+import check
 from findings import Findings
 from press import LOREM, REPO, chronicle
 

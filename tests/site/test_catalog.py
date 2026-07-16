@@ -3,8 +3,9 @@
 import pathlib
 from collections.abc import Callable
 
-import build_site
 import pytest
+
+import build_site
 from pages import Site, build_press
 from press import make_full_library
 

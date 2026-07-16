@@ -23,8 +23,9 @@ import sys
 import tempfile
 import xml.etree.ElementTree as ET
 
-import build_site
 import pytest
+
+import build_site
 from press import REPO, article, brief, git, make_press
 
 pytestmark = pytest.mark.slow

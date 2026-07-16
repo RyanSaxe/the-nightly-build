@@ -10,6 +10,7 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
+
 from findings import Findings
 from press import LOREM, article, mut
 

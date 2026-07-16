@@ -11,6 +11,7 @@ from collections.abc import Callable
 
 import pytest
 import yaml
+
 from press import REPO
 
 

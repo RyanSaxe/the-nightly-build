@@ -18,8 +18,9 @@ import tempfile
 import types
 from collections.abc import Callable
 
-import check
 import pytest
+
+import check
 from findings import Findings
 from press import (
     OPEN_YAML,

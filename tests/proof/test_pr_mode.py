@@ -4,6 +4,7 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
+
 from conftest import PR_BODY, PressRepo
 from findings import Findings
 from press import article
@@ -162,6 +163,26 @@ def test_pr_body_the_diff_does_not_answer_to(
     result = pr_repo.run_pr(pr_body=pr_repo.body_file(body_text))
 
     assert "B-META-MATCH" in result.blocks
+
+
+def test_preflight_passes_from_the_library_checkout(pr_repo: PressRepo) -> None:
+    """PROTOCOL step 8 preflights from the library checkout, where the new
+    bundle is not on disk yet. On the 2026-07-16 run two desks hit a false
+    'file not found' block on valid PRs; the proof reads the bundle from the
+    head ref, so which branch the checkout sits on cannot matter."""
+    pr_repo.checkout("library")
+
+    result = pr_repo.run_pr(pr_body=pr_repo.body)
+
+    assert not result.blocks
+
+
+def test_pr_proofs_the_head_ref_not_the_working_tree(pr_repo: PressRepo) -> None:
+    pr_repo.write("library/semiconductors/micron.html", "uncommitted garbage")
+
+    result = pr_repo.run_pr(pr_body=pr_repo.body)
+
+    assert not result.blocks
 
 
 def test_pr_touching_two_files(pr_repo: PressRepo) -> None:

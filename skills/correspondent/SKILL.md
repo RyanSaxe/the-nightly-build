@@ -80,24 +80,37 @@ Give the desks the model you are running on. A cheap model in the coach's chair
 produces exactly the thin, studied-nothing brief this pipeline exists to
 prevent, and it will pass every check but the one that matters.
 
-Then wait. While the desks work you do nothing but wait; you do not draft
-alongside them, and you do not review their drafts.
+Then see the night through: **you are not done until every desk's PR is open
+and green.** You still draft nothing and review nothing. But a desk gone
+quiet mid-chain is yours to wake: some runtimes hand a role's completion
+signal to you instead of the desk waiting on it. Message the stalled desk to
+continue from its artifacts; if its context is closed, spawn a fresh desk on
+the same worktree and `task.md` to continue from the record, never to start
+over.
 
-**If your runtime cannot spawn subagents at all**, run the desks yourself, one
-article at a time, following `skills/desk/SKILL.md` exactly. This is a
-degraded night: the roles lose their fresh contexts and the prose pays for it.
-A run that takes this path states it, once, in every PR body it opens:
-`Production: single-context, no isolation.` Never take it silently, and never
-take it because it is simpler.
+**If your runtime cannot spawn subagents at all, or a desk can be neither
+woken nor replaced**, the night is still yours to finish: run the remaining
+chain yourself, one article at a time, following `skills/desk/SKILL.md`
+exactly. This is a degraded night: the roles lose their fresh contexts and the
+prose pays for it. A run that takes this path states it, once, in every PR
+body it opens: `Production: single-context, no isolation.` Never take it
+silently, and never take it because it is simpler. Degraded means the same
+chain in one context, never a shorter one: skipping a role, or writing its
+artifact ad hoc instead of by its skill file, is the forgery this pipeline
+cannot see.
 
 ## Phase 3: see the night through CI
 
 CI checks what no local run can; its render probe needs a browser. Stay until
-`validate` reports on every PR your desks opened. A red check is yours: read
-the desk's comment and hand the finding back to that article's desk, which
-routes it through its chain and pushes to the same branch. Two rounds, then
+`validate` reports green on every PR your desks opened. A red check is yours:
+read the desk's comment and hand the finding back to that article's desk,
+waking it as in Phase 2 if it has gone quiet, and the desk routes the fix
+through its chain and pushes to the same branch. Two rounds, then
 leave the PR open with the findings noted in a comment; the next night
-supersedes it.
+supersedes it. A red no article change can fix, a defect in the runtime or in
+CI itself, is not yours to out-wait: open an issue that records what broke and
+where each PR stands. The night ends with green checks, or with an issue that
+says why not. It never just trails off.
 
 Never merge. Never push to `library`. Never open a second PR for a series. A
 PR labeled `nb-invalid` is a stop, not a fight.

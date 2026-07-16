@@ -8,8 +8,9 @@ escape --out.
 import pathlib
 import xml.etree.ElementTree as ET
 
-import build_site
 import pytest
+
+import build_site
 from pages import build_press
 from press import NOW, article, write_article
 

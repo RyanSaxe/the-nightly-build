@@ -32,8 +32,9 @@ import os
 import pathlib
 import tempfile
 
-import check
 import pytest
+
+import check
 from press import REPO
 
 CORPUS = pathlib.Path(__file__).parent / "corpus"

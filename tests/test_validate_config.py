@@ -7,6 +7,7 @@ import tempfile
 from collections.abc import Callable
 
 import pytest
+
 import validate_config
 from press import REPO
 

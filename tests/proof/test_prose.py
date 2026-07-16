@@ -11,6 +11,7 @@ import re
 from collections.abc import Callable
 
 import pytest
+
 from findings import Findings
 from press import LOREM, TODAY, article, brief, mut
 

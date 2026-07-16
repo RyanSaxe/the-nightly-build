@@ -19,9 +19,10 @@ Invocations:
         python3 engine/check.py --pr --repo . --main <main checkout> \
             --base <ref> --head <ref> [--pr-body FILE] [--library DIR]
 
-In PR mode --repo is the PR checkout, used for the diff and the article
-file. Configs and templates load from --main because the orphan library
-branch carries no engine.
+In PR mode --repo is any checkout of the press; the diff and the article
+both resolve from the --base and --head refs, so which branch the checkout
+sits on does not matter. Configs and templates load from --main because
+the orphan library branch carries no engine.
 
 The checks themselves live in nb/proof/; this file is the door they open by.
 """
@@ -69,7 +70,8 @@ def main(argv=None):
     p.add_argument(
         "--repo",
         default=".",
-        help="repo root (local mode: main checkout; PR mode: PR checkout)",
+        help="repo root (local mode: main checkout; PR mode: any checkout, "
+        "the article resolves from --head)",
     )
     p.add_argument(
         "--main",

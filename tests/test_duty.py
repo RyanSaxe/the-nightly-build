@@ -16,6 +16,7 @@ import tempfile
 from collections.abc import Callable
 
 import pytest
+
 from press import OPEN_YAML, REPO, TODAY, article, git
 
 QUEUE_YAML = (
