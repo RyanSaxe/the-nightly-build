@@ -258,8 +258,10 @@ every article, then hands each commission to its own `skills/desk/SKILL.md`
 subagent, launched together, each in its own worktree. A desk owns one article
 end to end and returns one open PR. Neither tier writes an artifact.
 
-A runtime that cannot spawn subagents runs the same chain in one context, and
-says so in every PR body it opens (`Production: single-context, no isolation.`)
+A runtime that cannot spawn subagents — or does not resume a delegating agent
+when its subagent finishes, so a fanned-out chain would stall between stages —
+runs the same chain in one context, and says so in every PR body it opens
+(`Production: single-context, no isolation.`)
 The pipeline survives. The fresh eyes do not, and the prose pays: an editor
 grading prose it helped write is not an editor. Never take that path silently.
 

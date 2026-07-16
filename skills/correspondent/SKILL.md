@@ -81,10 +81,14 @@ produces exactly the thin, studied-nothing brief this pipeline exists to
 prevent, and it will pass every check but the one that matters.
 
 Then wait. While the desks work you do nothing but wait; you do not draft
-alongside them, and you do not review their drafts.
+alongside them, and you do not review their drafts. Waiting assumes each desk is
+resumed when its own stages finish; if your runtime does not resume a delegate
+when its subagent returns, a launched desk stalls between stages, so run the
+desks inline instead (below).
 
-**If your runtime cannot spawn subagents at all**, run the desks yourself, one
-article at a time, following `skills/desk/SKILL.md` exactly. This is a
+**If your runtime cannot spawn subagents at all — or does not resume you when
+one finishes, so launched desks would stall between stages**, run the desks
+yourself, one article at a time, following `skills/desk/SKILL.md` exactly. This is a
 degraded night: the roles lose their fresh contexts and the prose pays for it.
 A run that takes this path states it, once, in every PR body it opens:
 `Production: single-context, no isolation.` Never take it silently, and never

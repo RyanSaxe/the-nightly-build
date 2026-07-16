@@ -48,6 +48,12 @@ count is a constraint, never a license to pad a bibliography.
 
 ## The chain
 
+Delegate a stage only if your runtime returns control to you when the subagent
+finishes — by blocking until it returns, or by resuming you on its completion.
+If spawning instead ends your turn and nothing wakes you when the subagent
+finishes, a fanned-out chain stalls between stages: take the single-context
+path below instead of fanning out and going idle.
+
 Run these in order, each a fresh context loading the named skill:
 
 1. `writing-coach` → `voice.md`
@@ -89,7 +95,9 @@ Report back to the correspondent with the PR number and the proof's WARN
 summary. It will watch CI and hand you anything red; route that finding back
 through the chain like any other, and push to the same branch.
 
-**If your runtime cannot spawn subagents**, run the stages yourself, in order,
+**If your runtime cannot spawn subagents — or does not return control to you
+when one finishes, so a fanned-out stage leaves you idle until an external
+nudge**, run the stages yourself, in order,
 loading each skill's file as you reach it, and clear the previous stage's
 material from your working attention before the next. This is a degraded
 night: the roles lose their fresh eyes, and the editor grades prose it helped
