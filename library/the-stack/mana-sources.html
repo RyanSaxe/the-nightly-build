@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A turn-two double pip wants fourteen of your seventeen lands · The Stack</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-stack",
+        "slug": "mana-sources",
+        "template": "article",
+        "title": "A turn-two double pip wants fourteen of your seventeen lands",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-17",
+        "tags": [],
+        "sources": 10,
+        "words": 2283,
+        "reading_minutes": 11,
+        "dek": "Frank Karsten's consistency model, reconstructed on a 40-card, 17-land deck on the play, where a single-color splash stays a coin flip until the third source.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Stack</div>
+        <h1 class="nb-title">A turn-two double pip wants fourteen of your seventeen lands</h1>
+        <p class="nb-dekline">
+          Frank Karsten's consistency model, reconstructed on a 40-card, 17-land deck on the play, where a single-color splash stays a coin flip until the third source.
+        </p>
+        <div class="nb-byline">
+          <span>11 min read</span><span>2026-07-17</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The answer key already exists</h2>
+        <p>
+          Ask a draft table how many red sources a double-red two-drop wants and
+          you will get a shrug and a number that sounds right. The number is
+          already published. Frank Karsten's 2022 source tables, computed for a
+          40-card deck with 17 lands, list the minimum colored sources for every
+          pip requirement a Limited card can pose: a single pip at one mana takes
+          9 sources, and a double pip you want to cast on turn two takes 14 of
+          those 17 lands.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Fourteen is not a typo and it is not conservative padding. It is what
+          the arithmetic returns when you ask for the color often enough to cast
+          the card on curve, and it is why "just splash it" and "run a couple
+          more Islands" are answers to a question that has an exact one. Karsten
+          defines a manabase as able to consistently cast a card when there is at
+          least an 89 + M percent chance to draw the colored sources it needs by
+          the turn it costs, on the play, conditional on having drawn enough
+          lands to pay for it. That target climbs with mana value, from 90
+          percent for a one-drop to 96 percent for a seven-drop.<sup
+            class="nb-cite"><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-formula" id="the-formula">
+        <h2>The formula you can rerun</h2>
+        <p>
+          The engine is one line of combinatorics. Drawing sources out of a deck
+          is sampling without replacement, so the count of on-color sources in
+          your opening cards follows the hypergeometric distribution: for a
+          population of N cards containing K successes, the probability that n
+          draws contain exactly k successes is
+          <code>P(X = k) = C(K,k)·C(N−K, n−k) / C(N, n)</code>.<sup
+            class="nb-cite"><a href="#s2">2</a></sup
+          >
+          Map the four letters onto a manabase and nothing is left abstract: N is
+          the deck (40), K is the number of lands that make your color, n is the
+          cards you have seen by the turn in question, and k is how many on-color
+          sources you actually want in hand. The quantity a manabase turns on is
+          never a single k but a tail: the chance of drawing <em>at least</em> the
+          pips you need, <code>P(X ≥ k)</code>, which is the sum of the formula
+          from k upward.<sup class="nb-cite"><a href="#s2">2</a></sup> Players who
+          keep a hypergeometric calculator open at the deckbuilding table are
+          computing exactly this: population is the deck, successes are the
+          sources, draws are the cards seen.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+        </p>
+        <p>
+          Work one cell by hand so the table stops being a black box. Take a
+          single-pip one-drop with 9 sources, and ask for the color in your
+          opening seven on the play. Here N = 40, K = 9, n = 7, and you want
+          k ≥ 1, so it is easiest to subtract the miss: the chance of drawing zero
+          of the 9 is C(31,7)/C(40,7) = 0.141, which makes
+          <code>P(X ≥ 1) = 1 − 0.141 = 0.859</code>, or 85.9 percent. Do the same
+          for a double pip you must hit twice, a turn-two WW two-drop run on 14
+          sources: <code>P(X ≥ 2) = 1 − [C(26,8) + 14·C(26,7)] / C(40,8)</code> =
+          86.0 percent. One card, one number, reproducible in any calculator to
+          the tenth of a point.
+        </p>
+        <div class="nb-callout">
+          <span class="nb-callout-term">Cards seen, on the play</span>
+          By turn t on the play you have seen 6 + t cards: the opening seven, and
+          no draw step on turn one. On the draw, add one. Every figure here is on
+          the play, the harder case.
+        </div>
+      </section>
+
+      <section data-nb-section="the-curve" id="the-curve">
+        <h2>Why it is a curve, not a threshold</h2>
+        <p>
+          The table hands you a minimum, but the honest object underneath is a
+          curve. Below is the bare hypergeometric
+          probability of drawing the pips you need against the number of on-color
+          sources, for the two requirements that decide most decks: a single pip
+          cast on turn two, and a double pip cast on turn three. No mulligan, no
+          card selection, so a reader can reproduce every point.
+        </p>
+        <figure class="nb-chart">
+          <figcaption>
+            Fig. 1 · Probability of drawing the colored sources you need, on the
+            play, by on-color source count in a 40-card / 17-land deck. Upper
+            curve: a single pip needed on turn two (8 cards seen, P ≥ 1). Lower
+            curve: a double pip needed on turn three (9 cards seen, P ≥ 2).
+            X-axis is on-color sources, one unit being one land that makes the
+            color; Y-axis is percent. Bare hypergeometric model, no mulligan and
+            no card selection, computed from the distribution's PMF within
+            Karsten's framework.<sup class="nb-cite"><a href="#s2">2</a></sup
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+          <canvas></canvas>
+          <noscript>
+            Single pip on turn two (P ≥ 1), sources 5 to 17: 69.4, 76.4, 81.9,
+            86.3, 89.7, 92.4, 94.4, 96.0, 97.1, 98.0, 98.6, 99.0, 99.4 percent.
+            Double pip on turn three (P ≥ 2): 31.1, 41.0, 50.4, 59.0, 66.7, 73.4,
+            79.1, 83.8, 87.7, 90.9, 93.3, 95.2, 96.7 percent.
+          </noscript>
+          <script type="application/json" data-nb-chart>
+            {
+              "type": "line",
+              "labels": ["5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17"],
+              "series": [
+                { "name": "Single pip, needed turn 2 (P at least 1)", "values": [69.4, 76.4, 81.9, 86.3, 89.7, 92.4, 94.4, 96.0, 97.1, 98.0, 98.6, 99.0, 99.4] },
+                { "name": "Double pip, needed turn 3 (P at least 2)", "values": [31.1, 41.0, 50.4, 59.0, 66.7, 73.4, 79.1, 83.8, 87.7, 90.9, 93.3, 95.2, 96.7] }
+              ],
+              "x": { "label": "On-color sources (of 17 lands in a 40-card deck)" },
+              "y": { "scale": "linear", "label": "Probability, on the play (%)" }
+            }
+          </script>
+        </figure>
+        <p>
+          The single-pip curve is nearly flat by the time it matters: past 9
+          sources each extra land buys two points, then one, then a fraction. The
+          double-pip curve is a different animal. It crosses 90 percent only at
+          14 sources on turn three, and every source below that is expensive,
+          moving the number by seven or eight points at a time. "About 9 sources"
+          is right for a single
+          pip and disastrous for a double: at 9 sources a turn-three WW spell is a
+          66.7 percent proposition, closer to a coin flip than to a plan.
+        </p>
+        <p>
+          The 90 percent line the table chases is a choice, not a law, and it is
+          worth saying so out loud. Karsten proposed it more than a decade ago, in
+          the original version of this analysis, on the reasoning that access to
+          your mana nine games in ten is a defensible reading of "consistent."<sup
+            class="nb-cite"><a href="#s4">4</a></sup
+          >
+          It is a judgment call, and a reader who wants 85 percent or 95 percent
+          can read their own line straight off the curve. What is not a judgment
+          call is where the curve sits, and that is the part the formula settles.
+        </p>
+      </section>
+
+      <section data-nb-section="the-splash" id="the-splash">
+        <h2>What a splash actually costs</h2>
+        <p>
+          A splash is a small number of off-color sources bought to cast one or
+          two cards, and its price is exactly the tail probability at that small
+          number. Karsten's own reduction makes the accounting simple: splashing a
+          card into a deck whose other lands all make your main color is
+          equivalent to running that card on the splash's source count alone, so a
+          single-pip splash is priced by nothing but how many sources you gave
+          it.<sup class="nb-cite"><a href="#s1">1</a></sup> Run the tail for a
+          bare single-pip splash, on the play, and the cost is stark.
+        </p>
+        <table class="rs-metrics">
+          <caption>
+            Probability you have drawn a single-pip splash by the turn you want
+            it, 40-card / 17-land deck, on the play. Bare hypergeometric, no
+            mulligan.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Splash sources</th>
+              <th>By turn 3</th>
+              <th>By turn 5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1 source</td><td>22.5%</td><td>27.5%</td></tr>
+            <tr><td>2 sources</td><td>40.4%</td><td>47.9%</td></tr>
+            <tr><td>3 sources</td><td>54.5%</td><td>63.0%</td></tr>
+            <tr><td>4 sources</td><td>65.6%</td><td>74.0%</td></tr>
+            <tr><td>5 sources</td><td>74.2%</td><td>82.0%</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Give every number the yardstick a drafter already owns. A full
+          on-color single pip runs around 9 sources and clears roughly 90 percent
+          on curve, the consistency of a card you would never think to cut. A
+          typical two-to-three-source splash lands between 40 and 67 percent to be
+          online by the turn you want it. You are more likely than not to have the
+          splash only from three sources, and already by turn three, where it is
+          there 54.5 percent of the time; one source never reaches a coin flip, and
+          two sources edge past half only around turn six.
+          The card is not a free inclusion on your curve; it is a card you will be
+          holding in a dead hand a third to a half of the time you want it.
+        </p>
+        <p>
+          The same math punctures the three-color manabase that splits 17 lands
+          into a tidy six, six, five. An independent Limited analysis running the
+          identical model puts a six-source color at only 71 percent to appear in
+          the opening hand and 81 percent by turn three, and confirms the
+          nine-source figure at 86 percent in the opening hand.<sup
+            class="nb-cite"><a href="#s5">5</a></sup
+          >
+          Those match the bare computation to the tenth of a point: 6 of 7 is
+          71.1 percent, 6 of 9 is 80.8 percent, 9 of 7 is 85.9 percent. Two
+          colors at six sources each is not a balanced base; it is two colors that
+          each fail you a fifth of the time in the first hand. And gold cards
+          compound the tax: because you need both colors present, Karsten raises
+          each requirement by one, so a two-color card sitting at 90 percent per
+          color is only 90 × 90 = 81 percent to be castable on curve.<sup
+            class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="calculator-and-table" id="calculator-and-table">
+        <h2>Where the calculator and the table disagree</h2>
+        <p>
+          Plug 9 sources, 7 cards, and a 40-card deck into a calculator and you
+          get 85.9 percent. Karsten's table lists 9 sources as sufficient for a
+          single-pip one-drop at a 90 percent target. The four-point gap is not an
+          error in either place; the two numbers answer slightly different
+          questions, and keeping them apart is the difference between using the
+          model and misquoting it. The calculator gives the floor: the raw chance
+          of drawing the color, counting every mana-screwed game as a failure.
+          Karsten's published minimum adds two refinements his simulation makes
+          explicit in code. The deck is modeled as good lands, other lands, and
+          spells; a game is counted only when total lands drawn already cover the
+          turn; and hands are kept or shipped under the London mulligan, keeping
+          seven-card hands with two to five lands and digging toward three.<sup
+            class="nb-cite"><a href="#s6">6</a></sup
+          >
+          Both refinements raise the probability of having the color <em>given
+          that you can pay the generic cost</em>, which is the question a player
+          cares about.
+        </p>
+        <p>
+          Rerun his conditional definition and the gap closes to about one source.
+          Conditioning on having enough lands, that same one-drop cell reads 87.0
+          percent before any mulligan, and the London mulligan carries the last
+          three points to his 90 percent target. Turn one is the single case that
+          leans on the mulligan; by turn two the requirement clears on its own,
+          with a single-pip two-drop at 9 sources reaching 92.5 percent against a
+          91 percent target, and a turn-two double pip at 14 sources landing at
+          91.5 percent. Karsten's counts reproduce from the bare distribution plus
+          his two stated refinements to within roughly a single source: the
+          recommendation is open, checkable, and honest, not a number handed
+          down.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>The curve. Every point is deterministic math you can rerun.<sup class="nb-cite"><a href="#s2">2</a></sup></li>
+              <li>The minimums, reproduced from that curve plus a mulligan model published as source code.<sup class="nb-cite"><a href="#s6">6</a></sup></li>
+              <li>The model's history: it has been rederived across the Paris, Vancouver, and London mulligan rules.<sup class="nb-cite"><a href="#s7">7</a></sup></li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>The 17-land baseline is a 2022 stance, one higher than Karsten's earlier defaults and argued from Reid Duke's land-count case.<sup class="nb-cite"><a href="#s8">8</a></sup></li>
+              <li>Turn-one requirements also want untapped sources, which taplands do not supply.<sup class="nb-cite"><a href="#s1">1</a></sup></li>
+              <li>Odd land counts scale the recommendation: think of it as sources per your lands, not per 17.<sup class="nb-cite"><a href="#s1">1</a></sup></li>
+            </ul>
+          </div>
+        </div>
+        <p>
+          The one thing this model does not give you is a current-metagame win
+          rate. It would be satisfying to close with a line like "decks at N
+          sources win X percent more," and the public data to attempt it exists:
+          17lands publishes aggregated, anonymized, per-set game and draft files
+          from opted-in Arena players, with a known skew toward more engaged
+          players.<sup class="nb-cite"><a href="#s9">9</a></sup> But a matured,
+          verifiable win-rate cut that isolates color-consistency from everything
+          else a manabase does is not on the table today, and a single small
+          sample would be too fragile to trust. The
+          model needs no such crutch. It is the field standard other builders
+          already reach for when they want the odds of the mana working out,<sup
+            class="nb-cite"><a href="#s10">10</a></sup
+          >
+          it is reproducible on a calculator, and it stands on its own. The number
+          you had a feel for is computable. Compute it, and price your splash
+          before you register it.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.tcgplayer.com/content/article/How-Many-Sources-Do-You-Need-to-Consistently-Cast-Your-Spells-A-2022-Update/dc23a7d2-0a16-4c0b-ad36-586fcca03ad8/"
+              >TCGplayer / ChannelFireball · Frank Karsten, "How Many Sources Do
+              You Need to Consistently Cast Your Spells? A 2022 Update" (2 Aug
+              2022) — the 40-card / 17-land master table, the definition of
+              "consistently cast," the assumptions list, and the splash and
+              gold-card rules</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://en.wikipedia.org/wiki/Hypergeometric_distribution"
+              >Wikipedia · "Hypergeometric distribution" — the probability mass
+              function and its tail, the deterministic model every figure here is
+              computed from</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://mtgazone.com/a-guide-to-hypergeometric-calculators/"
+              >MTG Arena Zone · "A Guide to Hypergeometric Calculators in Magic" —
+              how players map deck, sources, and cards seen onto the distribution
+              in practice</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.channelfireball.com/articles/frank-analysis-how-many-colored-mana-sources-do-you-need-to-consistently-cast-your-spells/"
+              >ChannelFireball · Frank Karsten, "Frank Analysis — How Many Colored
+              Mana Sources Do You Need to Consistently Cast Your Spells?" (2013) —
+              the original model and the 90 percent consistency standard as a
+              stated choice</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.experimentalsynthesizer.blog/articles/splash"
+              >Experimental Synthesizer · "When is the Splash Worth It?" (8 Mar
+              2024) — an independent application of the same model, corroborating
+              the 9-source (86%) and 6-source (71% / 81%) figures</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://raw.githubusercontent.com/frankkarsten/MTG-Math/master/HowManySources2022Update.py"
+              >GitHub · Frank Karsten, "HowManySources2022Update.py" — the
+              simulation source: the good-land / other-land / spell deck model,
+              the London mulligan, and the conditioning on lands drawn</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://infinite.tcgplayer.com/article/How-Many-Colored-Mana-Sources-Do-You-Need-to-Consistently-Cast-Your-Spells-A-Guilds-of-Ravnica-Update/"
+              >TCGplayer Infinite · Frank Karsten, "How Many Colored Mana Sources
+              Do You Need... A Guilds of Ravnica Update" (2018) — the
+              Vancouver-to-London intermediate revision, showing the model is
+              maintained across rule changes</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.tcgplayer.com/content/article/Your-Land-Count-is-Too-Low-Strategy-Highlight/bf77d238-9f61-48de-9ce1-1fa2c04ba901/"
+              >TCGplayer · Reid Duke, "Your Land Count is Too Low! — Strategy
+              Highlight" (4 Oct 2021) — the land-count argument Karsten cites for
+              the higher 2022 baseline</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.17lands.com/public_datasets"
+              >17lands · "Public Data Sets" — the aggregated, anonymized, opt-in
+              Limited datasets, cited here as documented and existing, not for any
+              specific win-rate figure</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.channelfireball.com/article/Managing-Your-Mana-Base-Deep-Dive/817630e3-756a-481c-8042-b2bf1e8bbd10/"
+              >ChannelFireball · "Managing Your Mana Base — Deep Dive" — a separate
+              author treating Karsten's math as the field standard for manabase
+              probability</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
