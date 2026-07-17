@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A grammar masks all but seven of GPT-2's 50,257 tokens to force valid output · The Build</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-build",
+        "slug": "constrained-decoding",
+        "template": "article",
+        "title": "A grammar masks all but seven of GPT-2's 50,257 tokens to force valid output",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-17",
+        "tags": ["decoding", "structured-output", "grammars", "llm"],
+        "sources": 8,
+        "words": 2773,
+        "reading_minutes": 14,
+        "dek": "A finite-state machine marks the legal next tokens at each step, and every rival token's logit is set to negative infinity before the model samples.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Build · Engineering</div>
+        <h1 class="nb-title">A grammar masks all but seven of GPT-2's 50,257 tokens to force valid output</h1>
+        <p class="nb-dekline">
+          A finite-state machine marks the legal next tokens at each step, and
+          every rival token's logit is set to negative infinity before the model
+          samples.
+        </p>
+        <div class="nb-byline"><span>14 min read</span><span>2026-07-17</span></div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The guarantee holds because the tokens are gone</h2>
+        <p>
+          A model decoding one token at a time produces a distribution over its
+          whole vocabulary at each step. Constrained decoding adds a grammar that
+          tracks which tokens could legally come next, and sets the logits of
+          every other token to negative infinity before the softmax, so the
+          sampler can only draw a token that keeps the output valid.<sup
+            class="nb-cite"><a href="#s1">1</a></sup
+          >
+          That one layer, added to the distribution and nothing to the model, is
+          what lets OpenAI's Structured Outputs promise it will "always generate
+          responses that adhere to your supplied JSON Schema."<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          The word "always" is not a claim about the prompt. It is enforced by
+          deletion.
+        </p>
+        <p>
+          Compile a grammar
+          that permits only the JSON value <code>true</code> or <code>false</code>,
+          run it against the real 50,257-token GPT-2 vocabulary, and at the first
+          step exactly seven tokens survive. The other 50,250 have their
+          probability driven to zero, no matter what the model wanted.
+          Building that machine from the grammar up, in runnable Python, exposes
+          the three bills the naive version hides: the index it must precompute,
+          the gap between a grammar that counts characters and a model that emits
+          tokens, and the places where forcing structure changes what the model
+          says.
+        </p>
+        <div class="nb-callout">
+          <span class="nb-callout-term">Constrained decoding</span>
+          Restricting generation to a formal language by masking, at each step,
+          every token whose logit the grammar cannot currently allow, so the
+          emitted sequence is valid by construction rather than by
+          post-hoc parsing.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </div>
+      </section>
+
+      <section data-nb-section="grammar-to-machine" id="grammar-to-machine">
+        <h2>A grammar is a machine you can walk</h2>
+        <p>
+          Willard and Louf's contribution, the method behind the Outlines library,
+          is to reduce guided generation to walking a finite-state machine: the
+          grammar becomes states and transitions, and generating a valid string is
+          nothing more than following transitions that exist.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          For a regular language the machine is small enough to write by hand. Take
+          the grammar <code>true | false</code>. Ten states, one transition per
+          character, two accepting states where a complete word ends.
+        </p>
+        <figure class="rs-code">
+          <div class="rs-code-head">
+            <span class="rs-code-file">constrain.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python"># grammar as a DFA over characters: the JSON value  true | false
+# state -1 is the implicit dead state; accepting states are 5 and 9.
+DELTA = {
+    (0, "t"): 1, (1, "r"): 3, (3, "u"): 4, (4, "e"): 5,
+    (0, "f"): 2, (2, "a"): 6, (6, "l"): 7, (7, "s"): 8, (8, "e"): 9,
+}
+ACCEPT, START = {5, 9}, 0
+
+def step(state, ch):
+    return DELTA.get((state, ch), -1)
+
+def walk(state, s):
+    for ch in s:
+        state = step(state, ch)
+        if state == -1:
+            return -1
+    return state</code></pre>
+          <figcaption class="rs-code-cap">
+            Fig. 1 · The grammar as a deterministic machine. <code>walk</code>
+            consumes a whole string and returns the state it lands in, or the dead
+            state if the string ever leaves the machine.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The reference implementation, outlines-core, exposes exactly this shape
+          around a real tokenizer: build a <code>Vocabulary</code> from a
+          pretrained model, combine it with a regular expression into an
+          <code>Index</code>, and read off <code>allowed_tokens(state)</code> and
+          <code>next_state(state, token)</code> at each step.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          The hand-written machine above is the toy version of that
+          <code>Index</code>. What is missing is the bridge from character
+          transitions to whole tokens, and building that bridge is the first real
+          cost.
+        </p>
+      </section>
+
+      <section data-nb-section="the-index" id="the-index">
+        <h2>The cost hides in the one-time compile</h2>
+        <p>
+          The masking step runs once per generated token, so it has to be cheap.
+          The naive way to enforce a grammar is, at each step, to loop over the
+          whole vocabulary and test each token against the machine. Willard and
+          Louf call this out as "a fixed O(N) cost for each token generated, where
+          N is the size of the LLM's vocabulary."<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Their fix is to precompute, for every state, the set of tokens that keep
+          the output legal from that state. With that map in hand the per-step
+          work is a single lookup: "using a hash-map for &sigma; can make the m
+          step in Algorithm 2 cost only O(1) on average."<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <figure class="rs-code">
+          <div class="rs-code-head">
+            <span class="rs-code-file">constrain.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">from tokenizers import Tokenizer
+
+tok = Tokenizer.from_pretrained("gpt2")           # the real GPT-2 tokenizer
+V = tok.get_vocab_size()                          # 50257
+STRINGS = [tok.decode([i]) for i in range(V)]     # every token's literal text
+
+def build_index():
+    # for each reachable state, the token ids whose whole string stays legal.
+    states = {START} | set(DELTA.values())
+    return {q: {i for i in range(V) if STRINGS[i] and walk(q, STRINGS[i]) != -1}
+            for q in states}
+
+index = build_index()
+print(len(index[START]), "of", V, "tokens legal at the start state")</code></pre>
+          <figcaption class="rs-code-cap">
+            Fig. 2 · Compiling the grammar against a real vocabulary. The
+            comprehension is the whole index-construction algorithm; it runs the
+            O(N) scan once, up front, so the per-step mask can be a set
+            lookup.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <figure class="rs-code">
+          <div class="rs-code-head">
+            <span class="rs-code-file">output</span><span>CONSOLE</span>
+          </div>
+          <pre><code class="language-text">7 of 50257 tokens legal at the start state</code></pre>
+          <figcaption class="rs-code-cap">
+            Fig. 3 · The compiled index over GPT-2. Seven tokens can legally begin
+            a <code>true</code> or <code>false</code> value; the machine has
+            already deleted the rest before the model runs.
+          </figcaption>
+        </figure>
+        <p>
+          The O(1)-versus-O(N) trade is bought with a one-time preprocessing pass,
+          and that pass is where the bill lands. Willard and Louf describe their
+          construction, Algorithm 4, as building "a map from FSM states to subsets
+          of V" whose "run-time cost is effectively irrelevant, although it
+          theoretically requires memory equal to the number of states in the FSM."<sup
+            class="nb-cite"><a href="#s1">1</a></sup
+          >
+          For a ten-state boolean the map is tiny. For a real JSON Schema it is
+          not free, and the independent JSONSchemaBench measured the gap: compiling
+          a schema into an index took Outlines about 3.5 seconds, against roughly
+          0 milliseconds for Guidance's incremental approach on the same
+          schemas.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          Hosted systems pay the same cost and hide it behind a cache. OpenAI
+          states plainly that "the first request you make with any schema will have
+          additional latency as our API processes the schema, but subsequent
+          requests with the same schema will not."<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          The mask is cheap; the compile that makes it cheap is what you schedule
+          around.
+        </p>
+      </section>
+
+      <section data-nb-section="tokens-not-characters" id="tokens-not-characters">
+        <h2>The grammar counts characters, the model emits tokens</h2>
+        <p>
+          Here is the joint where it is tempting to wave a hand, so slow down and
+          ask the plain question. The machine has transitions on single characters:
+          <code>t</code>, then <code>r</code>, then <code>u</code>. The model does
+          not emit characters. It emits tokens, and a token is a string of one or
+          more characters chosen by the tokenizer. So which states does a single
+          token move the machine through, and how does the index know?
+        </p>
+        <figure class="rs-code">
+          <div class="rs-code-head">
+            <span class="rs-code-file">constrain.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">for s in ["true", "tr", "t", " true"]:
+    tid = tok.encode(s, add_special_tokens=False).ids[0]
+    print(f"{s!r:&gt;7}  id {tid:&gt;5}  start state to state {walk(START, s)}")</code></pre>
+          <figcaption class="rs-code-cap">
+            Fig. 4 · One token, several transitions. Each string is a single GPT-2
+            token; <code>walk</code> reports where it lands the machine from the
+            start.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <figure class="rs-code">
+          <div class="rs-code-head">
+            <span class="rs-code-file">output</span><span>CONSOLE</span>
+          </div>
+          <pre><code class="language-text"> 'true'  id  7942  start state to state 5
+   'tr'  id  2213  start state to state 3
+    't'  id    83  start state to state 1
+' true'  id  2081  start state to state -1</code></pre>
+          <figcaption class="rs-code-cap">
+            Fig. 5 · The token <code>'true'</code> crosses four transitions in one
+            step and lands in an accepting state. The leading-space token
+            <code>' true'</code> is a different id and leaves the machine at once.
+          </figcaption>
+        </figure>
+        <p>
+          The answer to the childlike question is that the index does not map
+          characters to states. It maps each state to the tokens whose entire
+          string can be consumed from there. Willard and Louf's Algorithm 3 finds,
+          for a token string, "the states through which the FSM would traverses [sic]
+          when accepting the provided string," and Algorithm 4 stores that per
+          state.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          So <code>true</code> is a legal one-step move, while
+          <code>&nbsp;true</code>, with a leading space, is a different id and dies
+          at once, because the machine has no space transition. That is the
+          alignment tax in miniature: the mask has to be computed in the model's
+          token alphabet, not the grammar's character alphabet, and the two do not
+          line up.
+        </p>
+        <p>
+          The tax is small but not zero, and it does not fully vanish into the
+          precomputed index. XGrammar measured it on a production vocabulary: for
+          Llama-3.1's 128k tokens under a JSON grammar, the tokens whose legality
+          depends on runtime context "account for only a minor proportion,
+          amounting to less than 1% (1134 out of 128k)."<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          Those 1,134 tokens are the ones a static state-to-token map cannot fully
+          settle in advance, and they have to be rechecked as generation proceeds.
+        </p>
+      </section>
+
+      <section data-nb-section="the-mask" id="the-mask">
+        <h2>Read the change off one step</h2>
+        <p>
+          With the index built, the per-step mask is four lines: copy the logits,
+          set every token not in the current state's allowed set to negative
+          infinity, and let the softmax do the rest. The claim to check is that the
+          mask alone changes the distribution. Take one concrete step and print the
+          vector.
+        </p>
+        <figure class="rs-code">
+          <div class="rs-code-head">
+            <span class="rs-code-file">constrain.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">import numpy as np
+
+def mask(logits, state):
+    out = logits.copy()
+    out[[i for i in range(len(logits)) if i not in index[state]]] = -np.inf
+    return out
+
+def softmax(x):
+    x = x - x.max(); e = np.exp(x); return e / e.sum()
+
+# one concrete step: the model, asked for a boolean, scores these tokens.
+# " maybe" is its favourite, but the grammar forbids it here.
+scores = {" maybe": 8.2, "true": 7.9, " yes": 6.4,
+          "false": 6.1, "tr": 3.0, " I": 2.5}
+logits = np.full(V, -30.0)
+for s, v in scores.items():
+    logits[tok.encode(s, add_special_tokens=False).ids[0]] = v
+
+before, after = softmax(logits), softmax(mask(logits, START))
+for s in scores:
+    i = tok.encode(s, add_special_tokens=False).ids[0]
+    lg = "-inf" if i not in index[START] else f"{logits[i]:.1f}"
+    print(f"{s!r:&gt;8}  logit {lg:&gt;4}  p_before {before[i]:.4f}  p_after {after[i]:.4f}")</code></pre>
+          <figcaption class="rs-code-cap">
+            Fig. 6 · The whole mechanism, minus the network. The input scores stand
+            in for a model's logits at a step where it wants to hedge; everything
+            else is the real index, the real tokenizer, and a real softmax.<sup
+              class="nb-cite"><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <figure class="rs-code">
+          <div class="rs-code-head">
+            <span class="rs-code-file">output</span><span>CONSOLE</span>
+          </div>
+          <pre><code class="language-text">' maybe'  logit -inf  p_before 0.4908  p_after 0.0000
+  'true'  logit  7.9  p_before 0.3636  p_after 0.8527
+  ' yes'  logit -inf  p_before 0.0811  p_after 0.0000
+ 'false'  logit  6.1  p_before 0.0601  p_after 0.1410
+    'tr'  logit  3.0  p_before 0.0027  p_after 0.0063
+    ' I'  logit -inf  p_before 0.0016  p_after 0.0000</code></pre>
+          <figcaption class="rs-code-cap">
+            Fig. 7 · The receipt. The model's favourite token, <code>' maybe'</code>
+            at probability 0.49, is illegal at this state and goes to zero. The mass
+            it held is redistributed across the legal tokens; <code>'true'</code>
+            rises from 0.36 to 0.85.
+          </figcaption>
+        </figure>
+        <p>
+          Read the first line. Before the mask, the model's most likely next token
+          is <code>&nbsp;maybe</code> at probability 0.49, the kind of hedge that
+          would break a boolean field. It is not in the seven legal tokens, its
+          logit becomes negative infinity, and after the softmax its probability is
+          0.0000. The token <code>true</code>, second before the mask at 0.36,
+          absorbs most of the freed mass and comes out at 0.85. The mask never
+          reorders the legal tokens, so <code>true</code> stays ahead of
+          <code>false</code>; it only removes options.
+        </p>
+        <figure class="nb-chart">
+          <figcaption>
+            Fig. 8 · The step's distribution over the six scored tokens, before and
+            after the mask. Illegal tokens (<code>maybe</code>, <code>yes</code>,
+            <code>I</code>) collapse to zero and their mass moves to the legal
+            ones. Data from the run in Fig. 7; mechanism from Willard &amp; Louf.
+          </figcaption>
+          <canvas></canvas>
+          <noscript>chart requires JS; data in caption and prose</noscript>
+          <script type="application/json" data-nb-chart>
+            {
+              "type": "bar",
+              "labels": ["maybe", "true", "yes", "false", "tr", "I"],
+              "series": [
+                { "name": "p before mask", "values": [0.4908, 0.3636, 0.0811, 0.0601, 0.0027, 0.0016] },
+                { "name": "p after mask", "values": [0.0, 0.8527, 0.0, 0.141, 0.0063, 0.0] }
+              ],
+              "y": { "scale": "linear", "label": "probability" }
+            }
+          </script>
+        </figure>
+        <p>
+          This runs in production, not only in a paper. llama.cpp ships
+          grammar-constrained sampling in its GBNF format, "a format for defining
+          formal grammars to constrain model outputs," applying the same per-step
+          mask inside a local inference engine.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          The per-step cost, done well, is nearly invisible. XGrammar reports
+          masking latency "less than 40us" per token and up to a 100x reduction
+          against Outlines v1.0 and llama.cpp, and its end-to-end overhead against
+          unconstrained generation is close to nothing: per-output-token latency of
+          6.2 milliseconds without constraint versus 6.3 with it at batch size one,
+          9.0 versus 9.1 at batch size 16.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          The mask itself is cheap. What is not free is what the mask can do to the
+          content underneath the shape.
+        </p>
+      </section>
+
+      <section data-nb-section="shape-versus-content" id="shape-versus-content">
+        <h2>When the shape bends the answer</h2>
+        <p>
+          The mask guarantees shape. The uncomfortable question is whether forcing
+          the shape changes what the model would have said, and here the evidence
+          genuinely conflicts. Tam and colleagues, in "Let Me Speak Freely?",
+          measured "a significant decline in LLMs' reasoning abilities under format
+          restrictions."<sup class="nb-cite"><a href="#s7">7</a></sup>
+          On GSM8K grade-school math with GPT-3.5-turbo, accuracy fell from 75.99%
+          in free-form natural language to 49.25% under a constrained JSON mode.
+          On a last-letter-concatenation task, LLaMA-3-8B dropped from 70.07% to
+          28.00%.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          Taken alone, that is a case against ever reaching for the mask on a task
+          that requires thinking.
+        </p>
+        <p>
+          It should not be taken alone. Two independent re-runs, holding the prompt
+          fixed, found the opposite. The Outlines vendor dottxt, a party with a
+          stake, argued the original study "uses different prompts for structured
+          generation and unstructured generation" and conflated true masked
+          decoding with a fine-tuned "JSON-mode" that "has no guarantees about the
+          returned value." With matched prompts their re-run showed structured
+          generation edging ahead, GSM8K moving from 0.77 to 0.78.<sup
+            class="nb-cite"><a href="#s8">8</a></sup>
+          The neutral referee agrees. JSONSchemaBench, built by neither the Outlines
+          nor the OpenAI team, reports that "the constrained decoding, regardless of
+          the framework, achieves higher performance than the unconstrained
+          setting," with Guidance at 83.8% on GSM8K against an unconstrained 80.1%.<sup
+            class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          The two results reconcile, and the reconciliation is the practical rule.
+          The mask changes content only when the legal set at a step excludes the
+          token the model needed to reason well. Force a schema that puts the answer
+          field before any room to work, and the model must commit before it has
+          thought, which is the failure Tam's constrained runs mostly measure. Give
+          it a schema with a place to reason first, or match the prompt, and the
+          measured harm disappears. The degradation tracks the schema and the
+          prompt, not the logit mask.
+        </p>
+        <p>
+          One more honesty check sits underneath the word "guarantee." The
+          guarantee is validity against the grammar the engine actually compiled,
+          which is not always the schema you wrote. OpenAI concedes that "while
+          Structured Outputs supports much of JSON Schema, some features are
+          unavailable either for performance or technical reasons."<sup
+            class="nb-cite"><a href="#s2">2</a></sup>
+          JSONSchemaBench makes the limit quantitative: on a set of hard real-world
+          GitHub schemas, empirical coverage fell to 41% for Guidance, 39% for
+          llama.cpp, 28% for XGrammar, and 3% for Outlines, the last mostly to
+          timeouts.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          A schema the engine cannot compile is either reduced to one it can or
+          refused; the mask keeps its promise only over the grammar it built.
+        </p>
+        <p>
+          A grammar becomes a machine, the machine becomes a per-state token index,
+          and the index becomes a mask that deletes the illegal options before the
+          model draws. It buys guaranteed structure for a one-time compile, a
+          one-percent alignment tax handled at runtime, and the discipline to write
+          a schema that lets the model reason before it commits. Reach for it when
+          a downstream parser must never fail. Design the schema, not just the type,
+          when the answer needs thought before shape.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2307.09702"
+              >arXiv · Willard &amp; Louf, "Efficient Guided Generation for Large
+              Language Models" (the FSM-index method: O(N)-per-token naive cost,
+              the O(1)-average masking after a precomputed hash-map, Algorithm 3
+              for token sub-paths, and Algorithm 4 for the state-to-token
+              map)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developers.openai.com/api/docs/guides/structured-outputs"
+              data-nb-note="the hosted guarantee, the cached first-request compile cost, and the supported-subset limit"
+              >OpenAI · "Structured Outputs" API guide ("always generate responses
+              that adhere to your supplied JSON Schema"; first-request schema
+              latency then cached; "some features are unavailable")</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/dottxt-ai/outlines-core/blob/main/README.md"
+              >dottxt-ai · outlines-core README (the reference implementation:
+              <code>Vocabulary</code> from a pretrained tokenizer plus a regex into
+              an <code>Index</code>, with <code>allowed_tokens</code> and
+              <code>next_state</code> per step)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2501.10868"
+              data-nb-note="independent benchmark: constrained decoding matches or beats unconstrained accuracy; hard-schema coverage; compile time"
+              >arXiv · Geng et al., "Generating Structured Outputs from Language
+              Models: Benchmark and Studies" (JSONSchemaBench: constrained decoding
+              "achieves higher performance than the unconstrained setting"; GSM8K
+              83.8% vs 80.1%; hard-schema coverage 3-41%; Outlines ~3.5s vs Guidance
+              ~0ms compile)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2411.15100"
+              data-nb-note="masking-latency and TPOT-overhead numbers with baselines; the context-dependent token count"
+              >arXiv · Dong et al., "XGrammar: Flexible and Efficient Structured
+              Generation Engine for LLMs" (per-token mask "less than 40us", up to
+              100x vs Outlines v1.0 and llama.cpp; TPOT 6.2 vs 6.3 ms at batch 1;
+              context-dependent tokens 1,134 of 128k)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md"
+              >llama.cpp · GBNF grammar documentation ("a format for defining formal
+              grammars to constrain model outputs"; grammar-constrained sampling in
+              a production local-inference engine, with its performance
+              caveats)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2408.02442"
+              data-nb-note="the harm case: measured reasoning drops under a constrained JSON mode"
+              >arXiv · Tam et al., "Let Me Speak Freely? A Study on the Impact of
+              Format Restrictions on Performance of LLMs" ("a significant decline in
+              LLMs' reasoning abilities under format restrictions"; GSM8K 75.99% to
+              49.25%; LLaMA-3-8B last-letter 70.07% to 28.00%)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blog.dottxt.ai/say-what-you-mean.html"
+              data-nb-note="the matched-prompt rebuttal; a party with a stake, weighed against s7 and corroborated by s4"
+              >dottxt · "Say What You Mean: A Response to 'Let Me Speak Freely'"
+              (matched-prompt re-run: structured generation edges unstructured,
+              GSM8K 0.77 to 0.78; the critique that JSON-mode is not masked
+              structured generation)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
