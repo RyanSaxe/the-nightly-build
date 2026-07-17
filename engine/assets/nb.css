@@ -770,6 +770,22 @@ sup.nb-cite a[id],
   color: var(--accent-2);
 }
 
+/* Prose links. An article body may link a sibling library article or an
+   external page outside the citation apparatus, and the global anchor reset
+   leaves those links indistinguishable from prose. Scoped to direct children
+   of body paragraphs so citation sups, source lists, and chrome keep their
+   own rules. */
+.nb-article .nb-reading section p > a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--hair);
+  text-underline-offset: 2px;
+}
+
+.nb-article .nb-reading section p > a:hover {
+  text-decoration-color: var(--accent);
+}
+
 .nb-article .nb-eyebrow .nb-eyebrow-progress {
   color: var(--ink-soft);
 }
