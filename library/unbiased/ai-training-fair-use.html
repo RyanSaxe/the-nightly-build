@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The AI Copyright Fight Has Narrowed to One Fair-Use Factor · Unbiased</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "unbiased",
+        "slug": "ai-training-fair-use",
+        "template": "unbiased",
+        "title": "The AI Copyright Fight Has Narrowed to One Fair-Use Factor",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-17",
+        "tags": ["law", "technology", "copyright"],
+        "sources": 15,
+        "words": 2399,
+        "reading_minutes": 10,
+        "dek": "Developers and authors have nearly stopped arguing over whether training a model on a book transforms it. The fight that remains turns on whether the flood of machine-made competitors that training makes possible is a harm copyright's market-effect factor was built to stop.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Unbiased</div>
+        <h1 class="nb-title">
+          The AI Copyright Fight Has Narrowed to One Fair-Use Factor
+        </h1>
+        <p class="nb-dekline">
+          Developers and authors have nearly stopped arguing over whether
+          training a model on a book transforms it. The fight that remains turns
+          on whether the flood of machine-made competitors that training makes
+          possible is a harm copyright's market-effect factor was built to stop.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-07-17</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Three district rulings, none of them the last word</h2>
+        <p>
+          Fair use is the escape valve in the Copyright Act. Section 107 lets
+          someone copy a protected work without a license when four factors
+          weigh, on balance, in the copier's favor: the purpose and character of
+          the use, the nature of the copyrighted work, how much of it was taken,
+          and the effect of the use on the market for the original. Whether
+          training a generative model on copyrighted books and articles clears
+          that bar reached the merits three times in 2025. The rulings do not
+          line up.
+        </p>
+        <p>
+          In June, in the same San Francisco courthouse and two days apart, two
+          judges read comparable records and came out opposite ways. Judge
+          William Alsup held that training Anthropic's Claude models on books was
+          "exceedingly transformative," a use that repurposes rather than
+          substitutes, and therefore a fair use.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Judge Vince Chhabria granted Meta summary judgment on its own training
+          claim, then wrote that he had done so only because the thirteen authors
+          before him "presented no meaningful evidence on market dilution at
+          all," and that in most cases training on copyrighted books will likely
+          be illegal.<sup class="nb-cite"><a href="#s2">2</a></sup> Four months
+          earlier, Judge Stephanos Bibas had handed down the first of the three
+          orders, holding that Ross Intelligence's copying of Westlaw editorial
+          headnotes to build a competing legal-research tool was not
+          transformative and not fair use, with the market-effect factor favoring
+          Thomson Reuters because Ross set out to build a market substitute; Ross
+          was found to have copied 2,243 of the 2,830 headnotes at issue.<sup
+            class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+        </p>
+        <p>
+          Neither generative ruling is the clean victory a headline could make of
+          it. Alsup split his case in two. Training on lawfully acquired books
+          was fair use, but the way Anthropic had stocked its library was not: it
+          had downloaded "over seven million copies of books" from pirate sites
+          and kept them, and "such piracy of otherwise available copies is
+          inherently, irredeemably infringing" even when the pirated copy is then
+          put to a transformative use.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Anthropic settled that surviving liability in September. The
+          plaintiffs' motion for preliminary approval valued the fund at about
+          $1.5 billion, roughly $3,000 for each of some 500,000 works, and called
+          it the largest publicly reported copyright recovery in history.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Anthropic's deputy general counsel said the deal would "resolve the
+          plaintiffs' remaining legacy claims."<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          Chhabria's win
+          for Meta is narrower still: his order "does not stand for the
+          proposition that Meta's use of copyrighted materials to train its
+          language models is lawful," and binds only the thirteen plaintiffs
+          before him.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          No appellate court has yet weighed in. The Ross appeal, cabined to
+          non-generative AI, is the first to reach the Third Circuit.<sup
+            class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          What each side would put its name on is already on the record, in
+          briefs, testimony, and public statements, and in the two June orders
+          that adopted opposite halves of it.
+        </p>
+      </section>
+
+      <div class="rs-divide">
+        <section
+          class="rs-side rs-left"
+          data-nb-section="training-is-fair-use"
+          id="training-is-fair-use"
+        >
+          <h3 class="rs-side-camp">
+            OpenAI, Anthropic, the EFF, and the scholars of non-expressive use
+          </h3>
+          <p class="rs-side-thesis">
+            Copying a work to train a model is a transformative, non-expressive
+            use that copyright has long permitted, because the model learns
+            unprotectable facts and patterns rather than republishing the work,
+            and any liability belongs to infringing outputs, not to training.
+          </p>
+          <div class="rs-side-argument">
+            <p>
+              OpenAI states the position without qualification: "Training AI
+              models using publicly available internet materials is fair use, as
+              supported by long-standing and widely accepted precedents." It calls
+              The New York Times suit "without merit" and describes verbatim
+              regurgitation of training text as "a rare bug that we are working to
+              drive to zero."<sup class="nb-cite"><a href="#s6">6</a></sup>
+            </p>
+            <p>
+              The scholarly form of that claim is Matthew Sag's. A non-expressive
+              use copies a work to extract unprotected information from it, facts,
+              statistics, and statistical relationships, without conveying the
+              work's original expression to a human reader. Sag told the Senate
+              Judiciary Committee that "training generative AI on copyrighted
+              works is usually fair use because it falls into the category of
+              non-expressive," the same category courts had already blessed for
+              reverse engineering, search-engine indexing, and plagiarism
+              detection. If a model "is trained properly and operated with
+              appropriate safeguards," he testified, "its outputs will not
+              resemble its inputs in a way that would trigger copyright
+              liability."<sup class="nb-cite"><a href="#s7">7</a></sup>
+            </p>
+            <p>
+              This is the theory Alsup adopted. He called the purpose of training
+              transformative "spectacularly so," and rested the case on the fourth
+              factor, the effect of the use on the market for or value of the
+              original. The authors had argued that training would produce an
+              "explosion of works competing with their works." That, Alsup wrote,
+              "is not the kind of competitive or creative displacement that
+              concerns the Copyright Act. The Act seeks to advance original works
+              of authorship, not to protect authors against competition," and so
+              "the fourth factor thus favors fair use for the training
+              copies."<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </p>
+            <p>
+              The Electronic Frontier Foundation, which files amicus briefs on
+              this side, presses the public consequence. Building a model is
+              "beyond anything that any copyright owner rightly could expect to
+              control"; copyright exists "to be an engine for new expression," so
+              where AI works compete with the originals "that's a feature, not a
+              bug"; and forcing copyright to police "market dilution" would "only
+              hurt important and legal uses." The right rule, it argues, is
+              Alsup's: courts "should look to Bartz, not Kadrey."<sup
+                class="nb-cite"
+                ><a href="#s8">8</a></sup
+              >
+            </p>
+          </div>
+          <p class="rs-side-champion">
+            <span class="rs-side-outlet">Matthew Sag (Emory Law)</span>, standing
+            here because he laid out the non-expressive-use theory that the labs'
+            briefs and Alsup's order both draw on, under oath before the Senate,
+            and marked its own limits as he did.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+          </p>
+        </section>
+
+        <section
+          class="rs-side rs-right"
+          data-nb-section="training-needs-a-license"
+          id="training-needs-a-license"
+        >
+          <h3 class="rs-side-camp">
+            The New York Times, the Authors Guild, Getty Images, and the scholars
+            of the training-data market
+          </h3>
+          <p class="rs-side-thesis">
+            Training is mass unlicensed copying done to build commercial products
+            that compete with the very works copied, at a moment when a market to
+            license training data already exists, so it is infringement that a
+            license, not a fair-use defense, must cure.
+          </p>
+          <div class="rs-side-argument">
+            <p>
+              The New York Times filed that there is "nothing 'transformative'
+              about using The Times's content without payment to create products
+              that substitute for The Times and steal audiences away from it," and
+              that the defendants "seek to free-ride on The Times's massive
+              investment in its journalism by using it to build substitutive
+              products without permission or payment." The complaint demands
+              "billions of dollars in statutory and actual damages," a claim it
+              still must prove.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            </p>
+            <p>
+              The Authors Guild put the livelihood claim on the record when it
+              sued OpenAI for a class including John Grisham, George R.R. Martin,
+              and Jodi Picoult. Its chief executive, Mary Rasenberger, called
+              generative AI a threat to "decimate the author profession" and, for
+              fiction writers, "identity theft on a grand scale," while co-counsel
+              argued the labs "could have 'trained' their large language models on
+              works in the public domain or paid a reasonable licensing fee." The
+              Guild pegs median full-time author income at about $20,000, the
+              margin it says the copying puts at risk.<sup class="nb-cite"
+                ><a href="#s10">10</a></sup
+              >
+            </p>
+            <p>
+              This is the theory Chhabria credited. Where Alsup saw competition,
+              Chhabria saw substitution. "By training generative AI models with
+              copyrighted works," he wrote, "companies are creating something that
+              often will dramatically undermine the market for those works," and
+              "indirect substitution is still substitution." Market dilution is
+              the harm to a work's market from a flood of similar works a model can
+              now generate on demand, even when no single output reproduces the
+              original, and Chhabria predicted it "will often cause plaintiffs to
+              decisively win the fourth factor."<sup class="nb-cite"
+                ><a href="#s2">2</a></sup
+              >
+              The Authors Guild, reacting to Alsup, said his order "fails to look
+              at the actual harm already being caused by Claude in generating
+              books and articles that directly compete with the originals," and
+              called his digitization holding contrary to "how the publishing
+              markets work."<sup class="nb-cite"><a href="#s11">11</a></sup>
+            </p>
+            <p>
+              The scholarly form of the claim is Jane Ginsburg's. She argues for
+              decoupling the inputs from the outputs: even where a model's outputs
+              do not infringe, "commercial copying (at least) to create training
+              data would be for the same purpose" as the licensing market now
+              emerging "in news media and scholarly publishing," so after the
+              Supreme Court's Warhol decision whether input-copying is
+              transformative "may depend on whether there is a market for
+              licensing content for training data."<sup class="nb-cite"
+                ><a href="#s12">12</a></sup
+              >
+              Getty Images presses the visual-artist version, insisting its
+              "copyright-protected works were used to train Stable Diffusion" and
+              urging governments to set "stronger transparency rules."<sup
+                class="nb-cite"
+                ><a href="#s13">13</a></sup
+              >
+              Getty had abandoned its central UK copyright and database claims,
+              and the High Court held that the model
+              weights "are not themselves an infringing copy."<sup
+                class="nb-cite"
+                ><a href="#s14">14</a></sup
+              >
+              The U.S.
+              Copyright Office, in its 2025 training report, sits between the camps
+              but leans this way on the market: "if thousands of AI-generated
+              romance novels are put on the market, fewer of the human-authored
+              romance novels that the AI was trained on are likely to be
+              sold."<sup class="nb-cite"><a href="#s15">15</a></sup>
+            </p>
+          </div>
+          <p class="rs-side-champion">
+            <span class="rs-side-outlet">Jane C. Ginsburg (Columbia Law)</span>,
+            standing here because she reframed the dispute around the emerging
+            market for training data, the ground on which the transformative and
+            market-effect factors are now argued after Warhol.<sup
+              class="nb-cite"
+              ><a href="#s12">12</a></sup
+            >
+          </p>
+        </section>
+      </div>
+
+      <section data-nb-section="crux" id="crux">
+        <h2>The disagreement has collapsed onto the fourth factor</h2>
+        <p>
+          What no longer divides the sides is most of the doctrine. Both
+          generative rulings hold that training is
+          transformative; Alsup calls it spectacularly so,<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          and Chhabria agrees the point is not seriously disputable.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          The Copyright Office concedes that "various uses of copyrighted works in
+          AI training are likely to be transformative."<sup class="nb-cite"
+            ><a href="#s15">15</a></sup
+          >
+          The rights-holders' own scholar grants that outputs often will not
+          infringe, which is why she moves the fight to the inputs.<sup
+            class="nb-cite"
+            ><a href="#s12">12</a></sup
+          >
+          Strip away what everyone agrees on and one factor is left holding the
+          entire question: the effect of the use on the market.
+        </p>
+        <p>
+          Inside that factor sit two disagreements of different kinds, and the
+          cases keep fusing them. The first is legal, a dispute about what the
+          statute protects. Does the market-effect factor reach "market
+          dilution," the slow erosion of a work's market by a glut of machine-made
+          substitutes, or only the direct substitution of one copy for another?
+          Alsup says the statute "seeks to advance original works of authorship,
+          not to protect authors against competition."<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Chhabria says "indirect substitution is still substitution," and the
+          Copyright Office agrees dilution is a "serious risk" the factor should
+          count.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"
+            ><a href="#s15">15</a></sup
+          >
+          The EFF answers that policing dilution would reach uses copyright was
+          never meant to control.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          Neither judge misread the record here; they read the same clause of the
+          same statute to protect different things.
+        </p>
+        <p>
+          The second disagreement is a forecast, and it is where the litigation
+          actually turns. Even Chhabria's theory needs proof: Meta won not because
+          dilution does not count but because the plaintiffs "presented no
+          meaningful evidence on market dilution at all."<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          The theory that could sink the labs has never been carried on a trial
+          record. Whether it can be is a claim about the world, not the statute:
+          whether the outputs of a given model measurably displace sales of the
+          specific works it trained on, and whether a plaintiff can quantify it.
+          Each camp's strongest voice concedes the hinge. Sag grants that if a
+          model's ordinary outputs infringe or its access was unlawful, "there is
+          no obvious fair use rationale to replace" non-expressive use;<sup
+            class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          Alsup proved the access half by holding Anthropic's piracy unprotected,
+          and Anthropic paid $1.5 billion to close it.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup> Neither absolute survives
+          its own side's best minds.
+        </p>
+        <p>
+          Two things would settle it, and both are in motion. One is an appellate
+          ruling on whether dilution is cognizable under the fourth factor; the
+          split across the district orders makes review close to inevitable, and
+          the Ross appeal, though it turns on non-generative copying, is already
+          before the Third Circuit.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          The other is a trial record in which a well-resourced plaintiff finally
+          proves dilution of the works actually trained on. The New York Times,
+          which has pleaded substitution directly and can fund the market
+          economics Kadrey's authors did not, is the case that will test whether
+          the harm can be shown rather than asserted.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+          Until one plaintiff proves the market harm and one appeals court says
+          whether that harm counts, the record supports no verdict wider than the
+          one both judges reached in their own cases: it depends on the use, and
+          on evidence no one has yet put in.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Order on Fair Use, pp. 9-28"
+              href="https://fingfx.thomsonreuters.com/gfx/legaldocs/jnvwbgqlzpw/ANTHROPIC%20fair%20use.pdf"
+              >U.S. District Court, N.D. Cal. · Order on Fair Use, Bartz v.
+              Anthropic, No. 3:24-cv-05417-WHA (Judge William Alsup, June 23,
+              2025)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Order Granting Summary Judgment, pp. 1-40"
+              href="https://chatgptiseatingtheworld.com/wp-content/uploads/2025/06/Judge-Chhabria-Fair-Use-decision-in-Kadrey-v.-Meta-June-25-2025.pdf"
+              >U.S. District Court, N.D. Cal. · Order on Fair Use, Kadrey v. Meta
+              Platforms, No. 3:23-cv-03417-VC (Judge Vince Chhabria, June 25,
+              2025)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="765 F. Supp. 3d 382, at 398; appeal docketed No. 25-8018 (3d Cir.)"
+              href="https://www.ded.uscourts.gov/sites/ded/files/opinions/20-613_5.pdf"
+              >U.S. District Court, D. Del. · Memorandum Opinion on Fair Use,
+              Thomson Reuters Enterprise Centre GmbH v. Ross Intelligence Inc.
+              (Judge Stephanos Bibas, Feb. 11, 2025)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Motion for Preliminary Approval, Dkt. 363, pp. 1, 19"
+              href="https://storage.courtlistener.com/recap/gov.uscourts.cand.434709/gov.uscourts.cand.434709.363.0.pdf"
+              >U.S. District Court, N.D. Cal. · Plaintiffs' Motion for
+              Preliminary Approval of Class Settlement, Bartz v. Anthropic, No.
+              3:24-cv-05417-WHA, Dkt. 363 (Sept. 8, 2025)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-note="Anthropic Dep. Gen. Counsel Aparna Sridhar's settlement statement, quoted"
+              href="https://www.npr.org/2025/09/05/nx-s1-5529404/anthropic-settlement-authors-copyright-ai"
+              >Anthropic, settlement statement in Bartz v. Anthropic (Sept. 5,
+              2025), as reported by NPR</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/openai-and-journalism/"
+              >OpenAI · "OpenAI and journalism" (Jan. 8, 2024)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Written testimony, pp. 2-6"
+              href="https://www.judiciary.senate.gov/imo/media/doc/2023-07-12_pm_-_testimony_-_sag.pdf"
+              >Matthew Sag · Written Testimony, U.S. Senate Judiciary
+              Subcommittee on Intellectual Property, "Copyright and Artificial
+              Intelligence" (July 12, 2023)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.eff.org/deeplinks/2025/06/two-courts-rule-generative-ai-and-fair-use-one-gets-it-right"
+              >Electronic Frontier Foundation · "Two Courts Rule On Generative AI
+              and Fair Use — One Gets It Right" (June 2025)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Complaint, ¶¶ 2, 4"
+              href="https://nytco-assets.nytimes.com/2023/12/NYT_Complaint_Dec2023.pdf"
+              >The New York Times Company v. Microsoft & OpenAI · Complaint, No.
+              1:23-cv-11195 (S.D.N.Y. filed Dec. 27, 2023)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://authorsguild.org/news/ag-and-authors-file-class-action-suit-against-openai/"
+              >The Authors Guild · "The Authors Guild, John Grisham, Jodi
+              Picoult, David Baldacci, George R.R. Martin, and 13 Other Authors
+              File Class-Action Suit Against OpenAI" (Sept. 20, 2023)</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://authorsguild.org/news/mixed-decision-in-anthropic-ai-case/"
+              >The Authors Guild · "Mixed Decision in Anthropic AI Case" (June
+              25, 2025)</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://scholarship.law.columbia.edu/faculty_scholarship/4617/"
+              >Jane C. Ginsburg · "AI Input Data and Fair Use: A View from the
+              U.S." (Columbia Law School faculty scholarship, 2024)</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://newsroom.gettyimages.com/en/getty-images/getty-images-issues-statement-on-ruling-in-stability-ai-uk-litigation"
+              >Getty Images · "Getty Images issues statement on ruling in
+              Stability AI UK litigation" (Nov. 4, 2025)</a
+            >
+          </li>
+          <li id="s14">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="[2025] EWHC 2863 (Ch), ¶¶ 2, 9, 600"
+              href="https://www.judiciary.uk/wp-content/uploads/2025/11/Getty-Images-v-Stability-AI.pdf"
+              >High Court of Justice (England & Wales) · Getty Images (US) Inc &
+              Ors v Stability AI Ltd, [2025] EWHC 2863 (Ch) (Nov. 4, 2025)</a
+            >
+          </li>
+          <li id="s15">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Pre-Publication Version, § IV and Market Dilution discussion"
+              href="https://www.copyright.gov/ai/Copyright-and-Artificial-Intelligence-Part-3-Generative-AI-Training-Report-Pre-Publication-Version.pdf"
+              >U.S. Copyright Office · "Copyright and Artificial Intelligence,
+              Part 3: Generative AI Training" (Pre-Publication Version, May
+              2025)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
