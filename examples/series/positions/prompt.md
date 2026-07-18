@@ -28,5 +28,5 @@ Emphases:
   and quantify it. "Strong business" is not analysis.
 - Cite the document that owns the number, not the coverage of it. Any figure
   that carries weight in the piece comes from the record itself.
-- No recommendation and no price target. Equip the reader to judge the business
-  and let them make the call.
+- No recommendation and no price target. The piece lays out what the business
+  is worth judging on and stops there.

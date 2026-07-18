@@ -4,11 +4,11 @@ A course in writing fast GPU kernels, from the execution model up to
 FlashAttention, for an engineer who knows deep learning but has never written
 CUDA or Triton. Each article is one lesson that builds on the last. Triton is
 OpenAI's open-source GPU language and the layer PyTorch's `torch.compile` lowers
-to, so the payoff is code the reader can run.
+to, so the payoff of every lesson is runnable code.
 
 Every lesson follows the teaching moves, each a labeled note (nb-note):
-open with an "In this article" note stating what the reader will be able to
-do, recap the previous lesson concretely, teach the core, and close with a
+open with an "In this article" note stating what the lesson makes doable,
+recap the previous lesson concretely, teach the core, and close with a
 self-check note of exercises and a "Next article" note bridging onward.
 
 Show real code with the rs-code furniture: Triton in Python, CUDA in C++. Keep
@@ -16,7 +16,7 @@ listings short and honest. The reader should be able to run what you print.
 
 Emphases:
 
-- Build each idea from one the reader already holds, and reuse one running
+- Build each idea from one an earlier lesson established, and reuse one running
   example across the course. Define each term on first use.
 - Real numbers over hand-waving, each cited. A lesson that cannot measure its
   kernel has not taught it.

@@ -2,7 +2,7 @@
 
 Appraise, one article each, the techniques that make modern LLM inference
 affordable: what problem each solves, how it works, and what it costs you.
-The reader is an engineer deciding what to run, not a student.
+Each appraisal answers whether to run the technique, never how to study it.
 Label these articles `Appraisal`.
 
 Each appraisal fixes its spine: the plain-abstract furniture (nb-abstract)

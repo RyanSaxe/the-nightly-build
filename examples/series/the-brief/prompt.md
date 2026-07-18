@@ -5,10 +5,10 @@ and whether it matters. Cover the lanes that moved. Skip the rest.
 
 Lanes (label each item with its lane):
 
-- research: papers, benchmarks, capability results
-- compute: chips, datacenters, energy, the supply chain
-- industry: launches, funding, the labs, and the serious startups
-- policy: regulation, standards, court rulings, government moves
+- research: anything that changes what models can do or how that is measured
+- compute: anything that changes what running them costs, from chips to power
+- industry: anything that changes who builds or sells them
+- policy: anything a government, court, or standards body does about them
 
 Emphases:
 
@@ -17,6 +17,6 @@ Emphases:
 - Link each headline to the document that owns its claim, and to someone with no
   stake in that document reading the same thing. A write-up that only restates
   the announcement is the announcement again.
-- Assume the reader already saw the tweet. Add what it left out: the number,
+- The tweet already made the rounds. Add what it left out: the number,
   the caveat, the thing that makes it real or makes it noise.
 - Reference earlier briefs when a story develops ("we noted last week...").
