@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flow Matching Trades the Score for a Velocity Field · The Paper</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-paper",
+        "slug": "flow-matching",
+        "template": "paper",
+        "title": "Flow Matching Trades the Score for a Velocity Field",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-18",
+        "tags": ["generative-models", "diffusion", "flow-matching"],
+        "sources": 4,
+        "words": 2718,
+        "reading_minutes": 12,
+        "dek": "Lipman and colleagues prove that regressing a network onto a closed-form conditional velocity field has the same gradient as the intractable objective it stands in for, which is how a state-of-the-art image generator gets trained with nothing harder than mean-squared error.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Paper</div>
+        <h1 class="nb-title">Flow Matching Trades the Score for a Velocity Field</h1>
+        <p class="nb-dekline">
+          Lipman and colleagues prove that regressing a network onto a
+          closed-form conditional velocity field has the same gradient as the
+          intractable objective it stands in for, which is how a
+          state-of-the-art image generator gets trained with nothing harder
+          than mean-squared error.
+        </p>
+        <div class="nb-byline">
+          <span>12 min read</span><span>2026-07-18</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Flow Matching for Generative Modeling</p>
+          <p class="nb-paper-meta">
+            Yaron Lipman, Ricky T. Q. Chen, Heli Ben-Hamu, Maximilian Nickel,
+            Matt Le · arXiv:2210.02747 · ICLR 2023
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2210.02747"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We introduce a new paradigm for generative modeling built on
+            Continuous Normalizing Flows (CNFs), allowing us to train CNFs at
+            unprecedented scale. Specifically, we present the notion of Flow
+            Matching (FM), a simulation-free approach for training CNFs based on
+            regressing vector fields of fixed conditional probability paths.
+            Flow Matching is compatible with a general family of Gaussian
+            probability paths for transforming between noise and data samples —
+            which subsumes existing diffusion paths as specific instances.
+            Interestingly, we find that employing FM with diffusion paths
+            results in a more robust and stable alternative for training
+            diffusion models. Furthermore, Flow Matching opens the door to
+            training CNFs with other, non-diffusion probability paths. An
+            instance of particular interest is using Optimal Transport (OT)
+            displacement interpolation to define the conditional probability
+            paths. These paths are more efficient than diffusion paths, provide
+            faster training and sampling, and result in better generalization.
+            Training CNFs using Flow Matching on ImageNet leads to consistently
+            better performance than alternative diffusion-based methods in terms
+            of both likelihood and sample quality, and allows fast and reliable
+            sample generation using off-the-shelf numerical ODE
+            solvers.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The bill the score route runs up</h2>
+        <p>
+          To build a continuous generative model the diffusion way, you pay in
+          advance. You fix a stochastic differential equation that drips noise
+          into data over time, you derive the score of the resulting densities,
+          and you train a network to match that score at every noise level.
+          Each of those is a design decision that constrains the next, and none
+          of them hands you a direct grip on the object you actually want at
+          sampling time: a trajectory that carries a noise sample to a data
+          sample. The score is a means. The path is the end, and the score
+          route reaches it only indirectly.
+        </p>
+        <p>
+          Flow Matching pays a different bill. It names the end object directly
+          as a time-dependent velocity field, the thing whose integral is the
+          trajectory, and then trains a network to regress onto that field with
+          a plain squared-error loss. No stochastic differential equation to
+          design, no score to estimate, and no need to simulate the trajectory
+          while training.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          reframing was in the air: a month before this paper, Liu, Gong, and
+          Liu reached the same linear-interpolation-and-regression construction
+          from a different group and called it rectified
+          flow.<sup class="nb-cite"><a href="#s2">2</a></sup> The idea that
+          follows is best read as convergent rather than as one lab's invention.
+        </p>
+      </section>
+
+      <section data-nb-section="a-field-and-its-path" id="a-field-and-its-path">
+        <h2>A velocity field, and the path it carries</h2>
+        <p>
+          Start with the object being learned. A time-dependent velocity field
+          <code>v_t(x)</code> assigns a direction and speed to every point in
+          space at every time <code>t</code> in <code>[0, 1]</code>. Drop a
+          particle at <code>x</code> and let it ride the field, and you get a
+          flow <code>φ_t</code> defined by the ordinary differential equation
+          <code>dφ_t(x)/dt = v_t(φ_t(x))</code> with <code>φ_0(x) = x</code>.
+          The flow moves points; what a generative model cares about is how it
+          moves a whole distribution. Push a starting density
+          <code>p_0</code> through the flow and you get a new density at each
+          time, <code>p_t = [φ_t]_* p_0</code>, the push-forward.
+        </p>
+        <p>
+          The sequence of densities <code>p_t</code> is a probability path: a
+          continuous morph from the noise distribution at <code>t = 0</code> to
+          the data distribution at <code>t = 1</code>. A single identity ties
+          the field to the path it produces, the continuity equation,
+        </p>
+        <pre><code>  ∂p_t(x)/∂t  +  div( p_t(x) v_t(x) )  =  0 .</code></pre>
+        <p>
+          It is necessary and sufficient: a field <code>v_t</code> generates a
+          path <code>p_t</code> exactly when the two satisfy
+          it.<sup class="nb-cite"><a href="#s1">1</a></sup> Learning a
+          generative model is now learning a field, and a field is just a
+          function from <code>(x, t)</code> to a vector, the native diet of a
+          neural network.
+        </p>
+        <div class="nb-callout">
+          <span class="nb-callout-term">Velocity field vs. score</span>
+          The score points uphill on the log-density at a fixed noise level. The
+          velocity field points along the trajectory that transports noise into
+          data. Flow Matching learns the second directly, so the field it fits
+          is the sampler it will run.
+        </div>
+      </section>
+
+      <section data-nb-section="the-field-you-cannot-write-down" id="the-field-you-cannot-write-down">
+        <h2>The field you cannot write down</h2>
+        <p>
+          Suppose you already knew the right field. Then training would be a
+          one-line regression: pick a time, pick a point on the path, and push
+          the network's output toward the target. That is the Flow Matching
+          objective exactly,
+        </p>
+        <pre><code>  L_FM(θ)  =  E_{t, p_t(x)}  ‖ v_t(x) − u_t(x) ‖² ,</code></pre>
+        <p>
+          with <code>t</code> drawn uniformly on <code>[0, 1]</code> and
+          <code>x</code> drawn from the path density <code>p_t</code>. Here
+          <code>u_t</code> is the true field that generates the path you want,
+          and <code>v_t</code> is the network. The trouble is the target. For a
+          path that ends on real data you have no formula for
+          <code>u_t</code>.
+        </p>
+        <figure class="nb-excerpt">
+          <blockquote>
+            We generally don't have access to a closed form
+            <code>u_t</code> that generates the desired
+            <code>p_t</code>.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+          <figcaption>
+            <span class="nb-excerpt-loc">§3 · Flow Matching</span>
+            The objective everyone wants is not directly computable. The claim
+            is narrow: no formula for the field is at hand, not that the field
+            is unknowable.
+          </figcaption>
+        </figure>
+        <p>
+          It is fair to ask what makes any of this trainable at all. The
+          loss regresses onto a target that has no closed form and cannot be
+          sampled. Written as it stands, <code>L_FM</code> is a definition of
+          the goal, not a procedure. The paper's move is to replace the
+          intractable target with one that is trivial to compute, and to prove
+          that the swap costs nothing the optimizer can feel.
+        </p>
+      </section>
+
+      <section data-nb-section="conditioning-on-where-the-sample-lands" id="conditioning-on-where-the-sample-lands">
+        <h2>Conditioning on where the sample lands</h2>
+        <p>
+          The intractable field is intractable because it is a marginal over
+          every possible data point at once. Condition on a single data sample
+          <code>x_1</code> and everything simplifies. Fix
+          <code>x_1</code> and you can hand-design a conditional path
+          <code>p_t(x | x_1)</code> that starts as broad noise and ends
+          concentrated on <code>x_1</code>, and write down the conditional
+          field <code>u_t(x | x_1)</code> that generates it in closed form. The
+          marginal path is then just the mixture of these conditional paths over
+          the data,
+        </p>
+        <pre><code>  p_t(x)  =  ∫ p_t(x | x_1) q(x_1) dx_1 ,</code></pre>
+        <p>
+          and the marginal field is the corresponding weighted average of the
+          conditional fields,
+        </p>
+        <pre><code>  u_t(x)  =  ∫ u_t(x | x_1) [ p_t(x | x_1) q(x_1) / p_t(x) ] dx_1
+          =  E_{x_1 ~ p_{1|t}(x_1 | x)} [ u_t(x | x_1) ] .</code></pre>
+        <p>
+          Read the weight as a posterior: given that a particle sits at
+          <code>x</code> at time <code>t</code>, how likely is it that the
+          endpoint was <code>x_1</code>. The intractability lives in that
+          posterior, which you cannot
+          evaluate.<sup class="nb-cite"><a href="#s3">3</a></sup> Theorem 1
+          confirms the construction is sound: the averaged field really does
+          transport the mixture path, satisfying the continuity
+          equation.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Now regress onto the conditional target instead of the marginal one,
+        </p>
+        <pre><code>  L_CFM(θ)  =  E_{t, q(x_1), p_t(x | x_1)}  ‖ v_t(x) − u_t(x | x_1) ‖² .</code></pre>
+        <p>
+          This one you can run tonight. Sample a datum
+          <code>x_1</code>, sample a point from its conditional path, evaluate
+          the closed-form conditional field, take the squared error. In words:
+          you are performing regression on the velocity field, and the target is
+          the conditional field you designed rather than the marginal field you
+          cannot reach. The reason this is allowed is one theorem.
+        </p>
+        <figure class="nb-excerpt">
+          <blockquote>
+            Assuming that <code>p_t(x) &gt; 0</code> for all
+            <code>x ∈ ℝ^d</code> and <code>t ∈ [0, 1]</code>, then, up to a
+            constant independent of θ, <code>L_CFM</code> and
+            <code>L_FM</code> are equal. Hence, <code>∇_θ L_FM(θ) = ∇_θ
+            L_CFM(θ)</code>.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+          <figcaption>
+            <span class="nb-excerpt-loc">Theorem 2 · §3.2</span>
+            The tractable objective and the intractable one share a gradient. It
+            does not say the two losses are equal, only that θ moves identically
+            under both.
+          </figcaption>
+        </figure>
+        <p>
+          The intractable term drops in plain sight. Expand both squared
+          norms:
+        </p>
+        <pre><code>  L_FM  =  E ‖v_t(x)‖²  − 2 E⟨ v_t(x), u_t(x) ⟩       + E ‖u_t(x)‖²
+  L_CFM =  E ‖v_t(x)‖²  − 2 E⟨ v_t(x), u_t(x|x_1) ⟩   + E ‖u_t(x|x_1)‖²</code></pre>
+        <p>
+          The first terms agree: averaging <code>‖v_t(x)‖²</code> over
+          <code>p_t(x)</code> is the same as averaging it over the joint of
+          <code>q(x_1)</code> and <code>p_t(x | x_1)</code>, because integrating
+          the conditional path against the data gives back
+          <code>p_t(x)</code>. The last terms depend only on the targets, not on
+          θ, so they contribute nothing to the gradient. Everything hinges on
+          the cross term. Take the FM one and substitute the definition of the
+          marginal field, using the single identity that clears the fraction,
+        </p>
+        <pre><code>  p_t(x) u_t(x)  =  ∫ u_t(x | x_1) p_t(x | x_1) q(x_1) dx_1 .</code></pre>
+        <p>
+          The <code>p_t(x)</code> supplied by the FM expectation's own measure
+          cancels the <code>1 / p_t(x)</code> buried in the marginal field, and
+          the cross term collapses onto the conditional one,
+        </p>
+        <pre><code>  E_{p_t(x)}⟨ v_t, u_t ⟩  =  ∫⟨ v_t(x), p_t(x) u_t(x) ⟩ dx
+        =  ∫∫⟨ v_t(x), u_t(x|x_1) ⟩ p_t(x|x_1) q(x_1) dx_1 dx
+        =  E_{q, p_t(x|x_1)}⟨ v_t, u_t(x|x_1) ⟩ .</code></pre>
+        <p>
+          The two objectives differ only by a θ-independent constant, so their
+          gradients are identical. The intractable posterior never had to be
+          evaluated; it cancelled. The Cambridge Machine Learning Group's
+          independent reconstruction of this argument arrives at the same
+          gradient equality, which is good evidence that this is the standard
+          way to teach the
+          trick.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="diffusion-is-one-gaussian-path" id="diffusion-is-one-gaussian-path">
+        <h2>Diffusion is one Gaussian path among many</h2>
+        <p>
+          The framework is agnostic about which conditional path you pick, so
+          long as it starts as standard noise and ends on the datum. A natural
+          family is Gaussian: keep the conditional density Gaussian at every
+          time,
+        </p>
+        <pre><code>  p_t(x | x_1)  =  N( x | μ_t(x_1), σ_t(x_1)² I ) ,</code></pre>
+        <p>
+          with the mean sliding from <code>0</code> to <code>x_1</code> and the
+          spread shrinking from <code>1</code> to nearly zero as
+          <code>t</code> runs from <code>0</code> to <code>1</code>. For any such
+          choice there is a unique conditional field that generates it, and the
+          paper writes it down:
+          <code>u_t(x | x_1) = (σ_t'/σ_t)(x − μ_t) +
+          μ_t'</code>.<sup class="nb-cite"><a href="#s1">1</a></sup> Pick the
+          schedule and the target follows by differentiation.
+        </p>
+        <p>
+          Now set <code>μ_t(x_1) = α_{1−t} x_1</code> and
+          <code>σ_t(x_1) = sqrt(1 − α_{1−t}²)</code>, and the Gaussian path is
+          exactly the variance-preserving diffusion path that standard diffusion
+          models already walk. Diffusion is not a separate theory that Flow
+          Matching imitates; it is one member of this Gaussian family, recovered
+          by one choice of schedule. Training that member with the
+          conditional-regression loss, rather than with a score-matching loss
+          derived from a stochastic differential equation, is what the abstract
+          means by a more robust and stable alternative for training diffusion
+          models.<sup class="nb-cite"><a href="#s1">1</a></sup> The reframing
+          keeps diffusion and drops the machinery around it.
+        </p>
+      </section>
+
+      <section data-nb-section="straight-lines-for-one-target" id="straight-lines-for-one-target">
+        <h2>Straight lines, at least toward one target</h2>
+        <p>
+          Once the path is a free choice, the obvious question is which one to
+          choose, and the paper's answer is the shortest one. Take the mean to
+          move linearly and the standard deviation to fall linearly:
+          <code>μ_t(x_1) = t x_1</code> and
+          <code>σ_t(x_1) = 1 − (1 − σ_min) t</code>. This is the
+          optimal-transport displacement path, and its conditional field is
+        </p>
+        <pre><code>  u_t(x | x_1)  =  ( x_1 − (1 − σ_min) x ) / ( 1 − (1 − σ_min) t ) .</code></pre>
+        <p>
+          As <code>σ_min</code> goes to zero this is
+          <code>(x_1 − x) / (1 − t)</code>: aim straight at the target, at a
+          speed set by the time remaining. Integrate it and the particle rides a
+          straight line at constant speed from its noise start to
+          <code>x_1</code>.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-excerpt">
+          <blockquote>
+            [Particles] always move in straight line trajectories and with
+            constant speed.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+          <figcaption>
+            <span class="nb-excerpt-loc">§4.1 · Optimal Transport paths</span>
+            True of the per-sample conditional path toward a fixed
+            <code>x_1</code>. It is not yet a claim about the averaged field the
+            sampler actually integrates.
+          </figcaption>
+        </figure>
+        <p>
+          Straightness is what buys cheap sampling. A numerical ODE solver
+          integrates a straight, constant-speed trajectory exactly with a single
+          large step, while a curved one forces many small steps to stay on
+          course. The paper's own figures contrast the diffusion path, which
+          curves and backtracks, with the optimal-transport path, whose
+          conditional field has constant direction in time and is, in its words,
+          simpler to fit.<sup class="nb-cite"><a href="#s1">1</a></sup> If the
+          field the sampler ran were this straight, few-step generation would be
+          free.
+        </p>
+      </section>
+
+      <section data-nb-section="the-straight-paths-are-the-conditional-ones" id="the-straight-paths-are-the-conditional-ones">
+        <h2>The straight paths are the conditional ones</h2>
+        <p>
+          Here is the caveat the clean story tends to swallow. The straight
+          lines are a property of the conditional paths, each aimed at a single
+          fixed
+          <code>x_1</code>. The field you sample from is the marginal one, the
+          posterior-weighted average from Theorem 1. At a point that several
+          data endpoints could plausibly explain, the marginal velocity is a
+          blend of their directions, and a blend of straight lines aimed at
+          different targets is not itself straight. The learned trajectory you
+          integrate at sampling time is generally curved, however straight each
+          conditional path was.
+        </p>
+        <div class="nb-pull">
+          <p>
+            Every conditional path is a straight line. The average of them,
+            which is what you sample, bends.
+          </p>
+        </div>
+        <p>
+          Three independent accounts land on the same point. The rectified-flow
+          paper builds the identical linear interpolation, then notes that the
+          optimal field is the conditional expectation
+          <code>E[X_1 − X_0 | X_t = x]</code>, and that the raw interpolation
+          has crossing trajectories the learned field must causalize; its
+          one-step sampling needs a recursive reflow procedure precisely because
+          a single pass does not straighten the marginal
+          flow.<sup class="nb-cite"><a href="#s2">2</a></sup> The Cambridge
+          reconstruction makes the geometric version of the argument: distinct
+          conditional paths may cross at training time, but marginal ODE
+          trajectories cannot cross at sampling time, so they must bend to avoid
+          each other.<sup class="nb-cite"><a href="#s3">3</a></sup> The
+          straight-path selling point is real, and it is a statement about the
+          regression target, not about the sampler.
+        </p>
+      </section>
+
+      <section data-nb-section="what-survived-a-real-training-run" id="what-survived-a-real-training-run">
+        <h2>What survived a real training run</h2>
+        <p>
+          The idea's second life is where the reconstruction has to stay honest.
+          Rectified flow arrived at the same construction independently, one
+          month earlier, and both landed at the same
+          venue.<sup class="nb-cite"><a href="#s2">2</a></sup> The Cambridge
+          account counts three simultaneous papers introducing conditional flow
+          matching at once.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Treating Flow Matching as a lone invention gets the history wrong.
+          What
+          settles whether the reframing mattered is a production system, and
+          Stable Diffusion 3 is the test. It adopts the straight
+          rectified-flow path, <code>z_t = (1 − t) x_0 + t ε</code>, but does
+          not trust uniform training on it.
+        </p>
+        <p>
+          The change that made it win is a timestep schedule. Instead of drawing
+          the training time <code>t</code> uniformly, the team samples it from a
+          logit-normal density that up-weights the middle of the interval, where
+          the velocity target is hardest to
+          predict.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <figure class="nb-chart">
+          <figcaption>
+            Fig. 1 · Mean rank across evaluated settings in the Stable Diffusion
+            3 study (lower is better): plain rectified flow with uniform
+            timesteps, an LDM diffusion baseline, and rectified flow with
+            logit-normal timesteps.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </figcaption>
+          <canvas></canvas>
+          <noscript>chart requires JS; data in caption and prose</noscript>
+          <script type="application/json" data-nb-chart>
+            {
+              "type": "bar",
+              "labels": [
+                "rf / logit-normal",
+                "eps / linear (LDM)",
+                "rf / uniform"
+              ],
+              "series": [
+                { "name": "mean rank (lower is better)", "values": [1.54, 2.88, 5.67] }
+              ],
+              "y": { "scale": "linear", "label": "mean rank" }
+            }
+          </script>
+        </figure>
+        <p>
+          Plain rectified flow with uniform timesteps ranks 5.67, worse than the
+          diffusion baseline at 2.88; only after the logit-normal reweighting
+          does rectified flow reach 1.54 and pull
+          ahead.<sup class="nb-cite"><a href="#s4">4</a></sup> The abstract's
+          promise that optimal-transport paths give faster and better everything
+          is not wrong, but it is not free either. The clean straight-line
+          theory needed a non-uniform schedule to beat a diffusion model at
+          scale, which is the practical face of the same fact: the marginal flow
+          is not straight, so where along the path the network spends its
+          capacity matters.
+        </p>
+        <div class="nb-verdict">
+          <span class="nb-verdict-label">Verdict</span>
+          The core result holds and deserves its reputation: conditioning on the
+          endpoint turns an intractable objective into a closed-form regression
+          with the same gradient, and Theorem 2 earns that claim in a few lines
+          of algebra. The subsumption of diffusion as one Gaussian path is exact
+          and clarifying. The part to hold loosely is the marketing around
+          straight paths and few-step sampling. Straightness is a property of
+          the conditional target, not the marginal sampler, and both rectified
+          flow's reflow and Stable Diffusion 3's timestep reweighting exist to
+          buy back the straightness the marginal flow does not inherit for
+          free.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2210.02747"
+              >arXiv · Lipman, Chen, Ben-Hamu, Nickel, Le, "Flow Matching for
+              Generative Modeling" (ICLR 2023)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2209.03003"
+              >arXiv · Liu, Gong, Liu, "Flow Straight and Fast: Learning to
+              Generate and Transfer Data with Rectified Flow" (ICLR 2023)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://mlg.eng.cam.ac.uk/blog/2024/01/20/flow-matching.html"
+              >Cambridge Machine Learning Group · Fjelde, Mathieu, Dutordoir,
+              "An Introduction to Flow Matching"</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2403.03206"
+              >arXiv · Esser et al., "Scaling Rectified Flow Transformers for
+              High-Resolution Image Synthesis" (Stable Diffusion 3)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
