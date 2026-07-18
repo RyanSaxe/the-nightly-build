@@ -6,7 +6,7 @@
    this file and the engine publishes it, concatenated with every furniture owner,
    as assets/theme.css on each build. This paper's furniture rides alongside it,
    not inside it: shared pieces live in press/furniture/ (rs-code, rs-docket) and a
-   template's bespoke pieces live in its own folder (rs-side, in templates/divide/). */
+   template's bespoke pieces live in its own folder. */
 :root {
   /* DAY — the base and universal fallback */
   --bg: #f4f7fb;
