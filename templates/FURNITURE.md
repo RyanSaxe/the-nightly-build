@@ -205,20 +205,22 @@ Add class `major` for filled dots.
 </ol>
 ```
 
-## Position block
+## Position card
 
-One participant's stance in a disagreement, stated at its strongest and
-grounded in their cited statements. Use two or more, never one — and when
-two sides ARE the article, reach for the unbiased template's split instead.
+One cleanly stated position: whose it is, the statement once, a summary of
+its basis, the citation. Use it for a named holder the article calls on, or
+for the paper's own position in an opinion piece (the opinion template pins
+it). The "Position" pill is fixed chrome.
 
 ```html
 <div class="nb-position">
-  <span class="nb-position-who">WHO</span>
-  <span class="nb-position-stance">THEIR POSITION IN ONE SENTENCE.</span>
-  <p>
-    WHAT THEY HAVE ACTUALLY SAID AND WHERE.<sup class="nb-cite"
-      ><a href="#s3">3</a></sup
-    >
+  <div class="nb-position-top">
+    <span class="nb-position-who">WHO HOLDS IT</span>
+    <span class="nb-position-pill">Position</span>
+  </div>
+  <p class="nb-position-statement">THE POSITION, STATED ONCE.</p>
+  <p class="nb-position-summary">
+    THE BASIS IT RESTS ON.<sup class="nb-cite"><a href="#s3">3</a></sup>
   </p>
 </div>
 ```
