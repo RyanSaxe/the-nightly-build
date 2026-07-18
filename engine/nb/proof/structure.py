@@ -1,4 +1,27 @@
-"""The shape of the page: its sections, its chrome, its classes, its sandbox."""
+"""The shape of the page: its sections, its chrome, its classes, its sandbox.
+
+These checks read the single Article parse and hold the page to its
+mechanical contract: the template's declared sections and chrome survive,
+every class resolves to a shipped stylesheet, figures are local, sized, and
+cited (source assets under B-FIGURE, generated charts under B-CHART with
+their committed script), citations resolve to source entries, and nothing
+executable or off-origin gets in. The sandbox rules are the auto-merge
+security boundary — an article PR merges untrusted, so anything an attacker
+could smuggle through markup must be ruled out here, not reviewed later.
+"""
+
+__all__ = (
+    "chart_spec_error",
+    "check_chrome",
+    "check_cites",
+    "check_classes",
+    "check_figures",
+    "check_required_sections",
+    "check_sandbox",
+    "css_class_names",
+    "external_ref_allowed",
+    "image_dimensions",
+)
 
 import json
 import os
@@ -192,21 +215,45 @@ def check_figures(ed, *, html_path, rep):
     expected = re.compile(
         rf"^{re.escape(slug)}/[a-z0-9][a-z0-9._-]*\.(?:png|jpe?g|webp)$"
     )
+    # One figure component; the filename carries the contract. chart-N.* is
+    # the reserved name for a generated chart, which must ship its committed
+    # script; any other name is a captured source asset.
+    chart_expected = re.compile(rf"^{re.escape(slug)}/(chart-\d+)\.png$")
+    chart_named = re.compile(rf"^{re.escape(slug)}/chart-")
     seen = set()
     for image in ed.images:
         figure = image["figure"]
         if figure is None:
             rep.block("B-FIGURE", "images must sit inside figure.nb-figure")
             continue
+        src = image["src"]
+        is_chart = bool(chart_named.match(src))
         key = id(figure)
         if key not in seen:
             seen.add(key)
             if not any(cite in ed.source_container_ids for cite in figure["cites"]):
                 rep.block(
-                    "B-FIGURE", "each figure needs a caption citation to a source entry"
+                    "B-CHART" if is_chart else "B-FIGURE",
+                    "a chart caption must cite its data source"
+                    if is_chart
+                    else "each figure needs a caption citation to a source entry",
                 )
-        src = image["src"]
-        if not expected.fullmatch(src):
+        if is_chart:
+            chart_name = chart_expected.fullmatch(src)
+            if not chart_name:
+                rep.block(
+                    "B-CHART",
+                    f"a chart image must be '{slug}/chart-N.png': {src!r}",
+                )
+                continue
+            sibling = os.path.join(parent, slug, f"{chart_name.group(1)}.py")
+            if not os.path.isfile(sibling):
+                rep.block(
+                    "B-CHART",
+                    f"chart {src!r} must ship its generating script "
+                    f"'{slug}/{chart_name.group(1)}.py' in the bundle",
+                )
+        elif not expected.fullmatch(src):
             rep.block("B-FIGURE", f"figure image must be local to '{slug}/': {src!r}")
             continue
         if not image["alt"].strip():

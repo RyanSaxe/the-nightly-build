@@ -1,9 +1,19 @@
-"""The structural parse of one article file, which every check reads."""
+"""The structural parse of one article file, which every check reads.
+
+One HTMLParser walk collects everything the proof needs — sections, items,
+citations, source entries, sandbox violations, figures, word counts — so no
+check re-parses the file or disagrees with another about what it contains.
+html.parser is tolerant by design: malformed markup degrades into text
+instead of raising, and the structural checks downstream decide what
+matters. Nothing here judges; this module only observes.
+"""
 
 import re
 from html.parser import HTMLParser
 
 from nb import meta as nb_meta
+
+__all__ = ("Article", "collapse_space")
 
 VOID = {
     "area",
@@ -217,5 +227,13 @@ class Article(HTMLParser):
 
     @property
     def dekline(self) -> str:
-        # the space keeps a tag boundary (a <br>, an <em>) from fusing two words
+        """The rendered dek text, whitespace-normalized for comparison.
+
+        Joins the captured fragments on a space so a tag boundary (a <br>,
+        an <em>) never fuses two words, then collapses runs — the proof
+        compares this against nb-meta's dek, which is plain text.
+        """
+        # public API over private parse state; the join+collapse is real
+        # translation, not routing
+        # ast-grep-ignore: no-routing-functions
         return collapse_space(" ".join(self._dek_parts or []))

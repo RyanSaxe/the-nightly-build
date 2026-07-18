@@ -20,9 +20,13 @@ import re
 SERIES_RE = re.compile(r"^[a-z0-9-]{1,32}$")
 SLUG_RE = re.compile(r"^[a-z0-9-]{1,64}$")
 PR_PATH_RE = re.compile(r"^library/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})\.html$")
+# Images, plus a chart's committed provenance (chart-N.py and its data).
+# The provenance files are inert bundle data: the engine and CI never
+# execute them, and the article sandbox cannot reference them.
 ARTICLE_ASSET_RE = re.compile(
     r"^library/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})/"
-    r"[a-z0-9][a-z0-9._-]*\.(?:png|jpe?g|webp)$"
+    r"(?:[a-z0-9][a-z0-9._-]*\.(?:png|jpe?g|webp)"
+    r"|chart-\d+\.(?:py|csv|json))$"
 )
 MODES = ("collection", "sequence", "rolling", "open")
 
