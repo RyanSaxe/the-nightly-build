@@ -1,11 +1,11 @@
 """The structural parse of one article file, which every check reads.
 
 One HTMLParser walk collects everything the proof needs — sections, items,
-citations, source entries, sandbox violations, figures, word counts — so no
-check re-parses the file or disagrees with another about what it contains.
-html.parser is tolerant by design: malformed markup degrades into text
-instead of raising, and the structural checks downstream decide what
-matters. Nothing here judges; this module only observes.
+rubric rows, citations, source entries, sandbox violations, figures, word
+counts — so no check re-parses the file or disagrees with another about
+what it contains. html.parser is tolerant by design: malformed markup
+degrades into text instead of raising, and the structural checks downstream
+decide what matters. Nothing here judges; this module only observes.
 """
 
 import re
@@ -56,6 +56,9 @@ class Article(HTMLParser):
         self.sections = []  # data-nb-section values in order
         self.section_cites = {}  # section -> inline cite count
         self.items = []  # per data-nb-item: {"cites": [source entry id, ...]}
+        # per data-nb-criterion row: criterion slug, data-score attribute,
+        # cites inside the row, and the rendered text of its nb-rubric-score
+        self.rubric_rows = []
         self.ids = set()
         self.source_container_ids = set()
         self.source_ids = []  # source entry ids in declaration order
@@ -135,6 +138,18 @@ class Article(HTMLParser):
         if "data-nb-item" in a:
             self.items.append({"cites": []})
             el["item"] = len(self.items) - 1
+        if "data-nb-criterion" in a:
+            self.rubric_rows.append(
+                {
+                    "criterion": a["data-nb-criterion"],
+                    "score": a.get("data-score"),
+                    "cites": [],
+                    "score_text_parts": [],
+                }
+            )
+            el["rubric"] = len(self.rubric_rows) - 1
+        if "nb-rubric-score" in a.get("class", "").split():
+            el["rubric_score"] = True
 
         if tag == "sup" and "nb-cite" in a.get("class", "").split():
             el["cite_sup"] = True
@@ -161,6 +176,9 @@ class Article(HTMLParser):
                 it = self._current("item")
                 if it is not None:
                     self.items[it["item"]]["cites"].append(href[1:])
+                row = self._current("rubric")
+                if row is not None:
+                    self.rubric_rows[row["rubric"]]["cites"].append(href[1:])
             if "data-nb-source" in a:
                 nearest = None
                 for e in reversed(self.stack):
@@ -210,6 +228,10 @@ class Article(HTMLParser):
                 self._prose_text_parts.append(data)
             if self._dek_parts is not None and self._current("dekline") is not None:
                 self._dek_parts.append(data)
+            if self._current("rubric_score") is not None:
+                row = self._current("rubric")
+                if row is not None:
+                    self.rubric_rows[row["rubric"]]["score_text_parts"].append(data)
 
     @property
     def word_count(self):

@@ -129,6 +129,11 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      needs citations per the template's cite rule.
    - Number the source entries in the order the prose first cites them (the
      proof warns `W-CITE-ORDER` otherwise, a BLOCK under `strict`).
+   - If the series pins a rubric (`rubric:` in series.yaml), render one
+     `data-nb-criterion` row per pinned criterion and extend with rows this
+     subject demands. Scores are integers 0–5 in `data-score`, the rendered
+     `nb-rubric-score` text must agree, and each row's one-line justification
+     is cited (docs/series.md § Rubrics).
    - Your furniture palette composes three scopes: the engine base catalogue
      (`templates/FURNITURE.md`), the paper's shared furniture
      (`press/furniture/catalog.md`) if present, and your template's bespoke

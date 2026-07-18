@@ -41,7 +41,9 @@ discipline, every template:
   asset `<link>`/`<script>` tags and the manifest's `chrome:` strings
   exactly as they are; the proof blocks a reworded label or body class.
 - `manifest.yaml` defines the geometry and `series.yaml` may tighten its
-  bands. Both bind: their values are authoritative and machine-checked by
+  bands — and may pin rubric criteria (`rubric:`) your article must render
+  as scored `data-nb-criterion` rows, extended with rows the subject
+  demands. Both bind: their values are authoritative and machine-checked by
   the proof. A number restated in prose anywhere carries no force. Obey
   the files. Fill each anchor section exactly once. Where the manifest declares
   `flex_sections`, add that many more between the anchors, each named for the
