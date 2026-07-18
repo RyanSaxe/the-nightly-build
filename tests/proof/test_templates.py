@@ -142,6 +142,13 @@ def template_repo() -> str:
         "autopublish: true\nstrict: false\n"
         "items:\n  - {slug: carbon, title: Carbon}\n"
     )
+    columns = repo / "press" / "series" / "columns"
+    columns.mkdir(parents=True)
+    (columns / "series.yaml").write_text(
+        "name: Columns\nmode: collection\ntemplate: opinion\n"
+        "autopublish: true\nstrict: false\n"
+        "items:\n  - {slug: tariffs, title: Tariffs}\n"
+    )
     return str(repo)
 
 
@@ -190,6 +197,60 @@ def test_chronicle_shaped_article_is_block_clean_and_warn_free(
         "W-SELF-COUNT",
     ):
         assert code not in result.codes
+
+
+OPINION = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Tariffs</title>
+<script type="application/json" id="nb-meta">
+{{"protocol": "1.0", "series": "columns", "slug": "tariffs",
+  "template": "opinion", "title": "Tariffs", "mode": "collection",
+  "order": null, "date": "2026-07-06", "tags": [], "sources": 5,
+  "words": 1100, "reading_minutes": 5, "dek": "Argued.",
+  "harness": "test-fixture", "model": "claude-fable-5"}}
+</script>
+</head><body class="nb-article">
+<section data-nb-section="position"><div class="nb-position">
+<div class="nb-position-top"><span class="nb-position-who">This paper's position</span>
+<span class="nb-position-pill">Position</span></div>
+<p class="nb-position-statement">Price new load at marginal cost.</p>
+<p class="nb-position-summary">After the coalition's filings.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
+</div></section>
+<section data-nb-section="the-arithmetic"><p>{LOREM * 7}
+<sup class="nb-cite"><a href="#s2">2</a></sup></p></section>
+<section data-nb-section="the-precedent"><p>{LOREM * 7}
+<sup class="nb-cite"><a href="#s4">4</a></sup></p></section>
+<section data-nb-section="counter"><p>{LOREM * 7}
+<sup class="nb-cite"><a href="#s3">3</a></sup></p></section>
+<section data-nb-section="sources"><h2>Sources</h2><ol>{SOURCES}</ol></section>
+</body></html>"""
+
+
+def test_opinion_position_and_answered_counter_pass(
+    run_local: Callable[..., Findings], template_repo: str
+) -> None:
+    result = run_local(OPINION, "columns", slug="tariffs", repo=template_repo)
+    assert not result.blocks
+
+
+def test_opinion_blocks_without_the_counter(
+    run_local: Callable[..., Findings], template_repo: str
+) -> None:
+    skipped = OPINION.replace(
+        'data-nb-section="counter"', 'data-nb-section="more-argument"'
+    )
+    result = run_local(skipped, "columns", slug="tariffs", repo=template_repo)
+    assert "B-HTML" in result.blocks
+
+
+def test_opinion_blocks_when_the_position_card_is_reworded(
+    run_local: Callable[..., Findings], template_repo: str
+) -> None:
+    reworded = OPINION.replace(
+        '<span class="nb-position-pill">Position</span>',
+        '<span class="nb-position-pill">Stance</span>',
+    )
+    result = run_local(reworded, "columns", slug="tariffs", repo=template_repo)
+    assert "B-CHROME" in result.blocks
 
 
 def test_unbiased_two_sides_and_a_crux_pass(
