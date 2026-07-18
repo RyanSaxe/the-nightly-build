@@ -10,5 +10,5 @@ The watchlist anchors the desk without caging it. An earnings date alone
 is not a story. Watchlist: Anheuser-Busch InBev (the paper's owner works
 there: cover it from public sources like any other company and note the
 connection when it runs), Google, Microsoft, Micron, Apple, Nvidia, and
-ASML. `nb-chart` and `rs-metrics` are the desk's palette. Reach for them
-where the numbers carry the argument.
+ASML. The chart and the table (templates/FURNITURE.md) are the desk's
+palette. Reach for them where the numbers carry the argument.

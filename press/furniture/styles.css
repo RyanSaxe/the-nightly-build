@@ -191,6 +191,8 @@
   color: var(--ink);
 }
 
+/* Legacy: rs-metrics retired in favor of the shipped nb-table; kept so
+   published Ledger articles keep rendering. */
 /* Financial metrics — the numbers behind a business piece as a compact
    reference table, set in the mono face with right-aligned figures so columns
    read like a filing. The caption cites the source. Used by The Ledger. */
