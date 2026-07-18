@@ -236,7 +236,11 @@ Re-validate after every change.
   `press/furniture/` (`styles.css` + `catalog.md`). A piece only one template
   renders goes in that template's folder. Either restyles the whole library on
   every publish. Instruct the sections to use them in `prompt.md`. See
-  `docs/customization.md`.
+  `docs/customization.md`. To review or tune pieces visually, build the
+  furniture gallery — every catalogued piece on one page, no article needed:
+  `uv run python scripts/gallery/build.py`, then serve the repo root and open
+  `/press-check/gallery/` (a new piece needs a sample fragment in
+  `scripts/gallery/samples/`; the build says which).
 
 ## 7. Update my engine (plain git)
 

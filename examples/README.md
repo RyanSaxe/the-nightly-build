@@ -7,10 +7,11 @@ reads this folder. Copy pieces into your `press/` and edit:
 cp -r examples/series/kernels press/series/my-course
 ```
 
-- `the-divide/`: an open section on a custom template (the package at
-  `templates/divide/`). The template enforces exactly two sides and the
-  section runs `strict: true`, so the per-side citation checks become hard
-  BLOCKs. Build a template when the proof should guarantee structure.
+- `the-divide/`: an open section on the shipped `unbiased` template, run
+  `strict: true` so the per-side citation checks become hard BLOCKs. For
+  building a template of your own, follow the lesson walkthrough in
+  `docs/customization.md`: build one when the proof should guarantee
+  structure.
 - `the-brief/`: a rolling nightly brief on the `brief` template, slugged by
   date.
 - `docket/`: an open section tracking AI legal cases, carried by the

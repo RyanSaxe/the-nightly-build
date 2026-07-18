@@ -88,7 +88,11 @@
     if (m) applyAppearance(m);
   });
 
-  /* ---------------------------------------------------------------- charts */
+  /* ------------------------------------------------- legacy charts
+   * data-nb-chart blocks are retired for new articles (charts are PNGs
+   * rendered by engine/render_chart.py); this renderer stays so the
+   * published shelf keeps drawing. Chart.js loads only when a legacy
+   * block exists on the page. */
 
   var chartInstances = [];
 
@@ -99,6 +103,13 @@
   }
 
   function chartColors() {
+    var slots = [];
+    for (var i = 1; i <= 6; i++) {
+      var c = cssVar("--chart-" + i);
+      if (c) slots.push(c);
+    }
+    if (slots.length) return slots;
+    /* themes older than the chart tokens keep rendering on the accent trio */
     return [cssVar("--accent"), cssVar("--accent-2"), cssVar("--ink-soft")];
   }
 

@@ -1,9 +1,19 @@
-"""The structural parse of one article file, which every check reads."""
+"""The structural parse of one article file, which every check reads.
+
+One HTMLParser walk collects everything the proof needs — sections, items,
+rubric rows, citations, source entries, sandbox violations, figures, word
+counts — so no check re-parses the file or disagrees with another about
+what it contains. html.parser is tolerant by design: malformed markup
+degrades into text instead of raising, and the structural checks downstream
+decide what matters. Nothing here judges; this module only observes.
+"""
 
 import re
 from html.parser import HTMLParser
 
 from nb import meta as nb_meta
+
+__all__ = ("Article", "collapse_space")
 
 VOID = {
     "area",
@@ -42,11 +52,13 @@ class Article(HTMLParser):
         self.stack = []  # list of dicts per open element
         self.meta_raw = None
         self.meta_count = 0  # number of #nb-meta blocks; >1 is a violation
-        self.chart_raw = []  # raw JSON strings of data-nb-chart blocks
         self.script_tags = []  # (attrs_dict) for every <script>
         self.sections = []  # data-nb-section values in order
         self.section_cites = {}  # section -> inline cite count
         self.items = []  # per data-nb-item: {"cites": [source entry id, ...]}
+        # per data-nb-criterion row: criterion slug, data-score attribute,
+        # cites inside the row, and the rendered text of its nb-rubric-score
+        self.rubric_rows = []
         self.ids = set()
         self.source_container_ids = set()
         self.source_ids = []  # source entry ids in declaration order
@@ -57,7 +69,7 @@ class Article(HTMLParser):
         self.forbidden_tags = []
         self.external_refs = []  # (tag, url) for script src / link href / img src
         self.images = []  # {src, alt, figure}; local article-figure candidates
-        self._capture = None  # ("meta"|"chart", buffer) while inside a JSON script
+        self._capture = None  # ("meta", buffer) while inside the nb-meta script
         self._dek_parts = None  # text of the first .nb-dekline; None until one opens
         self._text_parts = []
         self._prose_text_parts = []  # body prose only, excludes the sources section
@@ -105,10 +117,6 @@ class Article(HTMLParser):
                 self.external_refs.append(("script", src))
             if nb_meta.is_meta_script(a):
                 self._capture = ("meta", [])
-            elif (a.get("type") or "").strip().lower() == "application/json" and (
-                "data-nb-chart" in a
-            ):
-                self._capture = ("chart", [])
         if tag == "link" and a.get("href"):
             self.external_refs.append(("link", a["href"]))
         if tag == "img" and a.get("src"):
@@ -130,6 +138,18 @@ class Article(HTMLParser):
         if "data-nb-item" in a:
             self.items.append({"cites": []})
             el["item"] = len(self.items) - 1
+        if "data-nb-criterion" in a:
+            self.rubric_rows.append(
+                {
+                    "criterion": a["data-nb-criterion"],
+                    "score": a.get("data-score"),
+                    "cites": [],
+                    "score_text_parts": [],
+                }
+            )
+            el["rubric"] = len(self.rubric_rows) - 1
+        if "nb-rubric-score" in a.get("class", "").split():
+            el["rubric_score"] = True
 
         if tag == "sup" and "nb-cite" in a.get("class", "").split():
             el["cite_sup"] = True
@@ -156,6 +176,9 @@ class Article(HTMLParser):
                 it = self._current("item")
                 if it is not None:
                     self.items[it["item"]]["cites"].append(href[1:])
+                row = self._current("rubric")
+                if row is not None:
+                    self.rubric_rows[row["rubric"]]["cites"].append(href[1:])
             if "data-nb-source" in a:
                 nearest = None
                 for e in reversed(self.stack):
@@ -182,16 +205,12 @@ class Article(HTMLParser):
         if tag in ("script", "style"):
             self._suppress_text_depth = max(0, self._suppress_text_depth - 1)
             if tag == "script" and self._capture:
-                kind, buf = self._capture
-                raw = "".join(buf)
-                if kind == "meta":
-                    self.meta_count += 1
-                    if self.meta_raw is None:
-                        # keep the FIRST block — the browser (getElementById) and
-                        # build_site/duty (first regex match) all read the first
-                        self.meta_raw = raw
-                else:
-                    self.chart_raw.append(raw)
+                _, buf = self._capture
+                self.meta_count += 1
+                if self.meta_raw is None:
+                    # keep the FIRST block — the browser (getElementById) and
+                    # build_site/duty (first regex match) all read the first
+                    self.meta_raw = "".join(buf)
                 self._capture = None
         # pop to matching tag (tolerant of minor nesting slips)
         for i in range(len(self.stack) - 1, -1, -1):
@@ -209,6 +228,10 @@ class Article(HTMLParser):
                 self._prose_text_parts.append(data)
             if self._dek_parts is not None and self._current("dekline") is not None:
                 self._dek_parts.append(data)
+            if self._current("rubric_score") is not None:
+                row = self._current("rubric")
+                if row is not None:
+                    self.rubric_rows[row["rubric"]]["score_text_parts"].append(data)
 
     @property
     def word_count(self):
@@ -217,5 +240,13 @@ class Article(HTMLParser):
 
     @property
     def dekline(self) -> str:
-        # the space keeps a tag boundary (a <br>, an <em>) from fusing two words
+        """The rendered dek text, whitespace-normalized for comparison.
+
+        Joins the captured fragments on a space so a tag boundary (a <br>,
+        an <em>) never fuses two words, then collapses runs — the proof
+        compares this against nb-meta's dek, which is plain text.
+        """
+        # public API over private parse state; the join+collapse is real
+        # translation, not routing
+        # ast-grep-ignore: no-routing-functions
         return collapse_space(" ".join(self._dek_parts or []))

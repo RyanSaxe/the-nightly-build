@@ -95,7 +95,7 @@ def pr_changed_files(repo, *, base, head):
 def materialize_bundle(repo, head, changes, dest):
     """Write the PR's files, as `head` has them, under dest.
 
-    The proof reads the bundle from disk (the article, then its figure assets
+    The proof reads the bundle from disk (the article, then its bundle assets
     by size and image header), but the checkout at --repo can be on any branch:
     the documented preflight runs it from the library checkout, where the new
     bundle does not exist yet. What the PR would merge is the blob at head, so
@@ -199,7 +199,7 @@ def run_pr_mode(args, rep):
             rep.block(
                 "B-DIFF-SHAPE",
                 "an owner curation PR deletes one article and only its matching "
-                f"local figure assets; found {changes}",
+                f"local article assets; found {changes}",
             )
         else:
             rep.notes.append(
@@ -211,7 +211,7 @@ def run_pr_mode(args, rep):
     if path is None:
         rep.block(
             "B-DIFF-SHAPE",
-            "PR must add one article and only matching local figure assets; found "
+            "PR must add one article and only matching local article assets; found "
             f"{[(status, path) for status, path in changes]}",
         )
         return

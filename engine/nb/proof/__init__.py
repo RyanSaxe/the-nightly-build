@@ -1,7 +1,19 @@
-"""The proof: every check one article must pass, run in one pass."""
+"""The proof: every check one article must pass, run in one pass.
+
+check_article is the single entry: it resolves the series and template,
+parses the file once (nb.article.Article), then runs every structural,
+sourcing, rubric, mode, and prose check against that one parse, recording
+findings on the caller's Report. Order matters only where a failed
+prerequisite makes later checks meaningless (an unresolvable series or
+unreadable file returns early); everything after the parse is independent.
+The proof never edits and never decides taste — it counts what the article
+declares and blocks what the contract rules out.
+"""
 
 import datetime as _dt
 import os
+
+__all__ = ("check_article",)
 
 from nb.article import Article
 from nb.config import find_template, load_banned_terms, published_slugs
@@ -14,6 +26,7 @@ from nb.proof.meta import (
 )
 from nb.proof.mode import check_mode
 from nb.proof.prose import check_warns, placeholder_entries
+from nb.proof.rubric import check_rubric
 from nb.proof.sources import check_source_kinds, check_sources
 from nb.proof.structure import (
     check_chrome,
@@ -104,6 +117,7 @@ def check_article(
     check_cites(ed, rep)
     check_figures(ed, html_path=html_path, rep=rep)
     check_source_kinds(ed, series=series, treg=treg, rep=rep)
+    check_rubric(ed, series=series, rep=rep)
     check_warns(
         ed,
         meta,

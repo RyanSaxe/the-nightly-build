@@ -129,13 +129,20 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      needs citations per the template's cite rule.
    - Number the source entries in the order the prose first cites them (the
      proof warns `W-CITE-ORDER` otherwise, a BLOCK under `strict`).
+   - If the series pins a rubric (`rubric:` in series.yaml), render one
+     `data-nb-criterion` row per pinned criterion and extend with rows this
+     subject demands. Scores are integers 0–5 in `data-score`, the rendered
+     `nb-rubric-score` text must agree, and each row's one-line justification
+     is cited (docs/series.md § Rubrics).
    - Your furniture palette composes three scopes: the engine base catalogue
      (`templates/FURNITURE.md`), the paper's shared furniture
      (`press/furniture/catalog.md`) if present, and your template's bespoke
      furniture (`<t>/furniture.md`) if it ships any. Use a component from any of
      them when it carries information better than prose.
    - Embed the `nb-meta` JSON block (schema below).
-   - Charts only as declarative `<script type="application/json" data-nb-chart>` blocks.
+   - Charts only as engine-rendered PNG figures: `figure.nb-figure` wrapping
+     `<slug>/chart-N.png`, its committed `chart-N.py` in the bundle, the data
+     source cited in the caption (docs/charts.md).
    - No scripts other than those JSON blocks and the template's own
      `<script src="../../assets/nb.js">`, the engine runtime. Keep it. Never add
      others. No iframes/objects/embeds. No inline event handlers. No `javascript:`

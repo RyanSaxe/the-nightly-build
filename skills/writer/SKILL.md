@@ -41,7 +41,9 @@ discipline, every template:
   asset `<link>`/`<script>` tags and the manifest's `chrome:` strings
   exactly as they are; the proof blocks a reworded label or body class.
 - `manifest.yaml` defines the geometry and `series.yaml` may tighten its
-  bands. Both bind: their values are authoritative and machine-checked by
+  bands — and may pin rubric criteria (`rubric:`) your article must render
+  as scored `data-nb-criterion` rows, extended with rows the subject
+  demands. Both bind: their values are authoritative and machine-checked by
   the proof. A number restated in prose anywhere carries no force. Obey
   the files. Fill each anchor section exactly once. Where the manifest declares
   `flex_sections`, add that many more between the anchors, each named for the
@@ -62,7 +64,10 @@ discipline, every template:
 - Furniture composes three scopes: `templates/FURNITURE.md`,
   `press/furniture/catalog.md` if present, the template's own. A piece
   earns its place by carrying information better than prose. Charts only as
-  `data-nb-chart` JSON blocks. No other scripts, styles, iframes, or handlers.
+  rendered PNGs with their committed `chart-N.py` (docs/charts.md): build the
+  figure from the research log's numbers, run
+  `uv run --group charts engine/render_chart.py`, inspect the PNG and the
+  rendered article. No scripts, styles, iframes, or handlers.
 - A source asset is earned only when `research.md § Source assets` identifies
   an exact visual from a cited primary or public document that lets the reader
   inspect an argument the prose uses. It may be a chart, photograph, document

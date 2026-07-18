@@ -1,8 +1,8 @@
-/* The Divide's bespoke furniture (prefix rs-). Bespoke to this template: only a
-   divide article renders two sides, so these classes live in the template's own
-   folder rather than in press/furniture/. The engine concatenates this file into
-   assets/theme.css whenever the divide template is present. Documented in
-   furniture.md beside it.
+/* The unbiased template's bespoke furniture. Bespoke to this template: only an
+   unbiased article renders two sides, so these classes live in the template's own
+   folder rather than in a press's shared furniture. The engine concatenates this
+   file into assets/theme.css whenever the unbiased template is present.
+   Documented in furniture.md beside it.
 
    One contested question argued left vs right. Exactly two sides sit in a
    two-column grid across an accent spine on wide screens. On a phone they stack,
@@ -10,28 +10,28 @@
    indented and hugs a right rule, so the reader still feels two sides. Each side
    is four slots: camp, thesis, argument, champion. One accent, mirrored — never
    two team colors, so the paper never looks partisan. */
-.rs-divide {
+.nb-divide {
   display: grid;
   grid-template-columns: 1fr 1fr;
   margin: 1.8rem 0;
 }
 
-.rs-divide .rs-side {
+.nb-divide .nb-side {
   min-width: 0; /* let grid cells shrink below content width instead of overflowing */
   display: flex;
   flex-direction: column;
 }
 
-.rs-divide .rs-left {
+.nb-divide .nb-side-left {
   padding-right: 1.6rem;
   border-right: 2px solid var(--accent);
 }
 
-.rs-divide .rs-right {
+.nb-divide .nb-side-right {
   padding-left: 1.6rem;
 }
 
-.rs-side-camp {
+.nb-side-camp {
   margin: 0 0 0.2rem;
   font-family: var(--sans);
   font-weight: 600;
@@ -41,7 +41,7 @@
   color: var(--accent);
 }
 
-.rs-side-thesis {
+.nb-side-thesis {
   margin: 0 0 0.75rem;
   font-family: var(--serif);
   font-weight: 600;
@@ -50,10 +50,10 @@
   color: var(--ink);
 }
 
-.nb-article .rs-side-champion {
+.nb-article .nb-side-champion {
   /* pinned to the side's bottom edge, so the two champions align across the
-     spine however the arguments differ in length; scoped under .nb-article to
-     outrank nb.css paragraph margins in the cascade */
+     spine on desktop however the arguments differ in length; scoped under
+     .nb-article to outrank nb.css paragraph margins in the cascade */
   margin-top: auto;
   padding-top: 0.55rem;
   border-top: 1px solid var(--hair);
@@ -63,32 +63,32 @@
   color: var(--ink-soft);
 }
 
-.rs-side-outlet {
+.nb-side-outlet {
   font-weight: 600;
   color: var(--ink);
 }
 
 @media (width <= 640px) {
-  .rs-divide {
+  .nb-divide {
     grid-template-columns: 1fr;
     gap: 1.6rem;
   }
 
-  .rs-divide .rs-left {
+  .nb-divide .nb-side-left {
     padding-right: 0;
     padding-left: 1rem;
     border-right: none;
     border-left: 3px solid var(--accent);
   }
 
-  .rs-divide .rs-right {
+  .nb-divide .nb-side-right {
     margin-left: 1.5rem;
     padding-right: 1rem;
     padding-left: 0;
     border-right: 3px solid var(--accent);
   }
 
-  .rs-divide .rs-right .rs-side-camp {
+  .nb-divide .nb-side-right .nb-side-camp {
     text-align: right;
   }
 }
@@ -98,17 +98,17 @@
    hairlines start aligned however long each argument runs. Articles written
    before the wrapper keep the bottom-pinned champion above. */
 @media (width >= 641px) {
-  .rs-divide:has(.rs-side-argument) {
+  .nb-divide:has(.nb-side-argument) {
     grid-template-rows: auto auto 1fr auto;
   }
 
-  .rs-divide .rs-side:has(> .rs-side-argument) {
+  .nb-divide .nb-side:has(> .nb-side-argument) {
     display: grid;
     grid-row: span 4;
     grid-template-rows: subgrid;
   }
 
-  .nb-article .rs-side:has(> .rs-side-argument) .rs-side-champion {
+  .nb-article .nb-side:has(> .nb-side-argument) .nb-side-champion {
     margin-top: 0.9rem;
   }
 }
