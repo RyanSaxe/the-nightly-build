@@ -42,37 +42,3 @@ can argue instead of recite. Used by The Record.
   </dl>
 </div>
 ```
-
-## Financial metrics (`rs-metrics`)
-
-The numbers behind a business piece: a compact table of
-metric, value, and change, so the prose argues what the numbers mean.
-Cite the filing or release in the caption. Used by
-The Ledger.
-
-```html
-<table class="rs-metrics">
-  <caption>
-    PERIOD, SOURCE.<sup class="nb-cite"><a href="#s1">1</a></sup>
-  </caption>
-  <thead>
-    <tr>
-      <th>Metric</th>
-      <th>Value</th>
-      <th>YoY</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>METRIC</td>
-      <td>VALUE</td>
-      <td>CHANGE</td>
-    </tr>
-    <tr>
-      <td>METRIC</td>
-      <td>VALUE</td>
-      <td>CHANGE</td>
-    </tr>
-  </tbody>
-</table>
-```

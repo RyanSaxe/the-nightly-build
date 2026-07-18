@@ -5,11 +5,21 @@ updates never touch it. Working examples live in `examples/`.
 
 ## Look: themes
 
-The entire visual system reads about 14 CSS variables from one token file.
-The theme contract: define the color tokens in all four blocks (light, dark,
-and the two manual-override blocks); the font and radius tokens live in the
-base block and are inherited. The test suite enforces parity across the
+The entire visual system reads about two dozen CSS variables from one token
+file. The theme contract: define the color tokens in all four blocks (light,
+dark, and the two manual-override blocks); the font and radius tokens live in
+the base block and are inherited. The test suite enforces parity across the
 blocks.
+
+Beyond the page tokens, a theme carries two data-color groups. `--chart-1`
+through `--chart-6` are the categorical series colors for charts, in a
+fixed, colorblind-validated order: assign them in sequence, never
+re-sorted.
+`--ok`, `--warn`, and `--bad` are semantic status inks (grade verdicts,
+holds-up labels, score meters). The suite checks their contrast in every
+block: chart tokens hold at least 3:1 against `--bg` and `--panel`, status
+tokens at least 4.5:1, so a custom theme cannot ship unreadable legends or
+status text.
 
 The shipped theme pairs a pale day-sky paper with bronze accents in light
 mode and a deep navy night with amber in dark mode. Keep day accents deep
@@ -111,8 +121,9 @@ This does not weaken the security model, because the trust boundary is
   (no `<script>`, no event handlers) is unchanged, so auto-merge is as safe as
   ever.
 
-Readers with JavaScript off still get the raw content (plain monospace code, an
-unrendered figure), the same graceful fallback the built-in charts use.
+Readers with JavaScript off still get the raw content (plain monospace code,
+an unrendered figure), and the engine's own charts are plain PNGs, readable
+everywhere.
 
 ## Voice: press/editorial.md
 
@@ -190,7 +201,7 @@ press/templates/<id>/
 A `press/templates/<id>/` package replaces a shipped `templates/<id>/` of the
 same id **wholesale**. User templates are first class: the proof enforces
 whatever the manifest declares, so a template you define gets the same
-validation, CI, and site treatment as the shipped two. Reach for one when a
+validation, CI, and site treatment as the shipped templates. Reach for one when a
 section needs structure enforced rather than described; for most genres,
 describing it in the series prompt on the `article` template is enough (see
 [series.md](series.md)).
@@ -247,9 +258,9 @@ ordered course, rebuilt as your own template.
    owns (a heading like "Sources", a component's fixed label) stay sentence
    case. The proof backstops the convention: a caps run surviving into an
    article's prose is a `W-PLACEHOLDER` warning. The same holds for
-   `identity.md`: describe the move, do not perform it. The objectives
-   box, check box, and bridge components in `templates/FURNITURE.md` carry
-   the lesson. The sandbox applies unchanged: no scripts beyond the JSON blocks
+   `identity.md`: describe the move, do not perform it. The note
+   component in `templates/FURNITURE.md` carries the lesson's goals,
+   self-checks, and bridge as labeled moves. The sandbox applies unchanged: no scripts beyond the JSON blocks
    and the engine runtime, citations as `sup.nb-cite` anchors into numbered
    source entries. Give each placeholder source entry a
    `data-nb-kind="primary"` or `"secondary"` next to its `data-nb-source`, as

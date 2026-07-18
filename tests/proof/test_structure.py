@@ -70,6 +70,64 @@ def test_invalid_figures_block(
     assert "B-FIGURE" in result.blocks
 
 
+def chart_figure(*, src: str = "micron/chart-1.png") -> str:
+    return f'''<figure class="nb-figure">
+  <img src="{src}" alt="Demand rising by year" />
+  <figcaption>Fig. 1 · Demand.<sup class="nb-cite"><a href="#s1">1</a></sup></figcaption>
+</figure>'''
+
+
+CHART_BUNDLE = {
+    "micron/chart-1.png": PNG,
+    "micron/chart-1.py": b"import plotly.graph_objects as go\nfig = go.Figure()\n",
+}
+
+
+def test_a_generated_chart_with_its_script_passes(
+    run_local: Callable[..., Findings],
+) -> None:
+    result = run_local(
+        mut("</article>", f"{chart_figure()}</article>"),
+        "semiconductors",
+        assets=CHART_BUNDLE,
+    )
+
+    assert "B-CHART" not in result.codes
+    assert "B-FIGURE" not in result.codes
+
+
+@pytest.mark.parametrize(
+    ("figure", "assets"),
+    [
+        pytest.param(
+            chart_figure(),
+            {"micron/chart-1.png": PNG},
+            id="missing-provenance-script",
+        ),
+        pytest.param(
+            chart_figure(src="micron/chart-1.webp"),
+            {"micron/chart-1.webp": PNG},
+            id="chart-named-asset-that-is-not-a-png",
+        ),
+        pytest.param(
+            chart_figure().replace(
+                '<sup class="nb-cite"><a href="#s1">1</a></sup>', ""
+            ),
+            dict(CHART_BUNDLE),
+            id="uncited-data-source",
+        ),
+    ],
+)
+def test_invalid_generated_charts_block(
+    run_local: Callable[..., Findings], *, figure: str, assets: dict[str, bytes]
+) -> None:
+    result = run_local(
+        mut("</article>", f"{figure}</article>"), "semiconductors", assets=assets
+    )
+
+    assert "B-CHART" in result.blocks
+
+
 def test_missing_required_section_blocks(run_local: Callable[..., Findings]) -> None:
     result = run_local(
         mut('data-nb-section="orientation"', 'data-nb-section="intro"'),
@@ -91,81 +149,89 @@ def test_duplicated_section_blocks(run_local: Callable[..., Findings]) -> None:
 
 
 @pytest.mark.parametrize(
-    "name,html",
+    "html",
     [
-        (
-            "executable script",
+        pytest.param(
             mut("</article>", "<script>alert(1)</script></article>"),
+            id="executable-script",
         ),
-        (
-            "external script src",
+        pytest.param(
             mut(
                 "</article>",
                 '<script type="application/json" data-nb-chart '
                 'src="https://evil.example/x.js"></script></article>',
             ),
+            id="external-script-src",
         ),
-        (
-            "iframe",
+        pytest.param(
             mut("</article>", '<iframe src="https://x.example"></iframe></article>'),
+            id="iframe",
         ),
-        ("inline event handler", mut("<article>", '<article onclick="x()">')),
-        (
-            "javascript: url",
+        pytest.param(
+            mut("<article>", '<article onclick="x()">'), id="inline-event-handler"
+        ),
+        pytest.param(
             mut('href="https://example.org/src3"', 'href="javascript:alert(1)"'),
+            id="javascript:-url",
         ),
-        (
-            "non-allowlisted stylesheet",
+        pytest.param(
             mut(FONT_LINK, "https://cdn.evil.example/style.css"),
+            id="non-allowlisted-stylesheet",
         ),
-        (
-            "font-host subdomain-suffix bypass",
+        pytest.param(
             mut(FONT_LINK, "https://fonts.googleapis.com.evil.example/pwn.css"),
+            id="font-host-subdomain-suffix-bypass",
         ),
-        (
-            "font-host userinfo bypass",
+        pytest.param(
             mut(FONT_LINK, "https://fonts.googleapis.com@evil.example/pwn.css"),
+            id="font-host-userinfo-bypass",
         ),
-        (
-            "font-host lookalike TLD suffix",
+        pytest.param(
             mut(FONT_LINK, "https://fonts.googleapis.commmm/x.css"),
+            id="font-host-lookalike-TLD-suffix",
         ),
-        ("malformed chart json", mut('"type":"bar"', '"type":"pie"')),
-        (
-            "stray json script block",
+        pytest.param(
+            mut(
+                "</article>",
+                '<figure><script type="application/json" data-nb-chart>'
+                '{"type":"bar","labels":["a"],"series":[]}</script></figure>'
+                "</article>",
+            ),
+            id="retired-declarative-chart",
+        ),
+        pytest.param(
             mut(
                 "</article>",
                 '<script type="application/json">{"x":1}</script></article>',
             ),
+            id="stray-json-script-block",
         ),
-        (
-            "non-engine relative script",
+        pytest.param(
             mut("</head>", '<script src="../../assets/other.js"></script></head>'),
+            id="non-engine-relative-script",
         ),
-        (
-            "protocol-relative stylesheet",
+        pytest.param(
             mut(FONT_LINK, "//cdn.evil.example/style.css"),
+            id="protocol-relative-stylesheet",
         ),
-        (
-            "backslash-obfuscated external ref",
+        pytest.param(
             mut(FONT_LINK, "/\\cdn.evil.example/style.css"),
+            id="backslash-obfuscated-external-ref",
         ),
-        (
-            "meta-refresh redirect",
+        pytest.param(
             mut(
                 "</head>",
                 '<meta http-equiv="refresh" content="0;url=//evil.example"></head>',
             ),
+            id="meta-refresh-redirect",
         ),
-        (
-            "form",
+        pytest.param(
             mut("</article>", '<form action="//evil.example"></form></article>'),
+            id="form",
         ),
     ],
 )
-def test_the_sandbox_blocks(
-    run_local: Callable[..., Findings], name: str, html: str
-) -> None:
+def test_the_sandbox_blocks(run_local: Callable[..., Findings], html: str) -> None:
     result = run_local(html, "semiconductors")
 
     assert "B-SANDBOX" in result.blocks
@@ -174,10 +240,13 @@ def test_the_sandbox_blocks(
 def test_an_external_script_load_blocks_on_its_own_rule(
     run_local: Callable[..., Findings],
 ) -> None:
-    # The script-src rule shares B-SANDBOX with the external-ref allowlist, which
-    # fires on the same markup. Asserting the code alone passes even when this rule
-    # is downgraded to a warn, so name the finding: a published article that loads a
-    # script off the open web is the sandbox failing at the only job it has.
+    """The script-src rule is asserted by message, not by shared code.
+
+    It shares B-SANDBOX with the external-ref allowlist, which fires on the
+    same markup, so asserting the code alone would pass even if this rule
+    were downgraded to a warn. A published article that loads a script off
+    the open web is the sandbox failing at the only job it has.
+    """
     loads_a_script = mut(
         "</article>",
         '<script type="application/json" data-nb-chart '
@@ -243,7 +312,6 @@ def skeleton_of(*sections: str) -> str:
 
 @pytest.fixture
 def overlay_repo(clone_testrepo: Callable[..., str]) -> str:
-    """A press whose templates overlay adds a flex template and a per-item one."""
     repo = clone_testrepo("press", "templates", "engine")
     templates = pathlib.Path(repo) / "press" / "templates"
     for tid, manifest, skeleton in [
@@ -316,25 +384,24 @@ def test_flex_template_passes_with_agent_named_sections_in_band(
 
 
 @pytest.mark.parametrize(
-    "name,sections",
+    "sections",
     [
-        ("too few", [("only-one", cite(1))]),
-        (
-            "too many",
+        pytest.param([("only-one", cite(1))], id="too-few"),
+        pytest.param(
             [
                 ("a1", cite(1)),
                 ("a2", cite(2)),
                 ("a3", cite(3)),
                 ("a4", cite(1)),
             ],
+            id="too-many",
         ),
-        ("duplicate labels", [("twice", cite(1)), ("twice", cite(2))]),
+        pytest.param([("twice", cite(1)), ("twice", cite(2))], id="duplicate-labels"),
     ],
 )
 def test_a_flex_outline_out_of_band_blocks(
     run_local: Callable[..., Findings],
     overlay_repo: str,
-    name: str,
     sections: list[tuple[str, str]],
 ) -> None:
     result = run_notes(run_local, overlay_repo, sections)
