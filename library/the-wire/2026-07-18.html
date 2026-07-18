@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Wire · 2026-07-18</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-wire",
+        "slug": "2026-07-18",
+        "template": "brief",
+        "title": "A distillation method rewards the student only for what instruction-tuning added to the teacher",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-18",
+        "tags": ["research", "engineering", "policy", "industry", "compute"],
+        "sources": 9,
+        "words": 989,
+        "reading_minutes": 4,
+        "dek": "A new attack cut a world-action agent's task success from 96.5% to 43.1%, and Anthropic set a July 19 cliff that moves Fable 5 onto metered usage credits.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Wire</div>
+        <h1 class="nb-title">
+          A distillation method rewards the student only for what
+          instruction-tuning added to the teacher
+        </h1>
+        <p class="nb-dekline">
+          A new attack cut a world-action agent's task success from 96.5% to
+          43.1%, and Anthropic set a July 19 cliff that moves Fable 5 onto
+          metered usage credits.
+        </p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-07-18</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.15161"
+              >A distillation method rewards the student only for what
+              instruction-tuning added to the teacher</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            NAVER-affiliated researchers reward a distilled student on the delta
+            signal, the gap between an instruction-tuned teacher and its own base
+            model before that tuning, which isolates what reasoning training added
+            rather than what the base already knew.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Standard on-policy distillation scores the student's sampled rollouts
+            against the teacher's full output distribution, folding base knowledge
+            and new reasoning into a single target. Rewarding the delta strips the
+            base away and copies only the reasoning the teacher gained. The reported
+            result is consistent gains over that conventional baseline across
+            mathematics, science, and code-reasoning benchmarks, and it holds up
+            under abbreviated post-training.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            When the post-training budget is short, the delta is the cheaper signal
+            to copy.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">engineering</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.14431"
+              >Byte-exact KV-cache grafting reaches the same AIME answers with
+              6,574x fewer tokens</a
+            ><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </h3>
+          <p>
+            On eight AIME 2025 problems a frozen model had not solved, grafting its
+            cached reasoning reaches the same answers from 61 cached tokens instead
+            of 401,026, a 6,574-fold reduction, with roughly 8,700 times less energy
+            on recurring cases.<sup class="nb-cite"><a href="#s2">2</a></sup> The
+            method caches a model's verified reasoning as a byte-exact key-value
+            artifact and grafts it into fresh inference contexts, with outputs
+            claimed byte-for-byte identical under SHA-256 equality; the mechanism is
+            cache replay rather than fresh computation, so the savings land on
+            repeated problems and not on novel prompts.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            The same work reports Gemma-4-12B climbing from 80.0% to 93.3% on that
+            benchmark and usable context widening from 32,768 to 2,854,766 tokens at
+            no extra GPU memory.<sup class="nb-cite"><a href="#s2">2</a></sup> These
+            numbers come from a single-author, unreplicated preprint, and the
+            "verified-knowledge flywheel" label runs ahead of what a reader can
+            check. Verify replay determinism on your own stack before counting on any
+            of it.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.15207"
+              >World-Action Drift Attacks drop agent success to 43.1% while the
+              model's forecast stays clean</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            A world-action model couples action generation with a prediction of the
+            resulting future, and the pairing was assumed to be self-checking: if
+            the imagined outcome matches the plan, the action is trusted. NUS
+            researchers break that assumption with World-Action Drift Attacks, which
+            separate what the model imagines from what it executes.<sup
+              class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            An action-only attack drops task success from 96.5% to 43.1%, and a
+            second, imagination-preserving variant holds that attack strength while
+            the predicted future barely moves, so the model stays internally
+            consistent while acting wrongly.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            Agreement between a world-action model's forecast and its behavior is not
+            evidence of safety, and any agent that gates actions on that agreement
+            inherits the gap the attack opens.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">policy</span>
+          <h3>
+            <a href="https://deepmind.google/blog/our-approach-to-bioresilience/"
+              >Google DeepMind and Isomorphic Labs open bio models to trusted
+              partners, grading the risk themselves</a
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </h3>
+          <p>
+            More than 15 partnerships with government, biosecurity, and research
+            bodies now sit behind a joint bioresilience program that Google DeepMind
+            and Isomorphic Labs published on July 16, opening AI models and agents to
+            "trusted partners" across outbreak prevention, detection, and
+            response.<sup class="nb-cite"><a href="#s4">4</a></sup> The tools are
+            specific: AlphaEvolve tuned to optimize metagenomic sequencing analysis
+            for faster outbreak detection, an Isomorphic unit standing up to design
+            medical countermeasures against both natural pandemics and AI-misuse
+            risks, and SynthID watermarking adapted so DNA-synthesis providers can
+            screen for risky AI-generated sequences.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            Access sits behind a four-step safety process of threat modeling,
+            evaluations, mitigations, and monitoring, run under DeepMind's own
+            Frontier Safety Framework rather than any external sign-off.<sup
+              class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            Reporting by International Business Times carries DeepMind's Helen King
+            saying the lab
+            "would not be launching" if it reached a critical capability level
+            without mitigations, alongside RAND's caution that "safeguards and
+            controlled access remain key considerations."<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            The same drug-design engine that speeds countermeasures can inform
+            pathogen design, and a company grading its own risk is not external
+            oversight.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">industry</span>
+          <h3>
+            <a href="https://www.anthropic.com/news/redeploying-fable-5"
+              >Anthropic's Fable 5 drops out of subscription limits on July 19 and
+              moves to metered credits</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            Anthropic's Fable 5 leaves subscription usage limits after July 19,
+            moving to separately billed usage credits.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            ><sup class="nb-cite"><a href="#s7">7</a></sup> The mechanism, from
+            Anthropic's own redeployment post, is included access capped at "up to
+            50% of weekly usage limits," after which the model "will be available
+            via usage credits."<sup class="nb-cite"><a href="#s6">6</a></sup> That
+            post set the cliff at July 7. The deadline has since slid to July 12 and
+            then July 19, extended after backlash over the early cutoff.<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            ><sup class="nb-cite"><a href="#s8">8</a></sup> A framing circulating
+            today calls the arrangement permanent. It is not. Every source that can
+            be verified says included through July 19, then metered, with only an
+            unscheduled promise to restore standard access "when it has enough
+            compute."<sup class="nb-cite"><a href="#s7">7</a></sup><sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            No source I could confirm supplies the post-cliff per-token price, so any
+            figure on aggregator pages is unconfirmed. If your product runs on Fable
+            5 inside a subscription, the included window closes tomorrow, and the
+            metered rate is still unknown.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">compute</span>
+          <h3>
+            <a href="https://epoch.ai/publications/ai-energy"
+              >A chatbot reply costs about 0.6 watt-hours, and AI is a few percent
+              of US power</a
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </h3>
+          <p>
+            Epoch AI's updated energy explainer puts a roughly 100-word chatbot
+            response at about 0.6 watt-hours, the draw of a microwave for ten seconds
+            or a 10-watt bulb for five minutes.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            At grid scale the useful number is the share. AI computing worldwide runs
+            in the tens of gigawatts, comparable to New York state's peak demand, and
+            comes to a few percent of US annual electricity, below air conditioning
+            at 12% and lighting at 8%.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            Epoch, citing a 2025 IEA report, puts data centers under 1% of global CO2
+            emissions.<sup class="nb-cite"><a href="#s9">9</a></sup> The projection
+            carries the pressure: US AI data-center demand could reach about 100
+            gigawatts by 2030, near the entire industrial sector's 120-gigawatt
+            average in 2025.<sup class="nb-cite"><a href="#s9">9</a></sup> Per query
+            the energy is trivial. The build-out to 100 gigawatts is not.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2607.15161"
+              >arXiv · Heo et al., "On-Policy Delta Distillation"</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2607.14431"
+              >arXiv · Sietse Schelpe, "Smarter and Cheaper at Once: Byte-Exact
+              KV-Cache Grafting Turns a Frozen Small Model into a Verified-Knowledge
+              Flywheel"</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2607.15207"
+              >arXiv · Li et al., "BadWAM: When World-Action Models Dream Right but
+              Act Wrong"</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://deepmind.google/blog/our-approach-to-bioresilience/"
+              >Google DeepMind &amp; Isomorphic Labs · Our approach to
+              bioresilience</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.ibtimes.com/google-deepmind-preparing-ais-biggest-risk-biosecurity-becoming-new-battleground-3805376"
+              >International Business Times · Google DeepMind Is Preparing For AI's
+              Biggest Risk</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.anthropic.com/news/redeploying-fable-5"
+              >Anthropic · Redeploying Fable 5</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.bleepingcomputer.com/news/artificial-intelligence/claude-fable-5-stays-free-for-paid-users-until-july-19-as-anthropic-buys-more-time/"
+              >BleepingComputer · Claude Fable 5 stays free for paid users until July
+              19 as Anthropic buys more time</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.androidauthority.com/claude-fable-5-free-extension-3685103/"
+              >Android Authority · Claude Fable 5 promotion extended after backlash
+              over early cutoff</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://epoch.ai/publications/ai-energy"
+              >Epoch AI · What you need to know about AI energy use</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
