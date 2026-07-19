@@ -61,7 +61,10 @@ Compact worked rows: steps of a computation, a record, a mapping, a
 comparison, a ranking. Numeric cells are mono and never wrap (space digit
 groups so the table fits a phone); add class `txt` on a cell that should
 read as prose. First-column tokens may wear `nb-table-token` chips. The
-caption states what the rows show and carries the citation.
+caption states what the rows show and carries the citation. Author the
+bare table exactly as below: the runtime dresses every one in the
+data-block card, rows scrolling inside it on a phone and the caption
+seated as the card's footer.
 
 ```html
 <table class="nb-table">
@@ -127,15 +130,18 @@ alternative text, and restate what matters in caption and prose.
 
 Math the argument leans on, typeset from LaTeX. The element's text is the
 TeX source and the runtime typesets it; a reader without JS sees the TeX
-itself, so keep it clean. Inline math rides in prose in an `nb-math-in`
-span. The bare display form carries a derivation the prose walks through.
-When one equation is the mechanism the article is about, use the annotated
-form instead: wrap each term the reader must track in
-`\htmlClass{nb-mc1}{…}` through `nb-mc5`, and name every colored term in
-the legend (the term cell repeats the TeX; the colors hold in both
-schemes). At most one annotated equation per article. Punctuation, spacing
-commands, and sizing are the writer's: what renders must read as one
-sentence with the prose around it.
+itself, so keep it clean. Three tiers, chosen by how much the equation
+needs to say. Inline math rides in prose in an `nb-math-in` span. A bare
+display equation — no caption — sits open on the page for a step the
+surrounding prose fully carries, cited in that prose. Group text with the
+equation and the figure becomes a data-block card: a caption when the
+equation needs its own cited line, and for the one equation an article is
+really about, the annotated form — wrap each term the reader must track
+in `\htmlClass{nb-mc1}{…}` through `nb-mc5` and name every colored term
+in the legend (the term cell repeats the TeX; the colors hold in both
+schemes). At most one annotated equation per article. Punctuation,
+spacing commands, and sizing are the writer's: what renders must read as
+one sentence with the prose around it.
 
 ```html
 <p>
@@ -149,6 +155,12 @@ sentence with the prose around it.
     \mathrm{Ortho}(G) = \operatorname*{arg\,min}_{O} \bigl\{\, \lVert O - G
     \rVert_F : O^{\top} O = I \,\bigr\}
   </div>
+</figure>
+
+<figure class="nb-math">
+  <div class="nb-math-eq">
+    \varphi^{N}(x) \to 1 \ \text{ as } \ N \to \infty
+  </div>
   <figcaption>
     WHAT THE EQUATION SAYS, IN PROSE.<sup class="nb-cite"
       ><a href="#s1">1</a></sup
@@ -156,7 +168,7 @@ sentence with the prose around it.
   </figcaption>
 </figure>
 
-<figure class="nb-math nb-math-annotated">
+<figure class="nb-math">
   <div class="nb-math-eq">
     \mathrm{softmax}\!\left( \frac{ \htmlClass{nb-mc1}{Q} \,
     \htmlClass{nb-mc2}{K^{\top}} }{ \htmlClass{nb-mc3}{\sqrt{d_k}} } \right)
