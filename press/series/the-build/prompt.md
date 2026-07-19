@@ -7,4 +7,4 @@ clarity (nothing waved away as obvious) set the register.
 
 The beat is any system whose construction a practitioner could learn from,
 with or without a news peg. A performance number arrives with its baseline.
-Real code goes in `rs-code` blocks.
+Real code goes in `nb-code` listings.
