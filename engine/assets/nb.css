@@ -1347,8 +1347,16 @@ figure.nb-chart noscript {
 
 /* the table: compact worked rows (design adopted from the example press's
    rs-worked): mono numerals, spaced digits fit a phone, the caption carries
-   the citation. A `txt` cell drops to serif, left-aligns, and wraps. */
+   the citation. A `txt` cell drops to serif, left-aligns, and wraps.
+
+   Authored markup is the bare table; the runtime dresses every one in the
+   data-block card (nb-table-card > nb-table-scroll, the caption re-seated
+   as the card's figcaption footer), so wide rows scroll inside the card
+   and never push the page. The no-JS fallback below makes the bare table
+   its own scroll container, so the page holds even before the card. */
 .nb-table {
+  display: block;
+  overflow-x: auto;
   margin: 24px auto;
   border-collapse: collapse;
   font-family: var(--mono);
@@ -1362,6 +1370,34 @@ figure.nb-chart noscript {
   font-family: var(--sans);
   font-size: 0.82rem;
   text-align: left;
+  color: var(--ink-soft);
+}
+
+.nb-table-card {
+  margin: 24px 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.nb-table-scroll {
+  overflow-x: auto;
+  padding: 12px 14px;
+}
+
+.nb-table-scroll .nb-table {
+  display: table;
+  overflow: visible;
+  margin: 0 auto;
+}
+
+.nb-table-card figcaption {
+  border-top: 1px solid var(--hair);
+  padding: 9px 14px;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  line-height: 1.55;
   color: var(--ink-soft);
 }
 
@@ -2009,7 +2045,14 @@ figure.nb-chart noscript {
    typesets it with KaTeX (nb.js, pinned, loaded only when a page carries
    the furniture). No JS, the raw TeX shows — honest and copyable. The
    annotated form colors terms via \htmlClass spans (.nb-mc*) from the
-   chart tokens, so the palette holds in both schemes. */
+   chart tokens, so the palette holds in both schemes.
+
+   Three tiers. Inline rides the prose line. A bare display equation sits
+   open on the page, journal-style: the prose around it carries the
+   citation. The moment text is grouped with the equation — a caption, a
+   legend — the whole thing becomes a data-block card (the same card the
+   code listing and the table wear), so the attached text reads as the
+   block's own and never as a stray paragraph. */
 .nb-math {
   margin: 26px 0;
 }
@@ -2034,23 +2077,33 @@ figure.nb-chart noscript {
   white-space: normal;
 }
 
-.nb-math figcaption {
-  margin-top: 7px;
-  text-align: center;
-  font-family: var(--sans);
-  font-size: 12.5px;
-  color: var(--ink-soft);
-}
-
-.nb-math-annotated {
+/* attached text promotes the figure to the card */
+.nb-math:has(figcaption),
+.nb-math:has(.nb-math-legend) {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 17px 18px 14px;
+  padding: 17px 18px 0;
 }
 
-.nb-math-annotated .nb-math-eq {
+.nb-math:has(figcaption) .nb-math-eq,
+.nb-math:has(.nb-math-legend) .nb-math-eq {
   padding: 5px 0 12px;
+}
+
+.nb-math figcaption {
+  border-top: 1px solid var(--hair);
+  margin: 0 -18px;
+  padding: 9px 18px 11px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+/* legend without a caption still closes the card cleanly */
+.nb-math:has(.nb-math-legend):not(:has(figcaption)) {
+  padding-bottom: 14px;
 }
 
 .nb-math-legend {
@@ -2078,11 +2131,9 @@ figure.nb-chart noscript {
   padding-top: 1px;
 }
 
-.nb-math-annotated figcaption {
+/* a legend above the caption supplies the closing hairline itself */
+.nb-math-legend + figcaption {
   margin-top: 13px;
-  padding-top: 10px;
-  border-top: 1px solid var(--hair);
-  text-align: left;
 }
 
 .nb-math .nb-mc1 {
