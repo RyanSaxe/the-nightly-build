@@ -4,14 +4,9 @@
    change. Bespoke, single-template furniture lives in that template's folder
    instead; these two pieces are shared across sections, so they live here. */
 
-/* Code block — a real listing with a header (file · language) and an optional
-   cited caption. This is the furniture that proves a site can use a real JS
-   library with no engine change: the article writes plain
-   <pre><code class="language-python">, Prism (declared in site.yaml, loaded on
-   every page) highlights it into .token spans, and this file colors them. No-JS
-   readers still get clean monospace. Token colors are set for light and
-   overridden for dark, scoped to the component so they never leak into the
-   page. Used by The Build. */
+/* Legacy: rs-code retired in favor of the engine's shipped nb-code (the
+   same design, promoted upstream; nb.js loads Prism itself). Kept styled,
+   with these token colors, so published Build articles keep rendering. */
 .rs-code {
   --tk-com: #7a8494;
   --tk-kw: #9a2b6b;
