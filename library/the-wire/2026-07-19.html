@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Wire · 2026-07-19</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-wire",
+        "slug": "2026-07-19",
+        "template": "brief",
+        "title": "China answers the chip curbs by lashing 8,192 NPUs into one node",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-19",
+        "tags": ["compute", "policy", "research", "engineering"],
+        "sources": 11,
+        "words": 869,
+        "reading_minutes": 4,
+        "dek": "The same WAIC that staged China's compute answer seated a 29-nation AI-governance bloc under Beijing, while a benchmark of paid freelance work put the frontier at one project in six, more than quadruple its October mark.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Wire</div>
+        <h1 class="nb-title">China answers the chip curbs by lashing 8,192 NPUs into one node</h1>
+        <p class="nb-dekline">
+          The same WAIC that staged China's compute answer seated a 29-nation
+          AI-governance bloc under Beijing, while a benchmark of paid freelance
+          work put the frontier at one project in six, more than quadruple its October mark.
+        </p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-07-19</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">compute</span>
+          <h3>
+            <a href="https://www.huawei.com/en/news/2025/9/hc-lingqu-ai-superpod"
+              >Huawei's Atlas 950 SuperPoD ties 8,192 Ascend NPUs over one
+              interconnect</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Huawei used its WAIC 2026 stand in Shanghai to put the Atlas 950
+            SuperPoD on the floor: 8,192 Ascend 950DT NPUs joined over its
+            proprietary UnifiedBus interconnect, pitched to train and serve
+            trillion-parameter models with no US-origin parts.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Independent measurement puts the single SuperPoD at roughly eight FP8
+            exaFLOPS across 160 cabinets and about 1,000 square metres, with
+            general availability set for the fourth quarter of 2026.<sup
+              class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            The chip is not the news. Huawei first announced the Atlas 950 line at
+            its Connect conference in September 2025; what moved this week is the
+            public display and the framing hung on it.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            The read off the show floor is that China's reply to the export
+            controls has turned from chasing single-chip parity with NVIDIA toward
+            lashing thousands of home-grown processors into one system-level node,
+            trading transistor density it cannot buy for the power and floor space
+            those figures spend.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">policy</span>
+          <h3>
+            <a
+              href="https://english.news.cn/20260716/2d364f232dd7456c8edf1d67d5125d37/c.html"
+              >Twenty-nine nations sign China's founding charter for a rival AI
+              body</a
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </h3>
+          <p>
+            On July 16, the eve of WAIC, 29 countries signed an agreement in
+            Shanghai establishing the World Artificial Intelligence Cooperation
+            Organization, an intergovernmental body headquartered in Shanghai,
+            with Foreign Minister Wang Yi signing for China.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            Xi Jinping's first WAIC keynote framed the launch as multilateral
+            cover rather than a Chinese project: AI development, he said, "should
+            not be a solo performance by a single country, but a symphony of
+            international cooperation."<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            The founding roster leans to the Global South, with Indonesia, Brazil,
+            Pakistan, and Russia among the signatories, and WAICO seats China at
+            the head of a governance track running parallel to the Western
+            frameworks even as Washington steps back from the same norm-setting
+            rooms.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research</span>
+          <h3>
+            <a href="https://safe.ai/blog/significant-increase-in-digital-labor-automation"
+              >Fable 5 finishes 16.1% of real paid freelance jobs, up from 2.5% in
+              October</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            On the Remote Labor Index, which grades agents on 240 freelance
+            projects that real clients actually paid for, Claude Fable 5 now
+            completes 16.1% to a standard that human graders judge at least as
+            good as the original worker's, roughly double Opus 4.8 at 8.3% and
+            GPT-5.5 at 6.3%.<sup class="nb-cite"><a href="#s6">6</a></sup
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+            That is up from the 2.5% the best agent managed when the index
+            launched in October 2025,<sup class="nb-cite"><a href="#s8">8</a></sup>
+            a frontier the CAIS and Scale team say has "more than quadrupled in
+            under eight months."<sup class="nb-cite"><a href="#s6">6</a></sup>
+            The figure is the July leaderboard's, not tonight's news, and it
+            arrives with its limits attached: Fable 5's access was cut off before
+            every one of the 240 projects could be scored, though even assuming it
+            failed each unscored job its rate would still be 14.6%, higher than
+            any other model.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            When the researchers swapped the human graders for an automated LLM
+            judge, it still ranked the models in the right order but badly
+            overshot the absolute rates, by roughly 2.9x for GPT-5.5 and 2.3x for
+            Opus 4.8, so automated grading tracks relative progress but cannot
+            replace human evaluation, because judging an RLI deliverable is itself
+            the kind of demanding agentic work the index is measuring.<sup
+              class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">engineering</span>
+          <h3>
+            <a
+              href="https://developer.nvidia.com/blog/build-a-multi-camera-3d-tracking-application-with-nvidia-deepstream-9-1-skills/"
+              >NVIDIA ships 13 DeepStream skills a coding agent can drive from a
+              prompt</a
+            ><sup class="nb-cite"><a href="#s10">10</a></sup>
+          </h3>
+          <p>
+            NVIDIA's DeepStream 9.1, out July 15, ships 13 modular "agentic skills"
+            written to be driven by coding agents such as Claude Code or Codex
+            rather than by a human editing configuration files.<sup class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+            The headline pair does the setup a vision team usually does by hand:
+            MV3DT projects detections from several calibrated cameras into one
+            shared 3D coordinate system and holds a single globally consistent ID
+            on each object as it crosses views, and AutoMagicCalib performs the
+            camera-network calibration that step depends on.<sup class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+            From a natural-language prompt the agent clones the repo, pulls the
+            models, and wires the pipeline, so standing up a multi-camera 3D
+            tracker no longer means writing the orchestration itself.<sup
+              class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+            The skills run down to Jetson Orin edge hardware under JetPack 7.2,
+            which is where most of this is meant to deploy.<sup class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.huawei.com/en/news/2025/9/hc-lingqu-ai-superpod"
+              >Huawei · HUAWEI CONNECT 2025 keynote release: Atlas 950 SuperPoD and
+              SuperCluster</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.tomshardware.com/tech-industry/artificial-intelligence/huawei-unveils-atlas-950-supercluster-touting-1-fp4-zettaflops-performance-for-ai-inference-and-524-fp8-exaflops-for-ai-training-features-hundreds-of-thousands-of-950dt-apus"
+              >Tom's Hardware · Huawei unveils Atlas 950 SuperCluster and SuperPoD
+              specifications</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.digitimes.com/news/a20260718VL200/2026-shanghai-chips.html"
+              >Digitimes · China's system-level answer to US chip curbs at WAIC
+              2026</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://english.news.cn/20260716/2d364f232dd7456c8edf1d67d5125d37/c.html"
+              >Xinhua · 29 countries sign agreement on establishing World AI
+              Cooperation Organization</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.aljazeera.com/news/2026/7/17/chinas-xi-jinping-launches-new-ai-alliance-what-is-it"
+              >Al Jazeera · China's Xi Jinping launches new AI alliance: what is
+              it?</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://safe.ai/blog/significant-increase-in-digital-labor-automation"
+              >CAIS &amp; Scale AI · A significant increase in digital labor
+              automation (Remote Labor Index, July leaderboard)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://importai.substack.com/p/import-ai-464-fables-writes-gpu-kernels"
+              >Import AI 464 · Jack Clark on the Remote Labor Index update</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2510.26787"
+              >arXiv:2510.26787 · Remote Labor Index: Measuring AI Automation of
+              Remote Work</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://tech.yahoo.com/ai/claude/articles/fable-5-just-set-ai-202926200.html"
+              >Yahoo Tech · Fable 5 just set a new AI freelance-work record, but it
+              can't replace humans yet</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developer.nvidia.com/blog/build-a-multi-camera-3d-tracking-application-with-nvidia-deepstream-9-1-skills/"
+              >NVIDIA Developer Blog · Build a multi-camera 3D tracking application
+              with DeepStream 9.1 skills</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://blockchain.news/news/nvidia-deepstream-9-1-3d-tracking"
+              >Blockchain.News · NVIDIA DeepStream 9.1 adds multi-camera 3D
+              tracking</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
