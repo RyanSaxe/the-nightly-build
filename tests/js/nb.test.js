@@ -504,3 +504,48 @@ test("a press-pinned Prism is left to highlight on its own", async () => {
     "the press copy's own bootstrap is untouched",
   );
 });
+
+/* ------------------------------------------------------ table data block */
+
+test("a bare nb-table is dressed in the card with its caption as footer", async () => {
+  const html = articlePage(
+    '<article><table class="nb-table"><caption>What the rows show.<sup class="nb-cite"><a href="#s1">1</a></sup></caption>' +
+      "<thead><tr><th>A</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table></article>",
+  );
+  const w = await loadNb(html);
+
+  const card = w.document.querySelector("figure.nb-table-card");
+  assert.ok(card, "the card wraps the table");
+  assert.ok(
+    card.querySelector(".nb-table-scroll > table.nb-table"),
+    "the table sits in the scroll container",
+  );
+  assert.equal(
+    card.querySelectorAll("caption").length,
+    0,
+    "the caption is re-seated out of the table",
+  );
+  const foot = card.querySelector("figcaption");
+  assert.match(foot.textContent, /What the rows show/);
+  assert.ok(
+    foot.querySelector('sup.nb-cite a[href="#s1"]'),
+    "the citation anchor survives the move",
+  );
+});
+
+test("dressing tables is idempotent and a captionless table gets no footer", async () => {
+  const html = articlePage(
+    '<article><div class="nb-table-card"><div class="nb-table-scroll">' +
+      '<table class="nb-table"><tbody><tr><td>done</td></tr></tbody></table></div></div>' +
+      '<table class="nb-table"><tbody><tr><td>bare</td></tr></tbody></table></article>',
+  );
+  const w = await loadNb(html);
+
+  assert.equal(
+    w.document.querySelectorAll(".nb-table-card").length,
+    2,
+    "the dressed table is left alone; the bare one is dressed",
+  );
+  const cards = w.document.querySelectorAll(".nb-table-card");
+  assert.equal(cards[1].querySelectorAll("figcaption").length, 0);
+});

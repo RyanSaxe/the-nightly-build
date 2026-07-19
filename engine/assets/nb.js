@@ -379,6 +379,32 @@
     });
   }
 
+  /* Every nb-table rides in the data-block card. The authored markup is
+     the bare table (caption inside), so the runtime dresses each one:
+     card > scroll container > table, the caption re-seated as the card's
+     figcaption footer. Nodes are moved, never re-parsed, so citation
+     markup survives untouched, and the whole published shelf retrofits.
+     No JS: the bare table is its own scroll container (see nb.css). */
+  function dressTables() {
+    document.querySelectorAll("table.nb-table").forEach(function (tbl) {
+      if (tbl.closest(".nb-table-card")) return; /* already dressed */
+      var card = document.createElement("figure");
+      card.className = "nb-table-card";
+      var scroll = document.createElement("div");
+      scroll.className = "nb-table-scroll";
+      tbl.parentNode.insertBefore(card, tbl);
+      scroll.appendChild(tbl);
+      card.appendChild(scroll);
+      var cap = tbl.caption;
+      if (cap) {
+        var foot = document.createElement("figcaption");
+        while (cap.firstChild) foot.appendChild(cap.firstChild);
+        cap.remove();
+        card.appendChild(foot);
+      }
+    });
+  }
+
   /* --------------------------------------------------------------- catalog */
 
   var catalogPromise = null;
@@ -914,6 +940,7 @@
     renderCharts();
     renderMath();
     highlightCode();
+    dressTables();
 
     var meta = articleMeta();
     if (meta) {
