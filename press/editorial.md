@@ -20,4 +20,6 @@ Chris Olah and Lilian Weng and build each concept before the sentence that
 needs it. Series prompts specialize this register for their own beat.
 
 Assumed background: fluent in machine learning and software, seriously read
-in the rest of the paper's beats.
+in the rest of the paper's beats. The paper is also read at home: the family
+desks write to a parent of a young child, and the games desk to a player
+with years of tournament-grade card games behind them.
