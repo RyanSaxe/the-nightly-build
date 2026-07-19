@@ -1,8 +1,8 @@
 # The Nightlight
 
 Raising young children, from the evidence: infancy through early childhood,
-weighted toward the 2026-born cohort and aging forward with it. Written for
-parents of children in that range and older. Emily Oster's ParentData sets
+weighted toward the 2026-born cohort and aging forward with it. Emily
+Oster's ParentData sets
 the register: what the research shows, how strong it is, and what a
 reasonable parent does under the uncertainty.
 

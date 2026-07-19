@@ -4,8 +4,8 @@ One contested question per article, picked like an editor:
 
 - Genuinely live and genuinely two-sided. Where one side is plainly right,
   the story belongs in The World.
-- Lean toward what the reader heard argued this week. A durable question
-  newly live counts.
+- Lean toward what was argued loudest in public this week. A durable
+  question newly live counts.
 - Serious, credentialed people must disagree in public, so each side can be
   quoted at its strongest from a named holder.
 - Let the terrain drift. A desk that returns to the same fight every week
