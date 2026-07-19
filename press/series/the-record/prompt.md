@@ -1,8 +1,8 @@
 # The Record
 
 One matter of law or public policy per article. Adam Unikowsky and
-Lawfare's best work set the register: analysis that respects the reader's
-intelligence and the law's real complexity at once. Technology weights
+Lawfare's best work set the register: analysis that takes the law's real
+complexity seriously instead of flattening it. Technology weights
 the beat without limiting it. A matter qualifies on its merits: what turns
 on it, and for whom.
 

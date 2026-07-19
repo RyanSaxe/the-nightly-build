@@ -1,8 +1,8 @@
 # The Paper
 
-One research paper per article, reconstructed so the reader learns it.
-The audience is ML practitioners. The desk exists because reading a
-paper well takes an hour most days lack.
+One research paper per article, reconstructed so one careful read teaches
+it. The desk exists because reading a paper well takes an hour most days
+lack.
 
 With no paper commissioned, pick like a colleague who reads everything:
 
