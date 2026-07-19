@@ -160,7 +160,7 @@ test("buildToc lists sections led by any heading level and nests the deeper ones
   );
 });
 
-test("bindSequenceNav renders a hostile catalog neighbor title as inert text", async () => {
+test("series nav renders a hostile catalog neighbor title as inert text", async () => {
   const html = articlePage("<article><h1>Two</h1></article>", {
     series: "s",
     mode: "sequence",
@@ -191,6 +191,83 @@ test("bindSequenceNav renders a hostile catalog neighbor title as inert text", a
   assert.ok(
     nav.textContent.includes("onerror"),
     "payload survives as visible text",
+  );
+  const labels = [...nav.querySelectorAll(".nb-endnav-label")].map((el) =>
+    el.textContent.trim(),
+  );
+  assert.deepEqual(labels, ["← Previous", "Next →"]);
+});
+
+test("a rolling series walks its dates; edges and lone articles stay quiet", async () => {
+  const catalog = {
+    site_title: "T",
+    articles: [
+      {
+        series: "r",
+        slug: "a",
+        date: "2026-07-10",
+        title: "First",
+        path: "/library/a.html",
+      },
+      {
+        series: "r",
+        slug: "b",
+        date: "2026-07-12",
+        title: "Middle",
+        path: "/library/b.html",
+      },
+      {
+        series: "r",
+        slug: "c",
+        date: "2026-07-15",
+        title: "Newest",
+        path: "/library/c.html",
+      },
+      {
+        series: "other",
+        slug: "x",
+        date: "2026-07-13",
+        title: "Stranger",
+        path: "/library/x.html",
+      },
+      {
+        series: "lone",
+        slug: "only",
+        date: "2026-07-14",
+        title: "Only",
+        path: "/library/o.html",
+      },
+    ],
+  };
+  const page = (slug) =>
+    articlePage("<article><h1>t</h1></article>", {
+      series: slug === "only" ? "lone" : "r",
+      mode: "rolling",
+      slug,
+      date: "2026-07-12",
+    });
+
+  const mid = await loadNb(page("b"), { fetch: fetchRouter({ catalog }) });
+  const titles = [...mid.document.querySelectorAll(".nb-endnav-title")].map(
+    (el) => el.textContent,
+  );
+  assert.deepEqual(
+    titles,
+    ["First", "Newest"],
+    "date neighbors, same series only",
+  );
+
+  const newest = await loadNb(page("c"), { fetch: fetchRouter({ catalog }) });
+  const links = newest.document.querySelectorAll(".nb-endnav a");
+  assert.equal(links.length, 1, "the newest article gets previous only");
+  assert.match(links[0].textContent, /Middle/);
+  assert.equal(links[0].classList.contains("next"), false);
+
+  const only = await loadNb(page("only"), { fetch: fetchRouter({ catalog }) });
+  assert.equal(
+    only.document.querySelector("nav.nb-endnav"),
+    null,
+    "a series of one renders no nav",
   );
 });
 

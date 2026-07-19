@@ -9,7 +9,7 @@
  *      fetched from cdnjs only when the page carries the furniture.
  *   3. Article furniture, retrofitted onto every article ever published:
  *      collapsible Contents, citation source-sheets with backrefs, byline
- *      normalization, series-linked eyebrow, sequence prev/next from
+ *      normalization, series-linked eyebrow, series last/next from
  *      catalog.json, external links in new tabs. The bar and footer are not
  *      here: the builder splices them into the article copy it publishes.
  *   4. The Search page: scoped fuzzy search over the builder-emitted index.
@@ -634,38 +634,58 @@
     });
   }
 
-  /* sequences: prev/next when a published neighbor exists; nothing else */
-  function bindSequenceNav(meta) {
-    if (meta.mode !== "sequence" || !meta.order) return;
+  /* last/next within the series, at the end of every article: sequences
+     walk their lesson order, everything else walks the dates. Only what
+     the catalog holds can render, and the catalog only ever holds
+     published articles, so a yet-unwritten next can never appear. */
+  function bindSeriesNav(meta) {
     catalog().then(function (cat) {
       if (!cat) return;
       var sibs = (cat.articles || []).filter(function (e) {
-        return e.series === meta.series && e.order;
+        return e.series === meta.series;
       });
-      var prev = sibs.find(function (e) {
-        return e.order === meta.order - 1;
-      });
-      var next = sibs.find(function (e) {
-        return e.order === meta.order + 1;
-      });
+      var prev = null;
+      var next = null;
+      if (meta.mode === "sequence" && meta.order) {
+        prev = sibs.find(function (e) {
+          return e.order === meta.order - 1;
+        });
+        next = sibs.find(function (e) {
+          return e.order === meta.order + 1;
+        });
+      } else {
+        sibs.sort(function (a, b) {
+          var ka = (a.date || "") + " " + (a.slug || "");
+          var kb = (b.date || "") + " " + (b.slug || "");
+          return ka < kb ? -1 : ka > kb ? 1 : 0;
+        });
+        var i = sibs.findIndex(function (e) {
+          return e.slug === meta.slug;
+        });
+        if (i < 0) return;
+        prev = sibs[i - 1];
+        next = sibs[i + 1];
+      }
       if (!prev && !next) return;
-      function link(e, arrow) {
+      function link(e, side) {
         return (
           '<a href="' +
           articleUrl(e) +
-          '">' +
-          (arrow === "l" ? "← " : "") +
+          '"' +
+          (side === "next" ? ' class="next"' : "") +
+          '><span class="nb-endnav-label">' +
+          (side === "next" ? "Next →" : "← Previous") +
+          '</span><span class="nb-endnav-title">' +
           escHtml(e.title) +
-          (arrow === "r" ? " →" : "") +
-          "</a>"
+          "</span></a>"
         );
       }
       var nav = document.createElement("nav");
       nav.className = "nb-endnav";
       nav.innerHTML =
         '<div class="nb-endnav-row">' +
-        (prev ? link(prev, "l") : "<span></span>") +
-        (next ? link(next, "r") : "<span></span>") +
+        (prev ? link(prev, "prev") : "<span></span>") +
+        (next ? link(next, "next") : "") +
         "</div>";
       (document.querySelector("article") || document.body).appendChild(nav);
     });
@@ -949,7 +969,7 @@
       linkEyebrow(meta);
       normalizeSources();
       bindCitations();
-      bindSequenceNav(meta);
+      bindSeriesNav(meta);
       bindAbstract();
     }
 

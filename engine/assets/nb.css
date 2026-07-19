@@ -1059,7 +1059,7 @@ a.nb-backref:hover {
 .nb-endnav {
   border-top: 1px solid var(--line);
   margin-top: 36px;
-  padding: 12px 0 4px;
+  padding: 14px 0 4px;
   font-family: var(--sans);
   font-size: 13px;
 }
@@ -1067,16 +1067,37 @@ a.nb-backref:hover {
 .nb-endnav-row {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
-  flex-wrap: wrap;
+  gap: 18px;
 }
 
 .nb-endnav a {
-  color: var(--accent-2);
+  display: block;
+  max-width: 47%;
   text-decoration: none;
 }
 
-.nb-endnav a:hover {
+.nb-endnav a.next {
+  margin-left: auto;
+  text-align: right;
+}
+
+.nb-endnav-label {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.nb-endnav-title {
+  display: block;
+  line-height: 1.45;
+  color: var(--accent-2);
+}
+
+.nb-endnav a:hover .nb-endnav-title {
   color: var(--accent);
 }
 
