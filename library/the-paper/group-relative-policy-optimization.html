@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GRPO drops PPO's critic and lets the group set the baseline · The Paper</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-paper",
+        "slug": "group-relative-policy-optimization",
+        "template": "paper",
+        "title": "GRPO drops PPO's critic and lets the group set the baseline",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-19",
+        "tags": ["ai"],
+        "sources": 6,
+        "words": 2100,
+        "reading_minutes": 10,
+        "dek": "Deleting the value network turns the advantage from a learned prediction into a z-score over a sampled group, the swap that made RL post-training cheap enough to become the reasoning-model default.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Paper</div>
+        <h1 class="nb-title">GRPO drops PPO's critic and lets the group set the baseline</h1>
+        <p class="nb-dekline">
+          Deleting the value network turns the advantage from a learned
+          prediction into a z-score over a sampled group, the swap that made
+          RL post-training cheap enough to become the reasoning-model default.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-07-19</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open
+            Language Models
+          </p>
+          <p class="nb-paper-meta">
+            Shao, Wang, Zhu, Xu, Song, Bi, Zhang, Zhang, Li, Wu, Guo ·
+            arXiv:2402.03300 · 2024
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2402.03300"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            Mathematical reasoning poses a significant challenge for language
+            models due to its complex and structured nature. In this paper, we
+            introduce DeepSeekMath 7B, which continues pre-training
+            DeepSeek-Coder-Base-v1.5 7B with 120B math-related tokens sourced
+            from Common Crawl, together with natural language and code data.
+            DeepSeekMath 7B has achieved an impressive score of 51.7% on the
+            competition-level MATH benchmark without relying on external
+            toolkits and voting techniques, approaching the performance level
+            of Gemini-Ultra and GPT-4. Self-consistency over 64 samples from
+            DeepSeekMath 7B achieves 60.9% on MATH. The mathematical reasoning
+            capability of DeepSeekMath is attributed to two key factors: First,
+            we harness the significant potential of publicly available web data
+            through a meticulously engineered data selection pipeline. Second,
+            we introduce Group Relative Policy Optimization (GRPO), a variant of
+            Proximal Policy Optimization (PPO), that enhances mathematical
+            reasoning abilities while concurrently optimizing the memory usage
+            of PPO.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>PPO trains two models to update one</h2>
+        <p>
+          Proximal Policy Optimization is the algorithm that carried
+          reinforcement learning from human feedback into production, and it is
+          an actor-critic method: two networks train together. One is the
+          policy being improved. The other is a value network, the critic,
+          whose only output is a scalar guess at how much reward the policy can
+          expect from here. DeepSeekMath describes that critic as
+          <em>typically another model of comparable size as the policy
+          model</em>, one that brings
+          <em>a substantial memory and computational burden</em>.<sup
+            class="nb-cite"><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          Group Relative Policy Optimization keeps the policy and deletes the
+          critic. For each question it samples a whole group of answers, scores
+          them, and uses the group's own reward statistics as the baseline the
+          critic used to supply. That one substitution is why RL post-training
+          became cheap enough to run at scale, and it is the algorithm DeepSeek
+          later adopted to train DeepSeek-R1-Zero and DeepSeek-R1,
+          <em>obviating the need for human-labeled reasoning
+          trajectories</em>.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-critics-job" id="the-critics-job">
+        <h2>The critic exists to lower variance</h2>
+        <p>
+          A policy gradient improves a policy by raising the log-probability of
+          actions in proportion to how good they turned out to be. Scored on
+          the raw return, that update is unbiased but noisy: a lucky episode
+          shouts as loudly as a good decision. The standard fix is decades old.
+          As Lilian Weng puts it, a widely used variation of REINFORCE is to
+          subtract a baseline from the return to reduce the variance of the
+          gradient estimate while keeping the bias unchanged.<sup
+            class="nb-cite"><a href="#s3">3</a></sup
+          >
+        </p>
+        <p>
+          The baseline that does this is a value function, and the quantity it
+          builds is the advantage
+          <span class="nb-math-in">A(s,a) = Q(s,a) - V(s)</span>: how much
+          better an action was than what you expected before taking it.
+          Subtract the expectation and only the surprise drives the update.
+          This is the value network's entire job inside the objective. It is
+          not a second opinion on the answer and it is not part of the reward.
+          It is a variance-reducing baseline, and nothing else.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="the-clipped-surrogate"
+        id="the-clipped-surrogate"
+      >
+        <h2>The clipped surrogate keeps a regression head</h2>
+        <p>
+          PPO wraps the policy gradient in a clipped surrogate that stops any
+          single update from moving the policy too far. Writing
+          <span class="nb-math-in">\rho_t = \frac{\pi_\theta(o_t \mid q, o_{&lt;t})}{\pi_{\theta_{\mathrm{old}}}(o_t \mid q, o_{&lt;t})}</span>
+          for the ratio between the new policy and the one that generated the
+          data, DeepSeekMath states PPO's objective as
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            J_{\mathrm{PPO}}(\theta) = \mathbb{E}\!\left[\, \frac{1}{|o|}\sum_{t=1}^{|o|} \min\!\left( \rho_t\, A_t,\; \operatorname{clip}(\rho_t,\, 1-\epsilon,\, 1+\epsilon)\, A_t \right) \right]
+          </div>
+          <figcaption>
+            PPO's token-level clipped surrogate: raise probability where the
+            advantage is positive, but clip the ratio so one step cannot chase
+            it too far.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The advantage <span class="nb-math-in">A_t</span> here is not free.
+          DeepSeekMath computes it with Generalized Advantage Estimation over
+          the rewards and a learned value function
+          <span class="nb-math-in">V_\psi</span>.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          That value function is the critic, and Schulman's original PPO makes
+          concrete what training it costs: when the policy and value function
+          share an architecture, the objective must add a value-function error
+          term, a squared-error loss
+          <span class="nb-math-in">(V_\theta(s_t) - V^{\mathrm{targ}}_t)^2</span>
+          fit to predicted returns.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          A regression head, trained every step to hit a moving target.
+        </p>
+        <p>
+          At language-model scale that head is a model of its own, and it is
+          awkward to fit. Usually only the last token of a response carries a
+          reward score, which, as the paper notes, complicates the training of
+          a value function meant to be accurate at every token.<sup
+            class="nb-cite"><a href="#s1">1</a></sup
+          >
+          So the critic is expensive to hold in memory and hard to make
+          correct. It is a strong candidate for deletion, if only something
+          could still supply the baseline.
+        </p>
+      </section>
+
+      <section data-nb-section="the-swap" id="the-swap">
+        <h2>Swap the prediction for the group's own average</h2>
+        <p>
+          GRPO's answer is to estimate the baseline from data it already has to
+          generate. For each question <span class="nb-math-in">q</span>, it
+          samples a group of outputs
+          <span class="nb-math-in">\{o_1, \dots, o_G\}</span> from the old
+          policy, scores each with the reward model, and then, in the paper's
+          words, normalizes those rewards by subtracting the group average and
+          dividing by the group standard deviation.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The normalized reward becomes the advantage assigned to every token
+          of that output. Put the two baselines where they can be seen at once:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \begin{aligned}
+            A_t^{\mathrm{PPO}} \;&amp;=\; R - V_\psi(s) \\[4pt]
+            \hat{A}_{i,t}^{\mathrm{GRPO}} \;&amp;=\; \frac{r_i - \operatorname{mean}(\mathbf{r})}{\operatorname{std}(\mathbf{r})}, \qquad \mathbf{r} = \{r_1, \dots, r_G\}
+            \end{aligned}
+          </div>
+          <figcaption>
+            The same job, two estimators: a reward minus a learned prediction,
+            versus a reward minus the empirical average of a sampled
+            group.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Each answer is scored against how the rest of the group did on the
+          same question. The standardization itself is not new. Karpathy, on
+          policy gradients from pixels, recommends standardizing returns by
+          subtracting the mean and dividing by the standard deviation before
+          backpropagation, so the update encourages roughly half of the sampled
+          actions and discourages the rest.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          What GRPO changes is where the mean and standard deviation come from.
+          They are read off a group of completions sampled on the spot, not
+          predicted by a network trained to know them in advance. The baseline
+          survives; the model that produced it is gone.
+        </p>
+      </section>
+
+      <section data-nb-section="the-objective" id="the-objective">
+        <h2>The objective, with the critic gone</h2>
+        <p>
+          Assembled, GRPO's objective keeps PPO's clipped surrogate and its KL
+          regularization and replaces only the advantage. The colored terms are
+          the ones worth tracking as the argument moves.
+        </p>
+        <figure class="nb-math nb-math-annotated">
+          <div class="nb-math-eq">
+            J_{\mathrm{GRPO}}(\theta) = \mathbb{E}_{q,\,\{o_i\}}\!\left[ \htmlClass{nb-mc1}{\frac{1}{G}\sum_{i=1}^{G}} \htmlClass{nb-mc2}{\frac{1}{|o_i|}\sum_{t=1}^{|o_i|}} \left( \min\!\left( \htmlClass{nb-mc4}{\rho_{i,t}}\, \htmlClass{nb-mc3}{\hat{A}_{i,t}},\; \operatorname{clip}(\htmlClass{nb-mc4}{\rho_{i,t}},\, 1-\epsilon,\, 1+\epsilon)\, \htmlClass{nb-mc3}{\hat{A}_{i,t}} \right) - \htmlClass{nb-mc5}{\beta\, D_{\mathrm{KL}}\!\left[\pi_\theta \Vert \pi_{\mathrm{ref}}\right]} \right) \right]
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\frac{1}{G}\sum_{i=1}^{G}</span
+              ><span>Average over the sampled group. This is where the
+              baseline now lives.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\frac{1}{|o_i|}\sum_{t=1}^{|o_i|}</span
+              ><span>Average over the tokens of output i. The per-token
+              normalization the later critique attacks.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\hat{A}_{i,t}</span
+              ><span>The group-relative advantage: the reward's z-score within
+              its group.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\rho_{i,t}</span
+              ><span>The probability ratio between the new and old policy,
+              clipped as in PPO.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc5">\beta\, D_{\mathrm{KL}}</span
+              ><span>The KL penalty, added straight to the loss rather than
+              folded into the reward.</span>
+            </li>
+          </ul>
+          <figcaption>
+            GRPO's objective: PPO's clipped surrogate, driven by a
+            group-relative advantage and regularized by a KL term in the
+            loss.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          One design choice is easy to miss. PPO folds its KL penalty into the
+          per-token reward; GRPO instead adds the divergence between the trained
+          policy and a frozen reference directly to the loss, which keeps the
+          advantage calculation clean.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          It estimates that divergence with an unbiased estimator credited to
+          Schulman, guaranteed to be positive:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            D_{\mathrm{KL}}\!\left[\pi_\theta \Vert \pi_{\mathrm{ref}}\right] = \frac{\pi_{\mathrm{ref}}(o_{i,t} \mid q, o_{i,&lt;t})}{\pi_\theta(o_{i,t} \mid q, o_{i,&lt;t})} - \log \frac{\pi_{\mathrm{ref}}(o_{i,t} \mid q, o_{i,&lt;t})}{\pi_\theta(o_{i,t} \mid q, o_{i,&lt;t})} - 1
+          </div>
+          <figcaption>
+            The KL estimator GRPO uses, positive by construction, keeping the
+            policy from drifting far from the reference.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <div class="nb-note">
+          <span class="nb-note-label">In plain language</span>
+          <p>
+            Every symbol that referred to a value network is gone. The baseline
+            that lowers the gradient's variance is now the group average built
+            into <span class="nb-math-in">\hat{A}_{i,t}</span>, computed from
+            answers the policy had to generate anyway.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section data-nb-section="the-ledger" id="the-ledger">
+        <h2>One model out, sixty-four samples in</h2>
+        <p>
+          The saving is real but qualitative, and the paper never puts a number
+          on it. What leaves the training loop is one policy-sized model's worth
+          of parameters, its optimizer state, and its activations: the critic
+          and everything needed to keep training it.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          DeepSeekMath's own figure states the point plainly, that GRPO
+          foregoes the value model and estimates the baseline from group scores,
+          significantly reducing training resources.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          What fills the space is generation. Where PPO paid to train a second
+          network, GRPO pays to sample a group. In DeepSeekMath's RL run that
+          group is 64 outputs per question, each a full forward pass with no
+          gradient, all scored by the reward model before a single policy
+          update, at a KL coefficient of 0.04.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The trade is memory for sampling compute, and it lands well because
+          inference batches cheaply while a second training model does not. It
+          is not free of risk. A baseline read from 64 samples is noisier than
+          one a trained value function would give, and when the group's rewards
+          are nearly identical, that estimate gets thin.
+        </p>
+        <p>
+          The substitution earns its keep on the task the paper set. Trained
+          with GRPO on roughly 144K chain-of-thought questions drawn from GSM8K
+          and MATH, DeepSeekMath-Instruct 7B improves from 46.8% to 51.7% on
+          MATH and from 82.9% to 88.2% on GSM8K.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The numbers are evidence that a critic-free baseline can carry a real
+          RL run, not the point of the method. The point is that the run happened
+          without ever holding a second policy-sized model in memory.
+        </p>
+      </section>
+
+      <section data-nb-section="the-two-biases" id="the-two-biases">
+        <h2>Two normalizations that bend the update</h2>
+        <p>
+          DeepSeekMath presents its two normalizations, the per-token
+          <span class="nb-math-in">1/|o_i|</span> and the division by the
+          group's standard deviation, as neutral machinery. An independent
+          analysis from Sea AI Lab and the National University of Singapore,
+          published at COLM 2025 and known as Dr. GRPO, argues that both quietly
+          bias the optimization.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          Dividing by <span class="nb-math-in">|o_i|</span> creates a
+          response-level length bias. For a correct answer, the shorter it is,
+          the larger the per-token update it receives; for an incorrect one, the
+          longer it is, the more its penalty is diluted.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          The policy is nudged toward short right answers and long wrong ones.
+          Dividing the centered reward by the group's standard deviation creates
+          a question-level difficulty bias: questions whose answers are almost
+          all right or almost all wrong have low variance, and normalizing by it
+          inflates their weight in the update relative to questions the model is
+          genuinely learning from.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          The Dr. GRPO fix is to remove both terms and keep the group mean as
+          the baseline.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          Both accounts are right about the object each describes. DeepSeekMath
+          defined an advantage and it computes the advantage it defined; the
+          critique measures a side effect that definition has on the gradient.
+          There is one more data point.
+          DeepSeek's own objective changed between papers: DeepSeekMath writes
+          GRPO with the per-token <span class="nb-math-in">1/|o_i|</span> sum,
+          while DeepSeek-R1 writes it per sequence, with a single advantage per
+          output and no per-token average.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          R1 states no reason for the change and predates the Dr. GRPO paper, so
+          the two forms differ without the record supporting any claim that one
+          caused the other.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            GRPO's one substantive idea holds. Replacing a learned value network
+            with the empirical statistics of a sampled group supplies the same
+            variance-reducing baseline at a fraction of the training footprint,
+            and it is the mechanism, not scale, behind cheap RL reasoning
+            training and DeepSeek-R1.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s2">2</a></sup> The specific
+            normalizations layered on top are the contestable part: two of them
+            are now known to bias the update, one of which DeepSeek itself
+            stopped writing.<sup class="nb-cite"><a href="#s6">6</a></sup> Adopt
+            the critic-free baseline; treat the normalization terms as tunable,
+            not settled. The assessment would shift only if the group baseline
+            were shown to underperform a trained critic on a task where the
+            reward is dense enough for the critic to have been cheap in the
+            first place.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§4.1, Eqs. 1–4; §4.1.2; §4.2; Fig. 4"
+              href="https://arxiv.org/abs/2402.03300"
+              >arXiv · Shao et al., DeepSeekMath: Pushing the Limits of
+              Mathematical Reasoning in Open Language Models (2024)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§2.1, Eq. 11; Fig. 3; abstract"
+              href="https://arxiv.org/abs/2501.12948"
+              >arXiv · DeepSeek-AI, DeepSeek-R1: Incentivizing Reasoning
+              Capability in LLMs via Reinforcement Learning (2025)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="§ REINFORCE"
+              href="https://lilianweng.github.io/posts/2018-04-08-policy-gradient/"
+              >Lil'Log · Lilian Weng, Policy Gradient Algorithms (2018)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Eqs. 7, 9"
+              href="https://arxiv.org/abs/1707.06347"
+              >arXiv · Schulman et al., Proximal Policy Optimization Algorithms
+              (2017)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="§ More general advantage functions"
+              href="https://karpathy.github.io/2016/05/31/rl/"
+              >Andrej Karpathy · Deep Reinforcement Learning: Pong from Pixels
+              (2016)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="§3.1–3.2"
+              href="https://arxiv.org/abs/2503.20783"
+              >arXiv · Liu et al., Understanding R1-Zero-Like Training: A
+              Critical Perspective (2025)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
