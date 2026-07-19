@@ -1,7 +1,7 @@
 # The Wire
 
 What moved in AI and the technology industry since yesterday. The tweet
-already made the rounds; the item's job is what it left out. A quiet paper
+already made the rounds. The item's job is what it left out. A quiet paper
 that changes how a practitioner builds outranks a loud launch.
 
 Label each item with one lane:

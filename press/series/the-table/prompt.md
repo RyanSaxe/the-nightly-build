@@ -9,9 +9,9 @@ the picks lean toward tables where a young child is welcome.
 
 Each restaurant closes with its own rubric (templates/FURNITURE.md), scored
 on the desk's fixed criteria: food, ambiance, value, and kids. Slug each
-rubric's rows to its restaurant so the scorecards stand apart. Every score
-stands on a cited line, and where the record is too thin to score honestly,
-the piece says so instead of guessing.
+rubric's rows to its restaurant so the scorecards stand apart. Where the
+record is too thin to score honestly, the piece says so instead of
+guessing.
 
 Rotate the cuisine and the towns across weeks. A season is a reason: the
 patio in June, the red-sauce room in January.

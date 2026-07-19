@@ -1,7 +1,7 @@
 # The Position
 
-One position per article, argued as its best advocate would argue it. Pick
-a question that is genuinely live, with real stakes, and say why tonight is
+One position per article, argued as its best advocate would. Pick a
+question that is genuinely live, name the stakes, and say why tonight is
 the night to argue it. The position must already have a champion: somebody
 with standing whose public record is deep enough to argue from, whatever
 form that record takes.
