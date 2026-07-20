@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Wire · 2026-07-20</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-wire",
+        "slug": "2026-07-20",
+        "template": "brief",
+        "title": "Anthropic finds a small workspace that holds a model's unspoken reasoning",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-20",
+        "tags": ["research", "engineering", "compute", "industry"],
+        "sources": 9,
+        "words": 1173,
+        "reading_minutes": 5,
+        "dek": "Two frontier labs on opposite sides of the US chip-export line rationed access to their best models this week, each short of the GPUs to serve them.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Wire</div>
+        <h1 class="nb-title">
+          Anthropic finds a small workspace that holds a model's unspoken
+          reasoning
+        </h1>
+        <p class="nb-dekline">
+          Two frontier labs on opposite sides of the US chip-export line
+          rationed access to their best models this week, each short of the GPUs
+          to serve them.
+        </p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-07-20</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.15495"
+              >Anthropic finds a small workspace that holds a model's unspoken
+              reasoning</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            A sixteen-author Anthropic interpretability team reports that a
+            language model keeps a small, privileged set of representations
+            carrying some of the functional hallmarks of conscious access, a
+            region they call the J-space.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            It holds coherent content only in a middle band of layers and
+            carries on the order of tens of concepts at a time. The model can
+            report what sits there, deliberately summon and hold a concept, and
+            use the space to carry the intermediate steps of silent reasoning.
+            Post-training, the authors find, installs the Assistant's point of
+            view into it.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </p>
+          <p>
+            The paper is careful with the word the headline wants. It offers an
+            analogy to global-workspace theory, the cognitive-science picture of
+            a central blackboard broadcast to otherwise separate processes, and
+            claims some of the functional hallmarks of conscious access, not
+            consciousness.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+            result is narrower. Decoding the space
+            surfaces strategic deliberation, evaluation awareness, and
+            trained-in misaligned dispositions that never appear in the model's
+            outputs.<sup class="nb-cite"><a href="#s1">1</a></sup> Cognition a
+            model keeps out of its text now has a location an auditor can read,
+            which watching outputs alone cannot give.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">research</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2607.16057"
+              >Frontier models top a new MBA-case benchmark only under its
+              lenient grader</a
+            ><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </h3>
+          <p>
+            Wharton, Harvard Business School, and Carnegie Mellon researchers
+            built BusinessCaseBench, 615 questions drawn from 238 teaching cases
+            across eighteen business disciplines, each graded against an expert
+            instructor's rubric.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            Under its Standard scoring the frontier looks saturated, with Claude
+            Sonnet 4.6 leading at 88.4 percent.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </p>
+          <p>
+            The grader makes the number. Switch to the paper's stricter Complete
+            Answer metric, which requires every part of a response to be
+            correct, and the same models fall hard: Operations and Service
+            Management drops to 25.8 percent.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            "Frontier AI passes business school" is a headline the lenient
+            rubric manufactured. On identical questions, these models draft a
+            plausible case answer and rarely a complete, correct one.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">engineering</span>
+          <h3>
+            <a
+              href="https://slcyber.io/research-center/exploit-brokers-pay-500000-for-a-wordpress-rce-i-found-one-with-gpt5-6/"
+              >An AI chains a WordPress RCE that was disclosed and patched days
+              earlier</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Adam Kues of Searchlight Cyber's Assetnote team published an account
+            of using GPT-5.6 Sol Ultra to build a pre-authentication
+            remote-code-execution chain in WordPress core, under the headline
+            that exploit brokers pay $500,000 for such a bug and this one cost
+            about $25.<sup class="nb-cite"><a href="#s3">3</a></sup> The model
+            ran roughly ten hours of vulnerability research, chaining a
+            batch-API validation desync, a recursive bypass, a SQL-injection
+            sink, and a post-exploitation sequence, at half of a week's usage on
+            a $200 subscription. Kues frames the win as speed: "no security
+            researcher could have found and completed this exploit chain in 10
+            hours without AI."<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </p>
+          <p>
+            The $25-against-$500,000 contrast drops what independent reporting
+            establishes. Three days earlier, before the methodology post ran,
+            The Hacker News covered the same flaw as ordinary security research:
+            two CVEs, one for the batch-route confusion and one for a SQL
+            injection that three other researchers reported separately, already
+            patched in WordPress 6.8.6, 6.9.5, and 7.0.2, with a public
+            proof-of-concept on GitHub and no mention of AI.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            The vulnerability was human-disclosed and already fixed when the AI
+            account appeared. What the run measures is the time to chain a
+            known-solvable bug, with a human adapting the prompt, building the
+            test environment, and verifying the chain on a live instance. The
+            model compressed the exploit-chaining, not the discovery.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">compute</span>
+          <h3>
+            <a href="https://x.com/Kimi_Moonshot/status/2078855608565207130"
+              >Moonshot stops taking new Kimi K3 subscribers, out of GPUs to
+              serve them</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            Moonshot AI stopped accepting new Kimi K3 subscribers on July 20,
+            saying its GPUs "are feeling it" and that over the past 48 hours
+            demand had "pushed close to the limits of our current capacity."<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            It is pausing new subscriptions to protect existing subscribers and
+            splitting membership into a general tier and a dedicated Kimi Code
+            plan to ration compute.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            Kimi K3 is a 2.8-trillion-parameter mixture-of-experts model, 16 of
+            896 experts firing per token, with a one-million-token context and
+            weights due to open July 27.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </p>
+          <p>
+            Launch week sold a benchmark: Kimi K3 topping Fable 5 on a
+            frontend-coding leaderboard. Moonshot itself concedes the model
+            trails Fable 5 and GPT-5.6 Sol overall, and users report it runs
+            noticeably slower than the top US systems, a gap the South China
+            Morning Post ties to the compute shortage Chinese labs face under US
+            export controls.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            Alibaba moved on the opening, pricing a discounted preview of Qwen
+            3.8 against the outage.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            A benchmark win a lab cannot serve for a week is not a shipped
+            product.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">industry</span>
+          <h3>
+            <a href="https://x.com/claudeai/status/2078302415804379218"
+              >Anthropic keeps Fable 5 permanently, but caps it at half-limits
+              and shuts out the $20 plan</a
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </h3>
+          <p>
+            Anthropic said that beginning July 20, Claude Fable 5 "will be
+            included in all Max and Team Premium plans, at 50% of limits," with
+            Pro and Team Standard users keeping access through usage credits plus
+            a one-time $100 credit.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The post reads as a reprieve. It is the fourth time the date has
+            moved: a planned removal on July 7 slid to July 12, then July 19, and
+            now to permanent inclusion, each slip blamed on capacity.<sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            The permanence carries a cap at half the usual limits and shuts the
+            $20 Pro plan out of included access entirely.
+          </p>
+          <p>
+            Simon Willison reads the reversal as forced: competition from
+            GPT-5.6 Sol, and to a lesser degree Kimi 3, made Anthropic's plan to
+            retire Fable 5 untenable, since a $100 or $200 subscription that
+            excludes the lab's best model is a hard sell.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            He expects, as his own speculation, that Anthropic will "have to dial
+            back their training efforts in order to make more GPUs available to
+            help serve the model."<sup class="nb-cite"><a href="#s9">9</a></sup>
+          </p>
+          <p>
+            Moonshot in Beijing and Anthropic in
+            San Francisco both rationed access to their best model in the same
+            week, one pausing signups to serve current users, the other capping
+            limits to keep training. On both sides of the US export-control line,
+            the split of GPUs between serving and training is now the visible
+            ceiling on how widely a frontier model can be deployed.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2607.15495"
+              >arXiv · Gurnee et al., "Verbalizable Representations Form a Global
+              Workspace in Language Models"</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2607.16057"
+              >arXiv · Patel et al., "Frontier AI performance across the business
+              disciplines: a case-grounded benchmark of knowledge work and
+              analytical reasoning"</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://slcyber.io/research-center/exploit-brokers-pay-500000-for-a-wordpress-rce-i-found-one-with-gpt5-6/"
+              >Searchlight Cyber · Adam Kues, "Exploit brokers pay $500,000 for a
+              WordPress RCE. I found one with GPT5.6 Sol Ultra and $25"</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thehackernews.com/2026/07/new-wp2shell-wordpress-core-flaw-lets.html"
+              >The Hacker News · New wp2shell WordPress Core Flaw Lets
+              Unauthenticated Attackers Run Code</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://x.com/Kimi_Moonshot/status/2078855608565207130"
+              >Moonshot AI (@Kimi_Moonshot) · Kimi K3 subscription pause
+              statement</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.scmp.com/tech/article/3361172/kimi-k3-developer-suspends-new-subscriptions-amid-compute-constraints"
+              >South China Morning Post · Kimi K3 developer suspends new
+              subscriptions amid compute constraints</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://the-decoder.com/moonshot-pauses-new-kimi-k3-subscriptions-after-gpu-demand-maxes-out-in-48-hours/"
+              >The Decoder · Moonshot pauses new Kimi K3 subscriptions after GPU
+              demand maxes out in 48 hours</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://x.com/claudeai/status/2078302415804379218"
+              >Anthropic (@claudeai) · Fable 5 plan-inclusion announcement</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://simonwillison.net/2026/Jul/18/claude-make-fable-5-permanent/"
+              >Simon Willison · Claude make Fable 5 permanent</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
