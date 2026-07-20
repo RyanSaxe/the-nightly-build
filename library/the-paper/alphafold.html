@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AlphaFold2 folds proteins by learning a geometry it can differentiate · The Paper</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-paper",
+        "slug": "alphafold",
+        "template": "paper",
+        "title": "AlphaFold2 folds proteins by learning a geometry it can differentiate",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-20",
+        "tags": ["biology", "deep-learning", "ai"],
+        "sources": 7,
+        "words": 3088,
+        "reading_minutes": 15,
+        "dek": "Coevolving residues reveal which parts of a protein sit close, and AlphaFold2 turns that signal into atomic coordinates — which is also why proteins with no evolutionary cousins stay beyond it.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Paper</div>
+        <h1 class="nb-title">
+          AlphaFold2 folds proteins by learning a geometry it can differentiate
+        </h1>
+        <p class="nb-dekline">
+          Coevolving residues reveal which parts of a protein sit close, and
+          AlphaFold2 turns that signal into atomic coordinates — which is also
+          why proteins with no evolutionary cousins stay beyond it.
+        </p>
+        <div class="nb-byline">
+          <span>14 min read</span><span>2026-07-20</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            Highly accurate protein structure prediction with AlphaFold
+          </p>
+          <p class="nb-paper-meta">
+            Jumper, Evans, Pritzel, Green, Figurnov et al. · Nature 596,
+            583–589 · 2021
+          </p>
+          <a
+            class="nb-paper-link"
+            href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8371605/"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            Predicting a protein's three-dimensional structure from its amino
+            acid sequence … has been an important open research problem for more
+            than 50 years … [the method delivers] atomic accuracy even in cases
+            in which no similar structure is known.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A fifty-year problem meets a blind contest</h2>
+        <p>
+          A protein is a chain. Each link is a residue, one of twenty amino
+          acids, and the chain is the same one whether it is stretched out or
+          folded. What a cell uses is the folded shape: the single compact
+          arrangement the chain settles into, with each residue at a definite
+          point in space. That shape decides what the protein binds and what it
+          does. A genome hands you the chain for free; reading the shape meant
+          growing a crystal or freezing a sample and firing radiation at it, and
+          turning the chain into the shape by calculation had stayed open for
+          more than fifty years.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The field kept score through CASP, a contest run every two years in
+          which organizers release sequences whose structures have been solved
+          but not published and let every group predict them blind. Accuracy is
+          measured mostly by GDT_TS, the share of a model's residues that land
+          within a set of distance cutoffs of the true positions, scaled from 0
+          to 100. For most of CASP's history the hard targets, the ones with no
+          solved relative to copy from, sat far down that scale. In 2020 one
+          entry did not.
+        </p>
+        <p>
+          AlphaFold2's models had a median backbone error of 0.96 Å against the
+          experimental structures, where the next best method managed 2.8 Å, and
+          its all-atom error was 1.5 Å against the field's 3.5 Å.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The unit is worth holding onto: a carbon atom is about 1.4 Å wide, so
+          a median backbone within one Ångström is a prediction wrong by less
+          than the width of an atom.
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">0.96 Å</span
+            ><span class="nb-stat-l">median backbone error, vs 2.8 Å next best</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">1.5 Å</span
+            ><span class="nb-stat-l">all-atom error, vs 3.5 Å next best</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">1.4 Å</span
+            ><span class="nb-stat-l">width of a carbon atom, the scale being hit</span>
+          </div>
+        </div>
+        <p>
+          The rest is how a chain of letters became coordinates that accurate.
+        </p>
+      </section>
+
+      <section data-nb-section="two-representations" id="two-representations">
+        <h2>The two things the network keeps</h2>
+        <p>
+          Start with the first idea, because without it the geometry has nothing
+          to work from. A single sequence is thin evidence about a shape. The
+          same protein in a mouse, a fish, and a bacterium has drifted in
+          sequence while keeping its fold, and evolution has quietly recorded
+          which residues are free to change and which are not. When two residues
+          touch in the folded structure, a mutation at one that would break the
+          contact tends to be answered by a compensating mutation at the other,
+          so the two positions vary together across species. Stack up the
+          homologous sequences into a multiple sequence alignment, the MSA, one
+          row per relative with the columns lined up by position, and those
+          coupled columns are a readout of which residues sit close in space:
+          the structural signal is there before any structure
+          exists.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          AlphaFold2 turns that observation into architecture by keeping two
+          separate tensors and refusing to collapse them into one. The first is
+          the MSA representation: the alignment itself, every residue of every
+          relative as a vector the network can revise. The second is the pair
+          representation, a grid with one vector for every ordered pair of
+          residues in the target, meant to hold what the network believes about
+          the relationship between position i and position j: how close they
+          are, how they are oriented. The paper reframes structure prediction as
+          inference on a graph whose nodes are residues and whose edges are
+          exactly those pairs, defined by residues in
+          proximity.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          One representation is evidence, the
+          coevolution the MSA carries; the other is geometry, a claim about
+          distances and angles. The whole trunk of the network is machinery for
+          letting those two talk without merging them, so evidence can update
+          geometry and a hardening geometry can tell the network what to look
+          for back in the evidence.
+        </p>
+      </section>
+
+      <section data-nb-section="the-evoformer" id="the-evoformer">
+        <h2>Forcing every triangle to close</h2>
+        <p>
+          The trunk is a stack of 48 identical blocks called the Evoformer, and
+          each block updates both representations in turn.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          On the MSA side the update is attention run along two axes: across a
+          row, so a residue attends to other residues in the same relative, and
+          down a column, so a position attends to how that same position varies
+          across species. That column pass is where coevolution enters, one
+          alignment column reading its own statistics. Crucially, the MSA's
+          row attention is biased by the pair representation: the current belief
+          about which residues are close is added into the attention logits, so
+          geometry steers where the evidence looks.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          The two stacks trade through an outer-product-mean step that writes MSA
+          statistics back onto the pair grid, closing the loop the other way.
+        </p>
+        <p>
+          The pair representation gets the harder job, and here the biophysics
+          dictates the operation rather than the other way around. A pair grid
+          is a table of pairwise relationships, but not every table of distances
+          describes a real arrangement of points. If i and k are close and k and
+          j are close, then i and j cannot be far: the three distances have to
+          close into a consistent triangle. A network free to set every edge
+          independently will happily write down triangles that violate that and
+          never notice. AlphaFold2 builds the constraint into the update.
+        </p>
+        <p>
+          Two operations do it. The triangular multiplicative update treats each
+          edge ij as something to be recomputed from the other two edges of
+          every triangle it belongs to, combining ik and jk to update ij, in an
+          outgoing and an incoming variant so both orientations of the triangle
+          get their say.<sup class="nb-cite"><a href="#s2">2</a></sup> The
+          triangular self-attention does the same in attention's language:
+          whether edge ij attends to edge ik is modulated by information drawn
+          from the third edge jk, so an update between two edges is always
+          refereed by the one that closes the triangle.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Neither operation imposes the triangle inequality as a hard rule. Both
+          give the network a strong, built-in pressure to keep its pairwise
+          beliefs geometrically consistent, which is what lets a grid of
+          independent edges behave like a set of points in space.
+        </p>
+      </section>
+
+      <section data-nb-section="the-structure-module" id="the-structure-module">
+        <h2>A gas of frames becomes a backbone</h2>
+        <p>
+          The Evoformer never emits coordinates. It hands off two abstractions:
+          the pair grid, and a single representation, one 384-dimensional vector
+          per residue read off the first row of the refined MSA.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Turning those into atoms is the second idea, the one that makes the
+          geometry differentiable end to end.
+        </p>
+        <p>
+          The structure module represents the protein as what the paper calls a
+          residue gas: every residue is a free-floating rigid body with its own
+          local coordinate frame, a rotation and a translation that place that
+          residue's backbone somewhere in space, initially all stacked at the
+          origin with the same orientation, which the authors name black-hole
+          initialization.<sup class="nb-cite"><a href="#s2">2</a></sup> Eight
+          layers, sharing one set of weights, repeatedly move those frames. The
+          bond lengths and bond angles inside a residue are held rigid and the
+          side chains are placed by a handful of torsion angles the module also
+          predicts, so the network never relearns chemistry it can be handed
+          and spends its capacity on where each rigid piece
+          goes.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The operation that moves the frames is Invariant Point Attention, and
+          its name is its design. A structure has no privileged pose: rotate the
+          whole protein and it is the same protein, so the answer must never
+          depend on the arbitrary global orientation. IPA is attention that,
+          alongside the usual queries and keys, produces points in each residue's
+          local frame and compares them in a shared frame. Because the comparison
+          rests on distances between points, and a distance is unchanged by any
+          global rotation or translation, the computation is invariant to global
+          pose by construction rather than by training.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Twelve heads, four query points each, working in nanometres. The module
+          reads the pair representation as an attention bias, so every constraint
+          the Evoformer negotiated flows into where the atoms go.
+        </p>
+        <p>
+          The residue gas is a second decoupling. Classical folding moved a
+          connected chain, where nudging one atom drags its neighbours and the
+          model spends its effort keeping the chain intact. Cutting the residues
+          loose lets the network place each one by its own evidence and repair
+          the chain afterward, so the optimization is about geometry, not about
+          holding a string together.
+        </p>
+      </section>
+
+      <section data-nb-section="training-the-geometry" id="training-the-geometry">
+        <h2>Scoring geometry with one differentiable loss</h2>
+        <p>
+          A pile of free-floating frames only becomes a structure if the
+          training signal rewards the right geometry, and this is the piece that
+          ties the method together. The main term is the Frame Aligned Point
+          Error. FAPE takes the predicted atoms, expresses them in the local
+          frame of each residue in turn, and measures the distance to the true
+          atoms under that alignment, then averages over all the frames.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Scoring under every local frame, not one global superposition, forces
+          atoms to be correct relative to their neighbours rather than only on
+          average, and it hands the network a smooth gradient that flows back
+          through the frames, through IPA, and into the Evoformer.
+        </p>
+        <p>
+          FAPE also fixes what a simpler distance loss cannot. Distances alone
+          are blind to handedness: a structure and its mirror image have
+          identical pairwise distances, so a model trained on distance r.m.s.d.
+          frequently produces mirror structures. Scoring points inside oriented
+          frames, FAPE sees the difference, and the authors prove it obeys the
+          triangle inequality.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          FAPE does not train alone. The total loss adds auxiliary,
+          distogram, masked-MSA, and confidence terms, and the weights record a
+          candid piece of the story.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \mathcal{L} = 0.5\,\htmlClass{nb-mc1}{\mathcal{L}_{\text{FAPE}}} +
+            0.5\,\mathcal{L}_{\text{aux}} +
+            0.3\,\htmlClass{nb-mc2}{\mathcal{L}_{\text{dist}}} +
+            2.0\,\htmlClass{nb-mc3}{\mathcal{L}_{\text{msa}}} +
+            0.01\,\htmlClass{nb-mc4}{\mathcal{L}_{\text{conf}}}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\mathcal{L}_{\text{FAPE}}</span
+              ><span>geometry: predicted atoms scored in every local frame.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\mathcal{L}_{\text{dist}}</span
+              ><span>distogram: a 64-bin histogram of pairwise distances.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\mathcal{L}_{\text{msa}}</span
+              ><span>masked-MSA: reconstruct hidden alignment entries.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\mathcal{L}_{\text{conf}}</span
+              ><span>confidence: predict the model's own per-residue error.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The training loss and its hand-set weights; the masked-MSA term
+            carries the largest of them.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The masked-MSA loss, at weight 2.0, hides
+          entries in the alignment and asks the network to fill them back in, the
+          BERT trick applied to evolution, and it outweighs FAPE fourfold. Here
+          an honest reading has to separate what is measured from what is
+          understood. The authors say the masked term is meant to force the
+          network to read coevolutionary relationships, then add, in as many
+          words, that this is the intention but they only observe the outcome
+          that it increases accuracy.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The loss weights were hand-selected and only lightly tuned. A clean
+          story in which every component is derived from principle is not the one
+          the paper tells about itself: several choices are justified by ablation
+          after the fact, and it says so.
+        </p>
+        <p>
+          Two more mechanisms sharpen the result without changing its nature.
+          Recycling runs the whole network four times, feeding each pass's output
+          back in as the next pass's input from a zero start, for a marked
+          accuracy gain at little extra training cost.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Self-distillation grows the data: the trained network predicts
+          structures for 355,993 sequences with no experimental structure, the
+          confident ones are kept, and a fresh network is trained from scratch on
+          the mix.<sup class="nb-cite"><a href="#s2">2</a></sup> Both are
+          amplifiers; neither is why the method works. The evolutionary input and
+          the differentiable geometry are.
+        </p>
+        <p>
+          The same training produces the confidence outputs that made AlphaFold2
+          usable in practice. A pLDDT head predicts each residue's own local
+          accuracy, projected into 50 bins and reported as an expected score, so
+          a model arrives annotated with where to trust it.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          A separate head predicts the aligned error between every pair of
+          residues across 64 distance bins, telling a user whether two
+          confidently-built domains are confidently placed relative to each
+          other. The second head exists because the first cannot see that
+          question: pLDDT is a local score and, by the paper's own statement, is
+          not sensitive to whether the whole structure aligns under one global
+          rotation, so a model can be uniformly high-pLDDT and still pack its
+          domains wrongly against each other.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-independent-verdict" id="the-independent-verdict">
+        <h2>What the referees and a rival found</h2>
+        <p>
+          A method paper grades its own homework, so the result is worth checking
+          against parties with no stake in it. The CASP14 organizers, who ran the
+          blind contest and assessed every group, are the outside referee.
+          Their assessment confirms the headline in their own words: one group,
+          AlphaFold2, submitted models competitive with experimental accuracy for
+          at least two-thirds of the targets, and for only four targets did any
+          other group score higher.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          That is independent certification that the jump was real, not an
+          artifact of self-report.
+        </p>
+        <p>
+          The same referees mark where it thinned. Their accuracy trend
+          starts near a GDT_TS of 95 and falls to about 85 for the hardest
+          targets, so hardness still costs something. Three targets solved by NMR,
+          a technique that reports an ensemble rather than one crystal structure,
+          scored very low. One flagellar subunit was predicted poorly because it
+          makes extensive contacts with other subunits it was modelled without.
+          And on multi-protein assemblies the round's progress over the previous
+          CASP was small.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Each of those is the same limitation seen from outside: a network
+          trained to place one chain, at rest, cannot know what it was not shown.
+        </p>
+        <p>
+          The rival is the second check. Within weeks of AlphaFold2, the Baker
+          lab published RoseTTAFold, an independently designed network that
+          reached, in its authors' own framing, accuracy approaching DeepMind's
+          while remaining, on the CASP14 targets, not as good as AlphaFold2.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Its architecture converged on the same core intuition from a different
+          direction: a three-track network in which information flows back and
+          forth between the 1-D sequence, the 2-D distance map, and the 3-D
+          coordinates, letting the three levels reason jointly. Two groups
+          reaching that design at once is evidence that coupling evidence and
+          geometry was an idea whose time had come, not a trick only one lab
+          could find, and RoseTTAFold's end-to-end run in about ten minutes on a
+          desktop GPU showed it was practical, not just
+          accurate.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="what-it-did-not-solve" id="what-it-did-not-solve">
+        <h2>What a single resting chain cannot know</h2>
+        <p>
+          Every well-known limit of
+          AlphaFold2 follows from a design choice already described.
+        </p>
+        <p>
+          Start with the one the paper measures itself. The whole first idea was
+          that structure is read from coevolution, so a protein with no
+          relatives has nothing to read. The paper shows accuracy falling off
+          sharply once the alignment holds fewer than roughly thirty
+          sequences.<sup class="nb-cite"><a href="#s1">1</a></sup> Orphan
+          proteins, designed sequences, and fast-evolving regions live in that
+          thin-alignment regime, and the model is weakest exactly where evolution
+          left the least signal. The dependence is not a bug to be patched; it is
+          the cost of the idea that made the method work.
+        </p>
+        <p>
+          Point mutations expose the same root differently. A single amino-acid
+          change can destabilize a protein, and it is tempting to read a mutant
+          structure straight off AlphaFold2. When Buel and Walters tried, the
+          predicted mutant and wild-type backbones differed by less than about
+          one Ångström, and pLDDT did not track the measured change in
+          stability.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          The model looks stable because it was trained to reproduce one settled
+          structure per sequence; it learned the fold a family adopts, not the
+          energetics that a mutation perturbs, so it reports the wild-type answer
+          with confidence and misses the effect entirely.
+        </p>
+        <p>
+          The remaining gaps line up the same way. A review by Agarwal and McShan
+          collects them: AlphaFold2 struggles to produce multiple conformations
+          for one sequence and to model antigen–antibody interactions, and it
+          does not handle protein–DNA or protein–RNA complexes, bound ligands and
+          ions, post-translational modifications, or the membrane plane.<sup
+            class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          Read against the architecture, the list is one sentence. The network
+          was trained on single protein chains, in one resting conformation,
+          with nothing but amino acids in the frame. Dynamics need more than one
+          structure; complexes and ligands need partners the model never saw;
+          disordered regions have no single fold to find. Each failure is the
+          shadow of the training distribution.
+        </p>
+        <p>
+          The clearest confirmation that these are limits of the design, not of
+          the ambition, is what changed when the design did. DeepMind's own
+          AlphaFold3, its later work rather than an independent check, replaced
+          the structure module with a diffusion-based generator that predicts the
+          joint structure of proteins together with nucleic acids, small
+          molecules, ions, and modified residues, and reported markedly better
+          accuracy on exactly the protein–ligand and protein–nucleic-acid
+          complexes AlphaFold2 could not touch.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          The successor's whole target list is AlphaFold2's list of failures, and
+          the fix was to change the training distribution and the generator, not
+          to tune the 2021 network harder.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            AlphaFold2 earns its result twice over: the accuracy is certified by
+            the independent CASP14 assessors, and the mechanism holds up to
+            reading. Two ideas carry it, the evolutionary couplings read from an
+            MSA and a geometry made differentiable through frames and FAPE, with
+            recycling and distillation as amplifiers. Its limits are the honest
+            price of those ideas, not surprises: no alignment, no signal; one
+            training structure, no dynamics; single chains, no complexes. Follow
+            the two representations through the triangle updates into the residue
+            gas and every failure is predictable before a limitation paper names
+            it.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Abstract; Results; Fig. 5a"
+              href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8371605/"
+              >Nature · Jumper et al., "Highly accurate protein structure
+              prediction with AlphaFold," Nature 596, 583–589 (2021) — main
+              text</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Supplementary §1.6–1.9, Algorithms 6, 11–14, 20, 22, 28–29"
+              data-nb-note="The algorithms live here as pseudocode: Evoformer, triangular updates, IPA, FAPE, recycling, pLDDT/PAE."
+              href="https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-021-03819-2/MediaObjects/41586_2021_3819_MOESM1_ESM.pdf"
+              >Springer · Jumper et al. (2021), Supplementary Information to
+              "Highly accurate protein structure prediction with AlphaFold"</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="Assessment of AlphaFold2 targets; assembly progress"
+              href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8726744/"
+              >Proteins · Kryshtafovych, Schwede, Topf, Fidelis & Moult, "Critical
+              assessment of methods of protein structure prediction (CASP) — Round
+              XIV," 89, 1607–1617 (2021)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="Three-track network; CASP14 comparison; runtime"
+              href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7612213/"
+              >Science · Baek et al., "Accurate prediction of protein structures
+              and interactions using a three-track neural network," 373, 871–876
+              (2021) — RoseTTAFold</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="Mutant vs wild-type backbone; pLDDT vs ΔΔG"
+              href="https://pubmed.ncbi.nlm.nih.gov/35046575/"
+              >Nature Struct. Mol. Biol. · Buel & Walters, "Can AlphaFold2 predict
+              the impact of missense mutations on structure?" 29, 1–2 (2022)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="Consolidated limitations list"
+              href="https://www.semanticscholar.org/paper/1ee1426c48e8db79d0cf402221aa2cc33270c8d8"
+              >Nature Chem. Biol. · Agarwal & McShan, "The power and pitfalls of
+              AlphaFold2 for structure prediction beyond rigid globular proteins,"
+              20, 950–959 (2024)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Diffusion structure module; complexes with ligands and nucleic acids"
+              data-nb-note="DeepMind's own later work, not an independent voice; full text gated at the publisher."
+              href="https://www.nature.com/articles/s41586-024-07487-w"
+              >Nature · Abramson et al., "Accurate structure prediction of
+              biomolecular interactions with AlphaFold 3," 630, 493–500 (2024)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
