@@ -83,8 +83,8 @@
    as quoted source material: a quiet panel behind a serif quote, the locator
    set small in the mono face so it reads as a coordinate, the gloss under a
    hairline. */
-/* retired from the catalog (citation locators carry the anchor now);
-   kept so the published shelf renders */
+/* @deprecated nb-excerpt -> nb-note: retired from the catalog (citation
+   locators carry the anchor now); kept so the published shelf renders */
 .nb-excerpt {
   margin: 1.6rem 0;
   padding: 1rem 1.15rem 0.8rem;
@@ -130,7 +130,8 @@
    accent across the three verdicts; the map directs attention without turning
    into a traffic light. */
 
-/* legacy: published back-catalog only; the map left the template 2026-07 */
+/* @deprecated nb-paper-map -> none: published back-catalog only; the map left
+   the template 2026-07 */
 .nb-paper-map {
   margin: 1.2rem 0;
   padding: 0;

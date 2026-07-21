@@ -108,6 +108,13 @@ piece closes. A press may shadow them. The floor holds those choices to a standa
 the writing easy to follow. End on the conclusion the argument built. Skip the generic
 moral. Let the teaching and the citations equip the reader to go further.
 
+An article's form comes only from its template and its own content. Reading the published
+library informs content and context: what a series has covered, what not to repeat. It
+never informs form. A shape you find in an older piece records what the format was, not
+what it should be now. A template that has moved on leaves its old structure in the
+back-catalog, and copying that structure forward is how a retired section reappears where
+it no longer belongs.
+
 ## Charts
 
 Use a chart when a trend or comparison is the point. Charts are PNGs

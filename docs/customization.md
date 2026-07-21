@@ -220,18 +220,21 @@ Manifests come in two styles:
   section except `sources` (always exempt) and any you list in the template's
   `cite_exempt` (for a non-cited section like an objectives box).
 
-Worked example: the classic lesson template, six fixed sections for an
-ordered course, rebuilt as your own template.
+Worked example: an `interview`, a Q&A transcript with a short introduction,
+built as your own template. It looks nothing like a shipped template, so it
+shadows none of them, and it still exercises the machinery this section
+teaches: a fixed outline, a section that carries no citations, and skeleton
+chrome the writer cannot reword.
 
-1. Write `press/templates/lesson/manifest.yaml`:
+1. Write `press/templates/interview/manifest.yaml`:
 
    ```yaml
    class: longread
-   words: [1500, 4000]
-   sections: [objectives, recap, teach, check, bridge, sources]
+   words: [1200, 3000]
+   sections: [preamble, exchange, sources]
    cite_rule: per-section
-   cite_exempt: [objectives] # the goals box carries no citations
-   modes: [sequence]
+   cite_exempt: [preamble] # the intro carries no citations
+   modes: [collection]
    ```
 
    Rules: `sections` must include `sources`. Bands are `[low, high]`.
@@ -246,10 +249,10 @@ ordered course, rebuilt as your own template.
    updating this list fails at your desk, not the writer's. The engine
    reads these from the manifest, so any template can use them. An optional
    `about:` one-liner documents the template for a browsing human; the engine
-   ignores it. The test suite exercises this exact lesson manifest, so the
+   ignores it. The test suite exercises this exact interview manifest, so the
    walkthrough cannot drift from what the proof enforces.
 
-2. Scaffold `press/templates/lesson/skeleton.html`. Copy a shipped skeleton's
+2. Scaffold `press/templates/interview/skeleton.html`. Copy a shipped skeleton's
    `<head>` and header chrome verbatim (asset links, nb-meta skeleton,
    eyebrow, title, dek, byline). Keep `class="nb-dekline"` on whatever element
    renders the dek: the front page and the feed print nb-meta's dek, and the
@@ -264,8 +267,8 @@ ordered course, rebuilt as your own template.
    case. The proof backstops the convention: a caps run surviving into an
    article's prose is a `W-PLACEHOLDER` warning. The same holds for
    `identity.md`: describe the move, do not perform it. The note
-   component in `templates/FURNITURE.md` carries the lesson's goals,
-   self-checks, and bridge as labeled moves. The sandbox applies unchanged: no scripts beyond the JSON blocks
+   component in `templates/FURNITURE.md` carries any labeled aside the
+   exchange needs, like an editor's note. The sandbox applies unchanged: no scripts beyond the JSON blocks
    and the engine runtime, citations as `sup.nb-cite` anchors into numbered
    source entries. Give each placeholder source entry a
    `data-nb-kind="primary"` or `"secondary"` next to its `data-nb-source`, as

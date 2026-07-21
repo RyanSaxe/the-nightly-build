@@ -32,6 +32,7 @@ from nb.proof.structure import (
     check_chrome,
     check_cites,
     check_classes,
+    check_deprecated,
     check_figures,
     check_required_sections,
     check_sandbox,
@@ -112,6 +113,7 @@ def check_article(
     check_required_sections(ed, treg, rep)
     check_chrome(raw, treg=treg, rep=rep)
     check_classes(raw, repo=repo, rep=rep)
+    check_deprecated(raw, repo=repo, rep=rep)
     check_sandbox(ed, rep)
     check_sources(ed, rep, check_links=check_links)
     check_cites(ed, rep)
