@@ -1,0 +1,12 @@
+# One research paper a night on the paper template. The prompt governs
+# selection; the template owns the abstract card, the reconstruction, the
+# evidence review, and the verdict.
+name: Paper of the Day
+mode: open
+section: "Daily Reading"
+template: paper
+prompt: prompt.md
+autopublish: true
+strict: false
+min_sources: 8
+cadence: daily

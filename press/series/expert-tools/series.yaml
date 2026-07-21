@@ -1,0 +1,12 @@
+# Niche, powerful tools for an expert workflow, rotating across Python packages,
+# Neovim plugins, and AI-harness extensions, roughly one of each a week.
+name: Expert Tools
+mode: open
+section: "Technical Practice"
+template: article
+prompt: prompt.md
+autopublish: true
+strict: false
+words: [1200, 3000]
+min_sources: 6
+cadence: [mon, wed, fri]

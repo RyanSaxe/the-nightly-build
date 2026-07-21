@@ -1,0 +1,16 @@
+# The unbiased current-affairs desk for policy, politics, and law. strict
+# promotes every WARN to a BLOCK, so the per-side citation checks are hard
+# gates: a one-sided or thinly-sourced article cannot publish. The count is the
+# floor; sources_by_kind is the mix, both sides sourced to primaries.
+name: Policy Debate
+mode: open
+section: "Current Affairs"
+template: unbiased
+prompt: prompt.md
+autopublish: true
+strict: true
+min_sources: 10
+sources_by_kind:
+  primary: [4, null]
+  secondary: [3, null]
+cadence: [tue, fri]

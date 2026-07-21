@@ -1,0 +1,12 @@
+# A weekly engineering study that rebuilds the essential part of an idea to
+# reveal what a description hides. Room for real code and a run of it.
+name: Build From Scratch
+mode: open
+section: "Technical Practice"
+template: article
+prompt: prompt.md
+autopublish: true
+strict: false
+words: [1500, 4500]
+min_sources: 8
+cadence: [sat]

@@ -1,0 +1,13 @@
+# An evidence-based desk that ages forward with a child born in February 2026. A
+# topic earns an article when high-quality evidence could change a real family
+# decision, timed to when that decision is near.
+name: Parenting Research
+mode: open
+section: "Parenting"
+template: article
+prompt: prompt.md
+autopublish: true
+strict: false
+words: [1200, 3000]
+min_sources: 8
+cadence: [tue, thu, sun]
