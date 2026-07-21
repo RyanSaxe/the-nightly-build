@@ -1,6 +1,6 @@
 # This paper's shared furniture
 
-## Code block (`rs-code`) — legacy
+## Code block (`rs-code`)
 
 Retired: the engine's `nb-code` (templates/FURNITURE.md) is this piece,
 promoted upstream, with Prism shipped by `nb.js` itself. New articles use

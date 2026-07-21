@@ -5,7 +5,7 @@ the rest of the paper takes its subjects. Magic, Teamfight Tactics, Slay
 the Spire, Storybook Brawl, Once Upon a Galaxy, and Hearthstone
 Battlegrounds anchor the taste, and any game of their character is on the
 beat. Frank Karsten's quantitative rigor and Mark Rosewater's design
-vocabulary are the poles; for a game without a Karsten, find the analyst
+vocabulary are the poles. For a game without a Karsten, find the analyst
 who fills that role. Skip the fundamentals.
 
 The beat runs from the metagame to the design table to the economics of these
