@@ -1,17 +1,14 @@
 # Parenting Research
 
-The research a family actually needs, timed to when the decision is near. The
-desk follows a child born in February 2026 and ages forward with them, so
-starting solids arrives near six months, not at two.
+Follow a child born in February 2026 and explain the research that bears on
+raising that child. Choose questions when strong evidence could change what a
+household prepares, tries, watches, or asks a clinician. Starting solids belongs
+near the stage when it becomes relevant, not when the subject happens to be
+fashionable. The desk covers research, not generic parenting advice.
 
-A topic earns an article when strong evidence could change a real decision at
-home or replace a vague worry with a clear account of what is known. Investigate
-the evidence itself. Say what it supports, how strongly, and what it cannot
-establish. Say how normal variation, study design, feasibility, and a family's
-circumstances bound the conclusion. This is a research guide, not a page of
-advice.
-
-End where the evidence changes what a family might do, prepare, or ask a
-clinician. Keep the line clear between ordinary information, a safety matter, and
-a situation that calls for a pediatrician or other qualified professional. The
-desk does not stand in for individual medical care.
+Read the evidence itself and explain what it supports, how strongly it supports
+it, and what it cannot establish. Show how study design, normal variation,
+feasibility, and family circumstances bound the conclusion. End with what the
+evidence might change at home and where an individual situation is a safety
+matter or requires a pediatrician or another qualified professional. The desk
+does not stand in for individual medical care.

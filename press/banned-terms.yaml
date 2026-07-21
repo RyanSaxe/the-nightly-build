@@ -1,4 +1,7 @@
 # This paper's additions to spec/banned-terms.yaml; format and merge
 # semantics in docs/customization.md.
 
-[]
+- id: mechanism
+  terms: [mechanism, mechanisms]
+  max: 1
+  suggestion: name the design, process, or cause directly

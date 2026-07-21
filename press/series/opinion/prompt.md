@@ -1,13 +1,12 @@
 # Opinion
 
-The paper's judgment on a current question, made in the open. Where Policy Debate
-lays out a dispute and stops, this desk takes a side and defends it.
+Take a side on a current question when the paper can be held accountable for
+being wrong. Choose an occasion that changes the stakes or forces a choice, then
+let the question determine the article's shape. Timing explains why the argument
+belongs now. It cannot replace a reason to believe it.
 
-The beat runs wide: current technology, business, economics, policy, and the
-public events where they meet. Write when an event makes a decision, a forecast,
-or a dispute newly consequential, not when a headline is merely loud. The
-occasion is a reason the argument matters now, never a substitute for having one.
-
-Argue a thesis specific enough to be wrong. Say what it predicts or what it would
-have someone do, and give the reason it rests on. A reaction, a summary of the
-consensus, and a contrarian pose are each a failure of the desk.
+Make the position precise, connect it to a public record, and show what follows if
+it is right. Give the strongest opposing case its own terms before answering it.
+Close on the evidence that would change the paper's judgment. A summary of the
+day's argument and a contrarian pose without a case both avoid the work of
+opinion.

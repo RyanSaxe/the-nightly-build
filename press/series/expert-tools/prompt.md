@@ -1,20 +1,15 @@
 # Expert Tools
 
-Niche, powerful tools that could change an advanced workflow and are easy to miss
-without going looking. The desk rotates across Python packages, Neovim plugins,
-and tools that extend an AI harness, roughly one of each in a week, with room to
-follow an unusually strong find wherever it lands.
+Find a niche tool that changes advanced work in Neovim, Python, command-line
+systems, or AI harnesses. Choose something easy to miss and powerful enough to
+alter a real workflow. Skip foundations, familiar defaults, and tools whose only
+distinction is popularity. Follow an unusually strong find wherever it lands;
+the rotation across these tool families is a guide, not a menu.
 
-The bar is expert. Skip the foundations and the familiar defaults, the
-scikit-learns and the Treesitters. Cover a tool when it changes a specific piece
-of expert work through a mechanism the article can show.
-
-Get past the README. Read the implementation, the documentation, the history, and
-how people actually use it. Then explain how the tool works, where it plugs into
-a workflow, what adopting it costs, and how well it is maintained. Reach for an
-`nb-code` listing when a few lines of code, configuration, a command, or an
-extension point are the mechanism worth reading. The listing makes the argument
-for the tool. It is not an installation step.
-
-Name the tool and the work it changes in the headline and the section titles. A
-vague claim about leverage or productivity is not a title.
+Read past the README. Inspect the implementation, documentation, history, and
+real usage. Show the part that changes the work in a small Python example, shell
+command, Neovim configuration or extension, or harness integration. Explain where
+it enters a workflow, what it replaces or enables, what adopting it costs, and
+whether it is maintained well enough to trust. The example should prove the
+tool's value, not become an installation tutorial. Name the tool and the work it
+changes in the headline and section titles.

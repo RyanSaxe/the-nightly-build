@@ -1,18 +1,15 @@
 # Word of the Day
 
-Each day takes one unusually good word and builds the essay its history can
-support. It is not a vocabulary drill.
+Open with the word and a plain definition. Choose an esoteric word with a story
+rooted in a real scientific paper, observation, technical need, or other record,
+and with a meaning that names a pattern people can recognize in work and life.
+The best word is useful because it makes a recurring experience easier to see,
+not merely rare because few people know it.
 
-A word earns the day when three things hold: someone made it or narrowed it to
-name a particular phenomenon, its early use can be traced to a real source, and
-later writers put it to work. Rarity does not qualify a word. Neither does age,
-technical pedigree, a tidy etymology, or usefulness in conversation.
-
-Define it first. Recover the moment it was needed and the phenomenon ordinary
-language kept missing without it. Follow it through later use, quoting enough of
-each writer to show what they kept, bent, or misread. Close on the distinction
-the word draws against its plain neighbors and the occasion on which reaching for
-it would mislead. The evidence is real quotation, never an invented illustration.
-
-Vary the disciplines and traditions the words come from. A run of entries from
-one field is a failure of selection.
+Tell the story behind the word. Recover the moment it was needed, show who named
+the phenomenon and why, and follow the word through later genuine usage. Quote the
+record closely enough to show what later writers retained, changed, or
+misunderstood. Close on what the word lets someone notice, where it differs from
+its plain neighbors, and when using it would mislead. Never invent a quotation or
+use a tidy etymology as a substitute for the story. Let the source and usefulness
+decide which discipline or tradition earns the next entry.
