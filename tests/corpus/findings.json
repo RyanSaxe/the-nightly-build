@@ -1,12 +1,53 @@
 {
   "the-field-guide/rockefeller-preserve-carriage-roads": {
-    "exit": 0,
-    "findings": [],
+    "exit": 1,
+    "findings": [
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-aside' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-callout' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-callout-term' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      }
+    ],
     "notes": []
   },
   "the-paper/causal-pts-young-children": {
-    "exit": 0,
+    "exit": 1,
     "findings": [
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-callout' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-callout-term' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-excerpt' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-excerpt-loc' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-paper-map' is a retired component; remove it. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
       {
         "code": "W-CITE-DENSITY",
         "level": "WARN",
@@ -109,6 +150,41 @@
   "transformers-from-scratch/tokens-and-embeddings": {
     "exit": 1,
     "findings": [
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-bridge' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-bridge-label' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-callout' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-callout-term' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-check-box' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-objectives' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
+      {
+        "code": "B-DEPRECATED",
+        "level": "BLOCK",
+        "message": "'nb-objectives-label' is a retired component; use 'nb-note' instead. Retired markup lingers in the published back-catalog but does not belong in a new article."
+      },
       {
         "code": "B-SANDBOX",
         "level": "BLOCK",
