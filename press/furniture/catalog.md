@@ -9,7 +9,7 @@ promoted upstream, with Prism shipped by `nb.js` itself. New articles use
 ## Case docket (`rs-docket`)
 
 The standing facts of a legal matter as reference data, set apart so the prose
-can argue instead of recite. Used by The Record.
+can argue instead of recite. Use when appropriate to highlight a court case.
 
 ```html
 <div class="rs-docket">

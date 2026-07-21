@@ -1,0 +1,17 @@
+# The reader's main news article: one substantial, grouped, densely-cited brief.
+# Runs on the press Brief override (press/templates/brief), item band 10-16. The
+# four item labels are the grouping rule, ordered and contiguous per the
+# prompt. Per-item source policy is the binding floor: one primary and at least
+# two independent secondaries on every item, so a separate article-wide
+# min_sources would sit below reality and is left off.
+name: Daily News
+mode: rolling
+section: "Daily Reading"
+template: brief
+prompt: prompt.md
+autopublish: true
+strict: false
+per_item_sources:
+  primary: [1, 1]
+  secondary: [2, null]
+cadence: daily

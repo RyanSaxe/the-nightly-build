@@ -1,0 +1,13 @@
+# A cumulative open lesson series toward reading filings and building financial
+# models. The topic is open: to sunset the course, pause this series and start a
+# new ID, never repurpose this one.
+name: Investing Course
+mode: open
+section: "Investing"
+template: lesson
+prompt: prompt.md
+autopublish: true
+strict: false
+words: [1200, 2200]
+min_sources: 6
+cadence: [mon, wed, fri, sun]

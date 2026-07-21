@@ -1,0 +1,15 @@
+# The chart-forward market-and-business desk. A public company is a case for a
+# market question, chosen dynamically from what the day makes instructive; there
+# is no watchlist. Charts are committed Plotly provenance scripts (docs/charts.md).
+name: Company Analysis
+mode: open
+section: "Investing"
+template: article
+prompt: prompt.md
+autopublish: true
+strict: false
+words: [1500, 4000]
+min_sources: 8
+cadence: [mon, thu, sat]
+consult: # read the filing itself before the coverage of it
+  - https://www.sec.gov/

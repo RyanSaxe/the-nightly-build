@@ -1,0 +1,14 @@
+# One unusually good word a night, its history told whole. Below the longread
+# default on purpose: a word essay is the paper's smallest read, and five real
+# sources (the coinage, the etymology, the usage it quotes) beat eight padded
+# ones.
+name: Word of the Day
+mode: open
+section: "Daily Reading"
+template: article
+prompt: prompt.md
+autopublish: true
+strict: false
+words: [800, 1100]
+min_sources: 5
+cadence: daily
