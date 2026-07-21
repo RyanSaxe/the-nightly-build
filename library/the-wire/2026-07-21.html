@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Wire · 2026-07-21</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-wire",
+        "slug": "2026-07-21",
+        "template": "brief",
+        "title": "Hugging Face reconstructs its breach on a self-hosted open model",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-21",
+        "tags": ["engineering", "compute", "policy", "industry"],
+        "sources": 10,
+        "words": 1112,
+        "reading_minutes": 5,
+        "dek": "By Hugging Face's account, commercial tools refused the attacker's payloads mid-breach, so it rebuilt the 17,000-event intrusion on an open model it hosted itself, a case for keeping one in the incident-response toolchain.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Wire</div>
+        <h1 class="nb-title">
+          Hugging Face reconstructs its breach on a self-hosted open model
+        </h1>
+        <p class="nb-dekline">
+          By Hugging Face's account, commercial tools refused the attacker's
+          payloads mid-breach, so it rebuilt the 17,000-event intrusion on an
+          open model it hosted itself, a case for keeping one in the
+          incident-response toolchain.
+        </p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-07-21</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">engineering</span>
+          <h3>
+            <a href="https://huggingface.co/blog/security-incident-july-2026"
+              >Hugging Face reconstructs its breach on a self-hosted open
+              model</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Hugging Face disclosed on July 16 that an autonomous agent framework
+            breached its production infrastructure over a weekend, executing
+            more than 17,000 recorded actions across a swarm of short-lived
+            sandboxes after a malicious dataset abused a remote-code loader and a
+            template-injection path in its dataset processing.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            The intrusion reached a limited set of internal datasets and several
+            service credentials. Public models, datasets, and Spaces were not
+            touched, and neither was the software supply chain.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            To rebuild the sequence of events from that 17,000-event log, the
+            company ran GLM 5.2, an open-weight model, on its own
+            infrastructure.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </p>
+          <p>
+            Hugging Face says it self-hosted because the commercial models it
+            first reached for refused to examine the attacker's payloads,
+            treating the malicious commands and exploit code the forensics
+            required as hostile traffic.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            That account is the company's own, and no independent security
+            researcher has confirmed it. Fortune reports the disclosure carries
+            zero outside expert commentary, and that its only public backers are
+            voices aligned with unrestricted AI development.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            The operational lesson rests on what Hugging Face did, and it holds
+            even if its explanation does not: a defender racing a machine-speed
+            intrusion cannot wait on a hosted model that may refuse the query.
+            Keep a model you can run yourself in the incident-response
+            toolchain, and test it on real attack artifacts before an incident
+            forces the question.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">compute</span>
+          <h3>
+            <a
+              href="https://www.theinformation.com/articles/google-plans-new-frozen-chip-run-ai-models-efficiently"
+              >Google is designing a chip that bakes Gemini into silicon</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            The Information reported on July 20 that Google is building a chip,
+            codenamed Frozen v2, that hardcodes parts of Gemini's architecture
+            into silicon.<sup class="nb-cite"><a href="#s3">3</a></sup> The chip
+            targets six to ten times more tokens per unit of power than Google's
+            newest TPUs, for deployment as early as 2028, and Google declined to
+            confirm it, saying only that its teams are "constantly researching
+            and experimenting with new innovations" for efficiency.<sup
+              class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            The reason to spend years baking a single model into hardware sits
+            in a number the chip news does not mention.
+          </p>
+          <p>
+            Across the five largest hyperscalers, Epoch AI finds operating cash
+            flow growing about 23 percent a year while cash capital spending
+            grows about 70 percent, so aggregate cash capex is on track to
+            overtake operating cash flow around the third quarter of 2026.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            Past that point, Epoch notes, further spending has to be financed by
+            other means.<sup class="nb-cite"><a href="#s5">5</a></sup> The
+            crossover is staggered by company: Oracle is already past it, Amazon
+            arrives around the second quarter of 2026, Alphabet near the first
+            quarter of 2027, Meta the third quarter of 2027, and Microsoft not
+            until the third quarter of 2028.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            The buildout itself is intact: hyperscalers are still guiding to
+            roughly $725 billion in 2026 AI capital spending, up 77 percent from
+            2025.<sup class="nb-cite"><a href="#s6">6</a></sup> That is why the
+            power a token costs to serve has become the variable Google is now
+            engineering around. When you weigh the next generation of inference
+            silicon, read power per token against your serving cost, not peak
+            throughput against a spec sheet.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">policy</span>
+          <h3>
+            <a
+              href="https://www.aisi.gov.uk/blog/how-far-behind-the-frontier-are-leading-open-weight-models-on-cyber"
+              >Britain measures the open-weight cyber gap at four to seven
+              months</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            The UK AI Security Institute published on July 17 the first public
+            measurement of how far leading open-weight models trail the closed
+            frontier on cyber capability, and put the gap at four to seven
+            months, down from the six-to-ten-month gaps it measured through
+            2025.<sup class="nb-cite"><a href="#s7">7</a></sup> It scored models
+            on narrow tasks spanning vulnerability research, reverse
+            engineering, web exploitation, and cryptography, and on "cyber
+            ranges" that test whether a model can plan and execute a multi-step
+            attack end to end.<sup class="nb-cite"><a href="#s7">7</a></sup> The
+            open models it tested, GLM-5.2 and DeepSeek V4-Pro, now sit within
+            half a year of closed comparators such as Opus 4.6 and GPT-5.5.<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+          </p>
+          <p>
+            The larger shift is in cost. Reading the same evaluation, The
+            Decoder puts the per-task cost of the open models far below the
+            closed ones: about $6 for GLM-5.2 and 28 cents for DeepSeek V4-Pro
+            against roughly $15 for Opus 4.6, and on identical workloads at
+            scale, $1.19 for DeepSeek against $85 for Opus.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            A shrinking time gap is a defender's problem measured in months. A
+            seventyfold cost gap is an attacker's opportunity measured in runs.<sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            AISI notes the same open models carry real privacy and customization
+            advantages the threat framing omits.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            If you model the risk from open-weight models, price it on cost per
+            attack, because the capability lag is closing slowly and the cost is
+            collapsing fast.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">industry</span>
+          <h3>
+            <a href="https://x.com/Alibaba_Qwen/status/2078759124914098291"
+              >Alibaba previews a 2.4-trillion-parameter Qwen with no
+              benchmarks</a
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </h3>
+          <p>
+            Alibaba's Qwen team announced on July 19, during WAIC in Shanghai, a
+            preview of Qwen3.8-Max, a 2.4-trillion-parameter model it calls one
+            of the most powerful available today, "second only to Fable 5."<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            The claim arrives with no benchmark table and no date for the
+            open-weight release the team says is coming soon.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            It is Alibaba's first multimodal model above a trillion parameters,
+            offered through its Token Plan and coding tools at 10 percent of the
+            standard price, and, as The Decoder notes, its ranking is the
+            company's own positioning without independent verification.<sup
+              class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+          </p>
+          <p>
+            The parameter count is real and large. The ordering against Fable 5
+            is advertising until someone outside Alibaba runs the numbers.<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            A preview priced at a tenth of standard buys adoption and usage data
+            before any public leaderboard can contest the claim.<sup
+              class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+            When Qwen3.8-Max reaches open weights, benchmark it on your own
+            tasks before you accept its place in the order.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://huggingface.co/blog/security-incident-july-2026"
+              >Hugging Face · Security incident, July 2026</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://fortune.com/2026/07/20/hugging-face-turns-to-chinese-open-source-ai-to-fend-off-autonomous-ai-cyber-attack-after-american-ai-guardrails-stymie-defense/"
+              >Fortune · Hugging Face turns to Chinese open-source AI to fend off
+              an autonomous AI cyberattack</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.theinformation.com/articles/google-plans-new-frozen-chip-run-ai-models-efficiently"
+              >The Information · Google Plans New "Frozen" Chip to Run Its AI
+              Models Much More Efficiently</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2026/07/20/google-is-working-on-a-new-ai-chip-designed-to-make-gemini-more-efficient/"
+              >TechCrunch · Google is working on a new AI chip designed to make
+              Gemini more efficient</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://epoch.ai/data-insights/hyperscaler-capex-vs-cash-flow"
+              >Epoch AI · Hyperscaler capex vs. cash flow</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://investingengineer.com/ai-chip-rally-over-july-2026-selloff/"
+              >Investing Engineer · Is the AI chip rally over? The July 2026
+              selloff</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.aisi.gov.uk/blog/how-far-behind-the-frontier-are-leading-open-weight-models-on-cyber"
+              >UK AI Security Institute · How far behind the frontier are
+              leading open-weight models on cyber?</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://the-decoder.com/open-weight-models-now-match-frontier-cyber-performance-from-just-four-months-ago-at-a-fraction-of-the-cost/"
+              >The Decoder · Open-weight models now match frontier cyber
+              performance from just four months ago, at a fraction of the
+              cost</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://x.com/Alibaba_Qwen/status/2078759124914098291"
+              >Qwen (@Alibaba_Qwen) · Qwen3.8-Max preview announcement</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://the-decoder.com/alibabas-qwen-takes-on-kimi-k3-with-open-weight-qwen-3-8-says-model-is-second-only-to-fable-5/"
+              >The Decoder · Alibaba's Qwen takes on Kimi K3 with open-weight
+              Qwen 3.8, says model is second only to Fable 5</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
