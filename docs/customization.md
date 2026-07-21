@@ -53,15 +53,15 @@ blocks, claim cards, and more. Any component in it works in any template.
 A drafter's furniture palette composes three scopes, so you extend the catalog
 without touching the engine:
 
-- **Engine base** — `templates/FURNITURE.md`, always available.
-- **Shared press furniture** — `press/furniture/`, a `catalog.md` (one read is
+- **Engine base**: `templates/FURNITURE.md`, always available.
+- **Shared press furniture**: `press/furniture/`, a `catalog.md` (one read is
   the whole palette) beside a `styles.css`. Anything every section might reach
   for lives here.
-- **Template-bespoke** — a `furniture.md` + `furniture.css` inside a template's
+- **Template-bespoke**: a `furniture.md` + `furniture.css` inside a template's
   own folder (`press/templates/<id>/`), for a component only that template
   renders.
 
-The builder concatenates every CSS owner — your theme plus all furniture files —
+The builder concatenates every CSS owner (your theme plus all furniture files)
 into the single `assets/theme.css` on each publish, so a class defined in any of
 them restyles past articles too. Define a component on your own prefix (`nb-` is
 reserved):
@@ -109,14 +109,14 @@ A press-declared copy of a library the engine also ships wins: `nb.js` sees
 it in the page and loads nothing, so pinning Prism with extra languages (as
 above; Prism components load against your copy of its core) or a different
 KaTeX version behaves as declared. The component stays pure markup either
-way — the article writes `<pre><code class="language-rust">…escaped
-code…</code></pre>` and the highlighter finds it.
+way. The article writes `<pre><code class="language-rust">…escaped
+code…</code></pre>`, and the highlighter finds it.
 
 This does not weaken the security model, because the trust boundary is
 **authorship**, not the presence of JavaScript:
 
 - Assets are declared in `site.yaml`, which lives on `main` and changes only
-  through your normal review — never through an auto-merged article PR. An
+  through your normal review, never through an auto-merged article PR. An
   untrusted night-shift run cannot add one.
 - Every asset must be **https and Subresource-Integrity-pinned**
   (`validate_config` enforces the hash), so the browser refuses a tampered CDN
@@ -191,7 +191,7 @@ run trips on it.
 
 ## Your own templates
 
-A template is a self-contained folder — the folder name is the template id —
+A template is a self-contained folder, its folder name the template id,
 under `templates/` (shipped) or `press/templates/` (yours):
 
 ```text
@@ -220,36 +220,39 @@ Manifests come in two styles:
   section except `sources` (always exempt) and any you list in the template's
   `cite_exempt` (for a non-cited section like an objectives box).
 
-Worked example: the classic lesson template, six fixed sections for an
-ordered course, rebuilt as your own template.
+Worked example: an `interview`, a Q&A transcript with a short introduction,
+built as your own template. It looks nothing like a shipped template, so it
+shadows none of them, and it still exercises the machinery this section
+teaches: a fixed outline, a section that carries no citations, and skeleton
+chrome the writer cannot reword.
 
-1. Write `press/templates/lesson/manifest.yaml`:
+1. Write `press/templates/interview/manifest.yaml`:
 
    ```yaml
    class: longread
-   words: [1500, 4000]
-   sections: [objectives, recap, teach, check, bridge, sources]
+   words: [1200, 3000]
+   sections: [preamble, exchange, sources]
    cite_rule: per-section
-   cite_exempt: [objectives] # the goals box carries no citations
-   modes: [sequence]
+   cite_exempt: [preamble] # the intro carries no citations
+   modes: [collection]
    ```
 
    Rules: `sections` must include `sources`. Bands are `[low, high]`.
    `cite_rule` is `per-section` or `per-item` (needs `data-nb-item` markers).
    An optional `cite_exempt: [names]` lets a template declare sections that
    need no citations, on top of the always-exempt `sources`. A
-   `chrome:` list names raw substrings of the skeleton — the body class,
-   fixed labels, fixed headings — that must survive the fill verbatim; the
+   `chrome:` list names raw substrings of the skeleton (the body class,
+   fixed labels, fixed headings) that must survive the fill verbatim. The
    proof blocks an article that alters them, so a writer can never unstyle
    a page by rewording its furniture. `validate_config.py` requires each
    string to appear in the skeleton, so rewording skeleton chrome without
    updating this list fails at your desk, not the writer's. The engine
    reads these from the manifest, so any template can use them. An optional
    `about:` one-liner documents the template for a browsing human; the engine
-   ignores it. The test suite exercises this exact lesson manifest, so the
+   ignores it. The test suite exercises this exact interview manifest, so the
    walkthrough cannot drift from what the proof enforces.
 
-2. Scaffold `press/templates/lesson/skeleton.html`. Copy a shipped skeleton's
+2. Scaffold `press/templates/interview/skeleton.html`. Copy a shipped skeleton's
    `<head>` and header chrome verbatim (asset links, nb-meta skeleton,
    eyebrow, title, dek, byline). Keep `class="nb-dekline"` on whatever element
    renders the dek: the front page and the feed print nb-meta's dek, and the
@@ -264,8 +267,8 @@ ordered course, rebuilt as your own template.
    case. The proof backstops the convention: a caps run surviving into an
    article's prose is a `W-PLACEHOLDER` warning. The same holds for
    `identity.md`: describe the move, do not perform it. The note
-   component in `templates/FURNITURE.md` carries the lesson's goals,
-   self-checks, and bridge as labeled moves. The sandbox applies unchanged: no scripts beyond the JSON blocks
+   component in `templates/FURNITURE.md` carries any labeled aside the
+   exchange needs, like an editor's note. The sandbox applies unchanged: no scripts beyond the JSON blocks
    and the engine runtime, citations as `sup.nb-cite` anchors into numbered
    source entries. Give each placeholder source entry a
    `data-nb-kind="primary"` or `"secondary"` next to its `data-nb-source`, as

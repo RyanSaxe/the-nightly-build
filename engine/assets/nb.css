@@ -1472,8 +1472,8 @@ figure.nb-chart noscript {
 
 /* lesson furniture */
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-objectives -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-objectives {
   background: var(--wash);
   border: 1px solid var(--hair);
@@ -1503,8 +1503,8 @@ figure.nb-chart noscript {
   margin: 4px 0;
 }
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-callout -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-callout {
   border-left: 3px solid var(--accent);
   background: var(--wash);
@@ -1524,8 +1524,8 @@ figure.nb-chart noscript {
   margin-bottom: 4px;
 }
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-check-box -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-check-box {
   border-top: 1px dashed var(--line);
   border-bottom: 1px dashed var(--line);
@@ -1542,8 +1542,8 @@ figure.nb-chart noscript {
   margin: 10px 0;
 }
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-bridge -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-bridge {
   border-left: 3px solid var(--accent-2);
   background: var(--wash);
@@ -1632,8 +1632,8 @@ figure.nb-chart noscript {
 
 /* paper furniture */
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-abstract -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-abstract {
   background: var(--wash);
   border: 1px solid var(--hair);
@@ -1701,8 +1701,8 @@ figure.nb-chart noscript {
   margin: 6px 0;
 }
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-verdict -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-verdict {
   border-left: 3px solid var(--accent-2);
   background: var(--wash);
@@ -1801,8 +1801,8 @@ figure.nb-chart noscript {
   color: var(--ink);
 }
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-epigraph -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-epigraph {
   margin: 0 0 26px;
   padding: 0 24px;
@@ -1826,8 +1826,8 @@ figure.nb-chart noscript {
   color: var(--faint);
 }
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-aside -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-aside {
   background: var(--wash);
   border: 1px solid var(--hair);
@@ -1894,8 +1894,8 @@ figure.nb-chart noscript {
   color: var(--ink-soft);
 }
 
-/* retired from the catalog (the nb-note primitive carries this move);
-   kept so the published shelf renders */
+/* @deprecated nb-cast -> nb-note: retired from the catalog (the nb-note
+   primitive carries this move); kept so the published shelf renders */
 .nb-cast {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2320,8 +2320,8 @@ figure.nb-chart noscript {
   background: none;
 }
 
-/* retired from the catalog (the claim card carries its own resolution);
-   kept so the published shelf renders */
+/* @deprecated nb-grade -> nb-claim: retired from the catalog (the claim card
+   carries its own resolution); kept so the published shelf renders */
 .nb-grade {
   display: flex;
   gap: 12px;

@@ -37,7 +37,12 @@ from nb.links import classify_link, dead_source_links
 from nb.proof import check_article
 from nb.proof.pr import resolve_pr_body, run_pr_mode
 from nb.proof.sources import SOURCE_KINDS, is_count
-from nb.proof.structure import ENGINE_SCRIPT_RE, check_chrome, check_classes
+from nb.proof.structure import (
+    ENGINE_SCRIPT_RE,
+    check_chrome,
+    check_classes,
+    check_deprecated,
+)
 from nb.report import Finding, Report, emit
 
 # `import check` is how the suite, validate_config.py, and any press tooling
@@ -51,6 +56,7 @@ __all__ = [
     "check_article",
     "check_chrome",
     "check_classes",
+    "check_deprecated",
     "classify_link",
     "dead_source_links",
     "find_template",

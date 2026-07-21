@@ -14,10 +14,12 @@ __all__ = (
     "check_chrome",
     "check_cites",
     "check_classes",
+    "check_deprecated",
     "check_figures",
     "check_required_sections",
     "check_sandbox",
     "css_class_names",
+    "deprecated_classes",
     "external_ref_allowed",
     "image_dimensions",
 )
@@ -40,6 +42,12 @@ ENGINE_SCRIPT_RE = re.compile(r"^(?:(?:\.\./)+|/)assets/nb\.js$")
 # Classes styled by owner-declared external assets (docs/customization.md's
 # syntax-highlighter recipe), so no shipped stylesheet defines them.
 CLASS_ALLOW_PREFIXES = ("language-", "token")
+# A retired component leaves its CSS in place so the frozen back-catalog keeps
+# rendering, and marks itself here for the proof to block in new articles:
+#   /* @deprecated nb-verdict -> nb-note: reason */   (replacement, or `none`)
+# The marker lives beside the CSS it guards, so retirement declares itself in
+# one place and the block can point the author at the live component.
+DEPRECATED_RE = re.compile(r"@deprecated\s+([\w-]+)\s*->\s*([\w-]+|none)")
 
 
 def external_ref_allowed(normalized_url):
@@ -298,6 +306,51 @@ def check_classes(raw, *, repo, rep):
             "W-DEAD-CLASS",
             f"classes matching no stylesheet rule: {dead}; a typo here "
             "renders the element unstyled",
+        )
+
+
+def deprecated_classes(repo):
+    """Map each retired class root to its replacement (or None).
+
+    Parsed from the @deprecated markers in the same sheets check_classes reads
+    (nb.css plus every css_owner), so the retired set never drifts from the CSS
+    that still ships.
+    """
+    sheets = [os.path.join(repo, "engine", "assets", "nb.css")]
+    sheets += css_owners(repo, load_site_config(repo))
+    marks = {}
+    for path in sheets:
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as fh:
+                for root, repl in DEPRECATED_RE.findall(fh.read()):
+                    marks[root] = None if repl == "none" else repl
+    return marks
+
+
+def check_deprecated(raw, *, repo, rep):
+    """Block a new article from using a retired component.
+
+    The component's CSS still renders the frozen back-catalog, but the proof
+    runs only on the article being authored, never over published ones, so the
+    block never breaks the shelf. A class is retired when it equals a marked
+    root or is one of its sub-parts (nb-verdict-title under nb-verdict).
+    """
+    marks = deprecated_classes(repo)
+    if not marks:
+        return
+    used = set()
+    for attr in re.findall(r'class="([^"]+)"', raw):
+        used.update(attr.split())
+    for cls in sorted(used):
+        root = next((r for r in marks if cls == r or cls.startswith(r + "-")), None)
+        if root is None:
+            continue
+        replacement = marks[root]
+        fix = f"use {replacement!r} instead" if replacement else "remove it"
+        rep.block(
+            "B-DEPRECATED",
+            f"{cls!r} is a retired component; {fix}. Retired markup lingers in "
+            "the published back-catalog but does not belong in a new article.",
         )
 
 
