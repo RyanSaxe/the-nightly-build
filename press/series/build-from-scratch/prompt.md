@@ -1,17 +1,6 @@
 # Build From Scratch
 
-A technical idea made concrete by rebuilding its essential part. Take a concept,
-a paper, a system, or an implementation, and reconstruct the piece of it that a
-description alone leaves inert.
+Take a consequential technical idea, paper, system, or implementation and rebuild it from scratch. Choose topics where showcasing the internals exposes an insight that is hard to get from a summary or report. Additionally, it should be relevant to what is going on in technology today, not a now-irrelevant historical relic.
 
-A subject earns a build when making it concrete shows something reading about it
-would not. Start from the constraint the original had to satisfy. Put the
-decisive design choice in code, in an `nb-code` listing where the code carries
-the mechanism. Explain the simpler design it rules out, and say exactly where the
-reconstruction departs from the production system or the paper.
+Start from the smallest design that can demonstrate the idea. Explain each design choice, show the code or experiment in `nb-code` that carries the argument, and compare the prototype to the real system. The reader should leave with an engineering-level understanding of the system such that they can build off of the covered technology with their own two hands.
 
-Run the build where it can be run. A benchmark, a baseline, a failure case, or a
-figure belongs when it tests the article's claim, and nowhere when it only
-dresses it. Close on what the small version cannot show and what a real system
-would still have to add. The aim is an engineering understanding someone can pick
-up and extend, not a tutorial.
