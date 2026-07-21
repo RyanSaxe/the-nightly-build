@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LoRA shrinks a fine-tuned GPT-3 checkpoint from 350GB to 35MB · The Paper</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "the-paper",
+        "slug": "lora",
+        "template": "paper",
+        "title": "LoRA shrinks a fine-tuned GPT-3 checkpoint from 350GB to 35MB",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-21",
+        "tags": ["nlp", "fine-tuning"],
+        "sources": 4,
+        "words": 2760,
+        "reading_minutes": 13,
+        "dek": "By freezing the pretrained weights and training a low-rank update to the attention projections, it matches full fine-tuning where the two were compared, and costs nothing extra at inference once the update is merged back in.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">The Paper</div>
+        <h1 class="nb-title">
+          LoRA shrinks a fine-tuned GPT-3 checkpoint from 350GB to 35MB
+        </h1>
+        <p class="nb-dekline">
+          By freezing the pretrained weights and training a low-rank update to
+          the attention projections, it matches full fine-tuning where the two
+          were compared, and costs nothing extra at inference once the update is
+          merged back in.
+        </p>
+        <div class="nb-byline">
+          <span>13 min read</span><span>2026-07-21</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            LoRA: Low-Rank Adaptation of Large Language Models
+          </p>
+          <p class="nb-paper-meta">
+            Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi
+            Li, Shean Wang, Lu Wang, Weizhu Chen (Microsoft) · arXiv:2106.09685 ·
+            2021
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2106.09685"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            An important paradigm of natural language processing consists of
+            large-scale pre-training on general domain data and adaptation to
+            particular tasks or domains. As we pre-train larger models, full
+            fine-tuning, which retrains all model parameters, becomes less
+            feasible. Using GPT-3 175B as an example — deploying independent
+            instances of fine-tuned models, each with 175B parameters, is
+            prohibitively expensive. We propose Low-Rank Adaptation, or LoRA,
+            which freezes the pre-trained model weights and injects trainable
+            rank decomposition matrices into each layer of the Transformer
+            architecture, greatly reducing the number of trainable parameters
+            for downstream tasks. Compared to GPT-3 175B fine-tuned with Adam,
+            LoRA can reduce the number of trainable parameters by 10,000 times
+            and the GPU memory requirement by 3 times. LoRA performs on-par or
+            better than fine-tuning in model quality on RoBERTa, DeBERTa, GPT-2,
+            and GPT-3, despite having fewer trainable parameters, a higher
+            training throughput, and, unlike adapters, no additional inference
+            latency. We also provide an empirical investigation into
+            rank-deficiency in language model adaptation, which sheds light on
+            the efficacy of LoRA. We release a package that facilitates the
+            integration of LoRA with PyTorch models and provide our
+            implementations and model checkpoints for RoBERTa, DeBERTa, and
+            GPT-2 at https://github.com/microsoft/LoRA.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The bill for a second full copy of GPT-3</h2>
+        <p>
+          Fine-tuning a pretrained model the ordinary way retrains every weight.
+          The result is a new model the same size as the original, and if you
+          fine-tune GPT-3 175B for ten downstream tasks you own eleven copies of
+          175 billion parameters. Storing one such copy in half precision takes
+          350 gigabytes, and every task you serve needs its own. Full
+          fine-tuning does not scale in the number of tasks, and that is the
+          problem the paper opens on.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The escape depends on a wager about what fine-tuning actually changes.
+          A prior result had measured it directly. Aghajanyan and colleagues
+          found that a pretrained language model can be steered to most of its
+          fine-tuned quality by optimizing a tiny number of parameters projected
+          into the full weight space: 200 trainable parameters were enough to
+          reach 90% of full-parameter performance on the MRPC sentence-pair task
+          with RoBERTa.<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Abstract"
+              data-nb-note="Aghajanyan et al.: 'by optimizing only 200 trainable parameters randomly projected back into the full space, we can tune a RoBERTa model to achieve 90% of the full parameter performance levels on MRPC.'"
+              >2</a
+            ></sup
+          >
+          If the useful part of an adaptation lives in so few directions, the
+          full weight update carries mostly redundant numbers. LoRA takes the
+          bet literally and constrains the update to be low-rank from the
+          start.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-low-rank-shape" id="the-low-rank-shape">
+        <h2>A weight update the size of two thin matrices</h2>
+        <p>
+          Take one weight matrix inside the model, a projection that maps an
+          input of dimension <em>k</em> to an output of dimension <em>d</em>.
+          Fine-tuning wants to add an update to it, and an unconstrained update
+          has one number for every entry of the matrix: <em>d</em> times
+          <em>k</em> of them, the full size of the weight. The low-rank
+          construction replaces that update with a product of two much smaller
+          matrices. The first, call it <em>A</em>, has <em>r</em> rows and
+          <em>k</em> columns. The second, <em>B</em>, has <em>d</em> rows and
+          <em>r</em> columns. Multiply them and the result <em>BA</em> is again
+          <em>d</em> by <em>k</em>, the exact shape of the weight, but it was
+          built from only <em>r</em>(<em>d</em> + <em>k</em>) free numbers rather
+          than <em>d</em> times <em>k</em>. When
+          <span class="nb-math-in">r \ll \min(d, k)</span>, that is a small
+          fraction of the full count.
+        </p>
+        <p>
+          The value <em>r</em> is the rank of the update, and it is the one dial
+          the method exposes. It sets how many independent directions the update
+          is allowed to move the weight along, and nothing else about the
+          construction changes when you turn it. The forward pass keeps the
+          frozen weight and adds the low-rank term beside it.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 4.1, Eq. 3">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            h = \htmlClass{nb-mc1}{W_0}\,x \;+\; \htmlClass{nb-mc2}{B}\,\htmlClass{nb-mc3}{A}\,x
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">W_0</span
+              ><span
+                >The pretrained weight, frozen at its trained value and never
+                updated. Shape <em>d</em> by <em>k</em>.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">B</span
+              ><span
+                >The second factor, shape <em>d</em> by <em>r</em>, initialized
+                to all zeros.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">A</span
+              ><span
+                >The first factor applied to the input, shape <em>r</em> by
+                <em>k</em>, initialized from a random Gaussian.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The layer's output is the frozen projection plus the low-rank update
+            acting on the same input. Only <em>A</em> and <em>B</em> carry
+            gradients; <em>W</em><sub>0</sub> is held fixed.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Section 4.1, Eq. 3">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Reading the line in order: the input <em>x</em> hits the frozen weight
+          and, in parallel, passes through <em>A</em>, which squeezes it down to
+          <em>r</em> numbers, then through <em>B</em>, which expands those
+          <em>r</em> numbers back out to the output dimension. The rank
+          <em>r</em> is a bottleneck the whole update must pass through. Widen it
+          and the update can express more; narrow it and it can express less and
+          costs less to train.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="starting-at-the-pretrained-model"
+        id="starting-at-the-pretrained-model"
+      >
+        <h2>Training that begins exactly at the pretrained model</h2>
+        <p>
+          Two choices about how the update starts and how it is scaled decide
+          whether the construction is usable, and both are worth slowing down
+          for. The first is initialization. <em>A</em> is drawn from a random
+          Gaussian, and <em>B</em> is set to all zeros. Their product
+          <em>BA</em> is therefore zero at the first training step, so the model
+          at step zero is exactly the pretrained model, unperturbed. Training
+          departs from the original weights rather than from a random dent in
+          them, and the adaptation only ever adds what the downstream task
+          demands.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 4.1">1</a></sup
+          >
+        </p>
+        <p>
+          The second is the scaling. The update is multiplied by
+          <span class="nb-math-in">\alpha / r</span> before it is added to the
+          frozen weight, where <em>&alpha;</em> is a constant the authors fix to
+          the first <em>r</em> they try and then leave alone. Dividing by
+          <em>r</em> means that raising the rank does not also inflate the
+          typical size of the update, so the learning rate that worked at one
+          rank keeps working at another. The scaling exists to spare you a
+          hyperparameter search every time you change the dial.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Section 4.1"
+              data-nb-note="'We then scale ΔWx by α/r ... we simply set α to the first r we try and do not tune it. This scaling helps to reduce the need to retune hyperparameters when we vary r.'"
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          The pairing of zero-initialized <em>B</em> and Gaussian <em>A</em> is
+          the hinge. It is what lets a randomly initialized module attach to a
+          trained network without damaging it on contact, and it is why the very
+          first gradient step is a clean departure from the pretrained weights
+          rather than a recovery from noise.
+        </p>
+      </section>
+
+      <section data-nb-section="which-weights" id="which-weights">
+        <h2>Adapt the attention projections, freeze the rest</h2>
+        <p>
+          A transformer layer has six weight matrices worth adapting: four in
+          the self-attention module (the query, key, value, and output
+          projections <em>W<sub>q</sub></em
+          >, <em>W<sub>k</sub></em
+          >, <em>W<sub>v</sub></em
+          >, <em>W<sub>o</sub></em
+          >) and two in the feed-forward MLP. The paper adapts only attention
+          weights and freezes the MLP entirely. This is a choice of study scope,
+          made for simplicity and parameter budget, not a claim that the MLP
+          cannot be adapted; the authors explicitly leave adapting the MLP,
+          LayerNorm, and bias terms to future work.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 4.2">1</a></sup
+          >
+          Later practice adapts the MLP routinely, so read the paper's scope as
+          the boundary of what it measured, not the boundary of the method.
+        </p>
+        <p>
+          Within that scope, the paper asks a sharp question: given a fixed
+          parameter budget, is it better to spend it on a large rank for one
+          matrix or a small rank spread across several? On GPT-3, holding the
+          budget at roughly eighteen million parameters, the answer is
+          consistent. Adapting one projection at a higher rank trails adapting
+          two at a lower rank, and adapting both the query and value projections
+          is the best pairing.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 7.1, Table 5">1</a></sup
+          >
+        </p>
+        <table class="nb-table">
+          <caption>
+            GPT-3 175B validation accuracy at a fixed ~18M-parameter budget,
+            varying which attention matrices are adapted and the rank that fits
+            the budget.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Section 7.1, Table 5">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Adapted matrices</th>
+              <th>Rank</th>
+              <th>WikiSQL</th>
+              <th>MNLI-m</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Wq</span></td>
+              <td>8</td>
+              <td>70.4</td>
+              <td>91.0</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Wk</span></td>
+              <td>8</td>
+              <td>70.0</td>
+              <td>90.8</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Wv</span></td>
+              <td>8</td>
+              <td>73.0</td>
+              <td>91.0</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Wo</span></td>
+              <td>8</td>
+              <td>73.2</td>
+              <td>91.3</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Wq, Wk</span></td>
+              <td>4</td>
+              <td>71.4</td>
+              <td>91.3</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Wq, Wv</span></td>
+              <td>4</td>
+              <td>73.7</td>
+              <td>91.3</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Wq, Wk, Wv, Wo</span></td>
+              <td>2</td>
+              <td>73.7</td>
+              <td>91.7</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The query projection alone at rank 8 reaches 70.4 on WikiSQL; the
+          query and value together at rank 4, on the same budget, reach 73.7.
+          Spreading a smaller rank across more matrices beats concentrating a
+          larger rank on one. The working recommendation the paper settles on is
+          to adapt <em>W<sub>q</sub></em> and <em>W<sub>v</sub></em> at a modest
+          rank.
+        </p>
+      </section>
+
+      <section data-nb-section="the-merge" id="the-merge">
+        <h2>Fold the update back in and inference costs nothing</h2>
+        <p>
+          Because <em>BA</em> has the same shape as the weight it corrects, it
+          can be added into that weight. At deployment you compute
+          <em>W</em> = <em>W</em><sub>0</sub> + <em>BA</em> once, store the
+          single merged matrix, and run inference exactly as you would run the
+          original model. The extra matrices vanish into the weight they were
+          correcting, and the forward pass has the same shape and the same cost
+          as an ordinary fine-tuned model. The paper states the guarantee
+          plainly: LoRA introduces no additional inference latency compared to a
+          fine-tuned model, by construction.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 4.1">1</a></sup
+          >
+        </p>
+        <p>
+          This is where LoRA separates from the adapter methods it competes
+          with. An adapter inserts small extra layers into the network, and
+          those layers stay in the forward path at inference, adding real
+          time. The paper measures it on GPT-2 medium: a single forward pass at
+          batch size one and sequence length 128 takes 19.8 milliseconds with no
+          adapter, and inserting adapters pushes that to 23.9 or 25.8
+          milliseconds depending on the variant, a penalty of 20.7% and 30.3%.
+          LoRA adds nothing to the same measurement because after merging there
+          is nothing extra to run.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 3, Table 1">1</a></sup
+          >
+        </p>
+        <p>
+          The zero-latency guarantee is real but conditional, and the same paper
+          names the condition. Merging bakes one task's update into the weights,
+          so serving a different task means recovering the original weight by
+          subtracting <em>BA</em> and adding a different task's update, a cheap
+          swap for whole-model serving but not a per-request one. If you want to
+          run many tasks' adapters side by side in a single batched forward pass,
+          you keep them unmerged, and then the update is an extra matrix multiply
+          again. Zero added latency and per-sample task switching in one batch
+          are not both available at once, and the paper flags the tradeoff
+          directly.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 4.2">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-cost" id="the-cost">
+        <h2>What the low-rank bet actually saves</h2>
+        <p>
+          Return to GPT-3 175B and put the running numbers on one screen. With
+          rank 4 and only the query and value projections adapted, LoRA trains
+          4.7 million parameters against full fine-tuning's 175.3 billion. The
+          checkpoint you save per task is the update alone, which drops the saved
+          artifact from 350 gigabytes to 35 megabytes, the 10,000-fold reduction
+          in the abstract. Training-time memory falls too, because the optimizer
+          no longer keeps gradient and momentum state for frozen weights: VRAM
+          during training goes from 1.2 terabytes to 350 gigabytes.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 4.2">1</a></sup
+          >
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">10,000&times;</span
+            ><span class="nb-stat-l">Fewer trainable parameters, GPT-3 175B</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">350GB &rarr; 35MB</span
+            ><span class="nb-stat-l">Per-task checkpoint</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">1.2TB &rarr; 350GB</span
+            ><span class="nb-stat-l">Training VRAM</span>
+          </div>
+        </div>
+        <p>
+          The saving would be worthless if quality collapsed, and it does not on
+          the tasks the paper ran. Plotting each method's GPT-3 accuracy against
+          the number of parameters it trains puts the claim on one axis. LoRA at
+          4.7 million parameters lands at the same accuracy as full fine-tuning
+          at 175.3 billion, four and a half orders of magnitude to its left, and
+          above the adapter and prefix-tuning baselines that spend more.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 5.2, Table 4">1</a></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="lora/chart-1.png"
+            alt="Scatter plot of GPT-3 WikiSQL validation accuracy against trainable parameters on a logarithmic axis. LoRA at 4.7 million parameters reaches 73.4 percent and at 37.7 million reaches 74.0 percent, matching full fine-tuning's 73.8 percent at 175,256 million parameters and sitting above the adapter, BitFit, and prefix-tuning baselines."
+          />
+          <figcaption>
+            Fig. 1 · GPT-3 175B on WikiSQL: validation accuracy against
+            trainable parameters (log scale). LoRA sits at full fine-tuning's
+            accuracy while training four orders of magnitude fewer parameters.
+            Data from Hu et al. 2021, Table 4.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Section 5.2, Table 4">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The pattern holds across the paper's smaller benchmarks. On GLUE with
+          RoBERTa and DeBERTa, LoRA matches or edges full fine-tuning while
+          training roughly two-tenths of a percent of the weights; on the E2E
+          generation task with GPT-2, it beats full fine-tuning on BLEU at under
+          a thousandth of the trainable parameters.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 5.1, Tables 2-3">1</a></sup
+          >
+        </p>
+        <p>
+          The design also composes downward. QLoRA holds the pretrained weights
+          frozen in 4-bit precision and trains the same low-rank update through
+          them, which cuts the memory to finetune a 65-billion-parameter model
+          from more than 780 gigabytes to under 48, a single GPU, while
+          preserving full 16-bit finetuning quality.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Abstract, Section 1"
+              data-nb-note="QLoRA 'reduces the average memory requirements of finetuning a 65B parameter model from >780GB of GPU memory to <48GB without degrading ... runtime or predictive performance.'"
+              >3</a
+            ></sup
+          >
+          The freeze-and-inject core is what makes that stacking possible: if the
+          base weights never move, their numerical precision is free to drop.
+        </p>
+      </section>
+
+      <section data-nb-section="why-a-rank-of-one" id="why-a-rank-of-one">
+        <h2>Why a rank of one is often enough</h2>
+        <p>
+          The intrinsic-dimension result told the authors to expect a low rank to
+          work; their own ablation says how low. On GPT-3, sweeping the rank of
+          the query-and-value update from 1 up to 64 barely moves accuracy on
+          either WikiSQL or MNLI. A rank of 1 already suffices for adapting both
+          <em>W<sub>q</sub></em> and <em>W<sub>v</sub></em> on these datasets, and
+          64 buys essentially nothing more.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 7.2, Table 6">1</a></sup
+          >
+          That flatness is the direct evidence for the low-rank hypothesis: if
+          the useful adaptation needed many directions, widening the bottleneck
+          would keep paying, and it does not.
+        </p>
+        <p>
+          Guard the reach of that finding, because the paper does. It is measured
+          on two datasets with GPT-3, tasks close to the model's pretraining, not
+          a law for every adaptation. The authors keep the boundary explicit in a
+          footnote.
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">The authors' own caveat</span>
+          <blockquote>
+            we do not expect a small r to work for every task or dataset. Consider
+            the following thought experiment: if the downstream task were in a
+            different language than the one used for pre-training, retraining the
+            entire model ... could certainly outperform LoRA with a small r.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="Section 7.2, Footnote 6">1</a></sup
+            >
+            <span class="nb-note-who">Hu et al. 2021, footnote 6</span>
+          </blockquote>
+        </div>
+        <p>
+          The paper also offers a mechanism for why the low-rank update helps at
+          all, and it is honest about how thin that evidence is. Comparing the
+          learned update against the frozen weight on the 48th layer of GPT-3,
+          the authors find the update does not repeat the weight's dominant
+          directions. It picks out directions the pretrained weight had left
+          weak and amplifies them, by a factor of about 21.5 at rank 4.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 7.3, Table 7">1</a></sup
+          >
+          The reading is appealing: adaptation turns up features the general
+          model already contained but underused. It rests on one layer of one
+          model, so treat it as a suggestive account of the mechanism, not a
+          proof of it.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="where-full-fine-tuning-wins"
+        id="where-full-fine-tuning-wins"
+      >
+        <h2>Where full fine-tuning still wins</h2>
+        <p>
+          The paper's headline, LoRA on-par with full fine-tuning, is true in the
+          regime it tested and needs a boundary drawn around it. A later
+          head-to-head study by Biderman and colleagues, a team with no stake in
+          the original result, supplies the boundary. On programming and
+          mathematics, across both instruction tuning and continued pretraining
+          on twenty billion tokens, they find that in the standard low-rank
+          settings LoRA substantially underperforms full fine-tuning.<sup
+            class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="Abstract"
+              data-nb-note="Biderman et al.: 'in the standard low-rank settings, LoRA substantially underperforms full finetuning' on programming and mathematics."
+              >4</a
+            ></sup
+          >
+          These are hard target domains far from the model's pretraining, exactly
+          the different-from-pretraining case the LoRA authors' footnote warned a
+          small rank would fail.
+        </p>
+        <p>
+          The same study measures why. Full fine-tuning learns weight
+          perturbations with a rank 10 to 100 times higher than typical LoRA
+          configurations, which plausibly accounts for the gap.<sup
+            class="nb-cite"
+            ><a href="#s4" data-nb-locator="Abstract, Section 5">4</a></sup
+          >
+          The two results do not contradict each other. LoRA's own tests sit
+          close to pretraining, where the useful update is genuinely low-rank and
+          a small <em>r</em> captures it. Biderman's tests sit far from it, where
+          the useful update is high-rank and a small <em>r</em> cannot reach it.
+          The intrinsic rank of the adaptation is what decides which regime you
+          are in, and it is a property of the task, not of the method.
+        </p>
+        <p>
+          Biderman also reports the compensating result, which is why the choice
+          is a tradeoff and not a verdict against LoRA. The frozen base keeps LoRA
+          closer to the original model's behavior on tasks outside the target
+          domain, so it forgets less than full fine-tuning and less than weight
+          decay or dropout hold back.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Abstract">4</a></sup
+          >
+          Constraining the update to be low-rank costs capacity on hard,
+          out-of-distribution targets and buys stability on everything else.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            LoRA earns its default status. The mechanism is sound, the cost saving
+            is real and large, and the quality claim holds where the paper made
+            it, on tasks near pretraining that admit a low-rank update. Read the
+            headline with its regime attached. When the adaptation must be
+            high-rank, code and mathematics being the demonstrated cases, full
+            fine-tuning's higher-rank updates still win, and the rank you can
+            afford is the knob that decides between them.<sup class="nb-cite"
+              ><a href="#s4" data-nb-locator="Abstract">4</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2106.09685"
+              >Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, Chen · "LoRA:
+              Low-Rank Adaptation of Large Language Models" (Microsoft, 2021)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2012.13255"
+              >Aghajanyan, Zettlemoyer, Gupta · "Intrinsic Dimensionality
+              Explains the Effectiveness of Language Model Fine-Tuning"
+              (2020)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2305.14314"
+              >Dettmers, Pagnoni, Holtzman, Zettlemoyer · "QLoRA: Efficient
+              Finetuning of Quantized LLMs" (University of Washington, 2023)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2405.09673"
+              >Biderman, Portes, Gonzalez Ortiz, et al. · "LoRA Learns Less and
+              Forgets Less" (Databricks / Columbia, 2024)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
