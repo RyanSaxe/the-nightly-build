@@ -8,7 +8,8 @@ template: article
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [1500, 4000]
+bands:
+  words: [1500, 4000]
 min_sources: 8
 cadence: [mon, thu, sat]
 consult: # read the filing itself before the coverage of it
