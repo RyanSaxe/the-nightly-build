@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chinchilla beat a model four times its size · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "chinchilla",
+        "template": "paper",
+        "title": "Chinchilla beat a model four times its size by training on four times the data",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-22",
+        "tags": [],
+        "sources": 8,
+        "words": 2008,
+        "reading_minutes": 11,
+        "dek": "For a fixed compute budget the best split is about twenty training tokens per parameter, a rule that survived an independent replication of its weakest proof and that practice has since deliberately left behind.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          Chinchilla beat a model four times its size by training on four times
+          the data
+        </h1>
+        <p class="nb-dekline">
+          For a fixed compute budget the best split is about twenty training
+          tokens per parameter, a rule that survived an independent replication
+          of its weakest proof and that practice has since deliberately left
+          behind.
+        </p>
+        <div class="nb-byline">
+          <span>11 min read</span><span>2026-07-22</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            Training Compute-Optimal Large Language Models
+          </p>
+          <p class="nb-paper-meta">
+            Hoffmann, Borgeaud, Mensch, Buchatskaya, Cai, Rutherford, and
+            colleagues · DeepMind · arXiv:2203.15556 · 2022
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2203.15556"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We investigate the optimal model size and number of tokens for
+            training a transformer language model under a given compute budget.
+            We find that current large language models are significantly
+            undertrained, a consequence of the recent focus on scaling language
+            models whilst keeping the amount of training data constant. By
+            training over 400 language models ranging from 70 million to over 16
+            billion parameters on 5 to 500 billion tokens, we find that for
+            compute-optimal training, the model size and the number of training
+            tokens should be scaled equally: for every doubling of model size
+            the number of training tokens should also be doubled. We test this
+            hypothesis by training a predicted compute-optimal model, Chinchilla,
+            that uses the same compute budget as Gopher but with 70B parameters
+            and 4× more more data. Chinchilla uniformly and significantly
+            outperforms Gopher (280B), GPT-3 (175B), Jurassic-1 (178B), and
+            Megatron-Turing NLG (530B) on a large range of downstream evaluation
+            tasks. This also means that Chinchilla uses substantially less
+            compute for fine-tuning and inference, greatly facilitating
+            downstream usage. As a highlight, Chinchilla reaches a
+            state-of-the-art average accuracy of 67.5% on the MMLU benchmark,
+            greater than a 7% improvement over Gopher.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>What Kaplan told everyone to build</h2>
+        <p>
+          For two years the field trained language models to a recipe written by
+          OpenAI. Kaplan and colleagues had measured how a transformer's loss
+          falls as three things grow, model size, data, and compute, and drawn a
+          conclusion that decided how the largest models of the era were built:
+          bigger models learn more from each token, so a fixed compute budget is
+          best spent on a very large model fed a comparatively modest amount of
+          data, stopped well before it has squeezed the data dry.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Under that rule, parameters were the thing to buy and tokens were the
+          thing to economize on. Gopher, GPT-3, Jurassic-1, and Megatron-Turing
+          NLG all followed it, and all of them grew wide before they grew
+          well-read.
+        </p>
+        <p>
+          The Chinchilla paper reran the measurement at larger scale and reached
+          the opposite allocation. For a fixed compute budget, it found, model
+          size and training tokens should grow in lockstep: double the
+          parameters and you should double the data with them.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          By that accounting the giants were not merely large. They were
+          starved.
+        </p>
+      </section>
+
+      <section data-nb-section="why-bigger-looked-better" id="why-bigger">
+        <h2>Why bigger looked better than it was</h2>
+        <p>
+          Start with the quantity everyone agrees on. Training a transformer
+          costs roughly six floating-point operations per parameter per token,
+          so the compute a run consumes is about
+          <span class="nb-math-in">C \approx 6ND</span> for
+          <span class="nb-math-in">N</span> parameters and
+          <span class="nb-math-in">D</span> tokens. Fix the budget
+          <span class="nb-math-in">C</span> and the two factors trade against
+          each other directly: every parameter you add is a token you cannot
+          afford, and the reverse.
+        </p>
+        <p>
+          Kaplan's recipe answered that trade by pouring the budget into
+          <span class="nb-math-in">N</span>. That looked right in the data
+          available at the time, because a larger model does reach a lower loss
+          at a given number of training steps, and if you only ever measure loss
+          against steps the larger model wins.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Chinchilla's diagnosis was that the earlier study read too much into
+          runs that were all stopped at a similar token count, and so mistook the
+          effect of adding parameters for the whole picture while holding the
+          data budget nearly still.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          When the newer work instead let both dials move across more than 400
+          training runs, from 70 million parameters to over 16 billion, and from
+          5 to 500 billion tokens, the balance moved to the middle. Gopher carried
+          280 billion parameters and saw about 300 billion tokens, roughly one
+          token for every parameter, where the corrected rule asks for twenty.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="three-routes" id="three-routes">
+        <h2>Three routes to the same frontier</h2>
+        <p>
+          The paper does not ask the reader to take the equal-scaling rule on
+          faith from a single fit. It arrives three separate ways. The first
+          fixes a handful of model sizes and, for each, trains it on more and
+          more tokens, then reads off which size reaches the lowest loss at each
+          compute budget. The second holds the compute budget fixed instead and
+          sweeps the model size, so each budget traces a shallow curve whose
+          bottom names the size worth building. Both routes answer the same
+          question from different directions, and both land on parameters and
+          tokens growing at nearly equal rates.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+        </p>
+        <p>
+          The third route fits an explicit formula for the loss and then
+          minimizes it. The formula separates the loss a model suffers into three
+          named parts.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L(N, D) = \htmlClass{nb-mc1}{E} +
+            \htmlClass{nb-mc2}{\frac{A}{N^{\alpha}}} +
+            \htmlClass{nb-mc3}{\frac{B}{D^{\beta}}}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">E</span
+              ><span
+                >the loss no amount of scale removes, the irreducible entropy of
+                the text itself.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">A/N^{\alpha}</span
+              ><span
+                >the penalty for a finite model, falling as parameters
+                grow.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">B/D^{\beta}</span
+              ><span
+                >the penalty for finite data, falling as training tokens
+                grow.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The parametric loss Hoffmann et al. fit and then minimized under the
+            compute constraint.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§3.3, Appendix D.3">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Minimize that loss subject to the compute budget
+          <span class="nb-math-in">C \approx 6ND</span> and the answer falls out
+          of the two exponents. The fitted values put both near one-half, so the
+          optimal model size and the optimal token count each grow as roughly the
+          square root of compute.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Grow as the same power and their ratio stays fixed, which is what turns
+          the abstract rule into the concrete rule of thumb the field
+          remembered: about twenty tokens for every parameter, whatever the
+          budget. Extrapolating the fit to the sizes labs actually cared about
+          gives the frontier below.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="chinchilla/chart-1.png"
+            alt="Log-log plot of optimal training tokens against model parameters for nine model sizes from 400 million to 10 trillion parameters. All nine points fall along a straight line of slope one, matching a reference line of twenty tokens per parameter."
+          />
+          <figcaption>
+            Fig. 1 · The compute-optimal frontier, extrapolated: for every model
+            size the estimated best token count sits on the twenty-to-one line,
+            so parameters and data scale together.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 3, §3.4">1</a></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="the-70b-that-beat-280b" id="demonstration">
+        <h2>The 70B model that beat 280B</h2>
+        <p>
+          A rule fit to hundreds of small runs is a prediction, not a result. The
+          paper spent the prediction on a single expensive test: take Gopher's
+          exact compute budget, and instead of a 280 billion-parameter model on
+          300 billion tokens, build a 70 billion-parameter model and feed it 1.4
+          trillion. Same arithmetic bill, four times fewer parameters, more than
+          four times the data.
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">70B</span
+            ><span class="nb-stat-l">Chinchilla parameters, vs Gopher's 280B</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">1.4T</span
+            ><span class="nb-stat-l">training tokens, vs Gopher's 300B</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">+7 pts</span
+            ><span class="nb-stat-l">MMLU over Gopher, at 67.5%</span>
+          </div>
+        </div>
+        <p>
+          The smaller model won, and not narrowly. Chinchilla beat Gopher across
+          the board and also cleared GPT-3 at 175 billion, Jurassic-1 at 178
+          billion, and Megatron-Turing NLG at 530 billion, models with as much as
+          seven times its parameter count. On the MMLU knowledge benchmark it
+          reached 67.5% average accuracy, better than seven points above
+          Gopher.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Abstract; Table 6">1</a></sup
+          >
+          The win came with a second prize the paper flagged plainly: a 70
+          billion-parameter model is far cheaper to fine-tune and to run than a
+          280 billion one, so the compute-optimal choice was also the cheaper one
+          to deploy.
+        </p>
+      </section>
+
+      <section data-nb-section="where-a-proof-breaks" id="replication">
+        <h2>Where one of the three proofs breaks</h2>
+        <p>
+          Two years on, a group at Epoch AI took the third route apart. Because
+          Hoffmann et al. never released the runs behind the parametric fit,
+          Besiroglu and colleagues reconstructed the data from the paper's own
+          plots and tried to refit the formula. Three things failed. The
+          published fit did not match the reconstructed points; its implied
+          exponents disagreed with the two other routes in the same paper; and
+          its reported confidence intervals were far too tight to be real. To
+          earn error bars that narrow, the authors calculated, a study would need
+          around 600,000 training runs, where Hoffmann et al. had likely run
+          fewer than 500.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          The natural reading is that Chinchilla's central claim had cracked. It
+          had not. When the Epoch group refit the formula honestly, the corrected
+          exponents came out at 0.51 and 0.49, back within a whisker of the
+          equal-scaling answer and consistent with the two routes the paper got
+          right.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          The replication is damning about the third method and its impossibly
+          confident error bars, and quietly reassuring about the conclusion those
+          numbers were meant to support. One of three proofs was botched. The
+          finding it was supposed to establish still stands, because the other
+          two establish it independently.
+        </p>
+        <p>
+          The older disagreement with Kaplan closed the same way. Pearce and
+          Song traced most of the gap between Kaplan's steep recommendation, in
+          which parameters should grow as
+          <span class="nb-math-in">C^{0.73}</span>, and Chinchilla's balanced
+          one at <span class="nb-math-in">C^{0.50}</span>, to a bookkeeping
+          choice: Kaplan counted only the non-embedding parameters and worked at
+          smaller scale, and correcting for both moves his numbers toward
+          Chinchilla's.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          Chinchilla's coefficients did not just replace Kaplan's. An
+          independent group reproduced them and diagnosed the original error.
+        </p>
+      </section>
+
+      <section data-nb-section="beyond-twenty-to-one" id="inference">
+        <h2>When twenty tokens per parameter became the wrong target</h2>
+        <p>
+          The rule that survived its own replication was then abandoned on
+          purpose, and the reason is the second prize from Chinchilla's own test.
+          Compute-optimal training asks a narrow question: for a fixed training
+          budget, which model reaches the lowest loss? A lab that will serve a
+          model to users cares about a different sum. It pays to train once and
+          then to run the model billions of times, and every one of those runs
+          costs in proportion to the parameter count. Once serving dominates the
+          bill, the cheapest model of a given quality is smaller and more heavily
+          trained than Chinchilla-optimal.
+        </p>
+        <p>
+          LLaMA made the argument in the open. Its authors set out to find, for a
+          target quality, not the fastest model to train but the fastest to run,
+          reasoning that a smaller model trained longer would ultimately be
+          cheaper at inference.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Introduction">6</a></sup
+          >
+          So they pushed a 7 billion-parameter model to a trillion tokens, about
+          140 per parameter and seven times past Chinchilla's ratio, and reported
+          that its quality was still climbing. The 13 billion-parameter version
+          outran GPT-3 at 175 billion.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          Sardana and Frankle later put the intuition on a formula, rewriting the
+          Chinchilla objective to include inference demand and finding that a lab
+          expecting on the order of a billion requests should train models
+          smaller and longer, with quality still improving out toward ten
+          thousand tokens per parameter.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          Overtraining a small model, once a mistake by Chinchilla's lights,
+          became standard practice.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>What the rule is worth now</h2>
+        <p>
+          Read three years later, the paper divides cleanly into a claim that
+          held and a proof that did not. The claim, that a fixed training budget
+          buys the most quality when parameters and tokens grow together, has
+          been demonstrated by a flagship model, reproduced by an independent
+          replication of its weakest method, and vindicated against its
+          predecessor by a third group that found the arithmetic error in the
+          older law. The specific parametric fit the paper reported, and the
+          unnaturally narrow confidence intervals attached to it, did not
+          survive contact with the reconstructed data.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Chinchilla answered the question it asked, and answered it durably:
+            for a fixed training budget, equal scaling wins, and roughly twenty
+            tokens per parameter is the split. What later work changed was the
+            question. Once a model's lifetime is spent on inference rather than
+            training, the sum to minimize is not training compute but total cost,
+            and the rational answer overshoots twenty-to-one by a wide margin.
+            The paper was right about compute-optimal training. The field simply
+            stopped wanting compute-optimal models.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2203.15556"
+              >arXiv · Hoffmann et al., "Training Compute-Optimal Large Language
+              Models" (2022)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2001.08361"
+              >arXiv · Kaplan et al., "Scaling Laws for Neural Language Models"
+              (2020)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://irhum.github.io/blog/chinchilla/"
+              >irhum · "Thoughts on Chinchilla"</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2404.10102"
+              >arXiv · Besiroglu, Erdil, Barnett, You, "Chinchilla Scaling: A
+              replication attempt" (2024)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2406.12907"
+              >arXiv · Pearce, Song, "Reconciling Kaplan and Chinchilla Scaling
+              Laws" (2024)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2302.13971"
+              >arXiv · Touvron et al., "LLaMA: Open and Efficient Foundation
+              Language Models" (2023)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2401.00448"
+              >arXiv · Sardana, Portes, Doubov, Frankle, "Beyond
+              Chinchilla-Optimal: Accounting for Inference in Language Model
+              Scaling Laws" (2024)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://cameronrwolfe.substack.com/p/llm-scaling-laws"
+              >Cameron R. Wolfe · "LLM Scaling Laws"</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
