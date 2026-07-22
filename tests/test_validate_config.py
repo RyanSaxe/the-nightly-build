@@ -1,4 +1,9 @@
-"""Configuration is checked before the night shift runs, not after it fails."""
+"""Configuration is checked before the night shift runs, not after it fails.
+
+These tests exercise the author-facing validator against real copied press
+trees. They focus on readable errors and on the contract's deliberately loose
+template choice model, so malformed YAML never becomes an unattended traceback.
+"""
 
 import pathlib
 import shutil
@@ -43,7 +48,13 @@ def directory_errors(directory: dict) -> list[str]:
 
 @pytest.fixture
 def manifest_patched_repo(clone_testrepo: Callable[..., str]) -> Callable[..., str]:
-    """A press whose template manifest has `patch` appended to it."""
+    """Return a copied press whose selected manifest has ``patch`` appended.
+
+    The helper deliberately uses a duplicate YAML key: PyYAML's last-value
+    behavior lets each test replace one manifest field without maintaining a
+    second full template package. The returned tree is isolated from the
+    session fixture and is safe for a validator run to inspect.
+    """
 
     def patch_manifest(patch: str, template: str = "article") -> str:
         tmp = clone_testrepo("press", "templates", "engine")
@@ -67,14 +78,16 @@ def test_the_shipped_examples_validate_as_a_press(
     assert vc_rc(str(repo)) == 0
 
 
-def test_an_illegal_mode_and_template_pairing_fails(
+def test_a_template_choice_list_is_valid_for_every_scheduling_mode(
     clone_testrepo: Callable[..., str], vc_rc: Callable[[str], int]
 ) -> None:
     repo = clone_testrepo("press", "templates", "engine")
     y = pathlib.Path(repo) / "press" / "series" / "semiconductors" / "series.yaml"
-    y.write_text(y.read_text().replace("mode: collection", "mode: rolling"))
+    text = y.read_text().replace("mode: collection", "mode: rolling")
+    text = text.replace("template: article", "templates: [article]")
+    y.write_text(text[: text.index("items:")])
 
-    assert vc_rc(repo) == 1
+    assert vc_rc(repo) == 0
 
 
 @pytest.mark.parametrize(
@@ -123,7 +136,13 @@ def test_the_directory_block_states_a_choice_and_a_description(
         pytest.param("autopublish: 'false'\n", 1, id="autopublish-truthy-string"),
         pytest.param("strict: 'no'\n", 1, id="strict-truthy-string"),
         pytest.param("min_sources: lots\n", 1, id="min_sources-string"),
+        pytest.param("min_sources: -1\n", 1, id="min_sources-negative"),
         pytest.param("min_sources: 12\n", 0, id="min_sources-well-typed"),
+        pytest.param(
+            "sources_by_kind:\n  primary: [oops, 2]\n",
+            1,
+            id="source-band-invalid-low",
+        ),
     ],
 )
 def test_a_mistyped_series_key_is_a_validation_error(
@@ -207,3 +226,28 @@ def test_declared_chrome_must_appear_in_the_template_skeleton(
     rc: int,
 ) -> None:
     assert vc_rc(manifest_patched_repo(patch)) == rc
+
+
+@pytest.mark.parametrize(
+    ("patch", "message"),
+    [
+        pytest.param(
+            "bands: {unknown: [1, 2]}\n",
+            "bands has unknown keys",
+            id="unknown-band",
+        ),
+        pytest.param(
+            "bands: {words: [100]}\n",
+            "bands.words must be [low, high]",
+            id="malformed-band",
+        ),
+    ],
+)
+def test_invalid_series_bands_report_their_cause(
+    patched_repo: Callable[[str], str],
+    vc_output: Callable[[str], subprocess.CompletedProcess[str]],
+    *,
+    patch: str,
+    message: str,
+) -> None:
+    assert message in vc_output(patched_repo(patch)).stdout

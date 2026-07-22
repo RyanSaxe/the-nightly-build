@@ -9,7 +9,8 @@ prompt: prompt.md
 autopublish: true
 strict: true
 min_sources: 10
-words: [1800, 3000]
+bands:
+  words: [1800, 3000]
 cadence: daily
 # A desk that quotes each side at its strongest has to read what each side
 # actually filed, said, and ruled. No ceiling: the more of the record the

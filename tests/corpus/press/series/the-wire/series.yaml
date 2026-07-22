@@ -7,7 +7,8 @@ prompt: prompt.md
 autopublish: true
 strict: true
 min_sources: 6
-words: [600, 1200]
+bands:
+  words: [600, 1200]
 cadence: daily
 # A brief that is all abstracts is a reading list, not a brief. Any one item
 # may rest on its document alone; the night as a whole may not.

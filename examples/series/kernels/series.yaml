@@ -8,7 +8,8 @@ template: article
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [1800, 4500] # a lesson needs room to build an idea, show code, and check it
+bands:
+  words: [1800, 4500] # a lesson needs room to build an idea, show code, and check it
 min_sources: 8
 cadence: [sun] # a weekly deep lesson
 tags: # shared angle fragments, pulled in when a lesson carries the tag

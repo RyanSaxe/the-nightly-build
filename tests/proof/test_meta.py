@@ -6,6 +6,9 @@ other half of the same question — the furniture the template declares must
 survive the writing of the piece.
 """
 
+import base64
+import hashlib
+import pathlib
 from collections.abc import Callable
 
 import pytest
@@ -77,7 +80,7 @@ def test_collection_with_library_state_and_an_unpublished_slug_is_clean(
 
 
 @pytest.mark.parametrize(
-    "name,html",
+    "_name,html",
     [
         ("missing nb-meta block", mut('id="nb-meta"', 'id="not-meta"')),
         ("invalid json", mut('"protocol": "1.0",', '"protocol": "1.0"')),
@@ -92,7 +95,7 @@ def test_collection_with_library_state_and_an_unpublished_slug_is_clean(
     ],
 )
 def test_unreadable_meta_blocks(
-    run_local: Callable[..., Findings], name: str, html: str
+    run_local: Callable[..., Findings], *, _name: str, html: str
 ) -> None:
     result = run_local(html, "semiconductors")
 
@@ -106,14 +109,14 @@ def test_path_and_meta_slug_must_match(run_local: Callable[..., Findings]) -> No
 
 
 @pytest.mark.parametrize(
-    "name,html",
+    "_name,html",
     [
         ("mode", mut('"mode": "collection"', '"mode": "rolling"')),
         ("template", mut('"template": "article"', '"template": "brief"')),
     ],
 )
 def test_meta_disagreeing_with_the_series_blocks(
-    run_local: Callable[..., Findings], name: str, html: str
+    run_local: Callable[..., Findings], *, _name: str, html: str
 ) -> None:
     result = run_local(html, "semiconductors")
 
@@ -159,8 +162,18 @@ def test_slug_style_tag_is_accepted(run_local: Callable[..., Findings]) -> None:
     assert not result.blocks
 
 
+def test_nested_tag_is_accepted(run_local: Callable[..., Findings]) -> None:
+    result = run_local(
+        mut('"tags": ["equity"]', '"tags": ["markets/equity"]'),
+        "semiconductors",
+    )
+
+    assert "B-META-PARSE" not in result.codes
+    assert not result.blocks
+
+
 @pytest.mark.parametrize(
-    "name,tags",
+    "_name,tags",
     [
         ("uppercase", '"tags": ["Equity"]'),
         ("path traversal", '"tags": ["../../../escape"]'),
@@ -168,7 +181,7 @@ def test_slug_style_tag_is_accepted(run_local: Callable[..., Findings]) -> None:
     ],
 )
 def test_tags_that_are_not_slugs_block(
-    run_local: Callable[..., Findings], name: str, tags: str
+    run_local: Callable[..., Findings], *, _name: str, tags: str
 ) -> None:
     result = run_local(mut('"tags": ["equity"]', tags), "semiconductors")
 
@@ -215,7 +228,7 @@ def test_a_typod_class_warns_as_dead() -> None:
     assert "W-DEAD-CLASS" in findings_of(rep).warns
 
 
-def test_defined_and_allowlisted_classes_pass() -> None:
+def test_defined_and_builtin_classes_pass() -> None:
     rep = check.Report()
     check.check_classes(
         '<body class="nb-article"><p class="nb-callout">x</p>'
@@ -227,3 +240,49 @@ def test_defined_and_allowlisted_classes_pass() -> None:
 
     assert not result.blocks
     assert "W-DEAD-CLASS" not in result.codes
+
+
+def test_sri_pinned_stylesheet_classes_join_the_inventory(
+    tmp_path: pathlib.Path,
+) -> None:
+    raw_css = b".external-chip { color: red; }"
+    digest = base64.b64encode(hashlib.sha384(raw_css).digest()).decode()
+    repo = tmp_path
+    (repo / "press").mkdir()
+    stylesheet = repo / "theme.css"
+    stylesheet.write_bytes(raw_css)
+    (repo / "press" / "site.yaml").write_text(
+        "assets:\n  styles:\n"
+        f"    - url: {stylesheet.as_uri()}\n      integrity: sha384-{digest}\n"
+    )
+
+    rep = check.Report()
+    check.check_classes(
+        '<p class="external-chip">x</p><p class="hallucinated-chip">y</p>',
+        repo=str(repo),
+        rep=rep,
+    )
+
+    assert "W-DEAD-CLASS" in findings_of(rep).warns
+    assert "external-chip" not in next(
+        finding.message for finding in rep.warns if finding.code == "W-DEAD-CLASS"
+    )
+
+
+def test_incomplete_external_stylesheet_suppresses_dead_class_warning(
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = tmp_path
+    (repo / "press").mkdir()
+    stylesheet = repo / "theme.css"
+    stylesheet.write_bytes(b".valid { }")
+    (repo / "press" / "site.yaml").write_text(
+        "assets:\n  styles:\n"
+        f"    - url: {stylesheet.as_uri()}\n      integrity: sha384-invalid\n"
+    )
+
+    rep = check.Report()
+    check.check_classes('<p class="possibly-valid">x</p>', repo=str(repo), rep=rep)
+
+    assert "W-DEAD-CLASS" not in findings_of(rep).codes
+    assert any("SRI verification failed" in note for note in rep.notes)

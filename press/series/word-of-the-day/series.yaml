@@ -9,6 +9,7 @@ template: article
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [800, 1100]
+bands:
+  words: [800, 1100]
 min_sources: 5
 cadence: daily

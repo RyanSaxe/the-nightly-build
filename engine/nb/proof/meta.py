@@ -1,4 +1,10 @@
-"""nb-meta: reading it, typing it, and holding it to the series and the body."""
+"""Parse article metadata and bind it to the configured series contract.
+
+The metadata block is intentionally a small, explicit boundary between an
+article and the engine. This module validates its primitive fields, resolves a
+series' allowed template choices, and applies only the series-owned policy
+bands after one template has been selected.
+"""
 
 import json
 import os
@@ -8,14 +14,23 @@ import yaml
 
 from nb import meta as nb_meta
 from nb.article import collapse_space
-from nb.config import load_registry, load_series
+from nb.config import apply_template_bands, load_registry, load_series, template_choices
 
 PROTOCOL_MAJOR = "1"
 MAX_BYTES = 2 * 1024 * 1024
 SLUG_RE = nb_meta.SLUG_RE
 SERIES_RE = nb_meta.SERIES_RE
-TAG_RE = re.compile(r"^[a-z0-9-]{1,32}$")
+TAG_RE = nb_meta.TAG_RE
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+__all__ = (
+    "bind_template",
+    "check_meta_agreement",
+    "parse_meta",
+    "read_article_source",
+    "resolve_series_and_template",
+    "validate_meta_fields",
+)
 
 _META_TYPE_NAMES = {
     str: "a string",
@@ -75,7 +90,7 @@ def validate_meta_fields(meta, rep):
             rep.block("B-META-PARSE", "nb-meta field 'tags' must be a list")
         else:
             for tag in tags:
-                if not isinstance(tag, str) or not TAG_RE.match(tag):
+                if not isinstance(tag, str) or not nb_meta.is_safe_tag(tag):
                     rep.block(
                         "B-META-PARSE",
                         f"nb-meta tag {tag!r} must match {TAG_RE.pattern} "
@@ -84,16 +99,19 @@ def validate_meta_fields(meta, rep):
 
 
 def resolve_series_and_template(repo, series_id, rep):
-    """B-SERIES: load the series config and resolve its template band.
+    """B-SERIES: load the series config and resolve its template choices.
 
-    Returns (series, registry, mode_cfg, template_id, treg, allowed_templates),
-    or None when a blocking failure means the check cannot continue. For an
-    open series template_id/treg are placeholders bound from nb-meta later and
-    allowed_templates is the per-article choice list; off open it is None.
+    Returns ``(series, registry, allowed_templates)`` or None when a blocking
+    failure means the check cannot continue. The manifest is bound only after
+    article metadata names one choice from the series' list, regardless of
+    scheduling mode.
     """
     series, spath = load_series(repo, series_id)
     if series is None:
         rep.block("B-SERIES", f"series '{series_id}' not found at {spath}")
+        return None
+    if not isinstance(series, dict):
+        rep.block("B-SERIES", f"series '{series_id}' config must be a mapping")
         return None
     if series.get("paused"):
         rep.block(
@@ -107,46 +125,17 @@ def resolve_series_and_template(repo, series_id, rep):
         rep.block("B-SERIES", f"template manifests unreadable: {e}")
         return None
 
-    mode_cfg = series.get("mode")
-    if mode_cfg == "open":
-        # open series pick a template per article; nb-meta names the choice,
-        # resolved after the meta block parses
-        allowed_templates = series.get("templates") or (
-            [series["template"]] if series.get("template") else []
-        )
-        unknown = [t for t in allowed_templates if t not in (registry or {})]
-        if not allowed_templates or unknown:
-            rep.block(
-                "B-SERIES",
-                f"open series templates {unknown or 'missing'} are not known templates",
-            )
-            return None
-        for t in allowed_templates:
-            if "open" not in (registry[t].get("modes") or []):
-                rep.block(
-                    "B-SERIES",
-                    f"mode 'open' not allowed for template '{t}' "
-                    f"(allowed: {registry[t].get('modes')})",
-                )
-        # placeholder registry entry; the real one is bound from nb-meta
-        # right after it parses (or the check returns early)
-        return series, registry, mode_cfg, None, {}, allowed_templates
-
-    template_id = series.get("template")
-    treg = (registry or {}).get(template_id)
-    if not treg:
+    allowed_templates = template_choices(series)
+    unknown = [
+        t for t in allowed_templates if not isinstance((registry or {}).get(t), dict)
+    ]
+    if not allowed_templates or unknown:
         rep.block(
             "B-SERIES",
-            f"series template '{template_id}' is not a known template",
+            f"series templates {unknown or 'missing'} are not known templates",
         )
         return None
-    if mode_cfg not in (treg.get("modes") or []):
-        rep.block(
-            "B-SERIES",
-            f"series mode '{mode_cfg}' not allowed for template "
-            f"'{template_id}' (allowed: {treg.get('modes')})",
-        )
-    return series, registry, mode_cfg, template_id, treg, None
+    return series, registry, allowed_templates
 
 
 def read_article_source(html_path, rep):
@@ -184,10 +173,10 @@ def parse_meta(ed, rep):
     return meta
 
 
-def bind_open_template(meta, registry, allowed_templates, rep):
+def bind_template(meta, registry, *, allowed_templates, series, rep):
     template_id = meta.get("template")
-    treg = (registry or {}).get(template_id)
-    if treg is None:
+    treg = (registry or {}).get(template_id) if isinstance(template_id, str) else None
+    if not isinstance(treg, dict):
         rep.block(
             "B-META-MATCH",
             f"nb-meta template '{template_id}' is not a known template",
@@ -199,7 +188,7 @@ def bind_open_template(meta, registry, allowed_templates, rep):
             f"nb-meta template '{template_id}' is not one of the "
             f"series' allowed templates {allowed_templates}",
         )
-    return template_id, treg
+    return template_id, apply_template_bands(treg, series=series)
 
 
 def check_meta_agreement(
@@ -236,7 +225,8 @@ def check_meta_agreement(
     if meta.get("template") != template_id:
         rep.block(
             "B-META-MATCH",
-            f"nb-meta template '{meta.get('template')}' != series template '{template_id}'",
+            f"nb-meta template '{meta.get('template')}' is not the selected "
+            f"series template '{template_id}'",
         )
     # The index card and the RSS summary are built from nb-meta's dek, so an
     # article whose body was fixed and whose meta was not ships the abandoned dek

@@ -78,8 +78,7 @@ workaround.
 
 ## 2. Propose, then write
 
-Propose: series `id`, mode, template (must be legal for the mode per the
-template's `manifest.yaml`), name, cadence if not nightly, and, for
+Propose: series `id`, mode, template choice(s), name, cadence if not nightly, and, for
 collection/sequence, the full item list. Draft a sequence's complete ordered
 syllabus with the user before writing anything. For an open section, the beat
 description in `prompt.md` IS the config, so invest the interview time there.
@@ -109,7 +108,7 @@ template manifest > template identity > press/series/<id>/prompt.md
 ```
 
 Every other layer already holds, and so does the config the engine reads for
-itself: `series.yaml` (`template`, `cadence`, `words`, `min_sources`, `consult`,
+itself: `series.yaml` (`template`/`templates`, `cadence`, `bands`, `min_sources`, `consult`,
 `required_docs`, `strict`, `tags`), `site.yaml`, and the furniture catalogues.
 If a fact lives in any of them, the prompt relies on it and never restates it:
 not PROTOCOL's rules (read the section's published articles first, meet the
@@ -210,7 +209,8 @@ On request:
   press check above and promote it; publish directly only if they say so.
   A series published by hand today is skipped by tonight's scheduled run.
 - **Let a collection surprise them** (`selection: random`).
-- **Adjust `words:` bands** (may tighten, never loosen below the template's floor)
+- **Adjust `bands:`** (series values may tighten or loosen template defaults;
+  omitted means no default) **and `min_sources`.**
   **and `min_sources`.**
 - **Flip `autopublish`** (false means the desk approves and a human merges) **or
   `strict`** (true means WARNs become BLOCKs). Warn that a skipped night is better

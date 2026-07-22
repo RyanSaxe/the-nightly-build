@@ -49,10 +49,10 @@ repos:
         files: \.js$
       - id: ast-grep
         name: ast-grep (nb.js DOM-sink invariants)
-        entry: npx ast-grep scan --rule .byor/rules/project/nbjs-innerhtml-escape.yml
+        entry: npx ast-grep scan --rule scripts/ast-grep/nbjs-innerhtml-escape.yml
         language: system
         pass_filenames: false
-        files: ^(engine/assets/.*\.js|\.byor/rules/project/nbjs-innerhtml-escape\.yml)$
+        files: ^(engine/assets/.*\.js|scripts/ast-grep/nbjs-innerhtml-escape\.yml)$
       - id: stylelint
         name: stylelint
         entry: npx stylelint

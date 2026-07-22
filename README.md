@@ -101,6 +101,15 @@ kinds the article declares; whether a source is truly independent of the primary
 is a judgment the research log makes and the editor audits. See
 [docs/series.md](docs/series.md).
 
+### Authenticated sources
+
+Public web access works out of the box. Sources that require an account do not:
+the harness cannot provision or inherit arbitrary authenticated sessions. Users
+willing to configure their own connector, browser profile, API, or browser
+automation service may still be able to use those sources, depending on the
+harness and provider. See [the authenticated-source feature issue](https://github.com/the-nightly-build/the-nightly-build/issues/127)
+for the current options and scope.
+
 The proof also verifies that every cited source link resolves. It probes each
 URL by default and BLOCKs only on a definitive dead link: a 404/410
 response or a domain that does not resolve. A restricted, slow, rate-limited,

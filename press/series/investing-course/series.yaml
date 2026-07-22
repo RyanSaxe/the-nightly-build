@@ -8,6 +8,7 @@ template: lesson
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [1200, 2200]
+bands:
+  words: [1200, 2200]
 min_sources: 6
 cadence: [mon, wed, fri, sun]

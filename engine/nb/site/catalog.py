@@ -1,14 +1,17 @@
-"""catalog.json: the library's state, machine-readable.
+"""Build ``catalog.json`` from the library's rendered article state.
 
 The catalog is what every other reader of this press consumes — the search
 page, the directory, another paper's tooling — so the series, the articles,
 the nights, and the tags are all derived here, once, from the same article
-dicts the pages render from.
+dicts the pages render from. Tag safety is shared with article validation;
+otherwise a valid nested tag could be omitted during generation or an unsafe
+tag could reach the output-directory builder.
 """
 
 import os
 import re
 
+from nb import meta as nb_meta
 from nb.site.library import date_sort_key, night_date
 
 PROTOCOL = "1.3"
@@ -16,6 +19,8 @@ UPSTREAM_REPOSITORY = os.getenv(
     "UPSTREAM_REPOSITORY", "the-nightly-build/the-nightly-build"
 )
 DIRECTORY_URL = os.getenv("DIRECTORY_URL", "https://the-nightly-build.github.io/")
+
+__all__ = ("build_catalog", "derive_self_repository", "is_safe_tag")
 
 
 def derive_self_repository(explicit, base_url) -> str | None:
@@ -27,22 +32,7 @@ def derive_self_repository(explicit, base_url) -> str | None:
     return f"{match.group(1)}/{match.group(2)}" if match else None
 
 
-def is_safe_tag(tag):
-    """Whether a tag can be turned into a tags/<tag>/index.html page safely.
-
-    Tags are untrusted (they come from auto-merged night-shift content and
-    check.py does not constrain them), and the builder writes each one as a
-    directory under tags/. A tag whose segments escape that tree — `..`,
-    `.`, an absolute path, a backslash, or an empty segment from a leading/
-    trailing/double slash — is dropped from the catalog entirely, so no
-    page, link, or os.makedirs is ever created outside --out. A plain
-    nested tag like `a/b` is safe and renders at its true depth.
-    """
-    if not isinstance(tag, str) or not tag or tag != tag.strip():
-        return False
-    if "\\" in tag or tag.startswith("/"):
-        return False
-    return all(seg and seg not in (".", "..") for seg in tag.split("/"))
+is_safe_tag = nb_meta.is_safe_tag
 
 
 def build_catalog(

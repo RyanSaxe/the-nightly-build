@@ -123,7 +123,7 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
 
 6. **Render exactly one self-contained HTML file** from your series' template:
    - Fill every anchor section the manifest requires exactly once. If the
-     template declares `flex_sections: [min, max]`, add that many more
+     effective template/series bands declare `bands.flex_sections: [min, max]`, add that many more
      sections between the anchors, each named by you for the topic
      (lowercase-hyphen `data-nb-section` labels). Every labeled section
      needs citations per the template's cite rule.
@@ -234,7 +234,8 @@ Embed in `<head>`:
 
 Field notes: `mode` is one of `collection | sequence | rolling | open`. `order` is the
 1-based item index for `sequence` mode, else null. `date` is the UTC date of your run.
-For `open` mode, `template` must be one of the series' declared choices. `sources` and
+Every mode may use the series' single `template:` or one of its `templates:` choices;
+for a multi-template series, the correspondent chooses the package per article. `sources` and
 `words` are your self-measurements (the proof recounts, and >20% deviation is a WARN).
 `harness`/`model` are honest provenance, supplied by the night desk in the
 commission. A role cannot know its own runtime.

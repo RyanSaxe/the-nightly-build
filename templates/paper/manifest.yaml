@@ -4,11 +4,11 @@
 # and the flex sections carry the reconstruction and land its verdict.
 about: "Reporting on one research paper: its abstract and link up front, the idea rebuilt in the piece's own words and weighed as a reviewer would."
 class: longread
-words: [1800, 3400]
+bands:
+  words: [1800, 3400]
+  flex_sections: [2, 8]
 sections: [abstract, orientation, sources]
-flex_sections: [2, 8]
 cite_rule: per-section
-modes: [collection, sequence, open]
 chrome:
   - '<body class="nb-article">'
   - "<h2>Sources</h2>"

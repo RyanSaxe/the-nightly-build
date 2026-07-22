@@ -6,12 +6,12 @@
 # from the citation rule.
 about: "A lesson: opens on Why this matters, closes on The takeaway, both written after the body. Teaches one subject to a smart reader who is new to it."
 class: longread
-words: [1200, 2200]
+bands:
+  words: [1200, 2200]
+  flex_sections: [0, 4]
 sections: [why, orientation, takeaway, sources]
-flex_sections: [0, 4]
 cite_rule: per-section
 cite_exempt: [why, takeaway]
-modes: [open]
 chrome:
   - '<body class="nb-article">'
   - "<h2>Sources</h2>"

@@ -59,8 +59,8 @@ def review(rows: str = ROWS) -> str:
 
 
 SCORED_MANIFEST = (
-    "class: shortread\nwords: [200, 3000]\n"
-    "sections: [rubric, sources]\ncite_rule: per-section\nmodes: [collection]\n"
+    "class: shortread\nbands:\n  words: [200, 3000]\n"
+    "sections: [rubric, sources]\ncite_rule: per-section\n"
 )
 
 SCORED_SKELETON = """<!DOCTYPE html><html><body>

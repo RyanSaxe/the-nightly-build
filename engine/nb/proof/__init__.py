@@ -18,7 +18,7 @@ __all__ = ("check_article",)
 from nb.article import Article
 from nb.config import find_template, load_banned_terms, published_slugs
 from nb.proof.meta import (
-    bind_open_template,
+    bind_template,
     check_meta_agreement,
     parse_meta,
     read_article_source,
@@ -63,7 +63,7 @@ def check_article(
     resolved = resolve_series_and_template(repo, series_id, rep)
     if resolved is None:
         return None
-    series, registry, mode_cfg, template_id, treg, allowed_templates = resolved
+    series, registry, allowed_templates = resolved
 
     raw = read_article_source(html_path, rep)
     if raw is None:
@@ -77,11 +77,16 @@ def check_article(
     if meta is None:
         return None
 
-    if mode_cfg == "open":
-        bound = bind_open_template(meta, registry, allowed_templates, rep)
-        if bound is None:
-            return None
-        template_id, treg = bound
+    bound = bind_template(
+        meta,
+        registry,
+        allowed_templates=allowed_templates,
+        series=series,
+        rep=rep,
+    )
+    if bound is None:
+        return None
+    template_id, treg = bound
 
     fname = os.path.basename(html_path)
     slug_from_path = fname[:-5] if fname.endswith(".html") else fname

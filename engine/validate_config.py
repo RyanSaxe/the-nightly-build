@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["pyyaml"]
+# dependencies = ["pyyaml", "tinycss2"]
 # ///
 """Validate the press configuration before anything schedules or publishes.
 
@@ -24,6 +24,7 @@ import build_site
 import check
 import duty
 from nb import meta as nb_meta
+from nb.config import TEMPLATE_BAND_KEYS, template_choices
 
 try:
     import yaml
@@ -39,13 +40,10 @@ MODES = frozenset(nb_meta.MODES)
 TEMPLATE_KEYS = {
     "chrome",
     "class",
-    "words",
-    "items",
+    "bands",
     "sections",
-    "flex_sections",
     "cite_rule",
     "cite_exempt",
-    "modes",
     "about",
 }
 CITE_RULES = {"per-section", "per-item"}
@@ -62,7 +60,7 @@ SERIES_KEYS = {
     "sources_by_kind",
     "per_item_sources",
     "rubric",
-    "words",
+    "bands",
     "items",
     "tags",
     "consult",
@@ -88,6 +86,9 @@ def check_site(repo, errors):
     if not os.path.isfile(path):
         return  # optional: the engine ships defaults
     site = load(path) or {}
+    if not isinstance(site, dict):
+        errors.append(f"{label}/site.yaml: must be a mapping")
+        return
     if "title" in site and (
         not isinstance(site["title"], str) or not site["title"].strip()
     ):
@@ -99,7 +100,7 @@ def check_site(repo, errors):
         errors.append(f"{label}/site.yaml: theme file not found: {theme!r}")
     if site.get("appearance", "auto") not in ("auto", "light", "dark"):
         errors.append(f"{label}/site.yaml: 'appearance' must be auto | light | dark")
-    if site.get("front", "comfortable") not in ("comfortable", "compact"):
+    if site.get("front", "compact") not in ("comfortable", "compact"):
         errors.append(f"{label}/site.yaml: 'front' must be comfortable | compact")
     footer = site.get("footer")
     if footer is not None and (
@@ -265,29 +266,44 @@ def check_registry(repo, errors):
             errors.append(f"{where}: unknown keys {sorted(unknown)}")
         if entry.get("class") not in ("longread", "shortread"):
             errors.append(f"{where}: class must be longread | shortread")
-        if not entry.get("sections"):
+        sections = entry.get("sections")
+        if not isinstance(sections, list) or not sections:
             errors.append(f"{where}: 'sections' is required")
-        elif "sources" not in entry["sections"]:
+        elif not all(isinstance(section, str) and section for section in sections):
+            errors.append(f"{where}: 'sections' must be a non-empty string list")
+        elif "sources" not in sections:
             errors.append(f"{where}: sections must include 'sources'")
         if entry.get("cite_rule") not in CITE_RULES:
             errors.append(f"{where}: cite_rule must be one of {sorted(CITE_RULES)}")
-        if not set(entry.get("modes") or []) <= MODES:
-            errors.append(f"{where}: modes must be a subset of {sorted(MODES)}")
+        bands = entry.get("bands")
+        if bands is not None and not isinstance(bands, dict):
+            errors.append(f"{where}: 'bands' must be a mapping of geometry defaults")
+            bands = {}
+        if isinstance(bands, dict):
+            unknown_bands = sorted(set(bands) - set(TEMPLATE_BAND_KEYS))
+            if unknown_bands:
+                errors.append(
+                    f"{where}: bands has unknown keys {unknown_bands} "
+                    f"(known: {sorted(TEMPLATE_BAND_KEYS)})"
+                )
+            for band_key in sorted(set(bands) & set(TEMPLATE_BAND_KEYS)):
+                band = bands[band_key]
+                if (
+                    not isinstance(band, list)
+                    or len(band) != 2
+                    or not all(check.is_count(value) for value in band)
+                    or band[0] > band[1]
+                ):
+                    errors.append(
+                        f"{where}: 'bands.{band_key}' must be [low, high] "
+                        "non-negative integers with low <= high"
+                    )
         cite_exempt = entry.get("cite_exempt")
         if cite_exempt is not None and not (
             isinstance(cite_exempt, list)
             and all(isinstance(x, str) for x in cite_exempt)
         ):
             errors.append(f"{where}: 'cite_exempt' must be a list of section names")
-        for band_key in ("words", "items", "flex_sections"):
-            band = entry.get(band_key)
-            if band is not None and not (
-                isinstance(band, list)
-                and len(band) == 2
-                and all(isinstance(x, int) for x in band)
-                and band[0] <= band[1]
-            ):
-                errors.append(f"{where}: '{band_key}' must be [low, high] integers")
         skeleton = os.path.join(folders[tid], "skeleton.html")
         if not os.path.isfile(skeleton):
             errors.append(f"{where}: no skeleton.html in the {tid} template folder")
@@ -324,7 +340,14 @@ def check_required_docs(docs, root, sid, where, errors):
                 f"{where}: required_docs entry must be a mapping with 'id' and 'path'"
             )
             continue
-        dpath = os.path.join(root, sid, doc.get("path", ""))
+        doc_id = doc.get("id")
+        doc_path = doc.get("path")
+        if not isinstance(doc_id, str) or not doc_id.strip():
+            errors.append(f"{where}: required_doc id must be a non-empty string")
+        if not isinstance(doc_path, str) or not doc_path:
+            errors.append(f"{where}: required_doc path must be a non-empty string")
+            continue
+        dpath = os.path.join(root, sid, doc_path)
         if not doc.get("id") or not os.path.isfile(dpath):
             errors.append(
                 f"{where}: required_doc "
@@ -355,10 +378,44 @@ def check_kind_bands(bands, *, key, where, errors):
         low, high = band
         if not check.is_count(low):
             errors.append(f"{where}: {key}.{kind} low must be an integer >= 0")
-        elif high is not None and (not check.is_count(high) or high < low):
+            continue
+        if high is not None and (not check.is_count(high) or high < low):
             errors.append(
                 f"{where}: {key}.{kind} high must be null (no upper "
                 f"bound) or an integer >= the low"
+            )
+
+
+def check_template_bands(bands, *, where, errors):
+    """Validate series geometry policy without requiring template defaults.
+
+    The series layer is allowed to introduce a band that a template omitted;
+    omission means that the template has no recommendation, not that the
+    series is forbidden from setting an explicit policy. Every supplied band
+    must still be one of the three engine-understood count ranges.
+    """
+    if bands is None:
+        return
+    if not isinstance(bands, dict):
+        errors.append(f"{where}: 'bands' must be a mapping of geometry bands")
+        return
+    unknown = sorted(set(bands) - set(TEMPLATE_BAND_KEYS))
+    if unknown:
+        errors.append(
+            f"{where}: bands has unknown keys {unknown} "
+            f"(known: {sorted(TEMPLATE_BAND_KEYS)})"
+        )
+    for key in sorted(set(bands) & set(TEMPLATE_BAND_KEYS)):
+        band = bands[key]
+        if (
+            not isinstance(band, list)
+            or len(band) != 2
+            or not all(check.is_count(value) for value in band)
+            or band[0] > band[1]
+        ):
+            errors.append(
+                f"{where}: bands.{key} must be [low, high] non-negative "
+                "integers with low <= high"
             )
 
 
@@ -475,9 +532,11 @@ def check_series(repo, registry, *, errors):
                 errors.append(f"{where}: '{flag}' must be true or false")
         min_sources = cfg.get("min_sources")
         if min_sources is not None and (
-            not isinstance(min_sources, int) or isinstance(min_sources, bool)
+            not isinstance(min_sources, int)
+            or isinstance(min_sources, bool)
+            or min_sources < 0
         ):
-            errors.append(f"{where}: 'min_sources' must be an integer")
+            errors.append(f"{where}: 'min_sources' must be an integer >= 0")
         section = cfg.get("section")
         if section is not None and (
             not isinstance(section, str) or not section.strip()
@@ -489,38 +548,34 @@ def check_series(repo, registry, *, errors):
                 errors.append(f"{where}: selection must be one of {sorted(SELECTIONS)}")
             elif mode != "collection":
                 errors.append(f"{where}: 'selection' only applies to collection mode")
+
+        template = cfg.get("template")
+        if template is not None and not isinstance(template, str):
+            errors.append(f"{where}: 'template' must be a template ID string")
         templates = cfg.get("templates")
-        if templates is not None and mode != "open":
-            errors.append(
-                f"{where}: 'templates' (a choice list) is only valid "
-                f"in open mode; use 'template'"
-            )
-            templates = None
         if templates is not None and (not isinstance(templates, list) or not templates):
             errors.append(f"{where}: 'templates' must be a non-empty list")
             templates = None
-        if mode == "open" and templates and cfg.get("template"):
+        elif templates is not None and not all(
+            isinstance(choice, str) and choice for choice in templates
+        ):
+            errors.append(f"{where}: 'templates' must contain template ID strings")
+            templates = None
+        if templates and template:
             errors.append(f"{where}: use 'template' or 'templates', not both")
-        if mode == "open" and not templates and not cfg.get("template"):
+        allowed = template_choices(cfg)
+        if not allowed:
             errors.append(
-                f"{where}: open mode requires 'template' or a 'templates' choice list"
+                f"{where}: requires 'template' or a non-empty 'templates' choice list"
             )
-            allowed = []
-        else:
-            allowed = templates or [cfg.get("template")]
+        check_template_bands(cfg.get("bands"), where=where, errors=errors)
         tregs = []
         for template in allowed:
             treg = registry.get(template)
-            if not treg:
+            if not isinstance(treg, dict):
                 errors.append(f"{where}: template '{template}' not a known template")
             else:
                 tregs.append(treg)
-                if mode in MODES and mode not in (treg.get("modes") or []):
-                    errors.append(
-                        f"{where}: mode '{mode}' not allowed for "
-                        f"template '{template}' "
-                        f"(allowed: {treg.get('modes')})"
-                    )
         check_kind_bands(
             cfg.get("sources_by_kind"),
             key="sources_by_kind",
@@ -549,34 +604,42 @@ def check_series(repo, registry, *, errors):
             check_kinded_skeletons(repo, allowed, where=where, errors=errors)
         check_rubric_config(cfg.get("rubric"), where=where, errors=errors)
         prompt = cfg.get("prompt")
-        if prompt and not os.path.isfile(os.path.join(root, sid, prompt)):
+        if prompt is not None and not isinstance(prompt, str):
+            errors.append(f"{where}: 'prompt' must be a path string")
+        elif prompt and not os.path.isfile(os.path.join(root, sid, prompt)):
             errors.append(f"{where}: prompt file '{prompt}' not found")
-        for tag, frag in (cfg.get("tags") or {}).items():
+        tags = cfg.get("tags")
+        if tags is not None and not isinstance(tags, dict):
+            errors.append(f"{where}: 'tags' must be a mapping of tag to fragment path")
+            tags = {}
+        for tag, frag in (tags or {}).items():
+            if not isinstance(tag, str) or not nb_meta.is_safe_tag(tag):
+                errors.append(
+                    f"{where}: tag fragment name {tag!r} must match "
+                    f"{nb_meta.TAG_RE.pattern}"
+                )
+                continue
+            if not isinstance(frag, str) or not frag:
+                errors.append(f"{where}: tag '{tag}' fragment path must be a string")
+                continue
             if not os.path.isfile(os.path.normpath(os.path.join(root, sid, frag))):
                 errors.append(f"{where}: tag '{tag}' fragment '{frag}' not found")
-        words = cfg.get("words")
-        if words is not None:
-            floors = [t["words"][0] for t in tregs if t.get("words")]
-            if not (
-                isinstance(words, list)
-                and len(words) == 2
-                and all(isinstance(x, int) for x in words)
-                and words[0] <= words[1]
-            ):
-                errors.append(f"{where}: 'words' must be [low, high] integers")
-            elif floors and words[0] < max(floors):
-                errors.append(
-                    f"{where}: words floor {words[0]} loosens the "
-                    f"registry floor {max(floors)} (may only tighten)"
-                )
-        items = cfg.get("items") or []
+
+        raw_items = cfg.get("items")
+        if raw_items is not None and not isinstance(raw_items, list):
+            errors.append(f"{where}: 'items' must be a list")
+            items = []
+        else:
+            items = raw_items or []
         if mode in ("collection", "sequence") and not items:
             errors.append(f"{where}: {mode} mode requires 'items'")
         if mode == "rolling" and items:
             errors.append(f"{where}: rolling mode must not define 'items'")
         seen = set()
         for i, item in enumerate(items):
-            item = item or {}
+            if not isinstance(item, dict):
+                errors.append(f"{where}: item #{i + 1} must be a mapping")
+                continue
             slug = item.get("slug")
             if not isinstance(slug, str) or not SLUG_RE.match(slug):
                 errors.append(
@@ -588,8 +651,22 @@ def check_series(repo, registry, *, errors):
                 seen.add(slug)  # only valid slugs seed the duplicate check
             check_required_docs(item.get("required_docs"), root, sid, where, errors)
         check_required_docs(cfg.get("required_docs"), root, sid, where, errors)
-        item_consult = [p for item in items for p in (item or {}).get("consult") or []]
-        for prefix in (cfg.get("consult") or []) + item_consult:
+        consult = cfg.get("consult")
+        if consult is not None and not isinstance(consult, list):
+            errors.append(f"{where}: 'consult' must be a list of https:// prefixes")
+            consult = []
+        item_consult = []
+        for item in items:
+            item_values = item.get("consult")
+            if item_values is None:
+                continue
+            if not isinstance(item_values, list):
+                errors.append(
+                    f"{where}: item consult must be a list of https:// prefixes"
+                )
+                continue
+            item_consult.extend(item_values)
+        for prefix in (consult or []) + item_consult:
             if not str(prefix).startswith("https://"):
                 errors.append(
                     f"{where}: consult entries must be https:// "
@@ -600,9 +677,9 @@ def check_series(repo, registry, *, errors):
             errors.append(f"{where}: sources_exclusive must be true or false")
         elif exclusive:
             has_docs = cfg.get("required_docs") or any(
-                (item or {}).get("required_docs") for item in items
+                item.get("required_docs") for item in items
             )
-            if not (cfg.get("consult") or item_consult or has_docs):
+            if not (consult or item_consult or has_docs):
                 errors.append(
                     f"{where}: sources_exclusive requires declared "
                     f"sources (consult and/or required_docs)"

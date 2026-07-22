@@ -71,12 +71,10 @@ def check_warns(
     skeleton_placeholders,
     rep,
 ):
-    band = series.get("words") or treg.get("words")
+    bands = treg.get("bands") or {}
+    band = bands.get("words")
     if band:
         lo, hi = band
-        if series.get("words"):
-            reg_lo = (treg.get("words") or [0])[0]
-            lo = max(lo, reg_lo)  # series may tighten, never loosen below registry
         wc = ed.word_count
         if wc < lo:
             rep.warn(
@@ -90,8 +88,8 @@ def check_warns(
                 f"{template_id} band is {lo}-{hi} words; found {wc}",
                 suggestion="consider trimming or splitting",
             )
-    if treg.get("items"):
-        lo, hi = treg["items"]
+    if bands.get("items"):
+        lo, hi = bands["items"]
         n = len(ed.items)
         if n < lo:
             rep.warn(
