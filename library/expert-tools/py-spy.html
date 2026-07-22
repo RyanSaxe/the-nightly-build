@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>py-spy profiles a running Python process without changing a line of it · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "py-spy",
+        "template": "article",
+        "title": "py-spy profiles a running Python process without changing a line of it",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-22",
+        "tags": [],
+        "sources": 6,
+        "words": 1750,
+        "reading_minutes": 9,
+        "dek": "It reads a running interpreter's memory from outside the process, which is why attaching needs no code change and why Linux makes you clear ptrace first.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">py-spy profiles a running Python process without changing a line of it</h1>
+        <p class="nb-dekline">
+          It reads a running interpreter's memory from outside the process, which is why attaching needs no code change and why Linux makes you clear ptrace first.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-07-22</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>cProfile has to be there before the program starts</h2>
+        <p>
+          A worker has been pinning a core for twenty minutes. It is already
+          running, in production, under a supervisor that will restart it if it
+          dies. py-spy can attach to that process by its PID and report where it
+          is spending its time, without restarting it or modifying its code in
+          any way.<sup class="nb-cite"><a href="#s1">1</a></sup> The profiler you
+          would otherwise reach for, <code>cProfile</code>, cannot: it traces
+          every function call for complete coverage, but it has to be wrapped
+          around the program before that program starts.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          To use it here you would edit the entry point, redeploy, and hope the
+          slow path shows up on the next run. If the process is wedged right now
+          and you cannot restart it, the deterministic profiler is not slow to
+          reach for. It is unreachable.
+        </p>
+        <p>
+          Nothing py-spy does gets imported into the target.
+        </p>
+      </section>
+
+      <section data-nb-section="reads-from-outside" id="reads-from-outside">
+        <h2>py-spy reads the interpreter's memory from a separate process</h2>
+        <p>
+          The reason it needs no cooperation is that it does not run inside the
+          program it profiles. py-spy is a separate process, written in Rust, and
+          it reconstructs the target's Python call stack by reading that
+          process's memory directly: <code>process_vm_readv</code> on Linux,
+          <code>vm_read</code> on macOS, <code>ReadProcessMemory</code> on
+          Windows.<sup class="nb-cite"><a href="#s1">1</a></sup> It walks the
+          CPython interpreter state in the target's address space, follows the
+          chain of frame objects, and turns raw bytes into function names and
+          line numbers on its own side of the boundary.
+        </p>
+        <p>
+          Two properties follow from that design. The
+          profiler adds no instrumentation to the target, so there is no
+          per-call bookkeeping to slow the program down and no observer effect
+          baked into the numbers. And because the work happens out of process in
+          compiled code, the overhead the target pays is only the brief pause
+          while a sample is read. The project describes the result as extremely
+          low overhead.<sup class="nb-cite"><a href="#s1">1</a></sup> That is a
+          self-report, not an independent benchmark, but the structure behind it
+          is sound: reading many stacks a second from another process is cheap
+          in a way that wrapping every call cannot be.
+        </p>
+      </section>
+
+      <section data-nb-section="attach-and-read" id="attach-and-read">
+        <h2>Attach to a running program and read its hotspot off the stack</h2>
+        <p>
+          The value shows up the moment you point it at a process you did not
+          start under a profiler. Take a program whose cost is not where it
+          appears to be. It looks like it serves requests; the time is actually in
+          a recursive call.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">slow.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def fib(n):
+    if n &lt; 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+def serve_request():
+    # reads like I/O, costs like arithmetic
+    return fib(34)
+
+def main():
+    served = 0
+    while True:
+        served += serve_request()
+
+main()</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · A program started with plain <code>python slow.py</code>, with no profiler and no instrumentation.
+          </figcaption>
+        </figure>
+        <p>
+          Start it the ordinary way in one terminal:
+          <code>python slow.py</code>. It is now a running, uninstrumented
+          process. Find it with <code>pgrep -f slow.py</code>, then ask py-spy
+          what its stack looks like right now.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">attach to the live PID</span><span>CONSOLE</span>
+          </div>
+          <pre><code class="language-python">$ py-spy dump --pid 48213
+Thread 48213 (active): "MainThread"
+    fib (slow.py:6)
+    fib (slow.py:6)
+    fib (slow.py:6)
+    serve_request (slow.py:10)
+    main (slow.py:15)
+    &lt;module&gt; (slow.py:17)</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · <code>dump</code> prints the current call stack of each thread, resolved from the target's memory.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The stack names the culprit without a single edit to the source. The
+          program is deep in <code>fib</code>, called from
+          <code>serve_request</code>, not blocked on a socket. Swap
+          <code>dump</code> for <code>top</code> and the same read repeats many
+          times a second into a live, sorted view, so a function that dominates
+          only intermittently still rises to the top. Swap it for
+          <code>record</code> and py-spy collects a window of samples and writes
+          a flame graph:
+          <code>py-spy record -o slow.svg --pid 48213 --duration 20</code>,<sup class="nb-cite"><a href="#s1">1</a></sup>
+          where the width of each box is how often that frame was on the stack.
+        </p>
+        <p>
+          An engineer profiling a live
+          market-data feed pointed py-spy at the running PID and found the
+          time sitting in a WebSocket client's <code>_listen</code> method, and
+          caught logging inside an unneeded helper showing up high in the
+          profile, all read off a process that was already running.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="three-questions" id="three-questions">
+        <h2>top, dump, and record answer three different questions</h2>
+        <p>
+          The three subcommands are not three renderings of one output. Each
+          exists for a distinct question, and knowing which one you are asking is
+          most of the skill.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            The question each subcommand answers, and what it returns.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th class="txt">Question it answers</th>
+              <th class="txt">What you get</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">top</span></td>
+              <td class="txt">What is it spending time on, right now and continuously?</td>
+              <td class="txt">A live, sorted view that updates as samples arrive.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">dump</span></td>
+              <td class="txt">Where is every thread stuck this instant?</td>
+              <td class="txt">One current call stack per thread, printed once.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">record</span></td>
+              <td class="txt">Where did a whole window of the run go?</td>
+              <td class="txt">A flame graph over the sampling period.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The one worth internalizing is <code>dump</code>. A single snapshot of
+          every thread's stack is exactly what you need when a program is hung
+          and you just have to see where it is wedged.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          A deadlock, a blocking call that never returns, a request that hangs
+          under load: <code>dump</code> turns each into one command against the
+          live PID, and it answers a question a deterministic profiler cannot
+          reach, because the deterministic profiler was never started.
+        </p>
+      </section>
+
+      <section data-nb-section="the-costs" id="the-costs">
+        <h2>The outside read is also where the costs come from</h2>
+        <p>
+          The same design that makes py-spy instrument-free is what forces its
+          price, and the honest way to weigh the tool is to read each cost off
+          the way it works.
+        </p>
+        <p>
+          Reading another process's memory is a privileged operation. On Linux,
+          attaching to a process py-spy did not itself start usually requires
+          root, or a system that has relaxed the <code>ptrace_scope</code>
+          sysctl; you avoid the requirement only when py-spy launches the
+          program for you.<sup class="nb-cite"><a href="#s1">1</a></sup> macOS
+          requires root either way. Inside a container the same call is blocked
+          by default, and the fix is to grant the
+          <code>SYS_PTRACE</code> capability to the container, with
+          <code>--cap-add SYS_PTRACE</code> under Docker or the equivalent in a
+          Kubernetes security context.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          None of this is exotic, but it is a permission you must plan for, and
+          it is the direct consequence of reading memory from outside.
+        </p>
+        <p>
+          Sampling has its own blind spots. Because py-spy records the stack a
+          fixed number of times per second rather than tracing every call, a
+          function that is short-lived or rarely on the stack can be missed,
+          where cProfile's exhaustive tracing would count it.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The default read also pauses the target briefly for each sample; the
+          <code>--nonblocking</code> flag skips the pause but trades it for
+          occasional sampling errors, so the low overhead is very low, not
+          literally nothing.<sup class="nb-cite"><a href="#s1">1</a></sup> And by
+          default the stacks are pure Python. Time spent in a C or Cython
+          extension shows up as time in the Python line that called it, not in
+          the native code, unless you pass <code>--native</code> to unwind the
+          C and C++ frames alongside the Python ones.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          Since a large part of the Python ecosystem is native
+          extensions, a profile without <code>--native</code> can point at a
+          call site while the real cost hides one layer below it.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="maintenance-verdict" id="maintenance-verdict">
+        <h2>The release feed reads bursty, not abandoned</h2>
+        <p>
+          A tool you attach to production is a tool you have to trust, so its
+          maintenance is a fair question. The release history is uneven. A
+          cluster of 0.3.x releases landed in mid-2022, then the feed goes quiet
+          for roughly twenty-six months until v0.4.0 in November 2024, before a
+          fresh pair, v0.4.1 and v0.4.2, arrived together in April 2026.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          Anyone hoping for a monthly cadence should adjust that expectation.
+        </p>
+        <p>
+          The recency argues the other way, though. The current release is
+          v0.4.2 from April 2026,<sup class="nb-cite"><a href="#s6">6</a></sup>
+          and py-spy supports CPython through 3.14,<sup class="nb-cite"><a href="#s1">1</a></sup>
+          which is the test that matters for a profiler: it is being kept in step
+          with the interpreter whose memory it reads, and a stale reader of a new
+          interpreter would simply fail to resolve stacks. Installation is a
+          prebuilt wheel across the common platforms, so adopting it does not
+          drag in a Rust toolchain.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            py-spy earns a place in the kit for one job it does that the
+            deterministic profilers cannot: reading a running, uninstrumented
+            process. Keep cProfile for exhaustive, deterministic timing during
+            development, and reach for py-spy when the process is already live,
+            already wedged, or cannot be restarted. Trust rests on it tracking
+            CPython 3.14 in a 2026 release;<sup class="nb-cite"><a href="#s1">1</a></sup>
+            the assessment would change if a future interpreter shipped and the
+            feed stayed silent.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/benfred/py-spy"
+              >benfred/py-spy · README and project documentation</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://oneuptime.com/blog/post/2025-01-06-profile-python-cprofile-pyspy/view"
+              >OneUptime · How to Profile Python Applications with cProfile and py-spy</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.wrighters.io/profiling-python-code-with-py-spy/"
+              >Wrighters.io · Profiling Python code with py-spy</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.benfrederickson.com/profiling-native-python-extensions-with-py-spy/"
+              >Ben Frederickson · Profiling Native Python Extensions with py-spy</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Releases feed, v0.3.14 (2022-09-08) through v0.4.2 (2026-04-24)"
+              href="https://github.com/benfred/py-spy/releases"
+              >benfred/py-spy · Release history</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/py-spy/"
+              >PyPI · py-spy 0.4.2 (released 2026-04-24)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
+</content>
