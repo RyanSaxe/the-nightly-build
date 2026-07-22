@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Net income is not the cash a business generates · Investing Course</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "investing-course",
+        "slug": "how-a-business-becomes-cash",
+        "template": "lesson",
+        "title": "Net income is not the cash a business generates",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-22",
+        "tags": ["accounting", "equity"],
+        "sources": 6,
+        "words": 1850,
+        "reading_minutes": 9,
+        "dek": "Costco's latest annual report puts net income at $8.1 billion and cash from operations at $13.3 billion for the same year, and the walk between them is where accrual accounting parts from cash.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Investing Course</div>
+        <h1 class="nb-title">Net income is not the cash a business generates</h1>
+        <p class="nb-dekline">
+          Costco's latest annual report puts net income at $8.1 billion and cash
+          from operations at $13.3 billion for the same year, and the walk
+          between them is where accrual accounting parts from cash.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-07-22</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Every public company files the same three financial statements, and
+          the first thing they teach is that a company's profit and the cash it
+          takes in are two different numbers. Confuse them and every later
+          judgment inherits the error: a business can report years of profit
+          while its bank balance falls, or generate cash far above its profit
+          and still be spending itself thin. This lesson takes one real annual
+          report and traces its reported profit, called net income, down to the
+          cash its operations actually produced. By the end you will be able to
+          open any company's filing, find the same walk, and name each place
+          where the accounting and the cash diverge. That skill is the ground
+          every later lesson in this course stands on: you cannot compare two
+          companies, or model one, until you can read what its statements are
+          and are not telling you.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a
+              href="https://www.sec.gov/about/reports-publications/investorpubsbegfinstmtguide"
+              >SEC, Beginners' Guide to Financial Statements</a
+            >: the regulator's plain-language tour of the balance sheet, income
+            statement, and cash flow statement.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a
+              href="https://www.sec.gov/Archives/edgar/data/909832/000090983225000101/cost-20250831.htm"
+              >Costco Wholesale, Form 10-K (fiscal 2025)</a
+            >: the filing this lesson reads from, with all three statements in
+            one place.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One filing, two numbers for the same year</h2>
+        <p>
+          Costco's annual report for the year ended August 31, 2025 reports a
+          net income of $8,099 million.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Consolidated Statements of Income"
+              >1</a
+            ></sup
+          >
+          The same filing reports that its operations produced $13,335 million
+          of cash.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Consolidated Statements of Cash Flows, operating activities"
+              >2</a
+            ></sup
+          >
+          One year, one company, two numbers that differ by more than five
+          billion dollars. Neither is wrong. They measure different things, and
+          learning to read a business begins with knowing which is which.
+        </p>
+        <p>
+          Net income is the profit a company reports: its revenue for the period
+          minus the costs matched against that revenue. Cash from operations is
+          the cash its day-to-day business actually took in and paid out over
+          the same period. A public company presents both, along with a third
+          view, in three statements that are meant to be read together. The
+          income statement shows profit over a stretch of time. The balance
+          sheet is a snapshot, on the last day of that stretch, of what the
+          company owns and owes. The cash flow statement tracks the cash that
+          moved and sorts it into operating, investing, and financing
+          activity.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          The three sit together in the financial-statements section of every
+          10-K, the annual report public companies file with the
+          regulator.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          The link that turns them into one system is small and exact. The top
+          line of the cash flow statement's operating section is net income, the
+          very figure the income statement ends on. Everything below it adjusts
+          that profit, line by line, until it becomes cash from operations.
+        </p>
+      </section>
+
+      <section data-nb-section="accrual-profit" id="accrual-profit">
+        <h2>What net income counts, and what it skips</h2>
+        <p>
+          Net income is built on accrual accounting: the rule that revenue is
+          recorded when it is earned and costs when they are incurred,
+          regardless of when cash changes hands. A sale is booked when the
+          company delivers what it promised, not when the customer
+          pays.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          A small case shows why that pulls profit away from cash. Suppose a
+          store buys an item for $60 in cash in June and sells it for $100 on
+          credit in August, collecting the $100 the following September. Its
+          accrual profit on that item is $40, and all of it lands in the August
+          period: $100 of revenue, $60 of matched cost. Yet no cash arrived in
+          August, and the $60 left the business back in June. Profit and cash
+          not only differ in size; they land in different periods. That gap is
+          not an error to correct. It is what accrual accounting is for, and it
+          is why a separate cash statement has to exist.
+        </p>
+        <p>
+          Costco's real figures show the same accrual profit at scale. In fiscal
+          2025 it recorded $275,235 million of total revenue, subtracted
+          $239,886 million of merchandise costs and $24,966 million of selling,
+          general, and administrative expense, and after taxes reported the
+          $8,099 million of net income.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Consolidated Statements of Income"
+              >1</a
+            ></sup
+          >
+          Every one of those figures follows the earned-not-paid rule, so none
+          of them is a cash number.
+        </p>
+        <p>
+          Costco also shows the timing running the other way, toward cash before
+          revenue. It collects membership fees in a lump at sign-up but earns
+          them only as the year of membership elapses, so the unearned part is a
+          liability, not yet revenue. On the balance sheet that liability,
+          labeled deferred membership fees, stood at $2,854 million at year
+          end.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Consolidated Balance Sheets">5</a></sup
+          >
+          That is $2.9 billion of members' cash already in hand that the income
+          statement has not yet counted as revenue. Revenue can trail cash as
+          easily as it can lead it, and only the cash flow statement keeps score
+          of the difference.
+        </p>
+      </section>
+
+      <section data-nb-section="the-reconciliation" id="the-reconciliation">
+        <h2>Walking net income to cash, one line at a time</h2>
+        <p>
+          The operating section rebuilds cash from profit by the indirect
+          method: start at net income, then reverse every item that changed the
+          profit without moving cash, and adjust for the cash tied up in or
+          released from day-to-day operations. The cash-flow standard (ASC 230)
+          lays out this form, and Costco's statement follows it exactly. Here is
+          the whole walk, in the filing's own order and figures.<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Consolidated Statements of Cash Flows, operating activities"
+              >2</a
+            ></sup
+          >
+        </p>
+        <p>
+          Start with net income, $8,099 million. Add back depreciation and
+          amortization, $2,426 million. Depreciation spreads the cost of a
+          long-lived asset, a warehouse or a forklift, across the years it is
+          used; amortization does the same for intangible assets. The expense
+          this year is real on the income statement but paid no cash this year,
+          so it goes back. The running total is $10,525 million. Add non-cash
+          lease expense of $303 million and stock-based compensation of $860
+          million, the value of pay settled in shares rather than cash, both
+          expenses that cost no cash this period. The total reaches $11,688
+          million.
+        </p>
+        <p>
+          Now a line that runs the other way. Impairment and other non-cash
+          items, net, was negative $117 million this year, a net non-cash gain
+          embedded in profit, so it is subtracted rather than added. The rule is
+          to reverse non-cash items, not to add them, and reversing a gain means
+          taking it out.<sup class="nb-cite"><a href="#s6">6</a></sup> The total falls to
+          $11,571 million. Then the changes in working capital, the cash tied up
+          in inventories and in what the company owes and is owed: merchandise
+          inventories released $559 million as stock fell, accounts payable
+          added $404 million, and other operating items added $801 million.
+          Those three carry the total to $13,335 million, which is cash from
+          operations.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="how-a-business-becomes-cash/chart-1.png"
+            alt="Waterfall chart bridging Costco's fiscal 2025 net income of 8,099 million dollars up through depreciation and amortization of 2,426 million, non-cash lease expense of 303 million, stock-based compensation of 860 million, a negative 117 million for other non-cash items, and working-capital changes of 559, 404, and 801 million, arriving at cash from operations of 13,335 million dollars."
+          />
+          <figcaption>
+            Fig. 1 · From net income to cash from operations, Costco fiscal
+            2025, in millions of dollars. Each step is one line of the operating
+            section; the red step is a non-cash gain reversed out.<sup
+              class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Consolidated Statements of Cash Flows, operating activities"
+                >2</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          One limit rides with this number. Cash from operations is measured
+          before the business spends anything on the stores and equipment that
+          keep it running.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="capex-versus-depreciation"
+        id="capex-versus-depreciation"
+      >
+        <h2>The cash the income statement never shows</h2>
+        <p>
+          The largest step in the walk was depreciation and amortization, $2,426
+          million added back. Depreciation is not this year's cash outlay; it is the spread-out cost
+          of purchases made in earlier years. This year's actual cash outlay on
+          new property and equipment, called capital expenditure or capex, was
+          $5,498 million, more than double the depreciation, and it sits in the
+          investing section, below cash from operations.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Consolidated Statements of Cash Flows, investing activities"
+              >2</a
+            ></sup
+          >
+          So the income statement charged $2,426 million of wear while the
+          business spent $5,498 million of cash the income statement never
+          records at all.
+        </p>
+        <p>
+          That divergence has a consequence: cash from
+          operations of $13,335 million overstates the cash truly left for
+          owners. Subtract the $5,498 million of capex the business needed just
+          to keep going and to grow, and the cash it generated after
+          reinvestment is $7,837 million, which is below its $8,099 million of
+          net income.<sup class="nb-cite"><a href="#s6">6</a></sup> A number
+          larger than profit and a number smaller than profit describe the same
+          year; which one is honest depends on the question being asked. The
+          table sets the four figures side by side.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Four measures of one Costco year, fiscal 2025, in millions of
+            dollars.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Measure</th>
+              <th>Value</th>
+              <th class="txt">What it is</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Net income</span></td>
+              <td>8 099</td>
+              <td class="txt">Accrual profit: revenue less matched costs.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">D&amp;A charged</span></td>
+              <td>2 426</td>
+              <td class="txt">
+                Non-cash wear expensed this year on past purchases.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Capex paid</span></td>
+              <td>5 498</td>
+              <td class="txt">
+                Actual cash spent this year on property and equipment.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Cash from ops</span></td>
+              <td>13 335</td>
+              <td class="txt">
+                Cash the business took in before reinvestment.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Ops less capex</span></td>
+              <td>7 837</td>
+              <td class="txt">
+                Cash left after the spending needed to keep running.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Working capital is the other place profit and cash come apart, and it
+          swings hard from year to year. In fiscal 2025 falling inventories
+          released $559 million of cash. A year earlier the same line ran the
+          opposite way: Costco built inventory and it consumed $2,068 million,
+          while slower payment to suppliers, a rise in accounts payable, put
+          $1,938 million back.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Consolidated Statements of Cash Flows, operating activities"
+              >2</a
+            ></sup
+          >
+          The business earned a profit in both years. Whether its own operations
+          fed cash or drank it turned on inventory and payment timing, not on
+          the profit at all.
+        </p>
+        <p>
+          One caution before generalizing from this company. Costco sells for
+          cash and card and carries almost no customer debts, so the classic
+          case, revenue booked on credit while the cash lags in accounts
+          receivable, barely appears here. In a business that sells on credit,
+          net income can run well ahead of cash for exactly that reason. Costco
+          is a clean teacher because it is unusual, not because it is typical.
+        </p>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Net income and cash from operations are different numbers, and the
+          difference has a small set of names. Reverse the non-cash items that
+          touched profit but not cash, adding depreciation and stock-based pay
+          back and taking net non-cash gains out. Adjust for the working capital
+          that day-to-day operations tie up or release. What remains is cash
+          from operations, and the operating section of the cash flow statement
+          is that reconciliation, printed in full in every 10-K. Read it once
+          more against the capital spending below it: cash from operations flags
+          the cash before reinvestment, and the real spending on property and
+          equipment can be double the depreciation the income statement showed,
+          so the cash actually left over can sit below the reported profit. You
+          can now open a filing, start at net income, and walk it to cash line
+          by line, naming each place accrual accounting and cash part. That is
+          the reading the next lesson will put to work, setting one company's
+          walk beside another's.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/blog/FreeCF.pdf"
+              >Aswath Damodaran, Earnings and Cash Flows: A Primer on Free Cash
+              Flows</a
+            >: how analysts adjust net income toward cash, and where the
+            shortcuts mislead.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://www.berkshirehathaway.com/letters/1986.html"
+              >Warren Buffett, 1986 Chairman's Letter (owner-earnings
+              appendix)</a
+            >: the case for measuring earnings net of the capital a business must
+            keep spending to stand still.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/909832/000090983225000101/R3.htm"
+              >SEC EDGAR · Costco Wholesale Corp., Form 10-K (FY2025),
+              Consolidated Statements of Income</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/909832/000090983225000101/cost-20250831.htm"
+              >SEC EDGAR · Costco Wholesale Corp., Form 10-K (FY2025, accession
+              0000909832-25-000101), Consolidated Statements of Cash Flows</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.sec.gov/about/reports-publications/investorpubsbegfinstmtguide"
+              >U.S. Securities and Exchange Commission · Beginners' Guide to
+              Financial Statements</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.sec.gov/files/reada10k.pdf"
+              >U.S. Securities and Exchange Commission · How to Read a 10-K/10-Q</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/909832/000090983225000101/R5.htm"
+              >SEC EDGAR · Costco Wholesale Corp., Form 10-K (FY2025),
+              Consolidated Balance Sheets</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/blog/FreeCF.pdf"
+              >Aswath Damodaran (NYU Stern) · Earnings and Cash Flows: A Primer
+              on Free Cash Flows</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
