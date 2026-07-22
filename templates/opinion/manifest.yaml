@@ -6,11 +6,11 @@
 # an opinion meets the same bar as any analysis (spec/editorial.md).
 about: "An argued position: the stance disclosed up front on the position card, the case built in cited sections, the strongest opposing case answered."
 class: longread
-words: [900, 2500]
+bands:
+  words: [900, 2500]
+  flex_sections: [2, 5]
 sections: [position, counter, sources]
-flex_sections: [2, 5]
 cite_rule: per-section
-modes: [collection, open]
 chrome:
   - '<body class="nb-article">'
   - '<div class="nb-position">'

@@ -8,7 +8,8 @@ template: article
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [1500, 3500] # appraisals stay tight: the technique carries the piece
+bands:
+  words: [1500, 3500] # appraisals stay tight: the technique carries the piece
 min_sources: 8
 cadence: [sat]
 consult:

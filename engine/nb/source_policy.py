@@ -11,9 +11,14 @@ DEFAULT_MIN_SOURCES = {"longread": 8, "shortread": 5}
 
 
 def minimum(series: dict, template: dict) -> int:
-    return series.get("min_sources") or DEFAULT_MIN_SOURCES.get(
-        template.get("class", "longread"), 5
-    )
+    configured = series.get("min_sources")
+    if (
+        isinstance(configured, int)
+        and not isinstance(configured, bool)
+        and configured >= 0
+    ):
+        return configured
+    return DEFAULT_MIN_SOURCES.get(template.get("class", "longread"), 5)
 
 
 def resolve(series: dict, template: dict) -> dict[str, int | dict[str, int]]:

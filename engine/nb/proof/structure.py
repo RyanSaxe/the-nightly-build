@@ -24,10 +24,20 @@ __all__ = (
     "image_dimensions",
 )
 
+import base64
+import binascii
+import hashlib
+import hmac
 import os
 import re
 import struct
+import urllib.error
+import urllib.request
 
+import tinycss2
+import tinycss2.ast
+
+from nb.report import Report
 from nb.site.assets import css_owners
 from nb.site.library import load_site_config
 
@@ -48,6 +58,12 @@ CLASS_ALLOW_PREFIXES = ("language-", "token")
 # The marker lives beside the CSS it guards, so retirement declares itself in
 # one place and the block can point the author at the live component.
 DEPRECATED_RE = re.compile(r"@deprecated\s+([\w-]+)\s*->\s*([\w-]+|none)")
+EXTERNAL_CSS_MAX_BYTES = 4 * 1024 * 1024
+EXTERNAL_CSS_TIMEOUT = 10
+NESTED_RULE_AT_RULES = frozenset(
+    {"container", "document", "keyframes", "layer", "media", "scope", "supports"}
+)
+_EXTERNAL_CSS_CACHE: dict[tuple[str, str], tuple[frozenset[str], bool, str | None]] = {}
 
 
 def external_ref_allowed(normalized_url):
@@ -78,10 +94,10 @@ def check_required_sections(ed, treg, rep):
                 "B-HTML",
                 f"section '{s}' appears {counts[s]} times; must be exactly once",
             )
-    # Absent flex_sections means a fully fixed outline: no section beyond the
-    # anchors is allowed (V6c). Present it as [0, 0] so extras BLOCK rather than
-    # slip through unchecked.
-    flex_band = treg.get("flex_sections") or [0, 0]
+    # Absent bands.flex_sections means a fully fixed outline: no section beyond
+    # the anchors is allowed (V6c). Present it as [0, 0] so extras BLOCK rather
+    # than slip through unchecked.
+    flex_band = (treg.get("bands") or {}).get("flex_sections") or [0, 0]
     extras = [s for s in ed.sections if s not in required_sections]
     dupes = sorted({s for s in extras if extras.count(s) > 1})
     if dupes:
@@ -278,22 +294,141 @@ def check_cites(ed, rep):
             )
 
 
-def css_class_names(repo):
+def _class_names_from_tokens(tokens):
+    names = set()
+
+    def visit(values):
+        for previous, current in zip(values, values[1:], strict=False):
+            if (
+                getattr(previous, "type", None) == "literal"
+                and getattr(previous, "value", None) == "."
+                and getattr(current, "type", None) == "ident"
+            ):
+                names.add(current.value)
+        for value in values:
+            content = getattr(value, "content", None)
+            if content is None:
+                content = getattr(value, "arguments", None)
+            if content is not None:
+                visit(content)
+
+    visit(tokens)
+    return names
+
+
+def _parse_css_classes(raw):
+    names = set()
+    complete = True
+
+    def visit(rules):
+        nonlocal complete
+        for rule in rules:
+            if isinstance(rule, tinycss2.ast.ParseError):
+                complete = False
+            elif isinstance(rule, tinycss2.ast.QualifiedRule):
+                names.update(_class_names_from_tokens(rule.prelude))
+            elif isinstance(rule, tinycss2.ast.AtRule):
+                at_keyword = getattr(rule, "at_keyword", "").lower()
+                if at_keyword == "import":
+                    complete = False
+                if rule.content is not None and at_keyword in NESTED_RULE_AT_RULES:
+                    visit(tinycss2.parse_rule_list(rule.content, skip_whitespace=True))
+
+    visit(tinycss2.parse_stylesheet(raw, skip_whitespace=True, skip_comments=True))
+    return names, complete
+
+
+def _integrity_matches(raw, integrity):
+    match = re.fullmatch(r"(sha256|sha384|sha512)-([A-Za-z0-9+/]+={0,2})", integrity)
+    if not match:
+        return False
+    digest = hashlib.new(match.group(1), raw).digest()
+    try:
+        expected = base64.b64decode(match.group(2), validate=True)
+    except binascii.Error:
+        return False
+    return hmac.compare_digest(digest, expected)
+
+
+def _external_css_classes(url, integrity):
+    key = (url, integrity)
+    if key in _EXTERNAL_CSS_CACHE:
+        return _EXTERNAL_CSS_CACHE[key]
+    try:
+        request = urllib.request.Request(
+            url, headers={"User-Agent": "nightly-build-proof"}
+        )
+        with urllib.request.urlopen(request, timeout=EXTERNAL_CSS_TIMEOUT) as response:
+            raw = response.read(EXTERNAL_CSS_MAX_BYTES + 1)
+        if len(raw) > EXTERNAL_CSS_MAX_BYTES:
+            result = frozenset(), False, "stylesheet exceeds the proof size limit"
+        elif not _integrity_matches(raw, integrity):
+            result = frozenset(), False, "SRI verification failed"
+        else:
+            names, complete = _parse_css_classes(raw.decode("utf-8"))
+            result = (
+                frozenset(names),
+                complete,
+                (
+                    "stylesheet contains an import or CSS parse error"
+                    if not complete
+                    else None
+                ),
+            )
+    except (OSError, UnicodeError, ValueError, urllib.error.URLError) as exc:
+        result = frozenset(), False, f"could not fetch or parse stylesheet ({exc})"
+    _EXTERNAL_CSS_CACHE[key] = result
+    return result
+
+
+def css_class_names(repo: str, *, rep: Report | None = None) -> tuple[set[str], bool]:
+    """Return CSS class names and whether the inventory is complete.
+
+    Local press stylesheets are parsed directly. Stylesheets in the site's
+    SRI-pinned ``assets.styles`` list are fetched, verified, and parsed as
+    styles only; scripts never participate in this inventory. A failed fetch,
+    bad hash, import, or parse error marks the inventory incomplete so the
+    caller can avoid claiming a class is dead when the evidence is partial.
+    """
     sheets = [os.path.join(repo, "engine", "assets", "nb.css")]
     # The page loads exactly nb.css plus theme.css, and nb/site owns what
     # concatenates into theme.css; asking it keeps this list from drifting.
     sheets += css_owners(repo, load_site_config(repo))
     names = set()
+    complete = True
     for path in sheets:
         if os.path.isfile(path):
             with open(path, encoding="utf-8") as fh:
-                names.update(re.findall(r"\.([A-Za-z_][\w-]*)", fh.read()))
-    return names
+                local_names, local_complete = _parse_css_classes(fh.read())
+            names.update(local_names)
+            complete = complete and local_complete
+    site = load_site_config(repo)
+    assets = site.get("assets") or {}
+    if not isinstance(assets, dict):
+        return names, False
+    for item in assets.get("styles") or []:
+        url = item.get("url") if isinstance(item, dict) else None
+        integrity = item.get("integrity") if isinstance(item, dict) else None
+        if not isinstance(url, str) or not isinstance(integrity, str):
+            complete = False
+            continue
+        external_names, external_complete, problem = _external_css_classes(
+            url, integrity
+        )
+        names.update(external_names)
+        complete = complete and external_complete
+        if problem and rep is not None:
+            note = f"external stylesheet {url}: {problem}; W-DEAD-CLASS suppressed"
+            if note not in rep.notes:
+                rep.notes.append(note)
+    return names, complete
 
 
 def check_classes(raw, *, repo, rep):
-    defined = css_class_names(repo)
+    defined, complete = css_class_names(repo, rep=rep)
     if not defined:
+        return
+    if not complete:
         return
     used = set()
     for attr in re.findall(r'class="([^"]+)"', raw):

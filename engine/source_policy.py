@@ -14,7 +14,7 @@ without asking an agent to recreate source-policy logic from configuration prose
 import argparse
 import json
 
-from nb.config import load_registry, load_series
+from nb.config import load_registry, load_series, template_choices
 from nb.source_policy import resolve
 
 
@@ -26,13 +26,25 @@ def main() -> None:
     series, path = load_series(args.repo, args.series)
     if not isinstance(series, dict):
         raise SystemExit(f"configured series not found: {path}")
-    template_id = series.get("template")
-    if not isinstance(template_id, str):
-        raise SystemExit(f"series has no single template: {path}")
-    template = load_registry(args.repo).get(template_id)
-    if not isinstance(template, dict):
-        raise SystemExit(f"unknown template '{template_id}'")
-    print(json.dumps(resolve(series, template), sort_keys=True))
+    registry = load_registry(args.repo)
+    template_ids = template_choices(series)
+    if not template_ids:
+        raise SystemExit(f"series has no template choices: {path}")
+    unknown = [
+        template_id for template_id in template_ids if template_id not in registry
+    ]
+    if unknown:
+        raise SystemExit(f"unknown template(s): {', '.join(unknown)}")
+    policies = {
+        template_id: resolve(series, registry[template_id])
+        for template_id in template_ids
+    }
+    shared = {
+        key: series[key]
+        for key in ("sources_by_kind", "per_item_sources")
+        if series.get(key) is not None
+    }
+    print(json.dumps({"templates": policies, "series": shared}, sort_keys=True))
 
 
 if __name__ == "__main__":

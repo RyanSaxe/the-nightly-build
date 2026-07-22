@@ -289,16 +289,16 @@ def test_a_second_nb_meta_block_is_refused(run_local: Callable[..., Findings]) -
 
 
 FIELDNOTES_MANIFEST = (
-    "class: shortread\nwords: [200, 3000]\n"
-    "sections: [sources]\nflex_sections: [2, 3]\n"
-    "cite_rule: per-section\ncite_exempt: [context]\nmodes: [collection]\n"
+    "class: shortread\nbands:\n  words: [200, 3000]\n"
+    "  flex_sections: [2, 3]\n"
+    "sections: [sources]\n"
+    "cite_rule: per-section\ncite_exempt: [context]\n"
 )
 # a per-item template NOT named 'brief', to prove the per-item cite rule is
 # manifest-driven rather than hardcoded to the shipped brief template
 DIGEST_MANIFEST = (
-    "class: shortread\nitems: [2, 4]\n"
+    "class: shortread\nbands:\n  items: [2, 4]\n"
     "sections: [entries, sources]\ncite_rule: per-item\n"
-    "modes: [collection]\n"
 )
 
 

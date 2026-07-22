@@ -84,6 +84,12 @@ then instruct a section in its `prompt.md`: "use `<div class=\"rs-margin-note\">
 for asides." Articles carry the markup, your furniture carries the look, and
 engine updates never touch either.
 
+The proof also checks class names for likely LLM typos. It parses every local
+stylesheet that ships in `theme.css` and emits `W-DEAD-CLASS` when article
+markup names a class that no stylesheet defines. Classes supplied by the
+engine's code-highlighting furniture (`language-*` and `token*`) are understood
+as built-ins. This is feedback, not a user-maintained class allowlist.
+
 ### Furniture that needs a JavaScript library
 
 CSS covers most furniture, and the two components that need a real library,
@@ -104,6 +110,13 @@ assets:
       integrity: sha384-…
   styles: [] # same shape, for a library that ships CSS
 ```
+
+Styles in `assets.styles` are included in the proof's class inventory after the
+bytes pass SRI verification. The engine parses CSS selectors; it does not load
+or execute scripts to discover classes. If a pinned stylesheet cannot be
+fetched, fails its hash, contains an import, or cannot be parsed completely,
+the proof records a note and suppresses definitive dead-class warnings rather
+than guessing that a class is invalid.
 
 A press-declared copy of a library the engine also ships wins: `nb.js` sees
 it in the page and loads nothing, so pinning Prism with extra languages (as
@@ -215,7 +228,7 @@ Manifests come in two styles:
 
 - Fixed outline: declare `sections` and each must appear exactly once.
 - Flexible outline: declare anchor `sections` plus
-  `flex_sections: [min, max]`, and the agent names that many additional
+  `bands.flex_sections: [min, max]`, and the agent names that many additional
   sections per article. Either way the cite rule applies to every labeled
   section except `sources` (always exempt) and any you list in the template's
   `cite_exempt` (for a non-cited section like an objectives box).
@@ -230,14 +243,16 @@ chrome the writer cannot reword.
 
    ```yaml
    class: longread
-   words: [1200, 3000]
+   bands:
+     words: [1200, 3000]
    sections: [preamble, exchange, sources]
    cite_rule: per-section
    cite_exempt: [preamble] # the intro carries no citations
-   modes: [collection]
    ```
 
-   Rules: `sections` must include `sources`. Bands are `[low, high]`.
+   Rules: `sections` must include `sources`. Bands are `[low, high]` defaults
+   under `bands:` and a series may replace them field by field in its own
+   `bands:` block, including in either direction; omitted means no default.
    `cite_rule` is `per-section` or `per-item` (needs `data-nb-item` markers).
    An optional `cite_exempt: [names]` lets a template declare sections that
    need no citations, on top of the always-exempt `sources`. A
@@ -247,7 +262,10 @@ chrome the writer cannot reword.
    a page by rewording its furniture. `validate_config.py` requires each
    string to appear in the skeleton, so rewording skeleton chrome without
    updating this list fails at your desk, not the writer's. The engine
-   reads these from the manifest, so any template can use them. An optional
+   reads these from the manifest, so any template can use them. Any scheduling
+   mode can use any template: a series declares `template:` or a `templates:`
+   choice list, and the correspondent records the selected package in
+   `nb-meta`. An optional
    `about:` one-liner documents the template for a browsing human; the engine
    ignores it. The test suite exercises this exact interview manifest, so the
    walkthrough cannot drift from what the proof enforces.

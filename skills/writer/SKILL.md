@@ -40,13 +40,13 @@ discipline, every template:
   flex-slot marker once the sections it stands for exist. Keep the engine
   asset `<link>`/`<script>` tags and the manifest's `chrome:` strings
   exactly as they are; the proof blocks a reworded label or body class.
-- `manifest.yaml` defines the geometry and `series.yaml` may tighten its
-  bands. A series may also pin rubric criteria (`rubric:`) your article must
+- `manifest.yaml` defines the geometry defaults under `bands:` and `series.yaml`
+  may replace those bands in either direction. A series may also pin rubric criteria (`rubric:`) your article must
   render as scored `data-nb-criterion` rows, extended with rows the subject
   demands. Both bind: their values are authoritative and machine-checked by
   the proof. A number restated in prose anywhere carries no force. Obey
   the files. Fill each anchor section exactly once. Where the manifest declares
-  `flex_sections`, add that many more between the anchors, each named for the
+  effective `bands.flex_sections`, add that many more between the anchors, each named for the
   topic (lowercase-hyphen `data-nb-section`), each cited per the template's
   cite rule.
 - Number source entries in the order the prose first cites them, and carry each

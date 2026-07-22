@@ -276,10 +276,32 @@ def test_open_series_with_a_templates_list_validates(
     assert vc_rc(open_press()) == 0
 
 
-def test_templates_on_a_non_open_series_is_rejected(
-    vc_rc: Callable[[str], int], patched_repo: Callable[..., str]
+def test_rolling_series_can_select_from_a_template_list(
+    run_local: Callable[..., Findings], clone_testrepo: Callable[..., str]
 ) -> None:
-    assert vc_rc(patched_repo("templates: [article]\n")) == 1
+    repo = clone_testrepo("press", "templates", "engine")
+    series = pathlib.Path(repo) / "press" / "series" / "ai-briefs" / "series.yaml"
+    series.write_text(
+        series.read_text().replace("template: brief", "templates: [brief, article]")
+    )
+
+    result = run_local(VALID_BRIEF, "ai-briefs", slug=TODAY, repo=repo)
+
+    assert "B-SERIES" not in result.codes
+    assert "B-META-MATCH" not in result.codes
+    assert not result.blocks
+
+
+def test_templates_on_a_non_open_series_is_allowed(
+    vc_rc: Callable[[str], int], clone_testrepo: Callable[..., str]
+) -> None:
+    repo = clone_testrepo("press", "templates", "engine")
+    series = pathlib.Path(repo) / "press" / "series" / "semiconductors" / "series.yaml"
+    series.write_text(
+        series.read_text().replace("template: article", "templates: [article, brief]")
+    )
+
+    assert vc_rc(repo) == 0
 
 
 def test_open_mode_without_any_template_is_rejected(
