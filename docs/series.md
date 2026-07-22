@@ -7,11 +7,11 @@ examples of everything below live in `examples/series/`.
 
 ## The four modes
 
-| Mode         | You declare                   | Each night publishes                                                         | Ends                      |
-| ------------ | ----------------------------- | ---------------------------------------------------------------------------- | ------------------------- |
-| `collection` | an item list                  | the next unpublished item, or any of them with `selection: random`           | when the list is done     |
-| `sequence`   | an ordered syllabus           | the lowest-numbered missing item, building on the published ones             | when the syllabus is done |
-| `rolling`    | nothing; the date is the item | today's UTC date                                                             | never, until paused       |
+| Mode         | You declare                   | Each night publishes                                                     | Ends                      |
+| ------------ | ----------------------------- | ------------------------------------------------------------------------ | ------------------------- |
+| `collection` | an item list                  | the next unpublished item, or any of them with `selection: random`       | when the list is done     |
+| `sequence`   | an ordered syllabus           | the lowest-numbered missing item, building on the published ones         | when the syllabus is done |
+| `rolling`    | nothing; the date is the item | today's UTC date                                                         | never, until paused       |
 | `open`       | a beat in prompt.md           | a topic the agent picks within the beat, in one of the series' templates | never, until paused       |
 
 The mode controls scheduling, not template capability. Every mode may declare
