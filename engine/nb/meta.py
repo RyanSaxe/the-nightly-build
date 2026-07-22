@@ -19,6 +19,7 @@ import re
 # they drift apart.
 SERIES_RE = re.compile(r"^[a-z0-9-]{1,32}$")
 SLUG_RE = re.compile(r"^[a-z0-9-]{1,64}$")
+TAG_RE = re.compile(r"^[a-z0-9-]{1,32}(?:/[a-z0-9-]{1,32})*$")
 PR_PATH_RE = re.compile(r"^library/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})\.html$")
 # Images, plus a chart's committed provenance (chart-N.py and its data).
 # The provenance files are inert bundle data: the engine and CI never
@@ -29,6 +30,33 @@ ARTICLE_ASSET_RE = re.compile(
     r"|chart-\d+\.(?:py|csv|json))$"
 )
 MODES = ("collection", "sequence", "rolling", "open")
+
+__all__ = (
+    "ARTICLE_ASSET_RE",
+    "META_RE",
+    "MODES",
+    "PR_PATH_RE",
+    "SERIES_RE",
+    "SLUG_RE",
+    "TAG_RE",
+    "article_bundle_path",
+    "is_meta_script",
+    "is_safe_tag",
+    "read_meta",
+    "series_dir",
+    "series_ids",
+)
+
+
+def is_safe_tag(tag: str) -> bool:
+    """Return whether a tag is safe as a nested static-site path.
+
+    Tags use one or more lowercase slug segments separated by single slashes.
+    The grammar excludes empty segments, traversal markers, backslashes, and
+    absolute paths before a builder ever joins the value to its output root.
+    """
+    return isinstance(tag, str) and bool(TAG_RE.fullmatch(tag))
+
 
 # The one nb-meta block every consumer honors: a typed
 # <script type="application/json" id="nb-meta">. Requiring the type (in any

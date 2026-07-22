@@ -1,5 +1,9 @@
-"""The proof's judgements about prose: the WARN tier, strict promotion, banned
-terms, and the placeholder text an agent forgot to replace.
+"""This module tests the proof's prose findings.
+
+The fixtures deliberately alter real repository-backed articles and series
+configurations, because prose findings depend on both the rendered structure
+and the policy selected by the series. This keeps the tests focused on the
+author-facing warning and strict-mode contracts rather than private helpers.
 
 A warn is advice; a block is a refusal. Which one a finding lands at is the
 thing under test here — a series with `strict: true` turns every warn into a
@@ -23,7 +27,6 @@ DEBATE_RE = re.compile(
 
 
 def _short_article() -> str:
-    """The fixture article with most of its prose cut away."""
     short = article()
     for _ in range(9):
         short = short.replace(LOREM, "Short. ", 20)
@@ -31,7 +34,6 @@ def _short_article() -> str:
 
 
 def _thin_sources() -> str:
-    """Two of the eight sources demoted to bare links, and their cites dropped."""
     return (
         article()
         .replace(
@@ -48,7 +50,6 @@ def _thin_sources() -> str:
 
 
 def _uncited_debate() -> str:
-    """The debate section stripped of every citation."""
     base = article()
     debate = DEBATE_RE.search(base)
     assert debate is not None
@@ -56,7 +57,6 @@ def _uncited_debate() -> str:
 
 
 def _thin_brief() -> str:
-    """A brief down to three items, two of them uncited."""
     return (
         re.sub(r"<div data-nb-item>.*?</div>", "", brief(), count=2, flags=re.S)
         .replace('<sup class="nb-cite"><a href="#s1">1</a></sup>', "")
@@ -66,7 +66,6 @@ def _thin_brief() -> str:
 
 @pytest.fixture
 def reqdoc_repo(clone_testrepo: Callable[..., str]) -> str:
-    """A press whose micron item declares a required document."""
     repo = clone_testrepo("press", "templates")
     y = pathlib.Path(repo) / "press" / "series" / "semiconductors" / "series.yaml"
     y.write_text(
@@ -113,6 +112,34 @@ def test_brief_with_too_few_items_warns_on_length(
 ) -> None:
     result = run_local(_thin_brief(), "ai-briefs", slug=TODAY)
     assert "W-LENGTH-LOW" in result.warns
+    assert not result.blocks
+
+
+def test_series_item_band_replaces_the_template_band(
+    run_local: Callable[..., Findings], clone_testrepo: Callable[..., str]
+) -> None:
+    repo = clone_testrepo("press", "templates")
+    y = pathlib.Path(repo) / "press" / "series" / "ai-briefs" / "series.yaml"
+    y.write_text(y.read_text() + "bands:\n  items: [2, 4]\n")
+    result = run_local(_thin_brief(), "ai-briefs", slug=TODAY, repo=repo)
+    assert "W-LENGTH-LOW" not in result.codes
+    assert not result.blocks
+
+
+def test_open_series_item_band_applies_after_template_selection(
+    run_local: Callable[..., Findings], clone_testrepo: Callable[..., str]
+) -> None:
+    repo = clone_testrepo("press", "templates")
+    series = pathlib.Path(repo) / "press" / "series" / "wildcard"
+    series.mkdir()
+    (series / "series.yaml").write_text(
+        "name: Wildcard\nmode: open\ntemplate: brief\nbands:\n  items: [2, 3]\n"
+    )
+    html = _thin_brief().replace('"series": "ai-briefs"', '"series": "wildcard"')
+    html = html.replace('"mode": "rolling"', '"mode": "open"')
+    html = html.replace('"slug": "2026-07-06"', '"slug": "preview"')
+    result = run_local(html, "wildcard", slug="preview", repo=repo)
+    assert "W-LENGTH-LOW" not in result.codes
     assert not result.blocks
 
 
@@ -168,8 +195,6 @@ def test_strict_promotes_warn_to_block(
 
 @pytest.fixture
 def banned_repo(clone_testrepo: Callable[..., str]) -> Callable[..., str]:
-    """A press carrying the spec's banned-terms list, optionally overridden."""
-
     def repo(press_yaml: str | None = None) -> str:
         tmp = clone_testrepo("press", "templates", "spec", "engine")
         if press_yaml is not None:
@@ -256,7 +281,7 @@ def test_validate_config_judges_a_banned_terms_override(
     press_yaml: str,
     returncode: int,
 ) -> None:
-    assert vc_rc(banned_repo(press_yaml)) == returncode
+    assert vc_rc(banned_repo(press_yaml)) == returncode, name
 
 
 def test_clean_article_carries_no_placeholder_warn(
@@ -291,7 +316,7 @@ def test_caps_runs_are_read_as_leftovers(
     run_local: Callable[..., Findings], name: str, paragraph: str
 ) -> None:
     result = run_local(mut(HEADING, f"{HEADING}<p>{paragraph}</p>"), "semiconductors")
-    assert "W-PLACEHOLDER" in result.warns
+    assert "W-PLACEHOLDER" in result.warns, name
 
 
 def test_acronym_runs_shorter_than_the_generic_bar_stay_clean(

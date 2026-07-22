@@ -6,5 +6,6 @@ template: article
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [1200, 2400]
+bands:
+  words: [1200, 2400]
 cadence: [sat, sun]

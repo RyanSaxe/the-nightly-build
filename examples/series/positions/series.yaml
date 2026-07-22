@@ -9,7 +9,8 @@ template: article
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [1500, 4000]
+bands:
+  words: [1500, 4000]
 min_sources: 8
 cadence: daily
 consult:

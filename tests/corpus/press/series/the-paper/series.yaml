@@ -8,7 +8,8 @@ template: paper
 prompt: prompt.md
 autopublish: true
 strict: false
-words: [2000, 3200]
+bands:
+  words: [2000, 3200]
 cadence: daily
 consult:
   - https://arxiv.org/

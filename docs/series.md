@@ -7,16 +7,22 @@ examples of everything below live in `examples/series/`.
 
 ## The four modes
 
-| Mode         | You declare                   | Each night publishes                                                         | Ends                      |
-| ------------ | ----------------------------- | ---------------------------------------------------------------------------- | ------------------------- |
-| `collection` | an item list                  | the next unpublished item, or any of them with `selection: random`           | when the list is done     |
-| `sequence`   | an ordered syllabus           | the lowest-numbered missing item, building on the published ones             | when the syllabus is done |
-| `rolling`    | nothing; the date is the item | today's UTC date                                                             | never, until paused       |
-| `open`       | a beat in prompt.md           | a topic the agent picks within the beat, in the template it judges fits best | never, until paused       |
+| Mode         | You declare                   | Each night publishes                                                     | Ends                      |
+| ------------ | ----------------------------- | ------------------------------------------------------------------------ | ------------------------- |
+| `collection` | an item list                  | the next unpublished item, or any of them with `selection: random`       | when the list is done     |
+| `sequence`   | an ordered syllabus           | the lowest-numbered missing item, building on the published ones         | when the syllabus is done |
+| `rolling`    | nothing; the date is the item | today's UTC date                                                         | never, until paused       |
+| `open`       | a beat in prompt.md           | a topic the agent picks within the beat, in one of the series' templates | never, until paused       |
+
+The mode controls scheduling, not template capability. Every mode may declare
+one `template:` or several `templates:`; a multi-template series lets the
+correspondent choose the best package for each article. `template:` and
+`templates:` are mutually exclusive, and a per-article choice is recorded in
+`nb-meta`; there is no template-level mode allowlist.
 
 Open mode is the hands-off paper. You describe a beat, the night shift
 reads the section's back catalog, picks something new, and chooses its template
-from the series' declared `templates:` list (or its single `template:`).
+from the series' declared choices.
 For several varied reads a day without curating items, run several open
 sections with distinct beats. One article per series per night is the
 invariant, so sections are how a paper gets breadth.
@@ -55,12 +61,23 @@ paused series sink into "In the stacks" automatically.
 
 ## Quality and sources
 
-Per series: `words: [low, high]` (may tighten, never loosen below the
-template's registry floor), `min_sources` (the citation floor; defaults to
-`8` for a longread template and `5` for a shortread one, so you only set it to
-raise the bar), `strict: true` (every WARN becomes a BLOCK), `autopublish: true`
-(the desk auto-merges a clean PR; the default is a human merge), and the source
-policy: `required_docs`, `consult`, and
+Per series, `bands:` optionally replaces template defaults field by field:
+
+```yaml
+bands:
+  words: [900, 3000]
+  items: [3, 8]
+  flex_sections: [1, 5]
+```
+
+Template bands are recommendations, not hardcoded genre gates. A series may
+loosen or tighten any supplied band, add a band where the template has no
+default, or omit `bands` for no geometry default. `min_sources` remains a
+separate source floor; it defaults to
+`8` for a longread template and `5` for a shortread one, while an explicit
+`min_sources: 0` disables that default. `strict: true` turns every WARN into a
+BLOCK. `autopublish: true` lets the desk auto-merge a clean PR (the default is
+a human merge). The source policy is `required_docs`, `consult`, and
 `sources_exclusive`, described in the [README](../README.md) and
 demonstrated across `examples/series/`.
 
@@ -79,7 +96,7 @@ sources_by_kind: # the composition of what the article cites, any series
   primary: [4, null] # at least four primaries; null means no ceiling
   secondary: [2, null]
 
-per_item_sources: # only on a per-item template (the brief's cite_rule)
+per_item_sources: # only when every selected template uses cite_rule: per-item
   primary: [1, 1] # every item: exactly one document that owns its claim
   secondary: [1, 2] # and one or two independent reads of it
 ```
@@ -88,7 +105,7 @@ per_item_sources: # only on a per-item template (the brief's cite_rule)
 items the night's writer chose. Both bands are BLOCKs regardless of `strict`,
 and a `per_item_sources` on a series that may cite per section is a
 configuration error, caught by `engine/validate_config.py` rather than at 2am.
-So is a band set on a series whose template ships source entries without
+So is a source-composition band set on a series whose template ships source entries without
 `data-nb-kind`. Once either band is set, a source that declares no kind blocks:
 a source that will not say what it is escapes every rule written about the mix.
 A series that sets neither band never asks.

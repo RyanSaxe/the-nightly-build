@@ -29,18 +29,3 @@ rule:
         has:
           field: property
           regex: "^innerHTML$"
-metadata:
-  byor:
-    rationale: >
-      nb.js renders article-derived strings (titles, headings) into innerHTML.
-      The proof (check.py) sees article source as text, so an escaped-entity
-      payload is legal there but decodes to live markup once innerHTML re-parses
-      it. Every dynamic value at a DOM sink must be escaped.
-    agent_prompt: >
-      Wrap the concatenated member-expression in escHtml(...) before it reaches
-      innerHTML/insertAdjacentHTML, or build the node with textContent /
-      setAttribute instead of string concatenation.
-    tags:
-      - javascript
-      - security
-      - xss
