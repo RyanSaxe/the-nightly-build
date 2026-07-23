@@ -18,9 +18,10 @@ import subprocess
 import yaml
 
 from nb import meta as nb_meta
+from nb.workflow_sync import classify_workflow_sync
 
 
-def added_article(diff_base):
+def changed_files(diff_base: str) -> list[tuple[str, str]]:
     out = (
         subprocess.run(
             ["git", "diff", "--name-status", "--no-renames", f"{diff_base}...HEAD"],
@@ -31,15 +32,19 @@ def added_article(diff_base):
         .stdout.strip()
         .splitlines()
     )
-    changes = []
+    changes: list[tuple[str, str]] = []
     for line in out:
         status, _, path = line.partition("\t")
         if path:
             changes.append((status, path))
-    return nb_meta.article_bundle_path(changes)
+    return changes
 
 
-def autopublish(repo, diff_base):
+def added_article(diff_base: str) -> str | None:
+    return nb_meta.article_bundle_path(changed_files(diff_base))
+
+
+def autopublish(repo: str, diff_base: str) -> None:
     path = added_article(diff_base)
     if path is None:
         print("false")
@@ -57,11 +62,19 @@ def autopublish(repo, diff_base):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("cmd", choices=["autopublish", "article-path"])
+    p.add_argument("cmd", choices=["autopublish", "article-path", "sync"])
     p.add_argument("--repo", default="_main")
     p.add_argument("--diff-base", required=True)
     a = p.parse_args()
     if a.cmd == "autopublish":
         autopublish(a.repo, a.diff_base)
-    else:
+    elif a.cmd == "article-path":
         print(added_article(a.diff_base) or "")
+    else:
+        sync = classify_workflow_sync(
+            ".",
+            a.repo,
+            head="HEAD",
+            changes=changed_files(a.diff_base),
+        )
+        print("true" if sync.valid else "false")

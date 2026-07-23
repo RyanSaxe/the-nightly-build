@@ -1,4 +1,10 @@
-"""The proof as CI runs it: a PR body, and the diff a night shift actually pushed."""
+"""The proof as CI runs it: a PR body, and the diff a night shift actually pushed.
+
+These tests use real Git branches to cover every diff shape admitted to the
+library: one article bundle, an owner retraction, or an exact copy of the two
+publishing workflows from the fork's main checkout. Working-tree mutations
+also confirm that validation reads proposed blobs from the named head ref.
+"""
 
 import pathlib
 from collections.abc import Callable
@@ -222,8 +228,50 @@ def test_pr_modifying_engine_code(pr_repo: PressRepo) -> None:
     assert "B-DIFF-SHAPE" in result.blocks
 
 
+def prepare_workflow_sync(pr_repo: PressRepo) -> str:
+    workflows = {
+        ".github/workflows/check.yml": "name: canonical check\n",
+        ".github/workflows/publish.yml": "name: canonical publish\n",
+    }
+    pr_repo.checkout("library")
+    pr_repo.checkout("nb/sync-library-workflows", new=True)
+    for path, content in workflows.items():
+        pr_repo.write(path, content)
+    pr_repo.commit("chore: sync library workflows from main abc123")
+    return "nb/sync-library-workflows"
+
+
+def test_pr_accepts_an_exact_workflow_sync(pr_repo: PressRepo) -> None:
+    head = prepare_workflow_sync(pr_repo)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+    assert result.report.outcome == "SYNC"
+
+
+def test_workflow_sync_rejects_an_extra_file(pr_repo: PressRepo) -> None:
+    head = prepare_workflow_sync(pr_repo)
+    pr_repo.write("unexpected.txt", "not part of a sync\n")
+    pr_repo.commit("sneak in another file")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-WORKFLOW-SYNC" in result.blocks
+
+
+def test_workflow_sync_rejects_a_noncanonical_blob(pr_repo: PressRepo) -> None:
+    head = prepare_workflow_sync(pr_repo)
+    pr_repo.write(".github/workflows/check.yml", "name: changed in the PR\n")
+    pr_repo.commit("change canonical workflow")
+    pr_repo.write(".github/workflows/check.yml", "name: canonical check\n")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-WORKFLOW-SYNC" in result.blocks
+
+
 def retract_on_a_curation_branch(pr_repo: PressRepo) -> None:
-    """The owner publishes a second article, then retracts it on their own branch."""
     pr_repo.checkout("library")
     pr_repo.write("library/semiconductors/tsmc.html", article())
     pr_repo.commit("published")
