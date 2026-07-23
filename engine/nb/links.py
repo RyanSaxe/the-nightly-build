@@ -1,6 +1,12 @@
-"""Probing cited source URLs: which of them are provably dead."""
+"""Probe cited sources without mistaking bot defenses for dead links.
+
+The article proof uses this module for both public HTTPS sources and the small
+grammar of repository-relative required documents. Network failures remain
+advisory unless the destination is definitively absent.
+"""
 
 import concurrent.futures
+import re
 import socket
 import urllib.error
 import urllib.request
@@ -13,6 +19,22 @@ LINK_UA = (
     "Mozilla/5.0 (compatible; NightlyBuild-proof/1.1; "
     "+https://github.com/RyanSaxe/the-nightly-build)"
 )
+
+__all__ = ("classify_link", "dead_source_links", "is_repo_relative_source")
+
+
+def is_repo_relative_source(href: str | None) -> bool:
+    """Return whether a required-doc href uses the local-path form.
+
+    Local citations are nonempty relative paths without whitespace or an
+    off-origin URL marker. The proof applies this exception only to sources
+    carrying ``data-nb-required``; ordinary sources still require HTTPS.
+    """
+    if not href or re.search(r"\s", href):
+        return False
+    normalized = href.replace("\\", "/")
+    is_off_origin = "://" in normalized or normalized.startswith("//")
+    return not is_off_origin and not normalized.startswith("/")
 
 
 def classify_link(status, error) -> Literal["dead", "ok", "unverified"]:

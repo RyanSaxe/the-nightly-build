@@ -92,7 +92,9 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      (for example `press/series/<id>/brief.pdf`), never an invented URL. A
      `data-nb-required` entry names a local artifact, so it is exempt from the
      absolute-https rule the other sources follow. Never fabricate a public URL
-     for a file that has none.
+     for a file that has none. The published site turns that path into a link to
+     the file on the fork's `main`; private repositories keep GitHub's normal
+     authentication.
    - `consult`: sources you MUST read BEFORE researching elsewhere. They orient
      the work, and citing them is optional. An entry that is a specific page
      gets read in full. An entry that scopes an archive (an arXiv listing, a
