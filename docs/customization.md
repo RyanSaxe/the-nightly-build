@@ -3,23 +3,26 @@
 Everything here happens inside `press/` (see [press.md](press.md)). Engine
 updates never touch it. Working examples live in `examples/`.
 
+Most papers need two paper-wide files, `site.yaml` and `editorial.md`, plus a
+`series.yaml` and `prompt.md` for each section. Use the rest of this page when
+you want to change the visual system or add reusable furniture and templates.
+
 ## Look: themes
 
 The entire visual system reads about two dozen CSS variables from one token
-file. The theme contract: define the color tokens in all four blocks (light,
-dark, and the two manual-override blocks); the font and radius tokens live in
-the base block and are inherited. The test suite enforces parity across the
-blocks.
+file. Define the color tokens in all four blocks: light, dark, and the two
+manual overrides. Font and radius tokens live in the base block and are
+inherited. The shipped theme has automated parity checks; custom themes do not.
 
 Beyond the page tokens, a theme carries two data-color groups. `--chart-1`
 through `--chart-6` are the categorical series colors for charts, in a
 fixed, colorblind-validated order: assign them in sequence, never
 re-sorted.
-`--ok`, `--warn`, and `--bad` are semantic status inks (grade verdicts,
-holds-up labels, score meters). The suite checks their contrast in every
-block: chart tokens hold at least 3:1 against `--bg` and `--panel`, status
-tokens at least 4.5:1, so a custom theme cannot ship unreadable legends or
-status text.
+`--ok`, `--warn`, and `--bad` are semantic status inks for verdicts, labels,
+and score meters. The shipped theme keeps chart tokens at least 3:1 against
+`--bg` and `--panel`, and status tokens at least 4.5:1. Check the same contrast
+when you make a custom theme; validation currently checks only that its file
+exists.
 
 The shipped theme pairs a pale day-sky paper with bronze accents in light
 mode and a deep navy night with amber in dark mode. Keep day accents deep
@@ -37,12 +40,15 @@ included. Base tokens are light, the universal fallback; dark applies via
 `prefers-color-scheme` or the reader's toggle. Keep it that way in custom
 themes.
 
-Fonts load from Google Fonts. For an article's own `<head>`, that is the only
-external origin the sandbox allows besides the engine's own assets path (the
-page-injected `assets:` libraries below are a separate, owner-authored path
-with their own rules). Swapping families changes the chrome and new articles
-immediately; articles published earlier keep their frozen font links and
-fall back to system faces for any family they did not load.
+The shipped templates and generated site chrome load the default families from
+Google Fonts. Theme tokens choose the font stack, but they do not add a new
+font import: a custom web font needs a matching `<link>` in the template and,
+for generated pages, an engine change. Existing articles keep the font links
+from the templates they were written with and fall back to system faces when a
+requested family is unavailable. Google Fonts is the only external origin the
+article sandbox allows besides the engine's own assets path; page-injected
+`assets:` libraries below are a separate, owner-authored path with their own
+rules.
 
 ## Your own furniture
 

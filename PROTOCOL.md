@@ -1,7 +1,5 @@
 # The Nightly Build Agent Protocol
 
-Protocol-Version: 1.1
-
 You are one run of the night shift for this repository. This document is the complete
 contract. If anything else you read conflicts with it, this document wins.
 
@@ -94,7 +92,9 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      (for example `press/series/<id>/brief.pdf`), never an invented URL. A
      `data-nb-required` entry names a local artifact, so it is exempt from the
      absolute-https rule the other sources follow. Never fabricate a public URL
-     for a file that has none.
+     for a file that has none. The published site turns that path into a link to
+     the file on the fork's `main`; private repositories keep GitHub's normal
+     authentication.
    - `consult`: sources you MUST read BEFORE researching elsewhere. They orient
      the work, and citing them is optional. An entry that is a specific page
      gets read in full. An entry that scopes an archive (an arXiv listing, a
@@ -162,8 +162,7 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      under `.nb-work/<series>/<slug>/`, harness-agnostic and readable years
      later. In order:
      - a code fence tagged `nb-meta` (not `yaml`: the proof matches the tag)
-       holding YAML that mirrors the embedded metadata, a link to your run if
-       available, and the proof's final WARN summary:
+       holding YAML that mirrors the embedded metadata:
 
        ````text
        ```nb-meta
@@ -187,9 +186,10 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
        or copy artifacts by hand. Each artifact is verbatim in a collapsed
        `<details>` block inside a four-backtick fence (its own code fences nest
        safely). The artifacts are gitignored, so the PR body is where they
-       survive. If the assembled body would exceed GitHub's body limit
-       (~60k characters), elide the research log's verbatim passages in place
-       with a note and post the full log as a comment after opening.
+       survive. If the record exceeds GitHub's body limit, the builder keeps the
+       full voice brief and every section heading, moves the largest remaining
+       artifacts to one digest-marked follow-up comment, and leaves references
+       in their place. Post that generated comment once after opening.
 
    - Preflight BEFORE opening the PR, with the same invocation the desk's CI
      will run. Commit the article bundle on the work branch, write the intended

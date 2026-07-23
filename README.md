@@ -2,203 +2,223 @@
 
 ![The Nightly Build](assets/the-nightly-build-banner.png)
 
-The Nightly Build is an engine for running a personal, AI-researched
-newspaper. You fork this repository, describe what you want to read, and a
-scheduled agent researches and publishes cited articles to your own GitHub
-Pages site every night. Git is the entire protocol: any agent that can open
-a pull request can be your night shift.
+## Your own AI-researched morning paper, published while you sleep
 
-Articles are original research artifacts, not summaries: each is a deeply
-researched, fully cited piece, shaped to fit its topic. You describe what you
-want covered and how deep to go; the night shift does the research, holds the
-sourcing and quality bar, and publishes. Over weeks the output accumulates into
-a permanent, searchable library that you own and that GitHub serves for free.
+The Nightly Build turns a GitHub repository into a personal newspaper. Describe
+what you want to read, connect an agent, and get original, cited articles on
+your own GitHub Pages site every morning.
 
-## What it looks like
+**No backend and no new accounts. It can run on AI tools you already use.**
 
-One clean column, a ruled index, and every card carrying its reading time and
-source count. The reader's front page and a single article, on a phone:
+Your paper and its archive live in your fork. You own it.
 
-<p>
-<img src="assets/screenshots/front-phone.png" width="48%" alt="The front page on a phone">
-<img src="assets/screenshots/article-phone.png" width="48%" alt="An article on a phone">
-</p>
-
-Technical pieces typeset their math (KaTeX) and highlight their code (Prism),
-in both schemes. The annotated equation names each colored term in a legend:
-
-<p>
-<img src="assets/screenshots/math-code-phone.png" width="48%" alt="Equations and a code listing, day scheme">
-<img src="assets/screenshots/math-code-phone-night.png" width="48%" alt="The same equations and listing, night scheme">
-</p>
-
-## Quickstart
-
-1. Fork this repository (keep GitHub's "Copy the main branch only" box
-   checked). Keep it public if you want the published site: GitHub Pages needs
-   a public repo on the free plan.
-2. Clone your fork and tell your agent "set me up", or run `./setup.sh` and
-   edit `press/` by hand. Setup scaffolds your configuration, creates the
-   `library` branch, and enables Pages and auto-merge. Enable workflows once
-   in your fork's Actions tab. A complete working configuration ships in
-   `examples/` to copy from.
-3. Rehearse. Ask your agent for a "press check": a full research run
-   rendered to a locally served site, with no PR, so you can tune prompts
-   before scheduling anything.
-4. Connect and schedule. Pick a path in [docs/scheduling.md](docs/scheduling.md):
-   a provider's native scheduler (often included in a plan you already pay for)
-   or the universal GitHub Actions cron that runs any headless agent. Schedule one nightly job for the whole
-   paper and trigger it once now for today's first article. Each run derives its
-   work list from the repo, so you never touch the schedule again.
-5. Read. The night shift opens one PR per series, CI validates and (for
-   `autopublish` series, which the examples enable) merges, the site rebuilds,
-   and the Atom feed delivers it.
+> [!NOTE]
+> Your articles will be searchable from [the-nightly-build.github.io](https://the-nightly-build.github.io/)
+>
+> If you don't want that, disable it via setting `directory.publish = false` in your `site.yaml`
 
 ## How it works
 
-| Piece             | Where                   | Purpose                                                                                                                                                                                                  |
-| ----------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PROTOCOL.md`     | main                    | The complete agent contract                                                                                                                                                                              |
-| the proof         | `engine/check.py`       | Validates articles. BLOCK findings stop publication; WARN findings drive revision                                                                                                                        |
-| the desk          | `check.yml`             | Validates every PR to `library`; auto-merges clean ones from `autopublish` series (otherwise a human merges); supersedes competitors                                                                     |
-| the press         | `engine/build_site.py`  | Rebuilds the site on every merge: front page, night archive, sections, search, feeds                                                                                                                     |
-| duty              | `engine/duty.py`        | Deterministic nightly work selection: cadence, pauses, completion, commissions                                                                                                                           |
-| templates         | `templates/<id>/`       | Citation geometries, each a self-contained folder package (manifest, skeleton, identity, optional furniture), plus a shared furniture catalog. User templates in `press/templates/<id>/` are first class |
-| the correspondent | `skills/correspondent/` | The night desk: reads duty, commissions every due article, hands each to its own desk, sees the PRs through CI                                                                                           |
-| a desk            | `skills/desk/`          | One article, end to end: runs the role chain below in its own worktree, proves the draft, opens the PR                                                                                                   |
-| the writing coach | `skills/writing-coach/` | Studies how the best writers in a topic actually write, then hands the drafter a per-article voice brief                                                                                                 |
-| the editor        | `skills/editor/`        | A surgical editorial pass over each draft: cuts and tightens in place or asks for a redraft, never rewrites                                                                                              |
-| the librarian     | `skills/librarian/`     | Setup interview and ongoing curation of `press/`                                                                                                                                                         |
+![The Nightly Build architecture](assets/architecture.svg)
 
-Two branches with disjoint jobs: `main` holds the engine and your
-configuration, `library` holds published articles, which the press builds into
-the live Pages site on each merge.
-`press/` is the only directory you edit. It does not exist upstream, so
-pulling engine updates is an ordinary merge with nothing to conflict.
+## Get started
 
-## Configuration
+### 1. Fork and bootstrap
 
-Series live in `press/series/<id>/` as a `series.yaml` plus a prompt file.
-Four modes: `collection` (an item list, published front to back or at
-random), `sequence` (an ordered course), `rolling` (one article per date),
-and `open` (you describe a beat, the agent picks each night's topic and
-genre). Cadence, pausing, sections, source requirements, and quality bands
-are one-line settings. See [docs/series.md](docs/series.md).
+Fork this repository with **Copy the main branch only** enabled. Keep the fork
+public if you want to use GitHub Pages on the free plan.
 
-Sources can be constrained per series: `required_docs` are committed files
-the agent must read and cite, `consult` lists must-read starting points, and
-`sources_exclusive: true` restricts citations to the declared set. The three
-sit at different tiers of the proof: `sources_exclusive` is an unconditional
-BLOCK (a citation outside the declared set fails the PR); a missing
-`required_docs` citation is a WARN that a `strict` series promotes to a BLOCK;
-`consult` is a read-first instruction the proof does not verify (citing a
-consulted source is optional).
-
-A count says nothing about what kind of sources came in, so a series can also
-constrain the mix: `sources_by_kind` and `per_item_sources` set `[low, high]`
-bands over primary and secondary sources, and both BLOCK. The proof counts the
-kinds the article declares; whether a source is truly independent of the primary
-is a judgment the research log makes and the editor audits. See
-[docs/series.md](docs/series.md).
-
-### Authenticated sources
-
-Public web access works out of the box. Sources that require an account do not:
-the harness cannot provision or inherit arbitrary authenticated sessions. Users
-willing to configure their own connector, browser profile, API, or browser
-automation service may still be able to use those sources, depending on the
-harness and provider. See [the authenticated-source feature issue](https://github.com/the-nightly-build/the-nightly-build/issues/127)
-for the current options and scope.
-
-The proof also verifies that every cited source link resolves. It probes each
-URL by default and BLOCKs only on a definitive dead link: a 404/410
-response or a domain that does not resolve. A restricted, slow, rate-limited,
-bot-blocking (403), or timing-out source is treated as unverified and never
-blocks, so a real-but-gated source cannot fail an article.
-
-## Security
-
-No executable logic ever lives on the `library` branch. Articles are
-sandboxed: no scripts beyond JSON data blocks and the engine runtime, no
-iframes, no event handlers, and external references only to the engine
-assets path and Google Fonts. The desk validates untrusted PRs with
-read-only permissions and no secrets. Auto-merge is squash-only, into
-`library` only, for BLOCK-clean PRs only. Your agent's API key exists only as
-an Actions secret on the trusted scheduled path, never where PR validation runs.
-
-Anyone can open a pull request to a public site, but no stranger can publish
-through one. The desk runs on the `pull_request` event, so a PR from a fork
-receives a read-only token and cannot merge itself; only a branch pushed to the
-site's own repository (the night shift, holding that repository's token) opens
-a same-repo PR that auto-merge can act on. The guarantee is the token split
-between fork and same-repo PRs, not article validation, so the trigger is
-`pull_request` and never `pull_request_target`, and a test enforces that so it
-cannot silently regress.
-
-A site may load libraries to power its furniture (a syntax highlighter, say)
-by declaring them in `press/site.yaml`. That surface preserves the boundary:
-the list is owner-authored on `main`, never by an auto-merged article; every
-entry is version-pinned and Subresource-Integrity-hashed; and articles stay
-script-free, so the sandbox above is unchanged. See
-[docs/customization.md](docs/customization.md).
-
-## Development
-
-uv is required for every local, CI, and harness Python invocation. Install it
-from [the official installer](https://docs.astral.sh/uv/getting-started/installation/),
-then run `uv sync --group figure-capture`. The engine has one runtime dependency,
-PyYAML; its scripts
-carry PEP 723 metadata, so `uv run engine/check.py` resolves it without a
-separate environment. Local development and CI use `pyproject.toml` and target
-Python 3.10+.
+Clone the fork and run the setup script (or ask your agent to do this in the next step):
 
 ```sh
-uv run pytest                                  # proof, builder, and end-to-end suites
-uv run engine/validate_config.py --repo .      # validate press/ configuration
+git clone https://github.com/<you>/<your-paper>.git
+cd <your-paper>
+./setup.sh
 ```
 
-Engine changes go through a lint, type-check, format, and test gate that CI
-enforces on `main`. Set it up once:
+The script scaffolds `press/`, creates the empty `library` branch, seeds its
+workflows, and configures GitHub Pages and auto-merge. It requires `git`,
+`gh` (authenticated), Python 3.10+, and PyYAML.
 
-```sh
-uv sync --group figure-capture # Python tools and capture dependencies
-npm install                 # web tools: prettier, eslint, stylelint, markdownlint
-uv run pre-commit install   # run the same checks on every commit
+### 2. Configure your paper
+
+Ask your agent to **set me up**, or copy a starting point from [`examples/`](examples/README.md).
+Your paper lives in one small configuration tree:
+
+```text
+press/
+├── site.yaml                 # title and appearance
+├── editorial.md              # paper-wide voice
+└── series/<id>/
+    ├── series.yaml           # cadence and publishing rules
+    └── prompt.md             # what this section covers
 ```
 
-Figure capture is an optional authoring toolchain. Its bootstrap installs the
-repo-pinned Python packages and Playwright's Chromium browser in one step:
+See [Your paper](docs/press.md) and [Series](docs/series.md) for the full
+configuration model.
 
-```sh
-./scripts/install-figure-capture.sh
-```
+### 3. Rehearse once
 
-Chromium is not committed and never runs in site CI or in a reader's browser.
-Re-run the command after updating the lockfile or when Playwright reports that
-its browser revision is missing.
+Ask your agent for a **press check**. It runs the article workflow locally,
+builds a preview, and lets you tune your paper before anything is published.
+This is useful for getting a feel for your prompts as well as the HTML components
+that come with the repo and/or your own custom ones, which you can read about in
+[Customization](docs/customization.md).
 
-`pre-commit` runs exactly what CI runs (the Rust drop-in `prek` reads the same
-config). The shell hooks also need `shellcheck` and `shfmt` on your PATH;
-install them from your package manager.
+### 4. Schedule the night shift
 
-This repository is engine-only. It runs no site and publishes no library;
-the maintainer dogfoods by copying it like any other user. `examples/`
-contains a complete working configuration as documentation.
+Ask your agent to help you schedule the night shift. You'll need to make sure
+it is set up with wider internet access permissions and the ability to raise
+a PR in your repository.
 
-## Docs
+The run derives its work from `press/`, so you do not need to update the schedule
+when you add or pause a section. The automation only needs to be updated if the
+[automation prompt](docs/scheduling.md#the-schedule-prompt) changes.
 
-- [Your site: ownership, forks, updates](docs/press.md)
-- [Series: modes, open sections, cadence, commissioning](docs/series.md)
-- [Scheduling: native schedulers, the universal Actions cron](docs/scheduling.md)
-- [Harnesses: which agents can run the night shift, and the cost](docs/harnesses.md)
-- [Customization: themes, voice, your own templates](docs/customization.md)
-- [Source assets: capture and article bundles](docs/source-assets.md)
-- [Delivery: feeds, the directory, the catalog API](docs/delivery.md)
+Choose a provider schedule or the universal GitHub Actions path in
+[Scheduling](docs/scheduling.md). [Harnesses](docs/harnesses.md) lists the
+supported agents and how their usage is billed.
 
-Published sites are listed automatically on
-[the-nightly-build.github.io](https://the-nightly-build.github.io/), a shared
-front page over every paper (set `directory.publish: false` to opt out). See
-[docs/delivery.md](docs/delivery.md).
+### 5. Read your paper
 
-MIT licensed. No accounts, no backend, no analytics. `catalog.json` and the
-Atom feeds are the API.
+The night shift opens pull requests against `library`. Once the first article
+merges, GitHub Pages publishes the newsstand, archive, search index, and feeds.
+See [Delivery](docs/delivery.md) for the URLs and feed formats.
+
+### 6. Iterate until you love it
+
+The first set of articles you get might not be perfect. You may want some formatting changes.
+A less formal voice. Different topics, you name it. The point is, it will probably take a few
+days to end up with a `press/` configuration that you love. Below are where you can configure:
+
+- Change the title and appearance in `press/site.yaml`.
+- Set the paper-wide voice in `press/editorial.md`.
+- Add sections, beats, cadence, and source requirements under `press/series/`.
+- Customize themes, furniture, and templates in `press/`.
+
+For inspiration, take a look at [examples](examples/README.md) as a living reference. Or even
+read [my personal fork](https://github.com/RyanSaxe/the-nightly-build/tree/main/press).
+
+[Customization](docs/customization.md) covers the extension points without requiring engine changes.
+
+## FAQ
+
+<!-- markdownlint-disable MD033 -->
+
+<details>
+<summary><strong>How do you keep the writing from sounding like AI?</strong></summary>
+
+---
+
+<p>By anchoring on strong real human writers as examples, and having an aggressive editor
+that is prompted to look for common indicators of AI slop as well as bad writing, the quality
+that comes out of The Nightly Build is quite a bit higher than my initial expectations. Importantly
+the agents have to pass explicitly codified gates before publishing. Words can be banned. Long
+sentences with lots of parentheticals and semicolons can be blocked. Basically, every time I saw
+an instance of writing that made me go "ugh that's AI", I tried my best to codify something in the
+system itself to prevent it. That being said, given this is something that is customizable, I did
+my best to avoid ham-stringing the engine from being able to express what downstream users may want.</p>
+
+---
+
+</details>
+
+<details>
+<summary><strong>Can it still hallucinate?</strong></summary>
+
+---
+
+<p>Sort of. It is genuinely impossible to guarantee everything said is 100% correct. Though the same is
+true of people. The system takes quite a bit of time and uses more tokens than you'd expect because it is
+forced to actually read every single source it cites. The editor will even force sentences to be cut if they
+cannot properly be demonstrated, and will meticulously try and find issues adversarially. Personally, I have
+found this leads to hallucinations to almost go away entirely. However, I am not going to claim that, as I
+am sure there will be instances of incorrectness.</p>
+
+---
+
+</details>
+
+<details>
+<summary><strong>What can the night shift access?</strong></summary>
+
+---
+
+<p>Only what you grant it. A normal run needs the web, both repository branches,
+and permission to open a PR against <code>library</code>. Validation reads
+untrusted article code without the scheduler's secrets. See
+<a href="docs/scheduling.md">Scheduling</a> for the full trust boundary.</p>
+
+---
+
+</details>
+
+<details>
+<summary><strong>Can it read paywalled or authenticated sources?</strong></summary>
+
+---
+
+<p>This is not something that is natively enabled, however you can set that up directly with
+your respective AI agent. If you'd like to see how that might work, take a look at
+<a href="https://github.com/the-nightly-build/the-nightly-build/issues/127">issue #127</a>.</p>
+
+---
+
+</details>
+
+<details>
+<summary><strong>Why does every article use a pull request?</strong></summary>
+
+---
+
+<p>The PR is both the review record and the publishing gate. It carries the
+article, earned assets, production record, and validation result. Nothing
+reaches <code>library</code> without passing CI. This makes it easy to audit
+the process if there are issues, as well as give more direct feedback in prompts.
+Additionally, PRs are a natural entity that basically every AI harness interacts with.</p>
+
+---
+
+</details>
+
+<details>
+<summary><strong>What does it cost?</strong></summary>
+
+---
+
+<p>The Nightly Build has no hosted service or fee. You pay for the agent or model
+runner you choose. More articles, broader research, and longer drafts use more
+tokens. See <a href="docs/harnesses.md">Harnesses</a>. Keep in mind this can be
+pretty token hungry. I would not recommend using something like Fable or Sol, unless
+you want to go through your weekly limits quickly.</p>
+
+---
+
+</details>
+
+<details>
+<summary><strong>Can I keep my paper private?</strong></summary>
+
+---
+
+<p>Yes, if your GitHub plan supports Pages for private repositories. A public
+fork is the simplest free setup.</p>
+
+---
+
+</details>
+
+<details>
+<summary><strong>Can I change the engine?</strong></summary>
+
+---
+
+<p>Yes. Most changes belong in <code>press/</code>; start with
+<a href="docs/customization.md">Customization</a>. If you modify the engine
+itself, you also own any conflicts when syncing upstream updates.</p>
+
+---
+
+</details>
+
+<!-- markdownlint-enable MD033 -->

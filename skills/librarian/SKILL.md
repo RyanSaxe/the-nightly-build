@@ -133,7 +133,7 @@ reread the finished prompt as the writer will, and fix anything the standard
 names before committing. The prompts in `examples/series/` hold both
 standards. Keep them holding both.
 
-Validate: `python3 engine/validate_config.py`. Fix anything it flags before
+Validate: `uv run engine/validate_config.py`. Fix anything it flags before
 proceeding. Commit the configuration to `main` via the user's normal review
 flow. Configuration is code-review territory, not an agent PR to `library`.
 
@@ -156,11 +156,14 @@ skips publishing.
 A press check runs a desk's article chain exactly as a real
 night, with one difference: the commission you write names the article path
 as `press-check/library/<series>/<slug>.html` (gitignored), so every role
-writes where `task.md` says. Run the chain (coach, researcher, writer,
+writes where `task.md` says. Before writing it, run
+`uv run engine/source_policy.py --repo . --series <id>` and put the result,
+focal source, and independent context on the card. Run the chain (coach,
+researcher, writer,
 editor), assemble the would-be PR body to `.nb-work/<series>/<slug>/pr-body.md`,
 and preflight it with `--pr-body`. Show the proof's verdict verbatim. Build
 the preview so the draft sits on the real newsstand with the back catalog:
-`python3 engine/build_site.py --repo . --library <checkout> --preview press-check/ --out press-check/site/`
+`uv run engine/build_site.py --repo . --library <checkout> --preview press-check/ --out press-check/site/`
 then serve it (`python3 -m http.server -d press-check/site/`). Headless,
 return the paths instead. This is the editorial loop for tuning a series:
 read the draft, adjust `prompt.md`, re-run, compare. **Promote on request**:
@@ -211,7 +214,6 @@ On request:
 - **Let a collection surprise them** (`selection: random`).
 - **Adjust `bands:`** (series values may tighten or loosen template defaults;
   omitted means no default) **and `min_sources`.**
-  **and `min_sources`.**
 - **Flip `autopublish`** (false means the desk approves and a human merges) **or
   `strict`** (true means WARNs become BLOCKs). Warn that a skipped night is better
   than a thin article.
@@ -261,10 +263,6 @@ construction: their commits and upstream's touch disjoint paths. If they HAVE
 edited engine files, the merge may conflict exactly there. That is normal fork
 ownership. Help them resolve it like any merge, never overwriting their work.
 
-After the merge, diff the paper's schedule prompt against the canonical one
-in `docs/scheduling.md` and replace anything that restates what the repo now
-owns. Nothing else guards that seam, and a schedule prompt written fat rots
-with every engine update.
 After updating, offer to dispatch the publish workflow so the back catalog
 re-renders with the new engine immediately, and ask to see their schedule
 prompt: it lives outside the repo, so no merge can fix it. Diff it against the

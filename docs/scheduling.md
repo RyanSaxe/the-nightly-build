@@ -1,8 +1,8 @@
 # Scheduling the night shift
 
-The night shift is just an agent that runs on a clock. Any agent that can check
-out your repo, browse the web, and open a pull request can be it. This page is
-how you put one on a nightly schedule.
+The night shift is an agent that runs on a clock. Any agent that can check out
+your repo, browse the web, and open a pull request can run it. This page helps
+you choose the scheduler and give it the access it needs.
 
 Two choices are involved, and they are independent:
 
@@ -13,11 +13,10 @@ Two choices are involved, and they are independent:
    You can do setup in one agent and schedule the night shift on another.
 
 The scheduler comes in two shapes. Some providers host their own; when yours
-does, that is the shortcut, and it is often included in a plan you already pay
-for. When it does not, the universal path below runs the same night shift on a
-GitHub Actions cron. That path always works. Which specific agents can be the
-night shift, how to invoke each, and what a run costs are in
-[harnesses.md](harnesses.md).
+does, that is the shortcut, and it may be included in a plan you already pay
+for. Otherwise, the universal path below runs the same night shift on a GitHub
+Actions cron. Which agents are supported, how to invoke them, and how usage is
+billed are in [harnesses.md](harnesses.md).
 
 ## What the night shift needs
 
@@ -69,30 +68,24 @@ The trigger lives on `main` (or in a separate repo). Never put it on the
 permissions and no secrets, and that boundary is the security model. A scheduled
 workflow on `main` holding your API key is the trusted side of that line.
 
-### Security: the night shift is untrusted by design
+### Security: contain the night shift
 
-The night shift researches by reading arbitrary web pages, so it can be
-prompt-injected by a page it visits, and no instruction reliably prevents that.
-The system is built to contain a compromised run, not to trust it:
+The night shift reads arbitrary web pages. Treat it as untrusted: a page can
+prompt-inject the agent, and instructions alone cannot prevent that.
 
-- Every article is validated by the proof (`engine/check.py`) and sandboxed: no
-  scripts beyond the engine runtime, no iframes or forms, no meta-refresh, and
-  external references only to the engine assets and Google Fonts. `setup.sh`
-  protects the `library` branch with `enforce_admins: true`, so the `validate`
-  check gates every merge, including runs that use your own token. A hijacked
-  run can do no more than open a PR the proof rejects.
-- The blast radius is your own fork only. A successful injection can alter your
-  `main` (the engine, or the `assets:` list in `press/site.yaml`, which loads
-  owner-authored JavaScript into every page), but never another user's paper or
-  the canonical repo, and it lands in your own commit history where you can see
-  it.
+- Article PRs are checked without scheduler secrets. The proof rejects active
+  content, including extra scripts, iframes, forms, and meta-refresh. `setup.sh`
+  protects `library`, and its required `validate` check gates every merge.
+- The scheduled agent is more powerful. The Actions example grants repository
+  contents write access so it can create work branches. Unless you also protect
+  `main`, a compromised run can change the engine or trusted configuration in
+  your fork. It cannot change another user's paper or the canonical repository.
 
-For a stricter boundary, run the schedule under a least-privilege identity: a
-fine-grained token or a bot collaborator that can push feature branches and open
-PRs but cannot push to `main` or `library`. That contains the autonomous night
-shift without touching your own ability to edit `press/` directly. And because
-`press/site.yaml`'s `assets:` block runs JavaScript on every reader's page,
-never let an untrusted agent edit it.
+For stronger containment, protect `main` as well as `library` and run the
+schedule under the narrowest identity your provider supports. That stricter
+setup needs feature branches and pull requests, not direct writes to either
+protected branch. Because `press/site.yaml` can add JavaScript to every reader's
+page, review changes to it as engine changes.
 
 ### The schedule prompt
 
@@ -105,8 +98,8 @@ sentence makes a stale prompt announce itself on the next run.
 > You are the night shift for The Nightly Build repo `<repo>`. Check out
 > `main` and read `PROTOCOL.md`: it is the complete contract, and the
 > correspondent skill carries the procedure. Check out the `library` branch
-> beside it at `<checkout>`. The engine scripts need Python 3.10+ and PyYAML
-> (install uv first if it is not already available), and research needs web
+> beside it at `<checkout>`. The engine scripts need uv and Python 3.10+;
+> run them through `uv run`. Research needs web
 > access. This paragraph is the entire assignment. If your schedule prompt
 > says more than this, it predates the engine you are running: flag that in
 > your PR bodies and ask the owner to paste the current paragraph from

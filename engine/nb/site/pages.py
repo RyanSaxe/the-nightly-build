@@ -168,6 +168,9 @@ def page(site, title, *, body, depth=0, active=None):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{esc(title)}</title>
+<link rel="icon" type="image/png" sizes="32x32" href="{rel}assets/favicon-32.png?v={site["stamp"]}">
+<link rel="icon" type="image/png" sizes="64x64" href="{rel}assets/favicon-64.png?v={site["stamp"]}">
+<link rel="apple-touch-icon" sizes="180x180" href="{rel}assets/apple-touch-icon.png?v={site["stamp"]}">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="{FONTS}" rel="stylesheet">
 <link rel="stylesheet" href="{rel}assets/theme.css?v={site["stamp"]}">

@@ -7,11 +7,26 @@ files on the library branch stay byte-exact.
 """
 
 import hashlib
+import html
 import os
 import re
 import shutil
+import sys
+import urllib.parse
 
+from nb.links import is_repo_relative_source
 from nb.site.pages import chrome_footer, chrome_header
+
+__all__ = (
+    "asset_stamp",
+    "copy_articles",
+    "copy_assets",
+    "css_owners",
+    "dress_article",
+    "rewrite_required_doc_links",
+    "template_dirs",
+    "write",
+)
 
 
 def write(path, content):
@@ -24,16 +39,23 @@ def asset_stamp(repo, css_paths=()):
     """Return a short content hash of the shared assets for cache busting.
 
     Every generated page and article copy links assets with ?v=<stamp>,
-    so a returning reader can never pair cached old CSS with newer markup.
-    The stamp folds in nb.css, nb.js, and every CSS owner concatenated
-    into assets/theme.css (the configured theme plus all furniture, shared
-    and template-scoped). copy_assets rebuilds theme.css from those owners
-    every build, so editing any of them busts the reader's cache and the
-    new look actually reaches them.
+    so a returning reader can never pair cached old assets with newer markup.
+    The stamp folds in the site icons, nb.css, nb.js, and every CSS owner
+    concatenated into assets/theme.css (the configured theme plus all
+    furniture, shared and template-scoped). copy_assets rebuilds theme.css
+    from those owners every build, so editing any of them busts the reader's
+    cache and the new look actually reaches them.
     """
     h = hashlib.md5()
     base = os.path.join(repo, "engine", "assets")
-    paths = [os.path.join(base, "nb.css"), os.path.join(base, "nb.js"), *css_paths]
+    paths = [
+        os.path.join(base, "apple-touch-icon.png"),
+        os.path.join(base, "favicon-32.png"),
+        os.path.join(base, "favicon-64.png"),
+        os.path.join(base, "nb.css"),
+        os.path.join(base, "nb.js"),
+        *css_paths,
+    ]
     for path in paths:
         if os.path.isfile(path):
             with open(path, "rb") as fh:
@@ -101,9 +123,47 @@ ARTICLE_ASSET_RE = re.compile(
     r'((?:href|src)="(?:\.\./)*assets/(?:nb\.css|nb\.js|theme\.css))(")'
 )
 BODY_OPEN_RE = re.compile(r"<body\b[^>]*>", re.IGNORECASE)
+ANCHOR_RE = re.compile(r"<a\b[^>]*>", re.IGNORECASE)
+REQUIRED_ATTR_RE = re.compile(r"\bdata-nb-required(?:\s*=|\s|>)", re.IGNORECASE)
+HREF_ATTR_RE = re.compile(
+    r"(\bhref\s*=\s*)(?:([\"'])(.*?)\2|([^\s>]+))", re.IGNORECASE | re.DOTALL
+)
 
 # Site copies of articles live at library/<series>/<slug>.html.
 ARTICLE_DEPTH = 2
+
+
+def rewrite_required_doc_links(raw: str, repository: str | None) -> tuple[str, bool]:
+    """Point local required-doc citations at the file on the fork's main branch.
+
+    Canonical articles keep the repo-relative provenance the proof validates.
+    Only the generated site copy gets a reader-facing GitHub URL. The boolean
+    reports a local citation that could not be rewritten because a preview had
+    no repository identity.
+    """
+    unresolved = False
+
+    def rewrite_anchor(match: re.Match[str]) -> str:
+        nonlocal unresolved
+        tag = match.group(0)
+        if REQUIRED_ATTR_RE.search(tag) is None:
+            return tag
+        href_match = HREF_ATTR_RE.search(tag)
+        if href_match is None:
+            return tag
+        group = 3 if href_match.group(2) else 4
+        href = html.unescape(href_match.group(group))
+        if not is_repo_relative_source(href):
+            return tag
+        if repository is None:
+            unresolved = True
+            return tag
+        path = urllib.parse.quote(href, safe="/%:@-._~")
+        url = f"https://github.com/{repository}/blob/main/{path}"
+        start, end = href_match.span(group)
+        return f"{tag[:start]}{url}{tag[end:]}"
+
+    return ANCHOR_RE.sub(rewrite_anchor, raw), unresolved
 
 
 def dress_article(raw, site):
@@ -115,6 +175,18 @@ def dress_article(raw, site):
     the next build. Idempotent, so an article that already carries a bar (an
     already-dressed copy handed back in) is left with exactly one.
     """
+    icons = "\n".join(
+        (
+            '<link rel="icon" type="image/png" sizes="32x32" '
+            f'href="../../assets/favicon-32.png?v={site["stamp"]}">',
+            '<link rel="icon" type="image/png" sizes="64x64" '
+            f'href="../../assets/favicon-64.png?v={site["stamp"]}">',
+            '<link rel="apple-touch-icon" sizes="180x180" '
+            f'href="../../assets/apple-touch-icon.png?v={site["stamp"]}">',
+        )
+    )
+    if "assets/favicon-32.png" not in raw:
+        raw = raw.replace("</head>", f"{icons}\n</head>", 1)
     if site["assets_html"]:
         raw = raw.replace("</head>", f"{site['assets_html']}\n</head>", 1)
     body_open = BODY_OPEN_RE.search(raw)
@@ -143,6 +215,12 @@ def copy_articles(articles, out, *, site):
             raw = fh.read()
         if site["stamp"]:
             raw = ARTICLE_ASSET_RE.sub(rf"\1?v={site['stamp']}\2", raw)
+        raw, unresolved = rewrite_required_doc_links(raw, site["repository"])
+        if unresolved:
+            sys.stderr.write(
+                "warning: required-doc link left relative because repository "
+                f"identity is unavailable: {ed['file']}\n"
+            )
         write(dst, dress_article(raw, site))
         source_assets = os.path.join(os.path.dirname(ed["file"]), ed["slug"])
         if os.path.isdir(source_assets):

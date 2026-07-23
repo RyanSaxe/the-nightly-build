@@ -76,10 +76,14 @@ default, or omit `bands` for no geometry default. `min_sources` remains a
 separate source floor; it defaults to
 `8` for a longread template and `5` for a shortread one, while an explicit
 `min_sources: 0` disables that default. `strict: true` turns every WARN into a
-BLOCK. `autopublish: true` lets the desk auto-merge a clean PR (the default is
-a human merge). The source policy is `required_docs`, `consult`, and
+BLOCK. `autopublish: true` lets CI auto-merge a clean PR (the default is a
+human merge). The source policy is `required_docs`, `consult`, and
 `sources_exclusive`, described in the [README](../README.md) and
 demonstrated across `examples/series/`.
+
+A `required_docs` citation stores the file's repo-relative path. The published
+site links that path to the file on the fork's `main` branch. Private repository
+links use GitHub's normal authentication; the file is never copied into Pages.
 
 ## Source composition
 

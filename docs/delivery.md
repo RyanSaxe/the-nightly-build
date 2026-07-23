@@ -17,10 +17,9 @@ the paper in your inbox, point an RSS-to-email service at the feed.
 `https://<you>.github.io/<repo>/catalog.json` is the machine-readable state
 of the whole library: series with progress and sections, every article's
 nb-meta plus `path`, `position`, and `reading_minutes`, builds grouped by
-night, and the tag index. The site's own search and navigation run on it.
-It is a stable public contract: external readers, dashboards, or a future
-multi-paper directory can build on it without touching the repo.
-`search-index.json` adds full text for client-side search.
+night, and the tag index. Generated pages and the catalog come from the same
+library state. External readers and dashboards can use the catalog without
+touching the repo. `search-index.json` carries full text for client-side search.
 
 ## The directory
 

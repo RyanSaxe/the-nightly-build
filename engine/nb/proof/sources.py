@@ -1,18 +1,25 @@
-"""The sources an article rests on: their form, and the mix a series asks for."""
+"""Check the form and composition of the sources an article rests on.
+
+The proof separates URL shape from editorial source policy. It verifies public
+and required-document links, then counts the primary and secondary labels the
+series contract asks each article or item to carry.
+"""
 
 import re
 
-from nb.links import dead_source_links
+from nb.links import dead_source_links, is_repo_relative_source
 
 SOURCE_KINDS = ("primary", "secondary")
 
-
-def is_repo_relative_source(href):
-    if not href or re.search(r"\s", href):
-        return False
-    normalized = href.replace("\\", "/")
-    is_off_origin = "://" in normalized or normalized.startswith("//")
-    return not is_off_origin and not normalized.startswith("/")
+__all__ = (
+    "SOURCE_KINDS",
+    "band_text",
+    "check_item_kinds",
+    "check_source_kinds",
+    "check_sources",
+    "is_count",
+    "kind_bands",
+)
 
 
 def check_sources(ed, rep, *, check_links):
@@ -52,11 +59,6 @@ def is_count(value) -> bool:
 
 
 def kind_bands(bands, *, key, rep) -> dict[str, tuple[int, int | None]]:
-    """The series' [low, high] bands per kind, blocking on a malformed config.
-
-    validate_config says all of this in daylight; a press that skipped it gets a
-    finding here rather than a traceback.
-    """
     if not isinstance(bands, dict):
         rep.block("B-SERIES", f"series '{key}' must be a mapping of kind to band")
         return {}

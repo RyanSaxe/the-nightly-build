@@ -28,7 +28,7 @@ never summaries.
 
 1. Read `PROTOCOL.md`. Fetch the `library` branch to its own checkout, then
    run the duty oracle. Never do calendar or queue math yourself:
-   `python3 engine/duty.py --repo . --library <checkout>`
+   `uv run engine/duty.py --repo . --library <checkout>`
    If your schedule prompt names one series, serve only that one, and only if
    duty lists it. **Duty says nothing is due → stop. No PR. Exiting silently
    here is correct behavior.** **Duty refuses the tree (exit 2) → do what it
@@ -43,12 +43,17 @@ never summaries.
    beat, the template from the series' declared choices, and a fresh slug.
    Choosing the subject is commissioning. It is not editing, and it does not
    make you the `editor`, who is a different role you will never perform.
-3. Write `task.md` per article. The commission fits on a card:
+3. Resolve the source policy for each assignment before writing its commission:
+   `uv run engine/source_policy.py --repo . --series <id>`. Copy the JSON result
+   onto the card and mark the selected template when the series offers several.
+4. Write `task.md` per article. The commission fits on a card:
    - the subject and the angle
    - what duty assigned, and its mode
    - what the recent catalog forbids repeating, and what else publishes
      tonight
    - known-good starting sources
+   - the resolved source floor and mix, the focal source, and the independent
+     context that could change its interpretation
    - the article's output path
    - the `harness` and `model` for nb-meta (you know the runtime; the roles
      do not)
