@@ -14,7 +14,7 @@ Your paper and its archive live in your fork. You own it.
 
 > [!NOTE]
 > Your articles will be searchable from [the-nightly-build.github.io](https://the-nightly-build.github.io/)
-> 
+>
 > If you don't want that, disable it via setting `directory.publish = false` in your `site.yaml`
 
 ## How it works
@@ -85,7 +85,7 @@ The night shift opens pull requests against `library`. Once the first article
 merges, GitHub Pages publishes the newsstand, archive, search index, and feeds.
 See [Delivery](docs/delivery.md) for the URLs and feed formats.
 
-### 6. Iterate until you love it!
+### 6. Iterate until you love it
 
 The first set of articles you get might not be perfect. You may want some formatting changes.
 A less formal voice. Different topics, you name it. The point is, it will probably take a few
@@ -116,7 +116,7 @@ that comes out of The Nightly Build is quite a bit higher than my initial expect
 the agents have to pass explicitly codified gates before publishing. Words can be banned. Long
 sentences with lots of parentheticals and semicolons can be blocked. Basically, every time I saw
 an instance of writing that made me go "ugh that's AI", I tried my best to codify something in the
-system itself to prevent it. That being said, given this is something that is customizable, I did 
+system itself to prevent it. That being said, given this is something that is customizable, I did
 my best to avoid ham-stringing the engine from being able to express what downstream users may want.</p>
 
 ---
@@ -198,8 +198,8 @@ you want to go through your weekly limits quickly.</p>
 
 <details>
 <summary><strong>Can I keep my paper private?</strong></summary>
-    
-----
+
+---
 
 <p>Yes, if your GitHub plan supports Pages for private repositories. A public
 fork is the simplest free setup.</p>
