@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 820" role="img" aria-labelledby="diagram-title diagram-description">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 760" role="img" aria-labelledby="diagram-title diagram-description">
   <title id="diagram-title">The Nightly Build article architecture</title>
   <desc id="diagram-description">Main enters the orchestrator, which fans work out into isolated worktrees. Each worktree runs a task, voice, research, writing, editing, and validation loop. Passing work opens a library pull request and publishes to GitHub Pages after green CI. CI failures return to the orchestrator.</desc>
   <defs>
@@ -27,14 +27,14 @@
     </style>
   </defs>
 
-  <rect width="1440" height="820" fill="#fbfaf7"/>
+  <rect width="1440" height="760" fill="#fbfaf7"/>
 
-  <rect x="120" y="300" width="1200" height="450" rx="24" fill="#fffdf8" stroke="#afbfbd" stroke-width="2" stroke-dasharray="9 7"/>
-  <text class="panel-title" x="155" y="342">INSIDE EACH ISOLATED WORKTREE</text>
-  <text class="panel-copy" x="155" y="367">The same desk loop runs in parallel for every commissioned task.</text>
+  <rect x="80" y="300" width="1280" height="420" rx="24" fill="#fffdf8" stroke="#afbfbd" stroke-width="2" stroke-dasharray="9 7"/>
+  <text class="panel-title" x="115" y="342">INSIDE EACH ISOLATED WORKTREE</text>
+  <text class="panel-copy" x="115" y="367">The same desk loop runs in parallel for every commissioned task.</text>
 
   <path class="edge" d="M210 170H270"/>
-  <path class="edge" d="M490 170H590"/>
+  <path class="edge" d="M490 170H580"/>
   <path class="leader" d="M690 215V300"/>
   <circle cx="690" cy="300" r="5" fill="#9cafb2"/>
   <path class="edge" d="M1260 170H1320"/>
@@ -53,12 +53,12 @@
   <text class="node-copy" x="295" y="174">sync · select · provision</text>
   <text class="artifact" x="295" y="201">commission task.md</text>
 
-  <rect x="602" y="115" width="200" height="100" rx="14" fill="#f7eed9" stroke="#d8b56a" stroke-width="1.5"/>
-  <rect x="596" y="121" width="200" height="100" rx="14" fill="#fbf3df" stroke="#d8b56a" stroke-width="1.5"/>
-  <rect x="590" y="127" width="200" height="100" rx="14" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="615" y="161">Worktrees × N</text>
-  <text class="node-copy" x="615" y="185">one isolated desk per article</text>
-  <text class="artifact" x="615" y="207">one task.md each</text>
+  <rect x="592" y="115" width="220" height="100" rx="14" fill="#f7eed9" stroke="#d8b56a" stroke-width="1.5"/>
+  <rect x="586" y="121" width="220" height="100" rx="14" fill="#fbf3df" stroke="#d8b56a" stroke-width="1.5"/>
+  <rect x="580" y="127" width="220" height="100" rx="14" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
+  <text class="node-title" x="605" y="161">Worktrees × N</text>
+  <text class="node-copy" x="605" y="185">one isolated desk per article</text>
+  <text class="artifact" x="605" y="207">one task.md each</text>
 
   <rect x="1020" y="115" width="240" height="110" rx="14" fill="#f1ebf7" stroke="#9a7ab6" stroke-width="2"/>
   <text class="node-title" x="1045" y="146">PR on library</text>
@@ -75,63 +75,62 @@
   <rect x="1215" y="282" width="50" height="26" rx="13" fill="#fbfaf7"/>
   <text class="label" x="1240" y="299" text-anchor="middle">pass</text>
 
-  <path class="edge" d="M280 475H330"/>
-  <path class="edge" d="M480 475H530"/>
-  <path class="edge" d="M710 475H760"/>
-  <path class="edge" d="M920 475H970"/>
-  <path class="edge" d="M1140 475H1190"/>
+  <path class="edge" d="M260 475H305"/>
+  <path class="edge" d="M470 475H515"/>
+  <path class="edge" d="M705 475H750"/>
+  <path class="edge" d="M925 475H970"/>
+  <path class="edge" d="M1160 475H1205"/>
 
-  <path class="repair" d="M575 525V552Q575 568 591 568H649Q665 568 665 552V525"/>
-  <rect x="576" y="554" width="76" height="25" rx="12" fill="#fffdf8"/>
-  <text class="repair-label" x="614" y="571" text-anchor="middle">bad URL</text>
+  <path class="repair" d="M660 425V400Q660 388 648 388H582Q570 388 570 400V425"/>
+  <text class="repair-label" x="615" y="379" text-anchor="middle">bad citation</text>
 
-  <path class="repair" d="M790 525V552Q790 568 806 568H864Q880 568 880 552V525"/>
-  <rect x="784" y="554" width="72" height="25" rx="12" fill="#fffdf8"/>
-  <text class="repair-label" x="820" y="571" text-anchor="middle">proof fails</text>
+  <path class="repair" d="M880 425V400Q880 388 868 388H807Q795 388 795 400V425"/>
+  <text class="repair-label" x="838" y="379" text-anchor="middle">bad writing</text>
 
-  <path class="repair" d="M1055 425V404Q1055 390 1041 390H634Q620 390 620 404V425"/>
-  <rect x="773" y="376" width="126" height="25" rx="12" fill="#fffdf8"/>
-  <text class="repair-label" x="836" y="393" text-anchor="middle">source gap · research</text>
+  <path class="repair" d="M1270 525V566Q1270 578 1258 578H1092Q1080 578 1080 566V525"/>
+  <text class="repair-label" x="1175" y="563" text-anchor="middle">check fails</text>
 
-  <path class="repair" d="M1010 525V598Q1010 614 994 614H866Q850 614 850 598V525"/>
-  <rect x="901" y="600" width="58" height="25" rx="12" fill="#fffdf8"/>
-  <text class="repair-label" x="930" y="617" text-anchor="middle">rewrite</text>
+  <path class="repair" d="M1040 525V603Q1040 615 1028 615H867Q855 615 855 603V525"/>
+  <text class="repair-label" x="948" y="600" text-anchor="middle">rewrite</text>
 
-  <path class="repair" d="M1250 525V660Q1250 676 1234 676H1081Q1065 676 1065 660V525"/>
-  <rect x="1105" y="662" width="104" height="25" rx="12" fill="#fffdf8"/>
-  <text class="repair-label" x="1157" y="679" text-anchor="middle">check fails · edit</text>
+  <path class="repair" d="M1000 525V640Q1000 652 988 652H632Q620 652 620 640V525"/>
+  <text class="repair-label" x="810" y="637" text-anchor="middle">source gap</text>
 
-  <rect x="130" y="425" width="150" height="100" rx="13" fill="#e8f2f4" stroke="#76a3ab" stroke-width="2"/>
-  <text class="node-title" x="145" y="455">Task</text>
-  <text class="node-copy" x="145" y="479" style="font-size:12px">from the orchestrator</text>
-  <text class="artifact" x="145" y="505">task.md</text>
+  <rect x="95" y="425" width="165" height="100" rx="13" fill="#e8f2f4" stroke="#76a3ab" stroke-width="2"/>
+  <text class="node-title" x="115" y="451">Task</text>
+  <text class="node-copy" x="115" y="473" style="font-size:12px">created by orchestrator</text>
+  <text class="node-copy" x="115" y="493" style="font-size:12px">scope + constraints</text>
+  <text class="artifact" x="115" y="514">task.md</text>
 
-  <rect x="330" y="425" width="150" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="345" y="451">Voice</text>
-  <text class="node-copy" x="345" y="473" style="font-size:12px">study relevant writers</text>
-  <text class="node-copy" x="345" y="493" style="font-size:12px">for voice + style</text>
-  <text class="artifact" x="345" y="514">voice.md</text>
+  <rect x="305" y="425" width="165" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
+  <text class="node-title" x="325" y="451">Voice</text>
+  <text class="node-copy" x="325" y="473" style="font-size:12px">study relevant writers</text>
+  <text class="node-copy" x="325" y="493" style="font-size:12px">for voice + style</text>
+  <text class="artifact" x="325" y="514">voice.md</text>
 
-  <rect x="530" y="425" width="180" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="555" y="455">Research</text>
-  <text class="node-copy" x="555" y="479">read + verify every URL</text>
-  <text class="artifact" x="555" y="505">research.md</text>
+  <rect x="515" y="425" width="190" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
+  <text class="node-title" x="535" y="451">Research</text>
+  <text class="node-copy" x="535" y="473" style="font-size:12px">read + verify sources</text>
+  <text class="node-copy" x="535" y="493" style="font-size:12px">log claims + citations</text>
+  <text class="artifact" x="535" y="514">research.md</text>
 
-  <rect x="760" y="425" width="160" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="785" y="455">Write + proof</text>
-  <text class="node-copy" x="785" y="479" style="font-size:12px">draft · check · revise</text>
-  <text class="artifact" x="785" y="505">article.html</text>
+  <rect x="750" y="425" width="175" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
+  <text class="node-title" x="770" y="451">Write</text>
+  <text class="node-copy" x="770" y="473" style="font-size:12px">draft from research</text>
+  <text class="node-copy" x="770" y="493" style="font-size:12px">run proof + revise</text>
+  <text class="artifact" x="770" y="514">article.html</text>
 
-  <rect x="970" y="425" width="170" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="985" y="451">Edit</text>
-  <text class="node-copy" x="985" y="473" style="font-size:12px">• concision · punctuation</text>
-  <text class="node-copy" x="985" y="493" style="font-size:12px">• citations · clarity</text>
-  <text class="artifact" x="985" y="514" style="font-size:10.5px">requested-changes.md</text>
+  <rect x="970" y="425" width="190" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
+  <text class="node-title" x="990" y="451">Edit</text>
+  <text class="node-copy" x="990" y="473" style="font-size:12px">tighten prose + punctuation</text>
+  <text class="node-copy" x="990" y="493" style="font-size:12px">check citations + clarity</text>
+  <text class="artifact" x="990" y="514">requested-changes.md</text>
 
-  <rect x="1190" y="425" width="120" height="100" rx="13" fill="#e9f5ec" stroke="#6f9a78" stroke-width="2"/>
-  <text class="node-title" x="1250" y="455" text-anchor="middle">Desk check</text>
-  <text class="node-copy" x="1250" y="479" text-anchor="middle">proof + render</text>
-  <text class="artifact" x="1250" y="505" text-anchor="middle">check.py</text>
+  <rect x="1205" y="425" width="140" height="100" rx="13" fill="#e9f5ec" stroke="#6f9a78" stroke-width="2"/>
+  <text class="node-title" x="1275" y="451" text-anchor="middle">Validate</text>
+  <text class="node-copy" x="1275" y="473" text-anchor="middle" style="font-size:12px">proof + render</text>
+  <text class="node-copy" x="1275" y="493" text-anchor="middle" style="font-size:12px">gate the handoff</text>
+  <text class="artifact" x="1275" y="514" text-anchor="middle">check.py</text>
 
-  <text class="panel-copy" x="155" y="720">Failures stay inside the desk. Only a CI failure returns to the orchestrator.</text>
+  <text class="panel-copy" x="115" y="695">Failures stay inside the desk. Only a CI failure returns to the orchestrator.</text>
 </svg>
