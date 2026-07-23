@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      A random network hides a sparse one that trains from its first weights ·
+      Paper of the Day
+    </title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "lottery-ticket-hypothesis",
+        "template": "paper",
+        "title": "A random network hides a sparse one that trains from its first weights",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-23",
+        "tags": [],
+        "sources": 11,
+        "words": 2450,
+        "reading_minutes": 14,
+        "dek": "A pruned subnetwork reaches full accuracy from the exact weights it started with and fails from fresh ones, and at ImageNet scale only once that starting point rewinds a few steps into training.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          A random network hides a sparse one that trains from its first weights
+        </h1>
+        <p class="nb-dekline">
+          A pruned subnetwork reaches full accuracy from the exact weights it
+          started with and fails from fresh ones, and at ImageNet scale only
+          once that starting point rewinds a few steps into training.
+        </p>
+        <div class="nb-byline">
+          <span>14 min read</span><span>2026-07-23</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural
+            Networks
+          </p>
+          <p class="nb-paper-meta">
+            Jonathan Frankle and Michael Carbin · ICLR 2019 (best paper) ·
+            arXiv:1803.03635 · 2019
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1803.03635"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            Neural network pruning techniques can reduce the parameter counts of
+            trained networks by over 90%, decreasing storage requirements and
+            improving computational performance of inference without
+            compromising accuracy. However, contemporary experience is that the
+            sparse architectures produced by pruning are difficult to train from
+            the start, which would similarly improve training performance. We
+            find that a standard pruning technique naturally uncovers
+            subnetworks whose initializations made them capable of training
+            effectively. Based on these results, we articulate the "lottery
+            ticket hypothesis:" dense, randomly-initialized, feed-forward
+            networks contain subnetworks ("winning tickets") that - when trained
+            in isolation - reach test accuracy comparable to the original
+            network in a similar number of iterations. The winning tickets we
+            find have won the initialization lottery: their connections have
+            initial weights that make training particularly effective. We
+            present an algorithm to identify winning tickets and a series of
+            experiments that support the lottery ticket hypothesis and the
+            importance of these fortuitous initializations. We consistently find
+            winning tickets that are less than 10-20% of the size of several
+            fully-connected and convolutional feed-forward architectures for
+            MNIST and CIFAR10. Above this size, the winning tickets that we find
+            learn faster than the original network and reach higher test
+            accuracy.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The sparse networks nobody could train</h2>
+        <p>
+          A trained image classifier is mostly ballast. Delete the weights with
+          the smallest magnitudes, keep going until more than ninety percent of
+          them are gone, and the network that remains still classifies about as
+          well as the one you started with.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          This was settled practice by 2018: train a large model, prune it hard,
+          fine-tune what survives, and ship a small network that runs cheaply.
+        </p>
+        <p>
+          The obvious next step never worked. If the pruned network is all you
+          need, why pay to train the large one first? Take the small sparse
+          architecture the pruning produced, initialize it fresh, and train it
+          from scratch. In practice it learns slowly and lands at worse accuracy
+          than the pruned-and-fine-tuned version. The sparse shape that was
+          perfectly good after training was, for years, untrainable before
+          it.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Frankle and Carbin found the missing ingredient, and it was not the
+          shape. A pruned subnetwork <em>can</em> be trained from scratch to the
+          full network's accuracy, but only if each surviving weight starts from
+          the exact random value it was handed at the original network's
+          birth. Keep those particular starting numbers and the sparse network
+          trains. Draw fresh random numbers into the same holes and it does
+          not. They named the trainable subnetwork a winning ticket, because its
+          connections had drawn initial weights that happened to make training
+          work.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section
+        data-nb-section="reset-to-first-weights"
+        id="reset-to-first-weights"
+      >
+        <h2>Reset the survivors to their first weights</h2>
+        <p>
+          The procedure that finds a winning ticket is a small change to
+          ordinary pruning, and the change is the whole result. Standard pruning
+          keeps the trained values of the surviving weights. Frankle and Carbin
+          throw those away and rewind each survivor to the value it held before
+          any training, at initialization. Call that initial weight vector
+          <span class="nb-math-in">\theta_0</span>. The steps, iterated:
+        </p>
+        <ol class="nb-steps">
+          <li>
+            <h3>Train the dense network</h3>
+            <p>
+              Initialize a full network at
+              <span class="nb-math-in">\theta_0</span> and train it to
+              completion. Record its accuracy as the target to match.<sup
+                class="nb-cite"
+                ><a href="#s1">1</a></sup
+              >
+            </p>
+          </li>
+          <li>
+            <h3>Prune the smallest weights</h3>
+            <p>
+              Rank the trained weights by magnitude and delete the smallest
+              fraction. What remains is a mask: a fixed pattern of which
+              connections stay and which are set to zero for good.<sup
+                class="nb-cite"
+                ><a href="#s1">1</a></sup
+              >
+            </p>
+          </li>
+          <li>
+            <h3>Rewind the survivors to initialization</h3>
+            <p>
+              For every connection the mask keeps, restore its value from
+              <span class="nb-math-in">\theta_0</span>, not its trained value.
+              The subnetwork now has a sparse shape and its original birth
+              weights, nothing learned.<sup class="nb-cite"
+                ><a href="#s1">1</a></sup
+              >
+            </p>
+          </li>
+          <li>
+            <h3>Train the subnetwork alone</h3>
+            <p>
+              Train the masked network in isolation for the same schedule and
+              compare its accuracy to the target. A winning ticket matches or
+              beats it.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </p>
+          </li>
+          <li>
+            <h3>Prune again and repeat</h3>
+            <p>
+              Removing everything in one cut finds a worse ticket than removing
+              a little at a time. Each round prunes a further slice of the
+              survivors, rewinds, and retrains, driving the network below twenty
+              percent of its weights while accuracy holds.<sup class="nb-cite"
+                ><a href="#s1">1</a></sup
+              >
+            </p>
+          </li>
+        </ol>
+        <p>
+          Iterative pruning that keeps trained weights is ordinary. Iterative
+          pruning that keeps the mask but restores the initialization is what
+          uncovers a subnetwork trainable on its own. The paper calls the repeated version
+          iterative magnitude pruning, and it is doing two jobs at once. The
+          mask picks a sparse shape. The rewind supplies the one initialization
+          that makes that shape learn.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="reinitialized-mask" id="reinitialized-mask">
+        <h2>The same holes, fresh weights, and no ticket</h2>
+        <p>
+          A procedure that finds something is only convincing if you can say
+          what the something is. Frankle and Carbin isolate it with one control.
+          Take a winning ticket, keep its mask exactly, and replace the rewound
+          weights with new random draws from the same distribution. The sparse
+          shape is untouched. Only the specific starting numbers change. The
+          reinitialized network trains slower and reaches lower accuracy, and
+          the gap widens as the pruning deepens. The mask alone is not the
+          prize. The prize is the mask together with its original
+          weights.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          That raises a sharper question: what about the birth weights actually
+          matters, their precise values or something coarser? Zhou and
+          colleagues took the algorithm apart to find out. They report that the
+          part which counts is mostly the <em>sign</em> of each initial weight.
+          Keep whether each connection started positive or negative, reset the
+          magnitudes to a constant, and the reinitialized network still trains.
+          Lose the signs and it fails. The lottery, on this reading, is won or
+          lost on which side of zero each surviving weight was born, more than
+          on its exact size.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The same group pushed the idea to its limit and found something
+          stranger. Search for a mask over an untrained, randomly initialized
+          network and you can find one that already classifies far above chance
+          with no training at all, reaching 86% on MNIST and 41% on CIFAR-10.
+          They called it a supermask. A pattern of which random weights to keep
+          is itself a kind of learning.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          The winning ticket was never only about a good place to start
+          gradient descent. Part of the answer was baked into the choice of
+          connections before the first step.
+        </p>
+      </section>
+
+      <section data-nb-section="shape-not-weights" id="shape-not-weights">
+        <h2>A rival result credits the shape, not the weights</h2>
+        <p>
+          At the same conference, a second paper read the same evidence the
+          opposite way. Liu and colleagues studied structured pruning, which
+          removes whole channels and filters rather than individual weights, and
+          reported a blunt finding. Fine-tuning a pruned model gave only
+          comparable or worse accuracy than training that same pruned
+          architecture from fresh random weights. The inherited weights bought
+          nothing. What mattered was the pruned shape, which they proposed to
+          treat as the output of an architecture search.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          On the lottery ticket specifically, they reported that the winning
+          initialization did not beat a random one in their setting.<sup
+            class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+        </p>
+        <p>
+          Both papers ran real experiments and both are right about what they
+          measured. The disagreement is about scope. Liu and colleagues worked
+          with structured pruning at the large learning rates standard for those
+          methods; Frankle and Carbin used unstructured pruning of individual
+          weights at a smaller learning rate. The winning-ticket effect turns
+          out to be sensitive to exactly these choices. So the honest 2019
+          summary was not that one paper had refuted the other. It was that the
+          effect appeared under some conditions and vanished under others, and
+          nobody yet had the rule that told them apart.
+        </p>
+      </section>
+
+      <section data-nb-section="breaks-at-scale" id="breaks-at-scale">
+        <h2>Where resetting to iteration zero breaks</h2>
+        <p>
+          The rule was forced into the open by scale. Iterative magnitude
+          pruning with a rewind to initialization works cleanly on small vision
+          networks, which is all the original paper claimed. Run it on a deep
+          residual network for ImageNet and it collapses. Reset the survivors to
+          their iteration-zero weights and the sparse network no longer matches
+          the full one. The famous 2019 result, taken literally at scale, is
+          false.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          Frankle and colleagues repaired it by moving the rewind point.
+          Instead of resetting each surviving weight to its value at
+          initialization, reset it to the value it held a short way into
+          training, between roughly a tenth of a percent and seven percent of
+          the schedule. With that single change, iterative magnitude pruning
+          again finds sparse subnetworks of deep networks that train to full
+          accuracy. One is a ResNet-50 pruned to 80% sparsity that completes
+          training and matches the original on ImageNet.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">&gt;90%</span
+            ><span class="nb-stat-l"
+              >of a trained network's weights are removable without losing
+              accuracy</span
+            >
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">80%</span
+            ><span class="nb-stat-l"
+              >sparsity of a ResNet-50 that still matches the full model on
+              ImageNet</span
+            >
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">0.1–7%</span
+            ><span class="nb-stat-l"
+              >into training, the rewind point that rescues the effect at
+              scale</span
+            >
+          </div>
+        </div>
+        <p>
+          Rewinding is the same idea with its one free parameter set correctly,
+          and setting it correctly turned the lottery ticket line of work into a
+          usable pruning recipe. Renda
+          and colleagues compared the standard fine-tuning step against two
+          rewinding variants, one that rewinds the weights and one that rewinds
+          only the learning-rate schedule. Both variants beat fine-tuning. The
+          result is a network-agnostic method that matches specialized
+          state-of-the-art pruning on accuracy and compression.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          The reset that started as a scientific probe became the retraining
+          step you would actually use.
+        </p>
+      </section>
+
+      <section data-nb-section="stability" id="stability">
+        <h2>Stability to SGD noise decides when a ticket exists</h2>
+        <p>
+          Why should the correct rewind point be initialization for MNIST and a
+          little later for ImageNet? Frankle and colleagues answered it with a
+          property they call stability to the noise of stochastic gradient
+          descent. Take a network at some point in training, make two copies,
+          and finish training each with a different random data order and
+          augmentation. If the two finished networks land in the same low-loss
+          region, connected by a straight path along which the loss never rises,
+          the network was stable at that point. From there on, training reaches
+          essentially the same place whichever random draws come next.<sup
+            class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+        <p>
+          The condition for a subnetwork to train to full accuracy is that it be
+          stable. A small network reaches stability at initialization, so its
+          winning tickets exist at iteration zero, exactly as the first paper
+          found. A large network is unstable at initialization and only settles
+          into a determined region a short way into training. Rewind such a
+          network to iteration zero and its ticket sits in the unstable phase,
+          where the random draws still dominate, and it cannot match the full
+          model. Rewind instead to the point where stability begins and the
+          ticket trains.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          This is the rule the two 2019 papers were missing. Init matters and
+          you must rewind are not competing claims. They are one condition read
+          at two scales. The original initialization carries the ticket whenever
+          the network is already stable there, which small networks are and
+          large ones are not. Even the practical shortcuts fall out of the same
+          fact. If the sparse pattern is settled early, you should be able to
+          spot it early. You and colleagues showed you can. Winning tickets,
+          which they call early-bird tickets, can be identified in the first few
+          epochs with cheap training, then trained the rest of the way alone, for
+          up to 4.7 times less energy at comparable accuracy.<sup
+            class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="what-followed" id="what-followed">
+        <h2>What the next three years established</h2>
+        <p>
+          Once the stability picture was in place, the surrounding claims
+          resolved, each in its own direction. The winning tickets are not a
+          per-run
+          coincidence. Morcos and colleagues generated tickets on one
+          natural-image dataset and reused them on others, from Fashion-MNIST
+          and SVHN through CIFAR and ImageNet to Places365. The tickets
+          transferred, and those from larger datasets transferred better.
+          The initialization carries an inductive bias general enough to move
+          between tasks.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <p>
+          The existence claim was not merely propped up by more experiments. It
+          was proven, in a stronger form than Frankle and Carbin stated. Malach
+          and colleagues showed that a sufficiently over-parameterized network
+          with random weights contains a subnetwork that matches a given target
+          network's accuracy with no training at all, only pruning. The weak
+          hypothesis says a good subnetwork is there to be trained. The strong
+          hypothesis, now a theorem, says a good subnetwork is already there
+          before training, and finding it is only a matter of pruning.<sup
+            class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+          The supermask was the empirical shadow of this result, and the proof
+          caught up to it.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The one hope the program has not delivered is the practical one:
+          finding the ticket cheaply, before training, without the full
+          prune-and-retrain loop. Several methods try to score weights at
+          initialization and prune once. Frankle and colleagues tested them and
+          found the tell. Randomly shuffle the specific weights such a method
+          prunes within each layer, or resample their initial values, and
+          accuracy is preserved or improves. A method whose exact choices you
+          can scramble for free is not identifying important individual weights.
+          It is only choosing how many to cut in each layer. The winning mask,
+          for now, still has to be earned by training.<sup class="nb-cite"
+            ><a href="#s10">10</a></sup
+          >
+          The literature that grew around all of this is large enough to have
+          its own surveys.<sup class="nb-cite"><a href="#s11">11</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>What the claim is worth now</h2>
+        <p>
+          The paper split, under scrutiny, into a headline that needed a
+          footnote and a core that grew sturdier. The 2019 headline, that a
+          subnetwork trains from its literal original initialization, is true
+          where the network is stable at the start and false where it is not. At
+          any interesting scale the honest statement is the rewound one. That is
+          a real correction, and it is the paper's own authors who made it. What
+          survived is the deeper claim underneath the headline. A dense random
+          network already contains a sparse subnetwork worth training. The choice
+          of connections carries information on its own, and that subnetwork's
+          starting weights are not interchangeable with fresh ones.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The lottery ticket hypothesis holds, once its rewind point is stated
+            honestly. Winning tickets exist, and they train from a specific early
+            weight state rather than from any random one. That state is
+            initialization for small networks and a short way into training for
+            large ones. The reason is stability to the noise of stochastic
+            gradient descent.<sup class="nb-cite"><a href="#s6">6</a></sup> The
+            existence of a matching subnetwork inside a random network is now a
+            theorem, not a conjecture.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            What remains open is the prize the whole program pointed at: finding
+            the winning subnetwork cheaply, before training, is still
+            unsolved.<sup class="nb-cite"><a href="#s10">10</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1803.03635"
+              >arXiv · Frankle, Carbin, "The Lottery Ticket Hypothesis: Finding
+              Sparse, Trainable Neural Networks" (ICLR 2019)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1905.01067"
+              >arXiv · Zhou, Lan, Liu, Yosinski, "Deconstructing Lottery Tickets:
+              Zeros, Signs, and the Supermask" (NeurIPS 2019)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1810.05270"
+              >arXiv · Liu, Sun, Zhou, Huang, Darrell, "Rethinking the Value of
+              Network Pruning" (ICLR 2019)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1903.01611"
+              >arXiv · Frankle, Dziugaite, Roy, Carbin, "Stabilizing the Lottery
+              Ticket Hypothesis" (2019)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2003.02389"
+              >arXiv · Renda, Frankle, Carbin, "Comparing Rewinding and
+              Fine-tuning in Neural Network Pruning" (ICLR 2020)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1912.05671"
+              >arXiv · Frankle, Dziugaite, Roy, Carbin, "Linear Mode Connectivity
+              and the Lottery Ticket Hypothesis" (ICML 2020)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1909.11957"
+              >arXiv · You et al., "Drawing Early-Bird Tickets: Toward More
+              Efficient Training of Deep Networks" (ICLR 2020)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1906.02773"
+              >arXiv · Morcos, Yu, Paganini, Tian, "One ticket to win them all:
+              generalizing lottery ticket initializations across datasets and
+              optimizers" (NeurIPS 2019)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2002.00585"
+              >arXiv · Malach, Yehudai, Shalev-Shwartz, Shamir, "Proving the
+              Lottery Ticket Hypothesis: Pruning is All You Need" (ICML 2020)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2009.08576"
+              >arXiv · Frankle, Dziugaite, Roy, Carbin, "Pruning Neural Networks
+              at Initialization: Why Are We Missing the Mark?" (ICLR 2021)</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://medium.com/data-science/the-lottery-ticket-hypothesis-a-survey-d1f0f62f8884"
+              >Robert Lange · "The Lottery Ticket Hypothesis: A Survey"</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
