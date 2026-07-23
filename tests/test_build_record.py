@@ -8,7 +8,11 @@ fence nesting, or the overflow boundary lost an artifact rather than a PR API.
 
 import pathlib
 
+import pytest
+
 import build_record
+from nb.proof.pr import RECORD_SECTIONS, check_pr_body_record
+from nb.report import Report
 
 
 def artifacts(tmp_path: pathlib.Path) -> pathlib.Path:
@@ -54,11 +58,31 @@ def test_build_embeds_every_artifact_verbatim(tmp_path: pathlib.Path) -> None:
 def test_build_moves_oversized_record_to_marked_comment(tmp_path: pathlib.Path) -> None:
     work = artifacts(tmp_path)
     (work / "research.md").write_text("# Research\n\n" + "x" * 200)
+    article_path = article(tmp_path)
+    complete, _comment = build_record.build(article_path, work)
 
-    body, comment = build_record.build(article(tmp_path), work, limit=100)
+    body, comment = build_record.build(article_path, work, limit=len(complete) - 1)
 
     assert "nb-record-sha256:" in body
-    assert "full production record exceeds" in body
+    assert len(body) < len(complete)
+    assert all(f"## {heading}" in body for heading in RECORD_SECTIONS)
+    assert body.count("Source: https://example.org/") == 3
     assert comment is not None
     assert comment.startswith("<!-- nb-production-record ")
     assert "x" * 200 in comment
+
+    body_path = tmp_path / "body.md"
+    body_path.write_text(body)
+    report = Report(strict=True)
+    check_pr_body_record(body_path, report)
+    assert report.blocks == []
+
+
+def test_build_refuses_an_overflow_body_that_cannot_keep_the_voice_brief(
+    tmp_path: pathlib.Path,
+) -> None:
+    work = artifacts(tmp_path)
+    (work / "voice.md").write_text("Source: https://example.org\n" + "v" * 1_000)
+
+    with pytest.raises(ValueError, match="shorten voice.md"):
+        build_record.build(article(tmp_path), work, limit=100)

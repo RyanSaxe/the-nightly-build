@@ -81,6 +81,10 @@ human merge). The source policy is `required_docs`, `consult`, and
 `sources_exclusive`, described in the [README](../README.md) and
 demonstrated across `examples/series/`.
 
+A `required_docs` citation stores the file's repo-relative path. The published
+site links that path to the file on the fork's `main` branch. Private repository
+links use GitHub's normal authentication; the file is never copied into Pages.
+
 ## Source composition
 
 `min_sources` counts. It cannot see what kind of sources came in, so six items

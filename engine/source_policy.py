@@ -5,8 +5,9 @@
 # ///
 """Print the resolved source obligations for a commissioned series.
 
-Desks use this before writing task.md so every role sees the real source floor,
-including a template default that is intentionally absent from series.yaml.
+Correspondents use this before writing task.md so every role sees the real
+source floor, including a template default intentionally absent from
+series.yaml.
 It writes JSON only, which makes the result safe to copy into a commission card
 without asking an agent to recreate source-policy logic from configuration prose.
 """

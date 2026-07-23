@@ -72,20 +72,58 @@ def digest(artifacts: dict[str, str]) -> str:
     return hashlib.sha256(joined.encode()).hexdigest()
 
 
+def compact_record(
+    meta: dict[str, object],
+    artifacts: dict[str, str],
+    *,
+    spilled: set[str],
+    record_digest: str,
+) -> str:
+    reference = (
+        "Full artifact moved to the marked follow-up comment "
+        f"(`nb-record-sha256: {record_digest}`)."
+    )
+    sections = [f"```nb-meta\n{yaml_meta(meta)}\n```"]
+    for heading, filename in ARTIFACT_SECTIONS:
+        content = (
+            reference if heading in spilled else fenced_artifact(artifacts[filename])
+        )
+        sections.append(f"## {heading}\n\n{content}")
+    consulted = (
+        reference
+        if "Also consulted" in spilled
+        else discarded(artifacts["research.md"])
+    )
+    sections.append(f"## Also consulted\n\n{consulted}")
+    return "\n\n".join(sections) + "\n"
+
+
 def overflow_record(
-    meta: dict[str, object], artifacts: dict[str, str]
+    meta: dict[str, object], artifacts: dict[str, str], *, limit: int
 ) -> tuple[str, str]:
     record = full_record(meta, artifacts)
     record_digest = digest(artifacts)
-    body = (
-        f"```nb-meta\n{yaml_meta(meta)}\n```\n\n"
-        "## Production record\n\n"
-        "The full production record exceeds GitHub's PR-body limit. It is posted "
-        "as the marked follow-up comment below.\n\n"
-        f"`nb-record-sha256: {record_digest}`\n"
-    )
     comment = f"<!-- nb-production-record {record_digest} -->\n\n{record}"
-    return body, comment
+    spillable = {
+        "Task": artifacts["task.md"],
+        "Process": artifacts["requested-changes.md"],
+        "Research": artifacts["research.md"],
+        "Also consulted": discarded(artifacts["research.md"]),
+    }
+    spilled: set[str] = set()
+    for heading, _content in sorted(
+        spillable.items(), key=lambda item: len(item[1]), reverse=True
+    ):
+        spilled.add(heading)
+        body = compact_record(
+            meta, artifacts, spilled=spilled, record_digest=record_digest
+        )
+        if len(body) <= limit:
+            return body, comment
+    raise ValueError(
+        "production-record index and voice brief exceed the PR-body limit; "
+        "shorten voice.md"
+    )
 
 
 def build(
@@ -95,7 +133,7 @@ def build(
     record = full_record(metadata(article), artifacts)
     if len(record) <= limit:
         return record, None
-    return overflow_record(metadata(article), artifacts)
+    return overflow_record(metadata(article), artifacts, limit=limit)
 
 
 def main() -> None:

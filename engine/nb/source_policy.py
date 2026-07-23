@@ -1,8 +1,8 @@
 """Resolve the source obligations that a commission must make explicit.
 
 The proof has always applied template-class defaults, but an agent reading only
-series.yaml cannot see them. The desk's command uses this deliberately small
-copy of that stable policy to make the requirement visible before research.
+series.yaml cannot see them. The correspondent's command uses this deliberately
+small copy of that stable policy to make the requirement visible before research.
 """
 
 __all__ = ("DEFAULT_MIN_SOURCES", "minimum", "resolve")

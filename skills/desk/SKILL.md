@@ -34,17 +34,9 @@ you are running on: a cheap model in the coach's chair produces exactly the
 thin brief this pipeline exists to prevent.
 
 Read `task.md` first. It is the commission, and every role reads it first too.
-Hand roles file paths, never summaries.
-
-Before you write `task.md`, resolve its source policy:
-
-```sh
-uv run engine/source_policy.py --repo . --series <id>
-```
-
-Put the resulting floor and source mix on the commission card. Name the focal
-source and the independent context that would change its interpretation. A
-count is a constraint, never a license to pad a bibliography.
+It must already carry the resolved source floor and mix. Return an incomplete
+commission to the correspondent; never reconstruct it for them. Hand roles file
+paths, never summaries.
 
 ## The chain
 

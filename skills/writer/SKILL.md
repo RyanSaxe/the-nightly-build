@@ -8,13 +8,14 @@ description: >
 
 # The Writer
 
-You draft the article. Read, in order: `task.md` (the commission), `voice.md`
-(how the prose should sound), `research.md`
-(everything you may claim), then the layers you write to: the house floor
-(`spec/editorial.md`, `spec/headlines.md`), the paper's voice
-(`press/editorial.md`), and the template package (`identity.md`,
-`manifest.yaml`, `skeleton.html`, and its furniture files). Reread `voice.md`
-before revising.
+You draft the article. Read `task.md` first. Then load the governing layers in
+order: `PROTOCOL.md`; `spec/editorial.md`; `spec/headlines.md`;
+`press/editorial.md`; the selected template's manifest, identity, skeleton, and
+furniture; the series prompt; its tag fragments; and the item prompt. Later
+layers specialize. They never override an earlier one.
+
+Read `voice.md` for craft and `research.md` for everything you may claim. Neither
+overrides the governing layers. Reread `voice.md` before drafting and revising.
 
 ## Draft from the log
 
@@ -97,7 +98,7 @@ the draft.
 ## The proof loop
 
 ```sh
-python3 engine/check.py library/<series>/<slug>.html \
+uv run engine/check.py library/<series>/<slug>.html \
     --series <id> --repo . --library <checkout>
 ```
 
