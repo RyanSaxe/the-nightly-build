@@ -19,8 +19,10 @@ CHROME_RE = re.compile(
     r'\n<header class="nb-bar">.*?</header>|<footer class="nb-footer">.*?</footer>\n',
     re.S,
 )
-FAVICON_RE = re.compile(
-    r'<link rel="icon" type="image/png" href="\.\./\.\./assets/favicon\.png\?v=[0-9a-f]+">\n'
+SITE_ICON_RE = re.compile(
+    r'<link rel="(?:icon|apple-touch-icon)"[^>]* '
+    r'href="\.\./\.\./assets/(?:favicon-(?:32|64)|apple-touch-icon)\.png'
+    r'\?v=[0-9a-f]+">\n'
 )
 STAMP_RE = re.compile(r"nb\.css\?v=([0-9a-f]+)")
 
@@ -64,4 +66,4 @@ def asset_stamp_of(page_html: str) -> str:
 
 def undress(article_html: str) -> str:
     without_chrome = CHROME_RE.sub("", article_html)
-    return FAVICON_RE.sub("", without_chrome)
+    return SITE_ICON_RE.sub("", without_chrome)

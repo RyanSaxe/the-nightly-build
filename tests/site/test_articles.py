@@ -20,7 +20,16 @@ def micron_copy(full_site: Site) -> str:
 
 
 @pytest.mark.parametrize(
-    "asset", ["favicon.png", "nb.js", "nb.css", "theme.css", "themes/newspaper.css"]
+    "asset",
+    [
+        "apple-touch-icon.png",
+        "favicon-32.png",
+        "favicon-64.png",
+        "nb.js",
+        "nb.css",
+        "theme.css",
+        "themes/newspaper.css",
+    ],
 )
 def test_the_assets_are_copied(full_site: Site, asset: str) -> None:
     assert pathlib.Path(full_site.out, "assets", asset).is_file()
@@ -34,13 +43,33 @@ def test_chrome_pages_carry_the_same_stamp(full_site: Site, micron_copy: str) ->
     assert f"assets/nb.css?v={asset_stamp_of(micron_copy)}" in full_site.index
 
 
-def test_generated_pages_and_articles_use_the_favicon(
-    full_site: Site, micron_copy: str
+@pytest.mark.parametrize(
+    ("relation", "type_attr", "size", "filename"),
+    [
+        ("icon", ' type="image/png"', "32x32", "favicon-32.png"),
+        ("icon", ' type="image/png"', "64x64", "favicon-64.png"),
+        ("apple-touch-icon", "", "180x180", "apple-touch-icon.png"),
+    ],
+)
+def test_generated_pages_and_articles_use_the_site_icons(
+    full_site: Site,
+    micron_copy: str,
+    *,
+    relation: str,
+    type_attr: str,
+    size: str,
+    filename: str,
 ) -> None:
     stamp = asset_stamp_of(micron_copy)
 
-    assert f'href="assets/favicon.png?v={stamp}"' in full_site.index
-    assert f'href="../../assets/favicon.png?v={stamp}"' in micron_copy
+    root_tag = (
+        f'<link rel="{relation}"{type_attr} sizes="{size}" '
+        f'href="assets/{filename}?v={stamp}">'
+    )
+    article_tag = root_tag.replace('href="assets/', 'href="../../assets/')
+
+    assert root_tag in full_site.index
+    assert article_tag in micron_copy
 
 
 def test_an_article_copy_wears_the_site_bar(micron_copy: str) -> None:
@@ -82,4 +111,5 @@ def test_dressing_a_dressed_article_does_not_double_the_bar(micron_copy: str) ->
     dressed = build_site.dress_article(micron_copy, site)
 
     assert dressed.count('<header class="nb-bar">') == 1
-    assert dressed.count('rel="icon"') == 1
+    assert dressed.count('rel="icon"') == 2
+    assert dressed.count('rel="apple-touch-icon"') == 1
