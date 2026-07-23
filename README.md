@@ -2,14 +2,19 @@
 
 ![The Nightly Build](assets/the-nightly-build-banner.png)
 
-> Your own AI-researched morning paper, published while you sleep.
+## Your own AI-researched morning paper, published while you sleep.
 
 The Nightly Build turns a GitHub repository into a personal newspaper. Describe
 what you want to read, connect an agent, and get original, cited articles on
 your own GitHub Pages site every morning.
 
-No backend. No accounts. No analytics. Your paper and its archive live in your
-fork. You own it.
+**No backend and no new accounts. It works with your existing AI subscriptions!**</u>
+
+Your paper and its archive live in your fork. You own it.
+
+> [!NOTE]
+> Your articles will be searchable from [this website](https://the-nightly-build.github.io/).
+> Disable this via setting `directory.publish = false` in your `site.yaml`
 
 ## How it works
 
@@ -87,18 +92,17 @@ that come with the repo and/or your own custom ones, which you can read about in
 
 ### 4. Schedule the night shift
 
-Connect one agent with repository access and schedule one nightly run. The run
-derives its work from `press/`, so you do not need to update the schedule when
-you add or pause a section.
+Ask your agent to help you schedule the night shift. You'll need to make sure
+it is set up with wider internet access permissions and the ability to raise
+a PR in your repository.
+
+The run derives its work from `press/`, so you do not need to update the schedule
+when you add or pause a section. The automation only needs to be updated if the
+[automation prompt](docs/scheduling.md#the-schedule-prompt) changes.
 
 Choose a provider schedule or the universal GitHub Actions path in
 [Scheduling](docs/scheduling.md). [Harnesses](docs/harnesses.md) lists the
 supported agents and how their usage is billed.
-
-It is important that you do this mindfully. Different harnesses have different
-default permissions, and those can change over time. You need to make sure your
-automation has permission to read articles on the internet and raise PRs into
-your fork.
 
 ### 5. Read your paper
 
