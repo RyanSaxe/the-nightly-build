@@ -199,11 +199,19 @@ wait_for_library() {
 		if [ "$state" = CLOSED ]; then
 			die "sync PR #$pr closed without updating library"
 		fi
+		failures=$(gh pr checks "$pr" --repo "$repo" \
+			--json bucket,name,link \
+			--jq '.[] | select(.bucket == "fail" or .bucket == "cancel") | "\(.name): \(.link)"' \
+			2>/dev/null || true)
+		if [ -n "$failures" ]; then
+			printf '%s\n' "$failures" >&2
+			die "sync PR #$pr failed. Fix the canonical engine on main, then rerun scripts/sync.sh; do not edit the generated branch"
+		fi
 		attempt=$((attempt + 1))
 		[ "$attempt" -le "$MAX_POLLS" ] && sleep "$POLL_SECONDS"
 	done
 	gh pr checks "$pr" --repo "$repo" 2>/dev/null || true
-	die "sync PR #$pr did not merge in time; inspect it at https://github.com/$repo/pull/$pr"
+	die "sync PR #$pr did not merge in time. Inspect https://github.com/$repo/pull/$pr, fix main, then rerun scripts/sync.sh"
 }
 
 sync_library() {

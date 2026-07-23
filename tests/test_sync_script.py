@@ -45,7 +45,9 @@ class SyncRepo:
     gh_log: pathlib.Path
     fake_bin: pathlib.Path
 
-    def run(self, *args: str) -> subprocess.CompletedProcess[str]:
+    def run(
+        self, *args: str, check_failure: bool = False
+    ) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
         env.update(
             {
@@ -56,6 +58,8 @@ class SyncRepo:
                 "PATH": f"{self.fake_bin}{os.pathsep}{env['PATH']}",
             }
         )
+        if check_failure:
+            env["FAKE_CHECK_FAILURE"] = "1"
         return subprocess.run(
             [str(self.checkout / "scripts" / "sync.sh"), *args],
             cwd=self.checkout,
@@ -96,11 +100,14 @@ case "$1:$2" in
   pr:create) printf '%s\\n' 'https://github.com/example/nightly-build/pull/42' ;;
   pr:edit) exit 0 ;;
   pr:merge)
+    [ "${FAKE_CHECK_FAILURE:-}" = 1 ] && exit 0
     sync=$(git --git-dir="$FAKE_ORIGIN" rev-parse refs/heads/nb/sync-library-workflows)
     git --git-dir="$FAKE_ORIGIN" update-ref refs/heads/library "$sync"
     ;;
   pr:view) printf '%s\\n' 'MERGED' ;;
-  pr:checks) exit 0 ;;
+  pr:checks)
+    [ "${FAKE_CHECK_FAILURE:-}" = 1 ] && printf '%s\n' 'validate: https://example.test/check'
+    ;;
   *) printf 'unexpected fake gh invocation: %s\\n' "$*" >&2; exit 2 ;;
 esac
 """
@@ -242,3 +249,16 @@ def test_upstream_conflict_stops_before_library_sync(tmp_path: pathlib.Path) -> 
     assert "shared.txt" in result.stderr
     assert repo.remote_ref("refs/heads/library") == library_before
     assert "pr create" not in repo.gh_log.read_text()
+
+
+def test_failed_sync_reports_the_check_and_repair_path(tmp_path: pathlib.Path) -> None:
+    repo = make_sync_repo(tmp_path, drift=True)
+
+    result = repo.run(check_failure=True)
+
+    assert result.returncode != 0
+    assert "validate: https://example.test/check" in result.stderr
+    assert "Fix the canonical engine on main" in result.stderr
+    assert repo.remote_blob("library", WORKFLOWS[0]) != repo.remote_blob(
+        "main", WORKFLOWS[0]
+    )
