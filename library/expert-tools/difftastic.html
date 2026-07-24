@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>difftastic compares syntax trees, so re-wrapping stops reading as a rewrite · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "difftastic",
+        "template": "article",
+        "title": "difftastic compares syntax trees, so re-wrapping stops reading as a rewrite",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-24",
+        "tags": [],
+        "sources": 10,
+        "words": 1962,
+        "reading_minutes": 10,
+        "dek": "It parses both files with tree-sitter and searches for the cheapest path between the two trees, which is why formatting noise vanishes and why a large enough diff falls back to plain line diff.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">difftastic compares syntax trees, so re-wrapping stops reading as a rewrite</h1>
+        <p class="nb-dekline">
+          It parses both files with tree-sitter and searches for the cheapest path between the two trees, which is why formatting noise vanishes and why a large enough diff falls back to plain line diff.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-07-24</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A one-line function grows a third argument, and git diff repaints all of it</h2>
+        <p>
+          A function took two arguments on one line. It now takes three, wrapped
+          one per line for readability. The only real edit is the third argument
+          and the comma that had to follow the second. Here is what
+          <code>git diff</code> makes of it.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">git diff</span><span>DIFF</span>
+          </div>
+          <pre><code class="language-python">-f &lt;- function(myarg1 = foo, myarg2 = bar) {}
++f &lt;- function(
++  myarg1 = foo,
++  myarg2 = bar,
++  myarg3 = baz
++) {}</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · One line removed, five added. Every line of the function is marked, though two arguments are untouched.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Six lines are flagged and two arguments never changed. The diff is
+          reporting the reformatting, because reformatting is what moved the
+          text, and moved text is all a line-oriented comparison can see. The
+          reader has to reconstruct the actual edit by eye, which is the tax an
+          expert pays on every reindent, every re-wrapped call, every function
+          that slid down the file.
+        </p>
+        <p>
+          Difftastic answers a different question. It parses both versions of
+          the file, compares the two syntax trees, and reports what changed in
+          the structure rather than in the layout.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The reformatting above does not change the tree, so it does not appear
+          in the result.
+        </p>
+      </section>
+
+      <section data-nb-section="what-diffing-is-for" id="what-diffing-is-for">
+        <h2>The goal of a diff is to find what stayed the same</h2>
+        <p>
+          The useful way to state the task is inside out. A diff is not really a
+          search for what changed. It is a search for the largest part of the
+          file that did not change, because once the unchanged material is
+          pinned down, the change is whatever is left over. Wilfred Hughes, who
+          wrote difftastic, puts it plainly: the goal of diffing is to work out
+          what has not changed.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          Line diff answers that question at the granularity of whole lines. Two
+          lines match or they do not, and a line that was only rewrapped counts
+          as two different lines. Difftastic answers it at the granularity of the
+          syntax. It runs the file through tree-sitter, a parser that turns
+          source text into a concrete syntax tree and is built to reparse quickly
+          as code is edited.<sup class="nb-cite"><a href="#s4">4</a></sup> The
+          arguments <code>myarg1</code> and <code>myarg2</code> are the same tree
+          nodes before and after, whatever column they sit in, so the comparison
+          can hold them fixed and spend its attention on the one node that is
+          new.
+        </p>
+        <p>
+          That reframing is what makes the rest tractable. If the job is to
+          maximize the shared structure, then finding a diff becomes finding the
+          cheapest set of edits that turns one tree into the other, and cheapest
+          is a word a computer can optimize.
+        </p>
+      </section>
+
+      <section data-nb-section="cheapest-path" id="cheapest-path">
+        <h2>difftastic diffs by finding the cheapest path between two trees</h2>
+        <p>
+          Both trees are flattened into nested lists, so every element is either
+          a list or an atom.<sup class="nb-cite"><a href="#s3">3</a></sup> The
+          comparison is then posed as a graph. A vertex is a pair of positions:
+          one position in the left tree and one in the right.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          The start vertex sits at the beginning of both trees; the end vertex
+          sits after the end of both.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          Getting from start to end means walking both trees to their conclusion,
+          and every step is one of three edits, each with a price:
+        </p>
+        <ul>
+          <li>advance on the left only, marking a node as removed;</li>
+          <li>advance on the right only, marking a node as added;</li>
+          <li>advance on both at once because the nodes match, which is the cheapest edge of the three.<sup class="nb-cite"><a href="#s3">3</a></sup></li>
+        </ul>
+        <p>
+          Matching costs less than marking a node novel, so any route that keeps
+          shared structure aligned is cheaper than one that does not. A diff is
+          now a shortest path. Difftastic runs Dijkstra's algorithm to find the
+          lowest-cost route from the start vertex to the end, and that route,
+          read back out, is the edit it displays.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          The unchanged arguments cost nothing to align, so they stay quiet; the
+          added argument is the one expensive edge on the cheapest path.
+        </p>
+        <p>
+          The size of that graph is its price. It is quadratic,
+          <span class="nb-math-in">O(L \times R)</span>, where
+          <span class="nb-math-in">L</span> and <span class="nb-math-in">R</span>
+          are the number of elements in the left and right trees.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Two properties keep that from exploding. Difftastic never materializes
+          the whole graph. Neighbours of a vertex are constructed only as the
+          search reaches them, so a route that is never explored costs no
+          memory.<sup class="nb-cite"><a href="#s5">5</a></sup> And it discards
+          the obviously unchanged runs at the start, middle, and end of the file
+          before the search begins.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-git-diff-it-replaces" id="the-git-diff-it-replaces">
+        <h2>Wired into git as the external diff, it marks two tokens on that same edit</h2>
+        <p>
+          Difftastic is a drop-in for git's own diff. Pointed at the wrapped
+          function from the opening, through git's external-diff hook, it reports
+          the structural edit instead of the textual one. The binary is
+          <code>difft</code>, and the one-off invocation names it as the external
+          differ for a single command:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">run difftastic for one git diff</span><span>CONSOLE</span>
+          </div>
+          <pre><code class="language-python">$ git -c diff.external=difft diff
+example.R --- 1/2 --- R
+1 f &lt;- function(myarg1 = foo, myarg2 = bar) {}    1 f &lt;- function(
+                                                  2   myarg1 = foo,
+                                                  3   myarg2 = bar,
+                                                  4   myarg3 = baz
+                                                  5 ) {}</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · The same edit under <code>difft</code>: only the trailing comma after the second argument and the line adding the third are highlighted as changed. The rewrapping is shown but unmarked.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Two items carry the change: the comma the second argument grew, and
+          the line that adds the third. The reflow that rewrote every line for
+          <code>git diff</code> is unmarked here. To make it the default for a
+          repository, the same setting goes in <code>~/.gitconfig</code> under a
+          <code>[diff] external = difft</code> line, after which
+          <code>git diff</code>, <code>git show --ext-diff</code>, and
+          <code>git log -p --ext-diff</code> all render structurally. The
+          config route hands difftastic more than the difftool path does,
+          including file-permission and rename information, so it can show
+          more.<sup class="nb-cite"><a href="#s6">6</a></sup> An independent
+          write-up reports the same isolation on a Rust signature. When a
+          parameter changes from <code>String</code> to
+          <code>impl Into&lt;String&gt;</code>, line diff repaints the whole
+          line. Difftastic greens only the inserted <code>impl Into&lt;</code>
+          and its closing bracket, naming the type as the thing that
+          changed.<sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="what-it-costs" id="what-it-costs">
+        <h2>The parse it depends on is also where the costs sit</h2>
+        <p>
+          Everything difftastic does well rests on getting a parse, and each cost
+          is a case where the parse is unavailable or too expensive to search.
+          There are three ways it steps back to a line diff, and they are worth
+          keeping distinct.
+        </p>
+        <table class="nb-table">
+          <caption>
+            The three conditions under which difftastic abandons structural diffing and falls back to a line-oriented one.<sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Trigger</th>
+              <th>Default</th>
+              <th class="txt">What happens</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">byte limit</span></td>
+              <td>1 000 000</td>
+              <td class="txt">A file larger than this is diffed as text before it is ever parsed.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">graph limit</span></td>
+              <td>3 000 000</td>
+              <td class="txt">If the search crosses this many graph vertices, it gives up mid-diff and finishes as text.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">no grammar</span></td>
+              <td>—</td>
+              <td class="txt">A language with no tree-sitter grammar gets a line diff with word highlighting.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The byte limit (<code>DEFAULT_BYTE_LIMIT</code>) and the graph limit
+          (<code>DEFAULT_GRAPH_LIMIT</code>) are constants in the source, tunable
+          through <code>DFT_BYTE_LIMIT</code> and
+          <code>DFT_GRAPH_LIMIT</code>.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          A third constant, the parse-error limit, defaults to
+          zero.<sup class="nb-cite"><a href="#s8">8</a></sup> The
+          grammar case is the one to plan around: coverage is language by
+          language. The project's README says difftastic supports over thirty
+          languages,<sup class="nb-cite"><a href="#s8">8</a></sup> while the
+          manual's current table enumerates sixty-three grammars and formats, and
+          <code>difft --list-languages</code> is the honest answer for any given
+          install.<sup class="nb-cite"><a href="#s2">2</a></sup> A file in
+          something outside that set still diffs, just as text.
+        </p>
+        <p>
+          Speed is a real cost, scoped narrowly. Hughes states it in the README:
+          difftastic scales relatively poorly on files with a large number of
+          changes, and can use a lot of memory.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          That is the tail the quadratic search punishes, a file rewritten
+          wholesale rather than edited. On review-sized diffs the independent
+          practitioners who use it report no speed trouble. The recurring
+          complaints in community threads are about the side-by-side display
+          being hard to read and about packaging friction from difftastic's
+          Rust toolchain, not about speed.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          The adoption gap those same users name is reach: difftastic is a
+          terminal tool, not yet wired into the editor panes and the pull-request
+          views where much review now happens.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="trust" id="trust">
+        <h2>A tool you put in front of every git diff has to be maintained, and this one is</h2>
+        <p>
+          Structural diff, not line diff, is a change you make to a command you
+          run dozens of times a day, so its upkeep is a fair question to press.
+          The record is active. The latest tagged release is 0.69.0 from 30 April
+          2026, with 0.70 already in development, following 0.68 in March 2026
+          and 0.67 in November 2025.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          The most recent commit lands 21 July 2026, and through the summer the
+          repository takes commits several times a week.<sup class="nb-cite"><a href="#s10">10</a></sup>
+          It is largely one maintainer's project, Hughes himself, with the churn
+          of dependency and parser updates around him.<sup class="nb-cite"><a href="#s10">10</a></sup>
+        </p>
+        <p>
+          Robustness is the honest caveat, and it is one the project states about
+          itself: difftastic regularly ships releases that fix crashes.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          Read one way that is a warning; read against the release cadence it is
+          reassurance, since the crashes are being found and fixed on a tight
+          loop rather than accumulating.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Set difftastic as git's external diff and it earns its place on one
+            job line diff cannot do: keeping reformatting, rewrapping, and moved
+            code out of the result, so the real edit is what you read.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup>
+            The costs are bounded and legible: a language needs a tree-sitter
+            grammar, a very large or wholesale-rewritten file falls back to
+            text, and the display is a terminal view, not an editor pane.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The assessment would change if the release loop that keeps it in step
+            with tree-sitter and fixes its crashes went quiet.<sup class="nb-cite"><a href="#s10">10</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://masalmon.eu/2026/03/30/difftastic/"
+              >Maëlle Salmon · Better Git diff with difftastic</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Introduction and Languages pages"
+              href="https://difftastic.wilfred.me.uk/introduction.html"
+              >Difftastic Manual · Introduction and supported languages</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.wilfred.me.uk/blog/2022/09/06/difftastic-the-fantastic-diff/"
+              >Wilfred Hughes · Difftastic, the Fantastic Diff</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://tree-sitter.github.io/tree-sitter/"
+              >Tree-sitter · Official documentation</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Diffing chapter"
+              href="https://difftastic.wilfred.me.uk/diffing.html"
+              >Difftastic Manual · Diffing</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Git chapter"
+              href="https://difftastic.wilfred.me.uk/git.html"
+              >Difftastic Manual · Git integration</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.ductile.systems/difftastic/"
+              >Ductile Systems · Super Charged Git Diffs with Difftastic</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="src/options.rs, CHANGELOG.md, README.md"
+              href="https://github.com/Wilfred/difftastic"
+              >Wilfred/difftastic · Source, CHANGELOG, and README</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://lobste.rs/s/d4jhbh/difftastic_diff_understands_syntax"
+              >Lobsters · Difftastic: a diff that understands syntax (discussion)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="commits/master, through 21 July 2026"
+              href="https://github.com/Wilfred/difftastic/commits/master"
+              >Wilfred/difftastic · Commit history</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
