@@ -47,25 +47,50 @@ press/
 
 ## Updating the engine
 
+### From GitHub
+
+Click **Sync fork**. This updates your fork's `main`; it never touches
+`library`. The next night shift runs `scripts/sync.sh`, updates the protected
+publishing workflows through CI if needed, and only then starts article work.
+
+To finish the workflow sync immediately from a local checkout:
+
 ```sh
-git remote add upstream https://github.com/the-nightly-build/the-nightly-build.git   # once
-git fetch upstream
-git merge upstream/main
-./setup.sh    # re-syncs the trigger workflows onto library
+git switch main
+git pull --ff-only origin main
+scripts/sync.sh
 ```
 
-This is an ordinary fork merge. It is clean by construction for anyone who
-only writes inside `press/`: your commits and upstream's commits touch
-disjoint paths, and upstream has no `press/` at all.
+This is also how an older fork adopts `scripts/sync.sh` for the first time.
+Do not rerun setup or update `library` yourself.
+
+### From the command line
+
+Once your fork contains `scripts/sync.sh`, one command performs the complete
+engine update:
+
+```sh
+scripts/sync.sh --update-main-from-upstream
+```
+
+This deliberate command merges upstream into your clean, current `main`,
+pushes it, and brings the protected `library` workflows forward through an
+exact, CI-gated PR. A merge conflict stops before `library` changes and names
+the paths to resolve.
+
+The default command follows your fork's `origin/main`; it never imports
+upstream changes. Only the explicit flag above fetches upstream.
+
+Upstream merges are clean by construction for anyone who only writes inside
+`press/`: your commits and upstream's commits touch disjoint paths, and
+upstream has no `press/` at all.
 
 Editing the engine is allowed. It is your fork. If you patch engine files,
 future merges may conflict exactly where you deviated, and resolving them is
 yours, the same as any fork on GitHub.
 
-Three follow-ups after an engine update:
+Two follow-ups after an engine update:
 
-- `./setup.sh` re-syncs the two trigger workflows that the `library` branch
-  carries. They are the only engine-adjacent files outside `main`.
 - Check your schedule prompt against the canonical one in
   [scheduling.md](scheduling.md). The prompt lives outside the repo (a hosted
   routine, an Actions step), so a merge cannot update it, and a prompt that
@@ -73,6 +98,7 @@ Three follow-ups after an engine update:
   the canonical prompt, replace it.
 - Optionally dispatch the publish workflow (Actions, nightly-build-publish,
   Run workflow) to re-render your whole back catalog with the new engine
-  immediately instead of waiting for tonight's build. Nothing on `library`
-  ever merges with upstream. Forks copy `main` only, and your library is
-  yours alone.
+  immediately instead of waiting for tonight's build.
+
+`library` is downstream publication state. Never merge it into `main` or
+upstream. Forks copy `main` only; your library is yours alone.

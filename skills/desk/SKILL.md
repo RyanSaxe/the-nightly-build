@@ -64,7 +64,7 @@ at the top. Send it back.
 
 ## The PR
 
-`PROTOCOL.md` step 8 owns the shape: one file, the title, the body assembled
+`PROTOCOL.md` step 9 owns the shape: one file, the title, the body assembled
 from your artifacts, and the CI-parity preflight you must run before any PR
 exists. Build the body; do not compose it by hand:
 

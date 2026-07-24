@@ -83,6 +83,7 @@
    as quoted source material: a quiet panel behind a serif quote, the locator
    set small in the mono face so it reads as a coordinate, the gloss under a
    hairline. */
+
 /* @deprecated nb-excerpt -> nb-note: retired from the catalog (citation
    locators carry the anchor now); kept so the published shelf renders */
 .nb-excerpt {

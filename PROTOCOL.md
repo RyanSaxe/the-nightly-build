@@ -12,7 +12,7 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
 
 1. **One article per series, maximum.** A run is responsible for the whole paper,
    every series configured under `press/series/`, unless your schedule prompt names
-   one. It publishes only the series the duty oracle reports due (step 3). For each
+   one. It publishes only the series the duty oracle reports due (step 4). For each
    series you serve, research and publish at most one article, as its own pull
    request. Serve the series independently, so a late failure never costs an earlier
    series its night. How you isolate each one is the runtime skill's concern.
@@ -32,12 +32,21 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
       scaffold you render). If the package ships an identity file
       (`<t>/identity.md`), read it as the template's voice. It composes here,
       before the series prompt. If the package ships bespoke furniture
-      (`<t>/furniture.md`), it joins your furniture palette (step 6).
+      (`<t>/furniture.md`), it joins your furniture palette (step 7).
    6. `press/series/<id>/prompt.md`: the series' editorial instructions.
    7. Tag fragments listed in the series config, in declared order.
    8. The item-level `prompt`, if present.
 
-3. **Select your work.** Fetch the `library` branch and check it out to its own
+3. **Synchronize the publishing boundary.** Run `scripts/sync.sh` before
+   commissioning anything. It compares the two publishing workflows on the
+   fork's `origin/main` and `origin/library`. If they differ, it opens one
+   exact workflow PR, waits for protected validation and auto-merge, then
+   verifies the resulting blobs. A failure ends the run: report the PR and
+   failing check, and do not commission articles against a stale editor.
+   Scheduled runs never pass `--update-main-from-upstream`; importing upstream
+   engine changes is a human operation.
+
+4. **Select your work.** Fetch the now-current `library` branch and check it out to its own
    path (a `git worktree add`, or a second clone) so the engine can read tonight's
    published state. The branch root holds `library/<series>/<slug>.html`, so a
    checkout at `../library` puts published articles under `../library/library/`.
@@ -69,7 +78,7 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      **Serve only the series duty.py lists as due. If nothing is due, stop. Do
      not open a PR. Exiting silently is correct behavior.**
 
-4. **Honor the source policy.** Every source has a kind, and the kinds are about
+5. **Honor the source policy.** Every source has a kind, and the kinds are about
    independence, not document type:
    - **primary**: the document that OWNS the claim. The paper, the filing, the
      ruling, the dataset, a company's release about its own deal.
@@ -117,11 +126,11 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
    and audited by the editor. A secondary on a different website that is written
    by the primary's own author is still not a secondary.
 
-5. **Research properly.** Use web access. Verify claims against primary sources, and
+6. **Research properly.** Use web access. Verify claims against primary sources, and
    cite them by the rules of `spec/editorial.md` § Citations. Meet the source floor
    for your series.
 
-6. **Render exactly one self-contained HTML file** from your series' template:
+7. **Render exactly one self-contained HTML file** from your series' template:
    - Fill every anchor section the manifest requires exactly once. If the
      effective template/series bands declare `bands.flex_sections: [min, max]`, add that many more
      sections between the anchors, each named by you for the topic
@@ -149,12 +158,12 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      URLs. External references only to the engine assets path and Google Fonts.
    - File path: `library/<series>/<slug>.html`.
 
-7. **Run the proof and iterate:**
+8. **Run the proof and iterate:**
    `uv run engine/check.py library/<series>/<slug>.html --series <id> --repo . --library <path-to-library-checkout>`
    Revise until `BLOCK: 0`. Treat every WARN as a revision note and address what you
    reasonably can. WARNs are the quality bar. BLOCKs are the publishing bar.
 
-8. **Open one pull request per article, targeting the `library` branch.** Branch
+9. **Open one pull request per article, targeting the `library` branch.** Branch
    from `library` and add one article bundle: its HTML file and, only when used,
    image assets directly under its matching slug directory.
    - Title: `nb: <series>/<slug> - <Title>`
@@ -201,11 +210,13 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      in a browser, which no file check can; stay until its validate check
      reports on each PR you opened, and fix a failure on the same branch.
 
-9. **Boundaries.** Never merge. Never push to `library` directly. Modify only the
-   article and, when a cited source asset earns its place, its matching local
-   asset directory (`library/<series>/<slug>/`). Never open a second PR for the
-   same series. If your PR is labeled `nb-invalid`, a future run supersedes you.
-   Do not fight the desk.
+10. **Boundaries.** Never merge. Never push to `library` directly. Modify only the
+    article and, when a cited source asset earns its place, its matching local
+    asset directory (`library/<series>/<slug>/`). Never open a second PR for the
+    same series. If your PR is labeled `nb-invalid`, a future run supersedes you.
+    Do not fight the desk. The protected workflow repair performed by
+    `scripts/sync.sh` is the only non-article exception; never reproduce it by
+    hand or bypass its validation.
 
 ## nb-meta
 

@@ -23,13 +23,17 @@ billed are in [harnesses.md](harnesses.md).
 Four requirements. Everything past them lives in `PROTOCOL.md`.
 
 1. A scheduler that fires on a nightly cron.
-2. A checkout of `main` (the engine and `press/`) with the `library` branch
-   available separately.
+2. A checkout of `main` (the engine and `press/`) with access to the fork's
+   `origin/main` and `origin/library` refs.
 3. Web access for research. Many cloud run environments sandbox outbound
    network by default, so this usually has to be enabled on the environment
    explicitly. Without it the night shift reaches nothing and correctly
    publishes nothing, rather than citing pages it never opened.
-4. Permission to open a pull request to `library`.
+4. Permission to push work branches and open pull requests to `library`.
+
+Every run starts with `scripts/sync.sh`. It follows the fork's `main`, waits
+for any protected workflow repair to merge, and stops before article work if
+the publishing boundary is not current.
 
 ## The universal path: GitHub Actions
 
@@ -49,9 +53,11 @@ permissions:
 jobs:
   night-shift:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4 # main: engine + press/
-      - uses: actions/checkout@v4 # library, checked out separately
+      - uses: actions/checkout@v4 # library; the agent refreshes it after sync
         with:
           ref: library
           path: library-checkout
@@ -74,8 +80,9 @@ The night shift reads arbitrary web pages. Treat it as untrusted: a page can
 prompt-inject the agent, and instructions alone cannot prevent that.
 
 - Article PRs are checked without scheduler secrets. The proof rejects active
-  content, including extra scripts, iframes, forms, and meta-refresh. `setup.sh`
-  protects `library`, and its required `validate` check gates every merge.
+  content, including extra scripts, iframes, forms, and meta-refresh.
+  `scripts/setup.sh` protects `library`, and its required `validate` check
+  gates every merge.
 - The scheduled agent is more powerful. The Actions example grants repository
   contents write access so it can create work branches. Unless you also protect
   `main`, a compromised run can change the engine or trusted configuration in

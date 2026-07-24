@@ -60,7 +60,7 @@ in the gitignored brief and never echo into the article.
 ## Write the brief
 
 Write a structured file to `.nb-work/<series>/<slug>/voice.md`. It is
-gitignored, so it never enters the one-file PR. PROTOCOL step 8 pastes it
+gitignored, so it never enters the one-file PR. PROTOCOL step 9 pastes it
 into the PR body. Lead with the voice, then the evidence. The writer opens
 this file for the directive.
 

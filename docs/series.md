@@ -90,7 +90,7 @@ links use GitHub's normal authentication; the file is never copied into Pages.
 `min_sources` counts. It cannot see what kind of sources came in, so six items
 lifted from a single day's arXiv listing clear a floor of six. Two keys constrain
 the mix instead. They read the kind each source declares in the markup
-(`data-nb-kind`), which PROTOCOL step 4 defines: a **primary** owns the claim
+(`data-nb-kind`), which PROTOCOL step 5 defines: a **primary** owns the claim
 (the filing, the ruling, the paper), and a **secondary** reports on a primary
 from outside it. The distinction is independence, not document type, so a lab's
 post about its own paper is an extension of that paper, never a second source.

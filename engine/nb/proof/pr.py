@@ -1,4 +1,9 @@
-"""PR mode: the shape of the night's diff, and the record its body carries."""
+"""PR mode: the shape of the night's diff, and the record its body carries.
+
+The library accepts one article bundle, an owner-authorized retraction, or an
+exact workflow sync from the fork's main branch. Article PRs also carry the
+production record that CI checks before handing the article to the proof.
+"""
 
 import datetime as _dt
 import os
@@ -11,6 +16,18 @@ import yaml
 from nb import meta as nb_meta
 from nb.config import load_series
 from nb.proof import check_article
+from nb.workflow_sync import classify_workflow_sync
+
+__all__ = (
+    "check_pr_body_record",
+    "materialize_bundle",
+    "parse_pr_body",
+    "pr_changed_files",
+    "record_headings",
+    "resolve_pr_body",
+    "run_pr_mode",
+    "section_text",
+)
 
 PR_PATH_RE = nb_meta.PR_PATH_RE
 RECORD_SECTIONS = ("Task", "Process", "Voice brief", "Research", "Also consulted")
@@ -132,7 +149,7 @@ def section_text(body, name):
 def check_pr_body_record(pr_body_path, rep):
     """WARN when the PR body's production record is missing or hollow.
 
-    PROTOCOL step 8 makes the body the article's production record, and the
+    PROTOCOL step 9 makes the body the article's production record, and the
     artifacts are gitignored, so the body is the only place they survive.
     Presence is the quality bar, never the publishing bar, so a gap is a WARN.
 
@@ -153,7 +170,7 @@ def check_pr_body_record(pr_body_path, rep):
             "W-BODY-RECORD",
             f"PR body record missing section(s): {', '.join(missing)}",
             suggestion="the body is the article's production record; "
-            "PROTOCOL step 8 lists the sections",
+            "PROTOCOL step 9 lists the sections",
         )
     if "Voice brief" in missing:
         return
@@ -190,6 +207,23 @@ def run_pr_mode(args, rep):
     except subprocess.CalledProcessError as e:
         rep.block("B-DIFF-SHAPE", f"git diff failed: {e.stderr or e}")
         return
+    cfg_repo = getattr(args, "main", None) or args.repo
+    workflow_sync = classify_workflow_sync(
+        args.repo,
+        cfg_repo,
+        head=args.head,
+        changes=changes,
+    )
+    if workflow_sync.attempted:
+        if workflow_sync.valid:
+            rep.outcome = "SYNC"
+            rep.notes.append("workflow sync: exact copies from the fork's main branch")
+        else:
+            rep.block(
+                "B-WORKFLOW-SYNC",
+                workflow_sync.reason or "invalid workflow sync",
+            )
+        return
     if (
         getattr(args, "deletions_by_owner", False)
         and changes
@@ -218,7 +252,6 @@ def run_pr_mode(args, rep):
     m = PR_PATH_RE.match(path)
     assert m is not None
     series_id = m.group(1)
-    cfg_repo = getattr(args, "main", None) or args.repo
     series_cfg, _ = load_series(cfg_repo, series_id)
     rep.strict = bool(series_cfg and series_cfg.get("strict"))
     pr_body_meta = resolve_pr_body(args.pr_body, rep)

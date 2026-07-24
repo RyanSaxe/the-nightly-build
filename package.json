@@ -8,7 +8,7 @@
     "format": "prettier --write .",
     "lint:format": "prettier --check .",
     "lint:js": "eslint .",
-    "lint:css": "stylelint \"engine/assets/**/*.css\"",
+    "lint:css": "stylelint \"engine/assets/**/*.css\" \"templates/**/*.css\"",
     "lint:md": "markdownlint-cli2",
     "lint": "npm run lint:format && npm run lint:js && npm run lint:css && npm run lint:md",
     "test:js": "node --test \"tests/js/**/*.test.js\"",

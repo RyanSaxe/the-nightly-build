@@ -7,6 +7,9 @@ holds only while check.yml uses `pull_request`; `pull_request_target` would hand
 fork PRs a writable token and break it.
 """
 
+import pathlib
+import subprocess
+import sys
 from collections.abc import Callable
 
 import pytest
@@ -38,6 +41,73 @@ def test_article_path_prints_the_prs_one_added_article(
     assert ci_helper("article-path", "autopublish: true\n") == "library/foo/story.html"
 
 
+def run_sync_helper(
+    tmp_path: pathlib.Path,
+    *,
+    extra_file: bool = False,
+    only_check: bool = False,
+) -> str:
+    canonical = tmp_path / "canonical"
+    checkout = tmp_path / "checkout"
+    canonical.mkdir()
+    checkout.mkdir()
+    workflows = {
+        ".github/workflows/check.yml": "name: check\n",
+        ".github/workflows/publish.yml": "name: publish\n",
+    }
+    for path, content in workflows.items():
+        target = canonical / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content)
+
+    subprocess.run(["git", "init", "-q", "-b", "library"], cwd=checkout, check=True)
+    subprocess.run(["git", "config", "user.email", "t@t"], cwd=checkout, check=True)
+    subprocess.run(["git", "config", "user.name", "t"], cwd=checkout, check=True)
+    (checkout / ".gitkeep").write_text("")
+    subprocess.run(["git", "add", "-A"], cwd=checkout, check=True)
+    subprocess.run(["git", "commit", "-qm", "library"], cwd=checkout, check=True)
+    subprocess.run(["git", "checkout", "-qb", "sync"], cwd=checkout, check=True)
+    proposed = {".github/workflows/check.yml": workflows[".github/workflows/check.yml"]}
+    if not only_check:
+        proposed = workflows
+    for path, content in proposed.items():
+        target = checkout / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content)
+    if extra_file:
+        (checkout / "unexpected.txt").write_text("extra\n")
+    subprocess.run(["git", "add", "-A"], cwd=checkout, check=True)
+    subprocess.run(["git", "commit", "-qm", "sync"], cwd=checkout, check=True)
+
+    return subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "engine" / "ci_helpers.py"),
+            "sync",
+            "--repo",
+            str(canonical),
+            "--diff-base",
+            "library",
+        ],
+        cwd=checkout,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
+def test_sync_requires_both_exact_workflow_blobs(tmp_path: pathlib.Path) -> None:
+    assert run_sync_helper(tmp_path) == "true"
+
+
+def test_sync_rejects_other_files(tmp_path: pathlib.Path) -> None:
+    assert run_sync_helper(tmp_path, extra_file=True) == "false"
+
+
+def test_sync_accepts_one_stale_canonical_workflow(tmp_path: pathlib.Path) -> None:
+    assert run_sync_helper(tmp_path, only_check=True) == "true"
+
+
 def check_yml_triggers() -> set[str]:
     workflow = yaml.safe_load(
         (REPO / ".github" / "workflows" / "check.yml").read_text()
@@ -53,3 +123,22 @@ def test_check_yml_triggers_on_pull_request() -> None:
 
 def test_check_yml_never_uses_pull_request_target() -> None:
     assert "pull_request_target" not in check_yml_triggers()
+
+
+def test_check_yml_routes_exact_syncs_to_the_protected_merge_job() -> None:
+    workflow = yaml.safe_load(
+        (REPO / ".github" / "workflows" / "check.yml").read_text()
+    )
+    validate = workflow["jobs"]["validate"]
+    automerge = workflow["jobs"]["automerge"]
+
+    assert "sync" in validate["outputs"]
+    assert "needs.validate.outputs.sync == 'true'" in automerge["if"]
+
+
+def test_canonical_workflows_use_declared_engine_dependencies() -> None:
+    for name in ("check.yml", "publish.yml"):
+        workflow = (REPO / ".github" / "workflows" / name).read_text()
+        assert "uv run" in workflow
+        assert "pip install" not in workflow
+        assert "uv pip" not in workflow

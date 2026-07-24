@@ -26,8 +26,12 @@ never summaries.
 
 ## Phase 1: commission the night
 
-1. Read `PROTOCOL.md`. Fetch the `library` branch to its own checkout, then
-   run the duty oracle. Never do calendar or queue math yourself:
+1. Read `PROTOCOL.md`. Run `scripts/sync.sh` before touching tonight's work.
+   It may open a protected workflow PR and wait for it to merge. If it fails,
+   report the PR and check, then stop: do not commission articles against a
+   stale editor. Never pass its upstream-update flag on a scheduled run.
+   After it succeeds, fetch the now-current `library` branch to its own
+   checkout and run the duty oracle. Never do calendar or queue math yourself:
    `uv run engine/duty.py --repo . --library <checkout>`
    If your schedule prompt names one series, serve only that one, and only if
    duty lists it. **Duty says nothing is due → stop. No PR. Exiting silently

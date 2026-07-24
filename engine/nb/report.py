@@ -32,6 +32,7 @@ class Report:
         self.findings = []
         self.strict = strict
         self.notes = []
+        self.outcome = "PUBLISHABLE"
 
     def block(self, code, msg, *, suggestion=None):
         finding = Finding(code, "BLOCK", message=msg, suggestion=suggestion)
@@ -60,12 +61,14 @@ class Report:
 
 def emit(rep, as_json):
     blocks, warns = rep.blocks, rep.warns
+    verdict = "BLOCKED" if blocks else rep.outcome
     if as_json:
         print(
             json.dumps(
                 {
                     "block_count": len(blocks),
                     "warn_count": len(warns),
+                    "verdict": verdict,
                     "findings": [f.as_dict() for f in rep.findings],
                     "notes": rep.notes,
                 },
@@ -81,5 +84,5 @@ def emit(rep, as_json):
                     print(f"  {'':<18} → {f.suggestion}")
         for n in rep.notes:
             print(f"note: {n}")
-        print("verdict:", "PUBLISHABLE" if not blocks else "BLOCKED")
+        print("verdict:", verdict)
     return 0 if not blocks else 1

@@ -38,7 +38,7 @@ cd <your-paper>
 
 The script scaffolds `press/`, creates the empty `library` branch, seeds its
 workflows, and configures GitHub Pages and auto-merge. It requires `git`,
-`gh` (authenticated), Python 3.10+, and PyYAML.
+`gh` (authenticated), `uv`, and Python 3.10+.
 
 ### 2. Configure your paper
 

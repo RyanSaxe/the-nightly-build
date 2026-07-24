@@ -46,7 +46,7 @@ jobs:
       - run: npm ci
       - run: npx prettier --check .
       - run: npx eslint .
-      - run: npx stylelint "engine/assets/**/*.css"
+      - run: npx stylelint "engine/assets/**/*.css" "templates/**/*.css"
       - run: npx markdownlint-cli2
       - run: npm run lint:sg
       - run: npm run test:js
@@ -56,9 +56,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: shellcheck (preinstalled on ubuntu runners)
-        run: shellcheck setup.sh
+        run: shellcheck setup.sh scripts/setup.sh scripts/sync.sh
       - name: shfmt
         run: |
           curl -fsSL https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64 -o /tmp/shfmt
           chmod +x /tmp/shfmt
-          /tmp/shfmt -d setup.sh
+          /tmp/shfmt -d setup.sh scripts/setup.sh scripts/sync.sh

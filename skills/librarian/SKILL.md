@@ -249,19 +249,20 @@ Re-validate after every change.
   `/press-check/gallery/` (a new piece needs a sample fragment in
   `scripts/gallery/samples/`; the build says which).
 
-## 7. Update my engine (plain git)
+## 7. Update my engine
 
 ```sh
-git remote add upstream https://github.com/the-nightly-build/the-nightly-build.git  # once
-git fetch upstream
-git merge upstream/main
-./setup.sh    # re-syncs the trigger workflows onto library
+scripts/sync.sh --update-main-from-upstream
 ```
 
-An ordinary fork merge. For users who only write inside `press/` it is clean by
-construction: their commits and upstream's touch disjoint paths. If they HAVE
-edited engine files, the merge may conflict exactly there. That is normal fork
-ownership. Help them resolve it like any merge, never overwriting their work.
+This explicit command imports upstream into the fork's clean, current `main`,
+pushes it, then synchronizes the protected `library` workflows through CI. A
+conflict stops before `library` changes and prints the paths to resolve. If the
+user updated `main` elsewhere, run `scripts/sync.sh` without the flag.
+
+For users who only write inside `press/`, upstream merges are clean by
+construction. If they have edited engine files, conflicts are normal fork
+ownership. Help resolve them without overwriting their work.
 
 After updating, offer to dispatch the publish workflow so the back catalog
 re-renders with the new engine immediately, and ask to see their schedule
@@ -272,8 +273,9 @@ it is written.
 
 ## Boundaries
 
-Never push to `library`. Never edit files under `library/`. The library is a
-source now: an error left up outlives its correction and misleads whatever
+Never push to `library`. Never edit files under `library/`. The protected PR
+created by `scripts/sync.sh` is the sole workflow-maintenance path. The library
+is a source now: an error left up outlives its correction and misleads whatever
 cites it. The escape hatch for a bad published article is deleting its file on
 `library` (the night shift rewrites it next run). That is a human decision:
 offer it promptly, do not do it unprompted.

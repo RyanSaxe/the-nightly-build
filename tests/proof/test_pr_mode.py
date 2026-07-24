@@ -1,4 +1,10 @@
-"""The proof as CI runs it: a PR body, and the diff a night shift actually pushed."""
+"""The proof as CI runs it: a PR body, and the diff a night shift actually pushed.
+
+These tests use real Git branches to cover every diff shape admitted to the
+library: one article bundle, an owner retraction, or an exact copy of the two
+publishing workflows from the fork's main checkout. Working-tree mutations
+also confirm that validation reads proposed blobs from the named head ref.
+"""
 
 import pathlib
 from collections.abc import Callable
@@ -22,7 +28,7 @@ MINIMAL_BODY = (
     "```\n"
 )
 
-# The canonical body carries the production record PROTOCOL step 8 defines: every
+# The canonical body carries the production record PROTOCOL step 9 defines: every
 # artifact the chain produced, including a voice brief that studied real writers.
 STUDIED_VOICE = (
     "## Voice brief\n"
@@ -166,7 +172,7 @@ def test_pr_body_the_diff_does_not_answer_to(
 
 
 def test_preflight_passes_from_the_library_checkout(pr_repo: PressRepo) -> None:
-    """PROTOCOL step 8 preflights from the library checkout, where the new
+    """PROTOCOL step 9 preflights from the library checkout, where the new
     bundle is not on disk yet. On the 2026-07-16 run two desks hit a false
     'file not found' block on valid PRs; the proof reads the bundle from the
     head ref, so which branch the checkout sits on cannot matter."""
@@ -222,8 +228,66 @@ def test_pr_modifying_engine_code(pr_repo: PressRepo) -> None:
     assert "B-DIFF-SHAPE" in result.blocks
 
 
+def prepare_workflow_sync(
+    pr_repo: PressRepo,
+    paths: tuple[str, ...] = (
+        ".github/workflows/check.yml",
+        ".github/workflows/publish.yml",
+    ),
+) -> str:
+    workflows = {
+        ".github/workflows/check.yml": "name: canonical check\n",
+        ".github/workflows/publish.yml": "name: canonical publish\n",
+    }
+    pr_repo.checkout("library")
+    pr_repo.checkout("nb/sync-library-workflows", new=True)
+    for path in paths:
+        content = workflows[path]
+        pr_repo.write(path, content)
+    pr_repo.commit("chore: sync library workflows from main abc123")
+    return "nb/sync-library-workflows"
+
+
+def test_pr_accepts_an_exact_workflow_sync(pr_repo: PressRepo) -> None:
+    head = prepare_workflow_sync(pr_repo)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+    assert result.report.outcome == "SYNC"
+
+
+def test_pr_accepts_one_stale_canonical_workflow(pr_repo: PressRepo) -> None:
+    head = prepare_workflow_sync(pr_repo, (".github/workflows/check.yml",))
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+    assert result.report.outcome == "SYNC"
+
+
+def test_workflow_sync_rejects_an_extra_file(pr_repo: PressRepo) -> None:
+    head = prepare_workflow_sync(pr_repo)
+    pr_repo.write("unexpected.txt", "not part of a sync\n")
+    pr_repo.commit("sneak in another file")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-WORKFLOW-SYNC" in result.blocks
+
+
+def test_workflow_sync_rejects_a_noncanonical_blob(pr_repo: PressRepo) -> None:
+    head = prepare_workflow_sync(pr_repo)
+    pr_repo.write(".github/workflows/check.yml", "name: changed in the PR\n")
+    pr_repo.commit("change canonical workflow")
+    pr_repo.write(".github/workflows/check.yml", "name: canonical check\n")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-WORKFLOW-SYNC" in result.blocks
+
+
 def retract_on_a_curation_branch(pr_repo: PressRepo) -> None:
-    """The owner publishes a second article, then retracts it on their own branch."""
     pr_repo.checkout("library")
     pr_repo.write("library/semiconductors/tsmc.html", article())
     pr_repo.commit("published")

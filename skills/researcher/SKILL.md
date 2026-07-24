@@ -37,7 +37,7 @@ The prose floor belongs to the writer and editor.
    confirmed resolves. Log a page that refuses fetchers (a 403, a
    paywall) as gated, never as dead. Try a browser user agent first.
 4. Classify every source you log as primary or secondary, and write the reason
-   in the same line. PROTOCOL step 4 defines the two: a primary owns the claim,
+   in the same line. PROTOCOL step 5 defines the two: a primary owns the claim,
    a secondary reports on a primary from outside it. The test is independence
    from the primary's AUTHOR, never document type and never the website. A lab's
    post about its own paper is an extension of that paper however it is hosted,
