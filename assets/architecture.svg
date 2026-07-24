@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 760" role="img" aria-labelledby="diagram-title diagram-description">
   <title id="diagram-title">The Nightly Build article architecture</title>
-  <desc id="diagram-description">Main enters the orchestrator, which fans work out into isolated worktrees. Each worktree runs a task, voice, research, writing, editing, and validation loop. Passing work opens a library pull request and publishes to GitHub Pages after green CI. CI failures return to the orchestrator.</desc>
+  <desc id="diagram-description">Main enters the orchestrator, which commissions isolated article worktrees and directly launches every role. Voice coaching and research run in parallel before writing, editing, and publishing. Passing work opens a library pull request and publishes to GitHub Pages after green CI.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
       <path d="M0 0L10 5L0 10Z" fill="#71858d"/>
@@ -31,7 +31,7 @@
 
   <rect x="80" y="300" width="1280" height="420" rx="24" fill="#fffdf8" stroke="#afbfbd" stroke-width="2" stroke-dasharray="9 7"/>
   <text class="panel-title" x="115" y="342">INSIDE EACH ISOLATED WORKTREE</text>
-  <text class="panel-copy" x="115" y="367">The same desk loop runs in parallel for every commissioned task.</text>
+  <text class="panel-copy" x="115" y="367">The correspondent launches each role; artifacts carry state between isolated contexts.</text>
 
   <path class="edge" d="M210 170H270"/>
   <path class="edge" d="M490 170H580"/>
@@ -42,7 +42,7 @@
 
   <path class="ci" d="M1180 115V72Q1180 58 1166 58H394Q380 58 380 72V115"/>
   <rect x="706" y="43" width="150" height="28" rx="14" fill="#fbfaf7"/>
-  <text class="ci-label" x="781" y="61" text-anchor="middle">CI failure · repair run</text>
+  <text class="ci-label" x="781" y="61" text-anchor="middle">CI failure · role routing</text>
 
   <rect x="50" y="130" width="160" height="80" rx="14" fill="#e8f2f4" stroke="#76a3ab" stroke-width="2"/>
   <text class="node-title" x="75" y="164">main</text>
@@ -57,14 +57,14 @@
   <rect x="586" y="121" width="220" height="100" rx="14" fill="#fbf3df" stroke="#d8b56a" stroke-width="1.5"/>
   <rect x="580" y="127" width="220" height="100" rx="14" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
   <text class="node-title" x="605" y="161">Worktrees × N</text>
-  <text class="node-copy" x="605" y="185">one isolated desk per article</text>
+  <text class="node-copy" x="605" y="185">one article team per worktree</text>
   <text class="artifact" x="605" y="207">one task.md each</text>
 
   <rect x="1020" y="115" width="240" height="110" rx="14" fill="#f1ebf7" stroke="#9a7ab6" stroke-width="2"/>
   <text class="node-title" x="1045" y="146">PR on library</text>
   <text class="node-copy" x="1045" y="170">article + record + assets</text>
   <line x1="1045" y1="183" x2="1235" y2="183" stroke="#cdbdd9"/>
-  <text class="artifact" x="1045" y="204">desk artifacts included</text>
+  <text class="artifact" x="1045" y="204">role artifacts included</text>
 
   <rect x="1320" y="130" width="100" height="80" rx="14" fill="#e8f2f4" stroke="#76a3ab" stroke-width="2"/>
   <text class="node-title" x="1370" y="163" text-anchor="middle">GitHub</text>
@@ -76,7 +76,8 @@
   <text class="label" x="1240" y="299" text-anchor="middle">pass</text>
 
   <path class="edge" d="M260 475H305"/>
-  <path class="edge" d="M470 475H515"/>
+  <path class="edge" d="M260 455H280V405H610V425"/>
+  <path class="edge" d="M470 505V545H838V525"/>
   <path class="edge" d="M705 475H750"/>
   <path class="edge" d="M925 475H970"/>
   <path class="edge" d="M1160 475H1205"/>
@@ -127,10 +128,10 @@
   <text class="artifact" x="990" y="514">requested-changes.md</text>
 
   <rect x="1205" y="425" width="140" height="100" rx="13" fill="#e9f5ec" stroke="#6f9a78" stroke-width="2"/>
-  <text class="node-title" x="1275" y="451" text-anchor="middle">Validate</text>
-  <text class="node-copy" x="1275" y="473" text-anchor="middle" style="font-size:12px">proof + render</text>
-  <text class="node-copy" x="1275" y="493" text-anchor="middle" style="font-size:12px">gate the handoff</text>
-  <text class="artifact" x="1275" y="514" text-anchor="middle">check.py</text>
+  <text class="node-title" x="1275" y="451" text-anchor="middle">Publish</text>
+  <text class="node-copy" x="1275" y="473" text-anchor="middle" style="font-size:12px">proof + PR + CI</text>
+  <text class="node-copy" x="1275" y="493" text-anchor="middle" style="font-size:12px">gate delivery</text>
+  <text class="artifact" x="1275" y="514" text-anchor="middle">PR + green CI</text>
 
-  <text class="panel-copy" x="115" y="695">Failures stay inside the desk. Only a CI failure returns to the orchestrator.</text>
+  <text class="panel-copy" x="115" y="695">Roles communicate by path; peer messages are optional; the publisher reports delivery.</text>
 </svg>

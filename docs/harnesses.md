@@ -52,3 +52,29 @@ has a non-interactive command or Action. Typical invoke steps are:
 Use each provider's current documentation for installation and Action inputs.
 Give the runtime web access, keep credentials in repository secrets, and say
 plainly whether the run consumes a subscription allowance or a metered API.
+
+## Role coordination
+
+The protocol does not assume that every harness exposes the same subagent API.
+The scheduled correspondent detects three useful levels at runtime:
+
+1. **Peer:** isolated, named children can address one another. The
+   correspondent still launches every role and owns phase transitions; peers
+   use direct messages only for narrow blocking questions.
+2. **Parent relay:** isolated children exist, but their messages return to the
+   correspondent. It relays paths and requests without copying artifact
+   contents into its context.
+3. **Single context:** no isolated child is available. The same role sequence
+   runs, but the PR records the loss of isolation explicitly.
+
+Nested spawning and provider-specific agent teams are never required. Each
+article has one worktree and five direct role launches: writing coach and
+researcher in parallel, then writer, editor, and publisher as their inputs
+become ready. Files under `.nb-work/` are authoritative, so a harness can
+resume a role or launch a fresh instance without restarting the article.
+
+Model names are equally harness-specific. `press/production.yaml` therefore
+uses portable tiers (`efficient`, `capable`, `premium`, or `inherit`) unless a
+user pins an exact provider ID. The correspondent maps a tier to an available
+model and records the actual selection in `task.md`; see
+[Production cost and role models](production.md).

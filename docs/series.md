@@ -166,7 +166,8 @@ Any PR to `library` that adds one isolated article bundle and passes the proof i
 article, whoever commissioned it. Ask your agent for three extra pieces
 this afternoon and tonight's build is simply bigger. The recommended flow
 is press check, then promote, so you read the rehearsal before it
-publishes. The desk applies the same validation either way.
+publishes. The direct-role chain and publisher apply the same validation either
+way.
 
 Three rules of the road:
 
