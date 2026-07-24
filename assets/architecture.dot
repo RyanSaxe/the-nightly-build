@@ -20,9 +20,9 @@ digraph nightly_build {
   edge [color="#71858d" fontname="Inter"]
 
   main [color="#76a3ab" fillcolor="#e8f2f4" label="main\nengine + press/"]
-  orchestrator [label="Orchestrator\nsync · select · provision\ncommission task.md"]
-  worktrees [label="Worktrees × N\none isolated desk per article\none task.md each"]
-  pull_request [color="#9a7ab6" fillcolor="#f1ebf7" label="PR on library\narticle + record + assets\ndesk artifacts included"]
+  orchestrator [label="Orchestrator\nsync · select · commission\nlaunch · route · monitor"]
+  worktrees [label="Worktrees × N\none article team per worktree\none task.md each"]
+  pull_request [color="#9a7ab6" fillcolor="#f1ebf7" label="PR on library\narticle + record + assets\nrole artifacts included"]
   pages [color="#76a3ab" fillcolor="#e8f2f4" label="GitHub Pages"]
 
   main -> orchestrator
@@ -32,31 +32,36 @@ digraph nightly_build {
     color="#c16e61"
     constraint=false
     fontcolor="#a35349"
-    label="CI failure · repair run"
+    label="CI failure · role routing"
     style=dashed
   ]
 
   subgraph cluster_worktree {
     color="#afbfbd"
     fontname="Inter"
-    label="INSIDE EACH ISOLATED WORKTREE\nThe same desk loop runs in parallel for every commissioned task."
+    label="INSIDE EACH ISOLATED WORKTREE\nThe correspondent launches each role; artifacts carry state between isolated contexts."
     style="dashed,rounded"
 
-    task [color="#76a3ab" fillcolor="#e8f2f4" label="Task\ncreated by orchestrator\nscope + constraints\ntask.md"]
+    task [color="#76a3ab" fillcolor="#e8f2f4" label="Task\ncreated by orchestrator\nwith requirements\ntask.md"]
     voice [label="Voice\nstudy relevant writers\nfor voice + style\nvoice.md"]
     research [label="Research\nread + verify sources\nlog claims + citations\nresearch.md"]
     write [label="Write\ndraft from research\nrun proof + revise\narticle.html"]
     edit [label="Edit\ntighten prose + punctuation\ncheck citations + clarity\nrequested-changes.md"]
-    validate [color="#6f9a78" fillcolor="#e9f5ec" label="Validate\nproof + render\ngate the handoff\ncheck.py"]
+    publish [color="#6f9a78" fillcolor="#e9f5ec" label="Publish\nproof + PR + CI\ngate delivery\nPR + green CI"]
 
-    task -> voice -> research -> write -> edit -> validate
-    research -> research [color="#c98612" fontcolor="#9a680f" label="bad citation" style=dashed]
-    write -> write [color="#c98612" fontcolor="#9a680f" label="bad writing" style=dashed]
-    edit -> research [color="#c98612" constraint=false fontcolor="#9a680f" label="source gap" style=dashed]
-    edit -> write [color="#c98612" constraint=false fontcolor="#9a680f" label="rewrite" style=dashed]
-    validate -> edit [color="#c98612" constraint=false fontcolor="#9a680f" label="check fails" style=dashed]
+    task -> voice
+    task -> research
+    voice -> write
+    research -> write -> edit -> publish
+    research -> research [color="#c16e61" fontcolor="#a35349" label="dead or invented URL" style=dashed]
+    write -> write [color="#c16e61" fontcolor="#a35349" label="bad HTML\nmissing section\nbroken citation\nbanned term\nand more" style=dashed]
+    write -> voice [color="#795b95" constraint=false fontcolor="#795b95" label="voice question" style=dashed]
+    write -> research [color="#795b95" constraint=false fontcolor="#795b95" label="source question" style=dashed]
+    edit -> research [color="#c98612" constraint=false fontcolor="#9a680f" label="source request" style=dashed]
+    edit -> write [color="#c98612" constraint=false fontcolor="#9a680f" label="rewrite request" style=dashed]
+    publish -> write [color="#c16e61" constraint=false fontcolor="#a35349" label="article check fails; writer repairs" style=dashed]
   }
 
   worktrees -> task [lhead=cluster_worktree label="expanded below" style=dashed]
-  validate -> pull_request [ltail=cluster_worktree label="pass"]
+  publish -> pull_request [ltail=cluster_worktree label="pass"]
 }

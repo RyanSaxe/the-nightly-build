@@ -157,22 +157,27 @@ Before any scheduling, offer a rehearsal: _"want to see what the first article
 would look like tonight?"_ It costs the same usage as a real run and only
 skips publishing.
 
-A press check runs a desk's article chain exactly as a real
-night, with one difference: the commission you write names the article path
+A press check runs the same direct-role chain as a real night, with one
+difference: the commission you write names the article path
 as `press-check/library/<series>/<slug>.html` (gitignored), so every role
-writes where `task.md` says. Before writing it, run
-`uv run engine/source_policy.py --repo . --series <id>` and put the result,
-focal source, and independent context on the card. Run the chain (coach,
-researcher, writer,
-editor), assemble the would-be PR body to `.nb-work/<series>/<slug>/pr-body.md`,
-and preflight it with `--pr-body`. Show the proof's verdict verbatim. Build
+writes where `task.md` says. Before writing it, run both
+`uv run engine/source_policy.py --repo . --series <id>` and
+`uv run engine/production_policy.py --repo . --series <id>`. Put the source
+result, focal source, independent context, and resolved five-role production
+plan on the card. Follow the correspondent's capability fallback: launch coach
+and researcher together when isolated agents exist, then writer and editor as
+direct children; use parent relay when peers cannot address one another. Perform
+the publisher's record and preflight steps without opening a PR. Assemble the
+would-be body to `.nb-work/<series>/<slug>/pr-body.md` and preflight it with
+`--pr-body`. Show the proof's verdict verbatim. Build
 the preview so the draft sits on the real newsstand with the back catalog:
 `uv run engine/build_site.py --repo . --library <checkout> --preview press-check/ --out press-check/site/`
 then serve it (`python3 -m http.server -d press-check/site/`). Headless,
 return the paths instead. This is the editorial loop for tuning a series:
 read the draft, adjust `prompt.md`, re-run, compare. **Promote on request**:
-copy the artifact to `library/<series>/<slug>.html` on a branch and open the
-real PR. No duplicate research spend, normal validation path.
+copy the artifact to `library/<series>/<slug>.html` on a branch and launch the
+publisher against the existing artifacts. No duplicate research spend, normal
+validation path.
 
 ## 5. Harness handoff
 
@@ -190,8 +195,9 @@ things:
 - **connect**: the one-time GitHub connection.
 - **schedule**: one nightly schedule, the canonical prompt with `<repo>` and
   `<checkout>` filled in.
-- **model and cost**: strongest available. Say plainly whether the run is
-  subscription-included or metered.
+- **model and cost**: a strong correspondent, with `production.yaml` choosing
+  cost-aware role models. Say plainly whether the run is subscription-included
+  or metered.
 - **first run now**: fire a one-off run if your harness can, so today's article
   publishes instead of waiting for tonight.
 
@@ -218,7 +224,7 @@ On request:
 - **Let a collection surprise them** (`selection: random`).
 - **Adjust `bands:`** (series values may tighten or loosen template defaults;
   omitted means no default) **and `min_sources`.**
-- **Flip `autopublish`** (false means the desk approves and a human merges) **or
+- **Flip `autopublish`** (false means a human merges after the publisher's PR) **or
   `strict`** (true means WARNs become BLOCKs). Warn that a skipped night is better
   than a thin article.
 

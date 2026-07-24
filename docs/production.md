@@ -29,6 +29,12 @@ The correspondent maps these tiers to models the current harness actually
 offers. To pin one provider instead, write its exact model ID. Effort is also a
 plain string because providers expose different levels.
 
+The correspondent launches every article role directly. When the harness
+supports isolated children, each role receives its own context; otherwise the
+production record discloses the single-context fallback. The policy controls
+those five launches; it does not select the correspondent itself and does not
+require nested agents or a provider-specific team feature.
+
 ```yaml
 stages:
   researcher:

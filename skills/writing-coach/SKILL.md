@@ -1,7 +1,7 @@
 ---
 name: writing-coach
 description: >
-  Fires when the article pipeline invokes it explicitly, before research.
+  Fires when the article pipeline invokes it explicitly, in parallel with research.
   Studies how the best writers in the article's domain write and produces a
   voice brief, a gitignored file fitted to the paper's style guide, template,
   and prompt, read by the writer and the editor. Does not fire on a user
@@ -101,9 +101,13 @@ Craft:
 Calibration: <one short verbatim passage, texture only>
 ```
 
+## Mid-chain requests
+
+When the named writer asks a narrow question about applying the brief, answer
+by appending `## Clarification: <question>` to `voice.md`, then reply with the
+path. Chat is a notification, never a second voice brief or an unwritten rule.
+
 ## Output
 
-Return the path to the brief, wrapped so the writer does not forget it:
-
-`<important>`Voice brief written to `.nb-work/<series>/<slug>/voice.md`. Read
-it before drafting, and again before editing.`</important>`
+Return only `DONE writing-coach .nb-work/<series>/<slug>/voice.md`. The writer
+receives the path from `task.md`; do not repeat the brief in the control message.
