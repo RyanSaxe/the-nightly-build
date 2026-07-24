@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ast-grep matched and rewrote 9 nullable-call sites across 5 files in the TypeScript compiler's source · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "ast-grep",
+        "template": "article",
+        "title": "ast-grep matched and rewrote 9 nullable-call sites across 5 files in the TypeScript compiler's source",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-24",
+        "tags": [],
+        "sources": 15,
+        "words": 2195,
+        "reading_minutes": 10,
+        "dek": "The pattern binds to the parse tree, not the text, so it skips every look-alike sitting inside a comment, a string, or a call with the wrong number of arguments.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">ast-grep matched and rewrote 9 nullable-call sites across 5 files in the TypeScript compiler's source</h1>
+        <p class="nb-dekline">
+          The pattern binds to the parse tree, not the text, so it skips every look-alike sitting inside a comment, a string, or a call with the wrong number of arguments.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-07-24</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A sed backreference matches the pattern until it breaks across a line</h2>
+        <p>
+          Code written before optional chaining existed is full of one shape:
+          check that a property exists, then call it.
+          <code>obj.val &amp;&amp; obj.val()</code>. The modern replacement is
+          one operator, <code>obj.val?.()</code>, and a large codebase
+          carries the old shape hundreds of times, spelled slightly
+          differently at each site. Real occurrences split the two halves
+          across a line break, the way this one does:
+          <code>const result = obj.val &amp;&amp;\n   obj.val()</code>.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          A <code>sed</code> substitution catches the single-line form with a
+          backreference:
+          <code>sed -E 's/([a-zA-Z_.]+) &amp;&amp; \1\(\)/\1?.()/'</code>. It
+          has no notion of the second half moving to the next line. It has no
+          notion of the difference between the pattern sitting in working
+          code and the same characters sitting inside a string or a comment
+          that happens to quote the old style. It has no way to tell a
+          two-argument call from a zero-argument one without a longer,
+          more fragile expression. Every character on the page counts the
+          same to it.
+        </p>
+        <p>
+          ast-grep is a Rust command-line tool, built on the tree-sitter
+          parsing library, that searches and rewrites code by matching the
+          shape of its parse tree instead of matching characters, also
+          invocable by the shorter alias <code>sg</code>.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          In the
+          release sitting at the top of the project's changelog as of this
+          writing, <code>sg</code> is being deprecated: the alias collides
+          with the pre-existing Linux <code>sg</code> command (for
+          <code>setgroups</code>), installed by default on distributions such
+          as Arch.<sup class="nb-cite"><a href="#s3">3</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup> Both the native
+          binary and its npm shim now print a warning to stderr whenever
+          <code>sg</code> is invoked, on every platform, and both keep
+          working while they do.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          The project's own docs already teach every example with the long
+          form.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-metavariable-rewrite" id="the-metavariable-rewrite">
+        <h2>$PROP matched nine real calls in the TypeScript compiler's source</h2>
+        <p>
+          Generalize the pattern with a metavariable:
+          <code>$PROP &amp;&amp; $PROP()</code>. A metavariable starts with
+          <code>$</code> and matches exactly one node in the parse tree, one
+          expression, whatever its own internal shape. A repeated name like
+          <code>$PROP</code> must match an identical subtree at every
+          occurrence, the way a backreference matches identical text, except
+          the identity check is structural rather than character-by-character.
+          It also carries information a text match cannot. It is
+          argument-count aware, so the pattern does not fire on a call with a
+          different number of arguments. It is lexically aware too, so it
+          does not match the same characters sitting inside a comment or a
+          string literal.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          Run it against a fresh clone of the TypeScript compiler's own
+          source, at commit <code>cc5c6e2d</code>, and it finds nine real
+          matches spread across five files: one in
+          <code>src/compiler/moduleSpecifiers.ts</code>, two each in
+          <code>src/harness/harnessIO.ts</code>,
+          <code>src/services/services.ts</code>,
+          <code>src/services/stringCompletions.ts</code>, and
+          <code>src/tsserver/nodeServer.ts</code>. Each <code>$PROP</code>
+          bound to a real property chain, not a bare name:
+          <code>os.homedir</code>, <code>host.getCustomTransformers</code>,
+          <code>ts.sys.tryEnableSourceMapsForHost</code>, among others.
+          Applying the rewrite non-interactively changes all nine:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">search and rewrite, against microsoft/TypeScript</span><span>CONSOLE</span>
+          </div>
+          <pre><code class="language-python">$ ast-grep --pattern '$PROP &amp;&amp; $PROP()' --lang ts src
+[... 9 matches ...]
+
+$ ast-grep -p '$PROP &amp;&amp; $PROP()' -r '$PROP?.()' --lang ts -U src
+Applied 9 changes
+
+$ git diff --stat
+ 5 files changed, 9 insertions(+), 9 deletions(-)</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · The search finds 9 matches across 5 files; the
+            non-interactive rewrite (<code>-U</code>) applies all 9, confirmed
+            by <code>git diff --stat</code>.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Every hunk is exactly the transform the pattern promises and
+          nothing else. In <code>src/tsserver/nodeServer.ts</code>,
+          <code>(os.homedir &amp;&amp; os.homedir()) ||</code> becomes
+          <code>(os.homedir?.()) ||</code>. In
+          <code>src/services/services.ts</code>,
+          <code>host.getCustomTransformers &amp;&amp;
+          host.getCustomTransformers()</code>
+          becomes <code>host.getCustomTransformers?.()</code>. No line
+          outside those nine changed.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          None of the nine spans a line break; every real site in this
+          checkout sits on one line. The pattern would still bind across a
+          break if one existed, since it matches the shape of the tree and
+          not the text: that is a separate, documented property, not
+          something this run happened to demonstrate.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          One detail matters as much as the pattern itself: the argument has
+          to be single-quoted. A double-quoted
+          <code>"$PROP &amp;&amp; $PROP()"</code> lets the shell expand
+          <code>$PROP</code> to an empty string before ast-grep ever sees the
+          pattern, the one place its own syntax collides with a text tool it
+          is not.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-reusable-rule" id="the-reusable-rule">
+        <h2>A YAML rule renames the definition and every call, and nothing else</h2>
+        <p>
+          A one-shot <code>--rewrite</code> is still a manual action, run
+          once, watched by a person reading the diff. A check meant to be
+          reused, as a repeated codemod or a house lint rule enforced in CI,
+          moves into a YAML rule file, run with <code>ast-grep scan</code>.
+          Given a file that defines a function and calls it:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">test.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def foo(x):
+    return x + 1
+
+y = foo(2)
+print(y)</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · The starting file, before the rule runs.<sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          a rule file with two patterns, one for the definition and one for
+          the call, renames <code>foo</code> to <code>baz</code> only where
+          the tree says it is that function's name or that function's call
+          site:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">change_func.yml</span><span>YAML</span>
+          </div>
+          <pre><code class="language-python">id: change_def
+language: Python
+rule:
+  pattern: |
+    def foo($X):
+      $$$S
+fix: |-
+  def baz($X):
+    $$$S
+
+---
+id: change_param
+rule:
+  pattern: foo($X)
+fix: baz($X)</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 3 · <code>ast-grep scan -r change_func.yml test.py</code>
+            renames the definition and its call site, leaving
+            <code>return x + 1</code> and <code>print(y)</code> untouched.<sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          A plain <code>sed 's/foo/baz/g'</code> cannot make that
+          distinction. It treats <code>foo</code> as a string wherever it
+          appears. It would rewrite the same characters inside a comment,
+          inside an unrelated identifier that merely contains those letters,
+          or inside a string literal that happens to quote it. Its regex
+          engine has no way to tell any of those apart from the real call.
+          The YAML rule matches by AST role instead, a function definition's
+          name, a call expression's callee, not by substring.<sup
+            class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+          The
+          <code>$$$S</code> in the pattern is the zero-or-more-node
+          metavariable, so the rule matches whether the function body is one
+          line or ten.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          The rewrite is also indentation-aware in a way substitution cannot
+          be. A fix template's own indentation composes additively with
+          wherever the match lands in the surrounding code. The same fix
+          text comes out at a different depth depending on whether it lands
+          at the top level or inside a nested block, and line-oriented
+          substitution has no concept of a replacement re-indenting itself
+          relative to where it lands in the tree.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-relational-rule" id="the-relational-rule">
+        <h2>A rule can flag console.error unless it sits inside a catch block</h2>
+        <p>
+          ast-grep's rules also compose relationally. <code>inside</code>,
+          <code>has</code>, <code>precedes</code>, and <code>follows</code>
+          each take a nested sub-rule, so a match can depend on where it sits
+          in the tree, not only on its own shape.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+          CodeRabbit, an AI code-review product with no stake in ast-grep,
+          ships exactly this as a worked example for its own custom review
+          rules: flag <code>console.error(...)</code> calls unless they sit
+          inside a <code>catch_clause</code>.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">.coderabbit.yaml rule</span><span>YAML</span>
+          </div>
+          <pre><code class="language-python">id: no-console-except-error
+rule:
+  any:
+    - pattern: console.error($$$)
+      not:
+        inside:
+          kind: catch_clause</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 4 · A relational rule, cited by CodeRabbit's own
+            documentation for its ast-grep integration.<sup class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          No single <code>grep</code> or <code>sed</code> invocation states
+          that condition, because neither tool has a concept of "inside" at
+          all. They see lines, not containment. A regex can find every
+          <code>console.error</code> call. Separating the ones sitting in
+          error handling from the ones that are not requires tracking clause
+          type and nesting across however many lines separate them. That is
+          the tree-structural awareness a line-based tool does not carry.<sup
+            class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-ceiling" id="the-ceiling">
+        <h2>ast-grep's own comparison page concedes it stops at syntax</h2>
+        <p>
+          The project does not oversell its reach. Its own comparison page
+          states plainly that ast-grep operates "only on the syntactic
+          level," with no type information and no data-flow analysis: it
+          cannot tell whether <code>$X.foo()</code> is being called on an
+          actual <code>Foo</code> instance, only that the shape matches.<sup
+            class="nb-cite"
+            ><a href="#s11">11</a></sup
+          >
+          The same page concedes that GritQL is "generally more powerful," at
+          a steeper learning-curve cost, and that Semgrep carries "advanced
+          features like equivalence and deep-semgrep" that ast-grep does not
+          attempt, trading some of that power for being, in the project's own
+          words, "very performant" using "a real parser." It grants the same
+          trade to Comby, which it calls "more generic" precisely because
+          Comby skips per-language parsers altogether. That comes at the cost
+          of being "not aware of the syntax and semantics," unable to handle
+          an indentation-sensitive language like Python the way ast-grep's
+          fix templates do.<sup class="nb-cite"><a href="#s11">11</a></sup>
+          That generality is a real advantage for a language none of these
+          tools parses, but not one for TypeScript or Python.
+        </p>
+        <p>
+          An independent account sharpens the same ceiling into a concrete
+          failure mode for AI coding agents specifically. Matching by shape
+          finds the right call sites, but the tool still cannot follow an
+          import graph, a barrel export, or a dynamic import. It has no way
+          to flag a stale match, and it hands back unranked, untyped hits the
+          agent still has to interpret on its own.<sup class="nb-cite"
+            ><a href="#s12">12</a></sup
+          >
+          Its author built a competing product to cover that gap,
+          a real conflict worth naming. But the underlying claim, that
+          ast-grep does not do cross-file or semantic resolution, is exactly
+          what the project's own comparison page already concedes.<sup
+            class="nb-cite"
+            ><a href="#s12">12</a></sup
+          ><sup class="nb-cite"><a href="#s11">11</a></sup>
+        </p>
+        <p>
+          The project's own FAQ catalogues where the syntax match gets
+          brittle in practice. A pattern has to parse as standalone code on
+          its own: a bare JSON fragment like <code>"key": "$VAL"</code> is
+          not legal JSON by itself and needs a <code>context</code> workaround
+          to match at all. The CLI and the online playground can disagree on
+          the identical pattern, purely from a tree-sitter parser-version
+          difference plus a UTF-8-versus-UTF-16 encoding difference that
+          changes how each recovers from a parse error, worth knowing before
+          prototyping a rule in the playground and shipping it from the CLI
+          unchecked. A <code>$$$</code> capture is lazy in a specific,
+          documented way, so an ambiguous pattern like
+          <code>foo($$$A, b, $$$C)</code> against <code>foo(a, c, b, b, c)</code>
+          stops <code>$$$A</code> at the first <code>b</code> rather than
+          trying every split, which can silently mis-capture. And there is no
+          built-in prefix or suffix syntax: matching every identifier that
+          starts with <code>use</code>, the way React hook names do, needs a
+          separate <code>constraints</code> block with a regex bolted onto
+          the pattern, not something the pattern syntax expresses on its
+          own.<sup class="nb-cite"><a href="#s13">13</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-maintainers" id="the-maintainers">
+        <h2>The changelog ships every few weeks, and two outside companies trust it in production</h2>
+        <p>
+          Adopting a rewrite tool is also a bet on upkeep. ast-grep's own
+          changelog has landed a release every two to six weeks for more than
+          a year: 0.44.1 on 4 July 2026, 0.44.0 on 21 June 2026, back through
+          0.39.2 on 27 July 2025. 0.45.0 is already in flight on the
+          project's main branch as of this writing, three weeks after the
+          last dated release.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Most of any given release is dependency bumps opened by an
+          automated bot, Renovate, with genuine fixes and features landing
+          alongside them every cycle, a maintenance signal rather than a
+          stall.<sup class="nb-cite"><a href="#s3">3</a></sup> The project
+          lists one author in its own build manifest,<sup class="nb-cite"
+            ><a href="#s14">14</a></sup
+          >
+          plus that bot-driven dependency pipeline and a stream of community
+          pull requests: not a large team, but not an unattended one either.
+        </p>
+        <p>
+          Two companies with no stake in the project have put it into
+          production. Codemod, a separate codemod-tooling company, uses
+          ast-grep as the deterministic front end of an Axios-to-fetch
+          migration pipeline, ahead of an LLM-driven transform step. On their
+          own monorepo, 7 of 16 attempted call-site replacements, 43.75
+          percent, went through fully automatically, and 81.25 percent needed
+          zero or only minor manual fixes.<sup class="nb-cite"
+            ><a href="#s15">15</a></sup
+          >
+          CodeRabbit, the review product already cited for its containment
+          rule, lets customers write their own review checks as ast-grep
+          YAML directly in a configuration file.<sup class="nb-cite"
+            ><a href="#s10">10</a></sup
+          >
+          Neither report is a large sample, and neither company publishes a
+          user count, but both are working systems, built by outsiders who
+          had every reason to reach for something else if the tool had not
+          held up.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            ast-grep earns its place for exactly the job: a
+            rewrite or a lint rule that has to know it is looking at code,
+            not text, applied at codebase scale without a human checking
+            every hit by hand. It is not a substitute for a tool that reasons
+            about types or data flow, and it is not the right layer for an
+            agent that needs to follow an import graph.<sup class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://astgrep.com/guide/quick-start"
+              >ast-grep docs · Quick Start</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/ast-grep/ast-grep"
+              >ast-grep/ast-grep · GitHub repository</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="CHANGELOG.md, entries 0.39.2 (27 Jul 2025) through the in-flight 0.45.0 section on main"
+              href="https://github.com/ast-grep/ast-grep/blob/main/CHANGELOG.md"
+              >ast-grep/ast-grep · CHANGELOG.md</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/ast-grep/ast-grep/issues/56"
+              >ast-grep/ast-grep · Issue #56, "Command name alias: ast-grep and sg"</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/ast-grep/ast-grep/pull/2843"
+              >ast-grep/ast-grep · PR #2843, "feat: deprecate the sg command"</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://astgrep.com/guide/pattern-syntax"
+              >ast-grep docs · Pattern Syntax</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="ast-grep 0.45.0, search and non-interactive rewrite run against src/"
+              href="https://github.com/microsoft/TypeScript/commit/cc5c6e2d32e2228fff83a66537bbe6042943054d"
+              >microsoft/TypeScript · commit cc5c6e2d (2026-07-23), tested directly with ast-grep 0.45.0</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://astgrep.com/guide/rewrite-code"
+              >ast-grep docs · Rewrite Code</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://astgrep.com/reference/rule"
+              >ast-grep docs · Rule Object Reference</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://docs.coderabbit.ai/configuration/ast-grep-instructions"
+              >CodeRabbit docs · ast-grep Instructions</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://astgrep.com/advanced/tool-comparison"
+              >ast-grep docs · Tool Comparison</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://agentmako.drhalto.com/blog/grep-ripgrep-ast-grep-vs-typed-tools.html"
+              >agentmako · "grep, ripgrep, ast-grep, and what AI coding agents actually need"</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://astgrep.com/advanced/faq"
+              >ast-grep docs · FAQ</a
+            >
+          </li>
+          <li id="s14">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://raw.githubusercontent.com/ast-grep/ast-grep/main/Cargo.toml"
+              >ast-grep/ast-grep · Cargo.toml (workspace manifest)</a
+            >
+          </li>
+          <li id="s15">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://codemod.com/blog/axios-fetch-with-codemod-2-0"
+              >Codemod · "From Axios → Fetch with Codemod 2.0"</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
