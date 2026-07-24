@@ -4,9 +4,9 @@
 # The built site is served from the Pages artifact; it is NOT committed back to
 # the library branch, so a protected library never blocks the deploy.
 # PLACEMENT: GitHub fires push triggers only from workflow files present on the
-# pushed branch, so setup.sh seeds a copy of this file onto library; the editor's
-# auto-merge also dispatches it explicitly (GITHUB_TOKEN pushes fire no events).
-# Keep this file a pure trigger: all engine logic is checked out from main.
+# pushed branch, so scripts/setup.sh seeds the first copy and sync.sh keeps it
+# current. Auto-merge also dispatches it (GITHUB_TOKEN pushes fire no events).
+# Keep this a pure trigger: engine logic comes from main at run time.
 name: nightly-build-publish
 
 on:
