@@ -165,7 +165,10 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
    - File path: `library/<series>/<slug>.html`.
 
 8. **Run the proof and iterate:**
-   `uv run engine/check.py library/<series>/<slug>.html --series <id> --repo . --library <path-to-library-checkout>`
+   From the main checkout, run
+   `uv run engine/check.py <article-worktree>/library/<series>/<slug>.html --series <id> --repo <main-checkout> --library <library-checkout>`.
+   The article worktree is based on the orphan `library` branch and does not
+   contain the engine.
    Revise until `BLOCK: 0`. Treat every WARN as a revision note and address what you
    reasonably can. WARNs are the quality bar. BLOCKs are the publishing bar.
 
@@ -206,9 +209,9 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
        artifacts to one digest-marked follow-up comment, and leaves references
        in their place. Post that generated comment once after opening.
 
-   - Preflight BEFORE opening the PR, with the same invocation the desk's CI
+   - Preflight BEFORE opening the PR, with the same invocation the publisher's CI
      will run. Commit the article bundle on the work branch, write the intended
-     body to a file, then from the library checkout:
+     body to a file, then from the main checkout:
      `uv run engine/check.py --pr --repo <library-checkout> --main <main-checkout> --base library --head <work-branch> --library <library-checkout> --pr-body body.txt`
      This checks everything CI checks at the bundle level, including matching
      local source assets and the body's nb-meta match. A failure here is
@@ -220,7 +223,7 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
     article and, when a cited source asset earns its place, its matching local
     asset directory (`library/<series>/<slug>/`). Never open a second PR for the
     same series. If your PR is labeled `nb-invalid`, a future run supersedes you.
-    Do not fight the desk. The protected workflow repair performed by
+    Do not fight the invalid label. The protected workflow repair performed by
     `scripts/sync.sh` is the only non-article exception; never reproduce it by
     hand or bypass its validation. An `NB_SYNC_PR_REQUIRED` handoff permits only
     the printed PR operations on the script-generated branch, followed by the
@@ -256,8 +259,9 @@ Field notes: `mode` is one of `collection | sequence | rolling | open`. `order` 
 Every mode may use the series' single `template:` or one of its `templates:` choices;
 for a multi-template series, the correspondent chooses the package per article. `sources` and
 `words` are your self-measurements (the proof recounts, and >20% deviation is a WARN).
-`harness`/`model` are honest provenance, supplied by the night desk in the
-commission. A role cannot know its own runtime.
+`harness`/`model` are honest provenance, supplied by the correspondent from the
+commission's resolved production plan. A role cannot know its own runtime; use
+`harness-managed` when the runtime does not expose the selected model.
 
 ## Quality creed
 
@@ -267,28 +271,38 @@ alone, and a sentence runs only when every hand that touched it would sign it. E
 the reader to go deeper on their own.
 
 Every article is produced by a chain of roles, each in a fresh context with its own
-skill and its own artifact under `.nb-work/<series>/<slug>/`: the night desk
-commissions the piece (`task.md`), the coach studies how the best real writers on the
-subject actually write (`voice.md`), the researcher builds the claims-and-evidence log
-(`research.md`), the writer drafts from that log and proves the result, and the editor
-attacks it (`requested-changes.md`). No stage is licensed to skim because the night is
-long. Artifacts are written for the next agent (conclusions first, stable
-headings) and to the floor's own standard: every role tunes its ear on what
-the others wrote. The PR body is assembled from them.
+skill and its own artifact under `.nb-work/<series>/<slug>/`: the correspondent
+commissions the piece (`task.md`); the coach studies how the best real writers on the
+subject actually write (`voice.md`) while the researcher builds the claims-and-evidence
+log (`research.md`); the writer drafts from those artifacts and proves the result; the
+editor attacks it (`requested-changes.md`); and the publisher performs deterministic
+delivery through green CI. No stage is licensed to skim because the night is long.
+Artifacts are written for the next agent (conclusions first, stable headings) and to
+the floor's own standard: every role tunes its ear on what the others wrote. The PR
+body is assembled from them.
 
 The chain is a division of labor, not a checklist one agent walks. An artifact
 written by anyone but the role whose name is on it is a forgery: it reads
 plausibly, it passes every automated check, and the article silently loses the
-work the role existed to do. So the night runs on two tiers.
-`skills/correspondent/SKILL.md` is the night desk: it reads duty, commissions
-every article, then hands each commission to its own `skills/desk/SKILL.md`
-subagent, launched together, each in its own worktree. A desk owns one article
-end to end and returns one open PR. Neither tier writes an artifact.
+work the role existed to do. `skills/correspondent/SKILL.md` is the night desk:
+it reads duty, commissions every article, creates one worktree per article, and
+directly launches every role. No child launches another child. Coach and
+researcher start in parallel; writer, editor, and publisher start only when
+their inputs exist. The correspondent coordinates phase transitions but writes
+no role artifact.
 
-A runtime that cannot spawn subagents runs the same chain in one context, and
-says so in every PR body it opens (`Production: single-context, no isolation.`)
-The pipeline survives. The fresh eyes do not, and the prose pays: an editor
-grading prose it helped write is not an editor. Never take that path silently.
+Named peer messages are an optimization, never a dependency. When the runtime
+supports them, a role may ask a narrow blocking question of an already named
+peer. Otherwise the correspondent relays the request, resuming that role or
+launching a fresh instance against the same artifacts. Files are authoritative;
+messages carry only `DONE`, `REQUEST`, or `BLOCKED` control lines and paths. This
+requires neither nested spawning nor a provider-specific agent-team feature.
+
+A runtime that cannot spawn subagents runs the same chain in one context and
+sets `coordination: single-context` in `task.md` before the first role. The
+production record preserves that disclosure in the PR body. The pipeline
+survives. The fresh eyes do not, and the prose pays: an editor grading prose it
+helped write is not an editor. Never take that path silently.
 
 The skills are files in this repository, read with your file tools. They are not
 slash commands, and no runtime registers them: `/correspondent` will fail.

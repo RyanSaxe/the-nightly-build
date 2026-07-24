@@ -114,6 +114,12 @@ When the writer or editor sends back a gap ("find X", "verify Y"), append
 under `## Request: <from>: <what>`. Do not rewrite the log. The chain has
 already read the rest.
 
+When a named peer asks directly, update the log before replying with its path.
+A message is a notification, never a second research record.
+
 ## Output
 
-Return only the log's path and its opening paragraph.
+Return only `DONE researcher .nb-work/<series>/<slug>/research.md`. If access or
+the commission makes the source policy impossible, return
+`BLOCKED researcher <one-sentence reason>` after recording the failure in the
+log.

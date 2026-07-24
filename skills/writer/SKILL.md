@@ -1,7 +1,7 @@
 ---
 name: writer
 description: >
-  Fires when a desk commissions an article and supplies `task.md`,
+  Fires when the correspondent supplies `task.md`,
   the voice brief, and the research log. Drafts the piece from the log alone
   and carries it through the proof loop. Does not fire on direct user requests.
 ---
@@ -21,8 +21,10 @@ overrides the governing layers. Reread `voice.md` before drafting and revising.
 
 Before drafting, list the ten facts or concepts the piece cannot be written
 without. Most belong in the opening. If the log cannot supply one, that is a
-gap: end your turn with a research request naming what needs finding, and the
-desk routes it. Do not write around the hole.
+gap. In peer mode, message the named researcher with one precise question and
+continue only after `research.md` records the answer. Otherwise end your turn
+with `REQUEST researcher <one-sentence question>` so the correspondent can
+relay it. Do not write around the hole.
 
 State what the record proves, attribute what a source asserts, and leave what
 you merely believe out of the paper. Every claim the argument rests on
@@ -97,9 +99,12 @@ the draft.
 
 ## The proof loop
 
+Run the engine from the absolute main-checkout path in `task.md`; the article
+lives in its separate worktree and the orphan `library` branch has no engine.
+
 ```sh
-uv run engine/check.py library/<series>/<slug>.html \
-    --series <id> --repo . --library <checkout>
+uv run engine/check.py <article-path> \
+    --series <id> --repo <main-checkout> --library <library-checkout>
 ```
 
 Iterate until `BLOCK: 0`, then treat every WARN as a revision note: fix it,
@@ -108,3 +113,9 @@ or name it in the hand-off to the editor with the reason it stands.
 When the editor returns requested changes, apply the redraft notes to the
 parts they name. The rest of the piece is settled. Rerun the proof and hand
 back.
+
+## Output
+
+After `BLOCK: 0`, return only `DONE writer <article-path>`. A blocking evidence
+gap returns only `REQUEST researcher <one-sentence question>`. Put article
+content and proof details in their files, never in the control message.

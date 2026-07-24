@@ -91,7 +91,7 @@ Stop before a reader could point to a scar.
 Read the paragraph endings in sequence, then read the draft against the library
 checkout. The checkout holds the whole paper, so the comparison does too: this
 piece's openers, closers, section heading shapes, and dek against every series'
-recent nights, not only its own. Desks draft in isolation, and a catchphrase
+recent nights, not only its own. Writers draft in isolation, and a catchphrase
 forms across them where one series' history shows nothing. A repeated shape is
 a formula. Break it.
 An ending gone soft usually finished a paragraph earlier. Strike everything
@@ -161,3 +161,11 @@ Later rounds append under a numbered heading. The file is quoted into the PR
 body's "Process" section, so write it as history a reader could follow cold,
 in your own words and never the draft's. A tell you adopt is a tell you stop
 seeing.
+
+Return one control line. Use `DONE editor <requested-changes-path>` when no
+redraft is needed, `REQUEST researcher <path-or-question>` when evidence must
+change, or `REQUEST writer <path-or-question>` for voice, prose, structure,
+markup, or proof. When both roles have work, request the researcher first and
+record the writer's work in `requested-changes.md`; the correspondent routes it
+afterward. A narrow peer question is allowed, but required work always belongs
+in the artifact.
