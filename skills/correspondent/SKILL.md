@@ -154,21 +154,22 @@ Children return exactly one control line:
 - `REQUEST <role> <artifact-path-or-one-sentence-question>`
 - `BLOCKED <role> <one-sentence-reason>`
 
-Do not ask for or relay artifact summaries. In `peer` mode, a writer, editor,
-or publisher may send a narrow blocking question directly to an already named
-role; the answer is not complete until that role updates its artifact. Phase
-transitions remain yours so completion notifications cannot strand a team. In
+Do not ask for or relay artifact summaries. In `peer` mode, the writer may ask
+the named coach or researcher a narrow blocking question, and the editor may do
+the same when a read exposes a gap. The answer is not complete until the owner
+updates `voice.md` or `research.md`; chat is never the record. Phase transitions
+remain yours so completion notifications cannot strand a team. In
 `parent-relay`, forward only the request and paths. If the target cannot resume,
 launch a fresh instance of the same role on the same task and artifacts; never
 start the article over.
 
-Route editor requests by target. Research first when evidence is missing, then
-resume the writer. Resume the writer directly for voice, prose, structure,
-markup, or proof work. After any redraft, resume the same editor when possible,
-or launch a fresh editor for a genuinely cold read. Cap the loop at two editor
-rounds. After the second, preserve unresolved objections in
-`requested-changes.md` and continue to the publisher, exactly as the production
-record promises.
+Route every `REQUEST` by target. Resume the coach for voice clarification and
+the researcher for evidence; then resume the writer. Resume the writer directly
+for prose, structure, markup, or proof work. After any redraft, resume the same
+editor when possible, or launch a fresh editor for a genuinely cold read. Cap
+the loop at two editor rounds. After the second, preserve unresolved objections
+in `requested-changes.md` and continue to the publisher, exactly as the
+production record promises.
 
 ## Phase 3: publish and see CI through
 

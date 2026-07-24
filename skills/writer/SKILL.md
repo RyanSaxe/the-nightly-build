@@ -26,6 +26,12 @@ continue only after `research.md` records the answer. Otherwise end your turn
 with `REQUEST researcher <one-sentence question>` so the correspondent can
 relay it. Do not write around the hole.
 
+Treat the voice brief the same way. When a concrete sentence or structural
+choice exposes an ambiguity the brief did not settle, ask the named coach one
+narrow question in peer mode and wait for `voice.md` to record the answer. In
+parent-relay mode, return `REQUEST writing-coach <one-sentence question>`.
+Never use chat as an unwritten exception to the brief.
+
 State what the record proves, attribute what a source asserts, and leave what
 you merely believe out of the paper. Every claim the argument rests on
 carries an inline citation to a source entry, and every citation traces to
@@ -117,5 +123,6 @@ back.
 ## Output
 
 After `BLOCK: 0`, return only `DONE writer <article-path>`. A blocking evidence
-gap returns only `REQUEST researcher <one-sentence question>`. Put article
-content and proof details in their files, never in the control message.
+gap returns only `REQUEST researcher <one-sentence question>`; a blocking voice
+question returns only `REQUEST writing-coach <one-sentence question>`. Put
+article content and proof details in their files, never in the control message.

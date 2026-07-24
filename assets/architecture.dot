@@ -20,7 +20,7 @@ digraph nightly_build {
   edge [color="#71858d" fontname="Inter"]
 
   main [color="#76a3ab" fillcolor="#e8f2f4" label="main\nengine + press/"]
-  orchestrator [label="Orchestrator\nsync · select · provision\ncommission task.md"]
+  orchestrator [label="Orchestrator\nsync · select · commission\nlaunch · route · monitor"]
   worktrees [label="Worktrees × N\none article team per worktree\none task.md each"]
   pull_request [color="#9a7ab6" fillcolor="#f1ebf7" label="PR on library\narticle + record + assets\nrole artifacts included"]
   pages [color="#76a3ab" fillcolor="#e8f2f4" label="GitHub Pages"]
@@ -42,7 +42,7 @@ digraph nightly_build {
     label="INSIDE EACH ISOLATED WORKTREE\nThe correspondent launches each role; artifacts carry state between isolated contexts."
     style="dashed,rounded"
 
-    task [color="#76a3ab" fillcolor="#e8f2f4" label="Task\ncreated by orchestrator\nscope + constraints\ntask.md"]
+    task [color="#76a3ab" fillcolor="#e8f2f4" label="Task\ncreated by orchestrator\nwith requirements\ntask.md"]
     voice [label="Voice\nstudy relevant writers\nfor voice + style\nvoice.md"]
     research [label="Research\nread + verify sources\nlog claims + citations\nresearch.md"]
     write [label="Write\ndraft from research\nrun proof + revise\narticle.html"]
@@ -53,11 +53,13 @@ digraph nightly_build {
     task -> research
     voice -> write
     research -> write -> edit -> publish
-    research -> research [color="#c98612" fontcolor="#9a680f" label="bad citation" style=dashed]
-    write -> write [color="#c98612" fontcolor="#9a680f" label="bad writing" style=dashed]
-    edit -> research [color="#c98612" constraint=false fontcolor="#9a680f" label="source gap" style=dashed]
-    edit -> write [color="#c98612" constraint=false fontcolor="#9a680f" label="rewrite" style=dashed]
-    publish -> edit [color="#c98612" constraint=false fontcolor="#9a680f" label="check fails" style=dashed]
+    research -> research [color="#c16e61" fontcolor="#a35349" label="dead or invented URL" style=dashed]
+    write -> write [color="#c16e61" fontcolor="#a35349" label="bad HTML\nmissing section\nbroken citation\nbanned term\nand more" style=dashed]
+    write -> voice [color="#795b95" constraint=false fontcolor="#795b95" label="voice question" style=dashed]
+    write -> research [color="#795b95" constraint=false fontcolor="#795b95" label="source question" style=dashed]
+    edit -> research [color="#c98612" constraint=false fontcolor="#9a680f" label="source request" style=dashed]
+    edit -> write [color="#c98612" constraint=false fontcolor="#9a680f" label="rewrite request" style=dashed]
+    publish -> write [color="#c16e61" constraint=false fontcolor="#a35349" label="article check fails; writer repairs" style=dashed]
   }
 
   worktrees -> task [lhead=cluster_worktree label="expanded below" style=dashed]

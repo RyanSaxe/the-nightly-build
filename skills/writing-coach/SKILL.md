@@ -101,6 +101,12 @@ Craft:
 Calibration: <one short verbatim passage, texture only>
 ```
 
+## Mid-chain requests
+
+When the named writer asks a narrow question about applying the brief, answer
+by appending `## Clarification: <question>` to `voice.md`, then reply with the
+path. Chat is a notification, never a second voice brief or an unwritten rule.
+
 ## Output
 
 Return only `DONE writing-coach .nb-work/<series>/<slug>/voice.md`. The writer
