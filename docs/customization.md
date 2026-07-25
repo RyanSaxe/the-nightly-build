@@ -90,6 +90,14 @@ then instruct a section in its `prompt.md`: "use `<div class=\"rs-margin-note\">
 for asides." Articles carry the markup, your furniture carries the look, and
 engine updates never touch either.
 
+The furniture gallery reads sample fragments from the same owner as the
+catalog. Put shared samples in `press/furniture/samples/<slug>.html` and
+template-bespoke samples in
+`press/templates/<id>/samples/<slug>.html`; `<slug>` is the lowercase,
+hyphenated catalog heading. A missing press sample renders a placeholder that
+names the expected path. Samples for shipped furniture remain engine-owned in
+`scripts/gallery/samples/`.
+
 The proof also checks class names for likely LLM typos. It parses every local
 stylesheet that ships in `theme.css` and emits `W-DEAD-CLASS` when article
 markup names a class that no stylesheet defines. Classes supplied by the
@@ -235,9 +243,13 @@ Manifests come in two styles:
 - Fixed outline: declare `sections` and each must appear exactly once.
 - Flexible outline: declare anchor `sections` plus
   `bands.flex_sections: [min, max]`, and the agent names that many additional
-  sections per article. Either way the cite rule applies to every labeled
-  section except `sources` (always exempt) and any you list in the template's
-  `cite_exempt` (for a non-cited section like an objectives box).
+  sections per article. A flexible template may also declare
+  `flex_components: [class-name, ...]`; every additional section must then
+  contain exactly one element carrying each class. This keeps essential
+  furniture without fixing the prose inside it. Either way the cite rule
+  applies to every labeled section except `sources` (always exempt) and any
+  you list in the template's `cite_exempt` (for a non-cited section like an
+  objectives box).
 
 Worked example: an `interview`, a Q&A transcript with a short introduction,
 built as your own template. It looks nothing like a shipped template, so it
@@ -268,7 +280,10 @@ chrome the writer cannot reword.
    a page by rewording its furniture. `validate_config.py` requires each
    string to appear in the skeleton, so rewording skeleton chrome without
    updating this list fails at your desk, not the writer's. The engine
-   reads these from the manifest, so any template can use them. Any scheduling
+   reads these from the manifest, so any template can use them. For flexible
+   outlines, `flex_components:` names required CSS component classes. Each
+   flexible section in both the skeleton and a finished article must contain
+   every named class exactly once. Any scheduling
    mode can use any template: a series declares `template:` or a `templates:`
    choice list, and the correspondent records the selected package in
    `nb-meta`. An optional

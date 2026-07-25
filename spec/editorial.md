@@ -109,8 +109,8 @@ tells of slop.
   `press/banned-terms.yaml`, and the proof counts every article against the merged list.
   When a count runs over, rewrite rather than substitute: a synonym carries the same
   vagueness, and repunctuating an em-dash keeps the fluff the dash was carrying. Delete
-  first, then rewrite what remains. An em-dash still earns its place for a real aside or
-  a sharp break. The ceiling exists for the reflex.
+  first, then rewrite what remains. Keep an em-dash for a real aside or a sharp
+  break, not as a reflex.
 
 Break any rule here sooner than write a sentence no honest voice would say aloud.
 

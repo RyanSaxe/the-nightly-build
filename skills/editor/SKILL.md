@@ -116,6 +116,26 @@ established.
 
 Line: `Reader: this gives me …` (or `nothing beyond the sources; redraft`).
 
+After the cold read, compare the complete rendered article with the briefing
+stack the writer received: the governing layers, template package, commission,
+voice brief, and series, tag, and item prompts. Audit the headline, dek,
+headings, body, captions, notes, and bookends. Fixed template chrome is exempt.
+Research facts and genuine terms of art are not leakage merely because both
+the log and article must name them.
+
+Look beyond exact quotation. Catch near-copies; instructions or selection
+criteria turned into claims about the subject; taxonomy names, examples, and
+structural labels presented as if the reporting discovered them; compliance or
+self-grading prose; generic editorial judgments with the subject's nouns
+substituted; and the same moves hidden behind synonyms. A sentence can leak
+without appearing in a headline. Delete a surgical leak. If the passage needs
+only a word or clause, rederive that fragment from the article's evidence. If
+it needs new prose, return it to the writer with the source instruction named;
+do not launder it through paraphrase.
+
+Line: `Prompt leakage: none` or `Prompt leakage: <article location> echoes
+<briefing source>; <cut or requested disposition>`.
+
 Source assets are evidence, never decoration. Request one when an exact source visual
 would let the reader test a load-bearing part of the argument better than prose
 alone. Request its removal when it no longer earns space. If the log missed the
@@ -153,10 +173,16 @@ Bounds: prose and structure only, never markup, scripts, or styles. Keep
 nb-meta's word count honest by recounting the rendered prose, headline
 through sources. Never run the proof. The writer reruns it.
 
+Keep requesting changes while publication-blocking work remains. Do not prolong
+the loop for optional polish, repeat resolved objections, or introduce a new
+standard late. If repeated attempts cannot resolve the same blocking issue,
+return `BLOCKED editor <reason>` instead of cycling silently.
+
 ## Output
 
-Write `requested-changes.md`: each read's required line, your fixes, and any
-requested changes. Surgical-done and redraft-needed can both be true.
+Write `requested-changes.md`: the four required lines (`Skeptic`, `Cut`,
+`Reader`, and `Prompt leakage`), your fixes, and any requested changes.
+Surgical-done and redraft-needed can both be true.
 Later rounds append under a numbered heading. The file is quoted into the PR
 body's "Process" section, so write it as history a reader could follow cold,
 in your own words and never the draft's. A tell you adopt is a tell you stop
@@ -164,8 +190,9 @@ seeing.
 
 Return one control line. Use `DONE editor <requested-changes-path>` when no
 redraft is needed, `REQUEST researcher <path-or-question>` when evidence must
-change, or `REQUEST writer <path-or-question>` for voice, prose, structure,
-markup, or proof. When both roles have work, request the researcher first and
-record the writer's work in `requested-changes.md`; the correspondent routes it
-afterward. A narrow peer question is allowed, but required work always belongs
-in the artifact.
+change, `REQUEST writer <path-or-question>` for voice, prose, structure, markup,
+or proof, or `BLOCKED editor <reason>` when repeated repairs cannot resolve the
+same required issue. When both roles have work, request the researcher first
+and record the writer's work in `requested-changes.md`; the correspondent routes
+it afterward. A narrow peer question is allowed, but required work always
+belongs in the artifact.

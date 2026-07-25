@@ -2,41 +2,48 @@
 
 ## The split (`nb-divide` + `nb-side`)
 
-Exactly two sides across an accent spine: left and right on wide screens, stacked
-but still allegiant on phones. Each side is four slots, in order.
+Exactly two positions across an accent spine: left and right on wide screens,
+stacked with mirrored rails on phones. Each position contains exactly one of
+the four components below. They orient the reader without prescribing the
+argument inside them.
 
 ```html
 <div class="nb-divide">
   <section
     class="nb-side nb-side-left"
-    data-nb-section="the-case-for-X"
-    id="the-case-for-X"
+    data-nb-section="POSITION-A-SLUG"
+    id="POSITION-A-SLUG"
   >
-    <h3 class="nb-side-camp">WHO HOLDS THIS SIDE</h3>
-    <p class="nb-side-thesis">The position in one sentence.</p>
-    <p>
-      Its strongest form, in their actual cited words.<sup class="nb-cite"
+    <h3 class="nb-side-camp">RECOGNIZABLE NAME FOR THIS POSITION</h3>
+    <p class="nb-side-thesis">THE POSITION STATED CONCISELY.</p>
+    <div class="nb-side-argument">
+      <p>
+        EVIDENCE AND REASONING IN THE FORM THIS QUESTION REQUIRES.<sup
+          class="nb-cite"
+          ><a href="#s2">2</a></sup
+        >
+      </p>
+    </div>
+    <p class="nb-side-champion">
+      <span class="nb-side-outlet">NAMED PERSON OR INSTITUTION</span> — WHY THIS
+      HOLDER HAS STANDING ON THE QUESTION.<sup class="nb-cite"
         ><a href="#s2">2</a></sup
       >
-    </p>
-    <p class="nb-side-champion">
-      <span class="nb-side-outlet">OUTLET</span>, standing here because
-      REASON.<sup class="nb-cite"><a href="#s2">2</a></sup>
     </p>
   </section>
   <section
     class="nb-side nb-side-right"
-    data-nb-section="the-case-for-Y"
-    id="the-case-for-Y"
+    data-nb-section="POSITION-B-SLUG"
+    id="POSITION-B-SLUG"
   >
     <!-- the same four slots, mirrored -->
   </section>
 </div>
 ```
 
-The slots: **camp** (`nb-side-camp`, who holds it), **thesis**
-(`nb-side-thesis`, the position in one sentence), the **argument**
-(`nb-side-argument`, a wrapper holding the cited prose, in the form its best advocate would recognize), and the **champion**
-(`nb-side-champion`, the vetted holder and in one clause why it has standing on
-this question, cited). One accent, mirrored across both sides, never a
-color per team.
+The slots are the position's recognizable **name** (`nb-side-camp`), its
+concise **thesis** (`nb-side-thesis`), the open **argument**
+(`nb-side-argument`), and a credible named **holder** with a cited statement
+and a brief indication of standing (`nb-side-champion`). The manifest makes
+all four mandatory in both positions. One accent is mirrored across the split;
+it is never a color assigned to either position.

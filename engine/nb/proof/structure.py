@@ -109,6 +109,16 @@ def check_required_sections(ed, treg, rep):
             f"{len(extras)} sections beyond the anchors; this template "
             f"expects between {low} and {high}",
         )
+    for section in extras:
+        counts = ed.section_class_counts.get(section, {})
+        for component in treg.get("flex_components") or []:
+            count = counts.get(component, 0)
+            if count != 1:
+                rep.block(
+                    "B-FURNITURE",
+                    f"flexible section '{section}' contains {count} elements with "
+                    f"class '{component}'; it must contain exactly one",
+                )
 
 
 def check_sandbox(ed, rep):

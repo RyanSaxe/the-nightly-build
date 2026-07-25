@@ -220,8 +220,8 @@ dependencies. Do not substitute `pip install` in a harness or schedule.
      reports on each PR you opened, and fix a failure on the same branch.
 
 10. **Boundaries.** Never merge. Never push to `library` directly. Modify only the
-    article and, when a cited source asset earns its place, its matching local
-    asset directory (`library/<series>/<slug>/`). Never open a second PR for the
+    article and the matching local asset directory when the article uses a cited
+    source asset (`library/<series>/<slug>/`). Never open a second PR for the
     same series. If your PR is labeled `nb-invalid`, a future run supersedes you.
     Do not fight the invalid label. The protected workflow repair performed by
     `scripts/sync.sh` is the only non-article exception; never reproduce it by

@@ -53,10 +53,15 @@ Never name the reader in a series prompt. The audience lives in
 `press/editorial.md`; prompt rules are stated about the article, the desk,
 or the subject.
 
-When a prompt asks the writer to classify (sort a crux into kinds, grade a
-source, weigh a claim), the label nouns leak into published copy verbatim.
-Instruct the classification in the subject's own words and say so: name the
-kind by what each side is predicting, never by the taxonomy's label.
+When production requires a classification, keep its taxonomy in the working
+artifacts. The published article states the underlying distinction in the
+subject's own terms; it does not announce the category used to produce it.
+
+Keep production judgment separate from publishable claims. Selection criteria,
+section functions, rubric names, and self-assessment belong to the briefing,
+not the article. An instruction that becomes plausible copy after swapping in
+the subject's nouns is still copyable when it uses synonyms instead of the
+original words; rewrite it as a constraint.
 
 ## Process
 
