@@ -4,9 +4,10 @@ Use a timely public company to investigate a larger business or market
 question. Choose it because the current record makes that question answerable,
 not because the company is due for a profile.
 
-Make the argument intelligible without assuming prior knowledge of the company.
-Add context where the article needs it rather than reserving an overview section
-or opening every article with the same account of a business.
+Assume no prior knowledge of the company. Teach the business as part of the
+analysis, not merely the minimum context for a narrow claim. Place that
+explanation where it clarifies the argument; do not confine it to the first
+paragraph or a fixed overview section.
 
 Let the question determine the route through the record and the shape of the
 article. Use any part of the company or market record that helps answer it. No
