@@ -1,8 +1,84 @@
 /* This paper's shared furniture (prefix rs-). Documented in catalog.md beside
    this file. The engine concatenates every furniture owner into assets/theme.css
    on each build, so these classes ride to the whole library without any engine
-   change. Bespoke, single-template furniture lives in that template's folder
-   instead; these two pieces are shared across sections, so they live here. */
+   change. Bespoke, single-template furniture lives in that template's folder. */
+
+/* Word card — a typographic definition plate for the smallest article in the
+   paper. On a wide page the lexical identity and definition sit across a rule;
+   on a phone they stack into the order in which they should be read. */
+.rs-word-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 1.25rem;
+  align-items: center;
+  margin: 0.35rem 0 1.6rem;
+  padding: 1.2rem 1.3rem;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.rs-word-card-head {
+  min-width: 0;
+}
+
+.rs-word-term {
+  display: block;
+  overflow-wrap: anywhere;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 7vw, 2.85rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.rs-word-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  margin-top: 0.65rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--faint);
+}
+
+.rs-word-pos {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rs-word-pronunciation {
+  font-family: var(--mono);
+}
+
+.nb-article .rs-word-definition {
+  margin: 0;
+  padding-left: 1.25rem;
+  border-left: 1px solid var(--hair);
+  font-family: var(--serif);
+  font-size: 1.08rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+@media (max-width: 620px) {
+  .rs-word-card {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+    padding: 1.05rem 1.1rem 1.1rem;
+  }
+
+  .nb-article .rs-word-definition {
+    padding-top: 0.85rem;
+    padding-left: 0;
+    border-top: 1px solid var(--hair);
+    border-left: 0;
+  }
+}
 
 /* Legacy: rs-code retired in favor of the engine's shipped nb-code (the
    same design, promoted upstream; nb.js loads Prism itself). Kept styled,

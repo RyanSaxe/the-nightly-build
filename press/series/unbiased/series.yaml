@@ -1,0 +1,15 @@
+# A detailed two-position current-affairs desk, anchored by a consequential US
+# development. Strict mode makes the unbiased template's structure and citation
+# rules hard gates.
+name: Unbiased
+mode: open
+section: "Current Affairs"
+template: unbiased
+prompt: prompt.md
+autopublish: true
+strict: true
+min_sources: 10
+sources_by_kind:
+  primary: [4, null]
+  secondary: [3, null]
+cadence: [tue, fri]

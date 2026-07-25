@@ -1,7 +1,6 @@
-# One unusually good word a night, its history told whole. Below the longread
-# default on purpose: a word essay is the paper's smallest read, and five real
-# sources (the coinage, the etymology, the usage it quotes) beat eight padded
-# ones.
+# One unusually useful word a night. This is the paper's smallest read: enough
+# room for a precise definition, the word's real origin, and the distinction it
+# preserves without turning a lexical essay into a survey.
 name: Word of the Day
 mode: open
 section: "Daily Reading"
@@ -10,6 +9,6 @@ prompt: prompt.md
 autopublish: true
 strict: false
 bands:
-  words: [800, 1100]
-min_sources: 5
+  words: [550, 800]
+min_sources: 4
 cadence: daily

@@ -1,0 +1,9 @@
+# Keep article production cost-aware while requiring the fresh-eyes editor to
+# use the scheduled correspondent's model at high effort.
+profile: balanced
+required: false
+stages:
+  editor:
+    model: inherit
+    effort: high
+    required: true

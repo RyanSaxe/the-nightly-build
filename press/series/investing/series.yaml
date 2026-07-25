@@ -1,0 +1,14 @@
+# A cumulative open course in investing judgment. The archive is the emergent
+# syllabus: each commission chooses the next prerequisite from what has and has
+# not been taught, rather than following a list fixed in advance.
+name: Investing Course
+mode: open
+section: "Investing"
+template: lesson
+prompt: prompt.md
+autopublish: true
+strict: false
+bands:
+  words: [1200, 2200]
+min_sources: 6
+cadence: [mon, wed, fri, sun]

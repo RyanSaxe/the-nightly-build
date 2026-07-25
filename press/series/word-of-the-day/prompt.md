@@ -1,15 +1,19 @@
 # Word of the Day
 
-Open with the word and a plain definition. Choose an esoteric word with a story
-rooted in a real scientific paper, observation, technical need, or other record,
-and with a meaning that names a pattern people can recognize in work and life.
-The best word is useful because it makes a recurring experience easier to see,
-not merely rare because few people know it.
+Choose an unusual word that remains useful outside its original setting. Its
+documented origin should contain enough events and people for an entertaining
+short read, not merely an etymology.
 
-Tell the story behind the word. Recover the moment it was needed, show who named
-the phenomenon and why, and follow the word through later genuine usage. Quote the
-record closely enough to show what later writers retained, changed, or
-misunderstood. Close on what the word lets someone notice, where it differs from
-its plain neighbors, and when using it would mislead. Never invent a quotation or
-use a tidy etymology as a substitute for the story. Let the source and usefulness
-decide which discipline or tradition earns the next entry.
+Sphexish is the benchmark, not a subject to repeat. Its origin is a memorable
+scientific episode, it names a recognizable pattern, and it remains useful far
+beyond the setting that produced it. Choose other words that bring together
+story and usefulness in their own way.
+
+The `rs-word-card` comes first. It gives the word, its pronunciation and part of
+speech, and a one-sentence definition clear enough to stand on its own.
+
+Tell the documented story of the word's origin and trace the development of its
+meaning. Ground its present sense in real examples of use. Cite authoritative
+dictionaries for the definition and original sources for quoted usage.
+Etymology is history, not proof of a present meaning. Beyond the opening card,
+these requirements impose no order or section structure.
