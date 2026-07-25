@@ -1,6 +1,6 @@
-# A current-affairs desk for live public questions. Strict mode makes the
-# unbiased template's structure and citation rules hard gates.
-name: Policy Debate
+# The paper's domain-neutral two-position desk. Strict mode makes the unbiased
+# template's structure and citation rules hard gates.
+name: Unbiased
 mode: open
 section: "Current Affairs"
 template: unbiased
