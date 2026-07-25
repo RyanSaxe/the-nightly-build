@@ -1,10 +1,9 @@
-# A current-affairs desk for live public questions. The press-owned debate
-# template is intentionally being dogfooded here before any engine template
-# adopts it. Strict mode makes its structure and citation rules hard gates.
+# A current-affairs desk for live public questions. Strict mode makes the
+# unbiased template's structure and citation rules hard gates.
 name: Policy Debate
 mode: open
 section: "Current Affairs"
-template: debate
+template: unbiased
 prompt: prompt.md
 autopublish: true
 strict: true
