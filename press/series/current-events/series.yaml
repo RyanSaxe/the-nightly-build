@@ -1,0 +1,16 @@
+# The US-focused general news front page. Four to six items keep the brief
+# selective; every item carries its primary record and at least one independent
+# account instead of the former brief's two-secondary floor.
+name: Current Events
+mode: rolling
+section: "Daily Reading"
+template: brief
+prompt: prompt.md
+autopublish: true
+strict: false
+bands:
+  items: [4, 6]
+per_item_sources:
+  primary: [1, 1]
+  secondary: [1, null]
+cadence: daily
