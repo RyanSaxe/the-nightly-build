@@ -153,6 +153,11 @@ Bounds: prose and structure only, never markup, scripts, or styles. Keep
 nb-meta's word count honest by recounting the rendered prose, headline
 through sources. Never run the proof. The writer reruns it.
 
+Keep requesting changes while publication-blocking work remains. Do not prolong
+the loop for optional polish, repeat resolved objections, or introduce a new
+standard late. If repeated attempts cannot resolve the same blocking issue,
+return `BLOCKED editor <reason>` instead of cycling silently.
+
 ## Output
 
 Write `requested-changes.md`: each read's required line, your fixes, and any
@@ -164,8 +169,9 @@ seeing.
 
 Return one control line. Use `DONE editor <requested-changes-path>` when no
 redraft is needed, `REQUEST researcher <path-or-question>` when evidence must
-change, or `REQUEST writer <path-or-question>` for voice, prose, structure,
-markup, or proof. When both roles have work, request the researcher first and
-record the writer's work in `requested-changes.md`; the correspondent routes it
-afterward. A narrow peer question is allowed, but required work always belongs
-in the artifact.
+change, `REQUEST writer <path-or-question>` for voice, prose, structure, markup,
+or proof, or `BLOCKED editor <reason>` when repeated repairs cannot resolve the
+same required issue. When both roles have work, request the researcher first
+and record the writer's work in `requested-changes.md`; the correspondent routes
+it afterward. A narrow peer question is allowed, but required work always
+belongs in the artifact.

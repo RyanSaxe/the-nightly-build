@@ -166,10 +166,16 @@ start the article over.
 Route every `REQUEST` by target. Resume the coach for voice clarification and
 the researcher for evidence; then resume the writer. Resume the writer directly
 for prose, structure, markup, or proof work. After any redraft, resume the same
-editor when possible, or launch a fresh editor for a genuinely cold read. Cap
-the loop at two editor rounds. After the second, preserve unresolved objections
-in `requested-changes.md` and continue to the publisher, exactly as the
-production record promises.
+editor when possible, or launch a fresh editor for a genuinely cold read.
+
+Keep routing editor `REQUEST`s through the responsible role and writer, then
+return the redraft to the editor. The loop has no round cap: only `DONE editor`
+settles it and unlocks the publisher. An editor `BLOCKED` triggers one senior
+recovery pass: inspect the artifacts, give the team a narrow diagnosis, and
+relaunch the needed role chain through the editor with the correspondent's
+model at high effort. Record the recovery invocation on `task.md`. If that pass
+also returns `BLOCKED`, stop the article without a PR and continue the rest of
+the night.
 
 ## Phase 3: publish and see CI through
 
