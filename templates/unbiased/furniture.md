@@ -2,41 +2,38 @@
 
 ## The split (`nb-divide` + `nb-side`)
 
-Exactly two sides across an accent spine: left and right on wide screens, stacked
-but still allegiant on phones. Each side is four slots, in order.
+Exactly two positions across an accent spine on wide screens and stacked on
+phones. Each position has a heading and an open argument area. The evidence
+determines the structure within that area.
 
 ```html
 <div class="nb-divide">
   <section
     class="nb-side nb-side-left"
-    data-nb-section="the-case-for-X"
-    id="the-case-for-X"
+    data-nb-section="POSITION-A-SLUG"
+    id="POSITION-A-SLUG"
   >
-    <h3 class="nb-side-camp">WHO HOLDS THIS SIDE</h3>
-    <p class="nb-side-thesis">The position in one sentence.</p>
-    <p>
-      Its strongest form, in their actual cited words.<sup class="nb-cite"
-        ><a href="#s2">2</a></sup
-      >
-    </p>
-    <p class="nb-side-champion">
-      <span class="nb-side-outlet">OUTLET</span>, standing here because
-      REASON.<sup class="nb-cite"><a href="#s2">2</a></sup>
-    </p>
+    <h2>HEADING SPECIFIC TO THIS POSITION</h2>
+    <div class="nb-side-argument">
+      <p>
+        EVIDENCE AND REASONING.<sup class="nb-cite"><a href="#s2">2</a></sup>
+      </p>
+    </div>
   </section>
   <section
     class="nb-side nb-side-right"
-    data-nb-section="the-case-for-Y"
-    id="the-case-for-Y"
+    data-nb-section="POSITION-B-SLUG"
+    id="POSITION-B-SLUG"
   >
-    <!-- the same four slots, mirrored -->
+    <h2>HEADING SPECIFIC TO THIS POSITION</h2>
+    <div class="nb-side-argument">
+      <p>
+        EVIDENCE AND REASONING.<sup class="nb-cite"><a href="#s3">3</a></sup>
+      </p>
+    </div>
   </section>
 </div>
 ```
 
-The slots: **camp** (`nb-side-camp`, who holds it), **thesis**
-(`nb-side-thesis`, the position in one sentence), the **argument**
-(`nb-side-argument`, a wrapper holding the cited prose, in the form its best advocate would recognize), and the **champion**
-(`nb-side-champion`, the vetted holder and in one clause why it has standing on
-this question, cited). One accent, mirrored across both sides, never a
-color per team.
+The shared accent shows the relationship between the positions. It is never a
+color assigned to either side.

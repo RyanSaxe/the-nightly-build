@@ -156,13 +156,10 @@ def template_repo() -> str:
 UNBIASED_SIDES = "".join(
     f'<section class="nb-side nb-side-{half}" data-nb-section="the-case-for-{half}" '
     f'id="the-case-for-{half}">'
-    f'<h3 class="nb-side-camp">Camp {half}</h3>'
-    f'<p class="nb-side-thesis">The {half} position in one sentence.</p>'
+    f"<h2>The {half} position</h2>"
     f'<div class="nb-side-argument"><p>{LOREM * 7}'
     f'<sup class="nb-cite"><a href="#s{i + 1}">{i + 1}</a></sup></p></div>'
-    f'<p class="nb-side-champion"><span class="nb-side-outlet">Outlet</span>, '
-    f'standing here because reasons.<sup class="nb-cite"><a href="#s{i + 1}">'
-    f"{i + 1}</a></sup></p></section>"
+    f"</section>"
     for i, half in enumerate(("left", "right"))
 )
 
@@ -179,8 +176,6 @@ UNBIASED = f"""<!DOCTYPE html>
 <section data-nb-section="orientation"><p>{LOREM * 7}
 <sup class="nb-cite"><a href="#s3">3</a></sup></p></section>
 <div class="nb-divide">{UNBIASED_SIDES}</div>
-<section data-nb-section="crux"><p>{LOREM * 7}
-<sup class="nb-cite"><a href="#s4">4</a></sup></p></section>
 <section data-nb-section="sources"><h2>Sources</h2><ol>{SOURCES}</ol></section>
 </body></html>"""
 
@@ -272,7 +267,7 @@ def test_opinion_blocks_when_the_position_card_is_reworded(
     assert "B-CHROME" in result.blocks
 
 
-def test_unbiased_two_sides_and_a_crux_pass(
+def test_unbiased_two_sides_pass(
     run_local: Callable[..., Findings], template_repo: str
 ) -> None:
     result = run_local(UNBIASED, "debates", slug="carbon", repo=template_repo)
@@ -283,9 +278,9 @@ def test_unbiased_blocks_a_third_side(
     run_local: Callable[..., Findings], template_repo: str
 ) -> None:
     third = UNBIASED.replace(
-        '<section data-nb-section="crux">',
+        '<section data-nb-section="sources">',
         '<section data-nb-section="the-case-for-both"><p>extra</p></section>'
-        '<section data-nb-section="crux">',
+        '<section data-nb-section="sources">',
     )
     result = run_local(third, "debates", slug="carbon", repo=template_repo)
     assert "B-HTML" in result.blocks
