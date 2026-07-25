@@ -1,9 +1,8 @@
 # Word of the Day
 
-Choose a word that expands the paper's vocabulary and supports an entertaining
-short read. It should be unusual enough to be new, useful beyond a narrow
-specialty, and attached to a well-documented history with real narrative
-incident.
+Choose an unusual word that remains useful outside its original setting. Its
+documented origin should contain enough events and people for an entertaining
+short read, not merely an etymology.
 
 Sphexish is the benchmark, not a subject to repeat. Its origin is a memorable
 scientific episode, it names a recognizable pattern, and it remains useful far

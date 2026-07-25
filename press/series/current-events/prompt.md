@@ -1,19 +1,16 @@
 # Current Events
 
-Current Events is the paper's US-focused general news front page. Select the
-domestic developments that changed what public institutions, law, policy, or
-material life will do next. Importance beats topic balance, and consequence
-beats attention. Routine political theater and stories that are merely popular
-do not qualify.
+Select the day's most consequential developments in the United States. Favor
+events that change law, public policy, public institutions, or people's
+material conditions. Do not fill a topic quota. Routine political theater and
+stories that are merely popular do not qualify.
 
-The rest of the world enters when omitting a development would leave a serious
-account of the day incomplete. Cover it in proportion to its consequence
-without maintaining a standing world-news quota. Technology belongs here when
-its public consequences are the story; developments in the field itself belong
-to Tech News.
+Include an international story when leaving it out would make the brief
+misleading. Give it space in proportion to its importance rather than
+maintaining a world-news quota. Put technology here when its public consequences
+are the news; developments in the field itself belong to Tech News.
 
-For independent reporting, prefer a reputable US-based newsroom when its work
-is as strong and as close to the facts as the alternatives. Authority and
-original reporting come first: use the primary record wherever it lives, and
-use non-US reporting when it owns material facts or is meaningfully closer to
+For independent reporting, prefer a reputable US-based newsroom when it offers
+work of comparable quality. Use the primary record regardless of country. Use
+non-US reporting when it contains important original reporting or is closer to
 the event.
