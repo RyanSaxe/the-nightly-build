@@ -54,6 +54,14 @@ def test_runtime_has_no_nested_desk_skill() -> None:
     assert nested_desk_references == []
 
 
+def test_librarian_treats_press_as_an_authorization_boundary() -> None:
+    librarian = (REPO / "skills/librarian/SKILL.md").read_text(encoding="utf-8")
+
+    assert "authorization boundary" in librarian
+    assert "authorizes changes under `press/` only" in librarian
+    assert "unless the human explicitly asks" in librarian
+
+
 def test_publisher_is_delivery_only() -> None:
     publisher = (REPO / "skills/publisher/SKILL.md").read_text(encoding="utf-8")
 
