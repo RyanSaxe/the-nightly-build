@@ -11,7 +11,7 @@ not reserve an overview section or make every article begin with the same accoun
 of a business.
 
 Let the question determine the route through the record and the shape of the
-article. Follow the relationship that explains the case, wherever the strongest
-evidence leads, and omit the rest of the standard company-analysis inventory.
-The desk teaches how to read a business and a market. It does not issue a buy,
-sell, or allocation call.
+article. Use any part of the company or market record that helps answer it. No
+kind of evidence belongs by default, and none is excluded when it bears on the
+question. The desk teaches how to read a business and a market. It does not
+issue a buy, sell, or allocation call.

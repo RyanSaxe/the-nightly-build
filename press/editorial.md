@@ -20,22 +20,17 @@ The baseline register is Mitchell Hashimoto's technical writing: calm and
 precise, argued from first principles. Ideas arrive in plain sentences and
 structure does the persuading. Where a piece teaches, take the patience of
 Chris Olah and Lilian Weng and build each concept before the sentence that
-needs it. Series prompts specialize this register for their own beat.
+needs it. Series prompts adapt this register to their subject.
 
 ## Page and flow
 
-Make the structure of the thought visible. A heading marks a real turn in the
-argument, early enough that a new idea does not hide at the end of the section
-before it. A long run of prose is welcome when its paragraphs carry one
-continuous argument. It is a wall only when the subject has changed and the
-page refuses to show it.
+Structure should make an article easy to follow. Start a new section when an
+idea needs development of its own, and give the section a heading that names
+the work it does.
 
-Do not make paragraphs carry information that already has a clearer shape.
-Wherever a relationship is best understood as a comparison, sequence,
-calculation, annotated source, chart, or another piece from the available
-furniture, give it that form. Furniture earns its space by making the argument
-easier to grasp or check. Never add a component merely to interrupt the prose,
-and never meet a quota.
+Use furniture when it is the clearest form for the material. A component earns
+its place by making evidence or reasoning easier to understand or check. It is
+never a decorative pause, and no article owes a quota.
 
 ## Reader
 
