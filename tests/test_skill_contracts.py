@@ -52,3 +52,16 @@ def test_publisher_is_delivery_only() -> None:
     assert "You do not coach, research, draft" in publisher
     assert "edit, summarize artifacts, or make editorial judgment" in publisher
     assert "DONE publisher <PR URL> GREEN <WARN count>" in publisher
+
+
+def test_editorial_loop_settles_before_publishing() -> None:
+    correspondent = (REPO / "skills/correspondent/SKILL.md").read_text(encoding="utf-8")
+    editor = (REPO / "skills/editor/SKILL.md").read_text(encoding="utf-8")
+
+    assert "no round cap" in correspondent
+    assert "only `DONE editor`" in correspondent
+    assert "recovery pass" in correspondent
+    assert "correspondent's" in correspondent
+    assert "model at high effort" in correspondent
+    assert "optional polish" in editor
+    assert "BLOCKED editor <reason>" in editor
