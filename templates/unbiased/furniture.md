@@ -19,13 +19,16 @@ argument inside them.
     <div class="nb-side-argument">
       <p>
         EVIDENCE AND REASONING IN THE FORM THIS QUESTION REQUIRES.<sup
-          class="nb-cite"><a href="#s2">2</a></sup>
+          class="nb-cite"
+          ><a href="#s2">2</a></sup
+        >
       </p>
     </div>
     <p class="nb-side-champion">
-      <span class="nb-side-outlet">NAMED PERSON OR INSTITUTION</span> — WHY
-      THIS HOLDER HAS STANDING ON THE QUESTION.<sup class="nb-cite"
-        ><a href="#s2">2</a></sup>
+      <span class="nb-side-outlet">NAMED PERSON OR INSTITUTION</span> — WHY THIS
+      HOLDER HAS STANDING ON THE QUESTION.<sup class="nb-cite"
+        ><a href="#s2">2</a></sup
+      >
     </p>
   </section>
   <section
