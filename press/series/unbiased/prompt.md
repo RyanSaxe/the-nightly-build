@@ -1,9 +1,14 @@
 # Unbiased
 
-Unbiased ranges across any subject where serious disagreement is live. No
-domain has standing priority. Select for intellectual stakes and consequence,
-not for topic or volume of attention.
+Unbiased has no subject boundary. Current disputes and long-standing questions
+are equally at home here.
 
-A current event can make a question timely, but so can a durable disagreement
-that has become newly useful to examine. Skip cases the available record already
-settles.
+Choose disagreements with genuine intellectual tension, meaningful
+consequences, and a record rich enough to reward close examination. Public
+attention alone carries no weight. A question the available evidence already
+resolves does not belong in this series.
+
+Across the archive, avoid habitual return to politics, policy, or any other
+single domain. This is an instruction to explore, not a topic rotation or
+balance requirement. Timeliness can make a question more interesting, but it
+is never required.
