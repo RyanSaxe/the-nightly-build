@@ -12,4 +12,3 @@ bands:
   words: [1200, 2200]
 min_sources: 6
 cadence: [mon, wed, fri, sun]
-
