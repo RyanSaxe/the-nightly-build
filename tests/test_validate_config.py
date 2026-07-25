@@ -282,6 +282,53 @@ def test_declared_chrome_must_appear_in_the_template_skeleton(
 
 
 @pytest.mark.parametrize(
+    "patch",
+    (
+        "flex_components: component\n",
+        "flex_components: []\n",
+        "flex_components: [nb-card, nb-card]\n",
+        "flex_components: ['not a class']\n",
+    ),
+)
+def test_flexible_component_contract_is_a_unique_css_class_list(
+    manifest_patched_repo: Callable[..., str],
+    vc_rc: Callable[[str], int],
+    patch: str,
+) -> None:
+    assert vc_rc(manifest_patched_repo(patch, template="unbiased")) == 1
+
+
+def test_flexible_components_require_a_flexible_outline(
+    manifest_patched_repo: Callable[..., str], vc_rc: Callable[[str], int]
+) -> None:
+    repo = manifest_patched_repo("bands:\n  words: [1200, 3500]\n", template="unbiased")
+
+    assert vc_rc(repo) == 1
+
+
+@pytest.mark.parametrize("component_count", (0, 2))
+def test_every_skeleton_flex_section_contains_each_component_once(
+    manifest_patched_repo: Callable[..., str],
+    vc_output: Callable[[str], subprocess.CompletedProcess[str]],
+    component_count: int,
+) -> None:
+    repo = manifest_patched_repo("", template="unbiased")
+    skeleton = pathlib.Path(repo) / "templates" / "unbiased" / "skeleton.html"
+    old = '<h3 class="nb-side-camp">RECOGNIZABLE NAME FOR THIS POSITION</h3>'
+    replacement = (
+        '<h3 class="nb-side-camp">RECOGNIZABLE NAME FOR THIS POSITION</h3>' * 2
+        if component_count == 2
+        else '<h3 class="nb-side">RECOGNIZABLE NAME FOR THIS POSITION</h3>'
+    )
+    skeleton.write_text(skeleton.read_text().replace(old, replacement, 1))
+
+    result = vc_output(repo)
+
+    assert result.returncode == 1
+    assert "expected exactly one" in result.stdout
+
+
+@pytest.mark.parametrize(
     ("patch", "message"),
     [
         pytest.param(

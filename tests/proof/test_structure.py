@@ -292,6 +292,7 @@ FIELDNOTES_MANIFEST = (
     "class: shortread\nbands:\n  words: [200, 3000]\n"
     "  flex_sections: [2, 3]\n"
     "sections: [sources]\n"
+    "flex_components: [nb-note]\n"
     "cite_rule: per-section\ncite_exempt: [context]\n"
 )
 # a per-item template NOT named 'brief', to prove the per-item cite rule is
@@ -315,7 +316,13 @@ def overlay_repo(clone_testrepo: Callable[..., str]) -> str:
     repo = clone_testrepo("press", "templates", "engine")
     templates = pathlib.Path(repo) / "press" / "templates"
     for tid, manifest, skeleton in [
-        ("fieldnotes", FIELDNOTES_MANIFEST, skeleton_of("YOUR-LABEL", "sources")),
+        (
+            "fieldnotes",
+            FIELDNOTES_MANIFEST,
+            '<!DOCTYPE html><html><body><section data-nb-section="YOUR-LABEL">'
+            '<aside class="nb-note"></aside></section>'
+            '<section data-nb-section="sources"></section></body></html>',
+        ),
         ("digest", DIGEST_MANIFEST, skeleton_of("entries", "sources")),
     ]:
         folder = templates / tid
@@ -350,7 +357,8 @@ def sources(n: int, prefix: str) -> str:
 
 def flex_article(sections: list[tuple[str, str]]) -> str:
     body = "".join(
-        f'<section data-nb-section="{name}"><p>{LOREM * 7}{cited}</p></section>'
+        f'<section data-nb-section="{name}"><aside class="nb-note">'
+        f"<p>{LOREM * 7}{cited}</p></aside></section>"
         for name, cited in sections
     )
     return f"""<!DOCTYPE html>
@@ -381,6 +389,20 @@ def test_flex_template_passes_with_agent_named_sections_in_band(
     )
 
     assert not result.blocks
+
+
+@pytest.mark.parametrize("count", (0, 2))
+def test_manifest_furniture_is_required_once_in_every_flexible_section(
+    run_local: Callable[..., Findings], overlay_repo: str, count: int
+) -> None:
+    html = flex_article([("the-lab", cite(1)), ("the-bet", cite(2))])
+    furniture = '<aside class="nb-note">'
+    replacement = furniture * count
+    malformed = html.replace(furniture, replacement, 1)
+
+    result = run_local(malformed, "notes", slug="first-notes", repo=overlay_repo)
+
+    assert "B-FURNITURE" in result.blocks
 
 
 @pytest.mark.parametrize(
