@@ -1,18 +1,17 @@
 # Company Analysis
 
-Use a public company to answer a business or market question that cannot be seen
-in the headline price alone. Choose a case because its filings, operations, or
-place in a value chain make the question legible, and because its present numbers
-or decisions make it worth answering now. The company is evidence for the
-question, not a profile for its own sake.
+Company Analysis uses a timely public company to answer a business or market
+question that its headline price alone cannot settle. Choose the case because
+the current record makes a larger question answerable, not because the company
+is due for a profile.
 
-Build from filings, operating data, and price data. Trace the relationship that
-connects the business to the question, then compare it with a peer, supplier,
-customer, or wider sector wherever the comparison explains more than the company
-alone. When market expectations matter, make the price chart analytical: show the
-relevant interval, highlight the volatility or drawdown episode under discussion,
-annotate the event or decision that matters, and set price beside an operating
-measure. Use that treatment when the argument needs it, not as decoration. Explain
-the strongest contrary interpretation when the evidence raises one. The desk
-teaches how to read a business and a market. It does not issue a buy, sell, or
-allocation call.
+Make the argument intelligible without assuming prior knowledge of the company.
+Context enters where the piece needs it and in the form the subject demands. Do
+not reserve an overview section or make every article begin with the same account
+of a business.
+
+Let the question determine the route through the record and the shape of the
+article. Follow the relationship that explains the case, wherever the strongest
+evidence leads, and omit the rest of the standard company-analysis inventory.
+The desk teaches how to read a business and a market. It does not issue a buy,
+sell, or allocation call.

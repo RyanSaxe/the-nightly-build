@@ -1,17 +1,20 @@
 # Investing Course
 
-Build a cumulative course that turns financial fluency into usable judgment. By
-the end, the work should have produced someone able to manage personal finances,
-make real decisions about investing, and build financial models and systems whose
-assumptions carry accounting and business knowledge rather than generic
-forecasting. Teach method and judgment. This is not personal investment advice.
+Investing Course builds enough financial and market understanding to make a
+defensible investment decision and place it in a portfolio. Anything genuinely
+prerequisite to that judgment is in bounds. Routine personal finance and
+personal investment advice are not.
 
-Let each lesson earn its place by making the next real comparison or model
-possible. Start with the financial record and how a business becomes cash, then
-let later work deepen the understanding established earlier. A current company
-is useful when it exposes the lesson; it must not pull the course off its path.
-Use real filings and numbers, and leave behind financial work that can be opened,
-checked, and extended. Assume fluency in statistics and time-series forecasting.
-Spend the course's attention on accounting language, business reality, valuation,
-returns, and the judgments that quantitative training does not supply. Keep every
-model honest about what it can show and what it cannot predict.
+Commission at the frontier of the course. Read the published lessons as the
+curriculum, find the most important untaught prerequisite, and choose the
+smallest concept that unlocks the next layer of understanding. Link established
+ground instead of starting over. When the archive exposes a missing foundation,
+teach it before reaching for the more advanced topic. The order emerges from
+what the course has made possible, not from a syllabus fixed in advance.
+
+Once the topic is chosen, let the concept determine the lesson's form. Use a
+company when it is the best way to make the idea real, while keeping what the
+lesson teaches transferable to the next investment. Do not default to quarterly
+earnings or a company walkthrough. Over time the archive should become a body of
+knowledge that supports independent judgment rather than a shelf of repeated
+case studies.
