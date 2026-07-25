@@ -1,11 +1,10 @@
-# The unbiased current-affairs desk for policy, politics, and law. strict
-# promotes every WARN to a BLOCK, so the per-side citation checks are hard
-# gates: a one-sided or thinly-sourced article cannot publish. The count is the
-# floor; sources_by_kind is the mix, both sides sourced to primaries.
+# A current-affairs desk for live public questions. The press-owned debate
+# template is intentionally being dogfooded here before any engine template
+# adopts it. Strict mode makes its structure and citation rules hard gates.
 name: Policy Debate
 mode: open
 section: "Current Affairs"
-template: unbiased
+template: debate
 prompt: prompt.md
 autopublish: true
 strict: true
