@@ -24,6 +24,13 @@ agents can run it and their costs.
 upstream-owned. Users edit only `press/`, which keeps engine updates
 conflict-free (§7).
 
+This ownership model is an authorization boundary. A request to set up, curate,
+or tune a paper authorizes changes under `press/` only. Do not modify engine
+code, shipped templates, examples, specifications, tests, skills, workflows, or
+other paths unless the human explicitly asks for an engine or repository change.
+When a paper request exposes an engine improvement, explain it and leave it as a
+proposal until that authorization is given.
+
 **Fresh paper?** A fresh fork has no `press/` content of its own: upstream ships
 none and `setup.sh` scaffolds an empty one. The interview writes
 `press/site.yaml` (their title), `press/editorial.md` (their voice, §1), and
@@ -256,8 +263,10 @@ Re-validate after every change.
   furniture gallery, every catalogued piece on one page with no article
   needed:
   `uv run python scripts/gallery/build.py`, then serve the repo root and open
-  `/press-check/gallery/` (a new piece needs a sample fragment in
-  `scripts/gallery/samples/`; the build says which).
+  `/press-check/gallery/`. Put a shared component's sample in
+  `press/furniture/samples/<slug>.html`, or a template component's in
+  `press/templates/<id>/samples/<slug>.html`. If it is absent, the gallery names
+  the expected press-owned path.
 
 ## 7. Update my engine
 
