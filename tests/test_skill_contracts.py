@@ -73,13 +73,17 @@ def test_publisher_is_delivery_only() -> None:
 
 def test_editorial_loop_settles_before_publishing() -> None:
     correspondent = (REPO / "skills/correspondent/SKILL.md").read_text(encoding="utf-8")
+    correspondent_prose = " ".join(correspondent.split())
     editor = (REPO / "skills/editor/SKILL.md").read_text(encoding="utf-8")
 
-    assert "no round cap" in correspondent
-    assert "only `DONE editor`" in correspondent
-    assert "recovery pass" in correspondent
-    assert "correspondent's" in correspondent
-    assert "model at high effort" in correspondent
+    assert "no round cap" in correspondent_prose
+    assert "only `DONE editor`" in correspondent_prose
+    assert "does not end the article" in correspondent_prose
+    assert "Do not repeat an unchanged attempt." in correspondent_prose
+    assert "take over the blocked role yourself" in correspondent_prose
+    assert "does not waive `DONE editor`" in correspondent_prose
+    assert "external constraint makes publication impossible" in correspondent_prose
+    assert "repeated objections" in correspondent_prose
     assert "optional polish" in editor
     assert "BLOCKED editor <reason>" in editor
 
