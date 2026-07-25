@@ -1,15 +1,16 @@
 # Word of the Day
 
-Open with the word and a plain definition. Choose an esoteric word with a story
-rooted in a real scientific paper, observation, technical need, or other record,
-and with a meaning that names a pattern people can recognize in work and life.
-The best word is useful because it makes a recurring experience easier to see,
-not merely rare because few people know it.
+Word of the Day makes one word usable in a few minutes. Choose a word that names
+a distinction worth keeping and has a real record behind it. Obscurity alone is
+no qualification. The word earns the article when knowing it makes a recurring
+experience, pattern, or idea easier to see precisely.
 
-Tell the story behind the word. Recover the moment it was needed, show who named
-the phenomenon and why, and follow the word through later genuine usage. Quote the
-record closely enough to show what later writers retained, changed, or
-misunderstood. Close on what the word lets someone notice, where it differs from
-its plain neighbors, and when using it would mislead. Never invent a quotation or
-use a tidy etymology as a substitute for the story. Let the source and usefulness
-decide which discipline or tradition earns the next entry.
+Open with the `rs-word-card`: the word, its pronunciation and part of speech,
+then one plain sentence that defines it without leaning on the story to come.
+Let that definition discipline the rest of the piece.
+
+Recover the moment the word was needed and show it doing useful work in a later
+genuine use. Follow only the part of its history that sharpens the meaning. End
+with the boundary that keeps the word precise: what a nearby ordinary word
+misses, or where this unusual word would overstate the case. Never turn a tidy
+etymology into evidence or rarity into importance.
