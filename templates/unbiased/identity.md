@@ -16,8 +16,10 @@ layout puts them side by side, and an uneven pair reads as a verdict. Each
 side cites a primary statement made under its own name, and its champion is a
 named holder with standing on this question.
 
-The crux is where the piece lands. It makes what still divides the sides
-examinable in the subject's own terms and leaves clear what evidence or
-development would materially change how the disagreement should be judged. No
-taxonomy belongs here: do not classify the disagreement or name a type for it.
-Head every section for this question's argument, never with a stock label.
+The crux is where the piece lands. Sort what still divides the sides into
+its kind: an unsettled fact, a clash of values, or a forecast. Say which
+this one is in the question's own words, never the bare label: every crux
+on this desk has said "is a forecast" where it could have said what each
+side is predicting. Then give the evidence: what would settle
+it for an undecided reader, and where it would first show up. Head every
+section for this question's argument, never with a stock label.
