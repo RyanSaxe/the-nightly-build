@@ -90,6 +90,14 @@ then instruct a section in its `prompt.md`: "use `<div class=\"rs-margin-note\">
 for asides." Articles carry the markup, your furniture carries the look, and
 engine updates never touch either.
 
+The furniture gallery reads sample fragments from the same owner as the
+catalog. Put shared samples in `press/furniture/samples/<slug>.html` and
+template-bespoke samples in
+`press/templates/<id>/samples/<slug>.html`; `<slug>` is the lowercase,
+hyphenated catalog heading. A missing press sample renders a placeholder that
+names the expected path. Samples for shipped furniture remain engine-owned in
+`scripts/gallery/samples/`.
+
 The proof also checks class names for likely LLM typos. It parses every local
 stylesheet that ships in `theme.css` and emits `W-DEAD-CLASS` when article
 markup names a class that no stylesheet defines. Classes supplied by the

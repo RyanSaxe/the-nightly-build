@@ -4,12 +4,11 @@
 The gallery is a dev tool, not a publishable page. It renders each furniture
 piece from every catalog scope — the engine base, the press's shared catalog,
 and each template's bespoke set — in isolation, with realistic sample content
-from ``samples/``, so an owner can judge and fine-tune components without
-writing an article. The page links the repo's CSS by relative path, so a
-style edit is a browser refresh, and it carries its own light/dark/auto
-toggle on the same ``data-mode`` mechanism the site runtime uses. Output goes
-under ``press-check/`` (gitignored); the build fails loudly when a catalog
-piece has no sample, and the test suite holds the two in lockstep.
+from its owner's ``samples/`` directory. The page links the repo's CSS by
+relative path, so a style edit is a browser refresh, and it carries its own
+light/dark/auto toggle on the same ``data-mode`` mechanism the site runtime
+uses. Output goes under ``press-check/`` (gitignored). Missing engine samples
+fail loudly; press-owned pieces render a placeholder naming their local path.
 
 Usage:
     uv run python scripts/gallery/build.py
@@ -22,7 +21,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-SAMPLES = Path(__file__).resolve().parent / "samples"
 DEFAULT_OUT = REPO / "press-check" / "gallery" / "index.html"
 
 
@@ -33,6 +31,7 @@ class Piece:
     scope: str
     blurb: str
     engine_owned: bool
+    sample_path: Path
 
 
 def slugify(heading: str) -> str:
@@ -40,24 +39,32 @@ def slugify(heading: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", bare).strip("-")
 
 
-def parse_catalog(text: str, scope: str, *, engine_owned: bool) -> list[Piece]:
+def parse_catalog(
+    text: str, scope: str, *, engine_owned: bool, sample_dir: Path
+) -> list[Piece]:
     pieces = []
     for match in re.finditer(r"^## (.+)$", text, re.MULTILINE):
         name = re.sub(r"\s*\(`[^`]*`\)\s*$", "", match.group(1)).strip()
         rest = text[match.end() :]
         paragraph = re.split(r"\n\s*\n", rest.strip(), maxsplit=1)[0]
         blurb = re.sub(r"`([^`]+)`", r"<code>\1</code>", " ".join(paragraph.split()))
-        pieces.append(Piece(name, slugify(name), scope, blurb, engine_owned))
+        slug = slugify(name)
+        pieces.append(
+            Piece(name, slug, scope, blurb, engine_owned, sample_dir / f"{slug}.html")
+        )
     return pieces
 
 
 def discover_pieces(repo: Path) -> list[Piece]:
-    catalogs: list[tuple[Path, str, bool]] = [
-        (repo / "templates" / "FURNITURE.md", "engine base", True)
+    engine_samples = repo / "scripts" / "gallery" / "samples"
+    catalogs: list[tuple[Path, str, bool, Path]] = [
+        (repo / "templates" / "FURNITURE.md", "engine base", True, engine_samples)
     ]
     press_catalog = repo / "press" / "furniture" / "catalog.md"
     if press_catalog.is_file():
-        catalogs.append((press_catalog, "press shared", False))
+        catalogs.append(
+            (press_catalog, "press shared", False, press_catalog.parent / "samples")
+        )
     for root in (repo / "templates", repo / "press" / "templates"):
         engine_owned = root == repo / "templates"
         if not root.is_dir():
@@ -65,12 +72,23 @@ def discover_pieces(repo: Path) -> list[Piece]:
         for folder in sorted(root.iterdir()):
             catalog = folder / "furniture.md"
             if catalog.is_file():
-                catalogs.append((catalog, f"template · {folder.name}", engine_owned))
+                sample_dir = engine_samples if engine_owned else folder / "samples"
+                catalogs.append(
+                    (
+                        catalog,
+                        f"template · {folder.name}",
+                        engine_owned,
+                        sample_dir,
+                    )
+                )
     pieces = []
-    for path, scope, engine_owned in catalogs:
+    for path, scope, engine_owned, sample_dir in catalogs:
         pieces.extend(
             parse_catalog(
-                path.read_text(encoding="utf-8"), scope, engine_owned=engine_owned
+                path.read_text(encoding="utf-8"),
+                scope,
+                engine_owned=engine_owned,
+                sample_dir=sample_dir,
             )
         )
     return pieces
@@ -126,22 +144,21 @@ def build(repo: Path = REPO, out: Path = DEFAULT_OUT) -> Path:
     # The engine ships a sample for every piece it owns, and the suite holds
     # that. A press's own furniture renders a placeholder instead of failing:
     # the engine cannot ship samples for components it has never seen.
-    missing = [
-        p
-        for p in pieces
-        if p.engine_owned and not (SAMPLES / f"{p.slug}.html").is_file()
-    ]
+    missing = [p for p in pieces if p.engine_owned and not p.sample_path.is_file()]
     if missing:
         names = ", ".join(f"{p.scope}: {p.name} ({p.slug}.html)" for p in missing)
         raise SystemExit(f"gallery samples missing for: {names}")
 
     def sample_of(piece: Piece) -> str:
-        path = SAMPLES / f"{piece.slug}.html"
-        if path.is_file():
-            return path.read_text(encoding="utf-8")
+        if piece.sample_path.is_file():
+            return piece.sample_path.read_text(encoding="utf-8")
+        try:
+            expected = piece.sample_path.relative_to(repo).as_posix()
+        except ValueError:
+            expected = piece.sample_path.as_posix()
         return (
             '<p style="font-family: var(--mono); font-size: 12px; color: var(--faint)">'
-            f"no gallery sample yet — add scripts/gallery/samples/{piece.slug}.html"
+            f"no gallery sample yet — add {expected}"
             "</p>"
         )
 
