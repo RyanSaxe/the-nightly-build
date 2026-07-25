@@ -30,7 +30,8 @@ The families, and how to choose within them. Evidence: a couple of
 heterogeneous headline numbers are a stat strip, rows of one shape three or
 more deep are a table, and anything the reader must see is a figure, drawn
 from data or captured from a source; a derivation the argument leans on is
-an equation, and source code is a listing when its mechanism is the evidence.
+an equation, and source code is a listing when the article's claim depends on
+what the code does.
 Voice: a labeled passage of any kind is
 the note, and the article's own best sentence, promoted, is a pull quote.
 Structure: stages in order are steps, events in time a timeline, a stance
@@ -194,8 +195,8 @@ one sentence with the prose around it.
 
 ## Code listing
 
-A listing the reader should actually read: the mechanism itself, never
-decoration. The header names the source (a path, or a short context) and
+A listing the reader should actually read: code whose behavior is evidence,
+never decoration. The header names the source (a path, or a short context) and
 the language; the `language-…` class drives the highlighter (python and
 javascript ship with the engine; a press pins more via `site.yaml` assets,
 see docs/customization.md). Escape the code as HTML. The caption states
@@ -262,7 +263,7 @@ One sentence from the article itself, promoted for emphasis. Use at most one.
 
 ## Numbered steps
 
-A mechanism or process, one stage per step. The connecting rule implies
+A process, one stage per step. The connecting rule implies
 order. Do not use it for unordered lists; a ranking is a table.
 
 ```html

@@ -130,7 +130,7 @@ articles wait on one another.
 
 ## Phase 2: run direct article teams
 
-Launch role agents with the runtime's general subagent mechanism. A role name
+Launch role agents with the runtime's general subagent tools. A role name
 in `task.md` is a logical identity, not proof that a registered agent type
 exists. Each launch prompt supplies its `skills/<role>/SKILL.md` path in the
 main checkout, the article's `task.md`, the shared article worktree, all

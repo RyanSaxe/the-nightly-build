@@ -53,15 +53,13 @@ Never name the reader in a series prompt. The audience lives in
 `press/editorial.md`; prompt rules are stated about the article, the desk,
 or the subject.
 
-When production requires a classification, keep its taxonomy in the working
-artifacts. The published article states the underlying distinction in the
-subject's own terms; it does not announce the category used to produce it.
+Keep planning labels in working files. Published prose should say what happened,
+what the evidence shows, or what is disputed, not repeat the label used to
+organize the work.
 
-Keep production judgment separate from publishable claims. Selection criteria,
-section functions, rubric names, and self-assessment belong to the briefing,
-not the article. An instruction that becomes plausible copy after swapping in
-the subject's nouns is still copyable when it uses synonyms instead of the
-original words; rewrite it as a constraint.
+Write prompts as directions, not sample article sentences. Topic-selection
+rules and checks on the finished draft are directions too. Remove any line a
+writer could paste into an article.
 
 ## Process
 
