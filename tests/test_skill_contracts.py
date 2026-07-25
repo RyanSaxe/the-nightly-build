@@ -73,43 +73,33 @@ def test_publisher_is_delivery_only() -> None:
 
 def test_editorial_loop_settles_before_publishing() -> None:
     correspondent = (REPO / "skills/correspondent/SKILL.md").read_text(encoding="utf-8")
+    correspondent_prose = " ".join(correspondent.split())
     editor = (REPO / "skills/editor/SKILL.md").read_text(encoding="utf-8")
 
-    assert "no round cap" in correspondent
-    assert "only `DONE editor`" in correspondent
-    assert "recovery pass" in correspondent
-    assert "correspondent's" in correspondent
-    assert "model at high effort" in correspondent
+    assert "no round cap" in correspondent_prose
+    assert "only `DONE editor`" in correspondent_prose
+    assert "does not end the article" in correspondent_prose
+    assert "Do not repeat an unchanged attempt." in correspondent_prose
+    assert "take over the blocked role yourself" in correspondent_prose
+    assert "does not waive `DONE editor`" in correspondent_prose
+    assert "external constraint makes publication impossible" in correspondent_prose
+    assert "repeated objections" in correspondent_prose
     assert "optional polish" in editor
     assert "BLOCKED editor <reason>" in editor
 
 
-def test_editor_audits_prompt_leakage_across_the_whole_article() -> None:
+def test_editor_checks_prompt_leakage_during_the_cut() -> None:
     editor = (REPO / "skills/editor/SKILL.md").read_text(encoding="utf-8")
-    editor_prose = " ".join(editor.split())
+    cut = editor.split("## Second read: the cut", 1)[1].split(
+        "## Third read: the reader", 1
+    )[0]
+    cut_prose = " ".join(cut.split())
 
-    for surface in (
-        "headline",
-        "dek",
-        "headings",
-        "body",
-        "captions",
-        "notes",
-        "bookends",
-    ):
-        assert surface in editor_prose
-    for leak in (
-        "near-copies",
-        "selection criteria",
-        "taxonomy names",
-        "structural labels",
-        "self-grading prose",
-        "nouns substituted",
-        "synonyms",
-    ):
-        assert leak in editor_prose
-    assert "Fixed template chrome is exempt" in editor_prose
-    assert "Prompt leakage:" in editor_prose
+    assert "prompt leakage: language drawn from instructions" in cut_prose
+    assert "Compare all authored text with the briefing stack." in cut_prose
+    assert "Fixed template labels, necessary names, and sourced facts" in cut_prose
+    assert "Prompt leakage:" not in editor
+    assert "the three required lines" in editor
 
 
 def test_article_identity_does_not_supply_the_known_leaked_phrase() -> None:
@@ -124,6 +114,22 @@ def test_article_identity_does_not_supply_the_known_leaked_phrase() -> None:
         "Remove any section whose deletion leaves that reasoning unchanged."
         in identity_prose
     )
+    assert "summary lede is a table of contents" not in identity_prose
+
+
+def test_writer_prompts_use_plain_directions() -> None:
+    prompting = (REPO / "spec/prompting.md").read_text(encoding="utf-8")
+
+    assert "Keep planning labels in working files." in prompting
+    assert "Write prompts as directions, not sample article sentences." in prompting
+    assert "keep its taxonomy" not in prompting
+    assert "subject's nouns" not in prompting
+
+
+def test_furniture_does_not_prompt_for_mechanisms() -> None:
+    furniture = (REPO / "templates/FURNITURE.md").read_text(encoding="utf-8")
+
+    assert "mechanism" not in furniture.lower()
 
 
 def test_writer_briefing_removes_the_repeated_editorial_judgment() -> None:
