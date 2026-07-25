@@ -11,3 +11,9 @@ bands:
   words: [1200, 3000]
 min_sources: 6
 cadence: [mon, wed, fri]
+items:
+  - slug: pydantic-monty
+    title: "Pydantic Monty"
+    consult:
+      - https://github.com/pydantic/monty
+      - https://pydantic.dev/articles/pydantic-monty
