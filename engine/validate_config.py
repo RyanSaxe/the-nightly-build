@@ -46,6 +46,7 @@ TEMPLATE_KEYS = {
     "cite_rule",
     "cite_exempt",
     "about",
+    "flex_components",
 }
 CITE_RULES = {"per-section", "per-item"}
 SOURCE_KINDS = frozenset(check.SOURCE_KINDS)
@@ -376,10 +377,54 @@ def check_registry(repo, errors):
             and all(isinstance(x, str) for x in cite_exempt)
         ):
             errors.append(f"{where}: 'cite_exempt' must be a list of section names")
+        flex_components = entry.get("flex_components")
+        valid_flex_components = bool(
+            isinstance(flex_components, list)
+            and flex_components
+            and all(
+                isinstance(component, str)
+                and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", component)
+                for component in flex_components
+            )
+            and len(flex_components) == len(set(flex_components))
+        )
+        if flex_components is not None and not valid_flex_components:
+            errors.append(
+                f"{where}: 'flex_components' must be a non-empty list of unique "
+                "CSS class names"
+            )
+        if flex_components is not None and not (
+            isinstance(bands, dict) and "flex_sections" in bands
+        ):
+            errors.append(f"{where}: 'flex_components' requires 'bands.flex_sections'")
         skeleton = os.path.join(folders[tid], "skeleton.html")
         if not os.path.isfile(skeleton):
             errors.append(f"{where}: no skeleton.html in the {tid} template folder")
             continue
+        with open(skeleton, encoding="utf-8") as fh:
+            skel = fh.read()
+        if valid_flex_components and isinstance(sections, list):
+            parsed = check.Article()
+            parsed.feed(skel)
+            parsed.close()
+            flexible_sections = [
+                section for section in parsed.sections if section not in sections
+            ]
+            if not flexible_sections:
+                errors.append(
+                    f"{where}: skeleton.html has no flexible section in which to "
+                    "place 'flex_components'"
+                )
+            for section in flexible_sections:
+                counts = parsed.section_class_counts.get(section, {})
+                for component in flex_components:
+                    count = counts.get(component, 0)
+                    if count != 1:
+                        errors.append(
+                            f"{where}: skeleton flexible section {section!r} has "
+                            f"{count} elements with class {component!r}; expected "
+                            "exactly one"
+                        )
         chrome = entry.get("chrome")
         if chrome is not None and not (
             isinstance(chrome, list) and all(isinstance(x, str) for x in chrome)
@@ -389,8 +434,6 @@ def check_registry(repo, errors):
             # Anchor each declared string to the skeleton it quotes: reworded
             # skeleton chrome would otherwise B-CHROME every future article
             # and land the blame on the writer instead of this manifest.
-            with open(skeleton, encoding="utf-8") as fh:
-                skel = fh.read()
             for piece in chrome:
                 if piece not in skel:
                     errors.append(

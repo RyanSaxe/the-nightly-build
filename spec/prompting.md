@@ -53,10 +53,10 @@ Never name the reader in a series prompt. The audience lives in
 `press/editorial.md`; prompt rules are stated about the article, the desk,
 or the subject.
 
-When a prompt asks the writer to classify (sort a crux into kinds, grade a
-source, weigh a claim), the label nouns leak into published copy verbatim.
-Instruct the classification in the subject's own words and say so: name the
-kind by what each side is predicting, never by the taxonomy's label.
+When a prompt asks the writer to classify (sort a disagreement into kinds,
+grade a source, weigh a claim), the label nouns leak into published copy
+verbatim. Instruct the classification in the subject's own words and say so:
+name the kind by what each side is predicting, never by the taxonomy's label.
 
 ## Process
 

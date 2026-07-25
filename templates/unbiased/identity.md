@@ -1,25 +1,22 @@
 # unbiased
 
-An unbiased article argues one genuinely contested question from both sides
-at full strength, so the reader finishes holding the disagreement and
-decides for themselves. The writer brings sources and no view.
+An unbiased article presents the strongest evidence-backed case for each of
+two genuinely contested answers to one question. The paper does not choose
+between them.
 
-The net is the whole of public life, and nothing in it is off this desk.
-Treat left/right as geometry, never as party registration: labor and capital,
-federal and local, safety and speed all render as two sides. Name each camp
-honestly in its slot, and within a side build the argument however its best
-advocate would: the four side slots order the furniture, never the reasoning.
+Define the positions from the actual disagreement, not from default political
+teams. Name them in terms their serious holders would recognize. Apply the same
+standards of relevance, evidence, and scrutiny to both.
 
-Steelman both cases. A reader who can tell which side the writer privately
-holds is reading a failed piece. Keep the cases balanced in length. The
-layout puts them side by side, and an uneven pair reads as a verdict. Each
-side cites a primary statement made under its own name, and its champion is a
-named holder with standing on this question.
+Fairness does not require false symmetry. Give each position the strongest
+support the record allows and no support the record does not. Represent each
+position through direct, cited statements from at least one credible named
+person or institution that holds it. Verify consequential factual claims with
+reputable independent reporting or evidence.
 
-The crux is where the piece lands. Sort what still divides the sides into
-its kind: an unsettled fact, a clash of values, or a forecast. Say which
-this one is in the question's own words, never the bare label: every crux
-on this desk has said "is a forecast" where it could have said what each
-side is predicting. Then give the evidence: what would settle
-it for an undecided reader, and where it would first show up. Head every
-section for this question's argument, never with a stock label.
+The split gives each position four orienting components: a recognizable name,
+a concise statement of the position, an open argument area, and its named
+holder. These are furniture, not a repeated outline for the reasoning within
+each argument. Let the question and evidence determine that reasoning. Do not
+add a house conclusion, and do not publish the component vocabulary as stock
+headings or explanatory prose.

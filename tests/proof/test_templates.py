@@ -179,8 +179,6 @@ UNBIASED = f"""<!DOCTYPE html>
 <section data-nb-section="orientation"><p>{LOREM * 7}
 <sup class="nb-cite"><a href="#s3">3</a></sup></p></section>
 <div class="nb-divide">{UNBIASED_SIDES}</div>
-<section data-nb-section="crux"><p>{LOREM * 7}
-<sup class="nb-cite"><a href="#s4">4</a></sup></p></section>
 <section data-nb-section="sources"><h2>Sources</h2><ol>{SOURCES}</ol></section>
 </body></html>"""
 
@@ -272,7 +270,7 @@ def test_opinion_blocks_when_the_position_card_is_reworded(
     assert "B-CHROME" in result.blocks
 
 
-def test_unbiased_two_sides_and_a_crux_pass(
+def test_unbiased_two_fully_furnished_sides_pass(
     run_local: Callable[..., Findings], template_repo: str
 ) -> None:
     result = run_local(UNBIASED, "debates", slug="carbon", repo=template_repo)
@@ -283,9 +281,9 @@ def test_unbiased_blocks_a_third_side(
     run_local: Callable[..., Findings], template_repo: str
 ) -> None:
     third = UNBIASED.replace(
-        '<section data-nb-section="crux">',
+        '<section data-nb-section="sources">',
         '<section data-nb-section="the-case-for-both"><p>extra</p></section>'
-        '<section data-nb-section="crux">',
+        '<section data-nb-section="sources">',
     )
     result = run_local(third, "debates", slug="carbon", repo=template_repo)
     assert "B-HTML" in result.blocks
@@ -297,6 +295,43 @@ def test_unbiased_blocks_when_the_divide_chrome_is_reworded(
     reworded = UNBIASED.replace('<div class="nb-divide">', '<div class="nb-split">')
     result = run_local(reworded, "debates", slug="carbon", repo=template_repo)
     assert "B-CHROME" in result.blocks
+
+
+@pytest.mark.parametrize("side", ("left", "right"))
+@pytest.mark.parametrize(
+    "component",
+    ("nb-side-camp", "nb-side-thesis", "nb-side-argument", "nb-side-champion"),
+)
+def test_unbiased_blocks_when_either_side_loses_required_furniture(
+    run_local: Callable[..., Findings],
+    template_repo: str,
+    component: str,
+    side: str,
+) -> None:
+    left, right = UNBIASED.split('class="nb-side nb-side-right"', 1)
+    if side == "left":
+        left = left.replace(f'class="{component}"', 'class="nb-side"', 1)
+    else:
+        right = right.replace(f'class="{component}"', 'class="nb-side"', 1)
+    incomplete = left + 'class="nb-side nb-side-right"' + right
+
+    result = run_local(incomplete, "debates", slug="carbon", repo=template_repo)
+
+    assert "B-FURNITURE" in result.blocks
+
+
+def test_unbiased_blocks_duplicate_furniture_within_one_side(
+    run_local: Callable[..., Findings], template_repo: str
+) -> None:
+    duplicated = UNBIASED.replace(
+        '<h3 class="nb-side-camp">Camp left</h3>',
+        '<h3 class="nb-side-camp">Camp left</h3>'
+        '<h3 class="nb-side-camp">Another label</h3>',
+    )
+
+    result = run_local(duplicated, "debates", slug="carbon", repo=template_repo)
+
+    assert "B-FURNITURE" in result.blocks
 
 
 @pytest.mark.parametrize("template_id", sorted(REGISTRY))
@@ -320,6 +355,14 @@ def test_shipped_skeleton_is_structurally_sound(template_id: str) -> None:
     assert not tpl.bad_event_attrs
     assert not tpl.bad_js_urls
     assert tpl.sources
+    for section in (
+        name for name in tpl.sections if name not in (treg.get("sections") or [])
+    ):
+        counts = tpl.section_class_counts.get(section, {})
+        assert all(
+            counts.get(component) == 1
+            for component in (treg.get("flex_components") or [])
+        )
 
 
 def test_article_from_a_user_defined_template_passes(

@@ -103,6 +103,9 @@ class Article(HTMLParser):
         self.script_tags = []  # (attrs_dict) for every <script>
         self.sections = []  # data-nb-section values in order
         self.section_cites = {}  # section -> inline cite count
+        # section -> class -> elements carrying that class. Template manifests
+        # may require component furniture inside every flexible section.
+        self.section_class_counts = {}
         self.items = []  # per data-nb-item: {"cites": [source entry id, ...]}
         # per data-nb-criterion row: criterion slug, data-score attribute,
         # cites inside the row, and the rendered text of its nb-rubric-score
@@ -185,11 +188,21 @@ class Article(HTMLParser):
                 }
             )
 
+        classes = set(a.get("class", "").split())
         if "data-nb-section" in a:
             name = a["data-nb-section"]
             self.sections.append(name)
             self.section_cites.setdefault(name, 0)
+            self.section_class_counts.setdefault(name, {})
             el["section"] = name
+            section_name = name
+        else:
+            section = self._current("section")
+            section_name = section["section"] if section is not None else None
+        if section_name is not None:
+            counts = self.section_class_counts.setdefault(section_name, {})
+            for class_name in classes:
+                counts[class_name] = counts.get(class_name, 0) + 1
         if "data-nb-item" in a:
             self.items.append({"cites": []})
             el["item"] = len(self.items) - 1
