@@ -12,6 +12,15 @@ RUNTIME_INSTRUCTIONS = (
     REPO / "PROTOCOL.md",
     *sorted((REPO / "skills").glob("*/SKILL.md")),
 )
+WRITER_BRIEFING_SURFACES = (
+    REPO / "PROTOCOL.md",
+    REPO / "skills/correspondent/SKILL.md",
+    REPO / "skills/writer/SKILL.md",
+    REPO / "spec/banned-terms.yaml",
+    REPO / "spec/editorial.md",
+    REPO / "templates/FURNITURE.md",
+    REPO / "templates/article/identity.md",
+)
 
 
 def test_engine_commands_use_uv() -> None:
@@ -65,3 +74,56 @@ def test_editorial_loop_settles_before_publishing() -> None:
     assert "model at high effort" in correspondent
     assert "optional polish" in editor
     assert "BLOCKED editor <reason>" in editor
+
+
+def test_editor_audits_prompt_leakage_across_the_whole_article() -> None:
+    editor = (REPO / "skills/editor/SKILL.md").read_text(encoding="utf-8")
+    editor_prose = " ".join(editor.split())
+
+    for surface in (
+        "headline",
+        "dek",
+        "headings",
+        "body",
+        "captions",
+        "notes",
+        "bookends",
+    ):
+        assert surface in editor_prose
+    for leak in (
+        "near-copies",
+        "selection criteria",
+        "taxonomy names",
+        "structural labels",
+        "self-grading prose",
+        "nouns substituted",
+        "synonyms",
+    ):
+        assert leak in editor_prose
+    assert "Fixed template chrome is exempt" in editor_prose
+    assert "Prompt leakage:" in editor_prose
+
+
+def test_article_identity_does_not_supply_the_known_leaked_phrase() -> None:
+    identity = (REPO / "templates/article/identity.md").read_text(encoding="utf-8")
+    identity_prose = " ".join(identity.split())
+
+    assert "earns its place" not in identity_prose
+    assert (
+        "Outline the article's reasoning before naming its sections." in identity_prose
+    )
+    assert (
+        "Remove any section whose deletion leaves that reasoning unchanged."
+        in identity_prose
+    )
+
+
+def test_writer_briefing_removes_the_repeated_editorial_judgment() -> None:
+    offenders = {
+        path.relative_to(REPO): phrase
+        for path in WRITER_BRIEFING_SURFACES
+        for phrase in ("earns its place", "worth publishing")
+        if phrase in path.read_text(encoding="utf-8").lower()
+    }
+
+    assert offenders == {}

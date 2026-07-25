@@ -30,7 +30,7 @@ The families, and how to choose within them. Evidence: a couple of
 heterogeneous headline numbers are a stat strip, rows of one shape three or
 more deep are a table, and anything the reader must see is a figure, drawn
 from data or captured from a source; a derivation the argument leans on is
-an equation, and a mechanism worth reading in source is a code listing.
+an equation, and source code is a listing when its mechanism is the evidence.
 Voice: a labeled passage of any kind is
 the note, and the article's own best sentence, promoted, is a pull quote.
 Structure: stages in order are steps, events in time a timeline, a stance

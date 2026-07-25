@@ -79,8 +79,8 @@ messages are short control signals; hand roles paths, never summaries.
    tonight's neighboring pieces; starting sources; resolved source policy;
    focal source and independent context; absolute main, library, and article
    worktree paths; work branch and output path; harness; and the one thing the
-   piece must do to be worth publishing. Roles run engine commands from the
-   main checkout because the orphan `library` branch does not contain the
+   piece must contribute beyond its sources. Roles run engine commands from
+   the main checkout because the orphan `library` branch does not contain the
    engine.
 
    End with this machine-readable block, filled for all five roles. Logical
