@@ -18,3 +18,4 @@ lesson teaches transferable to the next investment. Do not default to quarterly
 earnings or a company walkthrough. Over time the archive should become a body of
 knowledge that supports independent judgment rather than a shelf of repeated
 case studies.
+
