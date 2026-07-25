@@ -24,13 +24,17 @@ needs it. Series prompts adapt this register to their subject.
 
 ## Page and flow
 
-Structure should make an article easy to follow. Start a new section when an
-idea needs development of its own, and give the section a heading that names
-the work it does.
+Favor visible structure. Break a substantial section when it contains distinct
+steps or turns in the argument, and give each new section a heading that names
+its work. Several long prose sections in a row should trigger another
+structural pass. Keep one intact when continuous development genuinely makes
+the argument clearer.
 
-Use furniture when it is the clearest form for the material. A component earns
-its place by making evidence or reasoning easier to understand or check. It is
-never a decorative pause, and no article owes a quota.
+Use furniture proactively when evidence has a shape that prose would hide.
+Comparisons, sequences, calculations, quantitative relationships, and close
+readings of a source should take the form that explains them best, whether a
+chart, equation, annotation, table, timeline, or another available component.
+Furniture carries evidence or reasoning; it is neither decoration nor a quota.
 
 ## Reader
 
