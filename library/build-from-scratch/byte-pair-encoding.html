@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Byte-pair encoding hides the letters inside every common word a language model reads · Build From Scratch</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "build-from-scratch",
+        "slug": "byte-pair-encoding",
+        "template": "article",
+        "title": "Byte-pair encoding hides the letters inside every common word a language model reads",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-25",
+        "tags": ["tokenization", "nlp", "llm", "engineering"],
+        "sources": 13,
+        "words": 3357,
+        "reading_minutes": 15,
+        "dek": "A merge-and-count tokenizer trained from scratch on 617 bytes of text reproduces the same blind spot as GPT-2's real tokenizer, and turns the integer 2249 into four digits while leaving 2250 in three.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Build From Scratch</div>
+        <h1 class="nb-title">Byte-pair encoding hides the letters inside every common word a language model reads</h1>
+        <p class="nb-dekline">
+          A merge-and-count tokenizer trained from scratch on 617 bytes of text reproduces the same blind spot as GPT-2's real tokenizer, and turns the integer 2249 into four digits while leaving 2250 in three.
+        </p>
+        <div class="nb-byline">
+          <span>15 min read</span><span>2026-07-25</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A single token, three syllables long</h2>
+        <p>
+          A language model never reads a sentence one letter at a time. It
+          reads whatever units its tokenizer decided on, long before training
+          started, and those units are not letters. Ask OpenAI's own
+          tokenizer library, <code>tiktoken</code>, to encode the word
+          " strawberry" the way it actually sits inside a sentence, space and
+          all, using the GPT-2 encoding:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">python</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">&gt;&gt;&gt; import tiktoken
+&gt;&gt;&gt; enc = tiktoken.get_encoding("gpt2")
+&gt;&gt;&gt; enc.encode(" strawberry")
+[41236]
+&gt;&gt;&gt; enc.decode([41236])
+' strawberry'</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · One integer, 41236, is the model's entire view of " strawberry." It never receives the ten letters separately.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          One integer. Not ten letters, not three syllables: one opaque
+          symbol, indivisible from the model's point of view, the same way
+          <code>101</code> is one symbol to a program that never looks inside
+          it. A model asked to count the r's in that word is not reasoning
+          about r's at all. It is trying to recover a fact about the inside
+          of a token it was never shown the inside of. That gap between what
+          a word looks like and what a model reads is the tokenizer's doing,
+          not the model's. An algorithm short enough to run by hand fully
+          explains it: byte-pair encoding, the merge-and-count procedure
+          GPT-2 and nearly every large language model since has used to turn
+          text into the integers a model actually computes over.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Training that algorithm on a few hundred bytes of text shows its
+          merge table forming step by step. Running the encoder it produces
+          shows exactly where the blind spot comes from, why digits split
+          unpredictably, and why some scripts cost far more tokens than
+          others to say the same thing.
+        </p>
+      </section>
+
+      <section data-nb-section="counting-and-merging" id="counting-and-merging">
+        <h2>Counting pairs and merging the winner</h2>
+        <p>
+          Byte-pair encoding did not start as a language model component. In
+          1994, Philip Gage described it as a data-compression trick. Scan a
+          file for the most frequent pair of adjacent bytes. Replace every
+          occurrence with one new byte that was not already in use. Repeat
+          until the file stops shrinking.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Rico Sennrich, Barry Haddow, and Alexandra Birch reused that same
+          count-and-merge loop in 2016 for a different problem. A translation
+          model built on a fixed vocabulary of whole words has no way to
+          handle a word it never saw in training. Running Gage's algorithm
+          over a corpus of words, rather than a single file, produces a table
+          of subword merges instead. Rare and unseen words get spelled out of
+          pieces the model has seen before, instead of being dropped or
+          mapped to a single "unknown" symbol.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          That reuse is why a compression trick from a C hobbyist magazine
+          now sits underneath GPT-2, GPT-4, and most of what has followed.
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">What this build skips</span>
+          <p>
+            A production tokenizer runs a regex over the raw text before any
+            merging starts. A merge can then never glue a letter to a digit
+            or reach across certain punctuation, and special tokens (an
+            end-of-text marker, for GPT-2) sit outside the merge table
+            entirely.<sup class="nb-cite"><a href="#s5">5</a></sup> The build
+            below has none of that: no pre-split, no special tokens, and a
+            corpus of 617 bytes where GPT-2's was trained on the text of
+            roughly eight million web pages.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            What it keeps is the part that does the actual damage to the
+            model's view of characters and digits: byte-level counting and
+            greedy merging. Skipping the rest keeps the code short without
+            hiding the cause.
+          </p>
+        </div>
+        <p>
+          The whole training loop is three functions. Treat the text as a
+          sequence of raw UTF-8 byte values, 0 through 255 to start. Count
+          how often each adjacent pair of values occurs. Replace every copy
+          of the single most frequent pair with one new id, and record that
+          replacement as a merge. Repeat:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">bpe.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def get_stats(ids):
+    """Count adjacent-pair frequencies in a token id sequence."""
+    counts = {}
+    for a, b in zip(ids, ids[1:]):
+        counts[(a, b)] = counts.get((a, b), 0) + 1
+    return counts
+
+
+def merge_pair(ids, pair, new_id):
+    """Replace every occurrence of `pair` in `ids` with `new_id`."""
+    merged = []
+    i = 0
+    while i &lt; len(ids):
+        if i &lt; len(ids) - 1 and (ids[i], ids[i + 1]) == pair:
+            merged.append(new_id)
+            i += 2
+        else:
+            merged.append(ids[i])
+            i += 1
+    return merged
+
+
+def train(text, num_merges):
+    """Learn `num_merges` merges from `text`. Returns the final ids, the
+    merge table (pair -&gt; new id, in learned order), and the vocab
+    (id -&gt; bytes)."""
+    ids = list(text.encode("utf-8"))
+    vocab = {i: bytes([i]) for i in range(256)}
+    merges = {}
+    for step in range(num_merges):
+        stats = get_stats(ids)
+        if not stats:
+            break
+        pair = max(stats, key=stats.get)
+        new_id = 256 + step
+        ids = merge_pair(ids, pair, new_id)
+        merges[pair] = new_id
+        vocab[new_id] = vocab[pair[0]] + vocab[pair[1]]
+    return ids, merges, vocab</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · The entire training loop: count pairs, merge the most frequent one, repeat. <code>vocab</code> stores what byte string each learned id spells out, built by concatenating whatever the two halves of the pair already spell.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Running this over 617 bytes of toy text about a quick fox, a lazy
+          dog, and a quiet river, for 60 merges, prints the vocabulary
+          forming one pair at a time:
+        </p>
+        <table class="nb-table">
+          <caption>
+            The first ten merges learned from the toy corpus, most frequent pair first.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Merge</th>
+              <th>Pair</th>
+              <th>Result</th>
+              <th class="txt">Seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="nb-table-token">0</span></td><td>'h' + 'e'</td><td>'he'</td><td class="txt">20 times</td></tr>
+            <tr><td><span class="nb-table-token">1</span></td><td>' ' + 't'</td><td>' t'</td><td class="txt">18 times</td></tr>
+            <tr><td><span class="nb-table-token">2</span></td><td>'he' + ' '</td><td>'he '</td><td class="txt">15 times</td></tr>
+            <tr><td><span class="nb-table-token">3</span></td><td>' ' + 'a'</td><td>' a'</td><td class="txt">12 times</td></tr>
+            <tr><td><span class="nb-table-token">4</span></td><td>'e' + 'r'</td><td>'er'</td><td class="txt">11 times</td></tr>
+            <tr><td><span class="nb-table-token">5</span></td><td>'d' + ' '</td><td>'d '</td><td class="txt">10 times</td></tr>
+            <tr><td><span class="nb-table-token">6</span></td><td>' t' + 'he '</td><td>' the '</td><td class="txt">9 times</td></tr>
+            <tr><td><span class="nb-table-token">7</span></td><td>'s' + ' '</td><td>'s '</td><td class="txt">8 times</td></tr>
+            <tr><td><span class="nb-table-token">8</span></td><td>'d' + 'o'</td><td>'do'</td><td class="txt">8 times</td></tr>
+            <tr><td><span class="nb-table-token">9</span></td><td>'do' + 'g'</td><td>'dog'</td><td class="txt">7 times</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Two things are already visible that carry through everything
+          below. First, the algorithm has no notion of "word." Merge 6
+          glues a leading space, the letters "the," and a trailing space
+          into one unit, because that four-character run happened to recur
+          more often than any competing pair. "The " is not a linguistic
+          object here, just a frequent run of bytes. Second, frequency is
+          everything. "dog" earns
+          its own token by merge 9 because the toy corpus repeats it
+          constantly. A word that appears once never accumulates enough
+          adjacent-pair counts to merge past a couple of letters, no matter
+          how ordinary that word is outside this corpus. Sixty merges turn
+          the 617-byte corpus into a 316-entry vocabulary (256 raw bytes
+          plus the 60 learned merges) and compress the training text itself
+          from 617 bytes down to 312 tokens, exactly 1.98 bytes per token.
+          Every one of those 312 tokens is opaque to anything downstream: a
+          model that consumes them sees integers, never the bytes a merge
+          was built from.
+        </p>
+      </section>
+
+      <section data-nb-section="encoding-and-decoding" id="encoding-and-decoding">
+        <h2>Applying the merge table to text it has not seen</h2>
+        <p>
+          Training produces a merge table. Using it on new text is a
+          separate step, and the order matters. GPT-2's real tokenizer and
+          Andrej Karpathy's minbpe reference implementation both replay
+          merges in the order they were learned, not in order of frequency
+          in the new text. That keeps encoding deterministic and in
+          agreement with the training vocabulary.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          The same rule works here: at each step, encode finds every
+          candidate pair present in the current sequence, picks whichever one
+          was learned earliest, and merges it. When no remaining pair
+          appears in the merge table, the loop stops.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">bpe.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def encode(text, merges):
+    """Apply the learned merges, earliest-learned pair first, to new text."""
+    ids = list(text.encode("utf-8"))
+    while len(ids) &gt;= 2:
+        stats = get_stats(ids)
+        pair = min(stats, key=lambda p: merges.get(p, float("inf")))
+        if pair not in merges:
+            break
+        ids = merge_pair(ids, pair, merges[pair])
+    return ids
+
+
+def decode(ids, vocab):
+    """Invert token ids back to text through the vocab's byte strings."""
+    raw = b"".join(vocab[i] for i in ids)
+    return raw.decode("utf-8", errors="replace")</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 3 · Encoding replays the merge table in learned order; decoding just concatenates each id's stored bytes and decodes the result as UTF-8.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Running both functions on a sentence the training corpus already
+          knows well confirms the round trip holds:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">python</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">&gt;&gt;&gt; text = "The quick brown fox jumps over the lazy dog."
+&gt;&gt;&gt; ids = encode(text, merges)
+&gt;&gt;&gt; ids
+[273, 315, 117, 109, 112, 263, 111, 275, 262, 293, 46]
+&gt;&gt;&gt; len(ids), len(text)
+(11, 44)
+&gt;&gt;&gt; decode(ids, vocab) == text
+True</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 4 · Eleven tokens for a 44-character sentence, and <code>decode(encode(text))</code> reproduces it exactly.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Encoding and decoding are strict inverses of each other by
+          construction: nothing about the algorithm asks whether a merge
+          corresponds to a real morpheme, a whole word, or an arbitrary run
+          of bytes that happened to co-occur. That is also why the omitted
+          regex split matters more than it looks. Without it, a merge can
+          glue a space onto the front of a word, as merge 6 already did,
+          onto a digit, or across a sentence boundary the training corpus
+          repeats often enough. GPT-2's real pre-tokenizer exists
+          specifically to stop letters from ever merging with digits in the
+          first place, a boundary this toy build does not enforce.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="character-blindness" id="character-blindness">
+        <h2>A word the corpus barely saw, and one it never stopped seeing</h2>
+        <p>
+          Feed the unfamiliar word "strawberry" through the same 316-entry
+          vocabulary trained above and the merges run out almost immediately,
+          because "straw" and "berry" never occurred in the 617-byte corpus:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">python</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">&gt;&gt;&gt; ids = encode("strawberry", merges)
+&gt;&gt;&gt; ids
+[281, 114, 97, 119, 98, 260, 114, 121]
+&gt;&gt;&gt; [vocab[i] for i in ids]
+[b'st', b'r', b'a', b'w', b'b', b'er', b'r', b'y']</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 5 · Eight pieces for a ten-letter word: two small merges ("st," "er") survive, and six single letters carry the rest, because this corpus never repeated "straw" or "berry" often enough to earn a bigger merge.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          That is what an under-trained vocabulary does to a rare word: it
+          falls back toward individual letters, and the letters stay visible.
+          GPT-2's actual byte-level vocabulary, trained the same way but on
+          roughly eight million web pages instead of 617 bytes, has the
+          opposite problem with the opposite word.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          "Strawberry" is common enough in running text that its
+          space-prefixed form merged all the way down to one token, shown
+          already in Fig. 1: id 41236, decoding back to " strawberry" whole.
+          "Because," similarly common, is a single token both with and
+          without a leading space.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          Rare words fragment toward characters. Common words compress past
+          the point where characters are visible at all. A model built on
+          this tokenizer can infer the spelling of a rare word from its
+          pieces, because those pieces are close to letters. It cannot infer
+          the spelling of a common one, because its single token carries no
+          internal structure for the model to read.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          The failure runs backward from what intuition expects: the words a
+          speaker would call easy are exactly the ones the tokenizer has made
+          opaque.
+        </p>
+        <p>
+          GPT-2's vocabulary operates on raw bytes rather than characters for
+          a specific reason unrelated to spelling. A character-level
+          vocabulary has to enumerate every Unicode code point it might ever
+          meet. A byte-level one only ever needs 256 base symbols, so it can
+          represent any string in any script without a single "unknown"
+          token. The cost is needing more merges to reassemble scripts
+          outside its training distribution.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="number-fragmentation" id="number-fragmentation">
+        <h2>Merging digits by frequency, not by place value</h2>
+        <p>
+          A merge table has no concept of tens, hundreds, or a base-ten
+          place. It only knows which byte pairs recurred often enough to
+          earn a slot, so two integers that are one apart can tokenize into
+          a different number of pieces, split at different points, for no
+          reason connected to their value:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">python</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">&gt;&gt;&gt; for n in ["2249", "2250", "2251", "2252", "1994", "2016", "50257"]:
+...     ids = encode(n, merges)
+...     print(n, "-&gt;", [vocab[i] for i in ids])
+...
+2249 -&gt; [b'2', b'2', b'4', b'9']
+2250 -&gt; [b'2', b'25', b'0']
+2251 -&gt; [b'2', b'25', b'1']
+2252 -&gt; [b'2', b'25', b'2']
+1994 -&gt; [b'1', b'9', b'9', b'4']
+2016 -&gt; [b'201', b'6']
+50257 -&gt; [b'5', b'0', b'25', b'7']</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 6 · Four consecutive integers split into three or four pieces apiece, at three different digit boundaries, on the toy tokenizer.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The same inconsistency is not a toy-scale artifact. Running the
+          real GPT-2 encoding through <code>tiktoken</code> on the identical
+          four integers reproduces the same pattern, against a vocabulary
+          fifty thousand times larger:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">python</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">&gt;&gt;&gt; enc = tiktoken.get_encoding("gpt2")
+&gt;&gt;&gt; for n in ["2249", "2250", "2251", "2252"]:
+...     print(n, "-&gt;", [enc.decode([t]) for t in enc.encode(n)])
+...
+2249 -&gt; ['2', '249']
+2250 -&gt; ['22', '50']
+2251 -&gt; ['225', '1']
+2252 -&gt; ['225', '2']</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 7 · GPT-2's real tokenizer splits 2249 into two pieces at a different boundary than 2250, 2251, and 2252, which agree with each other and not with 2249.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Beren Millidge first reported the 2249-through-2251 splits in
+          2023, alongside two separate facts about GPT-2's number tokens:
+          every integer from 0 through 521 gets its own token, and,
+          separately, almost a tenth of the first ten thousand integers
+          do.<sup class="nb-cite"><a href="#s7">7</a></sup> A model
+          trained on tokens like these has to learn multiplication and
+          carrying as a lookup problem specific to whichever split each
+          number happened to receive, rather than as one consistent
+          procedure over digits. Zhang, Cao, Wei, Xu, and You formalized why
+          that is not merely inconvenient. A tokenization scheme that
+          scrambles place-value boundaries removes the structural
+          information an arithmetic procedure needs to track position across
+          a number. That limit sits closer to what a counter machine cannot
+          compute than to a fixable performance gap.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          The fix, when researchers have tried one, is to stop treating
+          digits like ordinary text. Chetverina's triadic suffix scheme
+          groups digits into fixed three-digit blocks and tags each block
+          with an explicit magnitude marker, trading the byte-pair merge
+          table's frequency-driven splits for a tokenization rule that
+          always respects place value.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          That it takes a dedicated scheme to fix confirms the underlying
+          claim: ordinary byte-pair encoding was never designed to preserve
+          arithmetic structure, and every model built on it inherits that gap
+          by default.
+        </p>
+      </section>
+
+      <section data-nb-section="the-token-tax" id="the-token-tax">
+        <h2>Paying for a bigger vocabulary</h2>
+        <p>
+          Every merge added to a vocabulary shortens the average sequence
+          length on text similar to what was trained on. The toy corpus
+          shows the curve directly: truncate its merge table to the first
+          <em>N</em> entries and re-encode one 81-character sentence the
+          training corpus never saw, "The lazy fox and the quick dog live by
+          the quiet river near a small room in 2016." Zero merges, a
+          256-symbol, purely byte-level vocabulary, needs one token per
+          character. The full 99 merges this 617-byte corpus supports before
+          it runs out of repeated pairs compresses the same sentence to one
+          token for every 2.25 characters.
+        </p>
+        <figure class="nb-figure">
+          <img src="byte-pair-encoding/chart-1.png" alt="Line chart showing characters per token rising from 1.0 to 2.25 as the toy tokenizer's vocabulary grows from 256 to 355 entries, on a fixed held-out sentence." />
+          <figcaption>
+            Fig. 8 · Compression on held-out text as a function of vocabulary size, measured by re-encoding one fixed sentence with the toy merge table truncated to its first N entries.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          That compression is not free, and it is not distributed evenly.
+          Every merge is trained on a particular corpus, so the tokens it
+          buys are cheap for text that resembles that corpus and expensive
+          for text that does not.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          GPT-2's training data was overwhelmingly English, so its merges
+          are overwhelmingly English merges. Independent measurements of
+          modern byte-level tokenizers put Mandarin at roughly 1.8 times the
+          tokens of equivalent English text, Japanese at roughly 2.1 times,
+          and Korean at roughly 2.4 times, though a single Japanese sentence
+          can run as high as 8 times English depending on its content.
+          Arabic, Hindi, and Burmese run 3-to-4 times English, and a handful
+          of under-resourced scripts run 12 times or higher.<sup class="nb-cite"><a href="#s10">10</a></sup>
+          A short sentence encoded here with the toy vocabulary shows the
+          same direction on a corpus of a few hundred bytes. "The quick fox"
+          costs 5 tokens for 13 characters in English, 0.38 tokens per
+          character. The same idea in Korean, "빠른 여우," costs 13 tokens
+          for 5 characters, 2.60 tokens per character, because none of those
+          Korean byte sequences were ever frequent enough in training to earn
+          a merge. The cause traces to which corpus the merges were counted
+          from, not the script itself. A tokenizer's vocabulary is a record of
+          what recurred in its training text, and any language
+          underrepresented there pays in tokens for every document it
+          appears in. That cost shrinks as the training corpus grows more
+          multilingual,<sup class="nb-cite"><a href="#s10">10</a></sup> and does not otherwise go away.<sup class="nb-cite"><a href="#s11">11</a></sup>
+        </p>
+        <p>
+          A large, frequency-built vocabulary carries one more cost that has
+          nothing to do with compression. Some of GPT-2's 50,257 tokens exist
+          because a string recurred often enough somewhere in its training
+          data, repeated Reddit usernames, in the best-known case, to earn a
+          merge. That same string never recurred often enough during the
+          model's own training to receive a well-formed internal
+          representation. Prompt
+          the model to repeat one of these tokens and it produces
+          hallucinated, off-topic, or refused output instead, a class of
+          vocabulary entry now called a glitch token.<sup class="nb-cite"><a href="#s12">12</a></sup>
+          Wu, Gao, Wang, Zhang, Liu, and Lian's gradient-based search
+          systematically locates these tokens across ten large language
+          models spanning five model families, without needing a hand-built
+          list of candidates first.<sup class="nb-cite"><a href="#s13">13</a></sup>
+          That same pattern belongs to the same trade-off as the compression
+          curve above. A vocabulary built purely by counting frequency in one
+          corpus merges whatever recurred there, whether or not the
+          resulting token ever recurs in the data the model is actually
+          trained on.
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>The merge-and-count loop above is the real algorithm, not a simplification of it: GPT-2's tokenizer and the reference minbpe implementation run the identical count-merge-repeat procedure, just over a much larger byte-level corpus.<sup class="nb-cite"><a href="#s5">5</a></sup></li>
+              <li>Encoding by replaying merges in learned order, and decoding by concatenating each id's stored bytes, is exactly how a production byte-level BPE tokenizer round-trips text.<sup class="nb-cite"><a href="#s5">5</a></sup></li>
+              <li>Every downstream failure demonstrated above, letter invisibility, digit fragmentation, and script cost, follows from the same two properties: byte-level counting and frequency-driven merging, both present in the 30 lines above.</li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>No regex pre-split means merges here can cross letter-digit and word-punctuation boundaries that GPT-2's real pipeline blocks by construction.<sup class="nb-cite"><a href="#s5">5</a></sup></li>
+              <li>No special tokens: a production tokenizer reserves ids like GPT-2's end-of-text marker outside the merge table; this build has none.<sup class="nb-cite"><a href="#s2">2</a></sup></li>
+              <li>Scale changes magnitude, not direction. 617 bytes and 99 merges show the same fragmentation and cost patterns as 50,257 tokens trained on roughly eight million pages. The exact splits and the exact multipliers stay specific to whichever corpus trained the vocabulary.<sup class="nb-cite"><a href="#s4">4</a></sup></li>
+            </ul>
+          </div>
+        </div>
+        <p>
+          None of that is a flaw introduced by careless training. It is what
+          the algorithm was asked to do: shrink a corpus by replacing
+          whatever recurs most, without regard for what a letter, a digit, or
+          a script means to the humans reading the result. A model that
+          reads only the integers that procedure produces inherits every
+          consequence of that indifference, and inherits none of the
+          ability to look inside a token and check.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/openai/tiktoken">OpenAI · tiktoken — Fast BPE Tokenizer Reference Implementation</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" href="https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf">Radford, Wu, Child, Luan, Amodei, Sutskever · "Language Models are Unsupervised Multitask Learners" (GPT-2)</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" href="https://dl.acm.org/doi/10.5555/177910.177914">Gage, Philip · "A New Algorithm for Data Compression," C Users Journal (1994)</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="primary" href="https://arxiv.org/abs/1508.07909">Sennrich, Haddow, Birch · "Neural Machine Translation of Rare Words with Subword Units" (2016)</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/karpathy/minbpe">Karpathy, Andrej · minbpe — Minimal BPE Implementation</a>
+          </li>
+          <li id="s6">
+            <a data-nb-source data-nb-kind="secondary" href="https://www.sotaaz.com/post/bpe-vs-byte-level-tokenization">"BPE vs Byte-level Tokenization: Why LLMs Struggle with Counting" — SOTAAZ (2025)</a>
+          </li>
+          <li id="s7">
+            <a data-nb-source data-nb-kind="secondary" href="https://www.beren.io/2023-02-04-Integer-tokenization-is-insane/">Millidge, Beren · "Integer tokenization is insane" (2023)</a>
+          </li>
+          <li id="s8">
+            <a data-nb-source data-nb-kind="primary" href="https://arxiv.org/abs/2505.14178">Zhang, Cao, Wei, Xu, You · "Tokenization Constraints in LLMs: A Study of Symbolic and Arithmetic Reasoning Limits" (2025)</a>
+          </li>
+          <li id="s9">
+            <a data-nb-source data-nb-kind="primary" href="https://arxiv.org/pdf/2604.11582">Chetverina, Olga · "A Triadic Suffix Tokenization Scheme for Numerical Reasoning" (2025)</a>
+          </li>
+          <li id="s10">
+            <a data-nb-source data-nb-kind="secondary" href="https://tianpan.co/blog/2026-04-20-multilingual-token-tax-llm-production">"The Multilingual Token Tax: What Building AI for Non-English Users Actually Costs" — TianPan (2026)</a>
+          </li>
+          <li id="s11">
+            <a data-nb-source data-nb-kind="secondary" href="https://promptcost.org/en/blog/llm-tokenization-explained/">"LLM Tokenization Explained: English vs Other Languages Cost Difference" — PromptCost.org (2026)</a>
+          </li>
+          <li id="s12">
+            <a data-nb-source data-nb-kind="secondary" href="https://github.com/NiluK/SolidGoldMagikarp">NiluK · "SolidGoldMagikarp" — Glitch Token Research Collection (2023)</a>
+          </li>
+          <li id="s13">
+            <a data-nb-source data-nb-kind="primary" href="https://arxiv.org/abs/2410.15052">Wu, Gao, Wang, Zhang, Liu, Lian · "GlitchMiner: Mining Glitch Tokens in Large Language Models via Gradient-based Discrete Optimization" (2024)</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
