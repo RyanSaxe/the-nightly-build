@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A single one-dimensional problem breaks Adam's convergence proof · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "adam-optimizer",
+        "template": "paper",
+        "title": "A single one-dimensional problem breaks Adam's convergence proof",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-25",
+        "tags": [],
+        "sources": 9,
+        "words": 2154,
+        "reading_minutes": 12,
+        "dek": "The fix that made Adam durable was Loshchilov and Hutter's 2019 repair to weight decay, arriving a year after Reddi et al.'s counterexample had already sent it to the worst point in its own one-dimensional search space.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          A single one-dimensional problem breaks Adam's convergence proof
+        </h1>
+        <p class="nb-dekline">
+          The fix that made Adam durable was Loshchilov and Hutter's 2019
+          repair to weight decay, arriving a year after Reddi et al.'s
+          counterexample had already sent it to the worst point in its own
+          one-dimensional search space.
+        </p>
+        <div class="nb-byline">
+          <span>12 min read</span><span>2026-07-25</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Adam: A Method for Stochastic Optimization</p>
+          <p class="nb-paper-meta">
+            Diederik P. Kingma, Jimmy Ba · ICLR 2015 · arXiv:1412.6980
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1412.6980"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We introduce Adam, an algorithm for first-order gradient-based
+            optimization of stochastic objective functions, based on adaptive
+            estimates of lower-order moments. The method is straightforward to
+            implement, is computationally efficient, has little memory
+            requirements, is invariant to diagonal rescaling of the gradients,
+            and is well suited for problems that are large in terms of data
+            and/or parameters. The method is also appropriate for
+            non-stationary objectives and problems with very noisy and/or
+            sparse gradients. The hyper-parameters have intuitive
+            interpretations and typically require little tuning. Some
+            connections to related algorithms, on which Adam was inspired, are
+            discussed. We also analyze the theoretical convergence properties
+            of the algorithm and provide a regret bound on the convergence
+            rate that is comparable to the best known results under the
+            online convex optimization framework. Empirical results
+            demonstrate that Adam works well in practice and compares
+            favorably to other stochastic optimization methods. Finally, we
+            discuss AdaMax, a variant of Adam based on the infinity
+            norm.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One step size never fit every parameter</h2>
+        <p>
+          Stochastic gradient descent moves every parameter by the same
+          multiple of its own gradient. Pick one learning rate and every
+          weight in the network lives with it, whether that weight's gradient
+          runs large and steady or small and rare. Adam's answer was to give
+          each parameter its own effective step, worked out from that
+          parameter's own gradient history, without asking anyone to tune a
+          separate rate per weight.
+        </p>
+        <p>
+          The paper's recipe is two exponential moving averages read
+          together. One tracks the gradient itself, giving the update
+          momentum. The other tracks the squared gradient, in the manner of
+          RMSProp, and turns that magnitude into a per-parameter scale. A
+          weight whose gradient has run large and noisy gets a smaller step.
+          One whose gradient has stayed small and quiet gets a larger
+          one.<sup class="nb-cite"><a href="#s2">2</a></sup> Kingma and Ba
+          built the combination to be, in their own words, "invariant to
+          diagonal rescaling of the gradients" and suited to problems "large
+          in terms of data and/or parameters," with hyperparameters that
+          "have intuitive interpretations and typically require little
+          tuning."<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+          >
+        </p>
+        <p>
+          Two claims rode on that design: that the rule itself would be
+          robust and well scaled in practice, and that it could be proven to
+          converge. The first held up. The second did not.
+        </p>
+      </section>
+
+      <section data-nb-section="two-moving-averages" id="two-moving-averages">
+        <h2>Two moving averages and a correction for both</h2>
+        <p>
+          Call the gradient at step <span class="nb-math-in">t</span> simply
+          <span class="nb-math-in">g_t</span>. The first average tracks its
+          mean:
+          <span class="nb-math-in"
+            >m_t \leftarrow \beta_1 m_{t-1} + (1-\beta_1)g_t</span
+          >, with a default <span class="nb-math-in">\beta_1 = 0.9</span>. The
+          second tracks its uncentered variance:
+          <span class="nb-math-in"
+            >v_t \leftarrow \beta_2 v_{t-1} + (1-\beta_2)g_t^2</span
+          >, with a default <span class="nb-math-in">\beta_2 = 0.999</span>.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Algorithm 1">1</a></sup
+          >
+        </p>
+        <p>
+          Both averages start at zero, so early in training they are pulled
+          toward zero exactly when there is the least history to average
+          over, an effect that stays measurable for dozens of steps whenever
+          a decay rate sits close to 1.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Kingma and Ba's correction divides each average by
+          <span class="nb-math-in">1-\beta^t</span>. That factor sits far
+          below 1 while <span class="nb-math-in">t</span> is small, pulling
+          the early estimate back up to where the same few gradients already
+          say it should be. It rises to 1 as <span class="nb-math-in">t</span>
+          grows, and the correction stops mattering.
+          <span class="nb-math-in"
+            >\hat{m}_t = m_t / (1-\beta_1^t)</span
+          >
+          and
+          <span class="nb-math-in">\hat{v}_t = v_t / (1-\beta_2^t)</span
+          >.<sup class="nb-cite"><a href="#s1" data-nb-locator="§3">1</a></sup>
+        </p>
+        <p>
+          The parameter update spends both corrected estimates at once.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Algorithm 1">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \theta_t = \theta_{t-1} - \alpha \cdot \frac{
+            \htmlClass{nb-mc1}{\hat{m}_t} }{
+            \htmlClass{nb-mc2}{\sqrt{\hat{v}_t}} + \htmlClass{nb-mc3}{\epsilon}
+            }
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\hat{m}_t</span
+              ><span
+                >which way to move: the bias-corrected running direction.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\sqrt{\hat{v}_t}</span
+              ><span
+                >how far to trust that direction: the bias-corrected
+                per-parameter scale.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\epsilon</span
+              ><span
+                >a floor, <span class="nb-math-in">10^{-8}</span> by default,
+                that keeps a parameter with near-zero variance from taking a
+                near-infinite step.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The Adam update: a global rate
+            <span class="nb-math-in">\alpha</span> scaled per parameter by
+            that parameter's own corrected gradient history.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="Algorithm 1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="the-case-it-shipped-with" id="the-case-it-shipped-with">
+        <h2>The proof and the practice Adam shipped with</h2>
+        <p>
+          Kingma and Ba did not stop at showing the rule behaves. They
+          analyzed it as an online learner and reported a regret bound of
+          order <span class="nb-math-in">O(1/\sqrt{T})</span> over
+          <span class="nb-math-in">T</span> rounds, "comparable to the best
+          known results under the online convex optimization
+          framework."<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Abstract; §4">1</a></sup
+          >
+          That is the standard way the online-learning literature states how
+          fast a method catches up to the best fixed point chosen in
+          hindsight.
+        </p>
+        <p>
+          With the defaults set (<span class="nb-math-in"
+            >\beta_1=0.9,\ \beta_2=0.999,\ \epsilon=10^{-8}</span
+          >) and the theory attached, the algorithm shipped ready to use, and
+          adoption followed the paper's own promise that it would need little
+          tuning. It is now the default optimizer in both major deep learning
+          frameworks: PyTorch's implementation matches Kingma and Ba's
+          specification down to the same three defaults,<sup
+            class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          and Google DeepMind's Optax library ships the equivalent for
+          JAX.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+      </section>
+
+      <section
+        data-nb-section="the-point-the-proof-couldnt-reach"
+        id="the-point-the-proof-couldnt-reach"
+      >
+        <h2>The point the proof said it could not reach</h2>
+        <p>
+          The regret bound rested on an assumption the proof used without
+          stating it as a separate requirement: that a quantity governing the
+          effective step size only shrinks over time. AdaGrad has that
+          property by construction, since it accumulates the full running sum
+          of past squared gradients, a sum that can only grow. Reddi, Kale,
+          and Kumar showed in 2018 that Adam's exponential average carries no
+          such guarantee.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="§3">5</a></sup
+          ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          They traced the break to a specific step in the original proof, one
+          that treats a quantity measuring the change in the per-parameter
+          learning rate as always positive when Adam's own update can drive
+          it negative.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="§3">5</a></sup
+          ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          The reason is how the average forgets. Old gradients fall out of it
+          geometrically instead of accumulating forever, so a single large
+          gradient can dominate the estimate for a few steps and then
+          disappear. The effective step size can then grow again exactly when
+          the proof needs it to keep shrinking.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+        <p>
+          The construction they built to demonstrate it is a one-dimensional
+          online convex problem, simple enough to check by hand. A single
+          coordinate is confined to <span class="nb-math-in">[-1, 1]</span>.
+          It faces a sequence of linear losses whose gradient signal favors
+          <span class="nb-math-in">x=-1</span> on average but occasionally
+          swings hard the other way. Adam's iterate does not settle near that
+          optimum. It converges to <span class="nb-math-in">x=+1</span>, the
+          single worst point the domain allows.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Theorem 1">5</a></sup
+          >
+        </p>
+        <p>
+          Malladi's later analysis is careful to call the construction
+          artificial: that exact sequence does not occur in ordinary
+          training.<sup class="nb-cite"><a href="#s6">6</a></sup> But an
+          artificial counterexample is enough to break a universal claim, and
+          the point was never that Adam fails on every problem. It is that
+          the proof, read as stated, does not cover the algorithm it was
+          written for, a defect serious enough that the paper exhibiting it
+          won ICLR's Best Paper award that year.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+        </p>
+      </section>
+
+      <section
+        data-nb-section="a-fix-with-no-following"
+        id="a-fix-with-no-following"
+      >
+        <h2>A fix with a regret bound and no following</h2>
+        <p>
+          Reddi, Kale, and Kumar's own repair keeps Adam's two exponential
+          averages and adds one operation. Instead of bias-correcting the
+          second moment every step, AMSGrad first takes the running maximum of
+          the raw second moment, then applies the bias correction once, to
+          that maximum.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Algorithm 2">5</a></sup
+          ><sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            v_t^{max} = \max\bigl(v_{t-1}^{max},\ v_t\bigr), \quad
+            \hat{v}_t^{max} = \frac{v_t^{max}}{1-\beta_2^t}
+          </div>
+        </figure>
+        <p>
+          That single maximum restores the non-increasing property the proof
+          needs, and with it a regret bound, this time proven for the
+          algorithm as actually run rather than an idealized stand-in for
+          it.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          What AMSGrad does not do is train a better network. Reddi, Kale,
+          and Kumar's own experiments on MNIST, CIFAR-10, and comparable image
+          benchmarks find it matching Adam at best and trailing it at
+          worst.<sup class="nb-cite"><a href="#s5">5</a></sup> The maximum
+          that repairs the proof also throws away the property Adam relies on
+          in practice: the ability of the effective step to grow back once a
+          spike in the gradient has passed. A guarantee built for a
+          one-dimensional adversary bought little for a network that never
+          meets one. PyTorch and Optax both ship AMSGrad as a boolean flag on
+          ordinary Adam, one nearly every training run leaves off.<sup
+            class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+        </p>
+      </section>
+
+      <section
+        data-nb-section="the-same-decay-rate"
+        id="the-same-decay-rate"
+      >
+        <h2>The same decay rate for every weight, finally</h2>
+        <p>
+          Loshchilov and Hutter's 2019 paper starts from a complaint that has
+          nothing to do with the convergence proof. Standard practice
+          regularizes a network by adding an L2 penalty to the loss. For
+          plain gradient descent that penalty is exactly equivalent to weight
+          decay: after rescaling by the learning rate, it shrinks every
+          weight by the same fraction at every step.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+          Fold that penalty into Adam, though, and the equivalence breaks,
+          because the penalty term travels through the gradient before Adam
+          divides by its own per-parameter scale. Its effect on any given
+          weight ends up divided by that weight's own
+          <span class="nb-math-in">\hat{v}_t</span>. A weight with a large,
+          noisy gradient history gets its penalty diluted. A weight with a
+          small, quiet one gets it amplified.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+        </p>
+        <p>
+          Reconstructing both update rules exactly as specified above and
+          running them on two synthetic parameters that differ only in how
+          large a gradient each saw before that gradient stopped computes the
+          asymmetry directly.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="adam-optimizer/chart-1.png"
+            alt="Line chart of four optimizer trajectories after a training signal stops, normalized to 1.0 at the moment decay switches on. Under Adam with L2 folded into the gradient, the parameter that saw a small prior gradient collapses to near zero within about fifty steps, briefly overshooting past zero, while the parameter that saw a large prior gradient decays much more slowly, retaining about a fifth of its value after two hundred steps. Under AdamW's decoupled decay, the two parameters' trajectories are indistinguishable throughout, decaying together at the same rate."
+          />
+          <figcaption>
+            Fig. 1 · Two synthetic parameters, one that saw a large task
+            gradient before signal-stop and one that saw a small one, then
+            decayed at the same nominal rate (<span class="nb-math-in"
+              >\lambda=0.05</span
+            >) with no further task gradient. Under Adam with L2 folded into
+            the gradient, the quiet parameter is driven to near zero within
+            roughly 50 steps while the hot parameter still retains about a
+            fifth of its value at step 200. Under AdamW's decoupled decay the
+            two are indistinguishable throughout: the same rate, regardless
+            of gradient history. Update rules per Kingma & Ba and Loshchilov
+            & Hutter; simulation and chart script committed alongside this
+            article.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Algorithm 1">1</a></sup
+            ><sup class="nb-cite"
+              ><a href="#s9" data-nb-locator="§4, Algorithm 2">9</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Loshchilov and Hutter's fix is to stop routing the penalty through
+          the gradient at all. Apply it directly to the weight, outside the
+          adaptive ratio. Every parameter then loses the same fraction of
+          itself, regardless of its own gradient history.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \theta_t = \theta_{t-1} - \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t}
+            + \epsilon} - \alpha\lambda\theta_{t-1}
+          </div>
+        </figure>
+        <p>
+          They reported the decoupled version improving generalization on
+          CIFAR-10 and ImageNet32x32 over Adam's coupled L2, matching or
+          beating plain SGD with momentum on both.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="§4.1">9</a></sup
+          >
+          On those same two benchmarks, they report the decoupled version
+          reaching "15% relative improvement in test error compared to Adam
+          both on CIFAR-10 and ImageNet32x32."<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="§4.3–4.4">9</a></sup
+          >
+          PyTorch and Optax both ship AdamW as a named, separate
+          optimizer.<sup class="nb-cite"><a href="#s3">3</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Three variants of one update rule, and what each one buys.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s5">5</a></sup
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>The one change from Adam</th>
+              <th class="txt">What it buys</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Adam</span></td>
+              <td>none, the 2015 original</td>
+              <td class="txt">
+                a robust, little-tuned update rule with a regret bound that
+                does not hold as stated.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">AMSGrad</span></td>
+              <td>
+                <span class="nb-math-in"
+                  >v_t^{max}=\max(v_{t-1}^{max},v_t)</span
+                >, corrected once
+              </td>
+              <td class="txt">
+                a regret bound that holds, and roughly the same accuracy as
+                Adam on real networks.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">AdamW</span></td>
+              <td>decay applied to the weight, outside the ratio</td>
+              <td class="txt">
+                a decay rate independent of gradient history, and better
+                generalization in practice.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section data-nb-section="separate-ways" id="separate-ways">
+        <h2>The algorithm and its proof went separate ways</h2>
+        <p>
+          Read next to each other, the three papers split Adam's decade-plus
+          run into a claim that held, a proof that did not, and a fix that
+          mattered more than either. The update rule Kingma and Ba described,
+          two corrected moving averages spending a single global rate, works
+          about as advertised: robust across a wide range of problems,
+          needing little of the per-parameter tuning it replaced.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The regret bound attached to it does not hold as stated. Reddi,
+          Kale, and Kumar built an explicit case where the algorithm
+          converges to the one point in a bounded domain it was supposed to
+          avoid.<sup class="nb-cite"><a href="#s5">5</a></sup> Their own
+          repair for that proof, AMSGrad, is theoretically sound and
+          practically beside the point.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Adam's convergence proof failed, and nothing has repaired the
+            version in the original paper. What kept Adam central was not a
+            corrected proof. It was Loshchilov and Hutter's separate finding
+            that the same algorithm silently broke a much older piece of
+            standard practice, and their fix for that, not AMSGrad, is the
+            version now bundled into most training stacks as the
+            default.<sup class="nb-cite"><a href="#s9">9</a></sup> Implement
+            Adam today from Kingma and Ba's update rule and bias correction
+            exactly as they wrote them, decouple weight decay the way
+            Loshchilov and Hutter specified rather than folding an L2 penalty
+            into the gradient, and do not expect the regret bound to mean
+            what the abstract once claimed.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1412.6980"
+              >arXiv · Kingma & Ba, "Adam: A Method for Stochastic
+              Optimization" (2015)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://d2l.ai/chapter_optimization/adam.html"
+              >Dive into Deep Learning · "Adam" (chapter 11.10)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://docs.pytorch.org/docs/main/generated/torch.optim.Adam.html"
+              >PyTorch documentation · torch.optim.Adam</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://optax.readthedocs.io/en/latest/api/optimizers.html"
+              >Optax documentation · optimizers API (Google DeepMind)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1904.09237"
+              >arXiv · Reddi, Kale & Kumar, "On the Convergence of Adam and
+              Beyond" (2018)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://undertheassumptions.substack.com/p/the-optimizer-that-outlived-its-proof"
+              >Sadhika Malladi · "The Optimizer That Outlived Its Proof"</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://romaingd.github.io/ICLR2018-Adam_flaw/"
+              >Romain Larson · "Adam's Convergence Proof is Flawed"</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://syncedreview.com/2018/04/16/iclr-2018s-best-papers-variant-adam-spherical-cnns-and-meta-learning/"
+              >SyncedReview · "ICLR 2018's Best Papers: Variant Adam,
+              Spherical CNNs, and Meta-Learning"</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1711.05101"
+              >arXiv · Loshchilov & Hutter, "Decoupled Weight Decay
+              Regularization" (2019)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
