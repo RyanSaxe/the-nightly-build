@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-07-27</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-07-27",
+        "template": "brief",
+        "title": "Moonshot's Kimi K3 cuts the lag to frontier models to three to five months",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-27",
+        "tags": ["ai", "chips", "quantum", "robotics"],
+        "sources": 11,
+        "words": 1150,
+        "reading_minutes": 6,
+        "dek": "Independent testing puts Kimi K3 in the same benchmark tier as Claude Fable and GPT-5.6 Sol Max, and finds a hallucination rate near 51 percent that Moonshot's own charts leave out.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Moonshot's Kimi K3 cuts the lag to frontier models to three to five months</h1>
+        <p class="nb-dekline">
+          Independent testing puts Kimi K3 in the same benchmark tier as
+          Claude Fable and GPT-5.6 Sol Max, and finds a hallucination rate
+          near 51 percent that Moonshot's own charts leave out.
+        </p>
+        <div class="nb-byline">
+          <span>6 min read</span><span>2026-07-27</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Open-Weight AI</span>
+          <h3>
+            <a href="https://huggingface.co/moonshotai/Kimi-K3"
+              >Moonshot's Kimi K3 closes to within months of the frontier</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Kimi K3 activates roughly 50 billion of its 2.8 trillion
+            parameters per token, routing each one through 16 of 896 experts
+            under what Moonshot calls Kimi Delta Attention, which the company
+            says improves scaling efficiency by roughly
+            2.5x.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            The model carries a Modified MIT license, a 1-million-token
+            context window, and native tool calling, web browsing, and
+            multi-step planning, and Moonshot released the weights on
+            Hugging Face at 00:00 UTC on July
+            27.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            Independent researcher Nathan Lambert ranks K3 third on
+            Artificial Analysis's Intelligence Index, behind only Claude
+            Fable and GPT-5.6 Sol Max, and first in the Frontend Code
+            Arena.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            He reads those rankings as closing the historical lag between
+            open and closed frontier models, from six to nine months down to
+            three to five.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            Artificial Analysis's own testing, reported independently by
+            TechTimes, found a hallucination rate near 51 percent, up from 39
+            percent on the prior K2.6 generation even as factual accuracy
+            rose from 33 percent to 46 percent, a tradeoff missing from
+            Moonshot's own published
+            charts.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            Anyone weighing K3 for an agentic deployment inherits that
+            tradeoff: a model that answers more questions correctly and
+            invents more of the ones it gets wrong, in close to equal
+            measure.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Open-Weight AI</span>
+          <h3>
+            <a href="https://deepseek.ai/deepseek-v4"
+              >DeepSeek retires its old API names four days after V4 goes
+              generally available</a
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </h3>
+          <p>
+            DeepSeek's V4 family ships as two models: V4-Pro, with 1.6
+            trillion total parameters and about 49 billion active per token,
+            and V4-Flash, with 284 billion total and about 13 billion
+            active.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            Both carry a 1-million-token context window, MIT-licensed
+            weights, and a Mixture-of-Experts design DeepSeek calls
+            Manifold-Constrained
+            Hyper-Connections.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            The company previewed V4 on April 24 and moved it to general
+            availability on July 20, adding agentic capabilities, stronger
+            math reasoning, and dedicated code-generation improvements at
+            that point, according to independent reporting from Tech
+            Insider.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            Four days later, at 15:59 UTC on July 24, DeepSeek shut off the
+            two legacy endpoint names, deepseek-chat and deepseek-reasoner,
+            forcing every integration still calling them onto V4 on a
+            compressed timeline.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            V4-Pro's list price is $0.435 per million input tokens on a
+            cache miss, pricing Tech Insider describes as 57 times cheaper
+            than Claude Fable 5 on the same
+            basis.<sup class="nb-cite"><a href="#s4">4</a></sup
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+            That comparison holds only for published list prices. It says
+            nothing about the quality gap DeepSeek would need to close for
+            the price gap to matter to a buyer choosing between them.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Robotics</span>
+          <h3>
+            <a href="https://blogs.nvidia.com/blog/medical-physics-simulation-open-source/"
+              >NVIDIA cuts simulated surgical-robot training from hours to
+              minutes</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            NVIDIA's new Medical Physics Simulation framework, released July
+            22 as an open-source module inside Isaac for Healthcare, runs
+            8,192 robot-training environments in parallel on GPU-native
+            simulation.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            That cuts the time to train a surgical policy from more than
+            five hours to under two minutes, the company
+            says.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            It combines classical physics modeling via NVIDIA's Warp and
+            Newton engines, for friction, contact, and rigid or flexible
+            mechanics, with real-time generative physics from a system
+            NVIDIA calls Cosmos-H
+            Dreams.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            CMR Surgical demonstrated the framework alongside its Versius
+            Plus system at the Society for Robotic Surgery conference on
+            July 23.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            It is the clearest sign yet that a commercial surgical-robot
+            maker plans to train on simulated anatomy rather than solely on
+            cadavers, which are expensive and offer limited anatomical
+            variety.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            The trade coverage of that demonstration describes the
+            collaboration and the conference showing but stops short of any
+            clinical data. There is no published timeline yet for when, or
+            whether, a policy trained this way reaches a Versius Plus arm in
+            an actual operating room.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            The speedup is real and measured in simulation. What it buys in
+            surgery is still a demo, not a deployed system.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Quantum Computing</span>
+          <h3>
+            <a href="https://www.hitachi.com/en/press/articles/2026/07/0722a/"
+              >Hitachi and Intel target a 1,000-qubit silicon chip by
+              2030</a
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </h3>
+          <p>
+            Hitachi, Intel K.K., and Japan's AIST institute announced a
+            NEDO-backed program on July 22 to move silicon quantum
+            computing from academic demonstration to industrial
+            fabrication, built on silicon spin qubits manufactured on
+            Intel's 18A process.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The roadmap sets three dated milestones: a cloud platform for
+            remote access to the hardware in fiscal 2027, a 100-qubit
+            error-correcting prototype in fiscal 2028, and a 1,000-qubit
+            system built through 3D chip integration in fiscal
+            2030.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            Right now the program covers chip designs and manufacturing
+            toolkits. No working qubits exist yet, and the earliest of those
+            three milestones is still more than a year
+            out.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The announcement landed one day before IBM said it was
+            acquiring HRL Laboratories, a competing bet on silicon-based
+            quantum hardware, putting two of the industry's largest players
+            behind silicon over superconducting or trapped-ion approaches in
+            the same week.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            Whether silicon spin qubits scale the way both companies are now
+            betting on is a question fiscal 2028's prototype, not this
+            announcement, will start to answer.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Chips</span>
+          <h3>
+            <a href="https://newsroom.amd.com"
+              >AMD's Venice server chips ship first on TSMC's 2-nanometer
+              process</a
+            ><sup class="nb-cite"><a href="#s10">10</a></sup>
+          </h3>
+          <p>
+            AMD's EPYC 9006 series, code-named Venice, is the industry's
+            first high-performance computing processor built on TSMC's
+            2-nanometer node, and the company says its Zen 6 cores deliver a
+            70 percent CPU performance gain over the prior Zen 5
+            generation.<sup class="nb-cite"><a href="#s10">10</a></sup>
+            The top configuration reaches 256 cores and 512 threads, with a
+            16-channel memory system and PCIe Gen 6 connectivity, and AMD is
+            positioning the line for agentic AI, enterprise, and HPC
+            workloads.<sup class="nb-cite"><a href="#s10">10</a></sup>
+            Independent hardware coverage from TweakTown confirms the core
+            count and process node but stops at AMD's own performance
+            figures: no third-party benchmark of the 70 percent claim has
+            been published yet.<sup class="nb-cite"><a href="#s11">11</a></sup>
+            AMD says consumer desktop parts on the same Zen 6 architecture
+            are coming, just not yet. For now, Venice ships only to the
+            cloud providers and enterprise buyers AMD names as its first
+            customers.<sup class="nb-cite"><a href="#s11">11</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://huggingface.co/moonshotai/Kimi-K3"
+              >Hugging Face · Moonshot AI, "Kimi-K3" model repository and model card</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.interconnects.ai/p/kimi-k3-the-open-weights-escalation"
+              >Interconnects.ai · Nathan Lambert, "Kimi K3: The Open Weights Escalation"</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.techtimes.com/articles/321499/20260724/kimi-k3-open-weights-drop-july-27-near-frontier-coding-undisclosed-hallucination-risk.htm"
+              >TechTimes · "Kimi K3 Open Weights Drop July 27: Near-Frontier Coding, Undisclosed Hallucination Risk"</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://deepseek.ai/deepseek-v4"
+              >DeepSeek · "DeepSeek V4" official product and specifications page</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://tech-insider.org/au/deepseek-v4-general-availability-2026/"
+              >Tech Insider · "DeepSeek V4 Reaches General Availability"</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blogs.nvidia.com/blog/medical-physics-simulation-open-source/"
+              >NVIDIA Blog · "Medical Physics Simulation Framework Speeds Surgical Robot Training"</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.massdevice.com/nvidia-unveils-simulation-framework-surgical-robotics/"
+              >MassDevice · "NVIDIA Unveils Simulation Framework for Surgical Robotics"</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.hitachi.com/en/press/articles/2026/07/0722a/"
+              >Hitachi · "Hitachi Launches R&D on Silicon Quantum Computers in Collaboration with Intel K.K. and AIST"</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.techtimes.com/articles/321377/20260723/japan-funds-silicon-spin-qubit-development-using-intels-18a-chip-process.htm"
+              >TechTimes · "Japan Funds Silicon Spin-Qubit Development Using Intel's 18A Chip Process"</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://newsroom.amd.com"
+              >AMD Newsroom · "6th Gen AMD EPYC 9006 Series Processors Deliver Purpose-Built Solutions for Agentic AI, Enterprise and HPC"</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.tweaktown.com/news/112793/amd-announces-6th-gen-amd-epyc-venice-cpus-up-to-256-cores-and-512-threads-and-built-for-ai/index.html"
+              >TweakTown · "AMD Announces 6th Gen AMD EPYC 'Venice' CPUs: Up To 256 Cores And 512 Threads, And Built For AI"</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
