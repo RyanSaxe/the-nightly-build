@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pydantic Monty pauses a running snippet mid-call and resumes it in a different process · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "pydantic-monty",
+        "template": "article",
+        "title": "Pydantic Monty pauses a running snippet mid-call and resumes it in a different process",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-27",
+        "tags": ["python", "sandboxing", "agents"],
+        "sources": 8,
+        "words": 2120,
+        "reading_minutes": 11,
+        "dek": "Version 0.0.19 starts in microseconds and blocks the filesystem and network by default, but it still can't run a match statement or import itertools.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">Pydantic Monty pauses a running snippet mid-call and resumes it in a different process</h1>
+        <p class="nb-dekline">
+          Version 0.0.19 starts in microseconds and blocks the filesystem and network by default, but it still can't run a match statement or import itertools.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-07-27</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>exec() gives an LLM's code the same access as the process running it</h2>
+        <p>
+          Agent frameworks increasingly let a model write a short Python
+          script to do the actual work, rather than approve one tool call at
+          a time. Pydantic's own case for the pattern is direct: "LLMs work
+          faster, cheaper and more reliably when they write code instead of
+          making sequential tool calls."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Whatever the model writes is still model output. Nobody reviews it
+          before it runs, and a model that can be prompted into calling the
+          right function can be prompted into calling the wrong one.
+        </p>
+        <p>
+          Python's own <code>exec()</code> enforces nothing about what that
+          code is allowed to touch. It runs the string in the calling
+          process, with the calling process's own permissions.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">exec() runs whatever the model wrote</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">llm_generated_code = """
+import os
+print(open("secret.env").read().strip())
+"""
+exec(llm_generated_code)
+# DB_PASSWORD=correct-horse-battery-staple</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · Ten lines, run directly with <code>exec()</code>: the
+            secret file in the working directory prints in plain text.
+          </figcaption>
+        </figure>
+        <p>
+          No permission check ran, and the process's filesystem access
+          became the model's filesystem access. Guards that patch this from
+          inside the same interpreter, stripping builtins or scanning the
+          syntax tree for banned names, still run the untrusted code in the
+          interpreter that also holds the host's secrets. Closing that gap
+          took a second interpreter, in a second process, that was never
+          given the operation in the first place.
+        </p>
+        <p>
+          Pydantic built that interpreter in Rust and calls it Monty,
+          distributed as <code>pydantic-monty</code> for exactly this job:
+          running untrusted, model-written Python.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The package on PyPI is at version 0.0.19, released July 24, 2026,
+          MIT-licensed, and needs Python 3.10 or later on the host.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Pydantic's own figures put the compiled interpreter at roughly 4.5
+          megabytes, with about 5 megabytes of memory overhead per
+          worker.<sup class="nb-cite"><a href="#s1">1</a></sup> Feed it the
+          identical ten lines:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">the same snippet under Monty</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">from pydantic_monty import Monty, MontyRuntimeError
+
+with Monty() as pool:
+    with pool.checkout() as session:
+        try:
+            session.feed_run(llm_generated_code)
+        except MontyRuntimeError as e:
+            print(e.display("type-msg"))
+# PermissionError: Permission denied: 'secret.env'</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · Same code, same file, run through Monty's
+            <code>feed_run</code> instead of <code>exec()</code>.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          <code>open()</code> is not missing here. The error is a
+          <code>PermissionError</code>, the kind Python raises when a
+          capability check fails, not the <code>NameError</code> or
+          <code>ModuleNotFoundError</code> it would raise if the call did
+          not exist. Monty's default is zero access: "no filesystem, no
+          network, no environment variables, strict resource
+          limits."<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          interpreter is enforcing that default here, not stumbling over an
+          operation it never built.
+        </p>
+      </section>
+
+      <section data-nb-section="microseconds-not-containers" id="microseconds-not-containers">
+        <h2>A container is the wrong shape for a call this small</h2>
+        <p>
+          The obvious way to isolate that code is a container: a scratch
+          filesystem and network namespace nothing else can see, thrown away
+          when the call ends. It is also not built for a call this small.
+          Pydantic's own comparison table puts Monty's execution at 4.5
+          microseconds without type checking and 4.8 milliseconds with it
+          turned on, against a Docker container's cold start at roughly 195
+          milliseconds and a Pyodide WebAssembly runtime at roughly 2,800
+          milliseconds.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          project's own README separately clocks a fourth approach, a
+          WASI/Wasmer sandbox reached over a subprocess call, at 66
+          milliseconds.<sup class="nb-cite"><a href="#s2">2</a></sup> One
+          independent write-up states the container case for agent workloads
+          plainly: Docker, it argues, is "too slow for how AI agents
+          actually work."<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Cold-start latency by sandboxing approach: Monty, Docker, and
+            Pyodide from Pydantic's own comparison, WASI/Wasmer from the
+            project's README.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Approach</th>
+              <th>Startup latency</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Monty</span></td>
+              <td>4.5 µs (no type check)</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Monty</span></td>
+              <td>4.8 ms (type-checked)</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">WASI/Wasmer</span></td>
+              <td>66 ms</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Docker</span></td>
+              <td>195 ms</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Pyodide (WASM)</span></td>
+              <td>2,800 ms</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The gap survives Monty's own safety cost. Type checking each
+          snippet before running it adds three orders of magnitude over the
+          untyped path, and the 4.8-millisecond, type-checked figure, the one
+          that describes an actual call, is still roughly 40 times faster
+          than Docker's 195.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The comparison is almost entirely startup and dispatch overhead,
+          not raw execution speed. Once a snippet is running, Monty's own
+          documentation describes runtime performance as similar to CPython,
+          generally "between 5x faster and 5x
+          slower."<sup class="nb-cite"><a href="#s2">2</a></sup> The numbers
+          above measure how fast the sandbox opens the door, not how fast it
+          runs once you are inside.
+        </p>
+      </section>
+
+      <section data-nb-section="one-function-at-a-time" id="one-function-at-a-time">
+        <h2>Every host function is granted by name, not inherited</h2>
+        <p>
+          Blocking everything by default only works if there is a way back in
+          for calls a snippet legitimately needs. Monty's route is
+          <code>external_lookup</code>: a plain dict of host callables,
+          passed once per call, naming the only functions the sandbox can
+          resolve for anything it does not already know.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Pydantic designs Monty around that same default: everything closed
+          until a name is granted.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">granting one function by name</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">code = """
+config = get_config("api_base_url")
+try:
+    open("secret.env").read()
+    leaked = True
+except Exception:
+    leaked = False
+(config, leaked)
+"""
+
+result = session.feed_run(
+    code,
+    external_lookup={"get_config": lambda key: "https://api.internal/v1"},
+)
+# ('https://api.internal/v1', False)</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 3 · One granted function resolves; the file read two lines
+            later still fails the same way it did in Fig. 2.
+          </figcaption>
+        </figure>
+        <p>
+          The host decided what <code>get_config</code> returns, and Monty
+          never had to know the function existed until that call was handed
+          to it. The file read two lines later fails the same way it did in
+          Fig. 2: not because <code>open()</code> is unresolved, but because
+          filesystem access is still zero by default, and Monty checks that
+          default on every call regardless of what has been
+          granted.<sup class="nb-cite"><a href="#s1">1</a></sup> A function
+          name missing from <code>external_lookup</code> entirely fails a
+          different way, with a plain <code>NameError</code>, though nothing
+          in this snippet takes that path.
+        </p>
+      </section>
+
+      <section data-nb-section="pause-mid-call" id="pause-mid-call">
+        <h2>A paused call serializes to a few hundred bytes and resumes in another process</h2>
+        <p>
+          Grant a function through <code>feed_run</code> and Monty calls it
+          synchronously, blocking until the host answers. A second entry
+          point, <code>feed_start</code>, does something a subprocess or
+          container sandbox has no equivalent for. Instead of driving
+          straight to completion, it can stop the instant a snippet reaches
+          an external call and hand back a snapshot describing exactly where
+          execution paused.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+          The host answers it whenever it is ready.
+        </p>
+        <p>
+          I ran this against the installed 0.0.19 package myself, against a
+          loop that calls an unresolved <code>get_weather</code> function
+          twice:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">pause, dump, resume on a different worker</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">code = """
+total = 0
+for city in ["Paris", "Tokyo"]:
+    total += get_weather(city)
+total
+"""
+
+with Monty() as pool:
+    with pool.checkout() as session:
+        snap = session.feed_start(code)
+        while not isinstance(snap, MontyComplete):
+            if isinstance(snap, FunctionSnapshot):
+                blob = snap.dump()          # 549 bytes
+                break
+            snap = snap.resume_auto()
+
+    # A second, unrelated worker picks the call up.
+    with pool.checkout() as session2:
+        restored = session2.load_snapshot(blob)
+        fake_temps = {"Paris": 18, "Tokyo": 27}
+        while not isinstance(restored, MontyComplete):
+            city = restored.args[0]
+            restored = restored.resume({"return_value": fake_temps[city]})
+        print(restored.output)
+# 45</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 4 · The dump crosses from the first worker to a freshly
+            checked-out second one and finishes the loop.
+          </figcaption>
+        </figure>
+        <p>
+          The pause happened inside one worker process.
+          <code>snap.dump()</code> returned 549 bytes: opaque state, no live
+          file descriptor, nothing tying it to the process that produced it.
+          I loaded those bytes into a second, freshly checked-out worker
+          Monty treats as unrelated to the first, and answered the paused
+          call with a plain dict. The loop picked up exactly where it
+          stopped, ran its second iteration, and returned the total.
+          Pydantic's own figure for a snapshot's size is "single-digit
+          kilobytes."<sup class="nb-cite"><a href="#s1">1</a></sup> This one,
+          at two iterations, landed under one.
+        </p>
+        <p>
+          Nothing about a container or a bare subprocess offers the same
+          trade. The process holding a paused call has to stay resident,
+          tying up a worker, until an answer arrives. Monty's snapshot lets
+          that worker go back into the pool the moment a call blocks, and
+          the eventual answer can land on whatever worker Monty checks out
+          next.
+        </p>
+      </section>
+
+      <section data-nb-section="code-mode-not-tool-calls" id="code-mode-not-tool-calls">
+        <h2>One code-writing call replaces a loop of tool calls</h2>
+        <p>
+          The payoff shows up across a full agent turn, not one call. Mike
+          Chambers built a weather agent that writes a short script instead
+          of calling tools one at a time, using
+          <code>asyncio.gather()</code> to run two external lookups at once
+          instead of two sequential round trips. His own framing of the
+          savings: "One round-trip instead of five. Or ten. Or
+          twenty."<sup class="nb-cite"><a href="#s5">5</a></sup> Fewer round
+          trips to the model means less context spent re-describing the
+          conversation each time.
+        </p>
+        <p>
+          The restricted language pushes toward this shape on its own.
+          Simon Willison, testing an earlier build, noticed that an
+          unsupported construct does not fail silently: the sandbox returns
+          a specific, typed error the model can read and retry against, the
+          way it would handle any other exception.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          A killed container returns nothing about why a call never came
+          back; a <code>NotImplementedError</code> naming the missing
+          construct is something an agent loop can act on directly.
+        </p>
+      </section>
+
+      <section data-nb-section="what-still-fails" id="what-still-fails">
+        <h2>match statements, generators, and most of the standard library still fail</h2>
+        <p>
+          Running each disputed construct against the installed 0.0.19
+          package settles most of the maturity question directly.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">what 0.0.19 runs and what it rejects</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">class Point:                 # works
+    def __init__(self, x, y): self.x, self.y = x, y
+
+with open_cm() as v: ...      # works (context managers)
+
+match x:                      # NotImplementedError:
+    case 1: ...                # pattern matching not yet supported
+
+def gen():                    # NotImplementedError:
+    yield 1                   # yield expressions not yet supported
+
+import itertools               # ModuleNotFoundError: no module 'itertools'
+import functools                # ModuleNotFoundError: no module 'functools'</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 5 · Each line run individually through <code>feed_run</code>
+            against the installed package; comments are the actual results.
+          </figcaption>
+        </figure>
+        <p>
+          A <code>class</code> definition and a <code>with</code> block
+          backed by <code>__enter__</code>/<code>__exit__</code> both execute
+          cleanly. As of this release, the README and the
+          hosted documentation, dated the same day, still listed class
+          definitions as "support should come soon." The version 0.0.19
+          release notes themselves list "User-defined classes implementation"
+          as new in this build.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          The documentation had not caught up to the changelog. Running the
+          interpreter directly settles which one was current.
+        </p>
+        <p>
+          A <code>match</code> statement and a generator function still fail
+          outright, each rejected with an explicit
+          <code>NotImplementedError</code> naming the missing construct, and
+          two of the standard library's most ordinary modules,
+          <code>itertools</code> and <code>functools</code>, are not
+          importable at all. Third-party packages stay out of the sandbox
+          entirely: installing one switches Monty to a separate,
+          embedded-CPython worker mode, a different trade against the
+          isolation the rest of this piece describes.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          An independent test against an earlier build, version 0.0.3,
+          found roughly the same shape of gaps: no class definitions, no
+          match statements, no context managers, no generators, most of the
+          standard library absent.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          Two of those five are resolved as of 0.0.19. Three are not.
+        </p>
+      </section>
+
+      <section data-nb-section="worth-building-on" id="worth-building-on">
+        <h2>The release log moves fast enough to trust; the missing stdlib is real enough to plan around</h2>
+        <p>
+          Trusting a v0.0.x sandbox with untrusted code is a fair thing to
+          ask before adopting it. The release cadence argues for patience
+          paying off. Version 0.0.18, on May 29, 2026, added context
+          managers, a limited <code>open()</code> builtin, and
+          garbage-collection improvements. Version 0.0.19, on July 24, added
+          user-defined classes, a WebSocket transport, and a
+          <code>feed_start</code> API with <code>resume_auto()</code> for
+          driving snapshots automatically: two substantial releases inside
+          three months.<sup class="nb-cite"><a href="#s7">7</a></sup> The
+          open issue tracker names specific, ordinary problems rather than
+          staying quiet: async incompatibilities, hangs on CPU-heavy
+          operations, missing stdlib modules, configuration validation bugs,
+          error messages that do not yet match CPython's.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          That reads as a project still actively finding its own edges, not
+          one that has stopped moving.
+        </p>
+        <p>
+          The same release that added classes also added WebSocket support,
+          meaning the worker pool this piece has been running locally can
+          run behind a network call instead, the same role a remote
+          code-execution service fills, without leaving Monty's own process
+          model.<sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Monty earns a place in an agent's code-mode step: short,
+            host-mediated snippets calling granted functions, with no
+            generators or much of the standard library required. Match
+            statements, generators, and most of the standard library still
+            block a script outright, by name, the moment the parser or the
+            import system meets them.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            That list is shrinking release to release, most recently classes
+            and context managers, so it is worth rechecking before ruling
+            Monty out for a workload it cannot handle today.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pydantic.dev/articles/pydantic-monty"
+              >Pydantic · Introducing Pydantic Monty</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/pydantic/monty"
+              >pydantic/monty · README and project documentation</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/pydantic-monty/"
+              >PyPI · pydantic-monty 0.0.19</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://medium.com/@stawils/why-ai-agents-are-ditching-docker-for-interpreter-level-sandboxing-a078e886d49d"
+              >Suleiman Tawil · Why AI Agents Are Ditching Docker for Interpreter-Level Sandboxing</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://blog.mikegchambers.com/posts/pydantic-monty/"
+              >Mike Chambers · Pydantic Monty: a safe way to run LLM-generated code</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://simonwillison.net/2026/Feb/6/pydantic-monty/"
+              >Simon Willison · Running Pydantic's Monty Rust sandboxed Python subset in WebAssembly</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Releases v0.0.18 (2026-05-29) through v0.0.19 (2026-07-24)"
+              href="https://github.com/pydantic/monty/releases"
+              >pydantic/monty · Release history</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://pydevtools.com/blog/pydantic-monty-secure-python-interpreter-for-ai-agents/"
+              >Tim Hopper · Pydantic Monty: A Secure Python Interpreter for AI Agents</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
