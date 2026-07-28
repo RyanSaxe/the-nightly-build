@@ -48,6 +48,6 @@ def test_root_launcher_exposes_the_command_surface() -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert "nb history" not in result.stdout
     assert "Commands:" in result.stdout
     assert "check" in result.stdout
+    assert "history" in result.stdout

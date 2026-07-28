@@ -74,6 +74,11 @@ COMMANDS = {
         "engine/render_check.py", "Probe a rendered article in Chrome", "CI"
     ),
     "ci": Command("engine/ci_helpers.py", "Resolve deterministic workflow facts", "CI"),
+    "history": Command(
+        "engine/nb/history.py",
+        "Search bounded records of published coverage",
+        "orchestrator, researcher, editor",
+    ),
 }
 
 
