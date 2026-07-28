@@ -1,17 +1,17 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
   width="2000"
-  height="1250"
-  viewBox="0 0 2000 1250"
+  height="1000"
+  viewBox="0 0 2000 1000"
   role="img"
   aria-labelledby="title description"
 >
   <title id="title">The Nightly Build production flow</title>
   <desc id="description">
     The orchestrator creates agent context and manages parallel isolated article
-    runs. Each successful article pull request is automatically merged and
-    published through GitHub Pages. A failed CI check returns to the
-    orchestrator for repair.
+    runs. Each run prepares an article pull request before GitHub creates it.
+    Successful pull requests are automatically merged and published through
+    GitHub Pages. A failed CI check returns to the orchestrator for repair.
   </desc>
 
   <defs>
@@ -154,10 +154,14 @@
         fill: #5f727b;
         font: 700 18px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
       }
+      .legend-label {
+        fill: #5f727b;
+        font: 14px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
     </style>
   </defs>
 
-  <rect width="2000" height="1250" fill="#fffefb" />
+  <rect width="2000" height="1000" fill="#fffefb" />
 
   <rect
     class="node"
@@ -205,12 +209,12 @@
     fill="#f1ebf7"
     stroke="#795b95"
   />
-  <text class="title" x="1035" y="116">Article PR</text>
+  <text class="title" x="1035" y="116">Create Article PR</text>
   <text class="copy" x="1035" y="148">
-    Contains the article, assets, and
+    Opens a PR for the article and assets.
   </text>
   <text class="copy" x="1035" y="173">
-    its exact agent artifacts.
+    Includes every exact agent artifact.
   </text>
 
   <rect
@@ -220,8 +224,8 @@
     width="350"
     height="120"
     rx="16"
-    fill="#e9f5ec"
-    stroke="#6f9a78"
+    fill="#f1ebf7"
+    stroke="#795b95"
   />
   <text class="title" x="1645" y="116">Published website</text>
   <text class="copy" x="1645" y="148">
@@ -231,8 +235,52 @@
     Searchable from the-nightly-build.github.io.
   </text>
 
+  <rect
+    x="1450"
+    y="235"
+    width="16"
+    height="16"
+    rx="4"
+    fill="#fff3d7"
+    stroke="#d49620"
+    stroke-width="2"
+  />
+  <text class="legend-label" x="1476" y="249">Agents</text>
+  <rect
+    x="1550"
+    y="235"
+    width="16"
+    height="16"
+    rx="4"
+    fill="#e8f2f4"
+    stroke="#76a3ab"
+    stroke-width="2"
+  />
+  <text class="legend-label" x="1576" y="249">Work environment</text>
+  <rect
+    x="1720"
+    y="235"
+    width="16"
+    height="16"
+    rx="4"
+    fill="#e9f5ec"
+    stroke="#6f9a78"
+    stroke-width="2"
+  />
+  <text class="legend-label" x="1746" y="249">Automation</text>
+  <rect
+    x="1845"
+    y="235"
+    width="16"
+    height="16"
+    rx="4"
+    fill="#f1ebf7"
+    stroke="#795b95"
+    stroke-width="2"
+  />
+  <text class="legend-label" x="1871" y="249">GitHub</text>
+
   <path class="flow" d="M380 140H520" />
-  <path class="flow" d="M870 140H1010" />
 
   <path class="success" d="M1360 140H1620" />
   <text class="label-success" x="1490" y="124">
@@ -295,9 +343,41 @@
     Approves only when the article holds up.
   </text>
 
+  <rect
+    class="node"
+    x="1010"
+    y="320"
+    width="320"
+    height="120"
+    rx="15"
+    fill="#e9f5ec"
+    stroke="#6f9a78"
+  />
+  <text class="role-title" x="1035" y="359">Prepare Article PR</text>
+  <text class="role-copy" x="1035" y="390">
+    Validates the article and agent artifacts.
+  </text>
+  <text class="role-copy" x="1035" y="415">
+    Creates the commit and exact PR request.
+  </text>
+
   <path class="flow" d="M380 490H480V620H560" />
   <path class="flow" d="M380 780H480V650H560" />
   <path class="flow" d="M880 635H1010" />
+  <path class="flow" d="M1120 575V440" />
+  <text class="flow-label" x="1105" y="512" style="text-anchor: end">
+    editor approves
+  </text>
+  <path class="failure" d="M1220 440V575" />
+  <text
+    class="label-failure"
+    x="1235"
+    y="512"
+    style="text-anchor: start"
+  >
+    final check fails
+  </text>
+  <path class="flow" d="M1170 320V200" />
 
   <path class="request" d="M600 575V405H220V430" />
   <text class="request-label" x="410" y="395">voice question</text>
@@ -327,35 +407,21 @@
   <path class="success" d="M225 200V290" />
   <text class="label-success" x="300" y="250">resolution</text>
 
-  <path class="flow" d="M1360 635H1620" />
-  <text class="flow-label" x="1490" y="621">editor approves</text>
-
-  <path class="expand" d="M695 960V1050" />
-  <path class="expand" d="M1795 960V1050" />
+  <path class="expand" d="M1360 635H1450" />
 
   <rect
     class="stage-outline"
-    x="30"
-    y="1050"
-    width="1940"
-    height="160"
+    x="1450"
+    y="290"
+    width="520"
+    height="670"
     rx="20"
     fill="#f7fbfb"
     stroke="#76a3ab"
   />
-  <text class="outline-title" x="60" y="1088">Available tools</text>
-
-  <rect
-    class="stage-outline"
-    x="1620"
-    y="290"
-    width="350"
-    height="670"
-    rx="20"
-    fill="#faf8fc"
-    stroke="#795b95"
-  />
-  <text class="outline-title" x="1650" y="328" style="fill: #705288">
-    PR creation
+  <text class="outline-title" x="1480" y="328">Available tools</text>
+  <text class="stage-copy" x="1480" y="355">
+    Each role receives only the tools it needs.
   </text>
+
 </svg>
