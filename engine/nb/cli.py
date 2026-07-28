@@ -79,6 +79,11 @@ COMMANDS = {
         "Search bounded records of published coverage",
         "orchestrator, researcher, editor",
     ),
+    "prepare-pr": Command(
+        "engine/nb/prepare_pr.py",
+        "Prepare and open one exact Article PR",
+        "orchestrator",
+    ),
 }
 
 
