@@ -6,8 +6,8 @@
 """Print the resolved model and effort guidance for an article's roles.
 
 The correspondent runs this command before launching production. Its JSON
-output is safe to copy into ``task.md`` without reconstructing configuration
-precedence in a model prompt.
+output is safe to resolve into each exact role brief without reconstructing
+configuration precedence in a model prompt.
 """
 
 import argparse

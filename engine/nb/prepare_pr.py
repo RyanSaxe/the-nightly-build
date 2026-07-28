@@ -25,28 +25,18 @@ from nb.artifacts import validate_artifacts
 from nb.proof.pr import run_pr_mode
 from nb.report import Report, emit
 
-__all__ = (
-    "Article",
-    "HANDOFF_EXIT",
-    "PreparedBranch",
-    "PrepareError",
-    "article_from_workspace",
-    "branch_name",
-    "main",
-    "prepare",
-    "pr_body",
-)
+__all__ = ("main",)
 
 HANDOFF_EXIT = 3
 COMMIT_MARKER = "Nightly-Build-Article: v1"
 
 
-class PrepareError(RuntimeError):
+class _PrepareError(RuntimeError):
     pass
 
 
 @dataclass(frozen=True)
-class Article:
+class _Article:
     path: pathlib.Path
     workspace: pathlib.Path
     series: str
@@ -55,8 +45,8 @@ class Article:
 
 
 @dataclass(frozen=True)
-class PreparedBranch:
-    article: Article
+class _PreparedBranch:
+    article: _Article
     name: str
     commit: str
 
@@ -71,44 +61,38 @@ def _git(repo: pathlib.Path, *arguments: str, check: bool = True) -> str:
     )
     if check and result.returncode:
         detail = result.stderr.strip() or result.stdout.strip()
-        raise PrepareError(f"git {' '.join(arguments)} failed: {detail}")
+        raise _PrepareError(f"git {' '.join(arguments)} failed: {detail}")
     return result.stdout.strip()
 
 
-def _regular_file(path: pathlib.Path, label: str) -> None:
-    if not path.is_file() or path.is_symlink():
-        raise PrepareError(f"{label} must be a regular file: {path}")
-
-
-def article_from_workspace(path: pathlib.Path) -> Article:
+def _article_from_workspace(path: pathlib.Path) -> _Article:
     article_path = path.resolve()
-    _regular_file(article_path, "article")
+    if not article_path.is_file() or article_path.is_symlink():
+        raise _PrepareError(f"article must be a regular file: {article_path}")
     metadata = nb_meta.read_meta(str(article_path))
     if metadata is None:
-        raise PrepareError("article has no readable nb-meta block")
+        raise _PrepareError("article has no readable nb-meta block")
 
     series = metadata.get("series")
     slug = metadata.get("slug")
     title = metadata.get("title")
     if not isinstance(series, str) or nb_meta.SERIES_RE.fullmatch(series) is None:
-        raise PrepareError("article nb-meta has an invalid series")
+        raise _PrepareError("article nb-meta has an invalid series")
     if not isinstance(slug, str) or nb_meta.SLUG_RE.fullmatch(slug) is None:
-        raise PrepareError("article nb-meta has an invalid slug")
+        raise _PrepareError("article nb-meta has an invalid slug")
     if not isinstance(title, str) or not title.strip():
-        raise PrepareError("article nb-meta has no title")
+        raise _PrepareError("article nb-meta has no title")
 
     expected_tail = pathlib.Path("library") / series / f"{slug}.html"
     if pathlib.Path(*article_path.parts[-3:]) != expected_tail:
-        raise PrepareError(f"article must be at <workspace>/{expected_tail.as_posix()}")
+        raise _PrepareError(
+            f"article must be at <workspace>/{expected_tail.as_posix()}"
+        )
     workspace = article_path.parents[2]
     errors = validate_artifacts(workspace, series=series, slug=slug)
     if errors:
-        raise PrepareError("invalid agent artifacts:\n- " + "\n- ".join(errors))
-    return Article(article_path, workspace, series, slug, title.strip())
-
-
-def branch_name(article: Article) -> str:
-    return f"nb/article/{article.series}/{article.slug}"
+        raise _PrepareError("invalid agent artifacts:\n- " + "\n- ".join(errors))
+    return _Article(article_path, workspace, series, slug, title.strip())
 
 
 def _remote_branch(library: pathlib.Path, name: str) -> str | None:
@@ -124,7 +108,7 @@ def _remote_branch(library: pathlib.Path, name: str) -> str | None:
 
 
 def _generated_branch_is_safe(
-    library: pathlib.Path, *, name: str, remote_commit: str, article: Article
+    library: pathlib.Path, *, name: str, remote_commit: str, article: _Article
 ) -> bool:
     remote_ref = f"refs/remotes/origin/{name}"
     _git(
@@ -160,7 +144,7 @@ def _generated_branch_is_safe(
     return nb_meta.article_bundle_path(changes) == expected_article
 
 
-def _copy_bundle(article: Article, worktree: pathlib.Path) -> None:
+def _copy_bundle(article: _Article, worktree: pathlib.Path) -> None:
     relative_article = article.path.relative_to(article.workspace)
     target_article = worktree / relative_article
     target_article.parent.mkdir(parents=True, exist_ok=True)
@@ -169,9 +153,9 @@ def _copy_bundle(article: Article, worktree: pathlib.Path) -> None:
     source_assets = article.path.with_suffix("")
     if source_assets.exists():
         if not source_assets.is_dir() or source_assets.is_symlink():
-            raise PrepareError(f"article assets must be a directory: {source_assets}")
+            raise _PrepareError(f"article assets must be a directory: {source_assets}")
         if any(path.is_symlink() for path in source_assets.rglob("*")):
-            raise PrepareError("article assets cannot contain symbolic links")
+            raise _PrepareError("article assets cannot contain symbolic links")
         shutil.copytree(
             source_assets,
             worktree / source_assets.relative_to(article.workspace),
@@ -208,17 +192,17 @@ def _prove_branch(
     run_pr_mode(arguments, report)
     emit(report, False)
     if report.blocks:
-        raise PrepareError("the generated Article PR did not pass nb check")
+        raise _PrepareError("the generated Article PR did not pass nb check")
 
 
 def _prepare_branch(
-    article: Article,
+    article: _Article,
     *,
     main_root: pathlib.Path,
     library: pathlib.Path,
     check_links: bool,
     today: dt.date | None,
-) -> PreparedBranch:
+) -> _PreparedBranch:
     _git(library, "rev-parse", "--is-inside-work-tree")
     _git(library, "fetch", "-q", "origin", "library")
     base = _git(library, "rev-parse", "origin/library")
@@ -228,14 +212,14 @@ def _prepare_branch(
         capture_output=True,
     )
     if published.returncode == 0:
-        raise PrepareError(f"article is already published: {article_target}")
+        raise _PrepareError(f"article is already published: {article_target}")
 
-    name = branch_name(article)
+    name = f"nb/article/{article.series}/{article.slug}"
     remote_commit = _remote_branch(library, name)
     if remote_commit and not _generated_branch_is_safe(
         library, name=name, remote_commit=remote_commit, article=article
     ):
-        raise PrepareError(
+        raise _PrepareError(
             f"origin/{name} contains unrecognized edits; preserve or remove it first"
         )
 
@@ -286,10 +270,10 @@ def _prepare_branch(
                 _git(worktree, "push", "-q", "origin", destination)
         finally:
             _git(library, "worktree", "remove", "--force", str(worktree), check=False)
-    return PreparedBranch(article, name, commit)
+    return _PreparedBranch(article, name, commit)
 
 
-def pr_body(prepared: PreparedBranch) -> str:
+def _pr_body(prepared: _PreparedBranch) -> str:
     article = prepared.article
     return (
         f"Publishes **{article.title}** in `{article.series}`.\n\n"
@@ -309,7 +293,7 @@ def _repository_name(library: pathlib.Path, gh: str) -> str | None:
     return result.stdout.strip() if result.returncode == 0 else None
 
 
-def _handoff(prepared: PreparedBranch, *, reason: str, repository: str | None) -> int:
+def _handoff(prepared: _PreparedBranch, *, reason: str, repository: str | None) -> int:
     article = prepared.article
     print("NB_ARTICLE_PR_REQUIRED")
     print(f"reason={reason}")
@@ -319,7 +303,7 @@ def _handoff(prepared: PreparedBranch, *, reason: str, repository: str | None) -
     print(f"head={prepared.name}")
     print(f"title=Publish {article.title}")
     print("body<<NB_ARTICLE_BODY")
-    print(pr_body(prepared), end="")
+    print(_pr_body(prepared), end="")
     print("NB_ARTICLE_BODY")
     print()
     print("Use the runtime's connected GitHub tools to finish this exact request:")
@@ -329,7 +313,7 @@ def _handoff(prepared: PreparedBranch, *, reason: str, repository: str | None) -
     return HANDOFF_EXIT
 
 
-def _open_pr(prepared: PreparedBranch, *, library: pathlib.Path) -> int:
+def _open_pr(prepared: _PreparedBranch, *, library: pathlib.Path) -> int:
     gh = shutil.which("gh")
     if gh is None:
         return _handoff(prepared, reason="gh is not installed", repository=None)
@@ -373,7 +357,7 @@ def _open_pr(prepared: PreparedBranch, *, library: pathlib.Path) -> int:
         )
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8") as body_file:
-        body_file.write(pr_body(prepared))
+        body_file.write(_pr_body(prepared))
         body_file.flush()
         url = existing.stdout.strip()
         if url:
@@ -416,7 +400,7 @@ def _open_pr(prepared: PreparedBranch, *, library: pathlib.Path) -> int:
     return 0
 
 
-def prepare(
+def _prepare(
     article_path: pathlib.Path,
     *,
     main_root: pathlib.Path,
@@ -424,7 +408,7 @@ def prepare(
     check_links: bool,
     today: dt.date | None = None,
 ) -> int:
-    article = article_from_workspace(article_path)
+    article = _article_from_workspace(article_path)
     prepared = _prepare_branch(
         article,
         main_root=main_root.resolve(),
@@ -455,14 +439,14 @@ def main(arguments: list[str] | None = None) -> int:
     parsed = _parser().parse_args(arguments)
     root = pathlib.Path(os.environ.get("NB_ROOT", pathlib.Path(__file__).parents[2]))
     try:
-        return prepare(
+        return _prepare(
             parsed.article,
             main_root=root,
             library=parsed.library,
             check_links=parsed.check_links,
             today=parsed.today,
         )
-    except PrepareError as error:
+    except _PrepareError as error:
         print(f"nb prepare-pr: {error}", file=sys.stderr)
         return 1
 
