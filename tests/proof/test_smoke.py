@@ -1,4 +1,10 @@
-"""The fixtures work: a valid article passes, a broken one blocks at the right tier."""
+"""The proof fixtures distinguish clean articles from exact failures.
+
+These smoke tests exercise local article validation and PR-mode Git validation
+before narrower suites diagnose individual rules. Keeping both paths here
+catches fixture drift early, especially when the committed-bundle contract
+changes independently from single-file checks.
+"""
 
 from collections.abc import Callable
 
@@ -37,9 +43,7 @@ def test_an_overcounted_source_list_warns_without_blocking(
     assert not result.blocks
 
 
-def test_a_report_filled_by_hand_reads_the_same(
-    run_local: Callable[..., Findings],
-) -> None:
+def test_a_report_filled_by_hand_reads_the_same() -> None:
     rep = check.Report()
     check.check_chrome(
         '<body class="nb-edition"></body>',
@@ -51,6 +55,6 @@ def test_a_report_filled_by_hand_reads_the_same(
 
 
 def test_the_press_is_a_real_git_repo(pr_repo) -> None:
-    result = pr_repo.run_pr(pr_body=pr_repo.body)
+    result = pr_repo.run_pr()
 
     assert not result.blocks

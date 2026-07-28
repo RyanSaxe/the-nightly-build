@@ -200,7 +200,6 @@ def _prove_branch(
         main=str(main_root),
         base=base,
         head="HEAD",
-        pr_body=None,
         library=str(library),
         today=today.isoformat() if today else None,
         check_links=check_links,

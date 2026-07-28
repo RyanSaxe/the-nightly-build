@@ -46,7 +46,6 @@ def check_article(
     repo,
     library_dir,
     rep,
-    pr_body_meta=None,
     today=None,
     check_links=False,
 ) -> dict | None:
@@ -99,7 +98,6 @@ def check_article(
         slug_from_path=slug_from_path,
         parent=parent,
         dekline=ed.dekline,
-        pr_body_meta=pr_body_meta,
         rep=rep,
     )
 

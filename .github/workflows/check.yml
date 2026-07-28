@@ -44,11 +44,6 @@ jobs:
           enable-cache: true
           python-version: "3.12"
 
-      - name: Write PR body to file
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: printf '%s' "$PR_BODY" > /tmp/pr-body.txt
-
       # The curation gate: a deletion-only PR is legitimate retraction when and
       # only when the repository owner authored it. The proof checks the shape;
       # this expression checks the author. Deletions never auto-merge.
@@ -62,8 +57,7 @@ jobs:
             --repo . --main _main \
             --base "origin/${{ github.base_ref }}" \
             --head "HEAD" \
-            --library _library \
-            --pr-body /tmp/pr-body.txt > /tmp/proof.txt
+            --library _library > /tmp/proof.txt
           code=$?
           cat /tmp/proof.txt
           echo "autopublish=$(uv run _main/engine/ci_helpers.py autopublish --repo _main --diff-base origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"

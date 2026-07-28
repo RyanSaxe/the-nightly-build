@@ -34,7 +34,12 @@ NS = "{http://www.w3.org/2005/Atom}"
 
 
 class Press:
-    """A real git press, and the night shift that runs against it."""
+    """A real Git press whose helpers reproduce two scheduled nights.
+
+    Main and library stay separate exactly as they do in production. Each
+    method performs the actual Git, proof, merge, and build boundary so the
+    rehearsal detects integration drift that unit fixtures cannot represent.
+    """
 
     def __init__(self) -> None:
         self.root = make_press()
@@ -104,15 +109,6 @@ class Press:
         git("add", "-A", cwd=self.root)
         git("commit", "-qm", f"nb: {series}/{slug}", cwd=self.root)
 
-        body = self.scratch / f"prbody-{branch.replace('/', '-')}.txt"
-        meta = json.loads(html.split('id="nb-meta">')[1].split("</script>")[0])
-        body.write_text(
-            "Nightly article.\n\n```nb-meta\n"
-            f"series: {series}\nslug: {slug}\nmode: {meta['mode']}\n"
-            f'template: {meta["template"]}\ndate: "{meta["date"]}"\n'
-            f'title: "{meta["title"]}"\norder: {meta["order"] or "null"}\n```\n'
-        )
-
         # exactly the editor's invocation: engine and configs from the main
         # checkout, the git diff and the article file from the PR checkout
         proof = self._run(
@@ -128,8 +124,6 @@ class Press:
             branch,
             "--library",
             self.library_state(),
-            "--pr-body",
-            str(body),
             "--today",
             today,
             "--no-check-links",  # the rehearsal runs offline and deterministic
@@ -174,8 +168,6 @@ class Press:
 
 @dataclasses.dataclass(frozen=True)
 class Rehearsal:
-    """Everything the two nights produced, captured as they happened."""
-
     press: Press
     article_findings: dict
     autopublish: str
