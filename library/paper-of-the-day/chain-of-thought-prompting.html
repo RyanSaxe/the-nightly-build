@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chain-of-thought prompting tripled the largest models' math scores, and made the smallest ones worse · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "chain-of-thought-prompting",
+        "template": "paper",
+        "title": "Chain-of-thought prompting tripled the largest models' math scores, and made the smallest ones worse",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-28",
+        "tags": [],
+        "sources": 8,
+        "words": 3039,
+        "reading_minutes": 14,
+        "dek": "Below roughly 100 billion parameters the technique is a wash or a liability, and the higher a model climbs past that line, the less its written reasoning reflects the computation that actually produced its answer.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          Chain-of-thought prompting tripled the largest models' math scores,
+          and made the smallest ones worse
+        </h1>
+        <p class="nb-dekline">
+          Below roughly 100 billion parameters the technique is a wash or a
+          liability, and the higher a model climbs past that line, the less
+          its written reasoning reflects the computation that actually
+          produced its answer.
+        </p>
+        <div class="nb-byline">
+          <span>14 min read</span><span>2026-07-28</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            Chain-of-Thought Prompting Elicits Reasoning in Large Language
+            Models
+          </p>
+          <p class="nb-paper-meta">
+            Wei, Wang, Schuurmans, Bosma, Ichter, Xia, Chi, Le, Zhou · Google
+            Research, Brain Team · arXiv:2201.11903 · NeurIPS 2022
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2201.11903"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We explore how generating a chain of thought—a series of
+            intermediate reasoning steps—significantly improves the ability
+            of large language models to perform complex reasoning. In
+            particular, we show how such reasoning abilities emerge naturally
+            in sufficiently large language models via a simple method called
+            chain-of-thought prompting, where a few chain of thought
+            demonstrations are provided as exemplars in prompting.
+            Experiments on three large language models show that
+            chain-of-thought prompting improves performance on a range of
+            arithmetic, commonsense, and symbolic reasoning tasks. The
+            empirical gains can be striking. For instance, prompting a PaLM
+            540B with just eight chain-of-thought exemplars achieves
+            state-of-the-art accuracy on the GSM8K benchmark of math word
+            problems, surpassing even finetuned GPT-3 with a
+            verifier.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A fix that adds no parameters</h2>
+        <p>
+          By 2022, scaling a language model up reliably bought better
+          performance on almost everything measured against it: translation,
+          question answering, summarization. Multi-step arithmetic and
+          symbolic reasoning were the visible exception. A model could double
+          in size and still fail a math word problem a schoolchild would
+          solve without hesitation. The standard way of prompting a model
+          gave it no room to show its work: the exemplars pair a question
+          directly with an answer, and the model learns to do the
+          same.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1, Introduction">1</a></sup
+          >
+          Wei et al. proposed a fix that changes nothing about the model
+          itself. Replace the handful of question-answer pairs in a few-shot
+          prompt with question-reasoning-answer triples, each one spelling
+          out the intermediate steps a person would write on paper, and the
+          model tends to produce the same kind of step-by-step trace before
+          its own answer. They called the trace a chain of thought.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2">1</a></sup
+          >
+        </p>
+        <p>
+          The claim built on that method is empirical, not architectural: no
+          weights change, no gradient is computed, only the eight examples in
+          the prompt do. And the claim has two parts, and the record has not
+          treated them the same way since. The first is that the trick works, sharply, on
+          arithmetic, commonsense, and symbolic tasks. The second is that it
+          works only once a model is large enough, an ability the paper says
+          "emerges" with scale rather than growing gradually.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.2, Results">1</a></sup
+          >
+          The first part has held up.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="one-problem-two-prompts"
+        id="one-problem-two-prompts"
+      >
+        <h2>One word problem, two prompts</h2>
+        <p>
+          The exemplar in
+          the prompt is a word problem about tennis balls. The test question,
+          immediately after it, is about apples in a cafeteria. Under
+          standard prompting, the exemplar simply states the tennis-ball
+          answer. Under chain-of-thought prompting, the exemplar's answer is
+          replaced by two sentences of arithmetic reasoning that arrive at
+          the same number.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Figure 1, p. 1">1</a></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="chain-of-thought-prompting/asset-1.png"
+            alt="Two prompts shown side by side, both containing the same exemplar question about Roger buying tennis balls and the same test question about a cafeteria's apples. Under standard prompting the exemplar answer is stated directly and the model answers the apple question 'The answer is 27', marked wrong. Under chain-of-thought prompting the exemplar answer is written out in two reasoning steps, and the model answers the apple question with a two-step written calculation ending 'The answer is 9', marked correct."
+          />
+          <figcaption>
+            Fig. 1 · The same test question, the same model, one difference
+            in the prompt: whether its single worked exemplar states an
+            answer or reasons to one.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Figure 1, p. 1"
+                data-nb-note="The paper's own paired example, reproduced to show what a standard prompt and a chain-of-thought prompt actually differ by."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The two prompts share every word except the exemplar's answer. Under
+          standard prompting the model answers the cafeteria question "The
+          answer is 27." It is wrong: 23 apples, minus the 20 used, plus the
+          6 bought, is 9, not a calculation that produces 27 by any obvious
+          route. Under chain-of-thought prompting, the same model writes "The
+          cafeteria had 23 apples originally. They used 20 to make lunch. So
+          they had 23 - 20 = 3. They bought 6 more apples, so they have 3 + 6
+          = 9. The answer is 9." Correct, and each step of the arithmetic
+          checks out.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Figure 1, p. 1">1</a></sup
+          >
+          Nothing about the test question changed. The only difference the
+          model saw was one worked example earlier in its context, showing
+          arithmetic reasoning instead of a bare answer, and that was enough
+          to move it from a wrong three-digit guess to a correct one arrived
+          at by a checkable route. This single case is the shape the rest of
+          the paper's benchmark tables repeat at scale.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="the-curve-and-its-bend"
+        id="the-curve-and-its-bend"
+      >
+        <h2>The curve, read at its bend</h2>
+        <p>
+          Wei et al. ran the same comparison across five model families and
+          model sizes spanning 350 million to 540 billion parameters, on five
+          arithmetic benchmarks. The pattern in the tennis-ball example holds
+          at large scale and inverts at small scale. On GSM8K, PaLM 540B goes
+          from 17.9% under standard prompting to 56.9% with chain-of-thought
+          exemplars, and GPT-3 175B goes from 15.6% to 46.9%, both more than
+          tripling.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 2, Appendix">1</a></sup
+          >
+          PaLM 8B moves the other way, from 4.9% to 4.1%. LaMDA at 420 million
+          parameters falls from 2.6% to 0.4%. The paper's own explanation for
+          the small-model failures is not that the trick does nothing there.
+          Small models write chains of thought that read fluently and reason
+          badly, and the extra text then costs more than the bare-answer
+          baseline gets right by guessing.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.2, Results">1</a></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="chain-of-thought-prompting/chart-1.png"
+            alt="Line chart of GSM8K solve rate against model scale in billions of parameters, log scale, for GPT-3 and PaLM under standard and chain-of-thought prompting. Standard-prompting lines for both families rise gently and stay under 20 percent even at the largest sizes. Chain-of-thought lines track slightly below standard prompting at the smallest sizes, cross above them between roughly 7 and 60 billion parameters, and pull sharply ahead at the largest sizes, reaching 46.9 percent for GPT-3 175B and 56.9 percent for PaLM 540B."
+          />
+          <figcaption>
+            Fig. 2 · GSM8K solve rate by model scale: chain-of-thought
+            prompting sits at or below standard prompting until roughly the
+            tens of billions of parameters, then pulls away.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 2, Appendix">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Read at the point it bends rather than as a slope trending upward:
+          for GPT-3, the cross-over sits between the 6.7-billion and
+          175-billion checkpoints; for PaLM, between 8 billion and 62 billion.
+          The paper's own summary puts the boundary at roughly 100 billion
+          parameters, and calls the pattern "an emergent ability of model
+          scale."<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.2, Results">1</a></sup
+          >
+          It borrows the term from a companion paper by four of the same
+          authors that treats this exact result as its headline
+          example.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Figure 3, caption">2</a></sup
+          >
+          The term claims something specific: not that the benefit grows with
+          scale, which would be unremarkable, but that it is close to zero or
+          negative below the threshold and does not extrapolate from the
+          smaller checkpoints. A Stanford group made the more general version
+          of that framing a live methodological question the following year.
+          They argued that a "sharp and unpredictable" jump in a published
+          scaling curve can come from the choice of a nonlinear metric, like
+          exact-match accuracy, rather than from a genuine discontinuity in
+          the model. A continuous metric on the same underlying outputs, they
+          showed, often traces a smooth improvement instead.<sup
+            class="nb-cite"
+            ><a href="#s3" data-nb-locator="Abstract">3</a></sup
+          >
+          That critique targets the emergent-abilities framing generally and
+          does not re-examine GSM8K by name, so it should be read as a
+          caution about how much weight "emergent" is being asked to carry,
+          not as a demonstrated refutation of Table 2's own numbers.
+        </p>
+        <p>
+          The paper does not leave "the model just gets more tokens to
+          compute with" as an untested alternative explanation. Three
+          ablations, all on LaMDA 137B and GSM8K, isolate what the written
+          steps are actually contributing.
+        </p>
+        <table class="nb-table">
+          <caption>
+            What the chain of thought is doing, isolated by ablation: neither
+            extra compute nor after-the-fact narration recovers the
+            gain.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§4; Appendix Table 6">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Prompt variant</th>
+              <th>GSM8K solve rate</th>
+              <th class="txt">What it isolates</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Standard</span></td>
+              <td>6.5%</td>
+              <td class="txt">Baseline, no reasoning steps.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Equation only</span></td>
+              <td>5.4%</td>
+              <td class="txt">
+                The arithmetic without the natural-language framing.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-table-token">Variable compute</span>
+              </td>
+              <td>6.4%</td>
+              <td class="txt">
+                Filler dots matching the chain's length, no content.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-table-token">Reasoning after answer</span>
+              </td>
+              <td>6.1%</td>
+              <td class="txt">
+                The same chain, moved after the stated answer instead of
+                before it.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Chain of thought</span></td>
+              <td>14.3%</td>
+              <td class="txt">Full method: reasoning steps, before the answer.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Padding the prompt with dot-filler tokens that match the chain's
+          length recovers almost nothing. That rules out extra compute budget
+          alone as the explanation. Moving the identical chain after the
+          stated answer, so the model cannot use it to derive that answer,
+          also fails to recover the gain.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§4">1</a></sup
+          >
+          The model is not just reciting a plausible-looking explanation once
+          it already has the number. Something about writing the steps out,
+          in order, in natural language, before the answer, is doing the
+          work. The
+          chain of thought is not free-floating decoration on top of a fixed
+          computation. Is
+          the chain a model writes down an accurate record of the
+          computation that used it? Or is it a separate, merely correlated
+          process?
+        </p>
+      </section>
+
+      <section
+        data-nb-section="where-the-gain-thins"
+        id="where-the-gain-thins"
+      >
+        <h2>Where the gain runs thin</h2>
+        <p>
+          The paper's own tables record where the method is weakest, and the
+          honest reading of the result has to include that record. On
+          CommonsenseQA, chain-of-thought prompting on PaLM 540B moves
+          accuracy from 78.1% to 79.9%, a 1.8-point gain and the smallest of
+          the paper's commonsense benchmarks.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 4">1</a></sup
+          >
+          An independent group later tested a version of the method with no
+          hand-written exemplars at all, just the phrase "Let's think step by
+          step" prepended to the prompt. They found the same weak spot from a
+          different angle: "In commonsense reasoning tasks, Zero-shot-CoT
+          does not provide performance gains."<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="§4.1">4</a></sup
+          >
+          Two different labs, two different versions of the method, the same
+          benchmark class resisting both.
+        </p>
+        <p>
+          The symbolic-reasoning results show a second limit, generalization
+          past the exact problem shape the exemplars demonstrate. On
+          last-letter concatenation, PaLM 540B reaches 99.4% in-domain (the
+          exemplars concatenate two-word names, the test questions do too)
+          but only 63.0% on four-word names, a shape the exemplars never
+          show.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 5">1</a></sup
+          >
+          At smaller scale the drop is closer to total: PaLM 62B holds 85.0%
+          in-domain and 13.4% on four-word out-of-domain items. The paper
+          calls this out directly rather than only in a table. Its own
+          limitations section states plainly that chain of thought carries
+          "no guarantee of correct reasoning paths," and that even the
+          hand-written exemplars are brittle enough that two of the three
+          co-authors who wrote them could not produce a working
+          chain-of-thought prompt for a task as simple as reversing a
+          five-item list.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§6">1</a></sup
+          >
+          A robustness check on the coin-flip task makes the same point with
+          numbers. Solve rate for CoT prompts written by three different
+          human annotators ranged from 99.6% down to 71.4%, both comfortably
+          above the 50% standard-prompting floor.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§6">1</a></sup
+          >
+          That is a wide enough spread that the exact wording of the eight
+          exemplars is doing real work.
+        </p>
+        <p>
+          A 2024 study out of Arizona State pushed the generalization
+          question harder, in a domain the original paper never tested:
+          multi-step planning. Stechly, Valmeekam, and Kambhampati ran a
+          Blocksworld case study. They found chain-of-thought gains that
+          "deteriorate as the size of the query-specified stack grows past
+          the size of stacks shown in the examples," and concluded that the
+          improvements "do not stem from the model learning general
+          algorithmic procedures via demonstrations but depend on carefully
+          engineering highly problem specific prompts."<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Abstract">5</a></sup
+          >
+          That is a sharper claim than Wei et al. make about their own
+          method, but it is an extension of the original paper's own caveat,
+          not a contradiction of it. Wei et al. already declined to claim a
+          portable algorithm. Kambhampati's group supplies the negative
+          result that shows exactly how far the portability fails once the
+          test cases move outside the exemplars' shape.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="two-follow-ons-one-independent"
+        id="two-follow-ons"
+      >
+        <h2>Two follow-ups, one of them independent</h2>
+        <p>
+          Two papers from later in 2022 pushed the accuracy result further,
+          and they are not equally strong evidence that the phenomenon is
+          real rather than an artifact of Wei et al.'s own exemplar writing.
+          Kojima et al., a University of Tokyo group with no author overlap
+          with the original paper, replaced the eight hand-written exemplars
+          with a single fixed sentence: "Let's think step by step." That
+          alone raised InstructGPT's MultiArith accuracy from 17.7% to 78.7%
+          and GSM8K from 10.4% to 40.7%, with PaLM 540B showing
+          similar-sized gains.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Abstract">4</a></sup
+          >
+          A different team, with no stake in the original claim, reproduced
+          the core phenomenon using a method that could not have been tuned
+          to Wei et al.'s specific exemplars. That makes it the closest thing
+          the accuracy literature has to an independent replication: the
+          effect survives even when the eight worked examples are replaced by
+          nothing at all.
+        </p>
+        <p>
+          Wang et al.'s self-consistency method is a different kind of
+          evidence, though it is often cited alongside Kojima's as if the two
+          carried equal weight. Five of its nine authors, including Wei,
+          Schuurmans, Chi, and Zhou, wrote the original paper. Sampling many
+          chains of thought per question instead of one, then taking the
+          majority final answer, adds a further 17.9 points on GSM8K over a
+          plain chain-of-thought baseline, plus double-digit gains on SVAMP
+          and AQuA.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Abstract">6</a></sup
+          >
+          That gain is real, and it says something interesting about how
+          much signal is buried in a single sampled chain. But it is the same
+          research program extending its own result, not a second lab
+          checking it. The paper's own re-run of the plain CoT baseline for
+          PaLM 540B on GSM8K, 56.5%, even lands a few tenths of a point below
+          the 56.9% Wei et al. reported for the identical model, task, and
+          method. The gap is small and almost certainly incidental, but a
+          reminder that even a co-author's own rerun does not reproduce a
+          headline number exactly.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Table, §Compared to model ensembling">6</a></sup
+          >
+        </p>
+      </section>
+
+      <section
+        data-nb-section="what-the-trace-leaves-out"
+        id="what-the-trace-leaves-out"
+      >
+        <h2>What the trace leaves out</h2>
+        <p>
+          Here is a technique that produces
+          more correct answers, on more tasks, as models scale, by making the
+          model write down steps before answering. It fails on exactly the
+          ablations that would show those steps are decorative. On that
+          reading, the trace is not just a means to a better answer. It looks
+          like a report of how the answer was reached, and reading it that
+          way is not unreasonable given the ablation results above. That
+          reading held the field's default assumption for roughly a year.
+        </p>
+        <p>
+          Turpin et al. tested it directly, by deliberately manipulating what
+          should have made no difference to a correct reasoner. Across 13
+          BIG-Bench Hard tasks on GPT-3.5 and Claude 1.0, they reordered
+          multiple-choice options so the correct answer always sat in
+          position "(A)," or suggested an answer outright in the prompt. Then
+          they measured how much that biasing feature moved the model's final
+          answer, against how often the model's chain of thought admitted the
+          feature had been present.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="§1, Our main findings">7</a></sup
+          >
+          The bias moved accuracy by as much as 36 percentage points. The
+          written chain of thought almost never mentioned it, instead
+          constructing a fluent, step-by-step justification for whichever
+          answer the bias had pushed the model toward, wrong answers
+          included.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Abstract">7</a></sup
+          >
+          On a modified social-bias benchmark, the same models weighted
+          evidence inconsistently to land on stereotype-aligned answers,
+          without the chain of thought ever naming the stereotype. That held
+          even when the biasing evidence was obvious enough that the models
+          referenced it in the chain 100% of the time, without ever
+          disclosing that it had swayed the conclusion.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="§4">7</a></sup
+          >
+          A chain of thought, in other words, can be a fluent post-hoc
+          rationalization of a decision made on other grounds, produced by
+          the same model, in the same style, as a faithful step-by-step
+          derivation. Nothing about reading the transcript distinguishes the
+          two.
+        </p>
+        <p>
+          Anthropic's Lanham et al. asked a related but distinct question:
+          not whether the chain can be wrong about its own causes, but how
+          much the final answer actually depends on the chain at all. They
+          measured dependence by deliberately corrupting the chain, inserting
+          mistakes into it, paraphrasing it, truncating it, replacing it with
+          filler, and checking whether the final answer changed. Dependence
+          on the stated chain varies a great deal by task. The sharpest
+          finding complicates the GSM8K scaling result directly: "as models
+          become larger and more capable, they produce less faithful
+          reasoning on most tasks we study."<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+        </p>
+        <p>
+          That is close to the inverse of what the 2022 scaling curve would
+          predict if faithfulness tracked accuracy. The same independent
+          variable, model scale, moves the two properties in opposite
+          directions. Accuracy on GSM8K rises from near-zero to 56.9% between
+          8 billion and 540 billion parameters. Lanham's faithfulness
+          measurements fall across most tasks over roughly that same range of
+          capability. Neither Turpin nor Lanham reruns Wei et al.'s exact
+          benchmarks, so this is not a refutation of Table 2's reported
+          numbers. Both literatures can be right about their own tables at
+          once. But it directly complicates the reading the accuracy result
+          alone invites: that the trace explains the answer, and that this
+          will only get more transparent as models grow. The paper's own
+          hedge turns out to have been the more careful sentence: "fully
+          characterizing a model's computations that support an answer
+          remains an open question."<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§6, Limitations">1</a></sup
+          >
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The accuracy claim holds. It is demonstrated on the paper's own
+            benchmarks and traced to the content of the written steps rather
+            than to extra compute by the paper's own ablations.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 2; §4">1</a></sup
+            >
+            It is reproduced by an independent group using a version of the
+            method the original authors did not write.<sup class="nb-cite"
+              ><a href="#s4" data-nb-locator="Abstract">4</a></sup
+            >
+            It generalizes less than "reasoning" suggests. It is weakest on
+            commonsense tasks, in both the original paper and an independent
+            replication. And it relies on exemplars specific enough to a
+            problem's shape that a 2024 planning study found the gains
+            collapsing once test cases moved past that shape.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            And the interpretive promise built into calling the trace a
+            chain of "thought," that someone watching it can see how the
+            model reasoned, does not hold up, least of all in the large
+            models where the accuracy gain is largest. Two measurements,
+            neither by the original authors, found the written steps can omit
+            the actual cause of an answer entirely,<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            and that this gets worse, not better, with scale and
+            capability.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            Wei et al. proved a technique. What the technique's own name
+            claims about what is happening inside the model was never
+            tested by the paper that coined it, and where it has been
+            tested since, it has mostly failed.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2201.11903"
+              >arXiv · Wei, Wang, Schuurmans, Bosma, Ichter, Xia, Chi, Le,
+              Zhou, "Chain-of-Thought Prompting Elicits Reasoning in Large
+              Language Models" (2022)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2206.07682"
+              >arXiv · Wei, Tay, Bommasani, Raffel, Zoph, Borgeaud, Yogatama,
+              Bosma, Zhou, Metzler, Chi, Hashimoto, et al., "Emergent
+              Abilities of Large Language Models" (2022)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2304.15004"
+              >arXiv · Schaeffer, Miranda, Koyejo, "Are Emergent Abilities of
+              Large Language Models a Mirage?" (2023)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2205.11916"
+              >arXiv · Kojima, Gu, Reid, Matsuo, Iwasawa, "Large Language
+              Models are Zero-Shot Reasoners" (2022)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2405.04776"
+              >arXiv · Stechly, Valmeekam, Kambhampati, "Chain of
+              Thoughtlessness? An Analysis of CoT in Planning" (2024)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2203.11171"
+              >arXiv · Wang, Wei, Schuurmans, Le, Chi, Narang, Chowdhery,
+              Zhou, "Self-Consistency Improves Chain of Thought Reasoning in
+              Language Models" (2022)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2305.04388"
+              >arXiv · Turpin, Michael, Perez, Bowman, "Language Models Don't
+              Always Say What They Think: Unfaithful Explanations in
+              Chain-of-Thought Prompting" (2023)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2307.13702"
+              >arXiv · Lanham, Chen, Radhakrishnan, Steiner, Denison,
+              Hernandez, Li, Durmus, Hubinger, Kernion, et al., "Measuring
+              Faithfulness in Chain-of-Thought Reasoning" (2023)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
