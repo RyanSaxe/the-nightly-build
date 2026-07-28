@@ -63,6 +63,7 @@ class SyncRepo:
                 "NB_SYNC_MAX_POLLS": "2",
                 "NB_SYNC_POLL_SECONDS": "0",
                 "PATH": f"{self.fake_bin}{os.pathsep}{env['PATH']}",
+                "UV_PROJECT_ENVIRONMENT": str(REPO / ".venv"),
             }
         )
         if check_failure:
@@ -145,6 +146,9 @@ def make_sync_repo(
     source.mkdir()
     (source / "scripts").mkdir()
     (source / ".github" / "workflows").mkdir(parents=True)
+    shutil.copy2(REPO / "nb", source / "nb")
+    shutil.copy2(REPO / "pyproject.toml", source / "pyproject.toml")
+    shutil.copy2(REPO / "uv.lock", source / "uv.lock")
     shutil.copy2(REPO / "scripts" / "sync.sh", source / "scripts" / "sync.sh")
     shutil.copytree(REPO / "engine", source / "engine")
     for path in WORKFLOWS:
@@ -273,7 +277,7 @@ def test_unauthenticated_gh_prepares_an_agent_handoff(
     assert "base=library" in result.stdout
     assert f"head={SYNC_BRANCH}" in result.stdout
     assert "Wait for the `validate` check" in result.stdout
-    assert "Rerun `scripts/sync.sh`" in result.stdout
+    assert "Rerun `nb sync`" in result.stdout
     assert "pr create" not in repo.gh_log.read_text()
 
     repo.update_remote_ref("refs/heads/library", f"refs/heads/{SYNC_BRANCH}")

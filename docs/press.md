@@ -33,7 +33,7 @@ press/
 1. Fork with GitHub's "Copy the main branch only" box checked. Keep the fork
    **public** if you want the published site: GitHub Pages needs a public repo
    on the free plan (a private repo needs Pro).
-2. Set up: say "set me up" to your agent, or run `./setup.sh` by hand. It
+2. Set up: say "set me up" to your agent, or run `./nb setup` by hand. It
    scaffolds your empty `press/`, creates the empty `library` branch, seeds
    its trigger workflows, clears the library branch to deploy, and enables
    Pages and auto-merge. Enable workflows once in your fork's Actions tab.
@@ -51,7 +51,7 @@ press/
 ### From GitHub
 
 Click **Sync fork**. This updates your fork's `main`; it never touches
-`library`. The next night shift runs `scripts/sync.sh`, updates the protected
+`library`. The next night shift runs `nb sync`, updates the protected
 publishing workflows through CI if needed, and only then starts article work.
 
 To finish the workflow sync immediately from a local checkout:
@@ -59,19 +59,18 @@ To finish the workflow sync immediately from a local checkout:
 ```sh
 git switch main
 git pull --ff-only origin main
-scripts/sync.sh
+./nb sync
 ```
 
-This is also how an older fork adopts `scripts/sync.sh` for the first time.
 Do not rerun setup or update `library` yourself.
 
 ### From the command line
 
-Once your fork contains `scripts/sync.sh`, one command performs the complete
+One command performs the complete
 engine update:
 
 ```sh
-scripts/sync.sh --update-main-from-upstream
+./nb sync --update-main-from-upstream
 ```
 
 This deliberate command merges upstream into your clean, current `main`,

@@ -29,10 +29,10 @@ The correspondent maps these tiers to models the current harness actually
 offers. To pin one provider instead, write its exact model ID. Effort is also a
 plain string because providers expose different levels.
 
-The correspondent launches every article role directly. When the harness
-supports isolated children, each role receives its own context; otherwise the
-production record discloses the single-context fallback. The policy controls
-those five launches; it does not select the correspondent itself and does not
+The correspondent launches every article role directly. Each role receives an
+exact brief and only the article context it needs; when isolated children are
+unavailable, the same artifact sequence runs in one context. The policy controls
+those four launches; it does not select the correspondent itself and does not
 require nested agents or a provider-specific team feature.
 
 ```yaml
@@ -49,8 +49,8 @@ the commission. With `required: true`, the article stops before that role when
 the runtime cannot honor or verify the directive. A stage-level value overrides
 the paper-wide value.
 
-The configurable stages are `writing-coach`, `researcher`, `writer`, `editor`,
-and `publisher`. The correspondent is deliberately absent: choose its model in
+The configurable stages are `writing-coach`, `researcher`, `writer`, and
+`editor`. The correspondent is deliberately absent: choose its model in
 the automation itself, where the run begins.
 
 ## Per-series overrides
@@ -73,7 +73,7 @@ press profile. Press stage fields apply next, then series stage fields. For
 Inspect the exact result with:
 
 ```sh
-uv run engine/production_policy.py --repo . --series <id>
+nb production-policy --repo . --series <id>
 ```
 
 Production policy never skips an editorial stage and does not estimate token or

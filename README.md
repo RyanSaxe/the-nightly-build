@@ -28,15 +28,15 @@ Your paper and its archive live in your fork. You own it.
 Fork this repository with **Copy the main branch only** enabled. Keep the fork
 public if you want to use GitHub Pages on the free plan.
 
-Clone the fork and run the setup script (or ask your agent to do this in the next step):
+Clone the fork and run setup (or ask your agent to do this in the next step):
 
 ```sh
 git clone https://github.com/<you>/<your-paper>.git
 cd <your-paper>
-./setup.sh
+./nb setup
 ```
 
-The script scaffolds `press/`, creates the empty `library` branch, seeds its
+The command scaffolds `press/`, creates the empty `library` branch, seeds its
 workflows, and configures GitHub Pages and auto-merge. It requires `git`,
 `gh` (authenticated), `uv`, and Python 3.10+.
 
@@ -172,7 +172,7 @@ your respective AI agent. If you'd like to see how that might work, take a look 
 ---
 
 <p>The PR is both the review record and the publishing gate. It carries the
-article, earned assets, production record, and validation result. Nothing
+article, earned assets, exact agent inputs and outputs, and validation result. Nothing
 reaches <code>library</code> without passing CI. This makes it easy to audit
 the process if there are issues, as well as give more direct feedback in prompts.
 Additionally, PRs are a natural entity that basically every AI harness interacts with.</p>

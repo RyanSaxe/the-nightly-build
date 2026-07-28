@@ -30,4 +30,4 @@ jobs:
           python-version: "3.12"
       # Skip if the change deleted press/ entirely; nothing to validate.
       - if: hashFiles('press/**') != ''
-        run: uv run python engine/validate_config.py --repo .
+        run: ./nb validate --repo .

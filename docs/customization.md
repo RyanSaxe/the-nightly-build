@@ -319,7 +319,7 @@ chrome the writer cannot reword.
    `furniture.md` + `furniture.css` for bespoke components only this template
    renders.
 
-3. Validate and rehearse: `uv run engine/validate_config.py --repo .`, then point a
+3. Validate and rehearse: `nb validate`, then point a
    series at the template and run a press check before scheduling it.
 
 ## What stays with the engine

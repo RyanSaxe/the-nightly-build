@@ -42,7 +42,7 @@ require_tools() {
 	command -v git >/dev/null 2>&1 || die "git is required"
 	command -v uv >/dev/null 2>&1 || die "uv is required: https://docs.astral.sh/uv/"
 	git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
-		die "scripts/sync.sh must live in a git checkout"
+		die "nb sync must run from a complete Nightly Build checkout"
 }
 
 repository_name() {
@@ -156,7 +156,7 @@ Use the runtime's connected GitHub tools to finish this generated sync:
 2. Never edit the generated branch or reproduce its commit by hand.
 3. Wait for the `validate` check. If it fails or never appears, stop and report it.
 4. After `validate` passes, squash-merge the PR through the protected branch.
-5. Rerun `scripts/sync.sh`; continue the night only after it verifies the blobs.
+5. Rerun `nb sync`; continue the night only after it verifies the blobs.
 EOF
 }
 
@@ -175,7 +175,7 @@ prepare_sync_commit() {
 		commit -qm "chore: sync library workflows from main" \
 		-m "$SYNC_MARKER" -m "Main-Oid: $main_oid" -m "Library-Oid: $library_oid"
 
-	uv run "$ROOT/engine/check.py" --pr \
+	"$ROOT/nb" check --pr \
 		--repo "$worktree" --main "$temp_root/main" \
 		--base origin/library --head HEAD >/dev/null ||
 		die "the generated workflow sync did not pass the local proof"
@@ -184,7 +184,7 @@ prepare_sync_commit() {
 		git -C "$worktree" push -q \
 			--force-with-lease="refs/heads/$SYNC_BRANCH:$remote_sha" \
 			origin "HEAD:refs/heads/$SYNC_BRANCH" ||
-			die "the sync branch changed while it was being prepared; run scripts/sync.sh again"
+			die "the sync branch changed while it was being prepared; run nb sync again"
 	else
 		git -C "$worktree" push -q origin "HEAD:refs/heads/$SYNC_BRANCH"
 	fi
@@ -236,13 +236,13 @@ wait_for_library() {
 		fi
 		if [ -n "$failures" ]; then
 			printf '%s\n' "$failures" >&2
-			die "sync PR #$pr failed. Fix the canonical engine on main, then rerun scripts/sync.sh; do not edit the generated branch"
+			die "sync PR #$pr failed. Fix the canonical engine on main, then rerun nb sync; do not edit the generated branch"
 		fi
 		attempt=$((attempt + 1))
 		[ "$attempt" -le "$MAX_POLLS" ] && sleep "$POLL_SECONDS"
 	done
 	gh pr checks "$pr" --repo "$repo" 2>/dev/null || true
-	die "sync PR #$pr did not merge in time. Inspect https://github.com/$repo/pull/$pr, fix main, then rerun scripts/sync.sh"
+	die "sync PR #$pr did not merge in time. Inspect https://github.com/$repo/pull/$pr, fix main, then rerun nb sync"
 }
 
 sync_library() {
@@ -285,7 +285,7 @@ sync_library() {
 			emit_agent_handoff "gh cannot read library branch protection" "$repo"
 			return "$HANDOFF_EXIT"
 		fi
-		die "library is not protected by the required 'validate' check. Run ./setup.sh"
+		die "library is not protected by the required 'validate' check. Run nb setup"
 	fi
 
 	if ! pr=$(open_or_update_pr "$repo"); then
@@ -329,10 +329,11 @@ update_main_from_upstream() {
 	if ! git -C "$ROOT" merge --no-edit upstream/main; then
 		printf '%s\n' "Conflicts:" >&2
 		git -C "$ROOT" diff --name-only --diff-filter=U >&2
-		die "resolve and commit these paths, push main, then run scripts/sync.sh; or run git merge --abort"
+		die "resolve and commit these paths, push main, then run nb sync; or run git merge --abort"
 	fi
 	git -C "$ROOT" push origin main
 	ok "fork main updated from upstream"
+	say "schedule prompts live outside Git; compare yours with docs/scheduling.md"
 	sync_library
 }
 
@@ -341,10 +342,10 @@ main() {
 	case "${1-}" in
 	"") sync_library ;;
 	--update-main-from-upstream)
-		[ "$#" = 1 ] || die "usage: scripts/sync.sh [--update-main-from-upstream]"
+		[ "$#" = 1 ] || die "usage: nb sync [--update-main-from-upstream]"
 		update_main_from_upstream
 		;;
-	*) die "usage: scripts/sync.sh [--update-main-from-upstream]" ;;
+	*) die "usage: nb sync [--update-main-from-upstream]" ;;
 	esac
 }
 

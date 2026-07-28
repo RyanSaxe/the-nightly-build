@@ -27,6 +27,8 @@ def uv_command(root: pathlib.Path, arguments: list[str]) -> list[str]:
         command.extend(("--group", "figure-capture"))
     elif requested == "chart":
         command.extend(("--group", "charts"))
+    elif requested == "render-check":
+        command.extend(("--with", "websocket-client"))
     command.extend(("python", "-m", "nb.cli", *arguments))
     return command
 
