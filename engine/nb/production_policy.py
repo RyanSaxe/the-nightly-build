@@ -12,7 +12,6 @@ STAGES = (
     "researcher",
     "writer",
     "editor",
-    "publisher",
 )
 PROFILES = ("inherit", "economy", "balanced", "quality")
 MODEL_TIERS = ("inherit", "efficient", "capable", "premium")
@@ -48,21 +47,18 @@ _PROFILE_PRESETS: dict[str, dict[str, tuple[str, str]]] = {
         "researcher": ("efficient", "low"),
         "writer": ("capable", "medium"),
         "editor": ("capable", "medium"),
-        "publisher": ("efficient", "low"),
     },
     "balanced": {
         "writing-coach": ("capable", "medium"),
         "researcher": ("efficient", "medium"),
         "writer": ("capable", "high"),
         "editor": ("capable", "high"),
-        "publisher": ("efficient", "low"),
     },
     "quality": {
         "writing-coach": ("premium", "high"),
         "researcher": ("capable", "high"),
         "writer": ("premium", "high"),
         "editor": ("premium", "high"),
-        "publisher": ("efficient", "low"),
     },
 }
 

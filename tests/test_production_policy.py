@@ -35,11 +35,6 @@ def test_missing_configuration_uses_the_cost_aware_default() -> None:
         },
         "writer": {"model": "capable", "effort": "high", "required": False},
         "editor": {"model": "capable", "effort": "high", "required": False},
-        "publisher": {
-            "model": "efficient",
-            "effort": "low",
-            "required": False,
-        },
     }
 
 
@@ -53,24 +48,24 @@ def test_inherit_is_an_explicit_profile() -> None:
 
 
 @pytest.mark.parametrize(
-    ("profile", "writer", "publisher"),
+    ("profile", "writer", "editor"),
     [
         pytest.param(
             "economy",
             {"model": "capable", "effort": "medium", "required": False},
-            {"model": "efficient", "effort": "low", "required": False},
+            {"model": "capable", "effort": "medium", "required": False},
             id="economy",
         ),
         pytest.param(
             "balanced",
             {"model": "capable", "effort": "high", "required": False},
-            {"model": "efficient", "effort": "low", "required": False},
+            {"model": "capable", "effort": "high", "required": False},
             id="balanced",
         ),
         pytest.param(
             "quality",
             {"model": "premium", "effort": "high", "required": False},
-            {"model": "efficient", "effort": "low", "required": False},
+            {"model": "premium", "effort": "high", "required": False},
             id="quality",
         ),
     ],
@@ -79,12 +74,12 @@ def test_profiles_resolve_complete_role_guidance(
     profile: str,
     *,
     writer: dict[str, str | bool],
-    publisher: dict[str, str | bool],
+    editor: dict[str, str | bool],
 ) -> None:
     policy = resolve({"profile": profile})
 
     assert policy["stages"]["writer"] == writer
-    assert policy["stages"]["publisher"] == publisher
+    assert policy["stages"]["editor"] == editor
 
 
 def test_series_overrides_press_fields_without_erasing_other_defaults() -> None:

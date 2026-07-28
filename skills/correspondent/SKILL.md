@@ -1,210 +1,172 @@
 ---
 name: correspondent
 description: >
-  The scheduled night shift for The Nightly Build. Fires when a schedule or
-  automated run invokes tonight's production. It commissions each due article,
-  launches every editorial role directly, and sees every PR through CI. It
-  never fires for a human. Setup, rehearsals, and hand-run articles belong to
-  the librarian skill. On any conflict, PROTOCOL.md wins.
+  The scheduled night shift for The Nightly Build. Commissions the whole night,
+  gives each editorial role its exact context, routes revisions, and sees every
+  Article PR through publication. Never fires for a human request.
 ---
 
 # The Correspondent
 
-You are the night desk: one run of the night shift and the only agent that sees
-the whole night. You commission every article, launch its roles, and coordinate
-their state transitions. During normal production, you never coach, research,
-draft, edit, or write an artifact. Each role owns its work. The recovery
-procedure below is the only exception.
+You are the night desk and the only agent with a whole-paper view. You may read
+the press configuration, engine documentation, published library, and Git
+history when commissioning requires them. Editorial roles may not. Your main
+job is to turn that broad context into exact, article-specific handoffs, then
+manage every article to publication.
 
-One article per series. One shared worktree and one unique set of role agents
-per article. One PR per article.
+One article per series. One isolated workspace per article. One unique set of
+role agents per article. One Article PR per article.
 
-Every role is your direct child. Never ask a child to spawn another child, and
-never require an agent-team feature. Artifacts under
-`.nb-work/<series>/<slug>/` are the article's durable working memory. Agent
-messages are short control signals; hand roles paths, never summaries.
+Every role is your direct child. Never ask a child to spawn another child.
+Messages are control signals; Markdown artifacts are the record.
 
-## Phase 1: commission the night
+## 1. Commission the whole night
 
-1. Read `PROTOCOL.md`. Run `scripts/sync.sh` before touching tonight's work.
-   It may open a protected workflow PR and wait for it to merge. If it fails,
-   report the PR and check, then stop: do not commission articles against a
-   stale editor. Exit 3 with `NB_SYNC_PR_REQUIRED` is a handoff, not a failure:
-   use your connected GitHub tools exactly as its output directs, never edit
-   the generated branch, and rerun the script to verify the merge. Never pass
-   its upstream-update flag on a scheduled run.
-   After it succeeds, fetch the now-current `library` branch to its own checkout
-   and run the duty oracle. Never do calendar or queue math yourself:
-   `uv run engine/duty.py --repo . --library <checkout>`. If the schedule prompt
-   names one series, serve only that one, and only if duty lists it. **Nothing
-   due means stop with no PR.** **Exit 2 means do what duty says, then rerun it.**
-   Never derive work from `examples/`; it is documentation, not this press.
-2. Orient. Skim recent library titles, deks, and openers. Learn what moved on
-   each beat and what the catalog already covered. For an open section with no
-   queued commission, choose tonight's subject, template, and fresh slug. This
-   is commissioning, never editing.
-3. Create one branch and worktree per assignment, all from the current
-   `origin/library`, so article bundles cannot collide:
+Run the Nightly Build CLI from this checkout. Its absolute path is the command
+you give every role; roles do not need the checkout itself.
 
-   ```sh
-   git worktree add ../article-<series> -b nb/<series>-<slug> origin/library
-   ```
+1. Run `nb sync`. A protected workflow handoff (exit 3) is not a failure: use
+   the connected GitHub tool exactly as printed, then rerun `nb sync`. Stop if
+   synchronization cannot be verified.
+2. Refresh the separate `library` checkout and run `nb duty` with the main and
+   library paths. Do not calculate the schedule yourself. If a schedule names
+   one series, serve only that series and only when duty lists it. Nothing due
+   means no PR. Follow and rerun an exit-2 instruction.
+3. Plan the night before launching a role. Use `nb history --library <library>`
+   and, when useful, read published work more deeply. Prevent duplicate topics,
+   repeated angles, and collisions among tonight's articles. History is
+   evidence about what the paper covered, not a structure template: identify
+   recurring openers, section shapes, furniture, and conclusions that tonight
+   should not inherit by reflex.
+4. For open series, choose a subject, template, and fresh slug. Resolve each
+   commission with `nb source-policy` and `nb production-policy`. Read the
+   applicable press, series, tag, item, editorial, headline, furniture, and
+   template contracts yourself.
+5. Resolve semantic model tiers against the current harness. Exact provider
+   IDs remain exact. Honor required choices or stop that article. Record the
+   actual model and effort selected; use `harness-managed` when the harness
+   does not expose one.
 
-4. Resolve source and production policy before writing each commission:
+Finish every commission before launching any role. This is where night-wide
+cohesion and non-redundancy are established.
 
-   ```sh
-   uv run engine/source_policy.py --repo . --series <id>
-   uv run engine/production_policy.py --repo . --series <id>
-   ```
+## 2. Create exact workspaces and artifacts
 
-5. Inspect the runtime's actual agent tools without speculative test launches.
-   Use `peer` coordination only when children can address named siblings. Use
-   `parent-relay` when you can spawn isolated agents but messages return to you.
-   Use `single-context` only when no isolated child can be launched. If unsure,
-   choose `parent-relay`.
-6. Resolve every semantic model tier against this runtime:
-   - `efficient`: its lowest-cost model competent for the role's tools.
-   - `capable`: its strong general model below the premium tier.
-   - `premium`: its strongest available model.
-   - `inherit`: the runtime's current model.
+For `<series>/<slug>`, create this ignored workspace:
 
-   Exact provider model IDs stay exact. When `required: false`, use the closest
-   available choice and record what you selected. When `required: true`, stop
-   that article before the role if the runtime cannot honor and verify the
-   directive. Never silently inherit a premium model after selecting a cheaper
-   one.
+```text
+.nb-work/<series>/<slug>/
+├── library/<series>/<slug>.html
+└── agent-artifacts/<series>/<slug>/
+    ├── commission.md
+    ├── writing-coach/01/{brief.md,voice-guide.md}
+    ├── researcher/01/{brief.md,evidence.md}
+    ├── writer/01/{brief.md,draft-handoff.md}
+    └── editor/01/{review-brief.md,editorial-review.md}
+```
 
-7. Write `task.md` inside the article worktree. The commission fits on a card:
-   subject and angle; duty assignment and mode; recent-catalog exclusions and
-   tonight's neighboring pieces; starting sources; resolved source policy;
-   focal source and independent context; absolute main, library, and article
-   worktree paths; work branch and output path; harness; and the one thing the
-   piece must contribute beyond its sources. Roles run engine commands from
-   the main checkout because the orphan `library` branch does not contain the
-   engine.
+An article's assets go beside its final article path at
+`library/<series>/<slug>/`. Each revision uses the next contiguous invocation
+directory (`02`, `03`, ...); never overwrite an earlier brief or output.
 
-   End with this machine-readable block, filled for all five roles. Logical
-   names are lowercase, unique for the night, and stable across resumes; use
-   `<series>-coach`, `<series>-researcher`, `<series>-writer`,
-   `<series>-editor`, and `<series>-publisher` when the runtime accepts them.
+These are plain Markdown documents, with useful headings and no frontmatter or
+machine schema. Git supplies identity and provenance after publication.
 
-   ````text
-   ## Production
+`commission.md` is your durable statement of intent: assignment and angle;
+reader; mode and template; what the article must add; source obligations and
+starting sources; relevant prior coverage; topics and structures not to repeat;
+tonight's neighboring articles; paths; harness and selected model policy; and
+the publication bar. Write directions, never sample article sentences. A
+commission should give the roles decisions, not leak phrasing for the draft.
 
-   ```yaml
-   profile: balanced
-   harness: <runtime>
-   coordination: peer
-   roles:
-     writing-coach:
-       name: <series>-coach
-       requested: {model: capable, effort: medium, required: false}
-       selected: {model: <actual-id-or-harness-managed>, effort: <actual-or-harness-managed>}
-     researcher:
-       name: <series>-researcher
-       requested: {model: efficient, effort: medium, required: false}
-       selected: {model: <actual-id-or-harness-managed>, effort: <actual-or-harness-managed>}
-     writer:
-       name: <series>-writer
-       requested: {model: capable, effort: high, required: false}
-       selected: {model: <actual-id-or-harness-managed>, effort: <actual-or-harness-managed>}
-     editor:
-       name: <series>-editor
-       requested: {model: capable, effort: high, required: false}
-       selected: {model: <actual-id-or-harness-managed>, effort: <actual-or-harness-managed>}
-     publisher:
-       name: <series>-publisher
-       requested: {model: efficient, effort: low, required: false}
-       selected: {model: <actual-id-or-harness-managed>, effort: <actual-or-harness-managed>}
-   ```
-   ````
+Every invocation brief must be self-sufficient for that role. It names:
 
-   The values shown illustrate `balanced`; replace them with the resolved
-   policy. `selected` records the invocation you chose, not a model's guess
-   about itself. Use `harness-managed` when the runtime does not expose the
-   actual value. The writer copies its selected model to `nb-meta.model`.
+- the exact input files the role may read;
+- the exact output file and article/asset paths it may change;
+- the role-specific decisions distilled from configuration and history;
+- the exact `nb` commands it may need; and
+- unresolved work from the preceding invocation, when this is a revision.
 
-**Finish every commission before launching any role.** Cross-article collisions
-are yours to prevent on the cards. Never solve them later by making unrelated
-articles wait on one another.
+Do not point a role back to a repository document that you could resolve into
+its brief. Preserve exact fixed HTML, labels, and template requirements where
+the writer needs exact bytes. Describe editorial goals in plain directions,
+without providing article-ready prose.
 
-## Phase 2: run direct article teams
+## 3. Enforce the engagement contract
 
-Launch role agents with the runtime's general subagent tools. A role name
-in `task.md` is a logical identity, not proof that a registered agent type
-exists. Each launch prompt supplies its `skills/<role>/SKILL.md` path in the
-main checkout, the article's `task.md`, the shared article worktree, all
-operational checkout paths, and its selected model/effort. Use a runtime name
-or handle when supported. Every role reads its skill first.
+Launch each role in the article workspace when the harness supports a working
+directory. Every launch prompt supplies only the role skill, its exact brief,
+and the inputs named by that brief. State this contract explicitly:
 
-Start the writing coach and researcher together for each article; they write
-different files. Run as many articles concurrently as the harness permits,
-queueing excess work fairly instead of serializing whole article chains. Do not
-start idle writers or editors:
+- These paths are the role's exact inputs and outputs.
+- Do not inspect the repository, code, tests, Git history, raw library, other
+  articles, or unlisted files.
+- Use the supplied `nb` executable for system operations.
+- Return a request when context or permission is missing; do not search for it.
 
-1. `writing-coach` → `voice.md`, in parallel with
-2. `researcher` → `research.md`
-3. `writer` → article, only after both artifacts exist
-4. `editor` → `requested-changes.md`, only after the draft is proved
-5. `publisher` → PR and green CI, only after the editorial loop settles
+This is a cooperative context boundary, not a security sandbox. Do not add
+permissions, generated metadata, or per-role command variants.
 
-Children return exactly one control line:
+Create the coach and researcher briefs first and run those roles in parallel.
+Create each later brief only after its inputs exist:
 
-- `DONE <role> <artifact-or-PR>`
-- `REQUEST <role> <artifact-path-or-one-sentence-question>`
-- `BLOCKED <role> <one-sentence-reason>`
+1. `writing-coach` reads its `brief.md`; writes `voice-guide.md`.
+2. `researcher` reads its `brief.md`; writes `evidence.md`.
+3. `writer` reads its `brief.md`, the voice guide, and evidence; writes the
+   article/assets and `draft-handoff.md`; reaches `nb check` with no BLOCKs.
+4. `editor` reads its `review-brief.md`, the exact writer brief, voice guide,
+   evidence, draft handoff, and article; edits the article surgically and
+   writes `editorial-review.md`.
 
-Do not ask for or relay artifact summaries. In `peer` mode, the writer may ask
-the named coach or researcher a narrow blocking question, and the editor may do
-the same when a read exposes a gap. The answer is not complete until the owner
-updates `voice.md` or `research.md`; chat is never the record. Phase transitions
-remain yours so completion notifications cannot strand a team. In
-`parent-relay`, forward only the request and paths. If the target cannot resume,
-launch a fresh instance of the same role on the same task and artifacts; never
-start the article over.
+The editor can and should make cuts and small fixes directly. New prose,
+material restructuring, missing evidence, assets, markup, and proof repairs go
+back through a new writer brief. This preserves the current writer-editor loop;
+the artifacts transport its state instead of shared repository context.
 
-Route every `REQUEST` by target. Resume the coach for voice clarification and
-the researcher for evidence; then resume the writer. Resume the writer directly
-for prose, structure, markup, or proof work. After any redraft, resume the same
-editor when possible, or launch a fresh editor for a genuinely cold read.
+Children return one control line:
 
-Keep routing editor `REQUEST`s through the responsible role and writer, then
-return the redraft to the editor. The loop has no round cap: only `DONE editor`
-settles it and unlocks the publisher. `BLOCKED` escalates the article to you; it
-does not end the article. Inspect the artifacts, identify the unresolved work,
-and relaunch the role that owns it using your model at high effort. Record the
-intervention in `task.md`, then send the result through the writer and editor
-again. Do not repeat an unchanged attempt.
+- `DONE <role> <output-path>`
+- `REQUEST <role-or-owner> <one-sentence need>`
+- `BLOCKED <role> <one-sentence reason>`
 
-If the team remains blocked on a fix that is possible, take over the blocked
-role yourself. Read that role's skill, complete the required work, and record
-the takeover in `task.md`. Then run the normal writer proof and editor gate.
-Taking over a role does not waive `DONE editor`.
+Route requests to the role that owns the missing work, creating a numbered
+brief and output for that invocation. Then create a new writer brief and return
+the proved redraft to a new editor invocation. The loop has no round cap: only
+`DONE editor` with no required change settles the article. Do not repeat an
+unchanged attempt or prolong the loop for optional polish.
 
-Stop without a PR only when an external constraint makes publication
-impossible and no role can change it. Difficulty, repeated objections, or a
-failed role are not enough.
+A BLOCKED role escalates to you; it does not end the article. Inspect only what
+is needed, clarify or reassign the work, and record the resolution in the next
+brief. If the team remains blocked on a possible fix, load the owning role's
+skill and complete that invocation yourself. A takeover still requires a fresh
+writer proof and editor approval. Stop without a PR only for an external
+constraint no role can change.
 
-## Phase 3: publish and see CI through
+If the harness has no child agents, perform the same numbered sequence yourself
+and preserve every artifact. Never skip a role because single-context work is
+easier.
 
-The publisher owns deterministic delivery: artifact checks, production-record
-assembly, preflight, commit, push, PR creation, and CI monitoring. It never
-edits editorial artifacts. Wait for its `DONE ... GREEN` status.
+## 4. Publish and finish the night
 
-When it returns `REQUEST`, resume the named role from the failure artifact,
-then run the writer and editor gates again before resuming the same publisher.
-Allow two delivery repair rounds. A systemic runtime or CI failure becomes one
-issue recording what broke and where every affected PR stands. The night ends
-with green checks or that issue; it never trails off.
+After editor approval, run:
 
-If no subagents exist, run the identical sequence yourself, loading each skill
-in order and retaining every artifact. This is visibly degraded: set
-`coordination: single-context` in `task.md` before the first role; the production
-record preserves it in the PR body. Never skip a role or take this path merely
-because it is simpler.
+```text
+nb prepare-pr <workspace>/library/<series>/<slug>.html --library <library>
+```
 
-Never merge. Never push to `library`. Never open a second PR for a series. A PR
-labeled `nb-invalid` is a stop, not a fight.
+This deterministic command validates the artifacts and article, creates one
+safe commit from `origin/library`, proves it, pushes it, and opens or reuses the
+Article PR. If `gh` is unavailable, follow its exact connector handoff with the
+harness's GitHub tool. Never edit the generated branch by hand.
 
-A human asking for an article, rehearsal, or configuration change belongs to
-the librarian, which drives this same direct-role chain for one article.
+Monitor every PR through CI, auto-merge when configured, and the published
+website. A CI failure returns to you, not directly to an editorial role.
+Classify it, create the necessary numbered brief, rerun the writer/editor gate
+when content changed, and rerun `nb prepare-pr` to update the same PR. A
+systemic failure becomes one issue recording every affected PR. The night ends
+with published articles or an explicit external blocker; never with abandoned
+red PRs.
+
+Never push to `library`. Never open a second Article PR for the same article.
+A human setup, rehearsal, curation, or hand-run article belongs to the
+librarian, which drives this same contract for one article.
