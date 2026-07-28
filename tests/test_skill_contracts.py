@@ -101,6 +101,13 @@ def test_writer_proves_every_draft_and_records_original_work() -> None:
     assert "editorial-review.md" in writer
 
 
+def test_writing_coach_cites_three_real_exemplars() -> None:
+    coach = ROLE_SKILLS["writing-coach"].read_text(encoding="utf-8")
+
+    assert "at least three exemplars" in coach
+    assert "Source: <URL>" in coach
+
+
 def test_librarian_treats_press_as_an_authorization_boundary() -> None:
     librarian = (REPO / "skills" / "librarian" / "SKILL.md").read_text(encoding="utf-8")
 

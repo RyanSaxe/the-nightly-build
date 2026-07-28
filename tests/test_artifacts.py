@@ -10,7 +10,12 @@ from __future__ import annotations
 
 import pathlib
 
-from nb.artifacts import ROLE_FILES, artifact_root, validate_artifacts
+from nb.artifacts import (
+    ROLE_FILES,
+    artifact_root,
+    artifact_warnings,
+    validate_artifacts,
+)
 
 
 def complete_tree(root: pathlib.Path) -> pathlib.Path:
@@ -69,3 +74,17 @@ def test_extra_or_empty_artifacts_fail(tmp_path: pathlib.Path) -> None:
 
     assert "unexpected artifact entries: ['notes.txt']" in errors
     assert "editor/01: empty artifact: editorial-review.md" in errors
+
+
+def test_a_voice_guide_without_three_studied_pieces_warns(
+    tmp_path: pathlib.Path,
+) -> None:
+    artifacts = complete_tree(tmp_path)
+    guide = artifacts / "writing-coach" / "01" / "voice-guide.md"
+    guide.write_text("# Voice guide\n\nSource: https://example.org/only-one-piece\n")
+
+    warnings = artifact_warnings(tmp_path, series="the-wire", slug="example")
+
+    assert warnings == [
+        "writing-coach/01/voice-guide.md cites 1 exemplar(s); expected at least 3"
+    ]

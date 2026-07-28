@@ -338,9 +338,13 @@ def write_agent_artifacts(root: str, series: str, *, slug: str) -> None:
         invocation = artifacts / role / "01"
         invocation.mkdir(parents=True)
         for filename in filenames:
-            (invocation / filename).write_text(
-                f"# {role}\n\nFixture {filename} for {series}/{slug}.\n"
-            )
+            content = f"# {role}\n\nFixture {filename} for {series}/{slug}.\n"
+            if filename == "voice-guide.md":
+                content += "\n".join(
+                    f"Source: https://example.org/exemplar-{number}"
+                    for number in range(1, 4)
+                )
+            (invocation / filename).write_text(content)
 
 
 def make_full_library() -> str:
