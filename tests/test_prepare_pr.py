@@ -161,3 +161,97 @@ def test_prepare_pr_prints_connector_handoff_without_gh(
     assert "NB_ARTICLE_PR_REQUIRED" in result.stdout
     assert "head=nb/article/semiconductors/micron" in result.stdout
     assert "Use the runtime's connected GitHub tools" in result.stdout
+
+
+def test_prepare_pr_safely_replaces_its_own_generated_branch(
+    tmp_path: pathlib.Path,
+) -> None:
+    library, origin = make_library(tmp_path)
+    article_path = make_workspace(tmp_path)
+    main_root = pathlib.Path(make_press())
+    fake_bin = tmp_path / "bin"
+    log = tmp_path / "gh.log"
+    log.write_text("")
+    write_fake_gh(fake_bin)
+    command_path = f"{fake_bin}{os.pathsep}{os.environ['PATH']}"
+
+    first = run_prepare(
+        article_path,
+        library=library,
+        main_root=main_root,
+        path=command_path,
+        gh_log=log,
+    )
+    branch = "refs/heads/nb/article/semiconductors/micron"
+    first_commit = subprocess.run(
+        ["git", f"--git-dir={origin}", "rev-parse", branch],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    article_path.write_text(article().replace("</body>", "<!-- revised --></body>"))
+
+    second = run_prepare(
+        article_path,
+        library=library,
+        main_root=main_root,
+        path=command_path,
+        gh_log=log,
+    )
+    second_commit = subprocess.run(
+        ["git", f"--git-dir={origin}", "rev-parse", branch],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    count = subprocess.run(
+        ["git", f"--git-dir={origin}", "rev-list", "--count", f"library..{branch}"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+    assert first.returncode == 0, first.stderr
+    assert second.returncode == 0, second.stderr
+    assert second_commit != first_commit
+    assert count == "1"
+
+
+def test_prepare_pr_preserves_an_unrecognized_remote_branch(
+    tmp_path: pathlib.Path,
+) -> None:
+    library, origin = make_library(tmp_path)
+    article_path = make_workspace(tmp_path)
+    main_root = pathlib.Path(make_press())
+    branch = "nb/article/semiconductors/micron"
+    git("checkout", "-qb", branch, "origin/library", cwd=str(library))
+    (library / "manual.txt").write_text("preserve this work\n")
+    git("add", "manual.txt", cwd=str(library))
+    git("config", "user.name", "Test Press", cwd=str(library))
+    git("config", "user.email", "test@example.com", cwd=str(library))
+    git("commit", "-qm", "manual branch", cwd=str(library))
+    git("push", "-q", "origin", branch, cwd=str(library))
+    before = subprocess.run(
+        ["git", f"--git-dir={origin}", "rev-parse", f"refs/heads/{branch}"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    git("checkout", "-q", "library", cwd=str(library))
+
+    result = run_prepare(
+        article_path,
+        library=library,
+        main_root=main_root,
+        path=os.environ["PATH"],
+    )
+    after = subprocess.run(
+        ["git", f"--git-dir={origin}", "rev-parse", f"refs/heads/{branch}"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+    assert result.returncode == 1
+    assert "contains unrecognized edits" in result.stderr
+    assert after == before
