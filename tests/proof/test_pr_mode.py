@@ -209,6 +209,32 @@ def test_pr_accepts_matching_figure_assets(pr_repo: PressRepo) -> None:
     assert "B-DIFF-SHAPE" not in result.codes
 
 
+def test_pr_requires_the_complete_matching_artifact_tree(pr_repo: PressRepo) -> None:
+    pr_repo.git(
+        "rm",
+        "-q",
+        "agent-artifacts/semiconductors/micron/editor/01/editorial-review.md",
+    )
+    pr_repo.commit("drop editor review")
+
+    result = pr_repo.run_pr(pr_body=pr_repo.body)
+
+    assert "B-AGENT-ARTIFACTS" in result.blocks
+
+
+def test_pr_accepts_numbered_revision_artifacts(pr_repo: PressRepo) -> None:
+    for filename in ("brief.md", "draft-handoff.md"):
+        pr_repo.write(
+            f"agent-artifacts/semiconductors/micron/writer/02/{filename}",
+            f"# Writer revision\n\nComplete {filename}.\n",
+        )
+    pr_repo.commit("record writer revision")
+
+    result = pr_repo.run_pr(pr_body=pr_repo.body)
+
+    assert "B-AGENT-ARTIFACTS" not in result.codes
+
+
 def test_pr_rejects_another_articles_figure_asset(pr_repo: PressRepo) -> None:
     pr_repo.write("library/semiconductors/tsmc/figure-1.png", "image")
     pr_repo.commit("wrong figure asset")

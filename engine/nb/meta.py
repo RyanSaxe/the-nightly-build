@@ -21,6 +21,9 @@ SERIES_RE = re.compile(r"^[a-z0-9-]{1,32}$")
 SLUG_RE = re.compile(r"^[a-z0-9-]{1,64}$")
 TAG_RE = re.compile(r"^[a-z0-9-]{1,32}(?:/[a-z0-9-]{1,32})*$")
 PR_PATH_RE = re.compile(r"^library/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})\.html$")
+AGENT_ARTIFACT_RE = re.compile(
+    r"^agent-artifacts/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})/[^/].*$"
+)
 # Images, plus a chart's committed provenance (chart-N.py and its data).
 # The provenance files are inert bundle data: the engine and CI never
 # execute them, and the article sandbox cannot reference them.
@@ -33,6 +36,7 @@ MODES = ("collection", "sequence", "rolling", "open")
 
 __all__ = (
     "ARTICLE_ASSET_RE",
+    "AGENT_ARTIFACT_RE",
     "META_RE",
     "MODES",
     "PR_PATH_RE",
@@ -122,7 +126,10 @@ def article_bundle_path(
         if path == article:
             continue
         asset = ARTICLE_ASSET_RE.match(path)
-        if asset is None or asset.groups() != (series_id, slug):
+        artifact = AGENT_ARTIFACT_RE.match(path)
+        if (asset is None or asset.groups() != (series_id, slug)) and (
+            artifact is None or artifact.groups() != (series_id, slug)
+        ):
             return None
     return article
 

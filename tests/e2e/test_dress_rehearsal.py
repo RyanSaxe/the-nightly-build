@@ -26,7 +26,7 @@ import xml.etree.ElementTree as ET
 import pytest
 
 import build_site
-from press import REPO, article, brief, git, make_press
+from press import REPO, article, brief, git, make_press, write_agent_artifacts
 
 pytestmark = pytest.mark.slow
 
@@ -100,6 +100,7 @@ class Press:
         d = pathlib.Path(self.root, "library", series)
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{slug}.html").write_text(html)
+        write_agent_artifacts(self.root, series, slug=slug)
         git("add", "-A", cwd=self.root)
         git("commit", "-qm", f"nb: {series}/{slug}", cwd=self.root)
 

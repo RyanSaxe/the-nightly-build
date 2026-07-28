@@ -7,6 +7,7 @@ production record that CI checks before handing the article to the proof.
 
 import datetime as _dt
 import os
+import pathlib
 import re
 import subprocess
 import tempfile
@@ -14,6 +15,7 @@ import tempfile
 import yaml
 
 from nb import meta as nb_meta
+from nb.artifacts import validate_artifacts
 from nb.config import load_series
 from nb.proof import check_article
 from nb.workflow_sync import classify_workflow_sync
@@ -245,7 +247,7 @@ def run_pr_mode(args, rep):
     if path is None:
         rep.block(
             "B-DIFF-SHAPE",
-            "PR must add one article and only matching local article assets; found "
+            "PR must add one article and only its matching assets and agent artifacts; found "
             f"{[(status, path) for status, path in changes]}",
         )
         return
@@ -257,6 +259,10 @@ def run_pr_mode(args, rep):
     pr_body_meta = resolve_pr_body(args.pr_body, rep)
     with tempfile.TemporaryDirectory() as bundle_dir:
         materialize_bundle(args.repo, args.head, changes, bundle_dir)
+        for issue in validate_artifacts(
+            pathlib.Path(bundle_dir), series=series_id, slug=m.group(2)
+        ):
+            rep.block("B-AGENT-ARTIFACTS", issue)
         check_article(
             os.path.join(bundle_dir, path),
             series_id,

@@ -30,6 +30,7 @@ from press import (
     git,
     make_full_library,
     make_press,
+    write_agent_artifacts,
 )
 
 DUTY = [sys.executable, str(REPO / "engine" / "duty.py")]
@@ -359,6 +360,7 @@ def pr_repo(clone_testrepo: Callable[..., str]) -> PressRepo:
     repo.commit("library init")
     repo.checkout("claude/night-run", new=True)
     repo.write("library/semiconductors/micron.html", article())
+    write_agent_artifacts(repo.path, "semiconductors", slug="micron")
     repo.commit("nb: semiconductors/micron")
     return repo
 
