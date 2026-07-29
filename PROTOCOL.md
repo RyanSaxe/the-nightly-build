@@ -58,19 +58,20 @@ document type or website.
 
 The series may define:
 
-- `required_docs`: local documents that must be read and cited with their IDs;
-- `consult`: sources or archives read before searching elsewhere;
-- `sources_exclusive: true`: the declared source set is the whole menu;
-- `sources_by_kind`: primary and secondary bands for the article; and
-- `per_item_sources`: those bands for every item in a per-item template.
+- `required_docs`: local documents that must be read and cited with their IDs
+- `consult`: sources or archives read before searching elsewhere
+- `sources_exclusive: true`: the declared source set is the only set of allowed sources
+- `sources_by_kind`: primary and secondary bands for the article
+- `per_item_sources`: those bands for every item in a per-item template
 
-The researcher records each classification and why. The writer carries it into
-`data-nb-kind`. The editor audits it. Counts cannot determine independence.
+The researcher records, next to each citation, each classification of primary/secondary
+and why. The writer carries it into `data-nb-kind`. The editor audits it.
+Counts cannot determine independence.
 
-Read every cited source. Open the underlying report, paper, hearing, filing, or
-dataset instead of trusting a summary. Verify load-bearing numbers against the
-primary that owns them. Seek contradictory evidence. A 403, paywall, or fetch
-restriction is gated, not dead; never record an unverified URL.
+Read every cited source. Not every character. Be efficient and search it for the information
+you need. Open the underlying report, paper, hearing, filing, or dataset instead of trusting a summary.
+Verify numbers and statements in a secondary against the primary that owns them. Seek contradictory evidence.
+A 403, paywall, or fetch restriction is gated, not dead; never record an unverified URL.
 
 ## Exact workspaces and artifacts
 
@@ -135,7 +136,8 @@ makes three ordered reads:
 1. **Skeptic:** state and try to break the thesis and load-bearing claims;
    reopen sources, recompute figures, and audit source kinds.
 2. **Cut:** remove sentences with no fact, claim, or reasoning work; cut
-   self-grading, signposts, instruction leakage, and repeated paper structures.
+   self-grading, signposts, instruction leakage, and repeated paper structures that
+   are not in the series' template.
 3. **Reader:** identify what the article gives beyond its sources, compare that
    with the writer's original-work claim, judge the voice, and retest headline.
 
@@ -163,7 +165,7 @@ matching source assets or chart provenance under `library/<series>/<slug>/`.
   handlers, `javascript:` URLs, or externally hosted images.
 - Cite load-bearing claims inline. Number source entries in first-citation
   order. Carry honest source kinds and locators from the evidence record.
-- Use furniture only when it communicates information prose would obscure.
+- Use furniture only when it can more effectively communicate than prose.
 - Create charts with `nb chart` from verified numbers and commit their
   provenance. Capture exact visual evidence with `nb asset`. Inspect the image
   and rendered page; include factual cited captions and useful alt text.

@@ -43,7 +43,7 @@ class ResolvedProductionPolicy(TypedDict):
 _PROFILE_PRESETS: dict[str, dict[str, tuple[str, str]]] = {
     "inherit": {stage: ("inherit", "inherit") for stage in STAGES},
     "economy": {
-        "writing-coach": ("efficient", "medium"),
+        "writing-coach": ("efficient", "low"),
         "researcher": ("efficient", "low"),
         "writer": ("capable", "medium"),
         "editor": ("capable", "medium"),
@@ -58,7 +58,7 @@ _PROFILE_PRESETS: dict[str, dict[str, tuple[str, str]]] = {
         "writing-coach": ("premium", "high"),
         "researcher": ("capable", "high"),
         "writer": ("premium", "high"),
-        "editor": ("premium", "high"),
+        "editor": ("inherit", "high"),
     },
 }
 
