@@ -48,16 +48,18 @@ def test_inherit_is_an_explicit_profile() -> None:
 
 
 @pytest.mark.parametrize(
-    ("profile", "writer", "editor"),
+    ("profile", "coach", "writer", "editor"),
     [
         pytest.param(
             "economy",
+            {"model": "efficient", "effort": "low", "required": False},
             {"model": "capable", "effort": "medium", "required": False},
             {"model": "capable", "effort": "medium", "required": False},
             id="economy",
         ),
         pytest.param(
             "balanced",
+            {"model": "capable", "effort": "medium", "required": False},
             {"model": "capable", "effort": "high", "required": False},
             {"model": "capable", "effort": "high", "required": False},
             id="balanced",
@@ -66,6 +68,7 @@ def test_inherit_is_an_explicit_profile() -> None:
             "quality",
             {"model": "premium", "effort": "high", "required": False},
             {"model": "premium", "effort": "high", "required": False},
+            {"model": "inherit", "effort": "high", "required": False},
             id="quality",
         ),
     ],
@@ -73,11 +76,13 @@ def test_inherit_is_an_explicit_profile() -> None:
 def test_profiles_resolve_complete_role_guidance(
     profile: str,
     *,
+    coach: dict[str, str | bool],
     writer: dict[str, str | bool],
     editor: dict[str, str | bool],
 ) -> None:
     policy = resolve({"profile": profile})
 
+    assert policy["stages"]["writing-coach"] == coach
     assert policy["stages"]["writer"] == writer
     assert policy["stages"]["editor"] == editor
 

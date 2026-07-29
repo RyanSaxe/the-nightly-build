@@ -172,7 +172,7 @@ The layer order, first to last. Later layers specialize and never override:
 ```text
 PROTOCOL.md > spec/editorial.md > spec/headlines.md > press/editorial.md >
 template manifest > template identity > press/series/<id>/prompt.md
-> tag fragments > item prompt
+> tag fragments > selected item record
 ```
 
 The template identity (`<id>/identity.md`) is the prose guidance carried in the

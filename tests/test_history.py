@@ -12,7 +12,7 @@ import json
 import pathlib
 import subprocess
 
-from nb.history import EXCERPT_LENGTH, HistoryEntry, format_results, search
+from nb.history import EXCERPT_LENGTH, HistoryEntry, excerpt, format_results, search
 from press import REPO
 
 
@@ -101,6 +101,20 @@ def test_output_contains_no_markup_or_ordered_structure() -> None:
     assert len(result.match) <= EXCERPT_LENGTH + 2
 
 
+def test_excerpt_uses_the_tightest_relevant_passage() -> None:
+    text = (
+        "Capacity appears in an unrelated introduction. "
+        + "filler " * 80
+        + "The margin discussion connects capacity directly to pricing."
+    )
+
+    match = excerpt(text, ["capacity", "margin"])
+
+    assert match is not None
+    assert "margin discussion connects capacity" in match
+    assert "unrelated introduction" not in match
+
+
 def write_article(
     library: pathlib.Path, *, series: str, slug: str, title: str, text: str
 ) -> None:
@@ -151,3 +165,60 @@ def test_nb_history_reads_the_library_without_returning_html(
     payload = json.loads(result.stdout)
     assert payload[0]["reference"] == "the-wire/example"
     assert "<h2>" not in result.stdout
+
+
+def test_nb_history_show_returns_readable_blocks_for_grep(
+    tmp_path: pathlib.Path,
+) -> None:
+    write_article(
+        tmp_path,
+        series="the-wire",
+        slug="example",
+        title="A searchable title",
+        text=(
+            "First paragraph with a needle.</p><script>secret()</script>"
+            '<section class="nb-note"><h2>Useful heading</h2><p>'
+            "Second paragraph with margin evidence."
+        ),
+    )
+
+    result = subprocess.run(
+        [
+            str(REPO / "nb"),
+            "history",
+            "--show",
+            "the-wire/example",
+            "--library",
+            str(tmp_path),
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "First paragraph with a needle." in result.stdout
+    assert "Useful heading\nSecond paragraph with margin evidence." in result.stdout
+    assert "secret" not in result.stdout
+    assert "<section" not in result.stdout
+    assert "nb-note" not in result.stdout
+
+
+def test_nb_history_show_rejects_search_arguments(tmp_path: pathlib.Path) -> None:
+    result = subprocess.run(
+        [
+            str(REPO / "nb"),
+            "history",
+            "needle",
+            "--show",
+            "the-wire/example",
+            "--library",
+            str(tmp_path),
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert "--show cannot be combined" in result.stderr

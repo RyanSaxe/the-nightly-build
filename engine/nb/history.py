@@ -16,8 +16,10 @@ import pathlib
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
+from html.parser import HTMLParser
 
-from nb.site.library import article_text, read_meta, scan_library
+from nb import meta as nb_meta
+from nb.site.library import article_body_html, article_text, read_meta, scan_library
 
 __all__ = (
     "HistoryEntry",
@@ -27,12 +29,37 @@ __all__ = (
     "load_entries",
     "main",
     "parser",
+    "readable_text",
     "search",
 )
 
 DEFAULT_LIMIT = 8
 MAX_LIMIT = 20
 EXCERPT_LENGTH = 240
+BLOCK_TAGS = frozenset(
+    {
+        "blockquote",
+        "dd",
+        "div",
+        "dt",
+        "figcaption",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "li",
+        "ol",
+        "p",
+        "pre",
+        "section",
+        "table",
+        "tr",
+        "ul",
+    }
+)
+IGNORED_TAGS = frozenset({"script", "style"})
 
 
 @dataclass(frozen=True)
@@ -58,6 +85,41 @@ class HistoryResult:
     date: str
     tags: tuple[str, ...]
     match: str | None
+
+
+class _ReadableTextParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self.ignored_depth = 0
+
+    def _line_break(self) -> None:
+        if self.parts and not self.parts[-1].endswith("\n"):
+            self.parts.append("\n")
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        del attrs
+        if tag in IGNORED_TAGS:
+            self.ignored_depth += 1
+        elif not self.ignored_depth and tag in BLOCK_TAGS:
+            self._line_break()
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in IGNORED_TAGS:
+            self.ignored_depth = max(0, self.ignored_depth - 1)
+        elif not self.ignored_depth and tag in BLOCK_TAGS:
+            self._line_break()
+
+    def handle_data(self, data: str) -> None:
+        if not self.ignored_depth:
+            self.parts.append(data)
+
+    def text(self) -> str:
+        lines = (
+            re.sub(r"\s+", " ", line).strip()
+            for line in "".join(self.parts).splitlines()
+        )
+        return "\n".join(line for line in lines if line)
 
 
 def _string(value: object, fallback: str = "") -> str:
@@ -90,15 +152,71 @@ def load_entries(library: pathlib.Path) -> list[HistoryEntry]:
     return entries
 
 
+def readable_text(path: pathlib.Path) -> str:
+    parser = _ReadableTextParser()
+    parser.feed(article_body_html(str(path)))
+    parser.close()
+    return parser.text()
+
+
+def _occurrences(text: str, terms: Sequence[str]) -> list[list[tuple[int, int]]]:
+    return [
+        [(match.start(), match.end()) for match in re.finditer(re.escape(term), text)]
+        for term in terms
+    ]
+
+
+def _tightest_span(
+    occurrences: Sequence[Sequence[tuple[int, int]]],
+) -> tuple[int, int] | None:
+    points = sorted(
+        (start, end, term_index)
+        for term_index, matches in enumerate(occurrences)
+        for start, end in matches
+    )
+    if not points or any(not matches for matches in occurrences):
+        return None
+
+    counts = [0] * len(occurrences)
+    covered = 0
+    left = 0
+    best: tuple[int, int] | None = None
+    for right, (_, _, term_index) in enumerate(points):
+        if counts[term_index] == 0:
+            covered += 1
+        counts[term_index] += 1
+        while covered == len(occurrences):
+            start = points[left][0]
+            end = max(point[1] for point in points[left : right + 1])
+            candidate = (start, end)
+            if best is None or candidate[1] - candidate[0] < best[1] - best[0]:
+                best = candidate
+            left_term = points[left][2]
+            counts[left_term] -= 1
+            if counts[left_term] == 0:
+                covered -= 1
+            left += 1
+    return best
+
+
 def excerpt(text: str, terms: Sequence[str]) -> str | None:
     if not terms:
         return None
     folded = text.casefold()
-    positions = [folded.find(term) for term in terms if folded.find(term) >= 0]
-    if not positions:
+    unique_terms = tuple(dict.fromkeys(term for term in terms if term))
+    matches = _occurrences(folded, unique_terms)
+    span = _tightest_span(matches)
+    if span is None:
         return None
-    center = min(positions)
-    start = max(0, center - EXCERPT_LENGTH // 3)
+
+    span_start, span_end = span
+    if span_end - span_start > EXCERPT_LENGTH:
+        rarest = min(
+            (values for values in matches if values), key=lambda values: len(values)
+        )
+        span_start, span_end = rarest[0]
+    spare = max(0, EXCERPT_LENGTH - (span_end - span_start))
+    start = max(0, span_start - spare // 3)
     end = min(len(text), start + EXCERPT_LENGTH)
     fragment = re.sub(r"\s+", " ", text[start:end]).strip()
     if start:
@@ -209,11 +327,47 @@ def parser() -> argparse.ArgumentParser:
     command.add_argument("--series", help="restrict results to one series")
     command.add_argument("--limit", type=_limit, default=DEFAULT_LIMIT)
     command.add_argument("--json", action="store_true")
+    command.add_argument(
+        "--show",
+        metavar="SERIES/SLUG",
+        help="print one selected article as clean, grep-friendly text",
+    )
     return command
 
 
+def _shown_article(library: pathlib.Path, reference: str) -> pathlib.Path | None:
+    series, separator, slug = reference.partition("/")
+    if (
+        separator != "/"
+        or "/" in slug
+        or nb_meta.SERIES_RE.fullmatch(series) is None
+        or nb_meta.SLUG_RE.fullmatch(slug) is None
+    ):
+        raise ValueError("--show expects SERIES/SLUG")
+    return next(
+        (
+            pathlib.Path(path)
+            for found_series, found_slug, path in scan_library(str(library))
+            if found_series == series and found_slug == slug
+        ),
+        None,
+    )
+
+
 def main(arguments: list[str] | None = None) -> None:
-    options = parser().parse_args(arguments)
+    command = parser()
+    options = command.parse_args(arguments)
+    if options.show:
+        if options.query or options.json or options.series:
+            command.error("--show cannot be combined with a query, --json, or --series")
+        try:
+            article = _shown_article(options.library, options.show)
+        except ValueError as error:
+            command.error(str(error))
+        if article is None:
+            raise SystemExit(f"published article not found: {options.show}")
+        print(readable_text(article))
+        return
     results = search(
         load_entries(options.library),
         options.query,

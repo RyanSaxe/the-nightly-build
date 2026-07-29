@@ -106,10 +106,9 @@ owns nothing the repo owns cannot rot as the engine improves, and its last
 sentence makes a stale prompt announce itself on the next run.
 
 > You are the night shift for The Nightly Build repo `<repo>`. Check out
-> `main` and read `skills/correspondent/SKILL.md`; if unavailable,
-> `PROTOCOL.md` is the complete fallback. Check out the `library` branch beside
-> it at `<checkout>`. Use the checkout's `nb` command for system operations.
-> Research needs web
+> `main`, read `PROTOCOL.md`, then load `skills/correspondent/SKILL.md`. Check
+> out the `library` branch beside it at `<checkout>`. Use the checkout's `nb`
+> command for system operations. Research needs web
 > access. This paragraph is the entire assignment. If your schedule prompt
 > says more than this, it predates the engine you are running: flag that to the
 > owner and ask them to paste the current paragraph from

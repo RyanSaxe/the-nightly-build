@@ -1,9 +1,8 @@
 """Guard the editorial capability and context boundaries.
 
 These checks avoid coupling tests to incidental prose. They verify durable
-interfaces instead: the semantic artifact names, the four-role topology, the
-absence of repository exploration from bounded roles, and the preserved
-writer-editor quality gates.
+interfaces instead: the semantic artifact names, the four-role topology,
+purposeful context retrieval, and the preserved writer-editor quality gates.
 """
 
 from __future__ import annotations
@@ -32,6 +31,11 @@ WRITER_BRIEFING_SURFACES = (
     REPO / "spec" / "editorial.md",
     REPO / "templates" / "FURNITURE.md",
     REPO / "templates" / "article" / "identity.md",
+)
+AGENT_PROMPT_SURFACES = (
+    REPO / "PROTOCOL.md",
+    REPO / "skills" / "correspondent" / "SKILL.md",
+    *ROLE_SKILLS.values(),
 )
 
 
@@ -65,14 +69,26 @@ def test_correspondent_owns_context_routing_and_publication() -> None:
 
     for role in ROLE_FILES:
         assert f"`{role}`" in skill
-    assert "only agent with a whole-paper view" in prose
-    assert "Every role is your direct child" in prose
-    assert "Do not inspect the repository" in prose
-    assert "no round cap" in prose
-    assert "only `DONE editor`" in prose
+    assert "only role expected to hold a whole-paper view" in prose
+    assert "nb start-article" in prose
+    assert "available tools for focused questions" in prose
+    assert "There is no round cap" in prose
+    assert "Only an editor `DONE`" in prose
     assert "nb prepare-pr" in prose
-    assert "Monitor every PR through CI" in prose
+    assert "Monitor every Article PR through CI" in prose
     assert "abandoned red PRs" in prose
+
+
+def test_protocol_governs_the_scheduled_correspondent() -> None:
+    agents = (REPO / "AGENTS.md").read_text(encoding="utf-8")
+    protocol = (REPO / "PROTOCOL.md").read_text(encoding="utf-8")
+    correspondent = (REPO / "skills/correspondent/SKILL.md").read_text(encoding="utf-8")
+
+    assert agents.index("`PROTOCOL.md`") < agents.index(
+        "`skills/correspondent/SKILL.md`"
+    )
+    assert "authoritative contract" in protocol
+    assert "Read `PROTOCOL.md` first" in correspondent
 
 
 def test_editor_preserves_three_reads_surgical_edits_and_prompt_leakage_gate() -> None:
@@ -87,6 +103,8 @@ def test_editor_preserves_three_reads_surgical_edits_and_prompt_leakage_gate() -
     assert "prompt leakage" in editor
     assert "writer `brief.md`" in editor
     assert "Fixed template labels" in editor
+    assert '"the trap is"' in editor
+    assert "A verdict block" in editor
     assert "optional polish" in editor
     assert "BLOCKED editor <reason>" in editor
 
@@ -99,6 +117,9 @@ def test_writer_proves_every_draft_and_records_original_work() -> None:
     assert "one act of original work" in writer
     assert "draft-handoff.md" in writer
     assert "editorial-review.md" in writer
+    assert "editorial-direction.md" in writer
+    assert ".nb-context" in writer
+    assert "documented in the furniture" in writer
 
 
 def test_writing_coach_cites_three_real_exemplars() -> None:
@@ -157,3 +178,13 @@ def test_writer_briefing_removes_the_repeated_editorial_judgment() -> None:
     }
 
     assert offenders == {}
+
+
+def test_agent_prompts_do_not_teach_a_banned_stock_term() -> None:
+    offenders = {
+        path.relative_to(REPO)
+        for path in AGENT_PROMPT_SURFACES
+        if "load-bearing" in path.read_text(encoding="utf-8").lower()
+    }
+
+    assert offenders == set()

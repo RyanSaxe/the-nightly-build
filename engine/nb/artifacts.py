@@ -25,6 +25,7 @@ ROLE_FILES: Mapping[str, tuple[str, str]] = {
     "writer": ("brief.md", "draft-handoff.md"),
     "editor": ("review-brief.md", "editorial-review.md"),
 }
+ROOT_FILES = ("editorial-direction.md", "commission.md")
 INVOCATION_RE = re.compile(r"^[0-9]{2}$")
 SOURCE_LINE_RE = re.compile(r"^\s*Source:\s*https?://\S+", re.IGNORECASE | re.MULTILINE)
 VOICE_EXEMPLARS_MIN = 3
@@ -90,16 +91,17 @@ def validate_artifacts(root: pathlib.Path, *, series: str, slug: str) -> list[st
     if not artifacts.is_dir() or artifacts.is_symlink():
         return [f"missing artifact tree: agent-artifacts/{series}/{slug}"]
 
-    allowed = {"commission.md", *ROLE_FILES}
+    allowed = {*ROOT_FILES, *ROLE_FILES}
     actual = {path.name for path in artifacts.iterdir()}
     errors = (
         [f"unexpected artifact entries: {sorted(actual - allowed)}"]
         if actual - allowed
         else []
     )
-    issue = _readable_markdown(artifacts / "commission.md")
-    if issue:
-        errors.append(issue)
+    for filename in ROOT_FILES:
+        issue = _readable_markdown(artifacts / filename)
+        if issue:
+            errors.append(issue)
     for role in ROLE_FILES:
         errors.extend(_role_errors(artifacts, role))
     return errors

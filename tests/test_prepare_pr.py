@@ -39,6 +39,9 @@ def make_workspace(tmp_path: pathlib.Path) -> pathlib.Path:
     article_path.parent.mkdir(parents=True)
     article_path.write_text(article())
     write_agent_artifacts(str(workspace), "semiconductors", slug="micron")
+    context = workspace / ".nb-context"
+    context.mkdir()
+    (context / "private.md").write_text("temporary authoring context\n")
     return article_path
 
 
@@ -132,9 +135,11 @@ def test_prepare_pr_pushes_exact_bundle_and_opens_pr(tmp_path: pathlib.Path) -> 
         check=True,
     ).stdout.splitlines()
     assert "library/semiconductors/micron.html" in changed
+    assert "agent-artifacts/semiconductors/micron/editorial-direction.md" in changed
     assert (
         "agent-artifacts/semiconductors/micron/editor/01/editorial-review.md" in changed
     )
+    assert not any(path.startswith(".nb-context/") for path in changed)
     assert "pr create" in log.read_text()
 
 

@@ -331,6 +331,9 @@ def write_article(root: str, series: str, *, slug: str, html: str) -> None:
 def write_agent_artifacts(root: str, series: str, *, slug: str) -> None:
     artifacts = pathlib.Path(root) / "agent-artifacts" / series / slug
     artifacts.mkdir(parents=True, exist_ok=True)
+    (artifacts / "editorial-direction.md").write_text(
+        f"# Editorial direction\n\nFixture direction for {series}/{slug}.\n"
+    )
     (artifacts / "commission.md").write_text(
         f"# Commission\n\nPublish {series}/{slug} for the fixture press.\n"
     )

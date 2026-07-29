@@ -77,7 +77,12 @@ COMMANDS = {
     "history": Command(
         "engine/nb/history.py",
         "Search bounded records of published coverage",
-        "orchestrator, researcher, editor",
+        "orchestrator, researcher, writer, editor",
+    ),
+    "start-article": Command(
+        "engine/nb/start_article.py",
+        "Initialize one exact article workspace",
+        "orchestrator",
     ),
     "prepare-pr": Command(
         "engine/nb/prepare_pr.py",

@@ -113,7 +113,7 @@ prompt is one layer in a stack the night shift reads in order
 ```text
 PROTOCOL.md > spec/editorial.md > spec/headlines.md > press/editorial.md >
 template manifest > template identity > press/series/<id>/prompt.md
-> tag fragments > item prompt
+> tag fragments > selected item record
 ```
 
 Every other layer already holds, and so does the config the engine reads for

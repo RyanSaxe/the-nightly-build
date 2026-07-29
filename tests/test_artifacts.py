@@ -21,6 +21,9 @@ from nb.artifacts import (
 def complete_tree(root: pathlib.Path) -> pathlib.Path:
     artifacts = artifact_root(root, series="the-wire", slug="example")
     artifacts.mkdir(parents=True)
+    (artifacts / "editorial-direction.md").write_text(
+        "# Editorial direction\n\nWrite clearly.\n"
+    )
     (artifacts / "commission.md").write_text("# Commission\n\nInvestigate this.\n")
     for role, filenames in ROLE_FILES.items():
         invocation = artifacts / role / "01"
@@ -36,8 +39,9 @@ def test_complete_semantic_tree_passes(tmp_path: pathlib.Path) -> None:
     assert validate_artifacts(tmp_path, series="the-wire", slug="example") == []
 
 
-def test_every_role_and_commission_are_required(tmp_path: pathlib.Path) -> None:
+def test_every_role_and_root_input_are_required(tmp_path: pathlib.Path) -> None:
     artifacts = complete_tree(tmp_path)
+    (artifacts / "editorial-direction.md").unlink()
     (artifacts / "commission.md").unlink()
     for path in (artifacts / "researcher").rglob("*"):
         if path.is_file():
@@ -47,6 +51,7 @@ def test_every_role_and_commission_are_required(tmp_path: pathlib.Path) -> None:
 
     errors = validate_artifacts(tmp_path, series="the-wire", slug="example")
 
+    assert "missing regular file: editorial-direction.md" in errors
     assert "missing regular file: commission.md" in errors
     assert "missing role directory: researcher" in errors
 
