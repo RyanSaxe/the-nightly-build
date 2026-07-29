@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LoRA ties full fine-tuning where intrinsic rank predicts it should · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "lora",
+        "template": "paper",
+        "title": "LoRA ties full fine-tuning where intrinsic rank predicts it should",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-29",
+        "tags": [],
+        "sources": 8,
+        "words": 2882,
+        "reading_minutes": 14,
+        "dek": "Five years of follow-on work now show exactly where that assumption fails: on code and math tasks whose true weight updates span ten to a hundred times more directions than any practical LoRA rank reaches.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          LoRA ties full fine-tuning where intrinsic rank predicts it should
+        </h1>
+        <p class="nb-dekline">
+          Five years of follow-on work now show exactly where that assumption
+          fails: on code and math tasks whose true weight updates span ten to
+          a hundred times more directions than any practical LoRA rank
+          reaches.
+        </p>
+        <div class="nb-byline">
+          <span>14 min read</span><span>2026-07-29</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            LoRA: Low-Rank Adaptation of Large Language Models
+          </p>
+          <p class="nb-paper-meta">
+            Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, Chen · Microsoft ·
+            arXiv:2106.09685 · 2021
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2106.09685"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            An important paradigm of natural language processing consists of
+            large-scale pre-training on general domain data and adaptation to
+            particular tasks or domains. As we pre-train larger models, full
+            fine-tuning, which retrains all model parameters, becomes less
+            feasible. Using GPT-3 175B as an example, deploying independent
+            instances of fine-tuned models, each with 175B parameters, is
+            prohibitively expensive. We propose Low-Rank Adaptation, or LoRA,
+            which freezes the pre-trained model weights and injects trainable
+            rank decomposition matrices into each layer of the Transformer
+            architecture, greatly reducing the number of trainable parameters
+            for downstream tasks. Compared to GPT-3 175B fine-tuned with
+            Adam, LoRA can reduce the number of trainable parameters by
+            10,000 times and the GPU memory requirement by 3 times. LoRA
+            performs on-par or better than fine-tuning in model quality on
+            RoBERTa, DeBERTa, GPT-2, and GPT-3, despite having fewer
+            trainable parameters, a higher training throughput, and, unlike
+            adapters, no additional inference latency. We also provide an
+            empirical investigation into rank-deficiency in language model
+            adaptation, which sheds light on the efficacy of LoRA. We release
+            a package that facilitates the integration of LoRA with PyTorch
+            models and provide our implementations and model checkpoints for
+            RoBERTa, DeBERTa, and GPT-2.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Full fine-tuning of GPT-3 needed a new 350GB checkpoint per task</h2>
+        <p>
+          Pretraining and adaptation is a two-step trade: spend enormous
+          compute once on a general model, then spend much less adapting it
+          to each task you actually need. The trade breaks down as the
+          general model grows, because the standard way to adapt it,
+          retraining every parameter, scales with the model, not the task.
+          GPT-3 175B fine-tuned on a new task produces a new 175-billion
+          parameter model, a checkpoint on the order of 350GB, and a lab
+          serving ten tasks needs ten of them.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+          >
+          Hu and colleagues called this "prohibitively expensive" and set
+          out to adapt the model without retraining most of it.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+          >
+        </p>
+        <p>
+          Their answer freezes the pretrained weights entirely and adds a
+          second, much smaller set of trainable matrices alongside them.
+          Whether that works rests on one bet: that the correction a task
+          needs, the difference between the pretrained weights and the
+          fine-tuned ones, does not use anywhere near the full range of
+          directions the weight matrix could in principle move in. The paper
+          calls this the intrinsic rank of the update, and everything else in
+          the method, and everything the follow-on record has since tested,
+          hangs on whether that bet holds for the task in front of you.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="one-low-rank-correction" id="one-low-rank-correction">
+        <h2>A frozen weight gains one low-rank correction</h2>
+        <p>
+          Take one weight matrix inside a transformer layer, shape
+          <span class="nb-math-in">d \times k</span>. Ordinary fine-tuning
+          learns a full update <span class="nb-math-in">\Delta W</span> of
+          that same shape, free to move in any of its
+          <span class="nb-math-in">d \times k</span> directions. LoRA
+          replaces that update with the product of two much smaller matrices,
+          <span class="nb-math-in">B</span> (shape
+          <span class="nb-math-in">d \times r</span>) and
+          <span class="nb-math-in">A</span> (shape
+          <span class="nb-math-in">r \times k</span>), and picks
+          <span class="nb-math-in">r</span> far smaller than
+          <span class="nb-math-in">d</span> or
+          <span class="nb-math-in">k</span>. The forward pass adds their
+          product to the frozen weight's own output.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            h = \htmlClass{nb-mc1}{W_0}x +
+            \htmlClass{nb-mc2}{B}\htmlClass{nb-mc3}{A}x
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">W_0</span
+              ><span
+                >the pretrained weight, frozen for the whole run and never
+                touched by gradient descent.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">B</span
+              ><span
+                >trainable, shape d×r, started at zero so training begins
+                exactly at the pretrained model.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">A</span
+              ><span
+                >trainable, shape r×k, started from a random projection.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The only path gradient descent touches. Merge
+            <span class="nb-math-in">BA</span> back into
+            <span class="nb-math-in">W_0</span> after training and the model
+            is a single matrix again, indistinguishable in shape from one
+            that was fully fine-tuned.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Rank ablations in the paper push
+          <span class="nb-math-in">r</span> down as far as it will go before
+          quality drops. On the datasets they tested, a rank of one is
+          already enough to adapt the query and value projections. GPT-3
+          configurations in the paper range from r=1, the smallest budget
+          tested, up through r=8 and beyond, and GPT-2 configurations run r=4
+          to r=16.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 3; Table 4">1</a></sup
+          >
+          At that rank the saving compounds into the paper's own headline
+          number. A full fine-tuned GPT-3 checkpoint runs about 350GB, or
+          350,000MB. The trained low-rank matrices for the same model take up
+          about 35MB. 350,000 divided by 35 is 10,000, the ten-thousand-fold
+          reduction the abstract claims.<sup class="nb-cite"><a href="#s1" data-nb-locator="Abstract">1</a></sup>
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">10,000×</span
+            ><span class="nb-stat-l">fewer trainable parameters, GPT-3 175B</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">3×</span
+            ><span class="nb-stat-l">less GPU memory to train</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">r=1</span
+            ><span class="nb-stat-l">the rank behind the GPT-3 benchmarks below</span>
+          </div>
+        </div>
+        <p>
+          A rank that low working at all rests on what the pretrained
+          weights already contain. A model
+          trained on trillions of tokens has already built most of the
+          machinery a downstream task needs. Adapting it to a narrower task
+          is closer to nudging existing representations into a slightly
+          different arrangement than building new capability from nothing,
+          and a nudge, unlike new capability, does not need the full space of
+          possible weight changes to express it. The intrinsic rank
+          hypothesis says that nudge is low-dimensional, and the rank
+          ablations are the direct test of exactly how low.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-2021-benchmarks" id="the-2021-benchmarks">
+        <h2>What actually beat full fine-tuning in 2021</h2>
+        <table class="nb-table">
+          <caption>
+            LoRA against full fine-tuning on the paper's own benchmarks, at
+            the ranks shown.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 2; Table 4">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Benchmark</th>
+              <th>Rank</th>
+              <th>LoRA</th>
+              <th class="txt">Full fine-tuning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">GPT-3 175B</span></td>
+              <td>WikiSQL accuracy</td>
+              <td>r=1</td>
+              <td>73.4%</td>
+              <td class="txt">73.8%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">GPT-3 175B</span></td>
+              <td>MultiNLI-matched</td>
+              <td>r=1</td>
+              <td>91.7%</td>
+              <td class="txt">89.5%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">GPT-3 175B</span></td>
+              <td>SAMSum ROUGE-1/2/L</td>
+              <td>r=1</td>
+              <td>53.8 / 29.8 / 45.9</td>
+              <td class="txt">52.0 / 28.0 / 44.5</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">GPT-2 Medium</span></td>
+              <td>E2E NLG BLEU</td>
+              <td>r=4-16</td>
+              <td>70.4</td>
+              <td class="txt">68.2</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Every one of these is a classification, generation, or
+          text-to-structure task where the answer stays close to the
+          pretrained model's existing competence: parse a question into SQL,
+          judge entailment, summarize a chat, generate text conditioned on a
+          short table. None asks the model to build a skill it did not
+          already have in some form. At r=1, LoRA already reaches that
+          competence on two of the three GPT-3 benchmarks above, MultiNLI and
+          SAMSum, and comes within 0.4 points of it on the third, WikiSQL. A
+          larger, 37.7M-parameter configuration closes even that gap,
+          reaching 74.0% against full fine-tuning's 73.8%.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 4">1</a></sup
+          >
+        </p>
+        <p>
+          The abstract's other claim, no added inference latency, follows
+          directly from the same equation: once training ends, add
+          <span class="nb-math-in">BA</span> into
+          <span class="nb-math-in">W_0</span> and the model is one matrix
+          again, the same shape it always was.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          That merge is a deliberate step, not something that happens on its
+          own. The reference implementation ships a merge function for
+          exactly this reason,<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          and Hugging Face's PEFT library, now the main way practitioners
+          run LoRA, documents calling <code>merge_and_unload()</code> before
+          serving.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Skip that step, which a deployment serving many task-specific
+          adapters off one shared base model has good reason to do, and
+          inference costs two matrix multiplications instead of one. The
+          latency claim and the multi-adapter convenience that made LoRA
+          attractive for serving are not in tension in principle. They are in
+          tension for exactly the deployment that wants both at once.
+        </p>
+      </section>
+
+      <section data-nb-section="qlora-quantized-stress-test" id="qlora">
+        <h2>Quantizing the frozen half changes nothing about the trained half</h2>
+        <p>
+          If the correction a task needs really is low-rank, it should not
+          much matter how precisely the frozen weights it is being added to
+          are stored, because the adapter is not encoding new information
+          about those weights, only the small nudge on top of them. QLoRA is
+          the test of that prediction: quantize the pretrained model to 4-bit
+          precision, keep it frozen, and train LoRA matrices in higher
+          precision on top.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          Across more than a thousand trained models, the paper reports that
+          this preserves full 16-bit fine-tuning task performance despite the
+          base weights carrying a quarter of the information they started
+          with.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          Guanaco, a 65-billion-parameter model trained this way in 24 hours
+          on a single 48GB GPU, reached 99.3% of ChatGPT's score on the
+          paper's benchmark.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          QLoRA is an extension of LoRA, not an independent check on it;
+          Dettmers and colleagues built directly on the original method
+          rather than setting out to test its assumptions.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          But the result still bears on the intrinsic-rank claim, because
+          quantization is exactly the kind of change that would hurt a method
+          if the adaptation depended on precise access to the frozen weights.
+          It didn't. The low-rank correction held up under a four-fold
+          compression of the thing it was correcting, which is more evidence
+          that the correction lives in a small subspace largely decoupled
+          from how the base weights are represented.
+        </p>
+      </section>
+
+      <section data-nb-section="where-the-bet-fails" id="where-the-bet-fails">
+        <h2>Code and math need more rank than LoRA offers</h2>
+        <p>
+          The original paper never tested a task where the model has to
+          learn something closer to a new skill than a nudge on an old one.
+          Biderman and colleagues did, in a 2024 study accepted to
+          <em>Transactions on Machine Learning Research</em> with Featured
+          Certification, continuing pretraining and instruction-tuning
+          models on code and math and comparing LoRA against full
+          fine-tuning at matched compute.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          The parity the 2021 benchmarks showed did not travel.
+        </p>
+        <table class="nb-table">
+          <caption>
+            LoRA against full fine-tuning where the task is closer to a new
+            skill than a nudge on an old one, r=256 on all modules.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Regime</th>
+              <th>LoRA</th>
+              <th class="txt">Full fine-tuning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">HumanEval</span></td>
+              <td>Code, continued pretraining</td>
+              <td>0.175</td>
+              <td class="txt">0.263</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">HumanEval</span></td>
+              <td>Code, instruction tuning</td>
+              <td>0.407</td>
+              <td class="txt">0.497</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">GSM8K</span></td>
+              <td>Math, continued pretraining</td>
+              <td>0.187</td>
+              <td class="txt">0.230</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">GSM8K</span></td>
+              <td>Math, instruction tuning</td>
+              <td>0.622</td>
+              <td class="txt">0.642</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Take the worst case: 0.175 against a full fine-tuning score of
+          0.263 on code continued pretraining. Divide the gap by the full
+          fine-tuning score, 0.088 ÷ 0.263, and LoRA lands about a third
+          short.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          Instruction tuning narrows the gap, and math narrows it further
+          still, down to a three percent shortfall on GSM8K. But the
+          direction never reverses. The closer a task sits to the model's
+          existing competence, the smaller the shortfall, and continued
+          pretraining on an unfamiliar domain sits furthest from that
+          competence of anything either paper tested.
+        </p>
+        <p>
+          Biderman and colleagues measured why directly. They estimated the
+          effective rank of the weight changes full fine-tuning actually
+          makes on these tasks and found it running 2,000 to 4,096, by their
+          90-percent-variance threshold.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Figure 7">5</a></sup
+          >
+          Even LoRA's largest rank in the study, r=256, sits well under that.
+          4,096 divided by 256 is 16, and 2,000 divided by 256 is about 8. So
+          the best-resourced LoRA configuration tested was still eight to
+          sixteen times short of the rank full fine-tuning was actually
+          using. The more typical, smaller ranks practitioners reach for fall
+          short by the fuller ten-to-hundred-fold margin the study
+          reports.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          This is the same intrinsic-rank quantity the original paper
+          measured at one to sixteen on GLUE-style tasks. Neither number is
+          wrong; the quantity itself scales with what the task demands, and
+          nothing in either paper predicts it in advance. A practitioner
+          still has to find it by ablation, same as Hu and colleagues did in
+          2021.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Where the adapter sits matters as much as how large it is. Biderman
+          and colleagues tested LoRA applied only to attention matrices,
+          only to the MLP, and to all of a model's linear layers at matched
+          parameter budgets, and attention-only trailed the other two by a
+          wide margin across every domain.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          The reason is not that attention matters less. It's that
+          restricting the update to one class of matrix caps how many
+          independent directions the whole model can move in, whatever rank
+          each individual matrix carries, and code and math evidently need
+          more of those directions than the attention matrices alone can
+          supply. Spreading the same trainable budget across more matrices
+          approximates a higher effective rank than concentrating it in
+          fewer places does.
+        </p>
+        <p>
+          One comparison caveat belongs here. The paper itself specifies
+          random Gaussian initialization for A and zero for B, so training
+          starts exactly at the pretrained weights,<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          but the reference implementation initializes A with Kaiming-uniform
+          in code, a default the paper's own text never mentions.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          A 2025 study found that default has convergence properties
+          data-aware alternatives improve on.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          Initialization is an uncontrolled variable in every LoRA-versus-
+          full-fine-tuning comparison run so far, this one included.
+        </p>
+        <p>
+          A structured-pruning study looks at first glance like it shows the
+          adapters themselves are over-parameterized. It doesn't. LoRAShear
+          prunes the frozen base model, guided by which parameters a LoRA
+          module marks as barely used for the task, and cuts the base LLM's
+          own footprint by 20% for a 1% quality loss.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          That is evidence LoRA is a useful lens on where a large pretrained
+          model's capacity goes unused, not evidence about how much capacity
+          the adapter itself needs.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="the-regularization-trade"
+        id="the-regularization-trade"
+      >
+        <h2>Less capacity bought less forgetting</h2>
+        <p>
+          The same study that measured where LoRA loses also measured what it
+          keeps. After continued pretraining on code, models tuned with LoRA
+          held onto more of their performance on general-knowledge
+          benchmarks, HellaSwag, ARC-Challenge, and WinoGrande, than fully
+          fine-tuned models did. On the instruction-tuning runs the retained
+          score was 0.63 against full fine-tuning's 0.45. Divide one by the
+          other, 0.63 ÷ 0.45, and LoRA kept 40% more of the source domain's
+          performance.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          Read the two findings together and there is no contradiction to
+          resolve, only a trade the original paper's benchmarks never
+          surfaced because none of them tested it. A rank ceiling caps how
+          far training can push a model away from where it started, and that
+          cap works in both directions at once. It limits the move away from
+          the pretrained weights toward the new task, and it limits the move
+          away from whatever the pretrained model already knew. Full
+          fine-tuning has no such ceiling, so it can chase a hard target
+          further and forget more of what came before while doing
+          it.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          LoRA is not a cheaper way to reach the same destination on every
+          task. On the tasks where it falls behind, it is a regularizer that
+          reaches a worse destination and forgets less getting there, and a
+          practitioner choosing between them is choosing which of those two
+          outcomes the deployment can afford.
+        </p>
+        <p>
+          The gaps LoRA does carry are not fixed features of low-rank
+          adaptation itself, only of the specific decomposition Hu and
+          colleagues chose. DoRA splits a weight matrix into magnitude and
+          direction and applies LoRA only to the direction term. Across
+          commonsense-reasoning benchmarks it beats vanilla LoRA on every
+          model size tested: 78.4% against 74.7% on LLaMA-7B, 85.2% against
+          80.8% on LLaMA3-8B.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          The gains are real and consistent, and modest, one to four and a
+          half points, not the difference full fine-tuning opens on code and
+          math. That is the right scale for what DoRA is. It is evidence
+          that the 2021 recipe was one point in a wider design space, not the
+          ceiling of what a low-rank update can do, and not a reversal of the
+          harder limit continued pretraining exposes.
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>The condition the 2021 claim depends on</h2>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                Parity on the original benchmarks: classification, structured
+                generation, and summarization tasks where the target stays
+                close to what a large pretrained model already
+                encodes.<sup class="nb-cite"><a href="#s1">1</a></sup>
+              </li>
+              <li>
+                Parity survives a four-fold compression of the frozen base
+                weights, evidence the correction lives in a subspace mostly
+                independent of how precisely those weights are
+                stored.<sup class="nb-cite"><a href="#s4">4</a></sup>
+              </li>
+              <li>
+                Better retention of prior capability than full fine-tuning
+                when a deployment needs the model not to forget what it knew
+                before adaptation.<sup class="nb-cite"><a href="#s5">5</a></sup>
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                A three-to-thirty-four percent shortfall on continued
+                pretraining and instruction tuning for code and math, where
+                the needed update is far from a nudge on existing
+                competence.<sup class="nb-cite"><a href="#s5">5</a></sup>
+              </li>
+              <li>
+                No formula predicts the rank a task needs in advance; both
+                papers found theirs by ablation, one to sixteen for one set
+                of tasks, 256 and still short for another.<sup
+                  class="nb-cite"
+                  ><a href="#s1">1</a></sup
+                ><sup class="nb-cite"><a href="#s5">5</a></sup>
+              </li>
+              <li>
+                "No added latency" holds only after the adapter is merged
+                back into the base weight, a step a multi-adapter deployment
+                often skips on purpose.<sup class="nb-cite"
+                  ><a href="#s2">2</a></sup
+                ><sup class="nb-cite"><a href="#s3">3</a></sup>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The 2021 claim holds when a task's necessary weight change is
+            genuinely low-rank relative to the model, the regime every
+            original benchmark tested and the regime QLoRA confirmed survives
+            heavy quantization of the frozen weights.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+            It breaks when the task demands directions on the order of what
+            full fine-tuning itself uses, thousands rather than hundreds,
+            which continued pretraining and instruction tuning on code and
+            math both do.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            Adoption answers a different question than correctness. Hugging
+            Face's PEFT library ships several initialization schemes and
+            several module-targeting strategies for LoRA. That is a library
+            admitting there is no single default that works everywhere, not
+            evidence that one exists.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            The paper's claim was never false. It was local to the tasks it
+            tested, and the five years since have measured exactly how far
+            that locality extends.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2106.09685"
+              >arXiv · Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, Chen,
+              "LoRA: Low-Rank Adaptation of Large Language Models"
+              (2021)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/microsoft/LoRA"
+              >GitHub · microsoft/LoRA, the reference implementation</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/huggingface/peft"
+              >GitHub · huggingface/peft, the parameter-efficient fine-tuning
+              library</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2305.14314"
+              >arXiv · Dettmers, Pagnoni, Holtzman, Zettlemoyer, "QLoRA:
+              Efficient Finetuning of Quantized LLMs" (2023)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2405.09673"
+              >arXiv · Biderman, Portes, Gonzalez Ortiz, Paul, Greengard, and
+              colleagues, "LoRA Learns Less and Forgets Less" (2024)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2510.24561"
+              >arXiv · Zhang, Chu, Peng, Li, Luo, Jiang, Huang, "LoRA-DA:
+              Data-Aware Initialization for Low-Rank Adaptation via
+              Asymptotic Analysis" (2025)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2310.18356"
+              >arXiv · Chen, Ding, Yadav, Zharkov, Liang, "LoRAShear:
+              Efficient Large Language Model Structured Pruning and
+              Knowledge Recovery" (2023)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2402.09353"
+              >arXiv · Liu, Wang, Yin, Molchanov, Wang, Cheng, Chen, "DoRA:
+              Weight-Decomposed Low-Rank Adaptation" (2024)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
