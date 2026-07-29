@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>oil.nvim edits a remote server's files the same way it edits a local directory: as text · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "oil-nvim",
+        "template": "article",
+        "title": "oil.nvim edits a remote server's files the same way it edits a local directory: as text",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-29",
+        "tags": [],
+        "sources": 12,
+        "words": 2264,
+        "reading_minutes": 11,
+        "dek": "Renaming, moving, and deleting a file are edits to a line, and the plugin deletes for good unless trash is switched on first.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">oil.nvim edits a remote server's files the same way it edits a local directory: as text</h1>
+        <p class="nb-dekline">
+          Renaming, moving, and deleting a file are edits to a line, and the plugin deletes for good unless trash is switched on first.
+        </p>
+        <div class="nb-byline">
+          <span>11 min read</span><span>2026-07-29</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Deleting a line in oil.nvim deletes the file behind it</h2>
+        <p>
+          oil.nvim opens a directory not as a tree or a picker but as an
+          ordinary Neovim buffer: one line per entry, editable with the same
+          commands that edit any other text.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          A line is a file. Delete the line with <code>dd</code>, the same key
+          that deletes a line of prose anywhere else in Neovim, and on write the
+          file it named is gone.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Open a line and type a new name over the old one, and the file is
+          renamed. Yank a line and paste it into a different directory's
+          buffer, and the file moves. None of this is a special mode or a
+          feature bound to its own keymap. It is the editor doing what the
+          editor already does, aimed at a buffer whose lines happen to be
+          filenames.
+        </p>
+        <p>
+          oil.nvim stages every edit
+          in the buffer and does nothing to the filesystem until the buffer is
+          written. The documentation lists the create, rename, move, copy, and
+          delete operations it recognizes. Separately, one option controls
+          whether a batch of them asks for confirmation before it
+          runs.<sup class="nb-cite"><a href="#s2">2</a></sup> It can also
+          stand in for Neovim's built-in <code>netrw</code> entirely: it ships
+          a setting that makes it the default handler for any directory
+          buffer.<sup class="nb-cite"><a href="#s2">2</a></sup> Once that
+          setting is on, opening a directory no longer opens netrw's
+          read-only listing of names. It opens a buffer you can type into.
+        </p>
+      </section>
+
+      <section data-nb-section="editing-across-directories" id="editing-across-directories">
+        <h2>A single :w moves a file, renames three more, and deletes a fourth</h2>
+        <p>
+          The buffer model does not stop at one directory. Two oil buffers can
+          be open in a split at once, one per directory, and a write commits
+          both. The plugin's own FAQ names this directly: "You want to
+          perform cross-directory actions. AFAIK there is no other plugin
+          that does this."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          A mutation layer behind the buffer tracks each edit and translates
+          it into a filesystem operation when the write commits.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          A workflow that would otherwise be a shell script becomes a
+          multi-cursor edit.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">~/.config/nvim/lua/plugins/oil.lua</span
+            ><span>LUA</span>
+          </div>
+          <pre><code class="language-lua">require("oil").setup({
+  default_file_explorer = true,        -- oil replaces netrw outright
+  delete_to_trash = true,              -- flip the permanent-delete default
+  skip_confirm_for_simple_edits = false,
+  watch_for_changes = true,
+  view_options = { show_hidden = true },
+  columns = { "icon", "permissions", "size", "mtime" },
+})
+
+vim.keymap.set("n", "-", "&lt;CMD&gt;Oil&lt;CR&gt;", { desc = "Open parent directory" })
+vim.keymap.set("n", "&lt;leader&gt;of", "&lt;CMD&gt;Oil --float&lt;CR&gt;", { desc = "Oil in a float" })</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 &middot; Trash is turned on by hand, and the float keymap
+            opens the floating-window mode the plugin ships for a quick edit
+            that does not disturb the window layout.<sup class="nb-cite"><a href="#s2">2</a></sup
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          With that config running, retiring a batch of stale fixtures looks
+          like this: split windows on <code>src/widgets/</code> and
+          <code>tests/widgets/</code>, both opened as oil buffers. Visual-block
+          select the five fixture lines in the tests buffer and delete the
+          block. Switch to the src buffer, open the line for the module those
+          fixtures covered, and retype its name to match the replacement
+          module landing in the same change. One <code>:wa</code> commits
+          both buffers: five deletes fire against
+          <code>tests/widgets/</code>, one rename fires against
+          <code>src/widgets/</code>, and nothing on disk changes until that
+          write. An independent user who moved from Emacs's <code>dired</code>
+          ran the same cross-buffer motion and confirmed it directly: opening
+          two oil buffers and moving lines between them "works exactly as
+          expected."<sup class="nb-cite"><a href="#s5">5</a></sup> A separate
+          independent write-up shows the same shape of task at the command
+          level: one substitute command run against the buffer, followed by
+          <code>:w</code>, renames every matching file in the batch at
+          once.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-ssh-adapter" id="the-ssh-adapter">
+        <h2>oil-ssh:// depends on the shell tools already on the remote box</h2>
+        <p>
+          The same buffer model reaches past the local disk. An adapter layer
+          sits between the buffer and the filesystem it edits, and swapping
+          the adapter swaps what "filesystem" means. The plugin states the
+          mechanism in its own words: file operations "work across adapters,"
+          so "you can use oil to copy files to/from a remote server using the
+          ssh adapter just as easily as you can copy files from one directory
+          to another on your local machine."<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          <code>:Oil oil-ssh://user@host/var/www</code>
+          opens a remote directory the identical way, and, as of the plugin's
+          May 2026 release, <code>oil-s3://</code> does the same for an S3
+          bucket.<sup class="nb-cite"><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          A rename typed into a remote buffer is not copied over the wire
+          and deleted at the source. It is executed as a rename on the far
+          end, because the adapter translates the same mutation calls it
+          would send locally into whatever the remote backend understands.
+        </p>
+        <p>
+          The claim to test is whether that translation is free, or whether
+          it leans on something the remote host has to supply. It leans on
+          something. The SSH adapter's own users have gone looking for
+          documentation on exactly what it expects from the far side. They
+          have not found enough of it: a feature request filed against the
+          project asks plainly for more documentation on the SSH
+          adapter.<sup class="nb-cite"><a href="#s7">7</a></sup> That request
+          means the adapter works well enough that people run it against
+          real servers, but not so transparently that its requirements are
+          obvious from the README. The practical read is that oil-ssh
+          assumes a fairly standard Unix shell on the other end, the same
+          assumption an <code>rsync</code> or <code>scp</code> workflow
+          already makes. A remote host that does not meet it is the case the
+          feature does not yet document its way around. Latency is the other
+          cost the abstraction cannot hide. A remote oil buffer edits real
+          files at the far end rather than a synced local copy, so every
+          preview and every write pays the round trip. A slow connection
+          turns a fast edit workflow back into a slow one, no matter how thin
+          the plugin's own overhead is.
+        </p>
+      </section>
+
+      <section data-nb-section="permanent-by-default" id="permanent-by-default">
+        <h2>delete_to_trash defaults to false, and a stray dd is permanent</h2>
+        <p>
+          The same property that makes oil.nvim fast, that a delete is just a
+          line disappearing and a write, is also what makes it dangerous by
+          default. The documented default for <code>delete_to_trash</code> is
+          false. An oil delete is a real filesystem delete, not a move to a
+          recoverable trash location, unless that option is turned
+          on.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The plugin does implement trash integration, following the
+          FreeDesktop specification on Linux and the native trash on macOS
+          and Windows, so the safety net exists.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          It is opt-in, not assumed.
+        </p>
+        <p>
+          That default carries a real cost on its own. A new user arriving
+          from a file manager where trash is already on may not think to
+          flip this setting before a first big batch edit, and
+          <code>delete_to_trash</code>'s own default is what fails them if
+          they don't. A second, separate risk shows that flipping it is not
+          a complete guarantee either. One user running with
+          <code>delete_to_trash = true</code> still lost a file. They
+          deleted it with <code>dd</code>, created a new directory, pasted
+          the file back in with <code>p</code>, and saved. The paste did not
+          survive the write, a bug in the mutation path itself, not a missed
+          setting.<sup class="nb-cite"><a href="#s8">8</a></sup> Turning
+          trash on closes the first risk. It does not close the second. The
+          first costs one line in the setup call, already flipped in the
+          config above. The second has no config fix yet: it is an open bug
+          report against the project, not a setting to change.
+        </p>
+      </section>
+
+      <section data-nb-section="a-buffer-that-closes" id="a-buffer-that-closes">
+        <h2>A tree stays open on screen; an oil buffer closes when the edit is done</h2>
+        <p>
+          oil.nvim is not the only plugin that turns file management into
+          something other than netrw's bare listing. <code>nvim-tree</code>,
+          <code>neo-tree</code>, and <code>mini.files</code> each keep a
+          persistent panel open, a tree the editor's other windows arrange
+          themselves around. oil.nvim's buffer is not a panel. It occupies a
+          normal window, and when the edit is done and the buffer closes,
+          nothing keeps a slot reserved for it. One independent comparison
+          frames the difference directly: oil suits someone who already
+          prefers a "split windows and the project drawer" workflow over a
+          tree that never goes away.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          netrw's own strength sits elsewhere, in remote-editing protocols
+          built up over years that oil does not try to replace outright.
+        </p>
+        <p>
+          A second independent account describes migrating away from
+          <code>mini.files</code>, calling it "excellent, extremely fast to
+          operate," in favor of oil's buffer model for multi-file batch
+          edits.<sup class="nb-cite"><a href="#s10">10</a></sup> The trade was
+          not free. A plain buffer, unlike a tree, gives up the
+          always-visible sense of where you are in a deep directory, so that
+          account added back a keymap to the project root and a custom
+          winbar.<sup class="nb-cite"><a href="#s10">10</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            What changes hands when you type into the buffer versus click or
+            navigate a tree.<sup class="nb-cite"><a href="#s9">9</a></sup
+            ><sup class="nb-cite"><a href="#s10">10</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Screen model</th>
+              <th class="txt">You edit files by</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">netrw</span></td>
+              <td>buffer, read-mostly</td>
+              <td class="txt">
+                single-file commands and its own built-in remote protocols
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">mini.files / neo-tree</span></td>
+              <td>persistent side panel</td>
+              <td class="txt">
+                tree navigation and panel-specific keybindings
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">oil.nvim</span></td>
+              <td>ordinary buffer, closes with the window</td>
+              <td class="txt">
+                normal Vim text edits, committed on write
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Adoption cost tracks that difference closely. Someone switching
+          from netrw and vim-vinegar describes the move to oil as intuitive,
+          because none of their existing Vim motions had to be relearned,
+          only redirected at a new kind of buffer.<sup class="nb-cite"
+            ><a href="#s11">11</a></sup
+          >
+          They paired it with <code>fzf-lua</code> for jumping straight into
+          a directory, rather than clicking through a tree to find it. The
+          friction that remains is keymap fluency, not configuration: one
+          independent adopter's advice after switching from Emacs is to
+          memorize "at least some" of the default keymappings up front, for
+          "a smoother experience."<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="one-maintainer-6800-stars" id="one-maintainer-6800-stars">
+        <h2>One maintainer ships every release for a plugin with 6,800 stars</h2>
+        <p>
+          The release history is not the straightforward story a changelog
+          skim suggests. Through 2024 the plugin shipped roughly monthly:
+          v2.9.0 in May, v2.13.0 by November, v2.14.0 in December, and
+          v2.15.0 on February 13, 2025.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          Then releases stopped. The next version, v2.16.0, did not ship
+          until May 24, 2026, a gap of fifteen months. It landed a new
+          adapter for S3 buckets, horizontal scrolling actions,
+          multicursor.nvim support, and more than twenty-five bug fixes
+          across the SSH adapter, trash handling, and LSP
+          integration.<sup class="nb-cite"><a href="#s4">4</a></sup> A burst
+          of work followed a long silence, not a project that never slowed
+          down.
+        </p>
+        <p>
+          That silence is not incidental to the sustainability question. It
+          is the reason the question got asked. A community member opened an
+          issue in February 2026, three months before v2.16.0 shipped,
+          during the gap rather than after it. The repository had reached
+          6.8 thousand stars, and stevearc had said openly that he has "very
+          little free time."<sup class="nb-cite"><a href="#s12">12</a></sup>
+          The discussion proposed co-maintainers or some form of shared
+          governance to keep pace with a plugin popular enough that, in the
+          discussion's words, it "ought to be very, very actively
+          maintained."<sup class="nb-cite"><a href="#s12">12</a></sup>
+          v2.16.0 landing a few months later shows the gap was not
+          abandonment. It does not resolve the underlying risk: every
+          release, fast or slow, still ships from one person's queue. A
+          fork, a security report, or a breaking Neovim API change lands
+          there too, and nothing in the record says the next gap will be
+          shorter.
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                A batch of renames, moves, and deletes across more than one
+                directory commits on a single write, backed by the plugin's
+                own FAQ and an independently reproduced bulk-rename
+                example, not just a paraphrase of the README.<sup
+                  class="nb-cite"
+                  ><a href="#s1">1</a></sup
+                ><sup class="nb-cite"><a href="#s6">6</a></sup>
+              </li>
+              <li>
+                The identical buffer model opens a remote directory over SSH
+                or an S3 bucket, using the same "across adapters" operations
+                the plugin documents for local moves.<sup class="nb-cite"
+                  ><a href="#s1">1</a></sup
+                ><sup class="nb-cite"><a href="#s4">4</a></sup>
+              </li>
+              <li>
+                Adoption cost is close to zero for an existing Vim user: the
+                motions transfer directly, and the default configuration
+                needs no scripting to get bulk edits working.<sup
+                  class="nb-cite"
+                  ><a href="#s11">11</a></sup
+                ><sup class="nb-cite"><a href="#s5">5</a></sup>
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                Deletion is permanent unless <code>delete_to_trash</code> is
+                switched on by hand.<sup class="nb-cite"><a href="#s2">2</a></sup>
+              </li>
+              <li>
+                Turning trash on is not a full guarantee: a separate paste
+                bug has destroyed a file even with
+                <code>delete_to_trash = true</code> enabled.<sup
+                  class="nb-cite"
+                  ><a href="#s8">8</a></sup
+                >
+              </li>
+              <li>
+                The SSH adapter assumes standard Unix tooling on the remote
+                host, and its own users say the documentation does not yet
+                spell out what it requires.<sup class="nb-cite"
+                  ><a href="#s7">7</a></sup
+                >
+              </li>
+              <li>
+                Every release ships from one maintainer with acknowledged
+                limited time, against a project with 6.8 thousand stars and
+                a recent fifteen-month gap between releases.<sup
+                  class="nb-cite"
+                  ><a href="#s12">12</a></sup
+                >
+              </li>
+              <li>Requires Neovim 0.10 or newer.<sup class="nb-cite"><a href="#s1">1</a></sup></li>
+            </ul>
+          </div>
+        </div>
+        <p>
+          None of that argues against adopting it. It argues for adopting it
+          the way the config above does. Turn trash on before the first
+          batch edit, not after the first loss, and don't treat it as a
+          complete guarantee once it is on. Treat the SSH adapter as
+          something to test against a real remote host before trusting it on
+          one that matters. The buffer model itself is not the risk here.
+          The risk sits in the defaults left untouched, in a bug that
+          outruns even the safety net, and in a maintenance queue with one
+          name on it.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/stevearc/oil.nvim"
+              >GitHub &middot; stevearc/oil.nvim README</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://raw.githubusercontent.com/stevearc/oil.nvim/master/doc/oil.txt"
+              >stevearc/oil.nvim &middot; doc/oil.txt</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://deepwiki.com/stevearc/oil.nvim"
+              >DeepWiki &middot; stevearc/oil.nvim architecture overview</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://raw.githubusercontent.com/stevearc/oil.nvim/master/CHANGELOG.md"
+              >stevearc/oil.nvim &middot; CHANGELOG.md</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://hungyi.net/Tech/Oil.nvim"
+              >hung.yi &middot; Oil.nvim, an Emacs dired user's adoption
+              notes</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://vimtricks.wiki/posts/oil-nvim-filesystem-editor"
+              >VimTricks &middot; oil.nvim as a filesystem editor</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://github.com/stevearc/oil.nvim/issues/525"
+              >GitHub &middot; oil.nvim issue #525, SSH adapter documentation
+              request</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://github.com/stevearc/oil.nvim/issues/743"
+              >GitHub &middot; oil.nvim issue #743, file lost to a paste bug
+              with trash enabled</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://pawelgrzybek.com/neovim-file-explorers/"
+              >Pawe&#322; Grzybek &middot; Neovim file explorers compared</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.dpenedo.com/posts/from-mini-files-and-neo-tree-to-oil-in-neovim/"
+              >Daniel Penedo &middot; From mini.files and neo-tree to oil in
+              Neovim</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://yeripratama.com/blog/better-file-explorer-workflow-in-neovim/"
+              >Yeri Pratama &middot; A better file explorer workflow in
+              Neovim</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://github.com/stevearc/oil.nvim/issues/726"
+              >GitHub &middot; oil.nvim issue #726, maintenance sustainability
+              discussion</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
