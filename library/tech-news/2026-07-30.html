@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-07-30</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-07-30",
+        "template": "brief",
+        "title": "Claude halved the security of a post-quantum signature scheme",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-30",
+        "tags": [],
+        "sources": 10,
+        "words": 719,
+        "reading_minutes": 3,
+        "dek": "The flaw it found in HAWK had survived two years of expert review, and Anthropic says nothing in production has to change.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Claude halved the security of a post-quantum signature scheme</h1>
+        <p class="nb-dekline">The flaw it found in HAWK had survived two years of expert review, and Anthropic says nothing in production has to change.</p>
+        <div class="nb-byline">
+          <span>3 min read</span><span>2026-07-30</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Cryptography</span>
+          <h3>
+            <a href="https://www.anthropic.com/research/discovering-cryptographic-weaknesses"
+              >Claude cut the effective key strength of HAWK in half</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Anthropic's Claude Mythos found a hidden lattice symmetry in HAWK, a
+            post-quantum signature scheme that had survived two years of
+            cryptanalysis. It used the symmetry to halve the effective key
+            strength: for HAWK-256 the cost of the best known attack falls from
+            2<sup>64</sup> to 2<sup>38</sup>, from infeasible to trivial. The run
+            took about 60 hours and roughly $100,000 in API calls. A second
+            result, a meet-in-the-middle procedure the model named the Möbius
+            Bridge, runs 200 to 800 times faster against a seven-round research
+            version of AES, but it never touches the full ten-round cipher and
+            would need more than 400 octillion messages to mount.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            Anthropic says no deployed system is affected and no production
+            software has to change.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Robotics</span>
+          <h3>
+            <a href="https://news.mit.edu/2026/making-robots-faster-helping-them-think-ahead-0728"
+              >MIT robots plan the next move before finishing the current one</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            The technique, called VLASH, lets a vision-language-action model
+            predict where the robot will be once its current action finishes and
+            plan the next one while that action still runs, erasing the pause
+            between chunks that makes learned policies stutter. On pick-and-place
+            the arms run about twice as fast, and the reaction gap between chunks
+            shrinks more than thirtyfold, with no added planning compute.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            The group, led by MIT's Song Han and presented at IROS, showed it on
+            table tennis and Whack-a-Mole as well as sorting and stacking.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Astrophysics</span>
+          <h3>
+            <a href="https://science.nasa.gov/missions/swift/nasas-swift-sees-wandering-mega-black-hole-shredding-star/"
+              >Swift caught a black hole shredding a star far from its galaxy's core</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            The flare sits more than 30,000 light-years from the galaxy's center,
+            the farthest offset ever recorded for an optically discovered tidal
+            disruption event, and marks a wandering black hole of about a million
+            solar masses rather than the central engine such events usually
+            trace. For a few months the disruption outshone its entire host
+            galaxy in ultraviolet, briefly radiating like 10 billion Suns some 750
+            million light-years away in Cetus.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            It was first pulled from the noise in November 2025 by an
+            AI classifier sifting the roughly half a million transients the
+            Zwicky Transient Facility logs each night, which flagged its
+            improbable location as a likely disruption.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Semiconductors</span>
+          <h3>
+            <a href="https://news.umich.edu/electron-lighthouse-illuminates-new-physics/"
+              >Two colors of laser light steer a current through a semiconductor</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            University of Michigan physicists overlapped two infrared laser pulses
+            of different colors inside a device and launched a directed beam of
+            electrons with no applied electric field, aiming it by rotating the
+            light's polarization. The direction comes from quantum interference
+            between two absorption paths to the same final state, one adding to
+            the motion and the other cancelling it, so the current sweeps like a
+            lighthouse beam as the light changes.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The work, in Physical Review Letters, points toward optical control
+            for sensing, imaging, and telecommunications rather than any
+            near-term device.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Chemistry</span>
+          <h3>
+            <a href="https://www.science.org/doi/10.1126/sciadv.aec6549"
+              >Twisted light tells a molecule's left hand from its right by the debris</a
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </h3>
+          <p>
+            Physicists at the Tata Institute and two IITs shaped laser light to
+            carry orbital angular momentum and found it breaks the left- and
+            right-handed versions of a molecule apart at different rates, so the
+            fragment counts alone reveal which mirror image is present.
+            Distinguishing these enantiomers is a standing problem in drug
+            chemistry, where the two hands of a molecule can behave very
+            differently in the body and current methods are slow or
+            insensitive.<sup class="nb-cite"><a href="#s10">10</a></sup>
+            The result, in Science Advances, offers the twist of the light itself
+            as a faster probe of molecular handedness.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.anthropic.com/research/discovering-cryptographic-weaknesses"
+              >Anthropic · Discovering cryptographic weaknesses with Claude</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://cyberscoop.com/anthropic-claude-mythos-encryption-flaws-hawk-aes-pqc/"
+              >CyberScoop · Anthropic's Claude Mythos finds weaknesses in encryption algorithms</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://news.mit.edu/2026/making-robots-faster-helping-them-think-ahead-0728"
+              >MIT News · Making robots faster by helping them think ahead</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://interestingengineering.com/ai-robotics/mit-tech-robot-move-2x-faster"
+              >Interesting Engineering · MIT's new model cuts reaction delays by 30 times</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://science.nasa.gov/missions/swift/nasas-swift-sees-wandering-mega-black-hole-shredding-star/"
+              >NASA Science · Swift Sees 'Wandering' Mega Black Hole Shredding Star</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.universetoday.com/articles/a-wandering-black-hole-meets-a-wandering-star"
+              >Universe Today · A Wandering Black Hole Meets a Wandering Star</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://news.umich.edu/electron-lighthouse-illuminates-new-physics/"
+              >University of Michigan · 'Electron lighthouse' illuminates new physics</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.sciencealert.com/physicists-created-an-electron-lighthouse-that-steers-current-with-light"
+              >ScienceAlert · Physicists Created an 'Electron Lighthouse' That Steers Current With Light</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.science.org/doi/10.1126/sciadv.aec6549"
+              >Science Advances · Twisted topological light illuminates molecular chirality</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://phys.org/news/2026-07-laser-distinguishes-mirror-image-molecules.html"
+              >Phys.org · Twisted laser light distinguishes mirror-image molecules by their fragment counts</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
