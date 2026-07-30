@@ -25,15 +25,15 @@ def test_missing_configuration_uses_the_cost_aware_default() -> None:
     assert policy["stages"] == {
         "writing-coach": {
             "model": "capable",
-            "effort": "medium",
+            "effort": "low",
             "required": False,
         },
         "researcher": {
-            "model": "efficient",
-            "effort": "medium",
+            "model": "capable",
+            "effort": "high",
             "required": False,
         },
-        "writer": {"model": "capable", "effort": "high", "required": False},
+        "writer": {"model": "capable", "effort": "medium", "required": False},
         "editor": {"model": "capable", "effort": "high", "required": False},
     }
 
@@ -48,27 +48,30 @@ def test_inherit_is_an_explicit_profile() -> None:
 
 
 @pytest.mark.parametrize(
-    ("profile", "coach", "writer", "editor"),
+    ("profile", "coach", "researcher", "writer", "editor"),
     [
         pytest.param(
             "economy",
             {"model": "efficient", "effort": "low", "required": False},
             {"model": "capable", "effort": "medium", "required": False},
             {"model": "capable", "effort": "medium", "required": False},
+            {"model": "capable", "effort": "high", "required": False},
             id="economy",
         ),
         pytest.param(
             "balanced",
-            {"model": "capable", "effort": "medium", "required": False},
+            {"model": "capable", "effort": "low", "required": False},
             {"model": "capable", "effort": "high", "required": False},
+            {"model": "capable", "effort": "medium", "required": False},
             {"model": "capable", "effort": "high", "required": False},
             id="balanced",
         ),
         pytest.param(
             "quality",
+            {"model": "premium", "effort": "low", "required": False},
             {"model": "premium", "effort": "high", "required": False},
             {"model": "premium", "effort": "high", "required": False},
-            {"model": "inherit", "effort": "high", "required": False},
+            {"model": "premium", "effort": "high", "required": False},
             id="quality",
         ),
     ],
@@ -77,12 +80,14 @@ def test_profiles_resolve_complete_role_guidance(
     profile: str,
     *,
     coach: dict[str, str | bool],
+    researcher: dict[str, str | bool],
     writer: dict[str, str | bool],
     editor: dict[str, str | bool],
 ) -> None:
     policy = resolve({"profile": profile})
 
     assert policy["stages"]["writing-coach"] == coach
+    assert policy["stages"]["researcher"] == researcher
     assert policy["stages"]["writer"] == writer
     assert policy["stages"]["editor"] == editor
 
@@ -114,8 +119,8 @@ def test_series_overrides_press_fields_without_erasing_other_defaults() -> None:
     }
     assert policy["stages"]["editor"]["required"] is False
     assert policy["stages"]["researcher"] == {
-        "model": "efficient",
-        "effort": "low",
+        "model": "capable",
+        "effort": "medium",
         "required": False,
     }
 
