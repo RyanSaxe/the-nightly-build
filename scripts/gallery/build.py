@@ -178,7 +178,7 @@ def build(repo: Path = REPO, out: Path = DEFAULT_OUT) -> Path:
     />
     {stylesheet_links(repo, out)}
     <style>
-      .gallery-main {{ max-width: 680px; margin: 0 auto; padding: 52px 16px 80px; }}
+      .gallery-main {{ width: 100%; min-width: 0; max-width: 680px; margin: 0 auto; padding: 52px 16px 80px; }}
       .gallery-main > h1 {{ font-size: 26px; margin: 0 0 4px; }}
       .gallery-lede {{ color: var(--ink-soft); font-style: italic; margin: 0 0 8px; }}
       .gallery-piece {{ border-top: 2px solid var(--accent); margin-top: 40px; padding-top: 8px; }}

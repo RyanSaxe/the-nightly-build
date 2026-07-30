@@ -105,6 +105,8 @@ def test_editor_preserves_three_reads_surgical_edits_and_prompt_leakage_gate() -
     assert "Fixed template labels" in editor
     assert '"the trap is"' in editor
     assert "A verdict block" in editor
+    assert "deliberate emphasis" in editor
+    assert "missed opportunities" in editor
     assert "optional polish" in editor
     assert "BLOCKED editor <reason>" in editor
 
@@ -120,6 +122,8 @@ def test_writer_proves_every_draft_and_records_original_work() -> None:
     assert "editorial-direction.md" in writer
     assert ".nb-context" in writer
     assert "documented in the furniture" in writer
+    assert "before drafting" in writer
+    assert "rendered page" in writer
 
 
 def test_writing_coach_cites_three_real_exemplars() -> None:
@@ -163,10 +167,16 @@ def test_writer_prompts_use_plain_directions() -> None:
     assert "subject's nouns" not in prompting
 
 
-def test_furniture_does_not_prompt_for_mechanisms() -> None:
+def test_furniture_has_no_quota_and_preserves_deliberate_emphasis() -> None:
     furniture = (REPO / "templates" / "FURNITURE.md").read_text(encoding="utf-8")
+    prose = " ".join(furniture.split())
 
     assert "mechanism" not in furniture.lower()
+    assert "deliberate emphasis" in prose
+    assert "There is no target count" in prose
+    assert "continuous article rather than a stack of components" in prose
+    assert "Two or three pieces" not in prose
+    assert "Zero is fine" not in prose
 
 
 def test_writer_briefing_removes_the_repeated_editorial_judgment() -> None:

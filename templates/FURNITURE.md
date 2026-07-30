@@ -2,9 +2,14 @@
 
 Furniture is the set of pre-designed components an article may use. The
 engine's shared CSS styles every class in both color schemes, so composing
-pieces cannot break the paper's look. Use a piece when it carries information
-better than prose would. Skip it when it would decorate. Two or three pieces
-per article is typical. Zero is fine.
+pieces cannot break the paper's look. Furniture is part of the article's
+language. Use it when its presentation meaningfully changes how a reader
+understands or experiences the material, including when deliberate emphasis is
+the point. Do not add it merely to fill space or create visual variety. There is
+no target count, but the finished piece should still read as a continuous
+article rather than a stack of components. In practice, a page with no
+furniture at all will rarely serve the reader well, and neither will one with
+furniture at every turn.
 
 Section tags, citation markup, source entries, and the nb-meta block are
 protocol, not furniture. PROTOCOL.md defines them. This base catalogue is the
@@ -61,11 +66,12 @@ be cited in nearby prose.
 Compact worked rows: steps of a computation, a record, a mapping, a
 comparison, a ranking. Numeric cells are mono and never wrap (space digit
 groups so the table fits a phone); add class `txt` on a cell that should
-read as prose. First-column tokens may wear `nb-table-token` chips. The
-caption states what the rows show and carries the citation. Author the
-bare table exactly as below: the runtime dresses every one in the
-data-block card, rows scrolling inside it on a phone and the caption
-seated as the card's footer.
+read as prose. Prose columns retain a readable width on a phone while the row
+scrolls. First-column tokens may wear `nb-table-token` chips; multiword chips
+wrap between words on narrow screens. The caption states what the rows show and
+carries the citation. Author the bare table exactly as below: the runtime
+dresses every one in the data-block card, rows scrolling inside it on a phone
+and the caption seated as the card's footer.
 
 ```html
 <table class="nb-table">
@@ -93,11 +99,11 @@ seated as the card's footer.
 
 An image the argument needs, in one component with two kinds, told apart by
 filename. A **chart** is drawn from data at production time: render with
-`uv run --group charts engine/render_chart.py` (docs/charts.md), commit the
-`chart-N.py` script beside `chart-N.png` as its provenance (the `chart-`
-name is reserved), label axes, note a non-linear scale, and cite the data
-source in the caption. A **source asset** (`asset-N.png`/`.jpg`/`.webp`) is
-an exact visual captured from a cited primary or public document: a figure,
+`nb chart` (docs/charts.md), commit the `chart-N.py` script beside
+`chart-N.png` as its provenance (the `chart-` name is reserved), label axes,
+note a non-linear scale, and cite the data source in the caption. A **source
+asset** (`asset-N.png`/`.jpg`/`.webp`) is an exact visual captured from a cited
+primary or public document: a figure,
 photograph, or document detail. Crop away page furniture and printed
 captions unless that text is itself evidence, and cite the document. Both
 live beside the article in `library/<series>/<slug>/`, need useful

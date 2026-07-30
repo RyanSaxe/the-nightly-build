@@ -52,10 +52,12 @@ Follow these universal rules:
   composition requirements are evidence requirements, not labels to game.
 - Add `data-nb-locator`, `data-nb-url`, or `data-nb-note` only when the evidence
   record supplies that detail. Never invent a locator.
-- Search the supplied furniture catalogs when a component could communicate
-  more clearly than prose. Use documented markup, never classes inferred from
-  CSS or dependency URLs. A component does not belong merely because a prior
-  article used it.
+- Plan prose and furniture together. Search the supplied catalogs before
+  drafting, then review the rendered page for missed opportunities and
+  components with no clear communicative or editorial purpose. Deliberate
+  emphasis is a valid purpose. Use documented markup, never classes inferred
+  from CSS or dependency URLs. A component does not belong merely because a
+  prior article used it.
 - Runtime dependencies declared by the press are already supplied by the site.
   Use only capabilities documented in the furniture, template identity, or
   editorial direction. Never add article-authored scripts or styles.

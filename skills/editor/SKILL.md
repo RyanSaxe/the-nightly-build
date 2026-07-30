@@ -78,9 +78,12 @@ An ending gone soft often finished a paragraph earlier. Hold the voice guide's
 register; delete voiced sentences with no cargo instead of flattening them.
 
 Apply the same test to furniture. A verdict block, callout, or other component
-does not survive because the paper used it before. Keep it only when the current
-template requires it or it communicates this article's information better than
-prose. Fixed labels required by the current template are not formulas.
+does not survive because the paper used it before, but deliberate emphasis is a
+valid editorial purpose. Remove a component when it has no clear purpose or
+makes the piece read like a stack of blocks. Look for missed opportunities too.
+When presentation leaves material harder to understand or experience than it
+should be, request the writer to consider the documented furniture. Fixed
+labels required by the current template are not formulas.
 
 Record: `Cut: N sentences; worst tell: …`.
 

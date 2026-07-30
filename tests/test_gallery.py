@@ -22,6 +22,13 @@ def test_every_engine_piece_has_a_sample() -> None:
     assert not missing
 
 
+def test_table_sample_exercises_long_labels_and_prose_cells() -> None:
+    sample = (REPO / "scripts/gallery/samples/table.html").read_text(encoding="utf-8")
+
+    assert '<span class="nb-table-token">Tax Foundation</span>' in sample
+    assert '<td class="txt">' in sample
+
+
 def test_the_built_page_shows_every_piece(tmp_path: pathlib.Path) -> None:
     out = build(REPO, tmp_path / "gallery" / "index.html")
     page = out.read_text(encoding="utf-8")

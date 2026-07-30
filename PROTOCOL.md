@@ -191,7 +191,10 @@ matching source assets or chart provenance under `library/<series>/<slug>/`.
   handlers, `javascript:` URLs, or externally hosted images.
 - Cite the claims the argument depends on inline. Number source entries in first-citation
   order. Carry honest source kinds and locators from the evidence record.
-- Use furniture only when it can more effectively communicate than prose.
+- Treat furniture as part of the article's language. Plan it with the prose and
+  reassess it after rendering; every component needs a clear communicative or
+  editorial purpose. There is no target count, but the page must remain a
+  continuous article rather than a stack of components.
 - Create charts with `nb chart` from verified numbers and commit their
   provenance. Capture exact visual evidence with `nb asset`. Inspect the image
   and rendered page; include factual cited captions and useful alt text.
