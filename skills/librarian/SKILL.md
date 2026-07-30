@@ -32,7 +32,7 @@ When a paper request exposes an engine improvement, explain it and leave it as a
 proposal until that authorization is given.
 
 **Fresh paper?** A fresh fork has no `press/` content of its own: upstream ships
-none and `setup.sh` scaffolds an empty one. The interview writes
+none and `nb setup` scaffolds an empty one. The interview writes
 `press/site.yaml` (their title), `press/editorial.md` (their voice, §1), and
 keeps the scaffolded `press/production.yaml` unless they want a different cost
 profile, then writes `press/series/` from scratch. The complete working
@@ -113,7 +113,7 @@ prompt is one layer in a stack the night shift reads in order
 ```text
 PROTOCOL.md > spec/editorial.md > spec/headlines.md > press/editorial.md >
 template manifest > template identity > press/series/<id>/prompt.md
-> tag fragments > item prompt
+> tag fragments > selected item record
 ```
 
 Every other layer already holds, and so does the config the engine reads for
@@ -144,13 +144,13 @@ reread the finished prompt as the writer will, and fix anything the standard
 names before committing. The prompts in `examples/series/` hold both
 standards. Keep them holding both.
 
-Validate: `uv run engine/validate_config.py`. Fix anything it flags before
+Validate with `nb validate`. Fix anything it flags before
 proceeding. Commit the configuration to `main` via the user's normal review
 flow. Configuration is code-review territory, not an agent PR to `library`.
 
 ## 3. Bootstrap
 
-If the repo has no `library` branch yet, run `./setup.sh` (idempotent: creates
+If the repo has no `library` branch yet, run `nb setup` (idempotent: creates
 the orphan `library` branch, enables Pages and auto-merge, clears the library
 branch to deploy, re-validates). Two human-only prerequisites for a live site,
 flag both when they apply: the repo must be **public** (GitHub Pages needs it on
@@ -164,27 +164,19 @@ Before any scheduling, offer a rehearsal: _"want to see what the first article
 would look like tonight?"_ It costs the same usage as a real run and only
 skips publishing.
 
-A press check runs the same direct-role chain as a real night, with one
-difference: the commission you write names the article path
-as `press-check/library/<series>/<slug>.html` (gitignored), so every role
-writes where `task.md` says. Before writing it, run both
-`uv run engine/source_policy.py --repo . --series <id>` and
-`uv run engine/production_policy.py --repo . --series <id>`. Put the source
-result, focal source, independent context, and resolved five-role production
-plan on the card. Follow the correspondent's capability fallback: launch coach
-and researcher together when isolated agents exist, then writer and editor as
-direct children; use parent relay when peers cannot address one another. Perform
-the publisher's record and preflight steps without opening a PR. Assemble the
-would-be body to `.nb-work/<series>/<slug>/pr-body.md` and preflight it with
-`--pr-body`. Show the proof's verdict verbatim. Build
-the preview so the draft sits on the real newsstand with the back catalog:
-`uv run engine/build_site.py --repo . --library <checkout> --preview press-check/ --out press-check/site/`
-then serve it (`python3 -m http.server -d press-check/site/`). Headless,
-return the paths instead. This is the editorial loop for tuning a series:
-read the draft, adjust `prompt.md`, re-run, compare. **Promote on request**:
-copy the artifact to `library/<series>/<slug>.html` on a branch and launch the
-publisher against the existing artifacts. No duplicate research spend, normal
-validation path.
+A press check runs the correspondent's exact workspace and four-role artifact
+contract for one article, but stops before `nb prepare-pr`. Resolve source and
+production policy with `nb`, then let the correspondent prepare each role's
+exact brief. Run coach and researcher in parallel when the harness allows it,
+then the complete writer-editor loop. Show the final `nb check` verdict
+verbatim.
+
+Build the draft onto the real back catalog with
+`nb preview --repo . --library <checkout> --preview <workspace> --out <site>`. Serve
+that output locally, or return its path when headless. This is the editorial
+loop for tuning a series: read the draft, adjust `prompt.md`, rerun, compare.
+**Promote on request** by running `nb prepare-pr` against the existing approved
+workspace. No duplicate research spend and no separate publisher agent.
 
 ## 5. Harness handoff
 
@@ -231,7 +223,7 @@ On request:
 - **Let a collection surprise them** (`selection: random`).
 - **Adjust `bands:`** (series values may tighten or loosen template defaults;
   omitted means no default) **and `min_sources`.**
-- **Flip `autopublish`** (false means a human merges after the publisher's PR) **or
+- **Flip `autopublish`** (false means a human merges the Article PR) **or
   `strict`** (true means WARNs become BLOCKs). Warn that a skipped night is better
   than a thin article.
 
@@ -271,13 +263,13 @@ Re-validate after every change.
 ## 7. Update my engine
 
 ```sh
-scripts/sync.sh --update-main-from-upstream
+nb sync --update-main-from-upstream
 ```
 
 This explicit command imports upstream into the fork's clean, current `main`,
 pushes it, then synchronizes the protected `library` workflows through CI. A
 conflict stops before `library` changes and prints the paths to resolve. If the
-user updated `main` elsewhere, run `scripts/sync.sh` without the flag.
+user updated `main` elsewhere, run `nb sync` without the flag.
 
 For users who only write inside `press/`, upstream merges are clean by
 construction. If they have edited engine files, conflicts are normal fork
@@ -293,7 +285,7 @@ it is written.
 ## Boundaries
 
 Never push to `library`. Never edit files under `library/`. The protected PR
-created by `scripts/sync.sh` is the sole workflow-maintenance path. The library
+created by `nb sync` is the sole workflow-maintenance path. The library
 is a source now: an error left up outlives its correction and misleads whatever
 cites it. The escape hatch for a bad published article is deleting its file on
 `library` (the night shift rewrites it next run). That is a human decision:

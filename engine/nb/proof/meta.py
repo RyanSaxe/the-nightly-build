@@ -200,7 +200,6 @@ def check_meta_agreement(
     slug_from_path,
     parent,
     dekline,
-    pr_body_meta,
     rep,
 ):
     if meta.get("slug") != slug_from_path:
@@ -239,14 +238,3 @@ def check_meta_agreement(
             suggestion="the front page and the feed render nb-meta's dek, not "
             "the body's; carry every dek edit back into nb-meta",
         )
-    if pr_body_meta is not None:
-        for field in ("series", "slug", "mode", "template", "date", "title"):
-            if field in pr_body_meta and pr_body_meta.get(field) != meta.get(field):
-                rep.block(
-                    "B-META-MATCH",
-                    f"PR body '{field}'={pr_body_meta.get(field)!r} disagrees "
-                    f"with embedded nb-meta {meta.get(field)!r}",
-                )
-        b_order = pr_body_meta.get("order", meta.get("order"))
-        if b_order != meta.get("order"):
-            rep.block("B-META-MATCH", "PR body 'order' disagrees with embedded nb-meta")

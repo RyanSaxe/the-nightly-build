@@ -5,6 +5,8 @@ it during setup, and the tests must stay green on any fork. make_press()
 fabricates a press with two fixture series (semiconductors, ai-briefs) on top
 of the real templates and engine assets, so what the tests exercise is the
 shipped machinery.
+Artifact helpers add the same semantic role files that a real Article PR must
+carry, keeping proof fixtures representative without embedding editorial prose.
 
 Import these directly. They are plain functions, callable at module level in a
 test file, which pytest fixtures cannot be.
@@ -16,6 +18,8 @@ import re
 import shutil
 import subprocess
 import tempfile
+
+from nb.artifacts import ROLE_FILES
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 
@@ -313,7 +317,6 @@ def chronicle() -> str:
 
 
 def mut(old: str, new: str, *, base: str | None = None) -> str:
-    """Derive a failure case by mutating a valid article (the fixture article, by default)."""
     base = article() if base is None else base
     assert old in base, f"mutation target not found: {old[:60]!r}"
     return base.replace(old, new)
@@ -325,8 +328,29 @@ def write_article(root: str, series: str, *, slug: str, html: str) -> None:
     (d / f"{slug}.html").write_text(html)
 
 
+def write_agent_artifacts(root: str, series: str, *, slug: str) -> None:
+    artifacts = pathlib.Path(root) / "agent-artifacts" / series / slug
+    artifacts.mkdir(parents=True, exist_ok=True)
+    (artifacts / "editorial-direction.md").write_text(
+        f"# Editorial direction\n\nFixture direction for {series}/{slug}.\n"
+    )
+    (artifacts / "commission.md").write_text(
+        f"# Commission\n\nPublish {series}/{slug} for the fixture press.\n"
+    )
+    for role, filenames in ROLE_FILES.items():
+        invocation = artifacts / role / "01"
+        invocation.mkdir(parents=True)
+        for filename in filenames:
+            content = f"# {role}\n\nFixture {filename} for {series}/{slug}.\n"
+            if filename == "voice-guide.md":
+                content += "\n".join(
+                    f"Source: https://example.org/exemplar-{number}"
+                    for number in range(1, 4)
+                )
+            (invocation / filename).write_text(content)
+
+
 def make_full_library() -> str:
-    """A published library: one collection article and two nights of briefs."""
     lib = tempfile.mkdtemp()
     write_article(lib, "semiconductors", slug="micron", html=article())
     write_article(lib, "ai-briefs", slug="2026-07-05", html=brief("2026-07-05"))

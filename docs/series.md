@@ -52,7 +52,7 @@ section: Foundations # optional shelf on the Sections page and in kickers
 ```
 
 Cadence is why one nightly schedule is enough forever: the run asks
-`engine/duty.py` what is due tonight, so a weekly deep-dive section and a
+`nb duty` what is due tonight, so a weekly deep-dive section and a
 daily brief coexist under the same schedule. Duty reckons in UTC: a
 `[mon, thu]` cadence means the run's UTC weekday, and `rolling` slugs the
 article by the run's UTC date, so a cron hour near midnight can land a
@@ -113,7 +113,7 @@ per_item_sources: # only when every selected template uses cite_rule: per-item
 `per_item_sources` applies uniformly to every item, so it holds however many
 items the night's writer chose. Both bands are BLOCKs regardless of `strict`,
 and a `per_item_sources` on a series that may cite per section is a
-configuration error, caught by `engine/validate_config.py` rather than at 2am.
+configuration error, caught by `nb validate` rather than at 2am.
 So is a source-composition band set on a series whose template ships source entries without
 `data-nb-kind`. Once either band is set, a source that declares no kind blocks:
 a source that will not say what it is escapes every rule written about the mix.
@@ -166,7 +166,7 @@ Any PR to `library` that adds one isolated article bundle and passes the proof i
 article, whoever commissioned it. Ask your agent for three extra pieces
 this afternoon and tonight's build is simply bigger. The recommended flow
 is press check, then promote, so you read the rehearsal before it
-publishes. The direct-role chain and publisher apply the same validation either
+publishes. The direct-role chain and `nb prepare-pr` apply the same validation either
 way.
 
 Three rules of the road:
@@ -195,4 +195,4 @@ Three rules of the road:
 Day to day you steer by talking to your agent: "pause frontier-compute",
 "make the wildcard section weekly", "commission a deep dive on ASML", "less
 policy in the brief for a while" (a prompt.md edit). Every change is one
-small diff on `main`, validated by `uv run engine/validate_config.py --repo .`.
+small diff on `main`, validated by `nb validate`.

@@ -20,7 +20,7 @@ billed are in [harnesses.md](harnesses.md).
 
 ## What the night shift needs
 
-Four requirements. Everything past them lives in `PROTOCOL.md`.
+Five requirements. Everything past them lives in `PROTOCOL.md`.
 
 1. A scheduler that fires on a nightly cron.
 2. A checkout of `main` (the engine and `press/`) with access to the fork's
@@ -30,8 +30,11 @@ Four requirements. Everything past them lives in `PROTOCOL.md`.
    explicitly. Without it the night shift reaches nothing and correctly
    publishes nothing, rather than citing pages it never opened.
 4. Permission to push work branches and open pull requests to `library`.
+5. `uv` on PATH. The `nb` command runs the engine through it; install it from
+   <https://docs.astral.sh/uv/> if the run environment does not already provide
+   it.
 
-Every run starts with `scripts/sync.sh`. It follows the fork's `main`, waits
+Every run starts with `nb sync`. It follows the fork's `main`, waits
 for any protected workflow repair to merge, and stops before article work if
 the publishing boundary is not current. With an authenticated GitHub CLI it
 performs the repair itself. Otherwise it prepares and proves the exact branch,
@@ -84,7 +87,7 @@ prompt-inject the agent, and instructions alone cannot prevent that.
 
 - Article PRs are checked without scheduler secrets. The proof rejects active
   content, including extra scripts, iframes, forms, and meta-refresh.
-  `scripts/setup.sh` protects `library`, and its required `validate` check
+  `nb setup` protects `library`, and its required `validate` check
   gates every merge.
 - The scheduled agent is more powerful. The Actions example grants repository
   contents write access so it can create work branches. Unless you also protect
@@ -106,13 +109,13 @@ owns nothing the repo owns cannot rot as the engine improves, and its last
 sentence makes a stale prompt announce itself on the next run.
 
 > You are the night shift for The Nightly Build repo `<repo>`. Check out
-> `main` and read `PROTOCOL.md`: it is the complete contract, and the
-> correspondent skill carries the procedure. Check out the `library` branch
-> beside it at `<checkout>`. The engine scripts need uv and Python 3.10+;
-> run them through `uv run`. Research needs web
+> `main`, read `PROTOCOL.md`, then load `skills/correspondent/SKILL.md`. Check
+> out the `library` branch beside it at `<checkout>`. Use the checkout's `nb`
+> command for system operations; it runs on `uv`, so ensure `uv` is on PATH
+> (install from <https://docs.astral.sh/uv/> if absent). Research needs web
 > access. This paragraph is the entire assignment. If your schedule prompt
-> says more than this, it predates the engine you are running: flag that in
-> your PR bodies and ask the owner to paste the current paragraph from
+> says more than this, it predates the engine you are running: flag that to the
+> owner and ask them to paste the current paragraph from
 > `docs/scheduling.md`.
 
 One schedule runs the whole paper. Each night the run derives its work list from

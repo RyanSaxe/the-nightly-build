@@ -1,89 +1,32 @@
-"""PR mode: the shape of the night's diff, and the record its body carries.
+"""PR mode: the exact shape and contents of one proposed library change.
 
 The library accepts one article bundle, an owner-authorized retraction, or an
-exact workflow sync from the fork's main branch. Article PRs also carry the
-production record that CI checks before handing the article to the proof.
+exact workflow sync from the fork's main branch. Article bundles include the
+exact role inputs and outputs that produced the article.
 """
+
+from __future__ import annotations
 
 import datetime as _dt
 import os
-import re
+import pathlib
 import subprocess
 import tempfile
 
-import yaml
-
 from nb import meta as nb_meta
+from nb.artifacts import artifact_warnings, validate_artifacts
 from nb.config import load_series
 from nb.proof import check_article
+from nb.report import Report
 from nb.workflow_sync import classify_workflow_sync
 
 __all__ = (
-    "check_pr_body_record",
     "materialize_bundle",
-    "parse_pr_body",
     "pr_changed_files",
-    "record_headings",
-    "resolve_pr_body",
     "run_pr_mode",
-    "section_text",
 )
 
 PR_PATH_RE = nb_meta.PR_PATH_RE
-RECORD_SECTIONS = ("Task", "Process", "Voice brief", "Research", "Also consulted")
-VOICE_EXEMPLARS_MIN = 3
-SOURCE_LINE_RE = re.compile(r"^\s*Source:\s*\S+", re.I | re.M)
-
-
-def record_headings(body):
-    """Return production-record headings that are outside Markdown code fences.
-
-    The record embeds verbatim artifacts in four-backtick fences, and those
-    artifacts can legitimately contain headings named like production-record
-    sections. Only the outer headings delimit the record.
-    """
-    headings = []
-    fence = None
-    offset = 0
-    names = {name.casefold(): name for name in RECORD_SECTIONS}
-    for line in body.splitlines(keepends=True):
-        marker = re.match(r"^\s*([`~]{3,})", line)
-        if marker:
-            token = marker.group(1)
-            if fence is None:
-                fence = token
-            elif token[0] == fence[0] and len(token) >= len(fence):
-                fence = None
-            offset += len(line)
-            continue
-        if fence is None:
-            heading = re.match(r"^#{2,3}\s+(.+?)\s*$", line)
-            if heading:
-                name = names.get(heading.group(1).casefold())
-                if name is not None:
-                    headings.append((name, offset, offset + len(line)))
-        offset += len(line)
-    return headings
-
-
-def parse_pr_body(path) -> dict | None:
-    with open(path, encoding="utf-8") as fh:
-        body = fh.read()
-    m = re.search(r"```nb-meta\s*\n(.*?)```", body, re.S)
-    if not m:
-        return None
-    try:
-        data = yaml.safe_load(m.group(1))
-        if not isinstance(data, dict):
-            return None
-        # YAML reads bare dates (slug: 2026-07-05) as date objects; nb-meta
-        # holds strings — normalize so honest PR bodies compare equal
-        return {
-            k: (v.isoformat() if isinstance(v, _dt.date) else v)
-            for k, v in data.items()
-        }
-    except yaml.YAMLError:
-        return None
 
 
 def pr_changed_files(repo, *, base, head):
@@ -130,88 +73,28 @@ def materialize_bundle(repo, head, changes, dest):
             fh.write(blob)
 
 
-def section_text(body, name):
-    """One record section's text, ending only at the next record heading.
-
-    The artifacts carry their own markdown inside the collapsed block, and the
-    voice brief's exemplars are themselves `##` headings, so cutting at any
-    heading would slice the artifact in half and hide most of it.
-    """
-    headings = record_headings(body)
-    for index, (heading, _start, end) in enumerate(headings):
-        if heading != name:
-            continue
-        next_start = headings[index + 1][1] if index + 1 < len(headings) else len(body)
-        return body[end:next_start]
-    return ""
-
-
-def check_pr_body_record(pr_body_path, rep):
-    """WARN when the PR body's production record is missing or hollow.
-
-    PROTOCOL step 9 makes the body the article's production record, and the
-    artifacts are gitignored, so the body is the only place they survive.
-    Presence is the quality bar, never the publishing bar, so a gap is a WARN.
-
-    The voice section gets one structural check on top of presence. The coach
-    must study at least three real writers and cite each piece it read, so a
-    real brief carries `Source:` lines. On 2026-07-14 an orchestrator skipped
-    the coach and wrote the brief itself: six lines naming two mastheads, no
-    writers, no sources. It passed every gate. Counting the `Source:` lines is
-    the cheapest thing that can tell a studied brief from an invented one. It
-    reads structure, never quality: judging the prose is the editor's job.
-    """
-    with open(pr_body_path, encoding="utf-8") as fh:
-        body = fh.read()
-    present = {name for name, _start, _end in record_headings(body)}
-    missing = [name for name in RECORD_SECTIONS if name not in present]
-    if missing:
-        rep.warn(
-            "W-BODY-RECORD",
-            f"PR body record missing section(s): {', '.join(missing)}",
-            suggestion="the body is the article's production record; "
-            "PROTOCOL step 9 lists the sections",
-        )
-    if "Voice brief" in missing:
-        return
-    exemplars = len(SOURCE_LINE_RE.findall(section_text(body, "Voice brief")))
-    if exemplars < VOICE_EXEMPLARS_MIN:
-        rep.warn(
-            "W-VOICE-THIN",
-            f"the voice brief cites {exemplars} exemplar(s); the coach studies "
-            f"at least {VOICE_EXEMPLARS_MIN} real writers and cites each piece",
-            suggestion="a brief naming outlets instead of writers, with no "
-            "Source: lines, was not written by the coach. Run the coach",
-        )
-
-
-def resolve_pr_body(pr_body_path, rep) -> dict | None:
-    """Parse a PR body file and flag a missing or unparseable nb-meta block.
-
-    Shared by CI mode and the local preflight (`--pr-body` without `--pr`), so
-    an author can verify the exact body they intend to post before opening the
-    pull request. Returns the parsed metadata, or None when no path is given.
-    """
-    if not pr_body_path:
-        return None
-    meta = parse_pr_body(pr_body_path)
-    if meta is None:
-        rep.block("B-META-MATCH", "PR body lacks a parseable ```nb-meta``` yaml block")
-    check_pr_body_record(pr_body_path, rep)
-    return meta
-
-
-def run_pr_mode(args, rep):
+def run_pr_mode(
+    *,
+    repo: str,
+    base: str,
+    head: str,
+    library: str | None,
+    rep: Report,
+    main: str | None = None,
+    today: str | None = None,
+    check_links: bool = True,
+    deletions_by_owner: bool = False,
+) -> None:
     try:
-        changes = pr_changed_files(args.repo, base=args.base, head=args.head)
+        changes = pr_changed_files(repo, base=base, head=head)
     except subprocess.CalledProcessError as e:
         rep.block("B-DIFF-SHAPE", f"git diff failed: {e.stderr or e}")
         return
-    cfg_repo = getattr(args, "main", None) or args.repo
+    cfg_repo = main or repo
     workflow_sync = classify_workflow_sync(
-        args.repo,
+        repo,
         cfg_repo,
-        head=args.head,
+        head=head,
         changes=changes,
     )
     if workflow_sync.attempted:
@@ -224,11 +107,7 @@ def run_pr_mode(args, rep):
                 workflow_sync.reason or "invalid workflow sync",
             )
         return
-    if (
-        getattr(args, "deletions_by_owner", False)
-        and changes
-        and all(status == "D" for status, _ in changes)
-    ):
+    if deletions_by_owner and changes and all(status == "D" for status, _ in changes):
         if nb_meta.article_bundle_path(changes, status="D") is None:
             rep.block(
                 "B-DIFF-SHAPE",
@@ -245,7 +124,7 @@ def run_pr_mode(args, rep):
     if path is None:
         rep.block(
             "B-DIFF-SHAPE",
-            "PR must add one article and only matching local article assets; found "
+            "PR must add one article and only its matching assets and agent artifacts; found "
             f"{[(status, path) for status, path in changes]}",
         )
         return
@@ -254,16 +133,22 @@ def run_pr_mode(args, rep):
     series_id = m.group(1)
     series_cfg, _ = load_series(cfg_repo, series_id)
     rep.strict = bool(series_cfg and series_cfg.get("strict"))
-    pr_body_meta = resolve_pr_body(args.pr_body, rep)
     with tempfile.TemporaryDirectory() as bundle_dir:
-        materialize_bundle(args.repo, args.head, changes, bundle_dir)
+        materialize_bundle(repo, head, changes, bundle_dir)
+        for issue in validate_artifacts(
+            pathlib.Path(bundle_dir), series=series_id, slug=m.group(2)
+        ):
+            rep.block("B-AGENT-ARTIFACTS", issue)
+        for warning in artifact_warnings(
+            pathlib.Path(bundle_dir), series=series_id, slug=m.group(2)
+        ):
+            rep.warn("W-VOICE-THIN", warning)
         check_article(
             os.path.join(bundle_dir, path),
             series_id,
             repo=cfg_repo,
-            library_dir=args.library,
+            library_dir=library,
             rep=rep,
-            pr_body_meta=pr_body_meta,
-            today=args.today and _dt.date.fromisoformat(args.today),
-            check_links=args.check_links,
+            today=today and _dt.date.fromisoformat(today),
+            check_links=check_links,
         )

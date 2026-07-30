@@ -31,7 +31,7 @@ fig.update_layout(yaxis_title="US$ billions")
 Render it:
 
 ```sh
-uv run --group charts engine/render_chart.py library/<series>/<slug>/chart-1.py
+nb chart library/<series>/<slug>/chart-1.py
 ```
 
 The tool registers the paper's `nb` plotly template as the default before the

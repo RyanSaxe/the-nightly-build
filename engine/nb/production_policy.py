@@ -12,7 +12,6 @@ STAGES = (
     "researcher",
     "writer",
     "editor",
-    "publisher",
 )
 PROFILES = ("inherit", "economy", "balanced", "quality")
 MODEL_TIERS = ("inherit", "efficient", "capable", "premium")
@@ -44,25 +43,22 @@ class ResolvedProductionPolicy(TypedDict):
 _PROFILE_PRESETS: dict[str, dict[str, tuple[str, str]]] = {
     "inherit": {stage: ("inherit", "inherit") for stage in STAGES},
     "economy": {
-        "writing-coach": ("efficient", "medium"),
-        "researcher": ("efficient", "low"),
+        "writing-coach": ("efficient", "low"),
+        "researcher": ("capable", "medium"),
         "writer": ("capable", "medium"),
-        "editor": ("capable", "medium"),
-        "publisher": ("efficient", "low"),
+        "editor": ("capable", "high"),
     },
     "balanced": {
-        "writing-coach": ("capable", "medium"),
-        "researcher": ("efficient", "medium"),
-        "writer": ("capable", "high"),
+        "writing-coach": ("capable", "low"),
+        "researcher": ("capable", "high"),
+        "writer": ("capable", "medium"),
         "editor": ("capable", "high"),
-        "publisher": ("efficient", "low"),
     },
     "quality": {
-        "writing-coach": ("premium", "high"),
-        "researcher": ("capable", "high"),
+        "writing-coach": ("premium", "low"),
+        "researcher": ("premium", "high"),
         "writer": ("premium", "high"),
         "editor": ("premium", "high"),
-        "publisher": ("efficient", "low"),
     },
 }
 

@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Run the Nightly Build command from this exact checkout."""
+
+from __future__ import annotations
+
+import os
+import pathlib
+import shutil
+import sys
+
+
+def checkout_root() -> pathlib.Path:
+    return pathlib.Path(__file__).resolve().parent
+
+
+def uv_command(root: pathlib.Path, arguments: list[str]) -> list[str]:
+    uv = shutil.which("uv")
+    if uv is None:
+        raise SystemExit(
+            "nb requires uv to manage its Python environment: "
+            "https://docs.astral.sh/uv/"
+        )
+
+    command = [uv, "run", "--project", str(root)]
+    requested = arguments[0] if arguments else ""
+    if requested == "asset":
+        command.extend(("--group", "figure-capture"))
+    elif requested == "chart":
+        command.extend(("--group", "charts"))
+    elif requested == "render-check":
+        command.extend(("--with", "websocket-client"))
+    command.extend(("python", "-m", "nb.cli", *arguments))
+    return command
+
+
+def main() -> None:
+    root = checkout_root()
+    environment = os.environ.copy()
+    environment["NB_ROOT"] = str(root)
+    engine = str(root / "engine")
+    current_path = environment.get("PYTHONPATH")
+    environment["PYTHONPATH"] = (
+        f"{engine}{os.pathsep}{current_path}" if current_path else engine
+    )
+    command = uv_command(root, sys.argv[1:])
+    os.execvpe(command[0], command, environment)
+
+
+if __name__ == "__main__":
+    main()

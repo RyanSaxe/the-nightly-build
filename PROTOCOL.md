@@ -1,308 +1,256 @@
-# The Nightly Build Agent Protocol
+# The Nightly Build agent protocol
 
-You are one run of the night shift for this repository. This document is the complete
-contract. If anything else you read conflicts with it, this document wins.
+This is the authoritative contract for one scheduled night shift. Read it
+before loading the correspondent skill. The protocol defines the process; the
+skill defines how the correspondent plans, commissions, and runs the desk.
 
-Runtime requirement: uv and Python 3.10+. Install uv with the [official
-instructions](https://docs.astral.sh/uv/getting-started/installation/), then run
-every engine command through `uv run`; it manages each script's declared
-dependencies. Do not substitute `pip install` in a harness or schedule.
+Run system operations through the checkout-owned `nb` executable. It locates
+this exact checkout and runs on [uv](https://docs.astral.sh/uv/), which must be
+available on PATH; install it if the run environment lacks it. uv provides the
+engine's Python environment, so do not install engine dependencies by hand or
+invoke files under `engine/` directly.
 
-## The contract
+## Invariants
 
-1. **One article per series, maximum.** A run is responsible for the whole paper,
-   every series configured under `press/series/`, unless your schedule prompt names
-   one. It publishes only the series the duty oracle reports due (step 4). For each
-   series you serve, research and publish at most one article, as its own pull
-   request. Serve the series independently, so a late failure never costs an earlier
-   series its night. How you isolate each one is the runtime skill's concern.
+1. Serve only series returned by `nb duty`, at most one article per series.
+2. One isolated workspace and one Article PR per article.
+3. The correspondent prepares each role's exact context. Editorial roles begin
+   with those named inputs and retrieve anything else for a specific need.
+4. Every article passes a writing coach, researcher, writer, and editor. The
+   writer-editor loop ends only when the editor approves.
+5. Never push to `library`. CI validates and publishes Article PRs.
 
-2. **Read your layers, in order.** (Later layers specialize style and subject. They never
-   override rules in this file.)
-   1. This file.
-   2. `spec/editorial.md`: the house voice and quality bar.
-   3. `spec/headlines.md`: the floor for headlines, deks, and section
-      headings.
-   4. `press/editorial.md`: the author's voice, if present. It specializes
-      the house style.
-   5. Your series' template package: the folder `templates/<t>/`, replaced
-      wholesale by `press/templates/<t>/` if a press package of the same id
-      exists (your package wins). Read its `manifest.yaml` (the machine
-      contract this file's proof enforces) and its `skeleton.html` (the
-      scaffold you render). If the package ships an identity file
-      (`<t>/identity.md`), read it as the template's voice. It composes here,
-      before the series prompt. If the package ships bespoke furniture
-      (`<t>/furniture.md`), it joins your furniture palette (step 7).
-   6. `press/series/<id>/prompt.md`: the series' editorial instructions.
-   7. Tag fragments listed in the series config, in declared order.
-   8. The item-level `prompt`, if present.
+## Commission the night
 
-3. **Synchronize the publishing boundary.** Run `scripts/sync.sh` before
-   commissioning anything. It compares the two publishing workflows on the
-   fork's `origin/main` and `origin/library`. If they differ, it opens one
-   exact workflow PR, waits for protected validation and auto-merge, then
-   verifies the resulting blobs. When the shell cannot operate GitHub, the
-   script instead pushes the same locally proved branch, exits 3, and prints
-   `NB_SYNC_PR_REQUIRED` with the exact PR fields. Use the runtime's connected
-   GitHub tools to reuse or open that PR, wait for `validate`, and, if it is
-   still open after the check passes, squash-merge it. Never edit the generated
-   branch. Rerun `scripts/sync.sh`; only its successful blob verification opens
-   the gate to article work. Any other failure ends the run: report the PR and
-   failing check, and do not commission articles against a stale editor.
-   Scheduled runs never pass `--update-main-from-upstream`; importing upstream
-   engine changes is a human operation.
+Run `nb sync` before article work. It verifies that the protected publishing
+workflows on `library` match `main`. When it exits 3 with
+`NB_SYNC_PR_REQUIRED`, use the runtime's connected GitHub tool exactly as the
+handoff says, then rerun `nb sync`. Any other failure stops the run.
 
-4. **Select your work.** Fetch the now-current `library` branch and check it out to its own
-   path (a `git worktree add`, or a second clone) so the engine can read tonight's
-   published state. The branch root holds `library/<series>/<slug>.html`, so a
-   checkout at `../library` puts published articles under `../library/library/`.
-   Then run the duty oracle:
-   `uv run engine/duty.py --repo . --library <path-to-library-checkout>`
-   Duty exits 2 and prints nothing when the tree is wrong: no press in it, or a
-   checkout behind `origin/main`. Both mean the same thing: the press, prompts,
-   and engine you are holding are not this paper's, so every article you write
-   from them is confidently wrong. Do what duty says and run it again. Never
-   work around a refusal, and never assemble a work list from anything but
-   duty's output. **The press is `press/`. `examples/` is documentation for
-   people, never configuration for you: an article written from it names a
-   series this paper does not run, and the proof will refuse it.**
-   Duty applies every scheduling rule deterministically (per-series `cadence`,
-   `paused`, completion, already-published-tonight) and prints the series due,
-   with what to publish:
-   - `collection`: one of the listed `candidates` (the next item in config
-     order, or every unpublished item under `selection: random`).
-   - `sequence`: the listed `slug`. You MUST read the series' already published
-     articles before writing. Your article builds on them explicitly.
-   - `rolling`: today's UTC date (the listed `slug`). Missed nights are skipped,
-     never backfilled.
-   - `open`: an editor-run section. If `commissions` lists slugs, publish one of
-     them (its `items:` entry may carry a prompt and sources). Otherwise invent
-     tonight's article within the series' beat: read the section's published
-     articles first (never repeat a topic, build continuity), then choose the
-     template that best fits from the series' declared choices (`templates:`,
-     or its single `template:`) and coin a fresh slug (`[a-z0-9-]{1,64}`).
-     **Serve only the series duty.py lists as due. If nothing is due, stop. Do
-     not open a PR. Exiting silently is correct behavior.**
+Refresh a separate checkout of the `library` branch, then run `nb duty` with
+the main and library paths. Follow an exit-2 repair and rerun it. Nothing due
+means stop without a PR. `examples/` is documentation, never press config.
 
-5. **Honor the source policy.** Every source has a kind, and the kinds are about
-   independence, not document type:
-   - **primary**: the document that OWNS the claim. The paper, the filing, the
-     ruling, the dataset, a company's release about its own deal.
-   - **secondary**: reporting or analysis ABOUT a primary, published by someone
-     with no stake in it. A lab's blog post about its own paper is not a
-     secondary. It is an extension of the primary, and counting it as a second
-     source is one voice wearing two hats.
+The orchestrator plans the whole night before launching a role. Read the
+governing layers in order:
 
-   You declare the kind on the source entry, `data-nb-kind="primary"` or
-   `data-nb-kind="secondary"`. The research log makes the call and records why.
-   Where a series constrains the mix (`sources_by_kind`, `per_item_sources`), a
-   source with no kind is a BLOCK: a source that will not say what it is escapes
-   every rule written about the mix. Where a series constrains nothing, an
-   undeclared kind is nobody's business, and the proof says nothing.
+1. this protocol;
+2. `spec/editorial.md` and `spec/headlines.md`;
+3. `press/editorial.md`, when present;
+4. the selected template's manifest, skeleton, identity, and furniture;
+5. the series prompt, tag fragments in declared order, and selected item record.
 
-   Five controls, per series and per item:
-   - `required_docs`: committed files you read and represent, each by a source
-     entry carrying `data-nb-required="<id>"`. Missing coverage is a WARN, a BLOCK
-     under the series' `strict`. Cite a committed file by its repo-relative path
-     (for example `press/series/<id>/brief.pdf`), never an invented URL. A
-     `data-nb-required` entry names a local artifact, so it is exempt from the
-     absolute-https rule the other sources follow. Never fabricate a public URL
-     for a file that has none. The published site turns that path into a link to
-     the file on the fork's `main`; private repositories keep GitHub's normal
-     authentication.
-   - `consult`: sources you MUST read BEFORE researching elsewhere. They orient
-     the work, and citing them is optional. An entry that is a specific page
-     gets read in full. An entry that scopes an archive (an arXiv listing, a
-     court index) tells you where to search, and you read what is relevant
-     under it.
-   - `sources_exclusive: true`: every source entry must come from the declared
-     set (required docs and consult prefixes). Cite nothing else. An outside
-     source is a BLOCK.
-   - `sources_by_kind`: the composition of the sources the article CITES, a
-     `[low, high]` band per kind (`primary: [4, null]` sets a floor and no
-     ceiling). A listed source no line cites counts toward nothing.
-   - `per_item_sources`: the same bands, applied uniformly to EVERY item you
-     write on a per-item template. `primary: [1, 1]` with `secondary: [2, 3]`
-     means each item carries exactly one primary and two or three secondaries,
-     whatever number of items you write.
+Later layers specialize earlier ones; they do not override them. Start history
+work with `nb history`. Use `nb history --show <series>/<slug>` or the raw
+article only when commissioning has a specific question the result list cannot
+answer. Prevent repeated topics and angles. Record recent openers, section
+shapes, furniture, and conclusions as habits not to inherit automatically.
+Publication history is not a template.
 
-   The composition rules are BLOCKs (`B-SOURCE-KIND`), `strict` or not. Sourcing
-   is not calibration. The proof counts the kinds you declared; it cannot see
-   whether a kind is TRUE. Independence is a judgment, made in the research log
-   and audited by the editor. A secondary on a different website that is written
-   by the primary's own author is still not a secondary.
+For each due article, run `nb source-policy` and `nb production-policy`. Resolve
+portable model tiers against the current harness, honor required selections,
+and record the actual model and effort. Complete every commission before roles
+start so tonight's articles remain cohesive and non-redundant.
 
-6. **Research properly.** Use web access. Verify claims against primary sources, and
-   cite them by the rules of `spec/editorial.md` § Citations. Meet the source floor
-   for your series.
+## Source policy
 
-7. **Render exactly one self-contained HTML file** from your series' template:
-   - Fill every anchor section the manifest requires exactly once. If the
-     effective template/series bands declare `bands.flex_sections: [min, max]`, add that many more
-     sections between the anchors, each named by you for the topic
-     (lowercase-hyphen `data-nb-section` labels). Every labeled section
-     needs citations per the template's cite rule.
-   - Number the source entries in the order the prose first cites them (the
-     proof warns `W-CITE-ORDER` otherwise, a BLOCK under `strict`).
-   - If the series pins a rubric (`rubric:` in series.yaml), render one
-     `data-nb-criterion` row per pinned criterion and extend with rows this
-     subject demands. Scores are integers 0–5 in `data-score`, the rendered
-     `nb-rubric-score` text must agree, and each row's one-line justification
-     is cited (docs/series.md § Rubrics).
-   - Your furniture palette composes three scopes: the engine base catalogue
-     (`templates/FURNITURE.md`), the paper's shared furniture
-     (`press/furniture/catalog.md`) if present, and your template's bespoke
-     furniture (`<t>/furniture.md`) if it ships any. Use a component from any of
-     them when it carries information better than prose.
-   - Embed the `nb-meta` JSON block (schema below).
-   - Charts only as engine-rendered PNG figures: `figure.nb-figure` wrapping
-     `<slug>/chart-N.png`, its committed `chart-N.py` in the bundle, the data
-     source cited in the caption (docs/charts.md).
-   - No scripts other than those JSON blocks and the template's own
-     `<script src="../../assets/nb.js">`, the engine runtime. Keep it. Never add
-     others. No iframes/objects/embeds. No inline event handlers. No `javascript:`
-     URLs. External references only to the engine assets path and Google Fonts.
-   - File path: `library/<series>/<slug>.html`.
+A primary source owns the claim: a paper, filing, ruling, dataset, or a party's
+statement about itself. A secondary reports or analyzes that primary from
+outside the authoring party. Independence follows authorship and stake, not
+document type or website.
 
-8. **Run the proof and iterate:**
-   From the main checkout, run
-   `uv run engine/check.py <article-worktree>/library/<series>/<slug>.html --series <id> --repo <main-checkout> --library <library-checkout>`.
-   The article worktree is based on the orphan `library` branch and does not
-   contain the engine.
-   Revise until `BLOCK: 0`. Treat every WARN as a revision note and address what you
-   reasonably can. WARNs are the quality bar. BLOCKs are the publishing bar.
+The series may define:
 
-9. **Open one pull request per article, targeting the `library` branch.** Branch
-   from `library` and add one article bundle: its HTML file and, only when used,
-   image assets directly under its matching slug directory.
-   - Title: `nb: <series>/<slug> - <Title>`
-   - Body: the article's production record, assembled from the run's artifacts
-     under `.nb-work/<series>/<slug>/`, harness-agnostic and readable years
-     later. In order:
-     - a code fence tagged `nb-meta` (not `yaml`: the proof matches the tag)
-       holding YAML that mirrors the embedded metadata:
+- `required_docs`: local documents that must be read and cited with their IDs
+- `consult`: sources or archives read before searching elsewhere
+- `sources_exclusive: true`: the declared source set is the only allowed set
+- `sources_by_kind`: primary and secondary bands for the article
+- `per_item_sources`: those bands for every item in a per-item template
 
-       ````text
-       ```nb-meta
-       series: the-wire
-       slug: 2026-07-14
-       title: "…"
-       ```
-       ````
+The researcher records each primary or secondary classification beside its
+citation and explains why. The writer carries it into `data-nb-kind`. The
+editor audits it. Counts cannot determine independence.
 
-     - `## Task`: the commission (`task.md`).
-     - `## Process`: the editor's `requested-changes.md`, plus any redraft
-       and what forced it.
-     - `## Voice brief`: the coach's `voice.md`. It cites the writers it studied,
-       at least three, each with a `Source:` line. A brief that names outlets
-       instead of writers was not studied, and the proof says so
-       (`W-VOICE-THIN`).
-     - `## Research`: the researcher's `research.md`.
-     - `## Also consulted`: the research log's Discarded section, one line per
-       source with the reason, plain (never collapsed).
-       Generate this record with `uv run engine/build_record.py`; never summarize
-       or copy artifacts by hand. Each artifact is verbatim in a collapsed
-       `<details>` block inside a four-backtick fence (its own code fences nest
-       safely). The artifacts are gitignored, so the PR body is where they
-       survive. If the record exceeds GitHub's body limit, the builder keeps the
-       full voice brief and every section heading, moves the largest remaining
-       artifacts to one digest-marked follow-up comment, and leaves references
-       in their place. Post that generated comment once after opening.
+Read every cited source, but do not read every character by default. Search it
+for the information the article needs. Open the underlying report, paper,
+hearing, filing, or dataset instead of trusting a summary. Verify numbers and
+statements in secondary coverage against the primary that owns them. Seek
+contradictory evidence. A 403, paywall, or fetch restriction is gated, not
+dead; never record an unverified URL.
 
-   - Preflight BEFORE opening the PR, with the same invocation the publisher's CI
-     will run. Commit the article bundle on the work branch, write the intended
-     body to a file, then from the main checkout:
-     `uv run engine/check.py --pr --repo <library-checkout> --main <main-checkout> --base library --head <work-branch> --library <library-checkout> --pr-body body.txt`
-     This checks everything CI checks at the bundle level, including matching
-     local source assets and the body's nb-meta match. A failure here is
-     yours to fix before any PR exists. CI also render-probes the built page
-     in a browser, which no file check can; stay until its validate check
-     reports on each PR you opened, and fix a failure on the same branch.
+## Exact workspaces and artifacts
 
-10. **Boundaries.** Never merge. Never push to `library` directly. Modify only the
-    article and the matching local asset directory when the article uses a cited
-    source asset (`library/<series>/<slug>/`). Never open a second PR for the
-    same series. If your PR is labeled `nb-invalid`, a future run supersedes you.
-    Do not fight the invalid label. The protected workflow repair performed by
-    `scripts/sync.sh` is the only non-article exception; never reproduce it by
-    hand or bypass its validation. An `NB_SYNC_PR_REQUIRED` handoff permits only
-    the printed PR operations on the script-generated branch, followed by the
-    script's own verification.
+For `<series>/<slug>`, create:
 
-## nb-meta
+```text
+.nb-work/<series>/<slug>/
+├── .nb-context/
+│   ├── template-contract.yaml
+│   ├── runtime-assets.yaml
+│   └── furniture/{engine,press,template}.md # files that apply
+├── library/<series>/<slug>.html
+├── library/<series>/<slug>/                 # assets, when used
+└── agent-artifacts/<series>/<slug>/
+    ├── editorial-direction.md
+    ├── commission.md
+    ├── writing-coach/01/{brief.md,voice-guide.md}
+    ├── researcher/01/{brief.md,evidence.md}
+    ├── writer/01/{brief.md,draft-handoff.md}
+    └── editor/01/{review-brief.md,editorial-review.md}
+```
 
-Embed in `<head>`:
+After selecting the series, slug, template, and tags, initialize the workspace:
+
+```text
+nb start-article <series> <slug> --template <template> \
+  --workspace .nb-work/<series>/<slug> [--tag <tag> ...]
+```
+
+The command copies the resolved skeleton to the article path. It writes the
+effective template contract, configured runtime assets, and applicable
+furniture catalogs under `.nb-context/`. It also composes
+`editorial-direction.md` verbatim from the house, press, template, series, tag,
+and selected-item layers. Do not edit generated context. CSS and JavaScript are
+implementation details; author against documented furniture, then preview and
+check it. A press dependency intended for article authors must be documented in
+its furniture, template identity, or series prompt.
+
+Use `02`, `03`, and so on for revisions. Never overwrite an earlier invocation.
+The Article PR commits `editorial-direction.md`, `commission.md`, and every
+numbered role input and output. They are plain Markdown without frontmatter or
+a machine manifest. `.nb-context/` is temporary, version-derived tool context;
+the committed direction records its checkout revision.
+
+`commission.md` records the assignment, angle, reader, mode, template, source
+obligations, starting sources, relevant prior coverage, structures not to
+repeat, neighboring articles, output paths, harness/model choices, and the
+article's required contribution. Write directions, not sample article prose.
+
+Every invocation brief names exact inputs, outputs, permitted changes,
+role-specific decisions, useful `nb` commands, and unresolved work. Preserve
+fixed HTML or labels exactly where needed; phrase editorial direction plainly.
+Do not make roles reconstruct configuration.
+
+## Role engagement contract
+
+Every role launch names its skill, exact brief, and named inputs. Start it in
+the article workspace when possible. State:
+
+- Begin with these exact inputs and write only the named outputs.
+- Use the supplied `nb` executable and other available tools for focused work.
+- Do not tour the repository, implementation, Git history, or archive as
+  background. Retrieve context to answer a specific question.
+- Request missing context from the correspondent. It can expand the input set
+  or route the question to the role that owns it.
+
+This is cooperative context isolation, not a security sandbox. Do not build
+permissions, metadata grants, or different command sets per role.
+
+Run the writing coach and researcher in parallel. The coach studies at least
+three respected writers in the domain and produces transferable craft, never a
+named persona or reusable line. The researcher produces traceable sources,
+contradictions, numbers, source-asset candidates, and discarded sources.
+
+Only then brief the writer. The writer receives `editorial-direction.md`, the
+voice guide, evidence record, initialized article, generated template context,
+and its exact brief. It requests missing evidence or voice guidance instead of
+filling gaps. It records the article's visible act of original work in
+`draft-handoff.md`, runs the brief's `nb check` command to `BLOCK: 0`, and
+treats warnings as revision notes.
+
+The editor receives the exact writer brief so prompt leakage is detectable. It
+makes three ordered reads:
+
+1. **Skeptic:** state and try to break the thesis and the claims it depends on;
+   reopen sources, recompute figures, and audit source kinds.
+2. **Cut:** remove sentences with no fact, claim, or reasoning work; cut
+   self-grading, stock revelations, signposts, instruction leakage, and
+   repeated structures not required by the current template.
+3. **Reader:** identify what the article gives beyond its sources, compare that
+   with the writer's original-work claim, judge the voice, and retest headline.
+
+The editor makes cuts and small prose fixes directly. Past a word or clause,
+new writing returns to the writer. Evidence returns to the researcher; assets,
+markup, structure, and proof return through the writer. Each repair gets new
+numbered briefs and outputs, then a fresh writer proof and editor read. There is
+no round cap. Only an editor `DONE` with no required change approves the piece.
+
+A blocked role escalates to the orchestrator. Clarify, reassign, or take over
+the owning role, but never waive the subsequent writer proof and editor gate.
+Stop only for an external constraint no role can change. If the harness has no
+child agents, perform the same numbered sequence in one context and preserve
+all artifacts.
+
+## Article contract
+
+The article is one HTML file at `library/<series>/<slug>.html`, plus only its
+matching source assets or chart provenance under `library/<series>/<slug>/`.
+
+- Fill every required anchor section once and only the allowed number of
+  subject-specific flexible sections. Remove placeholders and samples.
+- Preserve the template's fixed engine assets, classes, labels, and required
+  HTML. Add no active content: no extra scripts, styles, iframes, forms,
+  handlers, `javascript:` URLs, or externally hosted images.
+- Cite the claims the argument depends on inline. Number source entries in first-citation
+  order. Carry honest source kinds and locators from the evidence record.
+- Treat furniture as part of the article's language. Plan it with the prose and
+  reassess it after rendering; every component needs a clear communicative or
+  editorial purpose. There is no target count, but the page must remain a
+  continuous article rather than a stack of components.
+- Create charts with `nb chart` from verified numbers and commit their
+  provenance. Capture exact visual evidence with `nb asset`. Inspect the image
+  and rendered page; include factual cited captions and useful alt text.
+- Fill `nb-meta` with actual values. `sources` and `words` are measured, not
+  targets to inflate. `harness` and `model` are the resolved writer runtime.
+
+The metadata block is JSON in `<head>`:
 
 ```html
 <script type="application/json" id="nb-meta">
-{
-  "protocol": "1.1",
-  "series": "semiconductors",
-  "slug": "micron",
-  "template": "article",
-  "title": "The scarcest commodity in AI is made by Micron",
-  "mode": "collection",
-  "order": null,
-  "date": "2026-07-06",
-  "tags": ["equity"],
-  "sources": 24,
-  "words": 4100,
-  "reading_minutes": 18,
-  "dek": "One-sentence teaser shown on the newsstand card.",
-  "harness": "claude-code-routine",
-  "model": "claude-fable-5"
-}
+  {
+    "protocol": "1.1",
+    "series": "semiconductors",
+    "slug": "micron",
+    "template": "article",
+    "title": "The scarcest commodity in AI is made by Micron",
+    "mode": "collection",
+    "order": null,
+    "date": "2026-07-06",
+    "tags": ["equity"],
+    "sources": 24,
+    "words": 4100,
+    "reading_minutes": 18,
+    "dek": "One-sentence teaser shown on the newsstand card.",
+    "harness": "harness-name",
+    "model": "selected-writer-model"
+  }
+</script>
 ```
 
-Field notes: `mode` is one of `collection | sequence | rolling | open`. `order` is the
-1-based item index for `sequence` mode, else null. `date` is the UTC date of your run.
-Every mode may use the series' single `template:` or one of its `templates:` choices;
-for a multi-template series, the correspondent chooses the package per article. `sources` and
-`words` are your self-measurements (the proof recounts, and >20% deviation is a WARN).
-`harness`/`model` are honest provenance, supplied by the correspondent from the
-commission's resolved production plan. A role cannot know its own runtime; use
-`harness-managed` when the runtime does not expose the selected model.
+`mode` is `collection`, `sequence`, `rolling`, or `open`. `order` is the
+one-based sequence index and otherwise null. `date` follows the run's UTC date.
 
-## Quality creed
+## Prepare, validate, and publish
 
-Articles teach. They do not summarize. Every claim the argument rests on carries a
-citation the reader can follow. Doubt is a veto: any role may kill a claim on doubt
-alone, and a sentence runs only when every hand that touched it would sign it. Equip
-the reader to go deeper on their own.
+After editor approval, run:
 
-Every article is produced by a chain of roles, each in a fresh context with its own
-skill and its own artifact under `.nb-work/<series>/<slug>/`: the correspondent
-commissions the piece (`task.md`); the coach studies how the best real writers on the
-subject actually write (`voice.md`) while the researcher builds the claims-and-evidence
-log (`research.md`); the writer drafts from those artifacts and proves the result; the
-editor attacks it (`requested-changes.md`); and the publisher performs deterministic
-delivery through green CI. No stage is licensed to skim because the night is long.
-Artifacts are written for the next agent (conclusions first, stable headings) and to
-the floor's own standard: every role tunes its ear on what the others wrote. The PR
-body is assembled from them.
+```text
+nb prepare-pr <workspace>/library/<series>/<slug>.html --library <library>
+```
 
-The chain is a division of labor, not a checklist one agent walks. An artifact
-written by anyone but the role whose name is on it is a forgery: it reads
-plausibly, it passes every automated check, and the article silently loses the
-work the role existed to do. `skills/correspondent/SKILL.md` is the night desk:
-it reads duty, commissions every article, creates one worktree per article, and
-directly launches every role. No child launches another child. Coach and
-researcher start in parallel; writer, editor, and publisher start only when
-their inputs exist. The correspondent coordinates phase transitions but writes
-no role artifact.
+The command validates the exact artifact tree and article, creates one safe
+commit from `origin/library`, proves the committed diff, pushes it, and opens or
+reuses the Article PR. If `gh` is unavailable, use its printed
+`NB_ARTICLE_PR_REQUIRED` request with the harness's GitHub connector. Do not
+recreate or edit the generated branch.
 
-Named peer messages are an optimization, never a dependency. When the runtime
-supports them, a role may ask a narrow blocking question of an already named
-peer. Otherwise the correspondent relays the request, resuming that role or
-launching a fresh instance against the same artifacts. Files are authoritative;
-messages carry only `DONE`, `REQUEST`, or `BLOCKED` control lines and paths. This
-requires neither nested spawning nor a provider-specific agent-team feature.
+CI runs the same `nb` proof, builds and render-probes the article, and
+auto-merges clean PRs when the series allows it. The orchestrator monitors every
+PR through CI, merge, and the published website. A CI failure returns to the
+orchestrator, which creates the necessary numbered repair and updates the same
+PR. The night ends with published articles or an explicit external blocker,
+never abandoned red PRs.
 
-A runtime that cannot spawn subagents runs the same chain in one context and
-sets `coordination: single-context` in `task.md` before the first role. The
-production record preserves that disclosure in the PR body. The pipeline
-survives. The fresh eyes do not, and the prose pays: an editor grading prose it
-helped write is not an editor. Never take that path silently.
-
-The skills are files in this repository, read with your file tools. They are not
-slash commands, and no runtime registers them: `/correspondent` will fail.
+Never merge or push to `library` directly. Never open a second PR for the same
+article. The protected workflow branch created by `nb sync` is the sole
+non-article exception and may be used only as its handoff directs.
