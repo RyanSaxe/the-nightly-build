@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A distilled network inherits its teacher's accuracy, not its predictions · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "knowledge-distillation",
+        "template": "paper",
+        "title": "A distilled network inherits its teacher's accuracy, not its predictions",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-30",
+        "tags": ["research"],
+        "sources": 8,
+        "words": 2434,
+        "reading_minutes": 11,
+        "dek": "Six years after Geoffrey Hinton proposed training a small network on a teacher's softened probabilities, a controlled study traced the technique's stubborn failures to an optimization problem no one had been solving.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          A distilled network inherits its teacher's accuracy, not its
+          predictions
+        </h1>
+        <p class="nb-dekline">
+          Six years after Geoffrey Hinton proposed training a small network on a
+          teacher's softened probabilities, a controlled study traced the
+          technique's stubborn failures to an optimization problem no one had
+          been solving.
+        </p>
+        <div class="nb-byline"><span>11 min read</span><span>2026-07-30</span></div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Distilling the Knowledge in a Neural Network</p>
+          <p class="nb-paper-meta">
+            Geoffrey Hinton, Oriol Vinyals &amp; Jeff Dean · NIPS 2014 Deep
+            Learning Workshop · arXiv:1503.02531 · 2015
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1503.02531"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            A very simple way to improve the performance of almost any machine
+            learning algorithm is to train many different models on the same data
+            and then to average their predictions. Unfortunately, making
+            predictions using a whole ensemble of models is cumbersome and may be
+            too computationally expensive to allow deployment to a large number
+            of users, especially if the individual models are large neural nets.
+            Caruana and his collaborators have shown that it is possible to
+            compress the knowledge in an ensemble into a single model which is
+            much easier to deploy and we develop this approach further using a
+            different compression technique. We achieve some surprising results on
+            MNIST and we show that we can significantly improve the acoustic model
+            of a heavily used commercial system by distilling the knowledge in an
+            ensemble of models into a single model. We also introduce a new type
+            of ensemble composed of one or more full models and many specialist
+            models which learn to distinguish fine-grained classes that the full
+            models confuse. Unlike a mixture of experts, these specialist models
+            can be trained rapidly and in parallel.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Abstract, p. 1"
+                data-nb-url="https://arxiv.org/abs/1503.02531"
+                >1</a
+              ></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A network's knowledge is not its weights</h2>
+        <p>
+          Train a dozen neural networks on the same data, average their
+          predictions, and you almost always get a better classifier than any one
+          of them.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Abstract; §1, p. 1"
+              data-nb-url="https://arxiv.org/abs/1503.02531"
+              >1</a
+            ></sup
+          >
+          The averaged ensemble is also close to useless in production. A dozen
+          forward passes per query costs a dozen times the latency and hardware.
+          That expense keeps good models off phones and out of low-latency
+          services.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1, p. 1">1</a></sup
+          >
+          Buciluǎ, Caruana, and Niculescu-Mizil had shown in 2006 that the
+          accuracy of such an ensemble could be poured into a single small
+          network cheap enough to deploy.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Model Compression, KDD '06"
+              data-nb-url="https://www.cs.cornell.edu/~caruana/compression.kdd06.pdf"
+              data-nb-note="The origin Hinton et al. credit and generalize."
+              >2</a
+            ></sup
+          >
+          What Hinton, Vinyals, and Dean took up in 2015 was the prior question:
+          what, exactly, is being poured.
+        </p>
+        <p>
+          Their answer starts by refusing to identify a model's knowledge with
+          its weights. A more useful view is that the knowledge is a learned
+          mapping from input vectors to output vectors.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§1, p. 1–2"
+              data-nb-note="&ldquo;a learned mapping from input vectors to output vectors.&rdquo;"
+              >1</a
+            ></sup
+          >
+          Two networks with different architectures and not a single weight in
+          common can express the same mapping, so the knowledge can move between
+          them once you can say what the mapping is. A trained classifier says
+          what the mapping is every time it runs. It reports not just the class it
+          picks but the full probability it assigns to every class. Train the
+          small network to reproduce those probabilities and you have transferred
+          the mapping without transferring the parameters.
+        </p>
+      </section>
+
+      <section data-nb-section="wrong-answers" id="wrong-answers">
+        <h2>The information hiding in the wrong answers</h2>
+        <p>
+          The class a network picks is the least of what it tells you. A model
+          trained to recognize vehicles gives a photo of a BMW a small
+          probability of being a garbage truck and a far smaller probability of
+          being a carrot.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§1, p. 2"
+              data-nb-note="&ldquo;that mistake is still many times more probable than mistaking it for a carrot.&rdquo;"
+              >1</a
+            ></sup
+          >
+          Those two small numbers are not noise. They record what the network
+          learned about the shape of the world: a BMW resembles a garbage truck
+          more than it resembles a carrot. The relative sizes of the
+          probabilities a model assigns to answers it rejects are its
+          <em>dark knowledge</em>, the similarity structure written into
+          everything the model declines to predict.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1, p. 2">1</a></sup
+          >
+        </p>
+        <p>
+          On a task like MNIST the effect is extreme. A well-trained digit
+          classifier is nearly certain about every example, so almost all of its
+          output sits on the correct answer. The leftover probability still
+          carries the structure: one handwritten 2 might be given a probability of
+          10⁻⁶ of being a 3 and 10⁻⁹ of being a 7, while another 2 leans the other
+          way.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§1, p. 2"
+              data-nb-note="&ldquo;This is valuable information that defines a rich similarity structure over the data.&rdquo;"
+              >1</a
+            ></sup
+          >
+          That ratio says which twos look threeish and which look sevenish, and it
+          is exactly what a one-hot label cannot say. A hard label, a 1 for the
+          true class and 0 everywhere else, treats every wrong answer as equally
+          wrong. The teacher's softened output ranks them.
+        </p>
+        <p>
+          This is why soft targets can carry more information per example than
+          labels. A full distribution over many classes, most of its mass in a
+          high-entropy tail, constrains the student far more tightly per example
+          and varies less from one example to the next than a single correct
+          label does.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1, p. 2">1</a></sup
+          >
+          Hinton, Vinyals, and Dean note the practical payoff: a student can often
+          be trained on much less data, at a much higher learning rate, than the
+          teacher needed.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1, p. 2">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="temperature" id="temperature">
+        <h2>Raising the temperature of the softmax</h2>
+        <p>
+          The trouble is that on MNIST those informative ratios are numbers like
+          10⁻⁶, and a cross-entropy loss barely feels them: a target that small
+          contributes almost nothing next to the target of nearly 1 on the correct
+          class.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1, p. 2">1</a></sup
+          >
+          Ba and Caruana had worked around this the year before by regressing the
+          student directly onto the teacher's logits, the raw scores fed into the
+          final softmax, sidestepping the softmax's habit of crushing small
+          probabilities toward zero.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Do Deep Nets Really Need to be Deep?, NIPS 2014"
+              data-nb-url="https://arxiv.org/abs/1312.6184"
+              data-nb-note="Shallow students matched a deep teacher's logits and reached accuracies training on labels alone could not."
+              >3</a
+            ></sup
+          >
+          Hinton, Vinyals, and Dean found a more general fix, and it needs only
+          one knob.
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \htmlClass{nb-mc3}{q_i} \;=\; \frac{\exp\!\left(\htmlClass{nb-mc1}{z_i}\,/\,\htmlClass{nb-mc2}{T}\right)}{\sum_j \exp\!\left(\htmlClass{nb-mc1}{z_j}\,/\,\htmlClass{nb-mc2}{T}\right)}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">z_i</span
+              ><span
+                >the logit for class i, the network's raw score before the
+                softmax.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">T</span
+              ><span
+                >the temperature. At T = 1 this is the ordinary softmax; larger T
+                flattens the distribution.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">q_i</span
+              ><span
+                >the softened probability the teacher assigns to class i, used as
+                the student's target.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            Divide every logit by a temperature before exponentiating, and the
+            teacher's distribution softens.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Eq. 1, §2, p. 2–3"
+                data-nb-url="https://arxiv.org/abs/1503.02531"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          At a temperature of 1 the softmax behaves as usual. As the temperature
+          grows, the probabilities spread toward uniform, lifting the buried
+          ratios into a range the loss can see.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2, p. 3">1</a></sup
+          >
+          Generate the teacher's targets at a high temperature, train the student
+          against them at the same high temperature, then reset the student to a
+          temperature of 1 for deployment.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2, p. 3">1</a></sup
+          >
+          When the true labels are on hand, the recipe adds a second term: an
+          ordinary cross-entropy against the hard labels at a temperature of 1,
+          weighted well below the soft-target term.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2, p. 3">1</a></sup
+          >
+          One bookkeeping detail matters. The gradient from the soft targets
+          shrinks as 1/T², so at high temperature the hard-label gradient would
+          swamp it. Multiplying the soft term by T² holds the two forces in
+          proportion as the temperature is tuned.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2, p. 3">1</a></sup
+          >
+        </p>
+        <p>
+          The temperature also explains Ba and Caruana's logit regression as a
+          limiting case of the same idea.
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \frac{\partial C}{\partial z_i} \;\approx\; \frac{1}{N\,T^{2}}\left(z_i - v_i\right)
+          </div>
+          <figcaption>
+            At high temperature, with the logits zero-meaned for each example, the
+            distillation gradient reduces to the gradient of ½(zᵢ − vᵢ)², so
+            matching the softened distribution becomes matching the teacher's raw
+            logits vᵢ.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Eqs. 2–4, §2.1, p. 3"
+                data-nb-url="https://arxiv.org/abs/1503.02531"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          At a lower temperature the loss quietly ignores the teacher's most
+          negative logits, which are barely constrained during the teacher's own
+          training and may be noise. When the student is far too small to absorb
+          everything the teacher knows, an intermediate temperature, attending to
+          some of that structure but not all of it, works best.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2.1, p. 3">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="what-it-bought" id="what-it-bought">
+        <h2>What soft targets bought</h2>
+        <p>
+          The MNIST results made the case in three numbers. A large, heavily
+          regularized network with two hidden layers of 1200 units made 67 test
+          errors. A smaller network of two 800-unit layers, trained the ordinary
+          way, made 146. The same small network, its only extra help a
+          soft-target loss from the large one at a temperature of 20, made 74.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§3, p. 4"
+              data-nb-url="https://arxiv.org/abs/1503.02531"
+              >1</a
+            ></sup
+          >
+          Most of the gap between the small network's own result and the large
+          network's closed, and it closed even though the soft targets never
+          contained the translated and jittered images the large network had been
+          regularized with. The knowledge of how to generalize came across in the
+          probabilities themselves.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3, p. 4">1</a></sup
+          >
+        </p>
+        <p>
+          Then a stranger result. Hinton, Vinyals, and Dean removed every example
+          of the digit 3 from the transfer set, so the student never saw a single
+          3 while learning. Tested on 1010 threes it had never met, it still read
+          most of them correctly: after correcting one badly-set bias, the
+          distilled network got 98.6% of the test threes right.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§3, p. 4"
+              data-nb-note="&ldquo;98.6% of the test 3s correct despite never having seen a 3 during training.&rdquo;"
+              >1</a
+            ></sup
+          >
+          A concept it had no direct examples of arrived entirely through its
+          resemblance to the concepts it did see.
+        </p>
+        <p>
+          Speech carried the same lesson on a system that was in commercial use.
+          A ten-model ensemble lifted frame accuracy from 58.9% to 61.1%; a single
+          distilled network the same size as the baseline recovered 60.8%, keeping
+          more than 80% of the ensemble's gain in one deployable model.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 1, §4, p. 5">1</a></sup
+          >
+        </p>
+
+        <table class="nb-table">
+          <caption>
+            Distilling a ten-model acoustic ensemble into one network of the same
+            size recovers most of the ensemble's frame-accuracy gain.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Table 1, §4, p. 5"
+                data-nb-url="https://arxiv.org/abs/1503.02531"
+                >1</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>System</th>
+              <th>Frame accuracy</th>
+              <th>WER</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Baseline</span></td>
+              <td>58.9%</td>
+              <td>10.9%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">10-model ensemble</span></td>
+              <td>61.1%</td>
+              <td>10.7%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Distilled single model</span></td>
+              <td>60.8%</td>
+              <td>10.7%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          Soft targets doubled as a regularizer. Trained on just 3% of the speech
+          data, the baseline overfit to 44.5% test frame accuracy; the same
+          network trained on the same 3% against soft targets reached 57.0%,
+          within two points of the model trained on all the data.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Table 5, §6, p. 7–8"
+              data-nb-note="Soft targets recover &ldquo;almost all the information in the full training set (about 2% shy).&rdquo;"
+              >1</a
+            ></sup
+          >
+          By 2015 the case looked closed: soft targets transfer a teacher's
+          knowledge, and they do it well.
+        </p>
+      </section>
+
+      <section data-nb-section="student-vs-teacher" id="student-vs-teacher">
+        <h2>Does the student match the teacher?</h2>
+        <p>
+          The 2015 paper measured its students by accuracy: how often the
+          distilled network gets the answer right. It never asked the other
+          question its own story invites: how often the student's whole
+          probability distribution agrees with the teacher's. Stanton, Izmailov,
+          Kirichenko, Alemi, and Wilson asked it directly in 2021, and named the
+          two things the field had been quietly conflating.<sup class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="§1, §3.2"
+              data-nb-url="https://arxiv.org/abs/2106.05945"
+              data-nb-note="&ldquo;fidelity, the ability of a student to match a teacher's predictions, and generalization, the performance of a student in predicting unseen, in-distribution data.&rdquo;"
+              >4</a
+            ></sup
+          >
+          <em>Fidelity</em> is how well the student matches the teacher's
+          predictions. <em>Generalization</em> is how well the student predicts
+          unseen data. The founding story assumes the first delivers the second:
+          transfer the teacher's mapping faithfully and the student inherits the
+          skill. The measurement found the two come apart.
+        </p>
+        <p>
+          On an easy task the picture is reassuring. Distilling a small LeNet-5
+          into an identical copy on MNIST, with enough transfer data, drives
+          student–teacher top-1 agreement past 99%.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Fig. 2, §4.1, p. 4">4</a></sup
+          >
+          On a modern task it falls apart. Distilling a ResNet-56 on CIFAR-100,
+          with the student given the teacher's exact architecture so capacity is
+          not the limit, the best agreement Stanton and colleagues could reach sat
+          in the mid-eighties of a percent. Often it was lower.<sup
+            class="nb-cite"
+            ><a href="#s4" data-nb-locator="Fig. 1, §4.1, p. 4">4</a></sup
+          >
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="knowledge-distillation/chart-1.png"
+            alt="Horizontal bar chart of student-teacher top-1 agreement: LeNet-5 on MNIST at 99 percent, ResNet-56 on CIFAR-100 with MixUp at 86 percent, and ResNet-56 on CIFAR-100 with crops and flips at 84.5 percent, against a dashed line at 100 percent marking perfect fidelity."
+          />
+          <figcaption>
+            Fig. 1 · How often a distilled student's top-1 prediction agrees with
+            its teacher on held-out data. A toy task reaches near-perfect fidelity;
+            a modern task plateaus in the mid-eighties even when the student has
+            the teacher's exact architecture.<sup class="nb-cite"
+              ><a
+                href="#s4"
+                data-nb-locator="Figs. 2–3, §4.1, §5.1, pp. 4, 7"
+                data-nb-url="https://arxiv.org/abs/2106.05945"
+                data-nb-note="LeNet/MNIST over 99%; MixUp(T=4) 86%; Baseline crops+flips(T=4) 84.5%."
+                >4</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          No standard intervention closed the gap. Enlarging the transfer set with
+          generated images helped a little, and so did heavy data augmentation.
+          The best single recipe, MixUp at a temperature of 4, reached 86% test
+          agreement, with plain crops and flips close behind at 84.5%.<sup
+            class="nb-cite"
+            ><a href="#s4" data-nb-locator="Fig. 3, §5.1, p. 7">4</a></sup
+          >
+          The reason turned out to be blunt: the student does not match the
+          teacher on the test set because it does not even match the teacher on
+          the training set.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="§4.4, §6, pp. 5, 8">4</a></sup
+          >
+          Training a ResNet-20 to copy itself, Stanton and colleagues reached
+          78.95% train agreement after 300 epochs, and only 83.3% after 5000.
+          That is a 2% gain for sixteen times the compute, on a problem where a
+          perfect answer provably exists: the teacher's own weights achieve zero
+          loss.<sup
+            class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="§6.2, Fig. 6, p. 9"
+              data-nb-note="A student initialized at a convex mix of teacher and random weights only snaps to ~100% agreement past λ = 0.375."
+              >4</a
+            ></sup
+          >
+          Distillation is an unusually hard optimization problem, and ordinary
+          training does not solve it.
+        </p>
+        <p>
+          One result looks like a counterexample. In self-distillation, where
+          teacher and student are the
+          same size, the student sometimes beats the teacher, as Furlanello and
+          colleagues showed with Born-Again Networks.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="Born-Again Neural Networks, ICML 2018, abstract"
+              data-nb-url="https://arxiv.org/abs/1805.04770"
+              data-nb-note="&ldquo;students parameterized identically to their teachers ... outperform their teachers significantly.&rdquo;"
+              >5</a
+            ></sup
+          >
+          But a student that perfectly matched its teacher could not outscore it.
+          The improvement exists precisely because the student fails to copy the
+          teacher; the failure is doing the work.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="§4.2, p. 4">4</a></sup
+          >
+          Where the teacher is genuinely stronger than any student, an ensemble or
+          a much larger model, that same failure to copy is exactly what you
+          cannot afford.
+        </p>
+      </section>
+
+      <section data-nb-section="earning-the-name" id="earning-the-name">
+        <h2>Where distillation earns its name</h2>
+        <p>
+          None of this makes distillation a failure. It makes it a different tool
+          than its name promises. When the goal is a smaller model that works,
+          distillation delivers, with years of deployed evidence behind it.
+          DistilBERT reproduces 97% of BERT's language-understanding score at 40%
+          less size and 60% more speed, distilling during pre-training rather than
+          on a single task.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="DistilBERT, abstract"
+              data-nb-url="https://arxiv.org/abs/1910.01108"
+              data-nb-note="&ldquo;reduce the size of a BERT model by 40%, while retaining 97% of its language understanding capabilities and being 60% faster.&rdquo;"
+              >6</a
+            ></sup
+          >
+          That is the 2015 promise kept: a cheaper network that generalizes almost
+          as well as an expensive one.
+        </p>
+        <p>
+          What Stanton's result costs is the stronger reading, the one the word
+          <em>knowledge</em> invites, that the student has taken on the teacher's
+          actual beliefs. For most of what practitioners want, which is
+          generalization, that stronger reading is not needed. For the rest,
+          calibration you can trust, an interpretable stand-in for a black box,
+          behavior that faithfully mirrors a reference model, fidelity is the
+          point, and the mid-eighties is not enough.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="§4.3, p. 5">4</a></sup
+          >
+        </p>
+        <p>
+          The fix exists, and it is expensive. Beyer and colleagues treat
+          distillation as literally matching the teacher's function: identical
+          teacher and student views of each input, aggressive augmentation, and
+          training for thousands of epochs. Given that, the optimization problem
+          Stanton diagnosed begins to yield, and a ResNet-50 distilled this way
+          reaches 82.8% top-1 on ImageNet.<sup class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="A good teacher is patient and consistent, CVPR 2022, abstract; Fig. 1"
+              data-nb-url="https://arxiv.org/abs/2106.05237"
+              data-nb-note="&ldquo;distillation works the best when we train patiently for a large number of epochs and provide consistent image views&rdquo;; schedules run to ~9600 epochs."
+              >7</a
+            ></sup
+          >
+          Patience and consistency buy the fidelity that ordinary schedules never
+          reach. Few teams will pay 9600 epochs for it.
+        </p>
+        <p>
+          One more finding pins the 2015 intuition in place by showing what breaks
+          it. Müller, Kornblith, and Hinton found that a teacher trained with
+          label smoothing, a routine trick that improves the teacher's own
+          accuracy, makes a worse teacher for distillation.<sup class="nb-cite"
+            ><a
+              href="#s8"
+              data-nb-locator="When Does Label Smoothing Help?, NeurIPS 2019, abstract"
+              data-nb-url="https://arxiv.org/abs/1906.02629"
+              data-nb-note="&ldquo;if a teacher network is trained with label smoothing, knowledge distillation into a student network is much less effective.&rdquo;"
+              >8</a
+            ></sup
+          >
+          Label smoothing pulls each class's examples into a tight cluster and
+          erases the between-class resemblances in the logits. The teacher gets
+          better, the dark knowledge gets deleted, and the student learns less.<sup
+            class="nb-cite"
+            ><a href="#s8" data-nb-locator="abstract">8</a></sup
+          >
+          The relative probabilities of the wrong answers were carrying the
+          freight all along, exactly as the 2015 paper claimed.
+        </p>
+
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Distillation reliably ships a compact network that generalizes about
+            as well as its teacher, which is what most deployments need and what a
+            decade of results confirms.<sup class="nb-cite"
+              ><a href="#s6" data-nb-locator="DistilBERT, abstract">6</a></sup
+            >
+            It does not reliably ship the teacher's predictive distribution. On
+            modern architectures the student typically matches the teacher's top-1
+            answer only around 85% of the time. Copying the teacher is an
+            optimization problem ordinary training fails to solve.<sup
+              class="nb-cite"
+              ><a href="#s4" data-nb-locator="§6, §7, pp. 8–10">4</a></sup
+            >
+            Expect a smaller model that works, not a faithful replica of the
+            teacher's judgment, unless calibration, interpretability, or faithful
+            behavior is the goal and you will pay Beyer's schedule to get it.<sup
+              class="nb-cite"
+              ><a href="#s7" data-nb-locator="abstract">7</a></sup
+            >
+            An optimizer that closed the train-agreement gap cheaply would
+            overturn this.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1503.02531"
+              >arXiv · Hinton, Vinyals &amp; Dean, "Distilling the Knowledge in a
+              Neural Network" (2015)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.cs.cornell.edu/~caruana/compression.kdd06.pdf"
+              >KDD '06 · Buciluǎ, Caruana &amp; Niculescu-Mizil, "Model
+              Compression"</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1312.6184"
+              >arXiv · Ba &amp; Caruana, "Do Deep Nets Really Need to be Deep?"
+              (2014)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2106.05945"
+              >arXiv · Stanton, Izmailov, Kirichenko, Alemi &amp; Wilson, "Does
+              Knowledge Distillation Really Work?" (NeurIPS 2021)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1805.04770"
+              >arXiv · Furlanello, Lipton, Tschannen, Itti &amp; Anandkumar,
+              "Born-Again Neural Networks" (ICML 2018)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1910.01108"
+              >arXiv · Sanh, Debut, Chaumond &amp; Wolf, "DistilBERT" (2019)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2106.05237"
+              >arXiv · Beyer, Zhai, Royer, Markeeva, Anil &amp; Kolesnikov,
+              "Knowledge distillation: A good teacher is patient and consistent"
+              (CVPR 2022)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1906.02629"
+              >arXiv · Müller, Kornblith &amp; Hinton, "When Does Label Smoothing
+              Help?" (NeurIPS 2019)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
