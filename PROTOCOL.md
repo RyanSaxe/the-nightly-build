@@ -5,8 +5,10 @@ before loading the correspondent skill. The protocol defines the process; the
 skill defines how the correspondent plans, commissions, and runs the desk.
 
 Run system operations through the checkout-owned `nb` executable. It locates
-this exact checkout and lets uv provide its Python environment. Do not install
-engine dependencies by hand or invoke files under `engine/` directly.
+this exact checkout and runs on [uv](https://docs.astral.sh/uv/), which must be
+available on PATH; install it if the run environment lacks it. uv provides the
+engine's Python environment, so do not install engine dependencies by hand or
+invoke files under `engine/` directly.
 
 ## Invariants
 
