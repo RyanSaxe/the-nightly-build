@@ -110,7 +110,17 @@ def main(argv=None):
     if args.pr:
         if not args.base:
             p.error("--pr requires --base")
-        run_pr_mode(args, rep)
+        run_pr_mode(
+            repo=args.repo,
+            main=args.main,
+            base=args.base,
+            head=args.head,
+            library=args.library,
+            today=args.today,
+            check_links=args.check_links,
+            deletions_by_owner=args.deletions_by_owner,
+            rep=rep,
+        )
     else:
         if not args.file or not args.series:
             p.error("local mode requires FILE and --series")

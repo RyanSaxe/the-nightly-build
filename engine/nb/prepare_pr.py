@@ -18,7 +18,6 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
-from types import SimpleNamespace
 
 from nb import meta as nb_meta
 from nb.artifacts import validate_artifacts
@@ -179,7 +178,7 @@ def _prove_branch(
     today: dt.date | None,
 ) -> None:
     report = Report()
-    arguments = SimpleNamespace(
+    run_pr_mode(
         repo=str(worktree),
         main=str(main_root),
         base=base,
@@ -188,8 +187,8 @@ def _prove_branch(
         today=today.isoformat() if today else None,
         check_links=check_links,
         deletions_by_owner=False,
+        rep=report,
     )
-    run_pr_mode(arguments, report)
     emit(report, False)
     if report.blocks:
         raise _PrepareError("the generated Article PR did not pass nb check")

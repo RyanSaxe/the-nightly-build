@@ -154,7 +154,6 @@ def test_nb_history_reads_the_library_without_returning_html(
             "needle",
             "--library",
             str(tmp_path),
-            "--json",
         ],
         cwd=REPO,
         capture_output=True,
@@ -162,8 +161,8 @@ def test_nb_history_reads_the_library_without_returning_html(
     )
 
     assert result.returncode == 0, result.stderr
-    payload = json.loads(result.stdout)
-    assert payload[0]["reference"] == "the-wire/example"
+    assert "the-wire/example" in result.stdout
+    assert "The unmistakable needle belongs to this article." in result.stdout
     assert "<h2>" not in result.stdout
 
 
@@ -221,4 +220,4 @@ def test_nb_history_show_rejects_search_arguments(tmp_path: pathlib.Path) -> Non
     )
 
     assert result.returncode == 2
-    assert "--show cannot be combined" in result.stderr
+    assert "--show cannot be combined with a query or --series" in result.stderr

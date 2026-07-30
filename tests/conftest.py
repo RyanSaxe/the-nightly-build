@@ -15,7 +15,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import types
 from collections.abc import Callable
 
 import pytest
@@ -297,7 +296,7 @@ class PressRepo:
         deletions_by_owner: bool = False,
     ) -> Findings:
         rep = check.Report()
-        args = types.SimpleNamespace(
+        check.run_pr_mode(
             repo=self.path,
             main=None,
             base=base,
@@ -306,8 +305,8 @@ class PressRepo:
             today=today,
             check_links=False,
             deletions_by_owner=deletions_by_owner,
+            rep=rep,
         )
-        check.run_pr_mode(args, rep)
         return Findings(rep)
 
 

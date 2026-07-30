@@ -9,8 +9,6 @@ tour or returning an earlier article's markup and ordered structure.
 from __future__ import annotations
 
 import argparse
-import dataclasses
-import json
 import os
 import pathlib
 import re
@@ -226,12 +224,15 @@ def excerpt(text: str, terms: Sequence[str]) -> str | None:
     return fragment
 
 
-def _score(entry: HistoryEntry, terms: Sequence[str]) -> int:
+def _matching_score(entry: HistoryEntry, terms: Sequence[str]) -> int | None:
     title = entry.title.casefold()
     dek = entry.dek.casefold()
     tags = " ".join(entry.tags).casefold()
     text = entry.text.casefold()
     reference = entry.reference.casefold()
+    searchable = "\n".join((reference, title, dek, tags, text))
+    if not all(term in searchable for term in terms):
+        return None
     return sum(
         (12 if term in title else 0)
         + (7 if term in dek else 0)
@@ -250,27 +251,15 @@ def search(
     limit: int = DEFAULT_LIMIT,
 ) -> list[HistoryResult]:
     terms = tuple(term.casefold().strip() for term in query if term.strip())
-    eligible = [entry for entry in entries if series is None or entry.series == series]
-    if terms:
-        eligible = [
-            entry
-            for entry in eligible
-            if all(
-                term
-                in " ".join(
-                    (
-                        entry.reference,
-                        entry.title,
-                        entry.dek,
-                        " ".join(entry.tags),
-                        entry.text,
-                    )
-                ).casefold()
-                for term in terms
-            )
-        ]
-    eligible.sort(
-        key=lambda entry: (_score(entry, terms), entry.date, entry.reference),
+    scored: list[tuple[int, HistoryEntry]] = []
+    for entry in entries:
+        if series is not None and entry.series != series:
+            continue
+        score = _matching_score(entry, terms)
+        if score is not None:
+            scored.append((score, entry))
+    scored.sort(
+        key=lambda item: (item[0], item[1].date, item[1].reference),
         reverse=True,
     )
     return [
@@ -282,7 +271,7 @@ def search(
             tags=entry.tags,
             match=excerpt(entry.text, terms),
         )
-        for entry in eligible[:limit]
+        for _score_value, entry in scored[:limit]
     ]
 
 
@@ -326,7 +315,6 @@ def parser() -> argparse.ArgumentParser:
     )
     command.add_argument("--series", help="restrict results to one series")
     command.add_argument("--limit", type=_limit, default=DEFAULT_LIMIT)
-    command.add_argument("--json", action="store_true")
     command.add_argument(
         "--show",
         metavar="SERIES/SLUG",
@@ -344,22 +332,19 @@ def _shown_article(library: pathlib.Path, reference: str) -> pathlib.Path | None
         or nb_meta.SLUG_RE.fullmatch(slug) is None
     ):
         raise ValueError("--show expects SERIES/SLUG")
-    return next(
-        (
-            pathlib.Path(path)
-            for found_series, found_slug, path in scan_library(str(library))
-            if found_series == series and found_slug == slug
-        ),
-        None,
-    )
+    directory = nb_meta.series_dir(str(library), series)
+    if directory is None:
+        return None
+    article = pathlib.Path(directory) / f"{slug}.html"
+    return article if article.is_file() else None
 
 
 def main(arguments: list[str] | None = None) -> None:
     command = parser()
     options = command.parse_args(arguments)
     if options.show:
-        if options.query or options.json or options.series:
-            command.error("--show cannot be combined with a query, --json, or --series")
+        if options.query or options.series:
+            command.error("--show cannot be combined with a query or --series")
         try:
             article = _shown_article(options.library, options.show)
         except ValueError as error:
@@ -374,10 +359,7 @@ def main(arguments: list[str] | None = None) -> None:
         series=options.series,
         limit=options.limit,
     )
-    if options.json:
-        print(json.dumps([dataclasses.asdict(result) for result in results], indent=2))
-    else:
-        print(format_results(results))
+    print(format_results(results))
 
 
 if __name__ == "__main__":

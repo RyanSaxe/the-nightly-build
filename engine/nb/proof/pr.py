@@ -5,6 +5,8 @@ exact workflow sync from the fork's main branch. Article bundles include the
 exact role inputs and outputs that produced the article.
 """
 
+from __future__ import annotations
+
 import datetime as _dt
 import os
 import pathlib
@@ -15,6 +17,7 @@ from nb import meta as nb_meta
 from nb.artifacts import artifact_warnings, validate_artifacts
 from nb.config import load_series
 from nb.proof import check_article
+from nb.report import Report
 from nb.workflow_sync import classify_workflow_sync
 
 __all__ = (
@@ -70,17 +73,28 @@ def materialize_bundle(repo, head, changes, dest):
             fh.write(blob)
 
 
-def run_pr_mode(args, rep):
+def run_pr_mode(
+    *,
+    repo: str,
+    base: str,
+    head: str,
+    library: str | None,
+    rep: Report,
+    main: str | None = None,
+    today: str | None = None,
+    check_links: bool = True,
+    deletions_by_owner: bool = False,
+) -> None:
     try:
-        changes = pr_changed_files(args.repo, base=args.base, head=args.head)
+        changes = pr_changed_files(repo, base=base, head=head)
     except subprocess.CalledProcessError as e:
         rep.block("B-DIFF-SHAPE", f"git diff failed: {e.stderr or e}")
         return
-    cfg_repo = getattr(args, "main", None) or args.repo
+    cfg_repo = main or repo
     workflow_sync = classify_workflow_sync(
-        args.repo,
+        repo,
         cfg_repo,
-        head=args.head,
+        head=head,
         changes=changes,
     )
     if workflow_sync.attempted:
@@ -93,11 +107,7 @@ def run_pr_mode(args, rep):
                 workflow_sync.reason or "invalid workflow sync",
             )
         return
-    if (
-        getattr(args, "deletions_by_owner", False)
-        and changes
-        and all(status == "D" for status, _ in changes)
-    ):
+    if deletions_by_owner and changes and all(status == "D" for status, _ in changes):
         if nb_meta.article_bundle_path(changes, status="D") is None:
             rep.block(
                 "B-DIFF-SHAPE",
@@ -124,7 +134,7 @@ def run_pr_mode(args, rep):
     series_cfg, _ = load_series(cfg_repo, series_id)
     rep.strict = bool(series_cfg and series_cfg.get("strict"))
     with tempfile.TemporaryDirectory() as bundle_dir:
-        materialize_bundle(args.repo, args.head, changes, bundle_dir)
+        materialize_bundle(repo, head, changes, bundle_dir)
         for issue in validate_artifacts(
             pathlib.Path(bundle_dir), series=series_id, slug=m.group(2)
         ):
@@ -137,8 +147,8 @@ def run_pr_mode(args, rep):
             os.path.join(bundle_dir, path),
             series_id,
             repo=cfg_repo,
-            library_dir=args.library,
+            library_dir=library,
             rep=rep,
-            today=args.today and _dt.date.fromisoformat(args.today),
-            check_links=args.check_links,
+            today=today and _dt.date.fromisoformat(today),
+            check_links=check_links,
         )
