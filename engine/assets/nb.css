@@ -1489,6 +1489,22 @@ figure.nb-chart noscript {
   white-space: normal;
 }
 
+@media (width <= 640px) {
+  .nb-table .nb-table-token {
+    max-inline-size: min(7rem, 30vw);
+    white-space: normal;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .nb-table td.txt,
+  .nb-table th.txt {
+    min-inline-size: min(14rem, 68vw);
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}
+
 /* lesson furniture */
 
 /* @deprecated nb-objectives -> nb-note: retired from the catalog (the nb-note

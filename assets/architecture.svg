@@ -1,168 +1,448 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" role="img" aria-labelledby="diagram-title diagram-description">
-  <title id="diagram-title">The Nightly Build article architecture</title>
-  <desc id="diagram-description">Main enters the orchestrator, which commissions isolated article worktrees and directly launches every role. Voice coaching and research run in parallel before writing, editing, and publishing. Passing work opens a library pull request and publishes to GitHub Pages after green CI.</desc>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1880"
+  height="1000"
+  viewBox="0 0 1880 1000"
+  role="img"
+  aria-labelledby="title description"
+>
+  <title id="title">The Nightly Build production flow</title>
+  <desc id="description">
+    The orchestrator creates agent context and manages parallel isolated article
+    runs. Each run prepares an article pull request before GitHub creates it.
+    Successful pull requests are automatically merged and published through
+    GitHub Pages. A failed CI check returns to the orchestrator for repair.
+  </desc>
+
   <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M0 0L10 5L0 10Z" fill="#71858d"/>
+    <marker
+      id="arrow-gray"
+      markerWidth="10"
+      markerHeight="10"
+      refX="9"
+      refY="5"
+      orient="auto"
+    >
+      <path d="M0 0L10 5L0 10Z" fill="#6f828a" />
     </marker>
-    <marker id="repair-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M0 0L10 5L0 10Z" fill="#c98612"/>
+    <marker
+      id="arrow-green"
+      markerWidth="10"
+      markerHeight="10"
+      refX="9"
+      refY="5"
+      orient="auto"
+    >
+      <path d="M0 0L10 5L0 10Z" fill="#5f916d" />
     </marker>
-    <marker id="ci-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M0 0L10 5L0 10Z" fill="#c16e61"/>
+    <marker
+      id="arrow-red"
+      markerWidth="10"
+      markerHeight="10"
+      refX="9"
+      refY="5"
+      orient="auto"
+    >
+      <path d="M0 0L10 5L0 10Z" fill="#a35349" />
     </marker>
-    <marker id="message-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M0 0L10 5L0 10Z" fill="#795b95"/>
-    </marker>
-    <marker id="failure-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M0 0L10 5L0 10Z" fill="#c16e61"/>
+    <marker
+      id="arrow-gold"
+      markerWidth="10"
+      markerHeight="10"
+      refX="9"
+      refY="5"
+      orient="auto"
+    >
+      <path d="M0 0L10 5L0 10Z" fill="#c48216" />
     </marker>
     <style>
-      .edge { fill: none; stroke: #71858d; stroke-width: 2.4; marker-end: url(#arrow); }
-      .leader { fill: none; stroke: #9cafb2; stroke-width: 2; stroke-dasharray: 6 7; }
-      .repair { fill: none; stroke: #c98612; stroke-width: 2.2; stroke-dasharray: 7 6; marker-end: url(#repair-arrow); }
-      .message { fill: none; stroke: #795b95; stroke-width: 2.2; stroke-dasharray: 4 6; marker-end: url(#message-arrow); }
-      .failure { fill: none; stroke: #c16e61; stroke-width: 2.2; stroke-dasharray: 7 6; marker-end: url(#failure-arrow); }
-      .ci { fill: none; stroke: #c16e61; stroke-width: 2.3; stroke-dasharray: 8 6; marker-end: url(#ci-arrow); }
-      .node-title { fill: #10212b; font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .node-copy { fill: #61727b; font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .artifact { fill: #795b95; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
-      .panel-title { fill: #10212b; font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: .6px; }
-      .panel-copy { fill: #61727b; font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .label { fill: #5c7078; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .repair-label { fill: #9a680f; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .message-label { fill: #795b95; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .failure-label { fill: #a35349; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      .ci-label { fill: #a35349; font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .node {
+        stroke-width: 2;
+      }
+      .title {
+        fill: #10212b;
+        font: 700 20px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .copy {
+        fill: #5f727b;
+        font: 15px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .label-success {
+        fill: #4e7f5c;
+        font: 700 14px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+        text-anchor: middle;
+      }
+      .label-failure {
+        fill: #944b43;
+        font: 700 14px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+        text-anchor: middle;
+      }
+      .flow {
+        fill: none;
+        stroke: #6f828a;
+        stroke-width: 2.5;
+        marker-end: url(#arrow-gray);
+      }
+      .success {
+        fill: none;
+        stroke: #5f916d;
+        stroke-width: 2.5;
+        marker-end: url(#arrow-green);
+      }
+      .failure {
+        fill: none;
+        stroke: #a35349;
+        stroke-width: 2.25;
+        stroke-dasharray: 7 6;
+        marker-end: url(#arrow-red);
+      }
+      .request {
+        fill: none;
+        stroke: #c48216;
+        stroke-width: 2.25;
+        stroke-dasharray: 6 6;
+        marker-end: url(#arrow-gold);
+      }
+      .request-label {
+        fill: #a66d10;
+        font: 700 14px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+        text-anchor: middle;
+      }
+      .stage {
+        fill: #fbfdfc;
+        stroke: #76a3ab;
+        stroke-width: 2;
+        stroke-dasharray: 9 7;
+      }
+      .stage-title {
+        fill: #10212b;
+        font: 700 20px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage-copy {
+        fill: #5f727b;
+        font: 15px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .role {
+        fill: #fff3d7;
+        stroke: #d49620;
+        stroke-width: 2;
+      }
+      .role-title {
+        fill: #10212b;
+        font: 700 19px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .role-copy {
+        fill: #5f727b;
+        font: 14px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .expand {
+        fill: none;
+        stroke: #76a3ab;
+        stroke-width: 2;
+        stroke-dasharray: 6 6;
+      }
+      .flow-label {
+        fill: #5f727b;
+        font: 700 14px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+        text-anchor: middle;
+      }
+      .stage-outline {
+        stroke-width: 2;
+        stroke-dasharray: 9 7;
+      }
+      .outline-title {
+        fill: #5f727b;
+        font: 700 18px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
     </style>
   </defs>
 
-  <rect width="1440" height="960" fill="#fbfaf7"/>
+  <rect width="1880" height="1000" fill="#fffefb" />
 
-  <rect x="80" y="300" width="1280" height="620" rx="24" fill="#fffdf8" stroke="#afbfbd" stroke-width="2" stroke-dasharray="9 7"/>
-  <text class="panel-title" x="115" y="342">INSIDE EACH ISOLATED WORKTREE</text>
-  <text class="panel-copy" x="115" y="367">The correspondent launches each role; artifacts carry state between isolated contexts.</text>
-
-  <path class="edge" d="M210 170H270"/>
-  <path class="edge" d="M490 170H580"/>
-  <path class="leader" d="M690 215V300"/>
-  <circle cx="690" cy="300" r="5" fill="#9cafb2"/>
-  <path class="edge" d="M1260 170H1320"/>
-  <path class="edge" d="M1225 530V225"/>
-
-  <path class="ci" d="M1180 115V72Q1180 58 1166 58H394Q380 58 380 72V115"/>
-  <rect x="706" y="43" width="150" height="28" rx="14" fill="#fbfaf7"/>
-  <text class="ci-label" x="781" y="61" text-anchor="middle">CI failure · role routing</text>
-
-  <rect x="50" y="130" width="160" height="80" rx="14" fill="#e8f2f4" stroke="#76a3ab" stroke-width="2"/>
-  <text class="node-title" x="75" y="164">main</text>
-  <text class="node-copy" x="75" y="187">engine + press/</text>
-
-  <rect x="270" y="115" width="220" height="110" rx="14" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="295" y="149">Orchestrator</text>
-  <text class="node-copy" x="295" y="174">sync · select · commission</text>
-  <text class="node-copy" x="295" y="201">launch · route · monitor</text>
-
-  <rect x="592" y="115" width="220" height="100" rx="14" fill="#f7eed9" stroke="#d8b56a" stroke-width="1.5"/>
-  <rect x="586" y="121" width="220" height="100" rx="14" fill="#fbf3df" stroke="#d8b56a" stroke-width="1.5"/>
-  <rect x="580" y="127" width="220" height="100" rx="14" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="605" y="161">Worktrees × N</text>
-  <text class="node-copy" x="605" y="185">one article team per worktree</text>
-  <text class="artifact" x="605" y="207">one task.md each</text>
-
-  <rect x="1020" y="115" width="240" height="110" rx="14" fill="#f1ebf7" stroke="#9a7ab6" stroke-width="2"/>
-  <text class="node-title" x="1045" y="146">PR on library</text>
-  <text class="node-copy" x="1045" y="170">article + record + assets</text>
-  <line x1="1045" y1="183" x2="1235" y2="183" stroke="#cdbdd9"/>
-  <text class="artifact" x="1045" y="204">role artifacts included</text>
-
-  <rect x="1320" y="130" width="100" height="80" rx="14" fill="#e8f2f4" stroke="#76a3ab" stroke-width="2"/>
-  <text class="node-title" x="1370" y="163" text-anchor="middle">GitHub</text>
-  <text class="node-title" x="1370" y="186" text-anchor="middle">Pages</text>
-
-  <rect x="706" y="253" width="116" height="28" rx="14" fill="#fbfaf7"/>
-  <text class="label" x="764" y="271" text-anchor="middle">expanded below</text>
-  <rect x="1200" y="387" width="50" height="26" rx="13" fill="#fbfaf7"/>
-  <text class="label" x="1225" y="404" text-anchor="middle">pass</text>
-
-  <path class="edge" d="M260 560H300V455H340"/>
-  <path class="edge" d="M260 600H300V705H340"/>
-  <path class="edge" d="M530 455H575V560H620"/>
-  <path class="edge" d="M530 705H575V600H620"/>
-  <path class="edge" d="M795 580H875"/>
-  <path class="edge" d="M1065 580H1140"/>
-
-  <path class="failure" d="M765 530V500Q765 488 753 488H662Q650 488 650 500V530"/>
-  <text class="failure-label" x="708" y="419" text-anchor="middle">
-    <tspan x="708">bad HTML</tspan>
-    <tspan x="708" dy="14">missing section</tspan>
-    <tspan x="708" dy="14">broken citation</tspan>
-    <tspan x="708" dy="14">banned term</tspan>
-    <tspan x="708" dy="14">and more</tspan>
+  <rect
+    class="node"
+    x="30"
+    y="80"
+    width="350"
+    height="120"
+    rx="16"
+    fill="#fff3d7"
+    stroke="#d49620"
+  />
+  <text class="title" x="55" y="116">Orchestrator</text>
+  <text class="copy" x="55" y="148">
+    Creates the context each agent needs
+  </text>
+  <text class="copy" x="55" y="173">
+    and manages work to completion.
   </text>
 
-  <path class="failure" d="M500 655V630Q500 618 488 618H397Q385 618 385 630V655"/>
-  <text class="failure-label" x="443" y="609" text-anchor="middle">dead or invented URL</text>
+  <rect
+    class="node"
+    x="520"
+    y="80"
+    width="350"
+    height="120"
+    rx="16"
+    fill="#e8f2f4"
+    stroke="#76a3ab"
+  />
+  <text class="title" x="545" y="116">Isolated article runs × N</text>
+  <text class="copy" x="545" y="148">
+    Agents produce articles in parallel,
+  </text>
+  <text class="copy" x="545" y="173">
+    each in an isolated workspace.
+  </text>
 
-  <path class="message" d="M635 530V390H480V405"/>
-  <text class="message-label" x="557" y="385" text-anchor="middle">voice question</text>
+  <rect
+    class="node"
+    x="1010"
+    y="80"
+    width="350"
+    height="120"
+    rx="16"
+    fill="#f1ebf7"
+    stroke="#795b95"
+  />
+  <text class="title" x="1035" y="116">Create Article PR</text>
+  <text class="copy" x="1035" y="148">
+    Opens a PR for the article and assets.
+  </text>
+  <text class="copy" x="1035" y="173">
+    Includes every exact agent artifact.
+  </text>
 
-  <path class="message" d="M635 630V780H480V755"/>
-  <text class="message-label" x="557" y="775" text-anchor="middle">source question</text>
+  <rect
+    class="node"
+    x="1500"
+    y="80"
+    width="350"
+    height="120"
+    rx="16"
+    fill="#f1ebf7"
+    stroke="#795b95"
+  />
+  <text class="title" x="1525" y="116">Published website</text>
+  <text class="copy" x="1525" y="148">
+    Hosted on your GitHub Pages.
+  </text>
+  <text class="copy" x="1525" y="173">
+    Searchable from the-nightly-build.github.io.
+  </text>
 
-  <path class="repair" d="M945 630V650Q945 662 933 662H732Q720 662 720 650V630"/>
-  <text class="repair-label" x="833" y="657" text-anchor="middle">rewrite request</text>
+  <path class="flow" d="M380 140H520" />
 
-  <path class="repair" d="M900 630V825Q900 837 888 837H447Q435 837 435 825V755"/>
-  <text class="repair-label" x="670" y="832" text-anchor="middle">source request</text>
+  <path class="success" d="M1360 140H1500" />
+  <text class="label-success" x="1430" y="124">CI passes</text>
 
-  <path class="failure" d="M1240 630V735Q1240 747 1228 747H772Q760 747 760 735V630"/>
-  <text class="failure-label" x="1000" y="742" text-anchor="middle">article check fails; writer repairs</text>
+  <path class="failure" d="M1185 80V30H205V80" />
+  <text class="label-failure" x="695" y="20">
+    CI fails
+  </text>
 
-  <rect x="95" y="530" width="165" height="100" rx="13" fill="#e8f2f4" stroke="#76a3ab" stroke-width="2"/>
-  <text class="node-title" x="115" y="556">Task</text>
-  <text class="node-copy" x="115" y="578" style="font-size:12px">created by orchestrator</text>
-  <text class="node-copy" x="115" y="598" style="font-size:12px">with requirements</text>
-  <text class="artifact" x="115" y="619">task.md</text>
+  <path class="expand" d="M695 200V290" />
 
-  <rect x="340" y="405" width="190" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="360" y="431">Voice</text>
-  <text class="node-copy" x="360" y="453" style="font-size:12px">study relevant writers</text>
-  <text class="node-copy" x="360" y="473" style="font-size:12px">for voice + style</text>
-  <text class="artifact" x="360" y="494">voice.md</text>
+  <rect
+    class="stage"
+    x="30"
+    y="290"
+    width="1330"
+    height="670"
+    rx="20"
+  />
+  <text class="stage-title" x="60" y="328">One isolated article run</text>
+  <text class="stage-copy" x="60" y="355">
+    The orchestrator prepares each role’s exact input. Each role saves an exact output.
+  </text>
 
-  <rect x="340" y="655" width="190" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="360" y="681">Research</text>
-  <text class="node-copy" x="360" y="703" style="font-size:12px">read + verify sources</text>
-  <text class="node-copy" x="360" y="723" style="font-size:12px">log claims + citations</text>
-  <text class="artifact" x="360" y="744">research.md</text>
+  <rect class="role" x="60" y="430" width="320" height="120" rx="15" />
+  <text class="role-title" x="85" y="469">Writing coach</text>
+  <text class="role-copy" x="85" y="500">
+    Studies strong writers for this subject.
+  </text>
+  <text class="role-copy" x="85" y="525">
+    Defines how the article should sound.
+  </text>
 
-  <rect x="620" y="530" width="175" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="640" y="556">Write</text>
-  <text class="node-copy" x="640" y="578" style="font-size:12px">draft from research</text>
-  <text class="node-copy" x="640" y="598" style="font-size:12px">run proof + revise</text>
-  <text class="artifact" x="640" y="619">article.html</text>
+  <rect class="role" x="60" y="720" width="320" height="120" rx="15" />
+  <text class="role-title" x="85" y="759">Researcher</text>
+  <text class="role-copy" x="85" y="790">
+    Finds reliable sources for the article.
+  </text>
+  <text class="role-copy" x="85" y="815">
+    Records verified claims and evidence.
+  </text>
 
-  <rect x="875" y="530" width="190" height="100" rx="13" fill="#fff3d7" stroke="#d49620" stroke-width="2"/>
-  <text class="node-title" x="895" y="556">Edit</text>
-  <text class="node-copy" x="895" y="578" style="font-size:12px">tighten prose + punctuation</text>
-  <text class="node-copy" x="895" y="598" style="font-size:12px">check citations + clarity</text>
-  <text class="artifact" x="895" y="619">requested-changes.md</text>
+  <rect class="role" x="560" y="575" width="320" height="120" rx="15" />
+  <text class="role-title" x="585" y="614">Writer</text>
+  <text class="role-copy" x="585" y="645">
+    Drafts from the prepared inputs.
+  </text>
+  <text class="role-copy" x="585" y="670">
+    Fixes every failed article check.
+  </text>
 
-  <rect x="1140" y="530" width="170" height="100" rx="13" fill="#e9f5ec" stroke="#6f9a78" stroke-width="2"/>
-  <text class="node-title" x="1225" y="556" text-anchor="middle">Publish</text>
-  <text class="node-copy" x="1225" y="578" text-anchor="middle" style="font-size:12px">proof + PR + CI</text>
-  <text class="node-copy" x="1225" y="598" text-anchor="middle" style="font-size:12px">gate delivery</text>
-  <text class="artifact" x="1225" y="619" text-anchor="middle">PR + green CI</text>
+  <rect class="role" x="1010" y="575" width="320" height="120" rx="15" />
+  <text class="role-title" x="1035" y="614">Editor</text>
+  <text class="role-copy" x="1035" y="645">
+    Challenges evidence, reasoning, and prose.
+  </text>
+  <text class="role-copy" x="1035" y="670">
+    Approves only when the article holds up.
+  </text>
 
-  <rect x="105" y="860" width="1230" height="40" rx="12" fill="#fbfaf7" stroke="#d7dfde"/>
-  <text class="node-title" x="125" y="885" style="font-size:13px">KEY</text>
-  <path class="edge" d="M180 880H220"/>
-  <text class="label" x="233" y="884">artifact handoff</text>
-  <path class="failure" d="M405 880H445"/>
-  <text class="failure-label" x="458" y="884">check failure</text>
-  <path class="repair" d="M625 880H665"/>
-  <text class="repair-label" x="678" y="884">revision request</text>
-  <path class="message" d="M875 880H915"/>
-  <text class="message-label" x="928" y="884">peer question; answer updates artifact</text>
+  <rect
+    class="node"
+    x="1010"
+    y="320"
+    width="320"
+    height="120"
+    rx="15"
+    fill="#f1ebf7"
+    stroke="#795b95"
+  />
+  <text class="role-title" x="1035" y="359">Prepare Article PR</text>
+  <text class="role-copy" x="1035" y="390">
+    Validates the article and agent artifacts.
+  </text>
+  <text class="role-copy" x="1035" y="415">
+    Creates the commit and exact PR request.
+  </text>
+
+  <path class="flow" d="M380 490H480V620H560" />
+  <path class="flow" d="M380 780H480V650H560" />
+  <path class="flow" d="M880 635H1010" />
+  <path class="flow" d="M1120 575V440" />
+  <text class="flow-label" x="1105" y="512" style="text-anchor: end">
+    editor approves
+  </text>
+  <path class="failure" d="M1220 440V575" />
+  <text
+    class="label-failure"
+    x="1235"
+    y="512"
+    style="text-anchor: start"
+  >
+    final check fails
+  </text>
+  <path class="flow" d="M1170 320V200" />
+
+  <path class="request" d="M600 575V405H220V430" />
+  <text class="request-label" x="410" y="395">voice question</text>
+
+  <path class="request" d="M600 695V875H220V840" />
+  <text class="request-label" x="410" y="866">source question</text>
+
+  <path class="request" d="M1080 695V765H830V695" />
+  <text class="request-label" x="955" y="757">revision request</text>
+
+  <path class="request" d="M1140 695V925H130V840" />
+  <text class="request-label" x="635" y="916">evidence request</text>
+
+  <path class="failure" d="M120 720V685H320V720" />
+  <text class="label-failure" x="220" y="676">
+    source cannot be verified
+  </text>
+
+  <path class="failure" d="M680 575V535H820V575" />
+  <text class="label-failure" x="750" y="526">
+    article check fails
+  </text>
+
+  <path class="request" d="M175 290V200" />
+  <text class="request-label" x="100" y="250">escalation</text>
+
+  <path class="success" d="M225 200V290" />
+  <text class="label-success" x="300" y="250">resolution</text>
+
+  <path class="expand" d="M1360 660H1500" />
+
+  <rect
+    class="stage-outline"
+    x="1500"
+    y="290"
+    width="350"
+    height="670"
+    rx="20"
+    fill="#f7fbfb"
+    stroke="#76a3ab"
+  />
+  <text class="outline-title" x="1530" y="328">Nightly Build CLI</text>
+  <text class="stage-copy" x="1530" y="355">
+    Each agent gets only the context it needs.
+  </text>
+
+  <rect
+    class="node"
+    x="1530"
+    y="390"
+    width="290"
+    height="105"
+    rx="15"
+    fill="#e9f5ec"
+    stroke="#6f9a78"
+  />
+  <text class="role-title" x="1555" y="424">Search article history</text>
+  <text class="role-copy" x="1555" y="454">
+    Finds relevant prior coverage.
+  </text>
+  <text class="role-copy" x="1555" y="477">
+    Returns only requested context.
+  </text>
+
+  <rect
+    class="node"
+    x="1530"
+    y="535"
+    width="290"
+    height="105"
+    rx="15"
+    fill="#e9f5ec"
+    stroke="#6f9a78"
+  />
+  <text class="role-title" x="1555" y="569">Check work</text>
+  <text class="role-copy" x="1555" y="599">
+    Validates articles and PR inputs.
+  </text>
+  <text class="role-copy" x="1555" y="622">
+    Uses the same rules as CI.
+  </text>
+
+  <rect
+    class="node"
+    x="1530"
+    y="680"
+    width="290"
+    height="105"
+    rx="15"
+    fill="#e9f5ec"
+    stroke="#6f9a78"
+  />
+  <text class="role-title" x="1555" y="714">Create assets</text>
+  <text class="role-copy" x="1555" y="744">
+    Renders charts and captures evidence.
+  </text>
+  <text class="role-copy" x="1555" y="767">
+    Saves files with the article.
+  </text>
+
+  <rect
+    class="node"
+    x="1530"
+    y="825"
+    width="290"
+    height="105"
+    rx="15"
+    fill="#e9f5ec"
+    stroke="#6f9a78"
+  />
+  <text class="role-title" x="1555" y="859">Preview article</text>
+  <text class="role-copy" x="1555" y="889">
+    Renders the page before handoff.
+  </text>
+  <text class="role-copy" x="1555" y="912">
+    Shows layout and assets in context.
+  </text>
+
 </svg>

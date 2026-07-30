@@ -3,7 +3,7 @@
 # with read-only contents and no secrets against untrusted diffs. The merge job only
 # uses GITHUB_TOKEN and only fires after the check passes.
 # PLACEMENT: GitHub fires pull_request triggers only from workflow files present on
-# the PR's base branch, so scripts/setup.sh seeds the first copy and sync.sh keeps
+# the PR's base branch, so nb setup seeds the first copy and nb sync keeps
 # it current. Keep this a pure trigger: engine logic comes from main at run time.
 name: nightly-build-check
 
@@ -44,11 +44,6 @@ jobs:
           enable-cache: true
           python-version: "3.12"
 
-      - name: Write PR body to file
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: printf '%s' "$PR_BODY" > /tmp/pr-body.txt
-
       # The curation gate: a deletion-only PR is legitimate retraction when and
       # only when the repository owner authored it. The proof checks the shape;
       # this expression checks the author. Deletions never auto-merge.
@@ -58,26 +53,25 @@ jobs:
           CURATION: ${{ github.event.pull_request.user.login == github.repository_owner && '--deletions-by-owner' || '' }}
         run: |
           set +e
-          uv run --with websocket-client _main/engine/check.py --pr $CURATION \
+          _main/nb check --pr $CURATION \
             --repo . --main _main \
             --base "origin/${{ github.base_ref }}" \
             --head "HEAD" \
-            --library _library \
-            --pr-body /tmp/pr-body.txt > /tmp/proof.txt
+            --library _library > /tmp/proof.txt
           code=$?
           cat /tmp/proof.txt
-          echo "autopublish=$(uv run _main/engine/ci_helpers.py autopublish --repo _main --diff-base origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
-          echo "sync=$(uv run _main/engine/ci_helpers.py sync --repo _main --diff-base origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
+          echo "autopublish=$(_main/nb ci autopublish --repo _main --diff-base origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
+          echo "sync=$(_main/nb ci sync --repo _main --diff-base origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
           exit $code
 
       # The render probe sees what the file-level proof cannot: the page as a
       # browser draws it. Skips itself for curation PRs (no page to build).
       - name: Render probe
         run: |
-          path=$(uv run _main/engine/ci_helpers.py article-path --diff-base "origin/${{ github.base_ref }}")
+          path=$(_main/nb ci article-path --diff-base "origin/${{ github.base_ref }}")
           if [ -z "$path" ]; then echo "no added article; probe skipped"; exit 0; fi
-          uv run _main/engine/build_site.py --repo _main --library . --out /tmp/site
-          uv run --with websocket-client _main/engine/render_check.py --site /tmp/site --article "$path" | tee -a /tmp/proof.txt
+          _main/nb build --repo _main --library . --out /tmp/site
+          _main/nb render-check --site /tmp/site --article "$path" | tee -a /tmp/proof.txt
 
       - name: Comment findings on the PR
         if: always()

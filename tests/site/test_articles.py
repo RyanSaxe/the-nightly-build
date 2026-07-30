@@ -11,8 +11,8 @@ import pytest
 
 import build_site
 from nb.site.assets import copy_articles, rewrite_required_doc_links
-from pages import Site, asset_stamp_of, undress
-from press import article
+from pages import Site, asset_stamp_of, build_press, undress
+from press import article, make_full_library
 
 
 @pytest.fixture
@@ -34,6 +34,23 @@ def micron_copy(full_site: Site) -> str:
 )
 def test_the_assets_are_copied(full_site: Site, asset: str) -> None:
     assert pathlib.Path(full_site.out, "assets", asset).is_file()
+
+
+def test_agent_artifacts_never_enter_the_published_site(testrepo: str) -> None:
+    library = make_full_library()
+    artifact = pathlib.Path(
+        library,
+        "agent-artifacts",
+        "semiconductors",
+        "micron",
+        "commission.md",
+    )
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text("# Commission\n\nPrivate production context.\n")
+
+    site = build_press(testrepo, library)
+
+    assert not pathlib.Path(site.out, "agent-artifacts").exists()
 
 
 def test_an_article_copy_gets_a_cache_busting_stamp(micron_copy: str) -> None:

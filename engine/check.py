@@ -17,7 +17,7 @@ Invocations:
         python3 engine/check.py library/<series>/<slug>.html --series <id> --repo . [--library DIR]
     CI (PR mode):
         python3 engine/check.py --pr --repo . --main <main checkout> \
-            --base <ref> --head <ref> [--pr-body FILE] [--library DIR]
+            --base <ref> --head <ref> [--library DIR]
 
 In PR mode --repo is any checkout of the press; the diff and the article
 both resolve from the --base and --head refs, so which branch the checkout
@@ -35,7 +35,7 @@ from nb.article import Article
 from nb.config import find_template, load_registry, load_series
 from nb.links import classify_link, dead_source_links
 from nb.proof import check_article
-from nb.proof.pr import resolve_pr_body, run_pr_mode
+from nb.proof.pr import run_pr_mode
 from nb.proof.sources import SOURCE_KINDS, is_count
 from nb.proof.structure import (
     ENGINE_SCRIPT_RE,
@@ -64,7 +64,6 @@ __all__ = [
     "load_registry",
     "load_series",
     "main",
-    "resolve_pr_body",
     "run_pr_mode",
 ]
 
@@ -93,11 +92,6 @@ def main(argv=None):
     )
     p.add_argument("--base", help="PR base ref (pr mode)")
     p.add_argument("--head", default="HEAD", help="PR head ref (pr mode)")
-    p.add_argument(
-        "--pr-body",
-        help="PR body file; cross-checks its nb-meta against the article "
-        "(CI mode, or a local preflight before opening the PR)",
-    )
     p.add_argument("--today", help="override today's date (tests)")
     p.add_argument(
         "--check-links",
@@ -116,7 +110,17 @@ def main(argv=None):
     if args.pr:
         if not args.base:
             p.error("--pr requires --base")
-        run_pr_mode(args, rep)
+        run_pr_mode(
+            repo=args.repo,
+            main=args.main,
+            base=args.base,
+            head=args.head,
+            library=args.library,
+            today=args.today,
+            check_links=args.check_links,
+            deletions_by_owner=args.deletions_by_owner,
+            rep=rep,
+        )
     else:
         if not args.file or not args.series:
             p.error("local mode requires FILE and --series")
@@ -128,7 +132,6 @@ def main(argv=None):
             repo=args.repo,
             library_dir=args.library,
             rep=rep,
-            pr_body_meta=resolve_pr_body(args.pr_body, rep),
             today=args.today and _dt.date.fromisoformat(args.today),
             check_links=args.check_links,
         )

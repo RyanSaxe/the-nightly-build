@@ -15,7 +15,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import types
 from collections.abc import Callable
 
 import pytest
@@ -30,6 +29,7 @@ from press import (
     git,
     make_full_library,
     make_press,
+    write_agent_artifacts,
 )
 
 DUTY = [sys.executable, str(REPO / "engine" / "duty.py")]
@@ -84,7 +84,6 @@ def run_local(testrepo: str) -> Callable[..., Findings]:
         library: str | None = None,
         repo: str | None = None,
         today: str = TODAY,
-        pr_body: str | None = None,
         assets: dict[str, bytes] | None = None,
     ) -> Findings:
         repo = repo or testrepo
@@ -101,18 +100,12 @@ def run_local(testrepo: str) -> Callable[..., Findings]:
         rep = check.Report()
         cfg, _ = check.load_series(repo, series)
         rep.strict = bool(cfg and cfg.get("strict"))
-        body_meta = None
-        if pr_body is not None:
-            body_file = pathlib.Path(tmp) / "prbody.txt"
-            body_file.write_text(pr_body)
-            body_meta = check.resolve_pr_body(str(body_file), rep)
         check.check_article(
             str(article_path),
             series,
             repo=repo,
             library_dir=library,
             rep=rep,
-            pr_body_meta=body_meta,
             today=dt.date.fromisoformat(today),
         )
         return Findings(rep)
@@ -266,20 +259,6 @@ def ci_helper() -> Callable[[str, str], str]:
     return helper
 
 
-PR_BODY = """Nightly article.
-
-```nb-meta
-series: semiconductors
-slug: micron
-mode: collection
-template: article
-date: "2026-07-06"
-title: "Micron Technology: The Scarcest Commodity in AI"
-order: null
-```
-"""
-
-
 class PressRepo:
     """A real git press: main carries the engine, library carries what shipped.
 
@@ -288,10 +267,8 @@ class PressRepo:
     check.yml does.
     """
 
-    def __init__(self, path: str, scratch: pathlib.Path) -> None:
+    def __init__(self, path: str) -> None:
         self.path = path
-        self._scratch = scratch
-        self.body = self.body_file(PR_BODY)
 
     def git(self, *args: str) -> None:
         git(*args, cwd=self.path)
@@ -309,16 +286,9 @@ class PressRepo:
     def checkout(self, branch: str, *, new: bool = False) -> None:
         self.git("checkout", "-qb" if new else "-q", branch)
 
-    def body_file(self, text: str) -> str:
-        """A PR body written outside the worktree, so it never joins the diff."""
-        p = self._scratch / f"prbody-{len(list(self._scratch.iterdir()))}.txt"
-        p.write_text(text)
-        return str(p)
-
     def run_pr(
         self,
         *,
-        pr_body: str | None = None,
         base: str = "library",
         head: str = "claude/night-run",
         library: str | None = None,
@@ -326,18 +296,17 @@ class PressRepo:
         deletions_by_owner: bool = False,
     ) -> Findings:
         rep = check.Report()
-        args = types.SimpleNamespace(
+        check.run_pr_mode(
             repo=self.path,
             main=None,
             base=base,
             head=head,
-            pr_body=pr_body,
             library=library,
             today=today,
             check_links=False,
             deletions_by_owner=deletions_by_owner,
+            rep=rep,
         )
-        check.run_pr_mode(args, rep)
         return Findings(rep)
 
 
@@ -349,7 +318,7 @@ def pr_repo(clone_testrepo: Callable[..., str]) -> PressRepo:
         pathlib.Path(path) / "engine",
         ignore=shutil.ignore_patterns("__pycache__"),
     )
-    repo = PressRepo(path, pathlib.Path(tempfile.mkdtemp()))
+    repo = PressRepo(path)
     repo.git("init", "-q", "-b", "main")
     repo.git("config", "user.email", "t@t")
     repo.git("config", "user.name", "t")
@@ -359,6 +328,7 @@ def pr_repo(clone_testrepo: Callable[..., str]) -> PressRepo:
     repo.commit("library init")
     repo.checkout("claude/night-run", new=True)
     repo.write("library/semiconductors/micron.html", article())
+    write_agent_artifacts(repo.path, "semiconductors", slug="micron")
     repo.commit("nb: semiconductors/micron")
     return repo
 

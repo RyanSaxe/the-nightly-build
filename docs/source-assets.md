@@ -17,15 +17,15 @@ Use the least invasive capture method that preserves the exact visual:
 
 ```sh
 # A source supplies the image itself.
-uv run --group figure-capture engine/capture_asset.py image SOURCE-IMAGE-URL \
+nb asset image SOURCE-IMAGE-URL \
   library/SERIES/SLUG/asset-1.webp
 
 # A source supplies only a PDF. Coordinates are points from its top-left page origin.
-uv run --group figure-capture engine/capture_asset.py pdf PAPER.pdf \
+nb asset pdf PAPER.pdf \
   library/SERIES/SLUG/asset-1.png --page 4 --clip X,Y,WIDTH,HEIGHT
 
 # A source page renders a canvas or has no exportable figure.
-uv run --group figure-capture engine/capture_asset.py web SOURCE-PAGE-URL \
+nb asset web SOURCE-PAGE-URL \
   library/SERIES/SLUG/asset-1.png --selector 'CSS-SELECTOR'
 ```
 

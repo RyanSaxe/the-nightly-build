@@ -86,7 +86,7 @@ fi
 
 # 2. Configuration validates before anything else ----------------------------
 say "validating press/ configuration and the template packages"
-uv run engine/validate_config.py || die "fix the configuration above, then re-run"
+"$ROOT/nb" validate || die "fix the configuration above, then re-run"
 
 # 3. The library branch (orphan, empty press) --------------------------------
 library_created=false
@@ -201,7 +201,7 @@ fi
 
 # 6. Existing libraries synchronize through the protected PR path ------------
 if [ "$library_created" = false ]; then
-	"$SCRIPT_DIR/sync.sh"
+	"$ROOT/nb" sync
 fi
 
 # 7. Status ------------------------------------------------------------------

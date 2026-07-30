@@ -172,7 +172,7 @@ The layer order, first to last. Later layers specialize and never override:
 ```text
 PROTOCOL.md > spec/editorial.md > spec/headlines.md > press/editorial.md >
 template manifest > template identity > press/series/<id>/prompt.md
-> tag fragments > item prompt
+> tag fragments > selected item record
 ```
 
 The template identity (`<id>/identity.md`) is the prose guidance carried in the
@@ -319,7 +319,7 @@ chrome the writer cannot reword.
    `furniture.md` + `furniture.css` for bespoke components only this template
    renders.
 
-3. Validate and rehearse: `uv run engine/validate_config.py --repo .`, then point a
+3. Validate and rehearse: `nb validate`, then point a
    series at the template and run a press check before scheduling it.
 
 ## What stays with the engine
