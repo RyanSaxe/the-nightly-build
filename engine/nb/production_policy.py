@@ -44,21 +44,21 @@ _PROFILE_PRESETS: dict[str, dict[str, tuple[str, str]]] = {
     "inherit": {stage: ("inherit", "inherit") for stage in STAGES},
     "economy": {
         "writing-coach": ("efficient", "low"),
-        "researcher": ("efficient", "low"),
+        "researcher": ("capable", "medium"),
         "writer": ("capable", "medium"),
-        "editor": ("capable", "medium"),
+        "editor": ("capable", "high"),
     },
     "balanced": {
-        "writing-coach": ("capable", "medium"),
-        "researcher": ("efficient", "medium"),
-        "writer": ("capable", "high"),
+        "writing-coach": ("capable", "low"),
+        "researcher": ("capable", "high"),
+        "writer": ("capable", "medium"),
         "editor": ("capable", "high"),
     },
     "quality": {
-        "writing-coach": ("premium", "high"),
-        "researcher": ("capable", "high"),
+        "writing-coach": ("premium", "low"),
+        "researcher": ("premium", "high"),
         "writer": ("premium", "high"),
-        "editor": ("inherit", "high"),
+        "editor": ("premium", "high"),
     },
 }
 

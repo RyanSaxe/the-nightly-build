@@ -48,6 +48,11 @@ what it establishes firsthand or repeats; useful verbatim passages; and honest
 section, page, or paragraph locators. A repetition supports that a claim was
 made, not that it is true.
 
+When the record names a person or body, give it the exact title, role, and
+affiliation the primary states. A headline inherits whatever label the record
+carries, so an imprecise one becomes the paper's most visible error: a regional
+bank president recorded as a "governor" reaches the reader as fact.
+
 ### Contradictions
 
 Where sources disagree with one another or the commission. Leave this empty

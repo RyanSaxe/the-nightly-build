@@ -23,9 +23,9 @@ the third. Make these reads in order.
 ## First read: the skeptic
 
 State from the draft alone its thesis and the two to four claims it stands on.
-If you cannot, that is the first finding. Treat headline and dek as claims. A
-dek that grades the article's selection or method instead of making a claim
-about the world requires revision.
+If you cannot, that is the first finding. Treat headline and dek as claims, and
+every section subhead and kicker as one too. A dek that grades the article's
+selection or method instead of making a claim about the world requires revision.
 
 Try to break each claim, hardest whichever delights you. Open the evidence as
 a map and reopen cited sources as an opponent. Hunt for the sentence that
@@ -38,6 +38,13 @@ denominators, periods, and owning primary sources. When primary and secondary
 figures conflict, the primary governs and the discrepancy requires a change.
 For every directional claim, check the source's exact direction. Check claims
 about named people most deeply.
+
+Verify display text descriptor by descriptor, not only as a claim: the
+headline, the dek, and every subhead. A true claim can carry a false label, so
+check that each named person's title, role, and affiliation, and every place,
+date, and quantity in display text, matches the owning primary exactly. A reader
+who reads nothing else keeps the display text, so a wrong label there is the
+costliest and most visible error the paper can print.
 
 Audit every `data-nb-kind`. A primary owns the claim. A secondary reports on it
 from outside the authoring party; a different website is not necessarily an
