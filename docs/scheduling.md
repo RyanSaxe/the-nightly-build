@@ -20,7 +20,7 @@ billed are in [harnesses.md](harnesses.md).
 
 ## What the night shift needs
 
-Five requirements. Everything past them lives in `PROTOCOL.md`.
+Six requirements. Everything past them lives in `PROTOCOL.md`.
 
 1. A scheduler that fires on a nightly cron.
 2. A checkout of `main` (the engine and `press/`) with access to the fork's
@@ -33,6 +33,9 @@ Five requirements. Everything past them lives in `PROTOCOL.md`.
 5. `uv` on PATH. The `nb` command runs the engine through it; install it from
    <https://docs.astral.sh/uv/> if the run environment does not already provide
    it.
+6. Non-interactive execution. Grant the workflow's required tools and
+   permissions before it starts. If a permission is unavailable, the run must
+   fail immediately instead of waiting for human approval.
 
 Every run starts with `nb sync`. It follows the fork's `main`, waits
 for any protected workflow repair to merge, and stops before article work if
