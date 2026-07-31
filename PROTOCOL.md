@@ -175,8 +175,8 @@ markup, structure, and proof return through the writer. Each repair gets new
 numbered briefs and outputs, then a fresh writer proof and editor read. There is
 no round cap. Only an editor `DONE` with no required change approves the piece.
 
-A role launch never transfers responsibility for completing the article; the
-orchestrator remains responsible for advancing every article through every
+Launching a role does not transfer responsibility for the article. The
+orchestrator remains responsible for moving every article through every
 required stage.
 
 A blocked role escalates to the orchestrator. Clarify, reassign, or take over

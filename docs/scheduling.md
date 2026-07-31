@@ -33,9 +33,9 @@ Six requirements. Everything past them lives in `PROTOCOL.md`.
 5. `uv` on PATH. The `nb` command runs the engine through it; install it from
    <https://docs.astral.sh/uv/> if the run environment does not already provide
    it.
-6. Non-interactive execution. Preauthorize the tools and permissions required
-   by this workflow; an unavailable permission must fail immediately rather
-   than wait for human approval.
+6. Non-interactive execution. Grant the workflow's required tools and
+   permissions before it starts. If a permission is unavailable, the run must
+   fail immediately instead of waiting for human approval.
 
 Every run starts with `nb sync`. It follows the fork's `main`, waits
 for any protected workflow repair to merge, and stops before article work if
