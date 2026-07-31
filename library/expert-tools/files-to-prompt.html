@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>files-to-prompt folds a slice of a repo into one prompt, file by file · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "files-to-prompt",
+        "template": "article",
+        "title": "files-to-prompt folds a slice of a repo into one prompt, file by file",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-31",
+        "tags": ["python", "llm", "cli"],
+        "sources": 20,
+        "words": 2000,
+        "reading_minutes": 10,
+        "dek": "Behind the single command sits a 334-line script that has not been touched in seventeen months, still doing exactly the job it shipped to do.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">files-to-prompt folds a slice of a repo into one prompt, file by file</h1>
+        <p class="nb-dekline">
+          Behind the single command sits a 334-line script that has not been touched in seventeen months, still doing exactly the job it shipped to do.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-07-31</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>How much of the repo a prompt actually needs</h2>
+        <p>
+          A model only reasons about the files it has been shown. Too few and it
+          improvises around the gap. Too many and the real question sits buried
+          under files that have nothing to do with it, paying full token price for
+          none of the answer. files-to-prompt exists for that one job: concatenate
+          a chosen slice of a directory into a single block of text, meant to be
+          piped straight into a model instead of copied file by file into a chat
+          window.<sup class="nb-cite"><a href="#s1">1</a></sup> Its author still
+          describes it the same way years after building it: something to
+          "pipe several files at once into prompts to LLMs such as Claude and
+          GPT-4."<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The command that does that job is a 334-line Python script.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Reading what it actually does, rather than what the README promises it
+          does, is the only way to know which parts of the promise hold up and
+          which ones don't.
+        </p>
+      </section>
+
+      <section data-nb-section="the-default-walk" id="the-default-walk">
+        <h2>A directory walk that drops three PNGs</h2>
+        <p>
+          Point it at a real subtree and the shape of the problem gets concrete.
+          This paper's own <code>engine/assets/</code> holds two stylesheets, one
+          script, and three icon PNGs, the kind of directory a
+          <code>cat *</code> or a quick <code>find</code> pipeline would dump
+          wholesale into a prompt, icons and all.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">engine/assets/ (default mode)</span
+            ><span>CONSOLE</span>
+          </div>
+          <pre><code class="language-python">$ files-to-prompt engine/assets
+Warning: Skipping file engine/assets/apple-touch-icon.png due to UnicodeDecodeError
+Warning: Skipping file engine/assets/favicon-32.png due to UnicodeDecodeError
+Warning: Skipping file engine/assets/favicon-64.png due to UnicodeDecodeError
+engine/assets/nb.css
+---
+/* The Nightly Build — site chrome + shared article chrome. ...
+---</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · A real run against this repository's own asset directory,
+            files-to-prompt 0.6.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Three warnings, one per icon, and none of the PNGs reach the prompt.
+          What's left is 8,217 bytes: exactly the two stylesheets and the one
+          script, with the combined roughly 172 KB of icon data excluded for the
+          price of three lines on stderr.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+        </p>
+        <p>
+          That exclusion is not a binary sniff, whatever the usual shorthand for
+          it implies. <code>process_path</code> opens every file as text and
+          skips it only when decoding fails.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          A PNG fails reliably. So would a UTF-16 source file, or any text file
+          a filesystem happens to hand back with a stray byte in it. The tool
+          doesn't detect binaries. It detects decode failures and treats every
+          one of them the same way.
+        </p>
+      </section>
+
+      <section data-nb-section="a-tag-a-model-can-cite" id="a-tag-a-model-can-cite">
+        <h2>Every file gets a tag the model can cite back</h2>
+        <p>
+          Plain concatenation already beats hand-copying files into a chat
+          window. The reason to reach for this tool specifically, rather than a
+          bare <code>cat</code>, is <code>--cxml</code>. It wraps each file in
+          a tag carrying its own path and an index number.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          A model reading the prompt can then name the exact file a fact came
+          from, instead of guessing which pasted block it was looking at.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">engine/ci_helpers.py engine/check.py (--cxml)</span
+            ><span>CONSOLE</span>
+          </div>
+          <pre><code class="language-python">$ files-to-prompt engine/ci_helpers.py engine/check.py --cxml
+&lt;documents&gt;
+&lt;document index="1"&gt;
+&lt;source&gt;engine/ci_helpers.py&lt;/source&gt;
+&lt;document_content&gt;
+#!/usr/bin/env python3
+# /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["pyyaml"]
+# ///
+"""Answer PR-shape and press-configuration questions for the CI workflows.
+...
+&lt;/document_content&gt;
+&lt;/document&gt;
+&lt;/documents&gt;</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · Real <code>--cxml</code> output, two files, structure
+            confirmed against the README and the source.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Index 1 is <code>ci_helpers.py</code>, index 2 is
+          <code>check.py</code>, both closed off by the same
+          <code>&lt;/document_content&gt;</code>/<code>&lt;/document&gt;</code>
+          pair the README documents, 7,576 bytes for the two files
+          together.<sup class="nb-cite"><a href="#s5">5</a></sup> Ask a model a
+          question against a prompt built this way and it can answer by
+          pointing at <code>&lt;source&gt;engine/check.py&lt;/source&gt;</code>
+          instead of "the second file."
+        </p>
+        <p>
+          This is the step files-to-prompt actually occupies in a workflow: not
+          a chat-window substitute, the assembly stage that runs once, right
+          before the model call, replacing the manual work of finding the right
+          files and pasting them in by hand. Its own author still runs it that
+          way, piping straight into <code>llm</code>:
+          <code>files-to-prompt . -c | llm -m gemini-2.0-pro-exp-02-05 -s
+          'How does this work?...'</code>. Scoped to two files it reads
+          <code>files-to-prompt database.py utils/__init__.py -c | llm -m
+          o3-mini -o reasoning_effort high -s '...'</code
+          >.<sup class="nb-cite"><a href="#s6">6</a></sup> He described the
+          tool as something he uses "on an almost daily basis" and finds
+          "fantastic for quickly answering questions about code" when he wrote
+          that up.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="where-matching-gives-up" id="where-matching-gives-up">
+        <h2>Where the matching quietly gives up</h2>
+        <p>
+          <code>-e</code> is a suffix filter, not an extension check, and the
+          difference lets in exactly the kind of file the flag is supposed to
+          keep out.<sup class="nb-cite"><a href="#s2">2</a></sup> Running
+          <code>files-to-prompt . -e py</code> against a scratch directory
+          holding <code>real.py</code>, <code>copy</code> (no extension at
+          all), and <code>notpy.txt</code> returned both <code>real.py</code>
+          and <code>copy</code>. <code>copy</code> ends in the two characters
+          "p" and "y", and the filter compiles to
+          <code>str.endswith(("py",))</code>.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          <code>notpy.txt</code> was correctly excluded, since its name doesn't
+          end that way. The filter reads the tail of a filename, not the
+          extension a person would say the file has.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          An independent user hit the identical case against real C sources.
+          <code>-e c -e h</code> matched <code>Makefile.inc</code> and
+          <code>build.sh</code> too. "This actually matches any file that ends
+          in <code>c</code> or <code>h</code>, rather than just looking at the
+          extension," they wrote in July 2025. The workaround, passing the dot
+          yourself with <code>-e .c -e .h</code>, isn't documented anywhere in
+          the README. The issue has no maintainer response a year later.<sup
+            class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+        </p>
+        <p>
+          <code>.gitignore</code> honoring has the same shape: it works for the
+          ordinary case and fails for a common one. A <code>.gitignore</code>
+          naming <code>__pycache__/</code> and <code>*.pyc</code> excludes a
+          compiled artifact exactly as documented, and
+          <code>--ignore-gitignore</code> brings it straight back if
+          asked.<sup class="nb-cite"><a href="#s9">9</a></sup> But the matcher
+          isn't a real gitignore implementation. <code>should_ignore</code>
+          runs <code>fnmatch</code> against a file's bare basename, nothing
+          more:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">files_to_prompt/cli.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def should_ignore(path, gitignore_rules):
+    for rule in gitignore_rules:
+        if fnmatch(os.path.basename(path), rule):
+            return True
+        if os.path.isdir(path) and fnmatch(os.path.basename(path) + "/", rule):
+            return True
+    return False</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 3 · The entire gitignore-matching logic, verbatim.<sup
+              class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          No leading-slash anchoring, no <code>**</code> glob semantics, no
+          negation. A rule like <code>/src/staticfiles/</code>, anchored to the
+          repo root the way <code>.gitignore</code> syntax normally works,
+          never matches. The pattern still carries its own slashes.
+          <code>fnmatch</code> compares that literal string against the bare
+          directory name <code>staticfiles</code>.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          A scratch repository with exactly that rule leaked
+          <code>src/staticfiles/bundle.txt</code> straight into the
+          prompt.<sup class="nb-cite"><a href="#s10">10</a></sup> A real
+          Django project hit the same bug against its own real, anchored
+          <code>.gitignore</code>. The reporter counted 19,929 lines of
+          output that should have been excluded, including what they called
+          "vast numbers of UnicodeDecodeErrors." The issue is still open a
+          year and a half later.<sup class="nb-cite"
+            ><a href="#s11">11</a></sup
+          >
+          The project's own test suite covers nested, unanchored
+          <code>.gitignore</code> inheritance and passes; it does not test the
+          anchored case, which is exactly where the bug lives.<sup
+            class="nb-cite"
+            ><a href="#s12">12</a></sup
+          >
+        </p>
+        <p>
+          Neither gap is exotic. A suffix match on filenames and a
+          basename-only ignore matcher are both plausible things to ship in a
+          334-line script, and both are things a user only discovers by
+          running the tool against their own repository, not by reading the
+          README. There's no flag that catches either case for you. Only the
+          habit of scoping tight and checking what actually came back.
+        </p>
+      </section>
+
+      <section data-nb-section="seventeen-months-quiet" id="seventeen-months-quiet">
+        <h2>Seventeen months quiet, two hundred installs a day</h2>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">17 mo</span
+            ><span class="nb-stat-l">SINCE LAST COMMIT</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">13</span
+            ><span class="nb-stat-l">OPEN ISSUES</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">~200/day</span
+            ><span class="nb-stat-l">PYPI INSTALLS</span>
+          </div>
+        </div>
+        <p>
+          Six releases landed in eleven months: 0.1 in March 2024 through 0.5
+          in mid-February 2025, then 0.6 five days later, on February 19,
+          2025.<sup class="nb-cite"><a href="#s13">13</a></sup> Nothing has
+          shipped since: the same date marks the last commit of any kind to
+          the project, bugfix, doc change, or dependency bump, roughly
+          seventeen months earlier.<sup class="nb-cite"
+            ><a href="#s14">14</a></sup
+          >
+          Thirteen issues sit open, filed across that same
+          window and since, none closed.<sup class="nb-cite"
+            ><a href="#s15">15</a></sup
+          >
+          The two failures demonstrated above are among them.
+        </p>
+        <p>
+          The tool's own author hasn't stopped using it. Two months after the
+          last release, he was still running long-context models "via my
+          files-to-prompt tool to summarize large codebases, explain how they
+          work and even to debug gnarly bugs."<sup class="nb-cite"
+            ><a href="#s16">16</a></sup
+          >
+          A newer feature in his <code>llm</code> project, fragments,
+          deduplicates repeated pastes across prompts by hashing their
+          content, a complement to files-to-prompt's one-shot assembly, not a
+          stated replacement for it.<sup class="nb-cite"
+            ><a href="#s16">16</a></sup
+          >
+          Real installs keep arriving too: 240, 226, and 194 a day across
+          three consecutive days in late July 2026, seventeen months after the
+          code that ships stopped changing.<sup class="nb-cite"
+            ><a href="#s17">17</a></sup
+          >
+        </p>
+        <p>
+          It also hasn't become anyone's default. Repomix, the project most
+          often reached for now to "pack your codebase into AI-friendly
+          formats," ships secret scanning and token counting on top of its own
+          gitignore handling. It also carries roughly ten times the
+          following: about 27,500 GitHub stars against files-to-prompt's
+          2,800.<sup
+            class="nb-cite"
+            ><a href="#s18">18</a></sup
+          ><sup class="nb-cite"><a href="#s19">19</a></sup> files-to-prompt
+          stayed the smaller, single-job tool instead of growing into the
+          feature set Repomix now owns.
+        </p>
+        <p>
+          One more cost shows up only once someone else runs it against a
+          bigger project. An independent adopter, testing the exact piped
+          workflow against their own codebase, found their "project sizes and
+          specification documents are likely to run into size limitations for
+          local models (or for the clipboard at the very least)."<sup
+            class="nb-cite"
+            ><a href="#s20">20</a></sup
+          >
+          files-to-prompt has no sense of how large a model's context window
+          is. That judgment is entirely the operator's, every time, and it
+          scales more comfortably toward hosted long-context models than
+          local ones.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Adopt it, for what it still does correctly: a source-verified way
+            to hand a model exactly the files a question needs, tagged well
+            enough that the model can cite its own answer back to a specific
+            path. Don't extend it blind trust. Two real matching bugs sit
+            unfixed and effectively unremarked for over a year. Its one
+            maintainer has not committed in seventeen months. It has no sense
+            of what belongs in a slice beyond the paths and flags a user
+            types in, and its <code>.gitignore</code> handling only works
+            unanchored. Treat it as a small, single-purpose utility whose
+            entire 334 lines are worth reading before depending on them, not
+            as a maintained platform with someone watching its issue queue.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://simonw.substack.com/p/building-files-to-prompt-entirely"
+              >Simon Willison · "Building files-to-prompt entirely using Claude 3 Opus"</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="files_to_prompt/cli.py, full source, 334 lines"
+              href="https://raw.githubusercontent.com/simonw/files-to-prompt/main/files_to_prompt/cli.py"
+              >simonw/files-to-prompt · files_to_prompt/cli.py</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="files-to-prompt 0.6, installed via pip, run against this repository's engine/assets/ subtree, 2026-07-31"
+              href="https://pypi.org/project/files-to-prompt/"
+              >PyPI · files-to-prompt 0.6, own installation and run</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="### Claude XML Output"
+              href="https://raw.githubusercontent.com/simonw/files-to-prompt/main/README.md"
+              >simonw/files-to-prompt · README.md</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="files-to-prompt 0.6, --cxml run against engine/ci_helpers.py and engine/check.py, 2026-07-31"
+              href="https://pypi.org/project/files-to-prompt/"
+              >PyPI · files-to-prompt 0.6, own --cxml run</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://simonwillison.net/2025/Feb/14/files-to-prompt/"
+              >Simon Willison · "files-to-prompt 0.5"</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="files-to-prompt 0.6, -e py run against a scratch directory (real.py, copy, notpy.txt), 2026-07-31"
+              href="https://pypi.org/project/files-to-prompt/"
+              >PyPI · files-to-prompt 0.6, own -e suffix-filter run</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/simonw/files-to-prompt/issues/60"
+              >simonw/files-to-prompt · Issue #60, "Minor footgun: -e option is a suffix filter, not an exact extension check"</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="files-to-prompt 0.6, unanchored .gitignore run (__pycache__/, *.pyc), with and without --ignore-gitignore, 2026-07-31"
+              href="https://pypi.org/project/files-to-prompt/"
+              >PyPI · files-to-prompt 0.6, own gitignore-honoring run</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="files-to-prompt 0.6, anchored .gitignore run (/src/staticfiles/), 2026-07-31"
+              href="https://pypi.org/project/files-to-prompt/"
+              >PyPI · files-to-prompt 0.6, own anchored-gitignore run</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/simonw/files-to-prompt/issues/46"
+              >simonw/files-to-prompt · Issue #46, "Ignored paths in gitignore are being included in the output"</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="test_ignore_gitignore, test_basic_functionality, test_include_hidden"
+              href="https://raw.githubusercontent.com/simonw/files-to-prompt/main/tests/test_files_to_prompt.py"
+              >simonw/files-to-prompt · tests/test_files_to_prompt.py</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="info.version, releases keys"
+              href="https://pypi.org/pypi/files-to-prompt/json"
+              >PyPI JSON API · files-to-prompt release history</a
+            >
+          </li>
+          <li id="s14">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/simonw/files-to-prompt/commits/main"
+              >simonw/files-to-prompt · commit history, branch main</a
+            >
+          </li>
+          <li id="s15">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/simonw/files-to-prompt/issues"
+              >simonw/files-to-prompt · open issues</a
+            >
+          </li>
+          <li id="s16">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://simonwillison.net/2025/Apr/7/long-context-llm/"
+              >Simon Willison · "Long context support in LLM 0.24 using fragments and template plugins"</a
+            >
+          </li>
+          <li id="s17">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="overall, mirrors=false, 2026-07-28 through 2026-07-30"
+              href="https://pypistats.org/api/packages/files-to-prompt/overall?mirrors=false"
+              >PyPI Stats API · files-to-prompt download counts</a
+            >
+          </li>
+          <li id="s18">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/simonw/files-to-prompt"
+              >simonw/files-to-prompt · repository landing page</a
+            >
+          </li>
+          <li id="s19">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://github.com/yamadashy/repomix"
+              >yamadashy/repomix · repository landing page</a
+            >
+          </li>
+          <li id="s20">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="comment by user layer8"
+              href="https://news.ycombinator.com/item?id=42562983"
+              >Hacker News · item 42562983</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
