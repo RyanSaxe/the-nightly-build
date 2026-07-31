@@ -66,6 +66,17 @@ Messages are control signals; Markdown files are the record. Require one line:
 - `REQUEST <role-or-owner> <one-sentence need>`
 - `BLOCKED <role> <one-sentence reason>`
 
+Never treat silence as progress. Keep every launched role under active
+supervision and use bounded waits. If twenty minutes pass without a relevant
+result, a meaningful artifact change, or a concrete control message,
+investigate immediately. Check the role's activity and output, then ask what it
+needs. Try to unblock it first by clarifying the brief, supplying missing
+context, or routing missing work. Relaunch a role only after confirming it has
+died. Interrupt, reassign, or take over only as a last resort. A completion
+signal can be lost, so accept an output without one when it is complete and
+validated. You are responsible for moving every article through every required
+stage until it publishes. Only an external constraint may stop the desk.
+
 Missing voice guidance returns to the coach. Missing evidence returns to the
 researcher. Prose, structure, markup, assets, and proof return through the
 writer. Give every repair a new numbered brief and output, then require a fresh

@@ -175,6 +175,10 @@ markup, structure, and proof return through the writer. Each repair gets new
 numbered briefs and outputs, then a fresh writer proof and editor read. There is
 no round cap. Only an editor `DONE` with no required change approves the piece.
 
+Launching a role does not transfer responsibility for the article. The
+orchestrator remains responsible for moving every article through every
+required stage.
+
 A blocked role escalates to the orchestrator. Clarify, reassign, or take over
 the owning role, but never waive the subsequent writer proof and editor gate.
 Stop only for an external constraint no role can change. If the harness has no
