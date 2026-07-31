@@ -5,7 +5,7 @@ the skills, template identities, the furniture catalog, and the prompts a
 press writes for its series. Their prose trains the writer's prose. A layer
 that rambles produces articles that ramble, and a layer that lists produces
 articles that treat the list as the whole world. This file is the standard
-every prompt surface is written against. The librarian applies it to every
+every prompt surface is written against. The user assistant applies it to every
 prompt it writes or edits, and engine contributors apply it to the shipped
 layers.
 

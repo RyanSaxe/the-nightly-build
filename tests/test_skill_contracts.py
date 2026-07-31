@@ -133,12 +133,44 @@ def test_writing_coach_cites_three_real_exemplars() -> None:
     assert "Source: <URL>" in coach
 
 
-def test_librarian_treats_press_as_an_authorization_boundary() -> None:
-    librarian = (REPO / "skills" / "librarian" / "SKILL.md").read_text(encoding="utf-8")
+def test_user_assistant_is_a_progressive_router_not_a_questionnaire() -> None:
+    root = REPO / "skills" / "nb-user-assistant"
+    router = (root / "SKILL.md").read_text(encoding="utf-8")
+    authority = (root / "references" / "authority.md").read_text(encoding="utf-8")
+    router_prose = " ".join(router.split())
+    authority_prose = " ".join(authority.split())
 
-    assert "authorization boundary" in librarian
-    assert "authorizes changes under `press/` only" in librarian
-    assert "unless the human explicitly asks" in librarian
+    assert "Do not march them through a fixed questionnaire" in router_prose
+    assert "single workflow" in router_prose
+    assert "one manual handoff at a time" in authority_prose
+    assert "Never request secrets in chat" in authority_prose
+    for workflow in (
+        "setup",
+        "create-paper",
+        "update-paper",
+        "publish-now",
+        "revise-article",
+        "design",
+        "maintain",
+    ):
+        assert f"workflows/{workflow}.md" in router
+        assert (root / "workflows" / f"{workflow}.md").is_file()
+
+
+def test_manual_publication_and_revision_workflows_preserve_the_pr_gate() -> None:
+    root = REPO / "skills" / "nb-user-assistant" / "workflows"
+    publish = (root / "publish-now.md").read_text(encoding="utf-8")
+    revision = (root / "revise-article.md").read_text(encoding="utf-8")
+
+    assert 'bare topic ("birds")' in publish
+    assert "a URL" in publish
+    assert "configured home before production" in publish
+    assert "nb prepare-pr" in publish
+    assert "Mechanical" in revision
+    assert "Substantive" in revision
+    assert "Full rework" in revision
+    assert "nb prepare-pr ... --revision" in revision
+    assert "Revisions never auto-merge" in revision
 
 
 def test_article_identity_does_not_supply_the_known_leaked_phrase() -> None:

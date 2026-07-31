@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # The Nightly Build scripts/setup.sh
 # Idempotent bootstrap: creates the library branch, enables Pages + auto-merge,
-# validates configuration. Safe to re-run; callable by the Librarian skill.
+# validates configuration. Safe to re-run; callable by the user-assistant skill.
 # POSIX sh so it runs on any shell (dash, bash, zsh, ...), not just zsh.
 set -eu
 
@@ -209,7 +209,7 @@ echo
 ok "The presses are ready."
 printf '%s\n' "
 Next steps:
-  1. Configure a series, or ask your agent to set you up (the Librarian skill).
+  1. Configure a series, or ask your agent to set you up (the user-assistant skill).
   2. Rehearse:   run a press check; see skills/correspondent/SKILL.md.
   3. Schedule:   pick a path in docs/guides/schedule.md (a native scheduler, or the
                  universal GitHub Actions cron) and use the schedule prompt there.
