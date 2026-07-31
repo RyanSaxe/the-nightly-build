@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rescoring the same GPT-3 outputs turns a leap into a slope · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "emergent-abilities",
+        "template": "paper",
+        "title": "Rescoring the same GPT-3 outputs turns a leap into a slope",
+        "mode": "open",
+        "order": null,
+        "date": "2026-07-31",
+        "tags": ["research"],
+        "sources": 10,
+        "words": 2858,
+        "reading_minutes": 13,
+        "dek": "Schaeffer, Miranda, and Koyejo's 2023 rebuttal turns Wei et al.'s sharpest curves smooth by rescoring the same outputs. It leaves open exactly what a deployment needs to know: when the metric it depends on will cross the line.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          Rescoring the same GPT-3 outputs turns a leap into a slope
+        </h1>
+        <p class="nb-dekline">
+          Schaeffer, Miranda, and Koyejo's 2023 rebuttal turns Wei et al.'s
+          sharpest curves smooth by rescoring the same outputs. It leaves open
+          exactly what a deployment needs to know: when the metric it depends
+          on will cross the line.
+        </p>
+        <div class="nb-byline">
+          <span>13 min read</span><span>2026-07-31</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Emergent Abilities of Large Language Models</p>
+          <p class="nb-paper-meta">
+            Jason Wei, Yi Tay, Rishi Bommasani, Colin Raffel, Barret Zoph,
+            Sebastian Borgeaud, Dani Yogatama, Maarten Bosma, Denny Zhou,
+            Donald Metzler, Ed H. Chi, Tatsunori Hashimoto, Oriol Vinyals,
+            Percy Liang, Jeff Dean, William Fedus ·
+            Transactions on Machine Learning Research, arXiv:2206.07682 · 2022
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2206.07682"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            Scaling up language models has been shown to predictably improve
+            performance and sample efficiency on a wide range of downstream
+            tasks. This paper instead discusses an unpredictable phenomenon
+            that we refer to as emergent abilities of large language models.
+            We consider an ability to be emergent if it is not present in
+            smaller models but is present in larger models. Thus, emergent
+            abilities cannot be predicted simply by extrapolating the
+            performance of smaller models. The existence of such emergence
+            raises the question of whether additional scaling could
+            potentially further expand the range of capabilities of language
+            models.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A phenomenon named after the fact</h2>
+        <p>
+          By 2022, the standard picture of language-model scaling was smooth.
+          Train a bigger model on more compute and its loss falls along a
+          predictable curve, and downstream task performance mostly follows.
+          Wei et al. collected a specific counterexample to that picture:
+          tasks where accuracy sits at or near chance across several orders of
+          magnitude of training compute, then rises sharply once a model
+          crosses a particular scale, in a shape no small-model trend would
+          have predicted.<sup class="nb-cite"><a href="#s1">1</a></sup> They
+          named this pattern an emergent ability, borrowed a definition of
+          emergence from physicist Philip Anderson's 1972 essay "More Is
+          Different," and set out to catalog how often it happens and on what
+          kind of task.<sup class="nb-cite"><a href="#s1">1</a></sup> A year
+          and a half later, Schaeffer, Miranda, and Koyejo argued that much of
+          the catalog was an artifact of how the tasks were scored, not of
+          anything happening inside the models.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Their paper went on to receive a NeurIPS 2023 Outstanding Paper
+          award, one of the conference's top distinctions, a sign that the
+          field treated the challenge as substantial rather than as a
+          footnote.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Blog post, 11 Dec 2023"
+              data-nb-url="https://blog.neurips.cc/2023/12/11/announcing-the-neurips-2023-paper-awards/"
+              data-nb-note="NeurIPS's own award announcement lists the Schaeffer et al. paper under Outstanding Main Track Papers."
+              >3</a
+            ></sup
+          ><sup class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="Poster page, paper 72117"
+              data-nb-url="https://neurips.cc/virtual/2023/poster/72117"
+              data-nb-note="NeurIPS's own virtual program page corroborates the award and 2023 presentation."
+              >4</a
+            ></sup
+          >
+          The two papers do not disagree about what the number on the page
+          does. They disagree about what to conclude from it.
+        </p>
+      </section>
+
+      <section data-nb-section="what-wei-called-emergent" id="what-wei-called-emergent">
+        <h2>What Wei et al. called emergent</h2>
+        <p>
+          Wei et al. define the term twice, in near-identical words: "an
+          ability is emergent if it is not present in smaller models but is
+          present in larger models."<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Section 2, p.2"
+              data-nb-url="https://arxiv.org/pdf/2206.07682"
+              data-nb-note="Working definition of an emergent ability, stated twice in near-identical form."
+              >1</a
+            ></sup
+          >
+          Scale, in their plots, is training compute in floating-point
+          operations (FLOPs), with parameter count given as a secondary view
+          because compute and parameters had scaled roughly together across
+          the model families they studied.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The definition is narrower than it first sounds. It says nothing
+          about which scale triggers a given ability. The paper is explicit
+          that it isn't attempting to predict one: "our goal in this paper is
+          not to characterize or claim that a specific scale is required to
+          observe emergent abilities." It aims only to document examples of
+          the pattern already reported in prior work.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Section 2, p.3"
+              data-nb-url="https://arxiv.org/pdf/2206.07682"
+              data-nb-note="Wei et al. explicitly disclaim predicting which scale triggers a given emergent ability."
+              >1</a
+            ></sup
+          >
+          The claim is an existence claim about the shape of a curve, not a
+          theory of why the curve bends where it does.
+        </p>
+        <p>
+          The catalog behind that claim draws mostly on
+          <a href="https://arxiv.org/abs/2206.04615">BIG-Bench</a>, a
+          crowdsourced collection of 204 tasks spanning linguistics, math,
+          common-sense reasoning, and more, assembled specifically to probe
+          language models beyond the tasks any one lab would think to
+          write.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/2206.04615"
+              data-nb-note="BIG-Bench comprises 204 tasks drawn from linguistics, math, common-sense reasoning, and other domains."
+              >5</a
+            ></sup
+          >
+          Wei et al. found eight examples of the emergent pattern in few-shot
+          prompting across five model families, and four more once
+          fine-tuning or an augmented prompting technique enters the picture.
+          Compute thresholds for a sample of them:
+        </p>
+        <table class="nb-table">
+          <caption>
+            Where six of Wei et al.'s reported abilities cross from
+            near-chance to sharply above it, by training
+            compute.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Section 3, Fig. 2; Section 4, Fig. 3; Table 1, p.5"
+                data-nb-url="https://arxiv.org/pdf/2206.07682"
+                data-nb-note="Threshold figures compiled from Wei et al.'s Figure 2, Figure 3, and Table 1."
+                >1</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Model family</th>
+              <th>Threshold</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">BIG-Bench 3-digit arithmetic</td>
+              <td><span class="nb-table-token">GPT-3</span></td>
+              <td>2×10²² FLOPs (13B params)</td>
+            </tr>
+            <tr>
+              <td class="txt">Same task</td>
+              <td><span class="nb-table-token">LaMDA</span></td>
+              <td>~1×10²³ FLOPs (68B params)</td>
+            </tr>
+            <tr>
+              <td class="txt">TruthfulQA, &gt;20 pts above random</td>
+              <td><span class="nb-table-token">Gopher</span></td>
+              <td>5×10²³ FLOPs (280B params)</td>
+            </tr>
+            <tr>
+              <td class="txt">MMLU, 57-topic average</td>
+              <td><span class="nb-table-token">Chinchilla</span></td>
+              <td>3–5×10²³ FLOPs (70B–280B params)</td>
+            </tr>
+            <tr>
+              <td class="txt">Word in Context (WiC)</td>
+              <td><span class="nb-table-token">PaLM</span></td>
+              <td>2.5×10²⁴ FLOPs (540B params)</td>
+            </tr>
+            <tr>
+              <td class="txt">Chain-of-thought beats standard prompting, GSM8K</td>
+              <td><span class="nb-table-token">LaMDA</span></td>
+              <td>~1×10²³ FLOPs (~100B params)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          GSM8K, the benchmark behind that last row, is a set of 8,500
+          grade-school math word problems. Its authors reported that even the
+          largest transformers of 2021 failed most of them despite the
+          problems' conceptual simplicity, exactly the kind of task where a
+          threshold effect matters to anyone deciding whether a model is
+          worth deploying.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/2110.14168"
+              data-nb-note="GSM8K is 8,500 grade-school math word problems; even the largest 2021 transformers failed most of them."
+              >6</a
+            ></sup
+          >
+          Read across the table, the pattern Wei et al. describe is real in
+          the sense that the reported numbers do this: near-chance for a long
+          stretch of compute, then sharply above it. The open question is
+          what produces the shape.
+        </p>
+      </section>
+
+      <section data-nb-section="the-objection-in-the-paper-itself" id="the-objection-in-the-paper-itself">
+        <h2>The objection already in the paper</h2>
+        <p>
+          Wei et al. do not miss the obvious challenge to a threshold claim
+          built on accuracy scores. Section 5.1 raises it directly: "using
+          exact string match as the evaluation metric for long-sequence
+          targets may disguise compounding incremental improvements as
+          emergence."<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Section 5.1, pp.6-7"
+              data-nb-url="https://arxiv.org/pdf/2206.07682"
+              data-nb-note="Wei et al. anticipate the metric objection directly, then argue it is incomplete."
+              >1</a
+            ></sup
+          >
+          The intuition: a model generating a long answer can get more of its
+          tokens right as it scales. Exact-match scoring gives no credit for a
+          nearly-correct answer, so a smooth rise in per-token accuracy can
+          look like nothing happens and then everything happens.
+        </p>
+        <p>
+          Having raised it, Wei et al. argue the objection covers only part
+          of the catalog. It says nothing, they argue, about the tasks scored
+          by classification rather than exact match: multiple-choice
+          questions like TruthfulQA and MMLU, or the two-way judgment in Word
+          in Context, where there's no long sequence to get partially right.
+          Emergent-looking jumps show up on those tasks too, so the metric
+          explanation is, in their own words, "at best an incomplete
+          explanation."<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Section 5.1, pp.6-7"
+              data-nb-url="https://arxiv.org/pdf/2206.07682"
+              data-nb-note="Wei et al. call the metric explanation incomplete because classification tasks (Figure 2D-H) also show emergent jumps."
+              >1</a
+            ></sup
+          >
+          That distinction, between long-sequence tasks scored by exact
+          match and short-answer tasks scored by classification, is the exact
+          seam Schaeffer et al. cut into. Their central claim is that
+          classification metrics are not the exception Wei et al. took them
+          to be.
+        </p>
+      </section>
+
+      <section data-nb-section="one-task-two-rulers" id="one-task-two-rulers">
+        <h2>One task, two rulers</h2>
+        <p>
+          Schaeffer et al. open with a formal distinction between two kinds
+          of scoring rule. A nonlinear or discontinuous metric assigns credit
+          in a way that doesn't track the model's underlying per-token error
+          rate smoothly. Multiple Choice Grade scores 1 if the correct option
+          carries the highest probability and 0 otherwise. Exact String Match
+          scores 1 only for a perfect match.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 1 and Section 2, pp.1-3"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Formal definitions of Multiple Choice Grade and Exact String Match as discontinuous metrics."
+              >2</a
+            ></sup
+          >
+          Both are step functions: an answer one token off from correct
+          scores the same zero as an answer with no tokens right. A linear or
+          continuous metric, by contrast, tracks the error rate directly.
+          Token Edit Distance counts how many tokens are wrong, scaling
+          roughly linearly with the per-token error rate. Brier Score, used
+          for classification tasks, is the mean squared error between the
+          model's predicted probability and the correct outcome.<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 1 and Section 2, pp.1-3"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Formal definitions of Token Edit Distance and Brier Score as continuous metrics."
+              >2</a
+            ></sup
+          >
+          Their argument, stated plainly, is that emergent abilities appear
+          "due [to] the researcher's choice of metric rather than due to
+          fundamental changes in model behavior with scale."<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Abstract, p.1; restated Section 1, p.2"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Schaeffer et al.'s central claim, stated in the abstract and restated in Section 1."
+              >2</a
+            ></sup
+          >
+        </p>
+        <p>
+          To test it, they ran GPT-3 and InstructGPT on the exact kind of
+          task Wei et al. had flagged as emergent: 2-shot multiplication of
+          two 2-digit integers, and 2-shot addition of two 4-digit
+          integers.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 3, pp.4-5"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Task setup for the InstructGPT/GPT-3 arithmetic demonstration."
+              >2</a
+            ></sup
+          >
+          Scored under Accuracy, "the GPT family displays emergent abilities
+          if the target has 4 or 5 digits": small models sit near zero,
+          larger ones jump.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 3, pp.4-5, Fig. 3"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Under Accuracy, the GPT family shows an emergent jump on 4- or 5-digit targets."
+              >2</a
+            ></sup
+          >
+          Then they rescored the identical model outputs, unchanged, using
+          Token Edit Distance instead of Accuracy. Under that metric, "the
+          family's performance smoothly, continuously and predictably
+          improves with increasing scale."<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 3, p.5, Fig. 3 bottom row"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Rescoring the same outputs with Token Edit Distance produces a smooth curve instead of a jump."
+              >2</a
+            ></sup
+          >
+          No model was retrained. No output changed. The only thing that
+          moved was the rule for turning a string of digits into a number
+          between zero and one, and that alone converted a cliff into a
+          slope.
+        </p>
+        <p>
+          A second test in the same paper attacks a different weak point:
+          the small sample sizes typical of a benchmark like BIG-Bench.
+          Collecting more test examples to raise the resolution of the
+          Accuracy measurement itself, Schaeffer et al. found that "all
+          models in the InstructGPT/GPT-3 family achieve above-chance
+          accuracy," even under the original discontinuous
+          metric.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 3, p.5, Fig. 4"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Higher-resolution testing shows small models were never exactly at zero accuracy, only under-sampled."
+              >2</a
+            ></sup
+          >
+          The small models were never truly at zero. They were sampled too
+          thinly at the original test-set size to register their real,
+          nonzero, above-chance performance. Two independent failures,
+          metric choice and sample size, were both quietly doing the work
+          that "emergence" got credit for.
+        </p>
+        <p>
+          Neither of these demonstrations exists as a table of per-model
+          numbers in the published paper; both are given as figures, and the
+          exact percentage each model scored is not stated in the running
+          text. What is stated in words is the qualitative result: identical
+          outputs, two metrics, two shapes.
+        </p>
+      </section>
+
+      <section data-nb-section="the-tasks-called-metric-proof" id="the-tasks-called-metric-proof">
+        <h2>The tasks Wei et al. called metric-proof</h2>
+        <p>
+          The arithmetic demonstration only settles the long-sequence half of
+          Wei et al.'s objection, the half about exact string match on tasks
+          with a multi-token target. It leaves their other claim standing:
+          that classification tasks, scored by a rule with no partial credit
+          to withhold in the first place, show the same jumps for a different
+          reason. Schaeffer et al.'s second experiment goes after that claim
+          specifically.
+        </p>
+        <p>
+          They ran a meta-analysis of BIG-Bench's own 39 preferred metrics.
+          By an automated scoring-discontinuity measure, at most 5 of the 39
+          show anything that looks like emergence. Hand-annotating the
+          results narrows that further, to 4 of 39.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 4, p.6, Fig. 5A-B"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="At most 5 of 39 BIG-Bench metrics show automated emergence; hand-annotation narrows this to 4 of 39."
+              >2</a
+            ></sup
+          >
+          Of those four, two metrics account for more than 92 percent of all
+          claimed emergent cases in BIG-Bench: Multiple Choice Grade and
+          Exact String Match.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 4, p.6, Fig. 5C"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Multiple Choice Grade and Exact String Match together account for more than 92 percent of claimed emergent BIG-Bench cases."
+              >2</a
+            ></sup
+          >
+          Multiple Choice Grade is a classification metric, exactly the kind
+          Wei et al. treated as beyond the metric objection's reach. Its
+          appearance at the top of Schaeffer et al.'s list is a direct hit on
+          Wei et al.'s stated reason for calling the objection
+          incomplete, not a restatement of the exact-match half they had
+          already conceded ground on.
+        </p>
+        <p>
+          Schaeffer et al. show a second concrete case of the same swap,
+          independent of the arithmetic task: on LaMDA, an emergent-looking
+          jump visible under Multiple Choice Grade on certain BIG-Bench tasks
+          "disappeared when we changed the metric to the continuous Brier
+          Score."<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Section 4, Fig. 6, p.6"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="An emergent jump under Multiple Choice Grade on LaMDA disappears under the continuous Brier Score."
+              >2</a
+            ></sup
+          >
+          A separate model family, a separate metric pair, and the same
+          result: the discontinuity travels with the scoring rule, not with
+          the model.
+        </p>
+      </section>
+
+      <section data-nb-section="what-a-smoother-curve-doesnt-buy" id="what-a-smoother-curve-doesnt-buy">
+        <h2>What a smoother curve doesn't buy a deployment</h2>
+        <p>
+          Schaeffer et al. are careful about how far this goes. Their own
+          Discussion draws the line explicitly: "nothing in this paper should
+          be interpreted as claiming that large language models cannot
+          display emergent abilities; rather, our message is that previously
+          claimed emergent abilities... might likely be a mirage induced by
+          researcher analyses."<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Discussion, p.9"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Schaeffer et al.'s explicit self-limitation: not that emergence is impossible, but that previously claimed instances might be a metric-induced mirage."
+              >2</a
+            ></sup
+          >
+          They also offer a statistical reason some jumps would appear even
+          if metric choice explained nothing: BIG-Bench alone contains more
+          than 220 tasks scored on roughly 40 metrics across roughly 10 model
+          families, on the order of a million task-metric-family
+          combinations, enough that some fraction will look like a jump by
+          chance alone.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Discussion, p.9"
+              data-nb-url="https://arxiv.org/pdf/2304.15004"
+              data-nb-note="Roughly 10^6 task-metric-model-family triplets in BIG-Bench, used to argue some apparent jumps are statistically expected."
+              >2</a
+            ></sup
+          >
+          The mirage paper's own claim is narrower than "emergence isn't
+          real." It's "much of the specific evidence for it doesn't hold up
+          the way it was read."
+        </p>
+        <p>
+          Jason Wei responded to the argument directly, and did not concede
+          the practical point. He grants what produces it: "if you plot...
+          log-probability of the target sequence, performance improves
+          smoothly."<sup class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="Main body, arithmetic-example paragraph"
+              data-nb-url="https://www.jasonwei.net/blog/common-arguments-regarding-emergent-abilities"
+              data-nb-note="Jason Wei acknowledges that a smooth surrogate metric (log-probability) removes the apparent jump."
+              >7</a
+            ></sup
+          >
+          But he argues the discontinuous metric is the one a real use case
+          actually needs: "you want the answer to be 38, and nothing else.
+          Maybe 37 is closer to 38 than -2.591, but assigning some partial
+          credit to that answer seems unhelpful."<sup class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="Main body, arithmetic-example paragraph"
+              data-nb-url="https://www.jasonwei.net/blog/common-arguments-regarding-emergent-abilities"
+              data-nb-note="Wei's rebuttal: the discontinuous metric is the one that matters for real use, where partial credit is meaningless."
+              >7</a
+            ></sup
+          >
+          A calculator that is usually close is not a calculator. If the
+          product a model ships in only pays out for an exact right answer,
+          the smooth curve underneath is real but beside the point. A team
+          shipping that product still faces a genuinely unpredictable
+          question: at what scale does the metric it's stuck with cross the
+          line into usefulness.
+        </p>
+        <p>
+          Boaz Barak, writing as an outside theorist rather than an author of
+          either paper, accepts the metric-swap effect and then names a
+          second gap Schaeffer et al.'s model doesn't cover. Their
+          mathematical treatment scores a single per-token error rate. Many
+          of the tasks in question, like the scratchpad-assisted 8-digit
+          addition or the chain-of-thought math problems in Wei et al.'s
+          Figure 3, require several correct sub-steps in sequence. Barak's
+          point: "even if we can precisely predict the loss of a model
+          trained using N flops, we may not be able to predict which tasks it
+          would solve beyond those solvable by an N/10 flop model." The
+          reason: the probability that every sub-step in a chain succeeds can
+          still rise sharply even when each sub-step's own probability rises
+          smoothly.<sup class="nb-cite"
+            ><a
+              href="#s8"
+              data-nb-locator="Main body"
+              data-nb-url="https://windowsontheory.org/2023/12/22/emergent-abilities-and-grokking-fundamental-mirage-or-both/"
+              data-nb-note="Barak argues multi-step tasks can show a sharp aggregate curve from compounding sub-step probabilities, independent of metric choice."
+              >8</a
+            ></sup
+          >
+          Schaeffer et al.'s own model does not address that compounding
+          case, and neither Wei et al.'s scratchpad example nor their
+          chain-of-thought example is covered by either side's math. It is a
+          live gap, not a resolved one.
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                The metric-swap effect is demonstrated, not asserted: the
+                identical GPT-3/InstructGPT outputs score a cliff under
+                Accuracy and a slope under Token Edit Distance, and the same
+                pattern repeats on LaMDA with Multiple Choice Grade against
+                Brier Score.<sup class="nb-cite"><a href="#s2">2</a></sup>
+              </li>
+              <li>
+                The under-sampling failure is independent evidence in the
+                same direction: at higher test resolution, models Wei et al.
+                counted as flat at zero turn out to be non-zero all
+                along.<sup class="nb-cite"><a href="#s2">2</a></sup>
+              </li>
+              <li>
+                Schaeffer et al.'s classification-metric result directly
+                answers the specific objection Wei et al. raised against the
+                metric explanation, rather than sidestepping it.<sup
+                  class="nb-cite"
+                  ><a href="#s2">2</a></sup
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                The arithmetic demonstration is reported as figures, not a
+                data table; no source in this record gives the exact
+                accuracy or edit-distance value per model.<sup
+                  class="nb-cite"
+                  ><a href="#s2">2</a></sup
+                >
+              </li>
+              <li>
+                A smooth metric that a deployment cannot use does not answer
+                the deployment's actual question, which is when the metric it
+                does use will cross a threshold.<sup class="nb-cite"
+                  ><a href="#s7">7</a></sup
+                >
+              </li>
+              <li>
+                Neither paper's mathematics covers multi-step tasks where
+                several correct sub-steps chain together, which is exactly
+                where Barak locates a mechanism for real sharpness that
+                metric choice does not explain.<sup class="nb-cite"
+                  ><a href="#s8">8</a></sup
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <p>
+          The debate did not end with either paper. A year after the mirage
+          paper, Snell, Wallace, Klein, and Levine treated emergence as
+          exactly the kind of thing worth forecasting rather than
+          dissolving. Fitting curves to finetuning results on MMLU, GSM8K,
+          CommonsenseQA, and CoLA, they report being able to predict when a
+          benchmark score will cross a threshold "up to 4x the FLOPs in
+          advance."<sup class="nb-cite"
+            ><a
+              href="#s9"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/2411.16035"
+              data-nb-note="Snell et al. report forecasting emergence thresholds up to 4x the FLOPs in advance using finetuning curves."
+              >9</a
+            ></sup
+          >
+          That is a research program built on the premise that discontinuous
+          thresholds are a real target worth predicting, not a mirage to
+          explain away. As of mid-2025, the ontological question hadn't
+          settled by consensus either. A philosophy-of-science analysis
+          argued that "current debates over metrics, pre-training loss
+          thresholds, and in-context learning miss the fundamental
+          ontological nature of emergence in DNNs." It proposed reading large
+          language models instead as complex dynamical systems, with
+          properties analogous to emergence in other natural
+          systems.<sup class="nb-cite"
+            ><a
+              href="#s10"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/2508.04401"
+              data-nb-note="Havlík (2025) argues the metric debate has not settled the ontological question of whether LLM emergence is real, proposing a dynamical-systems framing instead."
+              >10</a
+            ></sup
+          >
+          The metric argument reframed the conversation. It did not close it.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            "Emergent ability" named one real thing and one artifact, and the
+            two were never cleanly separated at the time Wei et al. wrote:
+            capability genuinely improves with scale, and a discontinuous
+            scoring rule genuinely turns a smooth improvement into a cliff on
+            the page. Schaeffer et al. demonstrated the second half concretely
+            enough that it should retire the reading of Wei et al.'s curves
+            as evidence of a sudden internal change in what a model can do.
+            What survives is narrower and still consequential: for a metric a
+            deployment is actually stuck using, the scale at which that
+            metric crosses a usefulness threshold remains as unpredictable as
+            Wei et al. found it, and neither paper's mathematics yet explains
+            the multi-step tasks where a sharp aggregate curve can arise
+            without any metric artifact at all. Wei et al. measured a real
+            pattern in reported scores. They did not measure, and did not
+            claim to measure, an existence claim about model internals. The
+            mirage paper's rebuttal is best read as a correction to how the
+            pattern was interpreted, not a retraction of the pattern itself.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2206.07682"
+              >arXiv · Wei et al., "Emergent Abilities of Large Language
+              Models" (TMLR, 2022)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2304.15004"
+              >arXiv · Schaeffer, Miranda, Koyejo, "Are Emergent Abilities of
+              Large Language Models a Mirage?" (2023)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blog.neurips.cc/2023/12/11/announcing-the-neurips-2023-paper-awards/"
+              >NeurIPS · "Announcing the NeurIPS 2023 Paper Awards"</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://neurips.cc/virtual/2023/poster/72117"
+              >NeurIPS 2023 virtual program · poster page for paper 72117</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2206.04615"
+              >arXiv · Srivastava et al., "Beyond the Imitation Game:
+              Quantifying and Extrapolating the Capabilities of Language
+              Models" (BIG-Bench)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2110.14168"
+              >arXiv · Cobbe et al., "Training Verifiers to Solve Math Word
+              Problems" (GSM8K)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.jasonwei.net/blog/common-arguments-regarding-emergent-abilities"
+              >Jason Wei · "Common arguments regarding emergent
+              abilities" (blog)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://windowsontheory.org/2023/12/22/emergent-abilities-and-grokking-fundamental-mirage-or-both/"
+              >Windows on Theory · Boaz Barak, "Emergent abilities and
+              grokking: Fundamental, Mirage, or both?"</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2411.16035"
+              >arXiv · Snell, Wallace, Klein, Levine, "Predicting Emergent
+              Capabilities by Finetuning" (2024)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2508.04401"
+              >arXiv · Havlík, "Why are LLMs' abilities emergent?" (2025)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
