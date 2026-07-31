@@ -2,17 +2,20 @@
 
 Read `docs/getting-started/ask-your-ai.md`, `docs/getting-started/setup.md`,
 `docs/getting-started/first-run.md`, and the chosen page under
-`docs/integrations/`.
+`docs/integrations/`. Read and apply
+[the capability audit](../references/capability-audit.md) before declaring any
+environment ready.
 
 ## Establish the actual boundary
 
-Determine separately:
+Audit separately:
 
 1. what this conversational assistant can do now;
 2. where scheduled production will execute and what that runtime can do; and
 3. what GitHub CI and Pages will do after a PR opens.
 
-Do not infer one from another. A chat that can browse says nothing about a
+Do not infer one from another. Record direct evidence for each requirement. A
+chat that can browse says nothing about a
 hosted schedule, and a local authenticated `gh` says nothing about the
 schedule's repository app.
 
@@ -35,7 +38,8 @@ for schedule verification.
 ## Acceptance
 
 Setup is not complete after a local validation or a successful provider form.
-Trigger one immediate run in the exact scheduled environment with
-`autopublish: false`. It must use the web, push its generated branch, open a
-real Article PR, and pass proof plus browser rendering. Keep the PR for human
-review and report the result in plain language.
+Run the audit's immediate one-series canary in the exact scheduled environment
+with `autopublish: false`. It must use the web, push its generated branch, open
+a real Article PR, and pass proof plus browser rendering. Keep the PR for human
+review. Report `ready` only after every audit surface passes; otherwise name
+the failed boundary, its evidence, and the single next action.

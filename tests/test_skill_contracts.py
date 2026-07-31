@@ -173,6 +173,25 @@ def test_manual_publication_and_revision_workflows_preserve_the_pr_gate() -> Non
     assert "Revisions never auto-merge" in revision
 
 
+def test_setup_audits_chat_schedule_and_ci_with_a_real_canary() -> None:
+    root = REPO / "skills" / "nb-user-assistant"
+    setup = (root / "workflows" / "setup.md").read_text(encoding="utf-8")
+    audit = (root / "references" / "capability-audit.md").read_text(encoding="utf-8")
+    prose = " ".join(audit.split())
+
+    assert "capability-audit.md" in setup
+    assert "Current assistant" in audit
+    assert "Scheduled production" in audit
+    assert "GitHub CI and Pages" in audit
+    assert "Run the immediate one-series canary" in audit
+    assert "exact scheduled runtime" in prose
+    assert "opened real web sources" in prose
+    assert "opened a real PR with base `library`" in prose
+    assert "autopublish was disabled" in prose
+    assert "Setup status is `ready` only" in prose
+    assert "Resume at:" in audit
+
+
 def test_article_identity_does_not_supply_the_known_leaked_phrase() -> None:
     identity = (REPO / "templates" / "article" / "identity.md").read_text(
         encoding="utf-8"
