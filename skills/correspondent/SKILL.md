@@ -78,6 +78,19 @@ role, and record the resolution in the next brief. A takeover never waives the
 writer proof or editor gate. Stop only for an external constraint no role can
 change.
 
+Never treat silence as progress. A launched role is only "running" once you
+have verified it is; a completion signal can be dropped, and an interrupted or
+crashed role often emits none at all. So do not wait indefinitely on a signal
+that may never come. Most roles finish within about fifteen minutes; a coach or
+editor is usually faster, a researcher or writer with heavy retrieval slower.
+When a role has produced no output well past that, roughly thirty minutes with
+nothing, verify its liveness directly: list the roles actually running and check
+for the role's expected output file on disk. A role that is neither in the live
+list nor has written its output has died. Relaunch it from the same brief. Its
+named inputs are immutable and its outputs live at fixed paths, so a relaunch is
+safe and resumable. Confirm a role is truly gone before relaunching it, so you
+never leave two agents racing the same files.
+
 ## Finish the publication
 
 After approval, run `nb prepare-pr` exactly as the protocol directs. If `gh` is

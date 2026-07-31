@@ -181,6 +181,12 @@ Stop only for an external constraint no role can change. If the harness has no
 child agents, perform the same numbered sequence in one context and preserve
 all artifacts.
 
+A launched role that goes silent is not a running role. Completion signals can
+be dropped, so the orchestrator verifies liveness rather than waiting on a signal
+that may never arrive: a role neither still running nor holding its output on disk
+has died and is relaunched from the same brief. The correspondent skill sets the
+timing and the check.
+
 ## Article contract
 
 The article is one HTML file at `library/<series>/<slug>.html`, plus only its
