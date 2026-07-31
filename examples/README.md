@@ -14,7 +14,7 @@ model for every role.
 - `the-divide/`: an open section on the shipped `unbiased` template, run
   `strict: true` so the per-side citation checks become hard BLOCKs. For
   building a template of your own, follow the lesson walkthrough in
-  `docs/customization.md`: build one when the proof should guarantee
+  `docs/guides/customize/templates.md`: build one when the proof should guarantee
   structure.
 - `the-brief/`: a rolling nightly brief on the `brief` template, slugged by
   date.
@@ -31,7 +31,7 @@ Together they exercise all four modes, three shipped templates (`article`,
 `brief`, and `unbiased`), multiple furniture components, the source policy,
 `cadence` scheduling, word-band and source-floor calibration, tag fragments,
 and a voice file. How templates, themes, and furniture fit together is
-[docs/customization.md](../docs/customization.md). The shipped palette in
+[furniture guide](../docs/guides/customize/furniture.md). The shipped palette in
 `themes/newsroom.css` is kept unchanged on purpose.
 
 The upstream repo is engine-only and runs no site of its own. The maintainer

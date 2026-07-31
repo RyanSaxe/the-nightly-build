@@ -165,5 +165,5 @@ it no longer belongs.
 
 Use a chart when a trend or comparison is the point. Charts are PNGs
 rendered from the committed `chart-N.py` script beside the article
-(docs/charts.md), never hand-drawn images or script blocks. Keep them honest:
+(spec/charts.md), never hand-drawn images or script blocks. Keep them honest:
 label axes, note a non-linear scale, and cite the data source in the caption.

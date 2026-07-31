@@ -15,7 +15,7 @@ You configure the paper. You never run it. Your output is configuration on
 `main`, a rehearsal (press check), and the night-shift schedule. If your harness
 lets you create the schedule and fire the first run yourself, do it. Otherwise
 emit the filled prompt for the human to paste. Say which case applies plainly.
-`docs/scheduling.md` holds the scheduling model. `docs/harnesses.md` lists which
+`docs/guides/schedule.md` holds the scheduling model. `docs/integrations/README.md` lists which
 agents can run it and their costs.
 
 ## 0. The ownership model (say it once, early)
@@ -108,7 +108,7 @@ Then write:
 
 **A prompt carries only what the engine cannot know.** Config is not prose. The
 prompt is one layer in a stack the night shift reads in order
-(`docs/customization.md`):
+(`docs/guides/customize/furniture.md`):
 
 ```text
 PROTOCOL.md > spec/editorial.md > spec/headlines.md > press/editorial.md >
@@ -156,7 +156,7 @@ branch to deploy, re-validates). Two human-only prerequisites for a live site,
 flag both when they apply: the repo must be **public** (GitHub Pages needs it on
 the free plan, or Pro), and for a cloud harness it must be **connected** so the
 night shift can reach it (the Connect step for the chosen path in
-`docs/scheduling.md`).
+`docs/guides/schedule.md`).
 
 ## 4. Press check (offer it before scheduling; run it on request)
 
@@ -186,7 +186,7 @@ series never requires touching the harness again. If the paper already has its
 schedule, say so and skip this section. Configuring the new series on `main` was
 the whole job.
 
-For a first-time handoff, read `docs/scheduling.md` and `docs/harnesses.md`.
+For a first-time handoff, read `docs/guides/schedule.md` and `docs/integrations/README.md`.
 They own the details, so work from them, not from memory. Ask what agent or
 subscription the user already pays for, match it to a harness, and cover four
 things:
@@ -244,14 +244,14 @@ Re-validate after every change.
   `manifest.yaml` + `skeleton.html` required, `identity.md` and
   `furniture.md`/`furniture.css` optional. A press package replaces a shipped
   one of the same id wholesale. The build-your-own walkthrough in
-  `docs/customization.md` covers every manifest field and rebuilds the classic
+  `docs/reference/templates.md` covers every manifest field and rebuilds the classic
   lesson template this way. Crib from it. Do not improvise the fields.
   Validate, then press check before scheduling.
 - _"Give my paper its own furniture"_: components shared across sections go in
   `press/furniture/` (`styles.css` + `catalog.md`). A piece only one template
   renders goes in that template's folder. Either restyles the whole library on
   every publish. Instruct the sections to use them in `prompt.md`. See
-  `docs/customization.md`. To review or tune pieces visually, build the
+  `docs/guides/customize/furniture.md`. To review or tune pieces visually, build the
   furniture gallery, every catalogued piece on one page with no article
   needed:
   `uv run python scripts/gallery/build.py`, then serve the repo root and open
@@ -278,7 +278,7 @@ ownership. Help resolve them without overwriting their work.
 After updating, offer to dispatch the publish workflow so the back catalog
 re-renders with the new engine immediately, and ask to see their schedule
 prompt: it lives outside the repo, so no merge can fix it. Diff it against the
-canonical prompt in `docs/scheduling.md` and replace anything that restates
+canonical prompt in `docs/guides/schedule.md` and replace anything that restates
 what the repo owns. A trigger that recites the pipeline is stale the day after
 it is written.
 

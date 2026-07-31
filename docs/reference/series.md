@@ -46,7 +46,7 @@ one-line edit with a guarantee.
 ## Rhythm and shelving
 
 ```yaml
-cadence: daily # default | weekdays | weekends | [mon, thu]
+cadence: daily # default | weekdays | weekends | manual | [mon, thu]
 paused: true # skip this series entirely; the archive stays up
 section: Foundations # optional shelf on the Sections page and in kickers
 ```
@@ -58,6 +58,11 @@ daily brief coexist under the same schedule. Duty reckons in UTC: a
 article by the run's UTC date, so a cron hour near midnight can land a
 "Monday" run on your local Sunday evening. Pausing is the vacation switch: the
 proof refuses new articles for a paused series.
+
+`cadence: manual` is valid for every mode and is never scheduled by `nb duty`.
+Collection and sequence keep their configured-item rules; rolling keeps its
+date identity. An open manual series requires the article slug to match a
+configured `items` entry in both initialization and CI.
 
 `section:` is the one level of hierarchy a paper needs. Series group under
 their `section:` heading on the Sections page, and front-page kickers show the
@@ -83,8 +88,10 @@ separate source floor; it defaults to
 `min_sources: 0` disables that default. `strict: true` turns every WARN into a
 BLOCK. `autopublish: true` lets CI auto-merge a clean PR (the default is a
 human merge). The source policy is `required_docs`, `consult`, and
-`sources_exclusive`, described in the [README](../README.md) and
-demonstrated across `examples/series/`.
+`sources_exclusive`: required documents must be cited, consulted documents
+must be read but need not appear, and an exclusive source set forbids research
+beyond the configured files. Working configurations live under
+`examples/series/`.
 
 A `required_docs` citation stores the file's repo-relative path. The published
 site links that path to the file on the fork's `main` branch. Private repository
@@ -159,36 +166,14 @@ criteria here, and let the prompt name the rubric furniture
 (templates/FURNITURE.md). A series with no `rubric:` never asks, though any
 rubric rows an article renders are still integrity-checked.
 
-## Commissioning extras by hand
+## Manual commissions
 
-"One article per series per night" disciplines the night shift, not you.
-Any PR to `library` that adds one isolated article bundle and passes the proof is a legitimate
-article, whoever commissioned it. Ask your agent for three extra pieces
-this afternoon and tonight's build is simply bigger. The recommended flow
-is press check, then promote, so you read the rehearsal before it
-publishes. The direct-role chain and `nb prepare-pr` apply the same validation either
-way.
-
-Three rules of the road:
-
-- Every article needs a home. The proof rejects articles for series that do
-  not exist in `press/series/`, so a brand-new topic means a config change
-  on `main` first. Usually that is a one-line commission into an open
-  section's queue or a new item in a collection. A new series is the last
-  resort.
-- Extras count as tonight's article, on the same UTC day. The scheduled run
-  skips a series only when a hand-published article's nb-meta date equals the
-  run's own UTC date. Publish an extra late in the afternoon your time and a
-  cron that fires after UTC midnight sees a new date: the series reads as due
-  again and the run publishes a second item that night. Commission close to the
-  run, or expect the automatic piece as well.
-- Merge the night's PR before the next run. Duty dedupes against merged
-  `library` state, not open PRs, so a series whose PR is still unmerged when the
-  next run fires is re-selected and produces a second PR for the same work. Once
-  the first PR merges the duplicate becomes a file modification and the proof
-  BLOCKs it, but the wasted research and the open-PR pileup are real.
-  `autopublish` series merge themselves; a human-merge series needs you to merge
-  it in time.
+Every manually triggered article still belongs to a configured series and,
+where that mode requires it, a configured item. It uses the normal production
+and Article PR contract. A merged article whose nb-meta date is today's UTC
+date causes that series to idle for the rest of the date; an open PR is not
+published state and does not deduplicate the next run. See
+[Publish an article now](../guides/publish-now.md).
 
 ## Governing without YAML
 

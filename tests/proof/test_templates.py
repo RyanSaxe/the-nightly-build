@@ -73,7 +73,7 @@ USER_TEMPLATES = {
         "cite_rule: per-section\ncite_exempt: [context]\n",
         ("YOUR-LABEL", "sources"),
     ),
-    # the exact manifest from the docs/customization.md walkthrough, so the
+    # the exact manifest from the docs/reference/templates.md contract, so the
     # tutorial cannot drift from what the proof enforces
     "interview": (
         "class: longread\nbands:\n  words: [1200, 3000]\n"

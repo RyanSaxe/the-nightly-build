@@ -67,7 +67,7 @@ background: make the paper yours. Ask your agent to interview you and fill
 this in, or write it by hand.
 MD
 	cat >press/production.yaml <<'YAML'
-# Portable role guidance. See docs/production.md.
+# Portable role guidance. See docs/reference/production.md.
 profile: balanced
 required: false
 YAML
@@ -181,7 +181,7 @@ fi
 # enforce_admins:true is deliberate: the night shift holds your (admin) token,
 # so the required 'validate' check must bind admins too, or a prompt-injected
 # run could merge past the proof. Auto-merge still works (it merges only after
-# 'validate' passes). See docs/scheduling.md § Security.
+# 'validate' passes). See docs/concepts/publishing-and-security.md.
 if gh api -X PUT "repos/$repo/branches/library/protection" --input - >/dev/null 2>&1 <<'JSON'; then
 {
   "required_status_checks": { "strict": false, "contexts": ["validate"] },
@@ -211,7 +211,7 @@ printf '%s\n' "
 Next steps:
   1. Configure a series, or ask your agent to set you up (the Librarian skill).
   2. Rehearse:   run a press check; see skills/correspondent/SKILL.md.
-  3. Schedule:   pick a path in docs/scheduling.md (a native scheduler, or the
+  3. Schedule:   pick a path in docs/guides/schedule.md (a native scheduler, or the
                  universal GitHub Actions cron) and use the schedule prompt there.
   4. Morning:    your site lives at the Pages URL for $repo.
 "

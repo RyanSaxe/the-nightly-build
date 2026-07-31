@@ -248,7 +248,7 @@
       {
         "code": "B-SANDBOX",
         "level": "BLOCK",
-        "message": "declarative data-nb-chart charts are retired; render a PNG with engine/render_chart.py and embed it as a figure (docs/charts.md)"
+        "message": "declarative data-nb-chart charts are retired; render a PNG with engine/render_chart.py and embed it as a figure (spec/charts.md)"
       },
       {
         "code": "W-SENTENCE-DENSITY",

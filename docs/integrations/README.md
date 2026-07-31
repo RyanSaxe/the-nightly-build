@@ -1,7 +1,7 @@
-# Harnesses
+# Agent and scheduler integrations
 
 The night shift needs a repository checkout, web access, and permission to
-open pull requests. [Scheduling](scheduling.md) defines that contract. This
+open pull requests. [Schedule](../guides/schedule.md) defines that contract. This
 page maps it to current agent products.
 
 Provider features and prices move quickly. The links below are the source of
@@ -25,7 +25,7 @@ mean this project has stress-tested that harness end to end.
 ## Hosted schedulers
 
 Use a hosted scheduler when it can check out the fork, browse the web, and
-open a PR. Paste the canonical prompt from [Scheduling](scheduling.md) and run
+open a PR. Paste the canonical prompt from [Schedule](../guides/schedule.md) and run
 one task for the whole paper.
 
 - **Claude Code:** create a Routine and enable full, or suitably scoped,
@@ -40,7 +40,7 @@ one task for the whole paper.
 
 ## GitHub Actions
 
-The universal workflow in [Scheduling](scheduling.md) works with an agent that
+The universal workflow in [Schedule](../guides/schedule.md) works with an agent that
 has a non-interactive command or Action. Typical invoke steps are:
 
 - Codex: `openai/codex-action@v1` with `OPENAI_API_KEY`.
@@ -53,23 +53,11 @@ Use each provider's current documentation for installation and Action inputs.
 Give the runtime web access, keep credentials in repository secrets, and say
 plainly whether the run consumes a subscription allowance or a metered API.
 
-## Role coordination
+## Harness independence
 
-The protocol does not assume that every harness exposes the same subagent API.
-When isolated children are available, the correspondent launches each role
-directly with an exact brief and only the files that role needs. Requests return
-through the correspondent, which creates the next numbered brief. When no
-children exist, it performs the same artifact sequence in one context.
+The production protocol does not require nested spawning or a provider-specific
+team feature. A harness may isolate roles in separate contexts or execute the
+same recorded sequence in one context. See [Architecture](../concepts/architecture.md).
 
-Nested spawning and provider-specific agent teams are never required. Each
-article has one ignored workspace and four direct role launches: writing coach
-and researcher in parallel, then writer and editor as their inputs become
-ready. After approval, `nb prepare-pr` owns deterministic delivery. Files under
-`.nb-work/` are authoritative, so a harness can resume a role or launch a fresh
-instance without restarting the article.
-
-Model names are equally harness-specific. `press/production.yaml` therefore
-uses portable tiers (`efficient`, `capable`, `premium`, or `inherit`) unless a
-user pins an exact provider ID. The correspondent maps a tier to an available
-model and records the actual selection in `commission.md`; see
-[Production cost and role models](production.md).
+Model names are harness-specific. Portable tiers and exact provider overrides
+are defined in [Production reference](../reference/production.md).

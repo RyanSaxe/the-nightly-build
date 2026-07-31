@@ -16,7 +16,7 @@ protocol, not furniture. PROTOCOL.md defines them. This base catalogue is the
 engine's, always available to every template. A paper can add its own
 furniture (paper-wide in `press/furniture/`, or bespoke inside one template's
 folder) and instruct sections to use it in prompt.md (see
-docs/customization.md).
+docs/guides/customize/furniture.md).
 
 The catalogue is small on purpose: a few primitives the writer adapts beat a
 component per idea. Retired components (callout, epigraph, aside, cast,
@@ -99,7 +99,7 @@ and the caption seated as the card's footer.
 
 An image the argument needs, in one component with two kinds, told apart by
 filename. A **chart** is drawn from data at production time: render with
-`nb chart` (docs/charts.md), commit the `chart-N.py` script beside
+`nb chart` (spec/charts.md), commit the `chart-N.py` script beside
 `chart-N.png` as its provenance (the `chart-` name is reserved), label axes,
 note a non-linear scale, and cite the data source in the caption. A **source
 asset** (`asset-N.png`/`.jpg`/`.webp`) is an exact visual captured from a cited
@@ -205,7 +205,7 @@ A listing the reader should actually read: code whose behavior is evidence,
 never decoration. The header names the source (a path, or a short context) and
 the language; the `language-…` class drives the highlighter (python and
 javascript ship with the engine; a press pins more via `site.yaml` assets,
-see docs/customization.md). Escape the code as HTML. The caption states
+see docs/guides/customize/furniture.md). Escape the code as HTML. The caption states
 what the listing shows and carries the citation.
 
 ```html
@@ -351,7 +351,7 @@ Strengths against caveats, side by side. Its summary row is a "Verdict" note
 
 Scored criteria for a review: each row a criterion, an integer score 0–5,
 and one cited line the score stands on. A series may pin criteria every
-review must score (`rubric:` in series.yaml, docs/series.md § Rubrics); add
+review must score (`rubric:` in series.yaml, docs/reference/series.md § Rubrics); add
 rows the subject demands. The rendered score text must agree with
 `data-score`, and the meter colors itself from the score.
 
