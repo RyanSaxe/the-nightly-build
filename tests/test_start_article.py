@@ -150,6 +150,59 @@ def test_open_article_keeps_requested_tag_order(
     assert "Selected item" not in direction
 
 
+def test_manual_open_article_requires_a_configured_commission(
+    clone_testrepo,
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = pathlib.Path(clone_testrepo("press", "templates", "spec"))
+    series = repo / "press/series/wildcard"
+    series.mkdir()
+    (series / "series.yaml").write_text(
+        "name: Wildcard\nmode: open\ncadence: manual\ntemplate: article\n"
+        "prompt: prompt.md\n"
+    )
+    (series / "prompt.md").write_text("Choose a new subject.\n")
+
+    with pytest.raises(StartArticleError, match="has no item 'birds'"):
+        initialize(
+            repo=repo,
+            workspace=tmp_path / "article",
+            series_id="wildcard",
+            slug="birds",
+            template_id="article",
+        )
+
+
+def test_manual_open_article_accepts_a_configured_commission(
+    clone_testrepo,
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = pathlib.Path(clone_testrepo("press", "templates", "spec"))
+    series = repo / "press/series/wildcard"
+    series.mkdir()
+    (series / "series.yaml").write_text(
+        "name: Wildcard\nmode: open\ncadence: manual\ntemplate: article\n"
+        "prompt: prompt.md\nitems:\n  - slug: birds\n    prompt: Cover birds.\n"
+    )
+    (series / "prompt.md").write_text("Choose a new subject.\n")
+
+    article = initialize(
+        repo=repo,
+        workspace=tmp_path / "article",
+        series_id="wildcard",
+        slug="birds",
+        template_id="article",
+    )
+
+    assert article.exists()
+    assert (
+        "Cover birds."
+        in (
+            tmp_path / "article/agent-artifacts/wildcard/birds/editorial-direction.md"
+        ).read_text()
+    )
+
+
 def test_invalid_request_leaves_no_partial_article(
     clone_testrepo,
     tmp_path: pathlib.Path,

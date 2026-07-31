@@ -279,7 +279,10 @@ def initialize(
     _read(skeleton, label=f"template skeleton for {template_id}")
 
     item = _selected_item(series, slug)
-    if item is None and series.get("mode") in ("collection", "sequence"):
+    requires_item = series.get("mode") in ("collection", "sequence") or (
+        series.get("mode") == "open" and series.get("cadence") == "manual"
+    )
+    if item is None and requires_item:
         raise StartArticleError(f"series {series_id!r} has no item {slug!r}")
     resolved_tags = _resolve_tags(item=item, requested=tags)
     direction = _editorial_direction(

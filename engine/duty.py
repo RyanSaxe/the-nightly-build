@@ -46,7 +46,7 @@ except ImportError:
     sys.exit(2)
 
 DAY_NAMES = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
-CADENCE_WORDS = ("daily", "weekdays", "weekends")
+CADENCE_WORDS = ("daily", "weekdays", "weekends", "manual")
 
 
 def cadence_is_valid(cadence) -> bool:
@@ -70,6 +70,8 @@ def cadence_includes(cadence, day: str) -> bool:
         return day not in ("sat", "sun")
     if cadence == "weekends":
         return day in ("sat", "sun")
+    if cadence == "manual":
+        return False
     if isinstance(cadence, list):
         days = [str(d).lower() for d in cadence]
         if not any(d in DAY_NAMES for d in days):

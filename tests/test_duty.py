@@ -29,7 +29,6 @@ COLLECTION_MISSING_SLUG = (
 
 
 def duty_of(report: dict, series: str) -> dict:
-    """The series' entry in tonight's work list, due or idle. Absence is a failure."""
     entries = report["due"] + report["idle"]
     matched = [entry for entry in entries if entry["series"] == series]
     assert matched, f"{series} is in neither due nor idle: {report}"
@@ -98,6 +97,24 @@ def test_cadence_off_night_is_idle(
     report = duty(patched_repo("cadence: [tue]\n", series="ai-briefs"), empty_lib)
 
     assert duty_of(report, "ai-briefs") in report["idle"]
+
+
+@pytest.mark.parametrize("mode", ["collection", "sequence", "rolling", "open"])
+def test_manual_cadence_is_always_idle(
+    *,
+    duty: Callable[..., dict],
+    patched_repo: Callable[..., str],
+    empty_lib: str,
+    mode: str,
+) -> None:
+    report = duty(
+        patched_repo(f"mode: {mode}\ncadence: manual\n", series="ai-briefs"),
+        empty_lib,
+    )
+
+    entry = duty_of(report, "ai-briefs")
+    assert entry in report["idle"]
+    assert entry["reason"] == "cadence manual — not tonight"
 
 
 def test_open_series_with_a_queue_lists_commissions(
@@ -185,7 +202,6 @@ def test_list_cadence_matches_case_insensitively_and_fails_open(
     empty_lib: str,
     cadence: str,
 ) -> None:
-    """2026-07-06 is a Monday. Mon is due; an unrecognized day name is due too."""
     report = duty(patched_repo(f"cadence: {cadence}\n"), empty_lib)
 
     assert duty_of(report, "semiconductors") in report["due"]
@@ -242,7 +258,6 @@ def test_the_refusal_says_which_tree_and_that_examples_is_not_a_press(
 def test_examples_copied_into_press_is_a_real_press(
     run_duty: Callable[..., subprocess.CompletedProcess[str]], empty_lib: str
 ) -> None:
-    """The trap is the path, not the folder: examples/ is a complete working paper."""
     tmp = tempfile.mkdtemp()
     shutil.copytree(REPO / "examples", pathlib.Path(tmp) / "press")
 
@@ -268,7 +283,6 @@ def test_a_press_whose_desks_are_all_idle_is_a_quiet_night_not_a_refusal(
 
 @pytest.fixture
 def night_clone(clone_testrepo: Callable[..., str]) -> tuple[str, str]:
-    """The press as the night shift sees it: a checkout tracking an origin."""
     origin = tempfile.mkdtemp()
     git("init", "--bare", "-q", "-b", "main", cwd=origin)
     night = clone_testrepo("press", "templates")
@@ -284,7 +298,6 @@ def night_clone(clone_testrepo: Callable[..., str]) -> tuple[str, str]:
 
 @pytest.fixture
 def stale_clone(night_clone: tuple[str, str]) -> str:
-    """The owner retires a series on main; the night shift's clone never hears."""
     night, origin = night_clone
     owner = tempfile.mkdtemp()
     git("clone", "-q", origin, owner, cwd=tempfile.gettempdir())
@@ -346,5 +359,4 @@ def test_a_tree_with_no_git_is_never_called_stale(
     testrepo: str,
     empty_lib: str,
 ) -> None:
-    """A press check builds its fixture press in a temp dir, outside any repo."""
     assert run_duty("--repo", testrepo, "--library", empty_lib).returncode == 0

@@ -1,8 +1,22 @@
-"""B-MODE and B-SLUG: what the series' mode allows tonight to be."""
+"""Check what the series mode allows an article to publish.
+
+The mode proof owns slug admission, ordering, configured commissions, and
+published-state deduplication. Cadence normally belongs to the scheduler; the
+manual-open exception is checked here because each manually commissioned slug
+must be explicit configuration before CI accepts it.
+"""
 
 import datetime as _dt
 
 from nb.proof.meta import DATE_RE
+
+__all__ = (
+    "check_mode",
+    "check_open_slug",
+    "check_ordered_mode",
+    "check_rolling_mode",
+    "check_sequence_slug",
+)
 
 
 def check_sequence_slug(meta, *, items, idx, slug, pub, rep):
@@ -74,8 +88,14 @@ def check_rolling_mode(meta, *, slug, pub, today, rep):
         )
 
 
-def check_open_slug(*, items, slug, pub, rep):
+def check_open_slug(*, items, slug, pub, manual, rep):
     item_cfg = next((it for it in items if it.get("slug") == slug), None)
+    if manual and item_cfg is None:
+        rep.block(
+            "B-SLUG",
+            f"manual open series requires '{slug}' to be a configured item",
+        )
+        return None
     if pub is None:
         rep.notes.append(
             "library state not provided (--library); "
@@ -111,5 +131,11 @@ def check_mode(meta, *, series, series_id, slug, pub, today, rep):
         check_rolling_mode(meta, slug=slug, pub=pub, today=today, rep=rep)
         return None
     if mode == "open":
-        return check_open_slug(items=items, slug=slug, pub=pub, rep=rep)
+        return check_open_slug(
+            items=items,
+            slug=slug,
+            pub=pub,
+            manual=series.get("cadence") == "manual",
+            rep=rep,
+        )
     return None

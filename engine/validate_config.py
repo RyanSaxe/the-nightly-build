@@ -637,8 +637,8 @@ def check_series(repo, registry, *, errors):
         cadence = cfg.get("cadence")
         if cadence is not None and not duty.cadence_is_valid(cadence):
             errors.append(
-                f"{where}: cadence must be daily | weekdays | "
-                f"weekends | a list of day names {list(duty.DAY_NAMES)}"
+                f"{where}: cadence must be daily | weekdays | weekends | "
+                f"manual | a list of day names {list(duty.DAY_NAMES)}"
             )
         if not isinstance(cfg.get("paused", False), bool):
             errors.append(f"{where}: 'paused' must be true or false")

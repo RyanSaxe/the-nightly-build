@@ -172,6 +172,7 @@ def test_paused_series_blocks_publication(
     [
         ("cadence: weekdays\n", "semiconductors", True),
         ("cadence: [mon, thu]\n", "semiconductors", True),
+        ("cadence: manual\n", "semiconductors", True),
         ("cadence: fortnightly\n", "semiconductors", False),
         ("selection: random\n", "semiconductors", True),
         ("selection: random\n", "ai-briefs", False),
@@ -264,6 +265,40 @@ def test_publishing_the_commissioned_item_is_block_clean(
         "wildcard",
         slug="commissioned-piece",
         repo=open_press(QUEUE_YAML),
+        library=make_library({"wildcard": []}),
+    )
+
+    assert not result.blocks
+
+
+def test_manual_open_series_requires_a_configured_commission(
+    *,
+    run_local: Callable[..., Findings],
+    open_press: Callable[..., str],
+    make_library: Callable[..., str],
+) -> None:
+    result = run_local(
+        OPEN,
+        "wildcard",
+        slug="the-cuda-moat",
+        repo=open_press(OPEN_YAML + "cadence: manual\n"),
+        library=make_library({"wildcard": []}),
+    )
+
+    assert "B-SLUG" in result.blocks
+
+
+def test_manual_open_series_accepts_its_configured_commission(
+    *,
+    run_local: Callable[..., Findings],
+    open_press: Callable[..., str],
+    make_library: Callable[..., str],
+) -> None:
+    result = run_local(
+        OPEN.replace("the-cuda-moat", "commissioned-piece"),
+        "wildcard",
+        slug="commissioned-piece",
+        repo=open_press(QUEUE_YAML + "cadence: manual\n"),
         library=make_library({"wildcard": []}),
     )
 
