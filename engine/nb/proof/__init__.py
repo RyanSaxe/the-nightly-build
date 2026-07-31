@@ -48,6 +48,7 @@ def check_article(
     rep,
     today=None,
     check_links=False,
+    revision=False,
 ) -> dict | None:
     """Run every check against one article and record the findings on rep.
 
@@ -59,7 +60,9 @@ def check_article(
     """
     today = today or _dt.datetime.now(_dt.timezone.utc).date()
 
-    resolved = resolve_series_and_template(repo, series_id, rep)
+    resolved = resolve_series_and_template(
+        repo, series_id, rep=rep, allow_paused=revision
+    )
     if resolved is None:
         return None
     series, registry, allowed_templates = resolved
@@ -110,6 +113,7 @@ def check_article(
         slug=slug,
         pub=pub,
         today=today,
+        revision=revision,
         rep=rep,
     )
 

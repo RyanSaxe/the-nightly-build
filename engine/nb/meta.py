@@ -46,7 +46,9 @@ __all__ = (
     "article_bundle_path",
     "is_meta_script",
     "is_safe_tag",
+    "parse_meta",
     "read_meta",
+    "revision_bundle_path",
     "series_dir",
     "series_ids",
 )
@@ -79,9 +81,15 @@ def is_meta_script(attrs: dict) -> bool:
     ).strip().lower() == "application/json" and attrs.get("id") == "nb-meta"
 
 
-def read_meta(path: str) -> dict | None:
-    with open(path, encoding="utf-8", errors="replace") as fh:
-        m = META_RE.search(fh.read())
+def parse_meta(source: str) -> dict | None:
+    """Read the first typed nb-meta object from article source text.
+
+    Return ``None`` when no recognized block exists, its JSON is invalid, or
+    the decoded value is not an object. Field-level validation belongs to the
+    proof; this shared reader only establishes the object boundary used by
+    scheduling, building, PR identity checks, and file-backed ``read_meta``.
+    """
+    m = META_RE.search(source)
     if not m:
         return None
     try:
@@ -89,6 +97,11 @@ def read_meta(path: str) -> dict | None:
     except ValueError:
         return None
     return meta if isinstance(meta, dict) else None
+
+
+def read_meta(path: str) -> dict | None:
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        return parse_meta(fh.read())
 
 
 def series_dir(library: str, series_id: str) -> str | None:
@@ -131,6 +144,40 @@ def article_bundle_path(
             artifact is None or artifact.groups() != (series_id, slug)
         ):
             return None
+    return article
+
+
+def revision_bundle_path(changes: list[tuple[str, str]]) -> str | None:
+    """Return the one modified article in an isolated revision diff.
+
+    A revision modifies one published HTML file, may add, modify, or delete
+    assets below its matching directory, and may only add matching agent
+    artifacts. The artifact validator applies the narrower role-pair and
+    invocation-number rules after this path-level classification succeeds.
+    """
+    articles = [
+        path for state, path in changes if state == "M" and PR_PATH_RE.match(path)
+    ]
+    if len(articles) != 1:
+        return None
+    article = articles[0]
+    match = PR_PATH_RE.match(article)
+    assert match is not None
+    series_id, slug = match.groups()
+    for state, path in changes:
+        if path == article:
+            continue
+        asset = ARTICLE_ASSET_RE.match(path)
+        if asset is not None and asset.groups() == (series_id, slug):
+            if state not in ("A", "M", "D"):
+                return None
+            continue
+        artifact = AGENT_ARTIFACT_RE.match(path)
+        if artifact is not None and artifact.groups() == (series_id, slug):
+            if state != "A":
+                return None
+            continue
+        return None
     return article
 
 

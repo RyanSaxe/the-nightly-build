@@ -69,7 +69,7 @@ jobs:
       - name: Render probe
         run: |
           path=$(_main/nb ci article-path --diff-base "origin/${{ github.base_ref }}")
-          if [ -z "$path" ]; then echo "no added article; probe skipped"; exit 0; fi
+          if [ -z "$path" ]; then echo "no publishable article; probe skipped"; exit 0; fi
           _main/nb build --repo _main --library . --out /tmp/site
           _main/nb render-check --site /tmp/site --article "$path" | tee -a /tmp/proof.txt
 

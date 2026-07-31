@@ -8,7 +8,36 @@ named head's committed blobs rather than a checkout or PR-body description.
 import pathlib
 
 from conftest import PressRepo
-from press import article
+from press import article, write_agent_artifacts
+
+
+def prepare_revision(
+    pr_repo: PressRepo, *, legacy: bool = False, paused: bool = False
+) -> str:
+    pr_repo.checkout("library")
+    if paused:
+        series = pathlib.Path(pr_repo.path, "press/series/semiconductors/series.yaml")
+        series.write_text(series.read_text() + "paused: true\n")
+    pr_repo.write("library/semiconductors/micron.html", article())
+    if not legacy:
+        write_agent_artifacts(pr_repo.path, "semiconductors", slug="micron")
+    pr_repo.commit("publish micron")
+    pr_repo.checkout("owner/revise-micron", new=True)
+    pr_repo.write(
+        "library/semiconductors/micron.html",
+        article().replace("</body>", "<!-- corrected -->\n</body>"),
+    )
+    number = "01" if legacy else "02"
+    pr_repo.write(
+        f"agent-artifacts/semiconductors/micron/editor/{number}/review-brief.md",
+        "# Review brief\n\nReview the correction against the published article.\n",
+    )
+    pr_repo.write(
+        f"agent-artifacts/semiconductors/micron/editor/{number}/editorial-review.md",
+        "# Editorial review\n\nThe correction is accurate and ready for review.\n",
+    )
+    pr_repo.commit("revise micron")
+    return "owner/revise-micron"
 
 
 def test_pr_happy_path(pr_repo: PressRepo) -> None:
@@ -81,6 +110,121 @@ def test_pr_accepts_numbered_revision_artifacts(pr_repo: PressRepo) -> None:
     result = pr_repo.run_pr()
 
     assert "B-AGENT-ARTIFACTS" not in result.codes
+
+
+def test_pr_accepts_a_reviewed_article_revision(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+
+
+def test_revision_of_a_legacy_article_starts_editor_at_01(
+    pr_repo: PressRepo,
+) -> None:
+    head = prepare_revision(pr_repo, legacy=True)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+
+
+def test_revision_accepts_matching_asset_additions_modifications_and_deletions(
+    pr_repo: PressRepo,
+) -> None:
+    pr_repo.checkout("library")
+    pr_repo.write("library/semiconductors/micron.html", article())
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="micron")
+    pr_repo.write("library/semiconductors/micron/old.png", "old")
+    pr_repo.write("library/semiconductors/micron/change.png", "before")
+    pr_repo.commit("publish micron with assets")
+    pr_repo.checkout("owner/revise-assets", new=True)
+    pr_repo.write(
+        "library/semiconductors/micron.html",
+        article().replace("</body>", "<!-- assets revised -->\n</body>"),
+    )
+    pr_repo.git("rm", "-q", "library/semiconductors/micron/old.png")
+    pr_repo.write("library/semiconductors/micron/change.png", "after")
+    pr_repo.write("library/semiconductors/micron/new.png", "new")
+    for filename in ("review-brief.md", "editorial-review.md"):
+        pr_repo.write(
+            f"agent-artifacts/semiconductors/micron/editor/02/{filename}",
+            f"# Asset revision\n\nComplete {filename}.\n",
+        )
+    pr_repo.commit("revise assets")
+
+    result = pr_repo.run_pr(head="owner/revise-assets")
+
+    assert not result.blocks
+
+
+def test_revision_cannot_change_article_identity(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    revised = pathlib.Path(pr_repo.path, "library/semiconductors/micron.html")
+    revised.write_text(
+        revised.read_text().replace('"date": "2026-07-06"', '"date": "2026-07-07"')
+    )
+    pr_repo.commit("change identity")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-REVISION-IDENTITY" in result.blocks
+
+
+def test_revision_requires_a_fresh_editor_pair(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    pr_repo.git("rm", "-q", "-r", "agent-artifacts/semiconductors/micron/editor/02")
+    for filename in ("brief.md", "draft-handoff.md"):
+        pr_repo.write(
+            f"agent-artifacts/semiconductors/micron/writer/02/{filename}",
+            f"# Writer revision\n\nComplete {filename}.\n",
+        )
+    pr_repo.commit("omit editor")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-AGENT-ARTIFACTS" in result.blocks
+
+
+def test_revision_cannot_modify_published_artifacts(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    review = pathlib.Path(
+        pr_repo.path,
+        "agent-artifacts/semiconductors/micron/editor/01/editorial-review.md",
+    )
+    review.write_text(review.read_text() + "Changed history.\n")
+    pr_repo.commit("rewrite old review")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_paused_series_can_receive_a_revision(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo, paused=True)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+
+
+def test_paused_series_still_blocks_a_new_article(pr_repo: PressRepo) -> None:
+    pr_repo.checkout("library")
+    series = pathlib.Path(pr_repo.path, "press/series/semiconductors/series.yaml")
+    series.write_text(series.read_text() + "paused: true\n")
+    pr_repo.commit("pause semiconductors")
+    pr_repo.checkout("night/paused-new-article", new=True)
+    pr_repo.write(
+        "library/semiconductors/tsmc.html",
+        article().replace('"slug": "micron"', '"slug": "tsmc"'),
+    )
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="tsmc")
+    pr_repo.commit("try paused publication")
+
+    result = pr_repo.run_pr(head="night/paused-new-article")
+
+    assert "B-SERIES" in result.blocks
 
 
 def test_pr_rejects_another_articles_figure_asset(pr_repo: PressRepo) -> None:

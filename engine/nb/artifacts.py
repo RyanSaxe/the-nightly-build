@@ -10,13 +10,15 @@ from __future__ import annotations
 
 import pathlib
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 __all__ = (
     "ROLE_FILES",
+    "ROOT_FILES",
     "artifact_warnings",
     "artifact_root",
     "validate_artifacts",
+    "validate_revision_artifacts",
 )
 
 ROLE_FILES: Mapping[str, tuple[str, str]] = {
@@ -29,6 +31,10 @@ ROOT_FILES = ("editorial-direction.md", "commission.md")
 INVOCATION_RE = re.compile(r"^[0-9]{2}$")
 SOURCE_LINE_RE = re.compile(r"^\s*Source:\s*https?://\S+", re.IGNORECASE | re.MULTILINE)
 VOICE_EXEMPLARS_MIN = 3
+REVISION_ARTIFACT_RE = re.compile(
+    r"^agent-artifacts/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})/"
+    r"(writing-coach|researcher|writer|editor)/([0-9]{2})/([^/]+)$"
+)
 
 
 def artifact_root(root: pathlib.Path, *, series: str, slug: str) -> pathlib.Path:
@@ -104,6 +110,80 @@ def validate_artifacts(root: pathlib.Path, *, series: str, slug: str) -> list[st
             errors.append(issue)
     for role in ROLE_FILES:
         errors.extend(_role_errors(artifacts, role))
+    return errors
+
+
+def validate_revision_artifacts(
+    root: pathlib.Path,
+    *,
+    series: str,
+    slug: str,
+    added_paths: Sequence[str],
+    base_paths: Sequence[str],
+) -> list[str]:
+    """Validate only the fresh role invocations attached to a revision.
+
+    Published artifacts are historical records and need not satisfy today's
+    full artifact contract. Each role included in the revision must add the
+    next contiguous numbered invocation with its exact file pair, and every
+    revision must include a fresh editor review.
+    """
+    prefix = f"agent-artifacts/{series}/{slug}/"
+    added = [path for path in added_paths if path.startswith(prefix)]
+    grouped: dict[tuple[str, int], set[str]] = {}
+    errors: list[str] = []
+    for path in added:
+        match = REVISION_ARTIFACT_RE.fullmatch(path)
+        if match is None or match.group(1, 2) != (series, slug):
+            errors.append(f"invalid revision artifact path: {path}")
+            continue
+        role = match.group(3)
+        number = int(match.group(4))
+        grouped.setdefault((role, number), set()).add(match.group(5))
+
+    for (role, number), filenames in sorted(grouped.items()):
+        expected_files = set(ROLE_FILES[role])
+        if filenames != expected_files:
+            errors.append(
+                f"{role}/{number:02d}: expected {sorted(expected_files)}; "
+                f"found {sorted(filenames)}"
+            )
+            continue
+        for filename in sorted(expected_files):
+            issue = _readable_markdown(
+                root
+                / "agent-artifacts"
+                / series
+                / slug
+                / role
+                / f"{number:02d}"
+                / filename
+            )
+            if issue:
+                errors.append(f"{role}/{number:02d}: {issue}")
+
+    for role in ROLE_FILES:
+        base_numbers = {
+            int(match.group(4))
+            for path in base_paths
+            if (match := REVISION_ARTIFACT_RE.fullmatch(path)) is not None
+            and match.group(1, 2, 3) == (series, slug, role)
+        }
+        new_numbers = sorted(
+            number for candidate_role, number in grouped if candidate_role == role
+        )
+        if not new_numbers:
+            continue
+        first = max(base_numbers, default=0) + 1
+        expected = list(range(first, first + len(new_numbers)))
+        if new_numbers != expected:
+            errors.append(
+                f"{role}: new invocations must continue at {first:02d}; found "
+                + ", ".join(f"{number:02d}" for number in new_numbers)
+            )
+
+    if not any(role == "editor" for role, _number in grouped):
+        errors.append("revision requires a fresh editor invocation")
     return errors
 
 

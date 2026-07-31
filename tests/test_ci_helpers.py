@@ -41,6 +41,52 @@ def test_article_path_prints_the_prs_one_added_article(
     assert ci_helper("article-path", "autopublish: true\n") == "library/foo/story.html"
 
 
+def revision_ci_helper(tmp_path: pathlib.Path, command: str) -> str:
+    repo = tmp_path / "revision-ci"
+    series = repo / "press" / "series" / "foo"
+    article_path = repo / "library" / "foo" / "story.html"
+    series.mkdir(parents=True)
+    article_path.parent.mkdir(parents=True)
+    (series / "series.yaml").write_text("autopublish: true\n")
+    article_path.write_text("<html>published</html>\n")
+    subprocess.run(["git", "init", "-q", "-b", "library"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "t@t"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "published"], cwd=repo, check=True)
+    subprocess.run(["git", "checkout", "-qb", "revision"], cwd=repo, check=True)
+    article_path.write_text("<html>revised</html>\n")
+    artifacts = repo / "agent-artifacts" / "foo" / "story" / "editor" / "01"
+    artifacts.mkdir(parents=True)
+    (artifacts / "review-brief.md").write_text("# Brief\n")
+    (artifacts / "editorial-review.md").write_text("# Review\n")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "revision"], cwd=repo, check=True)
+    return subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "engine" / "ci_helpers.py"),
+            command,
+            "--repo",
+            str(repo),
+            "--diff-base",
+            "library",
+        ],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
+def test_article_path_includes_a_revised_article(tmp_path: pathlib.Path) -> None:
+    assert revision_ci_helper(tmp_path, "article-path") == "library/foo/story.html"
+
+
+def test_revisions_never_autopublish(tmp_path: pathlib.Path) -> None:
+    assert revision_ci_helper(tmp_path, "autopublish") == "false"
+
+
 def run_sync_helper(
     tmp_path: pathlib.Path,
     *,

@@ -1,8 +1,9 @@
 """PR mode: the exact shape and contents of one proposed library change.
 
-The library accepts one article bundle, an owner-authorized retraction, or an
-exact workflow sync from the fork's main branch. Article bundles include the
-exact role inputs and outputs that produced the article.
+The library accepts one new article bundle, one reviewed revision, an
+owner-authorized retraction, or an exact workflow sync from the fork's main
+branch. New bundles include the complete role record; revisions preserve that
+history and add fresh numbered role pairs.
 """
 
 from __future__ import annotations
@@ -14,7 +15,11 @@ import subprocess
 import tempfile
 
 from nb import meta as nb_meta
-from nb.artifacts import artifact_warnings, validate_artifacts
+from nb.artifacts import (
+    artifact_warnings,
+    validate_artifacts,
+    validate_revision_artifacts,
+)
 from nb.config import load_series
 from nb.proof import check_article
 from nb.report import Report
@@ -52,7 +57,7 @@ def pr_changed_files(repo, *, base, head):
     return changes
 
 
-def materialize_bundle(repo, head, changes, dest):
+def materialize_bundle(repo, head, *, changes, dest, extra_paths=()):
     """Write the PR's files, as `head` has them, under dest.
 
     The proof reads the bundle from disk (the article, then its bundle assets
@@ -61,7 +66,9 @@ def materialize_bundle(repo, head, changes, dest):
     bundle does not exist yet. What the PR would merge is the blob at head, so
     that is what gets checked, whatever happens to be checked out.
     """
-    for _status, relpath in changes:
+    paths = [relpath for status, relpath in changes if status != "D"]
+    paths.extend(path for path in extra_paths if path not in paths)
+    for relpath in paths:
         blob = subprocess.run(
             ["git", "-C", repo, "show", f"{head}:{relpath}"],
             capture_output=True,
@@ -71,6 +78,50 @@ def materialize_bundle(repo, head, changes, dest):
         os.makedirs(os.path.dirname(target), exist_ok=True)
         with open(target, "wb") as fh:
             fh.write(blob)
+
+
+def _tree_paths(repo: str, *, ref: str, prefix: str) -> list[str]:
+    result = subprocess.run(
+        ["git", "-C", repo, "ls-tree", "-r", "--name-only", ref, "--", prefix],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.splitlines()
+
+
+def _blob_meta(repo: str, *, ref: str, path: str) -> dict | None:
+    result = subprocess.run(
+        ["git", "-C", repo, "show", f"{ref}:{path}"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return nb_meta.parse_meta(result.stdout)
+
+
+def _check_revision_identity(
+    repo: str, *, base: str, head: str, path: str, rep: Report
+) -> None:
+    try:
+        before = _blob_meta(repo, ref=base, path=path)
+        after = _blob_meta(repo, ref=head, path=path)
+    except subprocess.CalledProcessError as error:
+        rep.block("B-REVISION-IDENTITY", f"cannot read revision article: {error}")
+        return
+    if before is None or after is None:
+        rep.block(
+            "B-REVISION-IDENTITY",
+            "revision identity requires readable nb-meta before and after",
+        )
+        return
+    frozen = ("series", "slug", "date", "mode", "order")
+    changed = [field for field in frozen if before.get(field) != after.get(field)]
+    if changed:
+        rep.block(
+            "B-REVISION-IDENTITY",
+            f"revision cannot change identity fields: {', '.join(changed)}",
+        )
 
 
 def run_pr_mode(
@@ -121,10 +172,15 @@ def run_pr_mode(
             )
         return
     path = nb_meta.article_bundle_path(changes)
+    revision = False
+    if path is None:
+        path = nb_meta.revision_bundle_path(changes)
+        revision = path is not None
     if path is None:
         rep.block(
             "B-DIFF-SHAPE",
-            "PR must add one article and only its matching assets and agent artifacts; found "
+            "PR must add one article bundle or revise one article with matching "
+            "assets and fresh agent artifacts; found "
             f"{[(status, path) for status, path in changes]}",
         )
         return
@@ -133,11 +189,37 @@ def run_pr_mode(
     series_id = m.group(1)
     series_cfg, _ = load_series(cfg_repo, series_id)
     rep.strict = bool(series_cfg and series_cfg.get("strict"))
+    if revision:
+        _check_revision_identity(repo, base=base, head=head, path=path, rep=rep)
     with tempfile.TemporaryDirectory() as bundle_dir:
-        materialize_bundle(repo, head, changes, bundle_dir)
-        for issue in validate_artifacts(
-            pathlib.Path(bundle_dir), series=series_id, slug=m.group(2)
-        ):
+        slug = m.group(2)
+        asset_prefix = f"library/{series_id}/{slug}/"
+        extra_paths = (
+            _tree_paths(repo, ref=head, prefix=asset_prefix) if revision else []
+        )
+        materialize_bundle(
+            repo,
+            head,
+            changes=changes,
+            dest=bundle_dir,
+            extra_paths=extra_paths,
+        )
+        if revision:
+            artifact_prefix = f"agent-artifacts/{series_id}/{slug}/"
+            issues = validate_revision_artifacts(
+                pathlib.Path(bundle_dir),
+                series=series_id,
+                slug=slug,
+                added_paths=[
+                    changed_path for status, changed_path in changes if status == "A"
+                ],
+                base_paths=_tree_paths(repo, ref=base, prefix=artifact_prefix),
+            )
+        else:
+            issues = validate_artifacts(
+                pathlib.Path(bundle_dir), series=series_id, slug=slug
+            )
+        for issue in issues:
             rep.block("B-AGENT-ARTIFACTS", issue)
         for warning in artifact_warnings(
             pathlib.Path(bundle_dir), series=series_id, slug=m.group(2)
@@ -151,4 +233,5 @@ def run_pr_mode(
             rep=rep,
             today=today and _dt.date.fromisoformat(today),
             check_links=check_links,
+            revision=revision,
         )

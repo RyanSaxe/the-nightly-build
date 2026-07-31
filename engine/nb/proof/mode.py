@@ -19,7 +19,15 @@ __all__ = (
 )
 
 
-def check_sequence_slug(meta, *, items, idx, slug, pub, rep):
+def check_sequence_slug(meta, *, items, idx, slug, pub, revision, rep):
+    if revision:
+        if meta.get("order") != idx + 1:
+            rep.block(
+                "B-MODE",
+                f"sequence order must be item position {idx + 1}; "
+                f"nb-meta says {meta.get('order')}",
+            )
+        return
     if pub is None:
         if meta.get("order") != idx + 1:
             rep.block(
@@ -49,7 +57,7 @@ def check_sequence_slug(meta, *, items, idx, slug, pub, rep):
         )
 
 
-def check_ordered_mode(meta, *, series_id, items, slug, pub, mode, rep):
+def check_ordered_mode(meta, *, series_id, items, slug, pub, mode, revision, rep):
     idx = next((i for i, it in enumerate(items) if it.get("slug") == slug), None)
     if idx is None:
         rep.block(
@@ -59,13 +67,21 @@ def check_ordered_mode(meta, *, series_id, items, slug, pub, mode, rep):
         return None
     item_cfg = items[idx]
     if mode == "sequence":
-        check_sequence_slug(meta, items=items, idx=idx, slug=slug, pub=pub, rep=rep)
-    elif pub is not None and slug in pub:
+        check_sequence_slug(
+            meta,
+            items=items,
+            idx=idx,
+            slug=slug,
+            pub=pub,
+            revision=revision,
+            rep=rep,
+        )
+    elif not revision and pub is not None and slug in pub:
         rep.block("B-MODE", f"'{slug}' is already published")
     return item_cfg
 
 
-def check_rolling_mode(meta, *, slug, pub, today, rep):
+def check_rolling_mode(meta, *, slug, pub, today, revision, rep):
     if not DATE_RE.match(slug):
         rep.block("B-SLUG", f"rolling slug must be YYYY-MM-DD, got '{slug}'")
     else:
@@ -80,7 +96,7 @@ def check_rolling_mode(meta, *, slug, pub, today, rep):
                 "B-META-MATCH",
                 f"rolling nb-meta date '{meta.get('date')}' must equal slug",
             )
-        if pub is not None and slug in pub:
+        if not revision and pub is not None and slug in pub:
             rep.block("B-MODE", f"a brief for {slug} is already published")
     if pub is None:
         rep.notes.append(
@@ -88,7 +104,7 @@ def check_rolling_mode(meta, *, slug, pub, today, rep):
         )
 
 
-def check_open_slug(*, items, slug, pub, manual, rep):
+def check_open_slug(*, items, slug, pub, manual, revision, rep):
     item_cfg = next((it for it in items if it.get("slug") == slug), None)
     if manual and item_cfg is None:
         rep.block(
@@ -96,6 +112,8 @@ def check_open_slug(*, items, slug, pub, manual, rep):
             f"manual open series requires '{slug}' to be a configured item",
         )
         return None
+    if revision:
+        return item_cfg
     if pub is None:
         rep.notes.append(
             "library state not provided (--library); "
@@ -114,7 +132,7 @@ def check_open_slug(*, items, slug, pub, manual, rep):
     return item_cfg
 
 
-def check_mode(meta, *, series, series_id, slug, pub, today, rep):
+def check_mode(meta, *, series, series_id, slug, pub, today, revision=False, rep):
     mode = series.get("mode")
     items = series.get("items") or []
     if mode in ("collection", "sequence"):
@@ -125,10 +143,18 @@ def check_mode(meta, *, series, series_id, slug, pub, today, rep):
             slug=slug,
             pub=pub,
             mode=mode,
+            revision=revision,
             rep=rep,
         )
     if mode == "rolling":
-        check_rolling_mode(meta, slug=slug, pub=pub, today=today, rep=rep)
+        check_rolling_mode(
+            meta,
+            slug=slug,
+            pub=pub,
+            today=today,
+            revision=revision,
+            rep=rep,
+        )
         return None
     if mode == "open":
         return check_open_slug(
@@ -136,6 +162,7 @@ def check_mode(meta, *, series, series_id, slug, pub, today, rep):
             slug=slug,
             pub=pub,
             manual=series.get("cadence") == "manual",
+            revision=revision,
             rep=rep,
         )
     return None
