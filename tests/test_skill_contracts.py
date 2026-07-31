@@ -9,10 +9,13 @@ from __future__ import annotations
 
 import pathlib
 
+import yaml
+
 from nb.artifacts import ROLE_FILES
 
 REPO = pathlib.Path(__file__).parents[1]
-ROLE_SKILLS = {role: REPO / "skills" / role / "SKILL.md" for role in ROLE_FILES}
+SKILLS = REPO / ".agents" / "skills"
+ROLE_SKILLS = {role: SKILLS / role / "SKILL.md" for role in ROLE_FILES}
 FORBIDDEN_ROLE_SURFACES = (
     "PROTOCOL.md",
     "spec/",
@@ -25,8 +28,8 @@ FORBIDDEN_ROLE_SURFACES = (
 )
 WRITER_BRIEFING_SURFACES = (
     REPO / "PROTOCOL.md",
-    REPO / "skills" / "correspondent" / "SKILL.md",
-    REPO / "skills" / "writer" / "SKILL.md",
+    SKILLS / "correspondent" / "SKILL.md",
+    SKILLS / "writer" / "SKILL.md",
     REPO / "spec" / "banned-terms.yaml",
     REPO / "spec" / "editorial.md",
     REPO / "templates" / "FURNITURE.md",
@@ -34,15 +37,15 @@ WRITER_BRIEFING_SURFACES = (
 )
 AGENT_PROMPT_SURFACES = (
     REPO / "PROTOCOL.md",
-    REPO / "skills" / "correspondent" / "SKILL.md",
+    SKILLS / "correspondent" / "SKILL.md",
     *ROLE_SKILLS.values(),
 )
 
 
 def test_runtime_has_exactly_four_editorial_roles() -> None:
     assert set(ROLE_FILES) == {"writing-coach", "researcher", "writer", "editor"}
-    assert not (REPO / "skills" / "publisher" / "SKILL.md").exists()
-    assert not (REPO / "skills" / "desk" / "SKILL.md").exists()
+    assert not (SKILLS / "publisher" / "SKILL.md").exists()
+    assert not (SKILLS / "desk" / "SKILL.md").exists()
 
 
 def test_each_role_uses_its_semantic_artifact_contract() -> None:
@@ -64,7 +67,7 @@ def test_bounded_roles_do_not_receive_repository_exploration_instructions() -> N
 
 
 def test_correspondent_owns_context_routing_and_publication() -> None:
-    skill = (REPO / "skills" / "correspondent" / "SKILL.md").read_text(encoding="utf-8")
+    skill = (SKILLS / "correspondent" / "SKILL.md").read_text(encoding="utf-8")
     prose = " ".join(skill.split())
 
     for role in ROLE_FILES:
@@ -82,10 +85,10 @@ def test_correspondent_owns_context_routing_and_publication() -> None:
 def test_protocol_governs_the_scheduled_correspondent() -> None:
     agents = (REPO / "AGENTS.md").read_text(encoding="utf-8")
     protocol = (REPO / "PROTOCOL.md").read_text(encoding="utf-8")
-    correspondent = (REPO / "skills/correspondent/SKILL.md").read_text(encoding="utf-8")
+    correspondent = (SKILLS / "correspondent" / "SKILL.md").read_text(encoding="utf-8")
 
     assert agents.index("`PROTOCOL.md`") < agents.index(
-        "`skills/correspondent/SKILL.md`"
+        "`.agents/skills/correspondent/SKILL.md`"
     )
     assert "authoritative contract" in protocol
     assert "Read `PROTOCOL.md` first" in correspondent
@@ -134,7 +137,7 @@ def test_writing_coach_cites_three_real_exemplars() -> None:
 
 
 def test_user_assistant_is_a_progressive_router_not_a_questionnaire() -> None:
-    root = REPO / "skills" / "nb-user-assistant"
+    root = SKILLS / "nb-user-assistant"
     router = (root / "SKILL.md").read_text(encoding="utf-8")
     authority = (root / "references" / "authority.md").read_text(encoding="utf-8")
     router_prose = " ".join(router.split())
@@ -158,7 +161,7 @@ def test_user_assistant_is_a_progressive_router_not_a_questionnaire() -> None:
 
 
 def test_manual_publication_and_revision_workflows_preserve_the_pr_gate() -> None:
-    root = REPO / "skills" / "nb-user-assistant" / "workflows"
+    root = SKILLS / "nb-user-assistant" / "workflows"
     publish = (root / "publish-now.md").read_text(encoding="utf-8")
     revision = (root / "revise-article.md").read_text(encoding="utf-8")
 
@@ -174,7 +177,7 @@ def test_manual_publication_and_revision_workflows_preserve_the_pr_gate() -> Non
 
 
 def test_setup_audits_chat_schedule_and_ci_with_a_real_canary() -> None:
-    root = REPO / "skills" / "nb-user-assistant"
+    root = SKILLS / "nb-user-assistant"
     setup = (root / "workflows" / "setup.md").read_text(encoding="utf-8")
     audit = (root / "references" / "capability-audit.md").read_text(encoding="utf-8")
     prose = " ".join(audit.split())
@@ -190,6 +193,77 @@ def test_setup_audits_chat_schedule_and_ci_with_a_real_canary() -> None:
     assert "autopublish was disabled" in prose
     assert "Setup status is `ready` only" in prose
     assert "Resume at:" in audit
+
+
+def _skill_metadata(path: pathlib.Path) -> dict[str, str]:
+    frontmatter = path.read_text(encoding="utf-8").split("---", 2)[1]
+    parsed = yaml.safe_load(frontmatter)
+    assert isinstance(parsed, dict)
+    return {str(key): str(value) for key, value in parsed.items()}
+
+
+def test_cross_harness_discovery_has_one_canonical_skill_tree() -> None:
+    expected = {
+        "correspondent",
+        "editor",
+        "nb-user-assistant",
+        "researcher",
+        "writer",
+        "writing-coach",
+    }
+
+    assert {path.name for path in SKILLS.iterdir() if path.is_dir()} == expected
+    assert not (REPO / "skills").exists()
+    assert (REPO / "CLAUDE.md").read_bytes() == b"@AGENTS.md\n"
+    assert (REPO / "GEMINI.md").read_bytes() == b"@./AGENTS.md\n"
+
+
+def test_claude_adapter_only_routes_the_user_assistant() -> None:
+    canonical = SKILLS / "nb-user-assistant" / "SKILL.md"
+    adapter = REPO / ".claude" / "skills" / "nb-user-assistant" / "SKILL.md"
+    adapters = tuple((REPO / ".claude" / "skills").glob("*/SKILL.md"))
+
+    assert adapters == (adapter,)
+    assert _skill_metadata(adapter) == _skill_metadata(canonical)
+    assert "../../../.agents/skills/nb-user-assistant/SKILL.md" in adapter.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_public_documentation_has_the_release_taxonomy() -> None:
+    expected = {
+        "README.md",
+        "concepts/architecture.md",
+        "concepts/ownership-and-branches.md",
+        "concepts/publishing-and-security.md",
+        "getting-started/ask-your-ai.md",
+        "getting-started/create-your-paper.md",
+        "getting-started/first-run.md",
+        "getting-started/setup.md",
+        "guides/customize/appearance-and-voice.md",
+        "guides/customize/furniture.md",
+        "guides/customize/templates.md",
+        "guides/manage-your-paper.md",
+        "guides/publish-now.md",
+        "guides/revise-an-article.md",
+        "guides/schedule.md",
+        "guides/update-engine.md",
+        "integrations/README.md",
+        "reference/delivery.md",
+        "reference/production.md",
+        "reference/series.md",
+        "reference/site.md",
+        "reference/templates.md",
+        "troubleshooting/article-prs.md",
+        "troubleshooting/setup-and-scheduling.md",
+    }
+    actual = {
+        path.relative_to(REPO / "docs").as_posix()
+        for path in (REPO / "docs").rglob("*.md")
+        if path.relative_to(REPO / "docs").parts[0] not in {"agent-only", "plans"}
+    }
+
+    assert actual == expected
 
 
 def test_article_identity_does_not_supply_the_known_leaked_phrase() -> None:
