@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-07-31</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-07-31",
+        "template": "brief",
+        "title": "A single HTTP request could hijack any unpatched Ruflo AI agent",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-07-31",
+        "tags": ["ai", "robotics", "compute", "security", "quantum"],
+        "sources": 9,
+        "words": 934,
+        "reading_minutes": 4,
+        "dek": "Noma Security's CVSS-10.0 disclosure traces the hole to Ruflo's own Docker defaults, and the fix stops new attacks without undoing damage already done.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">A single HTTP request could hijack any unpatched Ruflo AI agent</h1>
+        <p class="nb-dekline">Noma Security's CVSS-10.0 disclosure traces the hole to Ruflo's own Docker defaults, and the fix stops new attacks without undoing damage already done.</p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-07-31</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Security</span>
+          <h3>
+            <a href="https://github.com/ruvnet/ruflo/security/advisories/GHSA-c4hm-4h84-2cf3"
+              >Ruflo's MCP bridge let one HTTP request run shell commands</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Ruflo bills itself, and Noma Security's disclosure repeats, as
+            the leading open-source AI agent meta-harness, citing roughly 10
+            million downloads and 1 million active users. Those figures come
+            from the firm that found and is publicizing the flaw, not from
+            an independent audit.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            The flaw itself is not in dispute: Ruflo's own GitHub Security
+            Advisory confirms its MCP Bridge shipped with no authentication
+            on the default Docker Compose configuration's POST /mcp
+            endpoint.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+            bridge exposed 233 tools, per Noma's count, including
+            ruflo__terminal_execute, so a single unauthenticated HTTP
+            request could run arbitrary shell commands inside the
+            container.<sup class="nb-cite"><a href="#s2">2</a></sup> The
+            advisory puts the flaw at CVSS 10.0, affected versions below
+            3.16.3 and patched in 3.16.3, and confirms the
+            terminal-execute blocklist enforced in the autopilot flow never
+            covered direct calls to the bridge.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            Its remediation guidance, rotating API keys and auditing the
+            AgentDB memory store, makes clear the patch stops new
+            exploitation without undoing compromise that happened before
+            it.<sup class="nb-cite"><a href="#s1">1</a></sup> The Hacker
+            News's independent account of the same advisory carries that
+            distinction too, plus an on-the-record confirmation from
+            maintainer Reuven Cohen.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Robotics</span>
+          <h3>
+            <a href="https://deepmind.google/blog/gemini-robotics-2-brings-whole-body-intelligence-to-robots/"
+              >Gemini Robotics 2 unscrews a lightbulb 92% of the time, screws
+              one in just 36%</a
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </h3>
+          <p>
+            DeepMind's own numbers for Gemini Robotics 2, the three-model
+            suite it introduced 30 July, split sharply by task. Unscrewing a
+            lightbulb succeeds 92% of the time, screwing one back in just
+            36%, using a dustpan 32%, and sealing a ziplock bag 40%.
+            Precise insertion reaches 89.6% and picking items off a shelf
+            76.3%.<sup class="nb-cite"><a href="#s4">4</a></sup> The suite
+            separates whole-body manipulation (the vision-language-action
+            model, Gemini Robotics 2) from multi-step planning and
+            multi-robot coordination (Gemini Robotics ER 2).<sup class="nb-cite"><a href="#s4">4</a></sup>
+            A third, on-device model adapts to a new robot body from fewer
+            than 200 demonstrations with no network access.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            The company's own post states plainly that "multi-finger
+            dexterous manipulation remains challenging."<sup class="nb-cite"><a href="#s4">4</a></sup>
+            ER 2 is available through Google AI Studio and, in private
+            preview, the Gemini Enterprise Agent Platform. The VLA and
+            on-device models remain limited to early-access partners and
+            trusted testers.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            TheNextWeb, reviewing the same release independently, traces the
+            split to hardware: Apollo 2's five-fingered, 22 degree-of-freedom
+            hand draws the low multi-finger scores, while simpler
+            two-fingered grippers on other platforms cluster at 74% to 90%.
+            It adds that the robots "pause to think through moves a
+            person makes without a second thought."<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Compute</span>
+          <h3>
+            <a href="https://digital-strategy.ec.europa.eu/en/news/eu-launches-ai-gigafactories-call-boost-europes-computing-capacity-and-unlock-more-eu30-billion"
+              >The EU opens bidding for seven AI "gigafactories" worth over
+              €30 billion</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            The European Commission opened its formal call for AI
+            Gigafactory proposals on 30 July. The offer: up to €10 billion
+            in EU and national public funding, at least €20 billion in
+            private investment, over €30 billion combined, across as many
+            as seven sites.<sup class="nb-cite"><a href="#s6">6</a></sup> Bids are due
+            12 November 2026, with award decisions expected in early
+            2027.<sup class="nb-cite"><a href="#s6">6</a></sup> Euronews's
+            independent breakdown of that €10 billion finds only about €1
+            billion currently committed. Roughly €5 billion is anticipated
+            from a future EU budget member states have not yet agreed, and
+            another €5 billion is expected from the states themselves, a
+            distinction the Commission's own release does not
+            carry.<sup class="nb-cite"><a href="#s7">7</a></sup> The
+            program's stated goal is letting Europe "develop advanced AI on
+            its own infrastructure, in line with EU rules and values."
+            Euronews reports memoranda already signed with Nvidia, AMD, and
+            Qualcomm, none of them EU chip designers.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Quantum</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2604.16216"
+              >A cryogenic controller ran quantum error correction with no
+              room-temperature help</a
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </h3>
+          <p>
+            HRL Laboratories built a cryo-CMOS controller that operates at 4
+            Kelvin and draws no more than 3.5 watts. It ran error correction
+            directly on the lab's 18-qubit silicon processor, using a
+            distance-5 repetition code and a quantum error-detecting code,
+            with no real-time help from room-temperature
+            electronics.<sup class="nb-cite"><a href="#s8">8</a></sup> That
+            result comes from the team's preprint posted to arXiv, the same
+            text later published in Nature behind a paywall the preprint
+            does not share.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The chip holds 54 exchange-coupled quantum dots configurable
+            into 18 exchange-only qubits. The paper reports a mean
+            single-qubit gate error of 2×10⁻⁴ and a mean two-qubit (CNOT)
+            gate error of 3×10⁻³, with the best reproducible CNOT run
+            reaching 9×10⁻⁴.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The authors describe that performance as advancing the
+            exchange-only state of the art "by an order of
+            magnitude."<sup class="nb-cite"><a href="#s8">8</a></sup>
+            Nature's own news desk, independent of HRL, reports the result
+            published the same day as a comparable one from QuTech in
+            Delft, on a separate 5-qubit device. Silicon spin qubits still
+            trail superconducting systems (100-plus qubits) and
+            neutral-atom systems (thousands) in raw scale, even after this
+            gain.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/ruvnet/ruflo/security/advisories/GHSA-c4hm-4h84-2cf3"
+              >GitHub Security Advisory · Unauthenticated RCE in ruflo MCP
+              bridge default docker-compose deployment (GHSA-c4hm-4h84-2cf3)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://noma.security/blog/rufroot-the-mcp-bridge-vulnerability-that-turns-agents-into-rogue-admins-cve-2026-59726/"
+              >Noma Security · RufRoot: The MCP Bridge Vulnerability That
+              Turns Agents Into Rogue Admins (CVE-2026-59726)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thehackernews.com/2026/07/ruflo-mcp-flaw-lets-unauthenticated.html"
+              >The Hacker News · Ruflo MCP Flaw Lets Unauthenticated
+              Attackers Run Commands and Poison AI Memory</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://deepmind.google/blog/gemini-robotics-2-brings-whole-body-intelligence-to-robots/"
+              >Google DeepMind · Gemini Robotics 2 brings whole body
+              intelligence to robots</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thenextweb.com/news/gemini-robotics-2-whole-body-humanoid-control"
+              >TheNextWeb · Google's new AI can now walk a humanoid across
+              the room and tidy up, feet to fingertips</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://digital-strategy.ec.europa.eu/en/news/eu-launches-ai-gigafactories-call-boost-europes-computing-capacity-and-unlock-more-eu30-billion"
+              >European Commission · EU launches AI Gigafactories call to
+              boost Europe's computing capacity and unlock more than €30
+              billion in investment</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.euronews.com/my-europe/2026/07/30/eu-opens-call-for-seven-gigafactories-to-train-next-generation-ai-technologies"
+              >Euronews · EU opens call for seven "gigafactories" to train
+              next-generation AI technologies</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2604.16216"
+              >arXiv · A digitally controlled silicon quantum processing
+              unit</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.nature.com/articles/d41586-026-02357-z"
+              >Nature · Underdog "spin qubits" leap forward in race to a
+              useful quantum computer</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
