@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-01</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-01",
+        "template": "brief",
+        "title": "Tech News · 2026-08-01",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-01",
+        "tags": ["ai", "cryptography", "quantum-computing", "health"],
+        "sources": 8,
+        "words": 759,
+        "reading_minutes": 4,
+        "dek": "Claude found a cryptographic weakness in a NIST post-quantum candidate that survived two years of expert review, evidence that model capability is starting to outpace the process meant to check it.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Tech News · 2026-08-01</h1>
+        <p class="nb-dekline">
+          Claude found a cryptographic weakness in a NIST post-quantum
+          candidate that survived two years of expert review, evidence that
+          model capability is starting to outpace the process meant to check
+          it.
+        </p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-08-01</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Cryptography</span>
+          <h3>
+            <a
+              href="https://www.anthropic.com/research/discovering-cryptographic-weaknesses"
+              >Anthropic's Claude Mythos cuts HAWK-256 key recovery to 2^38
+              operations</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Anthropic's Claude Mythos Preview took about 60 hours to find a
+            previously unused symmetry in HAWK-256, a NIST post-quantum
+            cipher candidate that had already cleared two rounds of expert
+            review, cutting the cost of full key recovery from 2^64 to 2^38
+            operations.<sup class="nb-cite"><a href="#s1">1</a></sup> Separately,
+            after first refusing the task as impossible, the model spent
+            three days and roughly a billion output tokens building a
+            technique it named the Möbius Bridge. That technique improved the
+            best known attack on seven-round (not full) AES-128 by 200 to 800
+            times, at a cost of about $100,000 in API usage per result.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            > Neither attack touches software running today, Anthropic says,
+            but for NIST's reviewers weighing HAWK's candidacy the finding
+            means doubling the cipher's key sizes to compensate would erase
+            much of what made it an attractive post-quantum standard in the
+            first place.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI Models</span>
+          <h3>
+            <a href="https://huggingface.co/moonshotai/Kimi-K3"
+              >Moonshot ships Kimi K3's 2.8-trillion-parameter weights</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Moonshot's model card puts Kimi K3 at 2.8 trillion total
+            parameters and 104 billion active per token across 16 of 896
+            routed experts, the largest openly released mixture-of-experts
+            model to date.<sup class="nb-cite"><a href="#s3">3</a></sup> That
+            is up from the 2.7 trillion Fortune reported at the July 16
+            closed launch, fixed only when the weights actually shipped on
+            July 27.<sup class="nb-cite"><a href="#s4">4</a></sup> The model
+            understands text, image, and video natively, with a
+            1,048,576-token context window.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            > The "Kimi K3 License" behind those weights is not MIT or
+            Apache: any Model-as-a-Service business earning more than $20
+            million a year must sign a separate commercial agreement with
+            Moonshot.<sup class="nb-cite"><a href="#s3">3</a></sup> At $15 per
+            million output tokens against Anthropic Fable's $50, and with
+            Moonshot's own unverified benchmarks claiming wins over Opus 4.8
+            and GPT-5.6, a developer choosing which model to call now has an
+            open-weight option undercutting both on price.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Quantum Computing</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2604.16216"
+              >HRL runs quantum error correction entirely from a chip at 4
+              kelvin</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            HRL's exchange-only quantum processor packs 54 coupled quantum
+            dots into a three-rail array configurable to 18 qubits.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            > Single- and two-qubit operations on it advance the
+            exchange-only state of the art by an order of magnitude, the team
+            reports in a paper published in Nature the week of July 29.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            > Running a distance-5 repetition code against simulation, errors
+            fell roughly fivefold as more qubits joined the code, and the
+            correction ran entirely under a cryogenic controller at about 4
+            kelvin with no real-time input from room-temperature electronics,
+            reportedly for the first time.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            > That targets the wiring bottleneck that has kept silicon
+            quantum processors from scaling past a few dozen qubits. Control
+            logic living on a chip beside the qubits, instead of racks of
+            room-temperature electronics feeding thousands of wires into the
+            cryostat, is what a fault-tolerant machine actually needs.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Health</span>
+          <h3>
+            <a href="https://www.eurekalert.org/news-releases/1137937"
+              >Deramiocel cuts Duchenne muscular dystrophy decline by 54%</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            The Phase 3 trial randomized 106 patients ages 10 to 22,
+            double-blind and placebo-controlled.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            > Deramiocel, an infused, donor-derived cardiac cell therapy
+            given quarterly for a year, slowed decline on the PUL 2.0
+            upper-limb function scale by 54% relative to placebo.<sup class="nb-cite"><a href="#s7">7</a></sup> Among the
+            64 participants with pre-existing cardiac involvement,
+            the treated group's heart function held up better than placebo's,
+            and among 22 with comparable imaging, the drug slowed the buildup
+            of scar tissue in heart muscle, the two complications that most
+            often kill patients with the disease.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            > The trial enrolled a largely non-ambulatory population with
+            advanced disease that most Duchenne trials exclude.<sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            > It lands three weeks before deramiocel's Biologics License
+            Application reaches its August 22 FDA target action date,
+            against a safety profile that included allergic-type infusion
+            reactions in 42% of the treated group versus 15% on placebo.<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.anthropic.com/research/discovering-cryptographic-weaknesses"
+              >Anthropic Research · Discovering cryptographic weaknesses with
+              Claude</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://cyberscoop.com/anthropic-claude-mythos-encryption-flaws-hawk-aes-pqc/"
+              >CyberScoop · Anthropic's Claude Mythos finds weaknesses in
+              encryption algorithms</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://huggingface.co/moonshotai/Kimi-K3"
+              >Hugging Face · Kimi K3 model card (moonshotai/Kimi-K3)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://fortune.com/2026/07/16/moonshots-kimi-k3-pushes-chinese-ai-into-fable-level-territory/"
+              >Fortune · Moonshot's Kimi K3 pushes Chinese AI into
+              Fable-level territory</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2604.16216"
+              >arXiv · A digitally controlled silicon quantum processing
+              unit (HRL Quantum Team)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thequantuminsider.com/2026/07/29/hrl-shows-self-operating-silicon-quantum-processor-that-performs-error-correction/"
+              >The Quantum Insider · HRL Shows Self-Operating Silicon Quantum
+              Processor That Performs Error Correction</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.eurekalert.org/news-releases/1137937"
+              >The Lancet (EurekAlert release) · HOPE-3 phase 3 trial results
+              for deramiocel in Duchenne muscular dystrophy</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://health.ucdavis.edu/news/headlines/phase-3-trial-shows-investigational-cell-therapy-slowed-disease-progression-in-duchenne-muscular-dystrophy/2026/07"
+              >UC Davis Health · Phase 3 trial shows investigational cell
+              therapy slowed disease progression in Duchenne muscular
+              dystrophy</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
