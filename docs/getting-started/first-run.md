@@ -1,23 +1,19 @@
-# Run the first article
+# Verify the scheduled runtime
 
-The first run is a capability and editorial test. Run it in the
-exact environment that will execute the schedule, not in the setup chat or a
-different local shell.
+Run the verification in the exact environment that will execute the schedule,
+not in the setup chat or a different local shell.
 
-Before triggering it, keep `autopublish: false` on the series used for the
-test. The run must:
+The smoke run must:
 
 1. Check out current `main` and `library` state.
-2. Run `nb sync` and `nb duty` successfully.
+2. Install or verify `uv` and run the checkout-owned `nb` command.
 3. Reach real web sources from the scheduled runtime.
-4. Complete the editorial roles and their recorded artifacts.
-5. Push a generated branch and open a real Article PR against `library`.
-6. Pass the full proof and rendered-browser check in CI.
+4. Push a temporary branch and open a draft diagnostic PR against `main`.
+5. Confirm CI starts, then close the PR and delete the temporary branch.
 
-Review the article and its rendering. If it misses editorial intent, improve
-the press and run the test article again. If a capability fails, fix only that
+The smoke run never creates an article, targets `library`, loads the production
+orchestrator, or publishes the paper. If a capability fails, fix only that
 boundary and resume from it; do not silently substitute the setup environment.
 
-Setup is ready only after the scheduled runtime returns a passing PR. Merge it
-manually. Enable `autopublish: true` per series only when you trust both its
-editorial output and its operating boundary.
+The first real article is ordinary product usage. When its CI passes, it merges
+and publishes automatically.

@@ -6,7 +6,6 @@ mode: sequence
 section: "Foundations"
 template: article
 prompt: prompt.md
-autopublish: true
 strict: false
 bands:
   words: [1800, 4500] # a lesson needs room to build an idea, show code, and check it

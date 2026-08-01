@@ -54,10 +54,9 @@ Open that checkout in a coding agent and ask it to continue setup. Keep the
 fork public for GitHub Pages on the free plan; private Pages requires a
 supporting GitHub plan.
 
-Before unattended publication, run one test article in the exact scheduled
-runtime with `autopublish: false`. It must browse real sources, open a real
-Article PR, and pass proof plus browser-render CI. See
-[First run](docs/getting-started/first-run.md).
+Before unattended publication, verify the exact scheduled runtime can reach
+the repository, install the required tools, browse real sources, and open a
+draft smoke-test PR. See [First run](docs/getting-started/first-run.md).
 
 ## FAQ
 

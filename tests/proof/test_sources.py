@@ -426,7 +426,7 @@ def open_briefs_repo(
     y = pathlib.Path(tmp) / "press" / "series" / "ai-briefs" / "series.yaml"
     y.write_text(
         f"name: AI & Semiconductors\nmode: open\ntemplates: [{', '.join(templates)}]\n"
-        f"prompt: prompt.md\nautopublish: true\nstrict: false\nmin_sources: 5\n{patch}"
+        f"prompt: prompt.md\nstrict: false\nmin_sources: 5\n{patch}"
     )
     return tmp
 

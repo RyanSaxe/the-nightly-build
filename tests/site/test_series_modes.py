@@ -18,7 +18,6 @@ name: Wildcard
 mode: open
 templates: [article, brief]
 cadence: weekdays
-autopublish: true
 strict: false
 items:
   - {slug: commissioned-piece, title: On Commission}

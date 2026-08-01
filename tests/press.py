@@ -31,7 +31,6 @@ name: Semiconductors
 mode: collection
 template: article
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 8
 tags:
@@ -62,7 +61,6 @@ name: Wildcard
 mode: open
 templates: [article, brief]
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 8
 """
@@ -72,7 +70,6 @@ name: AI & Semiconductors
 mode: rolling
 template: brief
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 5
 cadence: daily

@@ -186,7 +186,7 @@ def test_production_policy_has_a_small_portable_schema(
 @pytest.mark.parametrize(
     ("patch", "rc"),
     [
-        pytest.param("autopublish: 'false'\n", 1, id="autopublish-truthy-string"),
+        pytest.param("autopublish: true\n", 1, id="autopublish-removed"),
         pytest.param("strict: 'no'\n", 1, id="strict-truthy-string"),
         pytest.param("min_sources: lots\n", 1, id="min_sources-string"),
         pytest.param("min_sources: -1\n", 1, id="min_sources-negative"),
@@ -206,6 +206,16 @@ def test_a_mistyped_series_key_is_a_validation_error(
     rc: int,
 ) -> None:
     assert vc_rc(patched_repo(patch)) == rc
+
+
+def test_autopublish_has_a_migration_error(
+    patched_repo: Callable[..., str],
+    vc_output: Callable[[str], subprocess.CompletedProcess[str]],
+) -> None:
+    result = vc_output(patched_repo("autopublish: false\n"))
+
+    assert result.returncode == 1
+    assert "'autopublish' was removed" in result.stdout
 
 
 def test_unparseable_series_yaml_is_a_readable_error_not_a_traceback(

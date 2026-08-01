@@ -3,8 +3,8 @@
 The press is laid out exactly like production — main carries the engine and the
 config, and an orphan library branch carries what shipped. Each proposed
 article branches from library, passes the same PR-mode proof that check.yml
-invokes, passes the autopublish gate, is squash-merged, and then enters the site
-build that publish.yml runs.
+invokes, is classified as a new article, is squash-merged, and then enters the
+site build that publish.yml runs.
 
 First date (2026-07-05): a collection article and a rolling brief.
 Second date (2026-07-06): a rolling brief.
@@ -131,15 +131,13 @@ class Press:
             "--no-check-links",  # This integration test is offline and deterministic.
             "--json",
         )
-        autopublish = self._run(
+        new_article = self._run(
             str(self.maindir / "engine" / "ci_helpers.py"),
-            "autopublish",
-            "--repo",
-            str(self.maindir),
+            "new-article",
             "--diff-base",
             "library",
         ).strip()
-        return json.loads(proof), autopublish
+        return json.loads(proof), new_article
 
     def _run(self, script: str, *args: str) -> str:
         return subprocess.run(
@@ -173,7 +171,7 @@ class Press:
 class PublicationScenario:
     press: Press
     article_findings: dict
-    autopublish: str
+    new_article: str
     brief_findings: dict
     first_catalog: dict
     first_front: str
@@ -188,7 +186,7 @@ class PublicationScenario:
 def publication() -> PublicationScenario:
     press = Press()
 
-    article_findings, autopublish = press.propose_article(
+    article_findings, new_article = press.propose_article(
         "nb/first-micron",
         "semiconductors",
         slug="micron",
@@ -239,7 +237,7 @@ def publication() -> PublicationScenario:
     return PublicationScenario(
         press=press,
         article_findings=article_findings,
-        autopublish=autopublish,
+        new_article=new_article,
         brief_findings=brief_findings,
         first_catalog=first_catalog,
         first_front=first_front,
@@ -262,8 +260,8 @@ def test_the_article_pr_validates_block_clean(publication: PublicationScenario) 
     )
 
 
-def test_the_autopublish_gate_says_true(publication: PublicationScenario) -> None:
-    assert publication.autopublish == "true"
+def test_the_new_article_gate_says_true(publication: PublicationScenario) -> None:
+    assert publication.new_article == "true"
 
 
 def test_the_brief_pr_validates_block_clean(publication: PublicationScenario) -> None:

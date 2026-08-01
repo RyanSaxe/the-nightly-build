@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["pyyaml"]
+# dependencies = []
 # ///
-"""Answer PR-shape and press-configuration questions for the CI workflows.
+"""Answer PR-shape questions for the CI workflows.
 
-check.yml needs facts that should not be derived in shell: whether the
-validated series has autopublish enabled, and which single article the PR
-adds or revises (the render probe's target). Keeping this outside check.py
-keeps the proof free of workflow concerns and keeps the parsing in one
-reviewed file instead of inline logic inside workflow definitions.
+check.yml needs to know whether a PR adds a new article and which single
+article a PR adds or revises. Keeping this outside check.py keeps the proof
+free of workflow concerns and the path grammar in one reviewed module.
 """
 
 import argparse
 import subprocess
 
-import yaml
-
 from nb import meta as nb_meta
 from nb.workflow_sync import classify_workflow_sync
 
-__all__ = ("autopublish", "changed_files")
+__all__ = ("changed_files",)
 
 
 def changed_files(diff_base: str) -> list[tuple[str, str]]:
@@ -42,30 +38,18 @@ def changed_files(diff_base: str) -> list[tuple[str, str]]:
     return changes
 
 
-def autopublish(repo: str, diff_base: str) -> None:
-    path = nb_meta.article_bundle_path(changed_files(diff_base))
-    if path is None:
-        print("false")
-        return
-    series_id = path.split("/")[1]
-    try:
-        with open(f"{repo}/press/series/{series_id}/series.yaml") as fh:
-            cfg = yaml.safe_load(fh)
-        # Only a real boolean True auto-merges: a string like 'false' is
-        # truthy, so anything but True stays a human-reviewed PR.
-        print("true" if cfg.get("autopublish") is True else "false")
-    except (OSError, yaml.YAMLError, AttributeError):
-        print("false")
-
-
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("cmd", choices=["autopublish", "article-path", "sync"])
+    p.add_argument("cmd", choices=["new-article", "article-path", "sync"])
     p.add_argument("--repo", default="_main")
     p.add_argument("--diff-base", required=True)
     a = p.parse_args()
-    if a.cmd == "autopublish":
-        autopublish(a.repo, a.diff_base)
+    if a.cmd == "new-article":
+        print(
+            "true"
+            if nb_meta.article_bundle_path(changed_files(a.diff_base)) is not None
+            else "false"
+        )
     elif a.cmd == "article-path":
         changes = changed_files(a.diff_base)
         path = nb_meta.article_bundle_path(changes) or nb_meta.revision_bundle_path(

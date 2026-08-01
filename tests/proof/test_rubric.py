@@ -74,7 +74,6 @@ SCORED_SKELETON = """<!DOCTYPE html><html><body>
 BENCH_SERIES = """name: The Bench
 mode: collection
 template: scored
-autopublish: true
 strict: false
 rubric:
   - id: speed

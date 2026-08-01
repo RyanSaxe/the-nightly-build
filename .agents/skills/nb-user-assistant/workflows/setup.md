@@ -38,8 +38,7 @@ for schedule verification.
 ## Acceptance
 
 Setup is not complete after a local validation or a successful provider form.
-Run the audit's immediate one-series test in the exact scheduled environment
-with `autopublish: false`. It must use the web, push its generated branch, open
-a real Article PR, and pass proof plus browser rendering. Keep the PR for human
-review. Report `ready` only after every audit surface passes; otherwise name
-the failed boundary, its evidence, and the single next action.
+Run the audit in the exact scheduled environment. It must use the web, exercise
+the repository tools, and prove its GitHub access without publishing an
+article. Report each capability from direct evidence; otherwise name the
+failed boundary and the single next action.

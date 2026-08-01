@@ -28,5 +28,5 @@ bad article is overfit; rederive the editorial principle.
 
 Apply the change on `main`, run `nb validate`, and preview when appearance,
 furniture, or templates change. Keep unrelated improvements out of the diff.
-If confidence depends on article output, keep autopublish off and recommend a
-targeted test article.
+If confidence depends on article output, recommend a local preview before the
+change lands.

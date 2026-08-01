@@ -101,9 +101,8 @@ article metadata, source and prose contracts, artifact history, rendered site,
 and article behavior in a browser.
 
 If CI fails, the failure returns to the orchestrator for a targeted repair and
-another proof. If it passes, GitHub may merge a new article automatically only
-when that series explicitly enables `autopublish`. Otherwise a person reviews
-and merges it. Revisions and owner curation always require human review.
+another proof. If it passes, GitHub automatically merges every new article.
+Revisions and owner curation always require human review.
 
 See [Publishing and security](publishing-and-security.md) for the complete
 permission and threat model.

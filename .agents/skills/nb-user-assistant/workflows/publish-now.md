@@ -30,6 +30,5 @@ Validate and commit the configuration on `main`. Then read
 `../../nb-orchestrator/SKILL.md` and continue in this same agent as the
 orchestrator, supplying this configured article as the exact authorized work.
 Do not run `nb duty`, delegate orchestration, copy the production sequence into
-this workflow, or weaken the required artifacts. Respect the series' normal
-autopublish setting unless the user asked for review first or the commission is
-a test article.
+this workflow, or weaken the required artifacts. A valid new-article PR
+publishes automatically.

@@ -56,7 +56,6 @@ SERIES_KEYS = {
     "template",
     "templates",
     "prompt",
-    "autopublish",
     "strict",
     "min_sources",
     "sources_by_kind",
@@ -623,7 +622,12 @@ def check_series(repo, registry, *, errors):
         if not isinstance(cfg, dict):
             errors.append(f"{where}: series.yaml must be a mapping")
             continue
-        unknown = set(cfg) - SERIES_KEYS
+        if "autopublish" in cfg:
+            errors.append(
+                f"{where}: 'autopublish' was removed; delete it because every "
+                "valid new article now publishes automatically"
+            )
+        unknown = set(cfg) - SERIES_KEYS - {"autopublish"}
         if unknown:
             errors.append(
                 f"{where}: unknown keys {sorted(unknown)} — "
@@ -642,7 +646,7 @@ def check_series(repo, registry, *, errors):
             )
         if not isinstance(cfg.get("paused", False), bool):
             errors.append(f"{where}: 'paused' must be true or false")
-        for flag in ("autopublish", "strict"):
+        for flag in ("strict",):
             if not isinstance(cfg.get(flag, False), bool):
                 errors.append(f"{where}: '{flag}' must be true or false")
         production = cfg.get("production")

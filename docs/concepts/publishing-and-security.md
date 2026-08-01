@@ -15,9 +15,9 @@ secrets. The proof restricts the diff shape, validates article metadata and
 source contracts, rejects active article content, preserves artifact history,
 and requires rendered-browser success.
 
-New articles auto-merge only when their series explicitly sets
-`autopublish: true`. Revisions and owner curation never auto-merge. A revision
-may change one published article and its matching assets. It adds one numbered
+Every valid new-article PR auto-merges. Revisions and owner curation never
+auto-merge. A revision may change one published article and its matching
+assets. It adds one numbered
 Markdown note explaining the change and cannot rewrite earlier notes or the
 historical production record.
 

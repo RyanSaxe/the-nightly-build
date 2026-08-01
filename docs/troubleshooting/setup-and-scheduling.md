@@ -29,6 +29,6 @@ app permissions.
 
 ## The first run worked locally but fails on schedule
 
-The local run proved the wrong boundary. Trigger the test article in the exact
-scheduled environment with `autopublish: false`; fix its first failed
-requirement and resume there.
+The local run proved the wrong boundary. Trigger the non-publishing smoke check
+in the exact scheduled environment; fix its first failed requirement and
+resume there.

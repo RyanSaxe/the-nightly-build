@@ -63,7 +63,7 @@ USER_TEMPLATES = {
 }
 
 USER_SERIES = {
-    "memos": "name: Memos\nmode: collection\ntemplate: memo\nautopublish: true\n"
+    "memos": "name: Memos\nmode: collection\ntemplate: memo\n"
     "strict: false\nitems:\n  - {slug: first, title: First Memo}\n",
     "notes": "name: Field Notes\nmode: collection\ntemplate: fieldnotes\n"
     "items:\n  - {slug: first-notes, title: First Notes}\n",
@@ -103,21 +103,21 @@ def template_repo() -> str:
     series.mkdir(parents=True)
     (series / "series.yaml").write_text(
         "name: histories\nmode: collection\ntemplate: article\n"
-        "autopublish: true\nstrict: false\n"
+        "strict: false\n"
         "items:\n  - {slug: unix, title: Unix}\n"
     )
     debates = repo / "press" / "series" / "debates"
     debates.mkdir(parents=True)
     (debates / "series.yaml").write_text(
         "name: Debates\nmode: collection\ntemplate: unbiased\n"
-        "autopublish: true\nstrict: false\n"
+        "strict: false\n"
         "items:\n  - {slug: carbon, title: Carbon}\n"
     )
     columns = repo / "press" / "series" / "columns"
     columns.mkdir(parents=True)
     (columns / "series.yaml").write_text(
         "name: Columns\nmode: collection\ntemplate: opinion\n"
-        "autopublish: true\nstrict: false\n"
+        "strict: false\n"
         "items:\n  - {slug: tariffs, title: Tariffs}\n"
     )
     return str(repo)

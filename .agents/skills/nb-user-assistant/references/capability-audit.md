@@ -43,10 +43,10 @@ the setup chat, or a different provider environment cannot substitute.
 
 ## Run the immediate one-series test
 
-Choose one approved series that can produce exactly one due article now. Keep
-`autopublish: false`. If its intended cadence is `manual`, temporarily use an
-ordinary due cadence for the test, then restore `manual` afterward; a
-manual series is correctly invisible to `nb duty`.
+Choose one approved series that can produce exactly one due article now. If its
+intended cadence is `manual`, temporarily use an ordinary due cadence for the
+test, then restore `manual` afterward; a manual series is correctly invisible
+to `nb duty`.
 
 Before triggering, run `nb duty` against the exact test configuration and
 confirm it returns only that series. If other series are due, adjust their test
@@ -63,7 +63,7 @@ The run must provide direct evidence that it:
 5. pushed the generated article branch;
 6. opened a real PR with base `library`;
 7. received a publishable proof and successful browser render from CI; and
-8. remained open for human review because autopublish was disabled.
+8. automatically merged and published.
 
 Inspect the PR diff and CI result. The existence of a PR alone does not prove
 research access or rendering. A green local proof alone does not prove GitHub

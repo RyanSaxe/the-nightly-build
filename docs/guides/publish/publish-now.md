@@ -21,5 +21,5 @@ draft, conduct editorial review, preview, and call `nb prepare-pr`. The result
 is an ordinary Article PR with the same CI gate as a scheduled article.
 
 A manual commission does not bypass source, artifact, rendering, or PR-shape
-requirements. If the series has `autopublish: false`, you decide whether to
-merge it after review.
+requirements. Its clean Article PR publishes automatically like any scheduled
+article.

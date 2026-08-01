@@ -86,8 +86,8 @@ default, or omit `bands` for no geometry default. `min_sources` remains a
 separate source floor; it defaults to
 `8` for a longread template and `5` for a shortread one, while an explicit
 `min_sources: 0` disables that default. `strict: true` turns every WARN into a
-BLOCK. `autopublish: true` lets CI auto-merge a clean PR (the default is a
-human merge). The source policy is `required_docs`, `consult`, and
+BLOCK. Every clean new-article PR auto-merges; revisions and owner curation
+wait for human review. The source policy is `required_docs`, `consult`, and
 `sources_exclusive`: required documents must be cited, consulted documents
 must be read but need not appear, and an exclusive source set forbids research
 beyond the configured files. Working configurations live under

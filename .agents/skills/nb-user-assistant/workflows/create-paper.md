@@ -16,8 +16,8 @@ these outcomes:
 - a concrete reader model and reading situation;
 - series with distinct territory, exclusions, evidence standards, and cadence;
 - an editorial voice grounded in examples and anti-examples;
-- the first week's range, coherence, and likely failure modes;
-- the user's review appetite, budget posture, and autopublish comfort.
+- the first week's range, coherence, and likely failure modes; and
+- the user's review appetite and budget posture.
 
 Ask from hypotheses. If the user wants a daily paper on AI, propose two or
 three meaningfully different editorial shapes and test them with candidate

@@ -6,7 +6,6 @@ mode: open
 section: "AI & the Law"
 template: article
 prompt: prompt.md
-autopublish: true
 strict: false
 bands:
   words: [1500, 4000]

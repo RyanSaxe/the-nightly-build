@@ -5,7 +5,6 @@ mode: rolling
 section: "The Daily"
 template: brief
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 6
 # Composition, not just count: a brief assembled from one day's arXiv listing
