@@ -8,21 +8,24 @@ the exact proposed branch with the checkout-owned `nb check`; do not edit
 
 A normal Article PR may add one HTML article plus matching assets and its full
 artifact tree. A revision may modify one existing HTML article, change only
-matching assets, and add only fresh role artifacts. Move configuration or
-engine changes to a separate PR against `main`.
+matching assets, and add exactly one matching revision note. Move configuration
+or engine changes to a separate PR against `main`.
 
 ## `B-AGENT-ARTIFACTS`
 
 Check the expected role file pair and invocation number. New articles require
-the complete production record. Revisions require at least the next numbered
-editor pair; any other fresh role must also contain its exact pair. Do not edit
-an invocation already on `library`.
+the complete production record. Do not edit an invocation already on
+`library`.
 
-## `B-REVISION-IDENTITY`
+## `B-REVISION-NOTE`
 
-Restore the published `series`, `slug`, `date`, `mode`, and `order`. A change to
-one of those creates a different publication identity and cannot be smuggled
-through an in-place revision.
+Add one nonempty UTF-8 Markdown file at
+`agent-artifacts/SERIES/SLUG/revisions/NN.md`, where `NN` is the next two-digit
+number. Start at `01.md` when no earlier note exists. Do not change or delete a
+published note.
+
+Revision notes do not share numbering with role invocations and do not require
+a role or prose template.
 
 ## The local proof passes but the render probe fails
 

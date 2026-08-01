@@ -1,22 +1,58 @@
 # Revise a published article
 
-Revisions correct the article in place without erasing its production history.
-They always open a human-reviewed PR and never auto-merge.
+A revision changes one published article without erasing how it reached the
+paper. It can be a spelling correction, a factual update, a substantial
+rewrite, or a replacement for a bad figure. The process should fit the work;
+the PR contract does not prescribe roles, prompts, or an editorial workflow.
 
-Choose the smallest honest review tier:
+Revisions always open a human-reviewed PR and never auto-merge.
 
-- **Mechanical:** formatting, spelling, a broken link, or another change that
-  does not alter meaning. A fresh editor review is required.
-- **Substantive:** meaning, framing, or prose changes. Run a fresh writer and
-  editor; add a researcher whenever evidence, claims, figures, numbers, or
-  sources change.
-- **Full rework:** the article is being reconceived. Run writing coach,
-  researcher, writer, and editor again.
+## Decide what the revision needs
 
-The assistant should initialize current authoring context with
-`nb start-article`, replace the skeleton and asset folder with the published
-article's exact current contents, apply the approved work, preview it, and add
-the next numbered artifact pair for every role used. It then runs:
+Start from the article and assets currently on `origin/library`. Establish the
+requested outcome and inspect only the context needed to make it safely:
+
+- correct spelling or markup directly when no judgment is required;
+- reopen sources when a claim, citation, number, or interpretation changes;
+- use a writer, editor, researcher, or writing coach when their judgment would
+  materially improve the result; and
+- regenerate, replace, add, or remove matching assets when the visual evidence
+  or presentation is wrong.
+
+Those are editorial choices, not CI requirements. A large LLM-assisted rewrite
+and a one-character correction produce the same narrow kind of PR.
+
+You may work in an ignored workspace, a detached worktree, or a local library
+checkout. `nb start-article` is optional. Do not commit or push changes directly
+to `library`; `nb prepare-pr` creates the generated revision branch from the
+current remote branch.
+
+## Record the reason
+
+Add exactly one new Markdown file:
+
+```text
+agent-artifacts/SERIES/SLUG/revisions/NN.md
+```
+
+Use the next two-digit number: an article with no revision notes starts at
+`01.md`, then `02.md`, and so on. This sequence is independent of any role
+invocation numbers in the original production record.
+
+There is no required heading or schema. Write for a future reader who needs to
+understand the article's history. Explain why the revision was needed and what
+materially changed; include the verification performed when it helps establish
+trust. Keep the note about the revision, not the mechanics of operating an AI.
+
+Do not edit or delete an earlier revision note or any historical role artifact.
+If you use article-making roles during the work, their scratch output can stay
+local; it is not part of the revision PR.
+
+## Prove and deliver the result
+
+Run the current full article proof. Preview the page whenever markup, layout,
+furniture, or assets changed, and compare the result with both the published
+page and the requested outcome. Then run:
 
 ```sh
 nb prepare-pr library/SERIES/SLUG.html \
@@ -24,11 +60,20 @@ nb prepare-pr library/SERIES/SLUG.html \
   --revision
 ```
 
-CI requires exactly one modified article, matching asset changes, and only new
-numbered role artifacts. A fresh editor pair is mandatory. Existing artifacts
-cannot be modified or deleted; a legacy article with none starts at `01`.
+The generated PR must:
 
-The revision cannot change `series`, `slug`, `date`, `mode`, or `order`. CI
-reruns the current full proof and render check. It permits a correction to a
-paused or already-published series, but the series must still exist and the
-article's template must still be allowed.
+- modify exactly `library/SERIES/SLUG.html`;
+- add, modify, or delete files only under the matching
+  `library/SERIES/SLUG/` asset directory;
+- add exactly the next `agent-artifacts/SERIES/SLUG/revisions/NN.md`; and
+- leave every other article and historical artifact untouched.
+
+The article may change any prose, structure, title, metadata, citation, or
+template choice that the normal current proof accepts. Its path remains fixed:
+the `series` and `slug` metadata must still agree with
+`library/SERIES/SLUG.html`. Moving or renaming an article is not an in-place
+revision.
+
+CI reruns the normal proof and browser-render check. It permits corrections to
+paused and already-published series, but the series must still exist and the
+result must satisfy its current configuration and template contract.

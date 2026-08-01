@@ -13,7 +13,9 @@ how this version of The Nightly Build works. Inspect before advising or editing.
   Do not paraphrase them into user prompts.
 - The checkout-owned `nb` command is the operational boundary. Use its help and
   current behavior rather than reconstructing commands.
-- `library` is publication state. Never push to it or edit its files in place.
+- `library` is publication state. Never commit or push to it directly. A local
+  revision working copy is input to `nb prepare-pr --revision`, not an
+  alternative publication path.
 
 One fact gets one owner. Skills provide judgment and procedure; docs and config
 own product facts. Link rather than copy field lists, provider instructions,
@@ -35,5 +37,5 @@ shortest exact action, say what success looks like, and resume from the result.
 Do not burden the user with actions the current assistant can safely perform.
 
 Validate every config change with `nb validate`. Before any Article PR, run the
-proof through this checkout's `nb`. Keep autopublish off during rehearsals,
-uncertain redesigns, and every revision.
+proof through this checkout's `nb`. Keep autopublish off during rehearsals and
+uncertain redesigns. Revisions never auto-merge regardless of series policy.

@@ -115,7 +115,8 @@ implementation details; author against documented furniture, then preview and
 check it. A press dependency intended for article authors must be documented in
 its furniture, template identity, or series prompt.
 
-Use `02`, `03`, and so on for revisions. Never overwrite an earlier invocation.
+Use `02`, `03`, and so on for later role invocations in this production run.
+Never overwrite an earlier invocation.
 The Article PR commits `editorial-direction.md`, `commission.md`, and every
 numbered role input and output. They are plain Markdown without frontmatter or
 a machine manifest. `.nb-context/` is temporary, version-derived tool context;

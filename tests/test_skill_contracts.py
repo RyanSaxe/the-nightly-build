@@ -169,9 +169,12 @@ def test_manual_publication_and_revision_workflows_preserve_the_pr_gate() -> Non
     assert "a URL" in publish
     assert "configured home before production" in publish
     assert "nb prepare-pr" in publish
-    assert "Mechanical" in revision
-    assert "Substantive" in revision
-    assert "Full rework" in revision
+    assert "smallest process" in revision
+    assert "No role is mandatory" in revision
+    assert "`nb start-article` is optional" in revision
+    assert "matching assets" in revision
+    assert "revisions/NN.md" in revision
+    assert "why the revision was needed" in revision
     assert "nb prepare-pr ... --revision" in revision
     assert "Revisions never auto-merge" in revision
 

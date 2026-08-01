@@ -11,6 +11,7 @@ Route by intent:
 - **An engine, documentation, or test contribution:** work normally from the
   repository and its public documentation; do not load a production role.
 
-Never push to `library` or edit its files in place. Article publication and
-revision go through Article PRs. Before any Article PR, run the proof through
-this checkout's `nb` command.
+Never commit or push directly to `library`. A local revision may use a working
+copy of the published article, but `nb prepare-pr --revision` owns its generated
+branch and commit. Article publication and revision go through Article PRs.
+Before any Article PR, run the proof through this checkout's `nb` command.

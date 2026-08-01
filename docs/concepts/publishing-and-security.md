@@ -17,8 +17,9 @@ and requires rendered-browser success.
 
 New articles auto-merge only when their series explicitly sets
 `autopublish: true`. Revisions and owner curation never auto-merge. A revision
-may change one published article and its matching assets, but it can only add
-fresh numbered role artifacts; it cannot rewrite the historical record.
+may change one published article and its matching assets. It adds one numbered
+Markdown note explaining the change and cannot rewrite earlier notes or the
+historical production record.
 
 Protect `main` as well as `library` if the scheduled identity should not be
 able to change trusted engine or press configuration directly. Review
