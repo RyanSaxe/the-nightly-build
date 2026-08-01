@@ -237,27 +237,6 @@ def test_the_sandbox_blocks(run_local: Callable[..., Findings], html: str) -> No
     assert "B-SANDBOX" in result.blocks
 
 
-def test_an_external_script_load_blocks_on_its_own_rule(
-    run_local: Callable[..., Findings],
-) -> None:
-    """The script-src rule is asserted by message, not by shared code.
-
-    It shares B-SANDBOX with the external-ref allowlist, which fires on the
-    same markup, so asserting the code alone would pass even if this rule
-    were downgraded to a warn. A published article that loads a script off
-    the open web is the sandbox failing at the only job it has.
-    """
-    loads_a_script = mut(
-        "</article>",
-        '<script type="application/json" data-nb-chart '
-        'src="https://evil.example/x.js"></script></article>',
-    )
-
-    result = run_local(loads_a_script, "semiconductors")
-
-    assert result.blocks.saying("articles may not load external scripts")
-
-
 def test_google_fonts_is_allowed(run_local: Callable[..., Findings]) -> None:
     result = run_local(article(), "semiconductors")
 

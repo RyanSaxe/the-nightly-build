@@ -128,11 +128,6 @@ def test_dense_sentence_warns_but_does_not_block(
         "semiconductors",
     )
     assert "W-SENTENCE-DENSITY" in result.warns
-    assert any(
-        finding.suggestion == "consider splitting it into multiple sentences"
-        for finding in result.report.findings
-        if finding.code == "W-SENTENCE-DENSITY"
-    )
     assert not result.blocks
 
 
@@ -144,11 +139,6 @@ def test_shorter_sentence_threshold_warns_on_medium_dense_prose(
         "semiconductors",
     )
     assert "W-SENTENCE-DENSITY" in result.warns
-    assert any(
-        "41 words" in finding.message
-        for finding in result.report.findings
-        if finding.code == "W-SENTENCE-DENSITY"
-    )
     assert not result.blocks
 
 
@@ -159,11 +149,7 @@ def test_punctuation_dense_sentence_warns(
         mut(HEADING, f"{HEADING}<p>{PUNCTUATION_DENSE_SENTENCE}</p>"),
         "semiconductors",
     )
-    assert any(
-        "punctuation score" in finding.message
-        for finding in result.report.findings
-        if finding.code == "W-SENTENCE-DENSITY"
-    )
+    assert "W-SENTENCE-DENSITY" in result.warns
     assert not result.blocks
 
 

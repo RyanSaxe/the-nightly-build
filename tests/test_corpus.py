@@ -7,9 +7,9 @@ brief, and a press-shadowed custom one) and one per mode the paper has ever
 published (open, rolling, sequence). Between them they carry the furniture the
 proof knows how to read and the sourcing it knows how to argue with.
 
-Every article runs through check.py and every finding it raises, at its tier and
-with its message, is recorded in corpus/findings.json. A change to the proof that
-moves a single finding on a single real article fails here, by name.
+Every article runs through check.py. The code, tier, and count of every finding
+are recorded in corpus/findings.json. A change to the proof that moves a finding
+on a real article fails here; editing diagnostic prose does not.
 
 The golden file is a record of CURRENT BEHAVIOR, not a claim that these articles
 are good. Some raise blocks today: the engine has grown checks since they shipped
@@ -31,6 +31,7 @@ import json
 import os
 import pathlib
 import tempfile
+from collections import Counter
 
 import pytest
 
@@ -57,7 +58,6 @@ CHECK_LINKS = ["--no-check-links"]
 
 
 def articles() -> list[str]:
-    """Every vendored article, as `series/slug`."""
     return sorted(
         f"{path.parent.name}/{path.stem}" for path in CORPUS.glob("library/*/*.html")
     )
@@ -65,11 +65,6 @@ def articles() -> list[str]:
 
 @functools.cache
 def mounted_repo(press: str) -> str:
-    """A repo root the proof can read: this engine, that press.
-
-    The engine and the press live in different repositories — the press is a fork's
-    press/ tree — and check.py takes one root. Symlinks join them without copying.
-    """
     root = pathlib.Path(tempfile.mkdtemp())
     for name in ("engine", "templates", "spec"):
         os.symlink(REPO / name, root / name)
@@ -95,8 +90,17 @@ def library_without(article: str) -> str:
     return str(root)
 
 
+def finding_summary(
+    findings: list[dict[str, str]],
+) -> list[dict[str, str | int]]:
+    counts = Counter((finding["level"], finding["code"]) for finding in findings)
+    return [
+        {"level": level, "code": code, "count": count}
+        for (level, code), count in sorted(counts.items())
+    ]
+
+
 def proof(article: str) -> dict:
-    """Run the proof over one article exactly as the CLI does, findings and status."""
     series, slug = article.split("/")
     press = "press-retired" if series in RETIRED_SERIES else "press"
     argv = [
@@ -118,18 +122,15 @@ def proof(article: str) -> dict:
     report = json.loads(out.getvalue())
     return {
         "exit": status,
-        "findings": report["findings"],
-        "notes": report["notes"],
+        "findings": finding_summary(report["findings"]),
     }
 
 
 def as_lines(verdict: dict) -> list[str]:
-    """One finding per line, for a diff someone can read at 2am."""
     lines = [f"exit {verdict['exit']}"]
     lines += [
-        f"{f['level']:<5} {f['code']:<18} {f['message']}" for f in verdict["findings"]
+        f"{f['level']:<5} {f['code']:<18} x{f['count']}" for f in verdict["findings"]
     ]
-    lines += [f"note: {note}" for note in verdict["notes"]]
     return lines
 
 

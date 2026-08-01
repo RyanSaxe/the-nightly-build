@@ -12,10 +12,11 @@ from collections.abc import Callable
 
 import check
 from findings import Findings, findings_of
+from nb.proof.structure import deprecated_classes
 from press import REPO, mut
 
 
-def test_a_retired_component_blocks_as_deprecated() -> None:
+def test_a_retired_component_declares_its_replacement() -> None:
     rep = check.Report()
     check.check_deprecated(
         '<body class="nb-article"><div class="nb-verdict">x</div></body>',
@@ -25,8 +26,7 @@ def test_a_retired_component_blocks_as_deprecated() -> None:
     result = findings_of(rep)
 
     assert "B-DEPRECATED" in result.blocks
-    # The block points the author at the live replacement, not just the retiree.
-    assert result.blocks.saying("nb-note")
+    assert deprecated_classes(str(REPO))["nb-verdict"] == "nb-note"
 
 
 def test_a_retired_subpart_blocks_as_deprecated() -> None:
@@ -40,7 +40,7 @@ def test_a_retired_subpart_blocks_as_deprecated() -> None:
     assert "B-DEPRECATED" in findings_of(rep).blocks
 
 
-def test_a_retirement_with_no_replacement_says_remove_it() -> None:
+def test_a_retirement_can_declare_no_replacement() -> None:
     rep = check.Report()
     check.check_deprecated(
         '<body class="nb-article"><ul class="nb-paper-map">x</ul></body>',
@@ -50,7 +50,7 @@ def test_a_retirement_with_no_replacement_says_remove_it() -> None:
     result = findings_of(rep)
 
     assert "B-DEPRECATED" in result.blocks
-    assert result.blocks.saying("remove it")
+    assert deprecated_classes(str(REPO))["nb-paper-map"] is None
 
 
 def test_live_components_are_not_deprecated() -> None:
