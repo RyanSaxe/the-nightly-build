@@ -19,7 +19,8 @@ Start with [Ask your AI](ask-your-ai.md). A capable assistant should:
 1. Establish access to your GitHub account and create a fork with only `main`.
 2. Clone the fork and run `./nb setup`.
 3. Help you define the first version of `press/`.
-4. Configure one scheduled runtime using [Schedule](../guides/schedule.md).
+4. Configure one scheduled runtime using
+   [Schedule](../guides/operate/schedule.md).
 5. Trigger the [first-run canary](first-run.md) in that exact runtime.
 
 `nb setup` scaffolds `press/`, creates the protected `library` branch, seeds its

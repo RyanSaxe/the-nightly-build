@@ -1,6 +1,6 @@
 # Update a paper
 
-Read `docs/guides/manage-your-paper.md` and the relevant reference page. Read
+Read `docs/guides/operate/manage-your-paper.md` and the relevant reference page. Read
 [prompt authoring](../craft/prompt-authoring.md) whenever prose direction will
 change.
 

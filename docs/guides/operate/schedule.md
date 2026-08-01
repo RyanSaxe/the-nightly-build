@@ -21,7 +21,7 @@ list. One schedule can run the whole paper because series own their cadence.
 
 Choose a provider-hosted scheduler when it meets all six requirements. The
 portable alternative is a GitHub Actions cron around a headless agent. Current
-provider entrypoints are listed in [Integrations](../integrations/README.md).
+provider entrypoints are listed in [Integrations](../../integrations/README.md).
 
 ## Canonical prompt
 
@@ -47,11 +47,12 @@ repository secrets.
 
 Do not put the trusted scheduler or its credentials in the `library` PR
 workflow. Article validation intentionally runs on `pull_request` with no
-scheduler secrets. See [Publishing and security](../concepts/publishing-and-security.md).
+scheduler secrets. See
+[Publishing and security](../../concepts/publishing-and-security.md).
 
 ## Prove it before relying on it
 
 Trigger an immediate canary in the exact scheduled environment with
 `autopublish: false`. Setup is not complete until that runtime browses real
 sources, creates a real Article PR, and passes both proof and render CI. Use
-[First run](../getting-started/first-run.md) as the acceptance test.
+[First run](../../getting-started/first-run.md) as the acceptance test.

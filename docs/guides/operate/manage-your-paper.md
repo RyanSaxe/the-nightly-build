@@ -20,7 +20,7 @@ each article to have a configured item before article initialization or CI
 will accept it.
 
 Configuration changes do not edit the published archive. To correct an article
-already on `library`, use [Revise an article](revise-an-article.md). To remove
+already on `library`, use [Revise an article](../publish/revise-an-article.md). To remove
 one, use an owner-authored deletion-only curation PR.
 
-The exact series fields live in [Series reference](../reference/series.md).
+The exact series fields live in [Series reference](../../reference/series.md).

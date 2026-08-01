@@ -173,7 +173,7 @@ where that mode requires it, a configured item. It uses the normal production
 and Article PR contract. A merged article whose nb-meta date is today's UTC
 date causes that series to idle for the rest of the date; an open PR is not
 published state and does not deduplicate the next run. See
-[Publish an article now](../guides/publish-now.md).
+[Publish an article now](../guides/publish/publish-now.md).
 
 ## Governing without YAML
 

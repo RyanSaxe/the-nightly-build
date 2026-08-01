@@ -1,7 +1,7 @@
 # Agent and scheduler integrations
 
 The night shift needs a repository checkout, web access, and permission to
-open pull requests. [Schedule](../guides/schedule.md) defines that contract. This
+open pull requests. [Schedule](../guides/operate/schedule.md) defines that contract. This
 page maps it to current agent products.
 
 Provider features and prices move quickly. The links below are the source of
@@ -25,7 +25,7 @@ mean this project has stress-tested that harness end to end.
 ## Hosted schedulers
 
 Use a hosted scheduler when it can check out the fork, browse the web, and
-open a PR. Paste the canonical prompt from [Schedule](../guides/schedule.md) and run
+open a PR. Paste the canonical prompt from [Schedule](../guides/operate/schedule.md) and run
 one task for the whole paper.
 
 - **Claude Code:** create a Routine and enable full, or suitably scoped,
@@ -40,7 +40,7 @@ one task for the whole paper.
 
 ## GitHub Actions
 
-The universal workflow in [Schedule](../guides/schedule.md) works with an agent that
+The universal workflow in [Schedule](../guides/operate/schedule.md) works with an agent that
 has a non-interactive command or Action. Typical invoke steps are:
 
 - Codex: `openai/codex-action@v1` with `OPENAI_API_KEY`.

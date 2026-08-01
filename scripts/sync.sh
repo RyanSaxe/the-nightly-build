@@ -333,7 +333,7 @@ update_main_from_upstream() {
 	fi
 	git -C "$ROOT" push origin main
 	ok "fork main updated from upstream"
-	say "schedule prompts live outside Git; compare yours with docs/guides/schedule.md"
+	say "schedule prompts live outside Git; compare yours with docs/guides/operate/schedule.md"
 	sync_library
 }
 

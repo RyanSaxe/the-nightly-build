@@ -37,5 +37,5 @@ creates them from the current `origin/library`, proves their one commit, and
 opens or describes the exact PR. The commit and PR are evidence; the workspace
 under `.nb-work/` is private production state and is never published.
 
-See [Update the engine](../guides/update-engine.md) for the fork lifecycle and
+See [Update the engine](../guides/operate/update-engine.md) for the fork lifecycle and
 [Publishing and security](publishing-and-security.md) for the trust boundary.

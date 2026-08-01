@@ -2,8 +2,8 @@
 
 Route maintenance to the canonical guide before acting:
 
-- engine update: `docs/guides/update-engine.md`;
-- schedule or capability failure: `docs/guides/schedule.md` and
+- engine update: `docs/guides/operate/update-engine.md`;
+- schedule or capability failure: `docs/guides/operate/schedule.md` and
   `docs/troubleshooting/setup-and-scheduling.md`;
 - Article PR failure: `docs/troubleshooting/article-prs.md`;
 - feeds, catalog, directory, or Pages URLs: `docs/reference/delivery.md`.

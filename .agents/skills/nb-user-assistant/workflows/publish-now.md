@@ -1,6 +1,6 @@
 # Publish an article now
 
-Read `docs/guides/publish-now.md`, `docs/reference/series.md`, and
+Read `docs/guides/publish/publish-now.md`, `docs/reference/series.md`, and
 [prompt authoring](../craft/prompt-authoring.md).
 
 Accept the user's actual starting point. It may be a bare topic ("birds"), a
