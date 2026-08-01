@@ -1,44 +1,36 @@
 # Set up a paper
 
-Read `docs/getting-started/ask-your-ai.md`, `docs/getting-started/setup.md`,
-`docs/getting-started/first-run.md`, and the chosen page under
-`docs/integrations/`. Read and apply
-[the capability audit](../references/capability-audit.md) before declaring any
-environment ready.
+Use `docs/getting-started/setup.md`, `docs/guides/operate/schedule.md`, and the
+[capability audit](../references/capability-audit.md) as the current setup
+contract. Inspect the repository before creating or replacing anything.
 
-## Establish the actual boundary
+## Establish the boundaries
 
-Audit separately:
+Distinguish the conversational assistant, scheduled runtime, and GitHub. The
+same provider may use different identities, tools, network rules, and approval
+modes in chat and on schedule. Verify only what the active environment can
+demonstrate.
 
-1. what this conversational assistant can do now;
-2. where scheduled production will execute and what that runtime can do; and
-3. what GitHub CI and Pages will do after a PR opens.
-
-Do not infer one from another. Record direct evidence for each requirement. A
-chat that can browse says nothing about a
-hosted schedule, and a local authenticated `gh` says nothing about the
-schedule's repository app.
-
-Inspect existing repository state before creating anything. Preserve a valid
-fork, press, branch, or schedule; resume the first incomplete requirement.
+Preserve a valid fork, checkout, press, branch, or schedule. Resume from the
+first incomplete requirement instead of restarting setup.
 
 ## Minimize handoffs
 
-Aim for the user to do only the actions a permission boundary makes impossible:
-sign in, authorize a provider, choose a billing-bearing runtime, or enable a
-setting unavailable to automation. Ask for one action, wait for its result,
-then verify it. Never ask the user to paste a token or perform a Git operation
-you can perform safely.
+Perform every safe action already authorized. Ask the user only for a sign-in,
+provider authorization, billing-bearing choice, or setting that automation
+cannot change. Give one manual action at a time, state its expected result, and
+verify it before continuing. Never ask for a pasted token.
 
-Run `nb setup` only when setup is actually needed. Use the current docs for its
-prerequisites and effects. Once the fork and publishing boundary exist, hand
-off to [create paper](create-paper.md) for editorial definition and return here
-for schedule verification.
+Run `nb setup` only when the publishing boundary is absent. Hand editorial
+definition to [create paper](create-paper.md), then configure the scheduled
+runtime with the repository's publication prompt.
 
-## Acceptance
+## Offer scheduled verification
 
-Setup is not complete after a local validation or a successful provider form.
-Run the audit in the exact scheduled environment. It must use the web, exercise
-the repository tools, and prove its GitHub access without publishing an
-article. Report each capability from direct evidence; otherwise name the
-failed boundary and the single next action.
+Offer a one-off smoke run in the exact scheduled environment. Use the
+capability audit and `.agents/prompts/verify-scheduled-runtime.md`; do not turn
+the smoke into an article, cadence change, or production run. Present its
+evidence and repair the narrow failed boundary when the user wants help.
+
+The user may proceed with unverified capabilities. State them plainly rather
+than manufacturing confidence or withholding unrelated setup work.

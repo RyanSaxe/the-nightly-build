@@ -37,6 +37,19 @@ authority. The scheduled agent itself becomes the orchestrator; it never
 launches an orchestrator subagent. Replace prompts that restate commands, role
 sequences, validation rules, or branch mechanics because those copies drift.
 
+## Verification prompt
+
+To test the exact scheduled environment without publishing, trigger an
+on-demand task with this assignment:
+
+> Work in The Nightly Build repository `<repo>` on current `main`. Read
+> `.agents/prompts/verify-scheduled-runtime.md` and follow it in this agent.
+> This paragraph is the entire assignment. If that file is unavailable, stop
+> and report the missing repository entrypoint.
+
+The smoke prompt opens and cleans up a draft PR against `main`. It never loads
+the orchestrator or touches `library`.
+
 ## GitHub Actions boundary
 
 A universal workflow runs on `main`, grants its job `contents: write` and
@@ -51,7 +64,5 @@ scheduler secrets. See
 
 ## Prove it before relying on it
 
-Trigger a non-publishing smoke check in the exact scheduled environment before
-relying on it. It should prove live research access, repository tooling, and
-GitHub delivery permissions without creating an article. Use
-[First run](../../getting-started/first-run.md) for the verification boundary.
+Use [Verify the scheduled runtime](../../getting-started/first-run.md) for the
+complete smoke-test boundary and result interpretation.

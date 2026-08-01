@@ -16,6 +16,7 @@ from nb.artifacts import ROLE_FILES
 REPO = pathlib.Path(__file__).parents[1]
 SKILLS = REPO / ".agents" / "skills"
 SCHEDULED_PROMPT = REPO / ".agents" / "prompts" / "run-scheduled-publication.md"
+SMOKE_PROMPT = REPO / ".agents" / "prompts" / "verify-scheduled-runtime.md"
 
 
 def skill_metadata(path: pathlib.Path) -> dict[str, str]:
@@ -37,8 +38,9 @@ def test_required_entrypoints_resolve_to_named_skills() -> None:
         assert metadata.get("description", "").strip()
 
 
-def test_scheduled_entrypoint_exists() -> None:
+def test_scheduled_entrypoints_exist() -> None:
     assert SCHEDULED_PROMPT.is_file()
+    assert SMOKE_PROMPT.is_file()
 
 
 def test_production_skills_have_no_generic_aliases() -> None:

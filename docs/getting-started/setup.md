@@ -21,7 +21,8 @@ Start with [Ask your AI](ask-your-ai.md). A capable assistant should:
 3. Help you define the first version of `press/`.
 4. Configure one scheduled runtime using
    [Schedule](../guides/operate/schedule.md).
-5. Trigger the [first test article](first-run.md) in that exact runtime.
+5. Offer to [verify that runtime](first-run.md) with a non-publishing smoke
+   test.
 
 `nb setup` scaffolds `press/`, creates the protected `library` branch, seeds its
 publishing workflows, and configures GitHub Pages and auto-merge. The local
@@ -38,8 +39,8 @@ cd YOUR-PAPER
 ```
 
 Enable Actions in the fork if GitHub asks. Then ask an AI in the checkout to
-help create your paper and schedule its first run.
+help create your paper and configure its schedule.
 
-Do not call setup complete merely because configuration validates locally. The
-scheduled environment is a separate capability boundary and must produce a
-real, passing Article PR before unattended publication is enabled.
+Local validation does not prove the scheduled environment. Run the optional
+smoke test there to verify its tools, research access, GitHub permissions, and
+CI trigger without publishing an article.

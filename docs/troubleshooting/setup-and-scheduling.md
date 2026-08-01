@@ -27,7 +27,7 @@ against `library`. On GitHub Actions, the job needs `contents: write` and
 `pull-requests: write`. Provider-hosted schedulers may need separate repository
 app permissions.
 
-## The first run worked locally but fails on schedule
+## Verification works locally but fails on schedule
 
 The local run proved the wrong boundary. Trigger the non-publishing smoke check
 in the exact scheduled environment; fix its first failed requirement and

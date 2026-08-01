@@ -27,8 +27,7 @@ Give this repository URL to the AI tool you already use and say:
 
 > Help me set up my own Nightly Build paper. Follow the repository's
 > instructions, tell me only the manual action you need from me right now, and
-> verify each capability before moving on. Do not publish automatically until
-> we have run the first test article and reviewed its Article PR.
+> offer to verify the actual scheduled environment before we rely on it.
 
 The assistant will determine what it can do, walk you through the few actions
 that require your permission, interview you about the paper, configure the
@@ -54,9 +53,10 @@ Open that checkout in a coding agent and ask it to continue setup. Keep the
 fork public for GitHub Pages on the free plan; private Pages requires a
 supporting GitHub plan.
 
-Before unattended publication, verify the exact scheduled runtime can reach
-the repository, install the required tools, browse real sources, and open a
-draft smoke-test PR. See [First run](docs/getting-started/first-run.md).
+Before unattended publication, you can verify that the exact scheduled runtime
+can reach the repository, install the required tools, browse real sources, and
+open then clean up a draft smoke-test PR. See
+[Verify the scheduled runtime](docs/getting-started/first-run.md).
 
 ## FAQ
 

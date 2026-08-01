@@ -1,102 +1,50 @@
 # Capability audit
 
-Setup crosses three execution surfaces. Audit each from direct evidence and
-record `not tested`, `passed`, or `failed`; never promote an inference to a
-pass.
+Audit the conversational assistant and scheduled runtime separately. Record
+each requirement as `passed`, `failed`, or `not verified`; never infer that one
+environment has another environment's tools, identity, network, or approvals.
 
-| Surface              | Required evidence                                                                 |
-| -------------------- | --------------------------------------------------------------------------------- |
-| Current assistant    | Can inspect the intended repo and perform each setup mutation it claims to own    |
-| Scheduled production | Can fetch both branches, run `nb`, browse real sources, push, and request a PR    |
-| GitHub CI and Pages  | PR triggers trusted proof, browser render succeeds, merge publishes the candidate |
+## Current assistant
 
-The same product name does not collapse surfaces. A desktop session and that
-provider's hosted schedule can have different repositories, identities,
-network policy, tools, billing, and approval modes.
+Identify the intended GitHub account, fork, and local checkout without exposing
+credentials. Verify every setup action this assistant claims it can perform:
 
-## Audit the current assistant
+- inspect or create the fork and clone;
+- run `git`, authenticated GitHub operations, and the checkout-owned `nb`;
+- create and validate `press/` changes; and
+- inspect or configure the chosen scheduled environment.
 
-Identify the GitHub account and target repository without exposing
-credentials. Confirm whether this session can:
+Use reversible checks. When a permission boundary requires the user, give one
+precise action in the provider's secure UI, say what result to expect, and wait
+for confirmation. Never request a token in chat.
 
-- create or inspect the canonical fork;
-- clone and edit the fork;
-- run `git`, authenticated GitHub operations, `uv`, and the checkout-owned
-  `nb` command;
-- push a `main` configuration branch or commit when authorized;
-- inspect provider schedule configuration.
+## Scheduled runtime
 
-Use reversible, task-relevant checks. Do not ask the user to perform a command
-merely because it is familiar. If the current assistant lacks a capability,
-give one manual action through the provider's normal secure UI, state the
-expected result, and wait.
+Inspect the actual schedule's repository, checkout ref, working directory,
+GitHub identity, network policy, tool approvals, and billing or subscription
+context. Configuration is useful evidence but does not prove that the runtime
+can execute.
 
-## Audit the scheduled runtime
+Offer an on-demand smoke test using
+`.agents/prompts/verify-scheduled-runtime.md`. Configure the provider to run
+that prompt in the same repository, identity, network, and approval mode as
+normal scheduled publication. Trigger the provider's real on-demand entrypoint;
+a local simulation or setup-chat run is not a substitute.
 
-Inspect the actual scheduled environment's configuration. Confirm its checkout
-ref, working directory, GitHub identity, secrets or subscription context,
-outbound network policy, installed `uv`, non-interactive tool approvals, and
-ability to push generated branches and open PRs against `library`.
+The smoke test installs or verifies `uv`, exercises the checkout-owned command,
+opens real research pages, and proves branch-push, draft-PR, and CI-trigger
+permissions against `main`. It closes the PR and deletes its temporary branch.
+It never creates an article or touches `library`.
 
-Configuration is not proof. Run the test below. A local simulation, a run in
-the setup chat, or a different provider environment cannot substitute.
+## Interpret the result
 
-## Run the immediate one-series test
+Give the user the smoke report and distinguish three things:
 
-Choose one approved series that can produce exactly one due article now. If its
-intended cadence is `manual`, temporarily use an ordinary due cadence for the
-test, then restore `manual` afterward; a manual series is correctly invisible
-to `nb duty`.
+- capabilities proven by the exact scheduled runtime;
+- failures with one corrective action and rerun boundary; and
+- publication behavior intentionally left for ordinary article production,
+  including article proof, automatic merge, and Pages deployment.
 
-Before triggering, run `nb duty` against the exact test configuration and
-confirm it returns only that series. If other series are due, adjust their test
-configuration rather than appending scope to the scheduler prompt. Use the
-scheduler's on-demand trigger with its final unmodified prompt, repository,
-permissions, and runtime.
-
-The run must provide direct evidence that it:
-
-1. checked out current `main` and current `library`;
-2. completed `nb sync` and resolved the expected work through `nb duty`;
-3. opened real web sources rather than relying on snippets or cached knowledge;
-4. completed the recorded editorial roles;
-5. pushed the generated article branch;
-6. opened a real PR with base `library`;
-7. received a publishable proof and successful browser render from CI; and
-8. automatically merged and published.
-
-Inspect the PR diff and CI result. The existence of a PR alone does not prove
-research access or rendering. A green local proof alone does not prove GitHub
-delivery. Do not merge merely to complete the audit; review the test article
-as the first issue of the paper.
-
-## Audit CI and publication
-
-Confirm the test article used the `pull_request` validation workflow from the
-base branch, the proof loaded engine and press state from `main`, and the
-render probe targeted the candidate article. After the user approves and
-merges the test article, confirm the Pages URL serves it and the catalog/feed
-update. CI and Pages remain distinct checks even when GitHub hosts both.
-
-## Handle failure without restarting
-
-Record a failed requirement in this form:
-
-```text
-Surface: scheduled production
-Requirement: push generated branch
-Observed: authentication succeeded; push returned permission denied
-Evidence: provider run URL or exact non-secret error
-Owner: repository-app permission
-Next action: enable Contents write for this repository
-Resume at: rerun the one-series test from branch delivery
-```
-
-Give the user only the `Next action` when it requires them. After the external
-state changes, repeat the narrowest reliable test, then resume the test run from
-the named boundary when the runtime supports it. Preserve completed evidence;
-do not repeat account creation, press interviews, or unrelated setup.
-
-Setup status is `ready` only when every surface has passed and the exact
-scheduled runtime produced the passing test Article PR. Otherwise report
-`not ready`, the failed or untested requirement, and the single next action.
+Verification is explicit and repeatable, not a requirement to manufacture a
+test article. If the user declines the smoke test, preserve those capabilities
+as `not verified` and continue according to their request.

@@ -11,8 +11,8 @@ the path that matches what you are trying to do.
   and handoffs involved.
 - [Create your paper](getting-started/create-your-paper.md) describes the
   editorial decisions worth making before configuration.
-- [Run the first article](getting-started/first-run.md) proves the scheduled
-  environment before you rely on it.
+- [Verify the scheduled runtime](getting-started/first-run.md) runs a
+  non-publishing smoke test in the actual automation environment.
 
 ## Operate your paper
 

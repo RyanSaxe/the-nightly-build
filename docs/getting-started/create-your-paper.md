@@ -31,4 +31,6 @@ press/
 Use [Series reference](../reference/series.md) for the exact configuration
 contract. Use [appearance and voice](../guides/customize/appearance-and-voice.md)
 when the editorial concept needs a distinct visual system. Once the proposed
-press validates, continue to [the first run](first-run.md).
+press validates, continue to
+[scheduled-runtime verification](first-run.md) if you want to test the
+automation before relying on it.

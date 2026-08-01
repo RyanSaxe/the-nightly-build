@@ -8,8 +8,7 @@ Send it this repository URL and say:
 
 > Help me set up my own Nightly Build paper. Follow the repository's
 > instructions, tell me only the manual action you need from me right now, and
-> verify each capability before moving on. Do not publish automatically until
-> we have run the first test article and reviewed its Article PR.
+> offer to verify the actual scheduled environment before we rely on it.
 
 The assistant should first determine what it can do in the current chat. It may
 be able to fork, clone, configure, push, and open pull requests itself. When it
