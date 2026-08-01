@@ -12,8 +12,9 @@ furniture at all will rarely serve the reader well, and neither will one with
 furniture at every turn.
 
 Section tags, citation markup, source entries, and the nb-meta block are
-protocol, not furniture. PROTOCOL.md defines them. This base catalogue is the
-engine's, always available to every template. A paper can add its own
+article structure, not furniture. Template manifests and deterministic proof
+define them. This base catalogue is the engine's, always available to every
+template. A paper can add its own
 furniture (paper-wide in `press/furniture/`, or bespoke inside one template's
 folder) and instruct sections to use it in prompt.md (see
 docs/guides/customize/furniture.md).

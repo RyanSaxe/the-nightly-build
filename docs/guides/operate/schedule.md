@@ -28,11 +28,12 @@ provider entrypoints are listed in [Integrations](../../integrations/README.md).
 Keep the external schedule prompt deliberately small:
 
 > You are the night shift for The Nightly Build repository `<repo>`. Check out
-> current `main`, read `AGENTS.md`, and follow its scheduled-production route.
-> Check out `library` beside it at `<checkout>`. Use this checkout's `nb`
-> command for system operations. Research requires web access. This paragraph
-> is the entire assignment. If the repository's current scheduling guide
-> differs, stop and tell the owner to replace this prompt.
+> current `main`, read `AGENTS.md`, and load
+> `.agents/skills/correspondent/SKILL.md`. Follow that skill's phased references
+> as an actual scheduled run. Check out `library` beside it at `<checkout>`.
+> Use this checkout's `nb` command for system operations. Research requires web
+> access. This paragraph is the entire assignment. If the repository's current
+> scheduling guide differs, stop and tell the owner to replace this prompt.
 
 The repository owns the workflow; the scheduler only owns location and
 authority. Replace prompts that restate role sequences, validation rules, or

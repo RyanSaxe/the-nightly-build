@@ -20,7 +20,7 @@ sources_by_kind:
 per_item_sources:
   primary: [1, null]
 # The roster: consult entries are swept before researching elsewhere
-# (PROTOCOL step 4). Archive prefixes scope a search; they are not pages
+# by the source policy. Archive prefixes scope a search; they are not pages
 # to read whole.
 consult:
   - https://arxiv.org/list/cs.LG/recent

@@ -1,8 +1,8 @@
 # The house floor
 
-The editorial standard every article meets, whatever its template. It composes under
-`PROTOCOL.md` and over the series, tag, and item prompts. A paper's own voice in
-`press/editorial.md` composes immediately after this file and specializes it.
+The editorial standard every article meets, whatever its template. The engine
+places it first in generated editorial direction, before a paper's voice in
+`press/editorial.md` and the applicable template, series, tag, and item layers.
 
 The floor is prescriptive on purpose. Its job is to make the default professional:
 research-grade writing. It reads in two registers.

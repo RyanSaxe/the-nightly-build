@@ -55,9 +55,10 @@ plainly whether the run consumes a subscription allowance or a metered API.
 
 ## Harness independence
 
-The production protocol does not require nested spawning or a provider-specific
-team feature. A harness may isolate roles in separate contexts or execute the
-same recorded sequence in one context. See [Architecture](../concepts/architecture.md).
+The correspondent workflow does not require nested spawning or a
+provider-specific team feature. A harness may isolate roles in separate
+contexts or execute the same recorded sequence in one context. See
+[Architecture](../concepts/architecture.md).
 
 Model names are harness-specific. Portable tiers and exact provider overrides
 are defined in [Production reference](../reference/production.md).

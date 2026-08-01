@@ -9,8 +9,8 @@ how this version of The Nightly Build works. Inspect before advising or editing.
   will benefit from a durable explanation.
 - `press/` is the user's specification. Keep paper-specific configuration,
   prompts, themes, furniture, and templates there.
-- `spec/`, `PROTOCOL.md`, and production role skills govern article creation.
-  Do not paraphrase them into user prompts.
+- `spec/` and the correspondent and editorial-role skill packages govern
+  article creation. Do not paraphrase them into user prompts.
 - The checkout-owned `nb` command is the operational boundary. Use its help and
   current behavior rather than reconstructing commands.
 - `library` is publication state. Never commit or push to it directly. A local

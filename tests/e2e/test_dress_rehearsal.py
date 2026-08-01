@@ -49,7 +49,6 @@ class Press:
             ignore=shutil.ignore_patterns("__pycache__"),
             dirs_exist_ok=True,
         )
-        shutil.copyfile(REPO / "PROTOCOL.md", pathlib.Path(self.root) / "PROTOCOL.md")
         git("init", "-q", "-b", "main", cwd=self.root)
         git("config", "user.email", "night@shift", cwd=self.root)
         git("config", "user.name", "night-shift", cwd=self.root)
