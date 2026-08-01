@@ -27,10 +27,12 @@ the path that matches what you are trying to do.
 
 ## Understand and reference the system
 
+- Start with the [feature catalog](reference/README.md) for the complete map of
+  supported capabilities and their configuration.
 - Concepts: [architecture](concepts/architecture.md),
   [ownership and branches](concepts/ownership-and-branches.md), and
   [publishing and security](concepts/publishing-and-security.md)
-- Reference: [site](reference/site.md), [series](reference/series.md),
+- Reference details: [site](reference/site.md), [series](reference/series.md),
   [templates](reference/templates.md), [production](reference/production.md),
   and [delivery](reference/delivery.md)
 - [Agent and scheduler integrations](integrations/README.md)

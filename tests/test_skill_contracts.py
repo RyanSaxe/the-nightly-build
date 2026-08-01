@@ -249,6 +249,7 @@ def test_public_documentation_has_the_release_taxonomy() -> None:
         "guides/publish/publish-now.md",
         "guides/publish/revise-an-article.md",
         "integrations/README.md",
+        "reference/README.md",
         "reference/delivery.md",
         "reference/production.md",
         "reference/series.md",

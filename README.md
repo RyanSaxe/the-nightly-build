@@ -36,7 +36,8 @@ fork, and verify the actual scheduled environment. The AI you talk to now and
 the AI that works overnight can be different products.
 
 Start with [Ask your AI](docs/getting-started/ask-your-ai.md), or read the full
-[documentation](docs/README.md).
+[documentation](docs/README.md). The [feature catalog](docs/reference/README.md)
+lists everything the released engine supports and where to configure it.
 
 ### Manual fallback
 
