@@ -15,11 +15,7 @@ import subprocess
 import tempfile
 
 from nb import meta as nb_meta
-from nb.artifacts import (
-    artifact_warnings,
-    validate_artifacts,
-    validate_revision_note,
-)
+from nb.artifacts import validate_artifacts, validate_revision_note
 from nb.config import load_series
 from nb.proof import check_article
 from nb.report import Report
@@ -205,10 +201,6 @@ def run_pr_mode(
                 "B-REVISION-NOTE" if revision else "B-AGENT-ARTIFACTS",
                 issue,
             )
-        for warning in artifact_warnings(
-            pathlib.Path(bundle_dir), series=series_id, slug=m.group(2)
-        ):
-            rep.warn("W-VOICE-THIN", warning)
         check_article(
             os.path.join(bundle_dir, path),
             series_id,

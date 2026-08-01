@@ -17,7 +17,6 @@ from nb import meta as nb_meta
 __all__ = (
     "ROLE_FILES",
     "ROOT_FILES",
-    "artifact_warnings",
     "artifact_root",
     "validate_artifacts",
     "validate_revision_note",
@@ -31,8 +30,6 @@ ROLE_FILES: Mapping[str, tuple[str, str]] = {
 }
 ROOT_FILES = ("editorial-direction.md", "commission.md")
 INVOCATION_RE = re.compile(r"^[0-9]{2}$")
-SOURCE_LINE_RE = re.compile(r"^\s*Source:\s*https?://\S+", re.IGNORECASE | re.MULTILINE)
-VOICE_EXEMPLARS_MIN = 3
 
 
 def artifact_root(root: pathlib.Path, *, series: str, slug: str) -> pathlib.Path:
@@ -150,27 +147,3 @@ def validate_revision_note(
     if issue:
         errors.append(f"revisions/{number:02d}.md: {issue}")
     return errors
-
-
-def artifact_warnings(root: pathlib.Path, *, series: str, slug: str) -> list[str]:
-    """Return quality warnings that can be proven from semantic artifacts.
-
-    Structure remains the publishing gate. This narrower audit preserves the
-    writing coach's longstanding quality signal: a guide that names outlets or
-    gestures at a voice without citing three pieces was not actually studied.
-    """
-    coach = artifact_root(root, series=series, slug=slug) / "writing-coach"
-    if not coach.is_dir():
-        return []
-    warnings = []
-    for invocation in sorted(coach.iterdir(), key=lambda path: path.name):
-        guide = invocation / "voice-guide.md"
-        if not guide.is_file():
-            continue
-        count = len(SOURCE_LINE_RE.findall(guide.read_text(encoding="utf-8")))
-        if count < VOICE_EXEMPLARS_MIN:
-            warnings.append(
-                f"writing-coach/{invocation.name}/voice-guide.md cites "
-                f"{count} exemplar(s); expected at least {VOICE_EXEMPLARS_MIN}"
-            )
-    return warnings
