@@ -26,9 +26,8 @@ required by its mode; a manual open series always needs a matching item. If no
 existing series fits, discuss whether the request reveals a durable new series
 or is outside the paper. Do not create a throwaway series to satisfy one topic.
 
-Validate and commit the configuration on `main`. Then read
+Validate the configuration and get it merged into `main`. Then read
 `../../nb-orchestrator/SKILL.md` and continue in this same agent as the
 orchestrator, supplying this configured article as the exact authorized work.
-Do not run `nb duty`, delegate orchestration, copy the production sequence into
-this workflow, or weaken the required artifacts. A valid new-article PR
-publishes automatically.
+Do not run `nb duty`, copy the production sequence into this workflow, or weaken
+the required artifacts. A valid new-article PR publishes automatically.

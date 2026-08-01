@@ -15,10 +15,11 @@ article-specific prompt. For a collection or sequence, add or select the
 corresponding configured item. A `cadence: manual` series is a good home for
 pieces that should never be scheduled automatically.
 
-After the configuration change is validated on `main`, the assistant runs the
-normal production chain: initialize with `nb start-article`, research and
-draft, conduct editorial review, preview, and call `nb prepare-pr`. The result
-is an ordinary Article PR with the same CI gate as a scheduled article.
+After the configuration change is validated and merged into `main`, the
+assistant runs the normal production chain: initialize with `nb start-article`,
+research and draft, conduct editorial review, preview, and call
+`nb prepare-pr`. The result is an ordinary Article PR with the same CI gate as
+a scheduled article.
 
 A manual commission does not bypass source, artifact, rendering, or PR-shape
 requirements. Its clean Article PR publishes automatically like any scheduled

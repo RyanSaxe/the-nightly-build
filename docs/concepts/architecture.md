@@ -19,9 +19,10 @@ The paper owner describes the publication under `press/` on `main`:
   each article-making role.
 
 This is configuration, not publication state. Scheduled work always starts
-from the current `main` branch, while prior articles and the generated site live
-on `library`. `nb duty` compares the press with that published catalog and
-returns the work that is due. A `manual` series never becomes due on its own.
+from the current `main` branch, while published articles, assets, production
+records, and the catalog live on `library`. `nb duty` compares the press with
+that catalog and returns the work that is due. A `manual` series never becomes
+due on its own.
 
 ## The orchestrator owns the run
 
@@ -127,6 +128,6 @@ same as for scheduled work.
 
 A revision may be as small as a typo correction or as large as a new
 LLM-assisted treatment of the article and its figures. The owner chooses the
-process. The submitted PR still changes exactly one published article, may
-change that article's local assets, records why the revision was needed, and
-passes the normal proof and browser checks before a person can merge it.
+process. The submitted PR changes one article's HTML and/or matching local
+assets, records why the revision was needed, and passes the normal proof and
+browser checks before a person can merge it.

@@ -16,10 +16,9 @@ source contracts, rejects active article content, preserves artifact history,
 and requires rendered-browser success.
 
 Every valid new-article PR auto-merges. Revisions and owner curation never
-auto-merge. A revision may change one published article and its matching
-assets. It adds one numbered
-Markdown note explaining the change and cannot rewrite earlier notes or the
-historical production record.
+auto-merge. A revision may change one published article's HTML and/or matching
+assets. It adds one numbered Markdown note explaining the change and cannot
+rewrite earlier notes or the historical production record.
 
 Protect `main` as well as `library` if the scheduled identity should not be
 able to change trusted engine or press configuration directly. Review

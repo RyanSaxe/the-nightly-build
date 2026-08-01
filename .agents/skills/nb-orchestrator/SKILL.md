@@ -10,8 +10,7 @@ description: >
 # The Nightly Build Orchestrator
 
 Commission the authorized work, give each editorial role the context it needs,
-and carry every article through publication. Keep the whole-paper view in this
-agent; do not launch another orchestrator. Resolve recoverable failures and
+and carry every article through publication. Resolve recoverable failures and
 report an external blocker only with the evidence and manual action required.
 
 ## Load production in phases

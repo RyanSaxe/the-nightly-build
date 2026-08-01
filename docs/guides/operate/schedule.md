@@ -12,16 +12,17 @@ The scheduled runtime needs:
 2. Current `main` plus access to `origin/main` and `origin/library`.
 3. Outbound web access for research.
 4. Permission to push generated branches and open PRs against `library`.
-5. `uv` on `PATH`.
+5. `uv` on `PATH`, or permission to install it.
 6. Non-interactive permission to use every required tool.
 
 Every run begins with `nb sync`, then asks `nb duty` for the deterministic work
 list. One schedule can run the whole paper because series own their cadence.
 `cadence: manual` series never appear as due.
 
-Choose a provider-hosted scheduler when it meets all six requirements. The
-portable alternative is a GitHub Actions cron around a headless agent. Current
-provider entrypoints are listed in [Integrations](../../integrations/README.md).
+Choose a scheduler only after its actual unattended environment meets all six
+requirements. Candidate provider entrypoints are listed in
+[Integrations](../../integrations/README.md), but a link to an automation
+product is not proof that it satisfies this contract.
 
 ## Canonical prompt
 
@@ -50,16 +51,8 @@ on-demand task with this assignment:
 The smoke prompt opens and cleans up a draft PR against `main`. It never loads
 the orchestrator or touches `library`.
 
-## GitHub Actions boundary
-
-A universal workflow runs on `main`, grants its job `contents: write` and
-`pull-requests: write`, installs `uv`, checks out both branches, and invokes the
-chosen headless agent with the canonical prompt. Keep model credentials in
-repository secrets.
-
-Do not put the trusted scheduler or its credentials in the `library` PR
-workflow. Article validation intentionally runs on `pull_request` with no
-scheduler secrets. See
+Keep scheduler credentials out of the `library` PR workflow. Article validation
+intentionally runs on `pull_request` with no scheduler secrets. See
 [Publishing and security](../../concepts/publishing-and-security.md).
 
 ## Prove it before relying on it

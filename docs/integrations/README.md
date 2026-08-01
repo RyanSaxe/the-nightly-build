@@ -1,64 +1,43 @@
 # Agent and scheduler integrations
 
-The scheduled runtime needs a repository checkout, web access, and permission
-to open pull requests. [Schedule](../guides/operate/schedule.md) defines that
-contract. This page maps it to current agent products.
+The Nightly Build does not depend on one model provider or agent product. It
+depends on capabilities in the actual unattended environment: a repository
+checkout, access to `main` and `library`, live web research, non-interactive
+tool use, and permission to push a branch and open a pull request. See
+[Schedule](../guides/operate/schedule.md) for the complete contract.
 
-Provider features and prices move quickly. The links below are the source of
-truth. A documented entrypoint means the integration is possible; it does not
-mean this project has stress-tested that harness end to end.
+An automation product's existence does not prove that it meets that contract.
+Provider behavior, permissions, and billing change independently, so this
+project does not yet claim end-to-end support for a provider-specific setup.
+Use the [scheduled-runtime smoke test](../getting-started/first-run.md) in the
+same environment that will publish the paper.
 
-## Current paths
+## Provider entrypoints to evaluate
 
-| Agent                                                                                             | Laptop-off schedule                            | Unattended entrypoint           | Billing                                                        |
-| ------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------- | -------------------------------------------------------------- |
-| [Claude Code](https://code.claude.com/docs/en/routines)                                           | Routines                                       | `anthropics/claude-code-action` | Routines use plan allowance; the Actions path uses API billing |
-| [Jules](https://jules.google/docs/scheduled-tasks/)                                               | Scheduled Tasks                                | Hosted task                     | Daily task quota for the plan                                  |
-| [Codex](https://learn.chatgpt.com/docs/automations)                                               | Cloud scheduled tasks                          | `openai/codex-action@v1`        | Cloud tasks use plan allowance; the Action uses API billing    |
-| [Cursor](https://docs.cursor.com/en/cli/headless)                                                 | Cloud Agents and Automations, plan-dependent   | `cursor-agent -p --force`       | Included usage, then on-demand usage where enabled             |
-| [OpenCode](https://dev.opencode.ai/docs/github/)                                                  | GitHub Action on cron                          | `opencode run`                  | The model provider you connect                                 |
-| [Devin](https://docs.devin.ai/product-guides/scheduled-sessions)                                  | Automations                                    | API or CLI                      | Devin plan usage                                               |
-| [GitHub Copilot](https://docs.github.com/en/copilot/how-tos/github-copilot-app/using-automations) | Automations                                    | Hosted coding agent             | Included premium requests, then usage-based billing if enabled |
-| [Antigravity](https://codelabs.developers.google.com/getting-started-google-antigravity)          | Local schedules; laptop-off is not established | CLI                             | Plan-dependent                                                 |
-| [Pi](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/README.md)               | No hosted scheduler                            | `pi -p`                         | The model provider you connect                                 |
+These first-party pages are starting points for configuring and testing a
+runtime. They are not Nightly Build setup recipes or support certifications.
 
-## Hosted schedulers
+| Provider or agent | First-party starting point                                                                     | Nightly Build status    |
+| ----------------- | ---------------------------------------------------------------------------------------------- | ----------------------- |
+| Claude Code       | [Routines](https://code.claude.com/docs/en/routines)                                           | Not verified end to end |
+| Codex             | [Automations](https://openai.com/academy/codex-automations/)                                   | Not verified end to end |
+| Jules             | [Scheduled Tasks](https://jules.google/docs/scheduled-tasks/)                                  | Not verified end to end |
+| Cursor            | [Automations](https://cursor.com/automate)                                                     | Not verified end to end |
+| Devin             | [Scheduled sessions](https://docs.devin.ai/product-guides/scheduled-sessions)                  | Not verified end to end |
+| GitHub Copilot    | [Automations](https://docs.github.com/en/copilot/how-tos/github-copilot-app/using-automations) | Not verified end to end |
+| OpenCode          | [GitHub integration](https://dev.opencode.ai/docs/github/)                                     | Not verified end to end |
 
-Use a hosted scheduler when it can check out the fork, browse the web, and
-open a PR. Paste the canonical prompt from [Schedule](../guides/operate/schedule.md) and run
-one task for the whole paper.
-
-- **Claude Code:** create a Routine and enable full, or suitably scoped,
-  network access. It runs in Anthropic's cloud and consumes your plan usage.
-- **Jules:** install its GitHub app, create a Scheduled Task, and select the
-  fork. Runs count against the plan's daily task quota.
-- **Codex:** choose a cloud environment for the scheduled task. Local tasks
-  need the computer; cloud tasks continue without it.
-- **Cursor, Devin, and Copilot:** use their hosted automation surface when
-  your plan includes it. Confirm repository permissions and usage limits in
-  the provider before scheduling.
-
-## GitHub Actions
-
-The universal workflow in [Schedule](../guides/operate/schedule.md) works with an agent that
-has a non-interactive command or Action. Typical invoke steps are:
-
-- Codex: `openai/codex-action@v1` with `OPENAI_API_KEY`.
-- Claude Code: `anthropics/claude-code-action` with `ANTHROPIC_API_KEY`.
-- Cursor: `cursor-agent -p --force "<prompt>"` with `CURSOR_API_KEY`.
-- OpenCode: `opencode run "<prompt>"` with the chosen model credentials.
-- Pi: `pi -p "<prompt>"` with the chosen model credentials.
-
-Use each provider's current documentation for installation and Action inputs.
-Give the runtime web access, keep credentials in repository secrets, and say
-plainly whether the run consumes a subscription allowance or a metered API.
+Before documenting a provider-specific path, verify repository authentication,
+both required branches, research access, tool approvals, `uv` availability or
+installation, on-demand and scheduled invocation, the non-publishing smoke
+test, and one real publication. State whether the path uses subscription
+allowance or metered API billing and record when it was last verified.
 
 ## Harness independence
 
-The orchestrator workflow does not require nested spawning or a
-provider-specific team feature. A harness may isolate roles in separate
-contexts or execute the same recorded sequence in one context. See
-[Architecture](../concepts/architecture.md).
+The orchestrator does not require a provider-specific team feature. A harness
+may isolate bounded editorial roles in child contexts or execute the same
+recorded sequence in one context. See [Architecture](../concepts/architecture.md).
 
 Model names are harness-specific. Portable tiers and exact provider overrides
 are defined in [Production reference](../reference/production.md).
