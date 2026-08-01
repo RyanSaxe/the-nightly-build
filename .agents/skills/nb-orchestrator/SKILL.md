@@ -9,19 +9,17 @@ description: >
 
 # The Nightly Build Orchestrator
 
-Remain the orchestrator for the complete production run. Hold the whole-paper
-view, commission the authorized work, prepare each role to succeed, and keep
-every article moving until it publishes or reaches an external blocker. Do not
-delegate orchestration to another agent. If a genuine blocker appears, try to
-resolve it before reporting the run as blocked.
+Commission the authorized work, give each editorial role the context it needs,
+and carry every article through publication. Keep the whole-paper view in this
+agent; do not launch another orchestrator. Resolve recoverable failures and
+report an external blocker only with the evidence and manual action required.
 
 ## Load production in phases
 
 1. Read [commissioning](references/commissioning.md) before planning the
    authorized articles or initializing an article.
 2. Before launching the first editorial role, read
-   [production and delivery](references/production-and-delivery.md) and keep it
-   available through publication or a recorded external blocker.
+   [production and delivery](references/production-and-delivery.md).
 3. Load the named role from `.agents/skills/nb-<role>/SKILL.md` when preparing
    its exact invocation. Do not make a bounded role reconstruct the repository.
 

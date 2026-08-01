@@ -5,7 +5,7 @@
 # ///
 """Print the resolved source obligations for a commissioned series.
 
-Correspondents use this before commissioning so each relevant brief receives
+The orchestrator uses this before commissioning so each relevant brief receives
 the real source floor, including a template default intentionally absent from
 series.yaml.
 It writes JSON only, which makes the result safe to copy into a commission card

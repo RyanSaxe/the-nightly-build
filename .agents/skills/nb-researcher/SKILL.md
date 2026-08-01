@@ -44,9 +44,10 @@ thin. Then use these stable sections:
 ### Sources
 
 One entry per source read: URL; primary/secondary classification and reason;
-what it establishes firsthand or repeats; useful verbatim passages; and honest
-section, page, or paragraph locators. A repetition supports that a claim was
-made, not that it is true.
+what it establishes firsthand or repeats; a precise paraphrase; and honest
+section, page, or paragraph locators. Include a short quotation only when the
+source's exact wording is itself evidence. A repetition supports that a claim
+was made, not that it is true.
 
 When the record names a person or body, give it the exact title, role, and
 affiliation the primary states. A headline inherits whatever label the record
@@ -78,14 +79,14 @@ The evidence record has two readers: a writer drafting from it and an editor
 trying to break the result. Make each claim traceable enough for either reader
 to reopen the source cold.
 
-## Requests and output
+## Complete the invocation
 
 For a later evidence request, read only the new numbered `brief.md` and the
 prior evidence artifact it names. Write a complete new `evidence.md` that
 preserves still-valid work and clearly records the new finding; never overwrite
 an earlier invocation.
 
-Return `DONE researcher <evidence-path>`. If required evidence is inaccessible
-or the policy cannot be met, record what failed and return
-`BLOCKED researcher <one-sentence reason>`. If the brief itself is incomplete,
-return `REQUEST orchestrator <one-sentence need>`.
+Report the evidence path and the record's important limitation. If required
+evidence is inaccessible or the policy cannot be met, record what failed and
+tell the orchestrator what remains unresolved. If the brief is incomplete,
+name the missing decision instead of reconstructing it.

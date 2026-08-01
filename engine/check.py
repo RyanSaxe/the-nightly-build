@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["pyyaml", "tinycss2"]
 # ///
-"""Validate an article against the protocol and series config: the proof.
+"""Validate an article against the publication and series contracts: the proof.
 
 Findings come in two tiers. BLOCK findings are integrity failures and CI
 refuses to publish on any of them. WARN findings are quality calibration:

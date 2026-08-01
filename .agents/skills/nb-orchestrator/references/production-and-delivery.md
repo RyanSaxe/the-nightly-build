@@ -1,7 +1,8 @@
 # Production and delivery
 
-Read this reference before launching an editorial role. The orchestrator owns
-movement and context; each named role owns its bounded editorial decisions.
+Coordinate the editorial roles without duplicating their judgment. The
+orchestrator owns sequencing, context, and delivery; each named role owns its
+bounded editorial decisions.
 
 ## Run the role sequence
 
@@ -17,9 +18,8 @@ identities and artifacts:
 | `writer`        | `brief.md`        | `draft-handoff.md`    |
 | `editor`        | `review-brief.md` | `editorial-review.md` |
 
-The `nb-*` names identify skill packages. Production-policy keys, artifact
-directories, and control signals continue to use the unprefixed role IDs in
-this table.
+The `nb-*` names identify skill packages. Production-policy keys and artifact
+directories use the unprefixed role IDs in this table.
 
 Store each pair beneath the artifact root created by `nb start-article`:
 `<role>/01/<input-and-output>`. A later invocation of that role uses the next
@@ -37,23 +37,17 @@ If isolated children are unavailable, perform the same numbered sequence in
 one context and preserve the same artifacts. Isolation changes execution, not
 the editorial record or gate.
 
-## Require explicit control signals
+## Follow each invocation
 
-Require one line from each invocation:
+Ask each role to report its output path, decision, and any missing input in
+plain language. Inspect the named artifact before treating the invocation as
+complete; the file, not a chat phrase, is the production record.
 
-- `DONE <role> <output-path>`
-- `REQUEST <role-or-owner> <one-sentence need>`
-- `BLOCKED <role> <one-sentence reason>`
-
-Messages are control signals; Markdown files are the record. A completion
-signal may be lost, so accept an output without one when the named artifact is
-complete and validated.
-
-Keep launched roles under active supervision with bounded waits. If twenty
-minutes pass without a relevant result, meaningful artifact change, or
-concrete control message, inspect the activity and ask what is missing.
-Clarify or supply context before relaunching. Confirm a role has stopped before
-replacing it; interrupt, reassign, or take over only as a last resort.
+Use the harness's actual task state to supervise active roles. When a role
+fails, stalls, or returns without its artifact, inspect the available evidence
+and supply missing context before relaunching it. Do not start a duplicate
+while the original invocation is still active. Interrupt, reassign, or take
+over only when the owning role cannot complete the work.
 
 ## Route repairs without waiving gates
 
@@ -62,12 +56,12 @@ researcher. Prose, structure, markup, assets, and proof return through the
 writer. Give every repair a new numbered brief and output, then require a fresh
 writer proof and editor read.
 
-Only an editor `DONE` with no required change settles an article. There is no
-round cap, but do not repeat an unchanged attempt or prolong the loop for
-optional polish. A blocked role escalates to the orchestrator, which clarifies,
-reassigns, or takes over the owning work and records that resolution in the
-next brief. A takeover never waives writer proof or editor approval. Stop only
-for an external constraint no role can change.
+Only an editorial review with no required change settles an article. There is
+no round cap, but do not repeat an unchanged attempt or prolong the loop for
+optional polish. Clarify, reassign, or take over work a role cannot complete,
+and record that resolution in the next brief. A takeover never waives writer
+proof or editor approval. Stop only for an external constraint no role can
+change.
 
 ## Prepare and monitor the Article PR
 

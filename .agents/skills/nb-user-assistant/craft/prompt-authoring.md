@@ -8,8 +8,8 @@ brief.
 
 State the prompt's job before drafting. Identify the decisions its reader must
 make, the context only this layer owns, and the observable failure it should
-prevent. Delete anything already encoded by YAML, a manifest, the protocol, a
-catalog, or another prompt layer.
+prevent. Delete anything already encoded by YAML, a manifest, the proof
+contract, a catalog, or another prompt layer.
 
 Write editorial judgment with consequences. Define territory by the principle
 that admits and excludes work. Define evidence by what a claim must survive.

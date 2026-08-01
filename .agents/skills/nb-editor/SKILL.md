@@ -134,7 +134,8 @@ the declared word count honest when cuts change it. The writer runs the proof.
 Keep requesting changes while publication-blocking work remains. Do not
 prolong the loop for optional polish, repeat resolved objections, or introduce
 a new standard late. If repeated attempts cannot resolve the same required
-issue, return `BLOCKED editor <reason>`.
+issue, record the unresolved issue, its owner, and the evidence needed to move
+it.
 
 ## Write the editorial review
 
@@ -144,9 +145,8 @@ the final decision. Write in your own words, never the draft's. Later editor
 invocations write a new numbered artifact; never append to or overwrite an
 earlier review.
 
-Return `DONE editor <editorial-review-path>` only when no redraft is required.
-Return `REQUEST researcher <one-sentence need>` for evidence,
-`REQUEST writer <one-sentence need>` for prose, structure, markup, assets, or
-proof, or `REQUEST orchestrator <one-sentence missing context>`. When researcher
+Report the editorial-review path and final decision. When more work is needed,
+name its owner: researcher for evidence; writer for prose, structure, markup,
+assets, or proof; orchestrator for missing commission context. When researcher
 and writer both have work, request evidence first and record the writer's work
 in the review so the orchestrator can route it next.

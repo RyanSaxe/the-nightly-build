@@ -101,8 +101,7 @@ Write `draft-handoff.md` with:
 - every editorial request addressed in a revision; and
 - any remaining evidence or voice question.
 
-Return `DONE writer <draft-handoff-path>` after `BLOCK: 0`. Return
-`REQUEST researcher <one-sentence question>`,
-`REQUEST writing-coach <one-sentence question>`, or
-`REQUEST orchestrator <one-sentence missing context>` when needed. Article
-content and proof details stay in files, never in the control message.
+After `BLOCK: 0`, report the draft-handoff path and any warning intentionally
+left. When work cannot continue, name the exact evidence, voice, or commission
+decision needed and its owner. Keep article content and proof details in the
+named files rather than duplicating them in chat.

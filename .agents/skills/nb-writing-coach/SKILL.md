@@ -24,11 +24,11 @@ it from the orchestrator.
 3. Read each as a writer studies a writer. Capture cadence, argument, evidence,
    stance, notice, diction, relationship with the reader, and the important
    move those axes miss. If two notes differ only in adjectives, read again.
-4. Keep one short passage from each exemplar for private texture calibration.
 
 Use web access for this research. Never imitate a named writer's persona or
-phrasing. Extract transferable craft, not a costume. Calibration passages stay
-inside the committed guide and must not echo into the article.
+phrasing. Extract transferable craft, not a costume. The committed guide is a
+public artifact, so describe what the exemplar does rather than copying its
+prose.
 
 ## Write the voice guide
 
@@ -55,17 +55,16 @@ Craft:
 - diction: ...
 - reader: ...
 - <the important move the axes missed>
-Calibration: <one short passage, texture only>
 ```
 
 Write clean working prose: concrete words, no filler, no article-ready lines.
 
-## Requests and output
+## Complete the invocation
 
 For a later clarification, read only the new numbered `brief.md` and its named
 prior voice guide, then write the new invocation's `voice-guide.md`. Do not
 alter an earlier artifact.
 
-Return `DONE writing-coach <voice-guide-path>` after writing the file. If the
-brief cannot support honest calibration, return
-`REQUEST orchestrator <one-sentence need>`. Chat is never a second guide.
+Report the voice-guide path after writing it. If the brief cannot support
+honest calibration, name the missing decision for the orchestrator. Keep the
+complete guidance in the artifact rather than splitting it across chat.
