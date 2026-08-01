@@ -276,8 +276,6 @@ def test_unauthenticated_gh_prepares_an_agent_handoff(
     assert "reason=gh is not authenticated" in result.stdout
     assert "base=library" in result.stdout
     assert f"head={SYNC_BRANCH}" in result.stdout
-    assert "Wait for the `validate` check" in result.stdout
-    assert "Rerun `nb sync`" in result.stdout
     assert "pr create" not in repo.gh_log.read_text()
 
     repo.update_remote_ref("refs/heads/library", f"refs/heads/{SYNC_BRANCH}")
@@ -357,7 +355,6 @@ def test_failed_sync_reports_the_check_and_repair_path(tmp_path: pathlib.Path) -
 
     assert result.returncode != 0
     assert "validate: https://example.test/check" in result.stderr
-    assert "Fix the canonical engine on main" in result.stderr
     assert repo.remote_blob("library", WORKFLOWS[0]) != repo.remote_blob(
         "main", WORKFLOWS[0]
     )

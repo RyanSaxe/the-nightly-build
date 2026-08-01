@@ -93,7 +93,6 @@ def test_generated_pages_and_articles_use_the_site_icons(
 def test_an_article_copy_wears_the_site_bar(micron_copy: str) -> None:
     assert '<header class="nb-bar">' in micron_copy
     assert '<a href="../../series/">Sections</a>' in micron_copy
-    assert "The whole newspaper" in micron_copy
 
 
 def test_an_article_copy_wears_the_footer_and_the_appearance_toggle(

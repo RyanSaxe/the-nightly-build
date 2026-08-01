@@ -1,4 +1,9 @@
-"""Two builds that must not fall over: an empty press, and a night with a gap."""
+"""Two builds that must not fall over: an empty press, and a night with a gap.
+
+An empty fork still needs navigable chrome and an explicit empty-state container.
+A later build with no new articles must continue to identify the most recent real
+edition instead of pretending that the build date is a publication date.
+"""
 
 import datetime as dt
 import tempfile
@@ -10,8 +15,11 @@ def empty_site(testrepo: str) -> Site:
     return build_press(testrepo, tempfile.mkdtemp())
 
 
-def test_a_fresh_fork_says_the_presses_are_ready(testrepo: str) -> None:
-    assert "The presses are ready" in empty_site(testrepo).index
+def test_a_fresh_fork_renders_an_empty_state(testrepo: str) -> None:
+    site = empty_site(testrepo)
+
+    assert site.catalog["articles"] == []
+    assert 'class="nb-empty"' in site.index
 
 
 def test_an_empty_build_still_renders_a_sections_page(testrepo: str) -> None:

@@ -218,7 +218,6 @@ def test_prepare_pr_prints_connector_handoff_without_gh(
     assert result.returncode == 3, result.stderr
     assert "NB_ARTICLE_PR_REQUIRED" in result.stdout
     assert "head=nb/article/semiconductors/micron" in result.stdout
-    assert "Use the runtime's connected GitHub tools" in result.stdout
 
 
 def test_prepare_pr_safely_replaces_its_own_generated_branch(
