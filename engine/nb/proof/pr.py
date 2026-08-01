@@ -3,7 +3,7 @@
 The library accepts one new article bundle, one reviewed revision, an
 owner-authorized retraction, or an exact workflow sync from the fork's main
 branch. New bundles include the complete role record; revisions preserve that
-history and add fresh numbered role pairs.
+history and add one numbered explanation of the change.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from nb import meta as nb_meta
 from nb.artifacts import (
     artifact_warnings,
     validate_artifacts,
-    validate_revision_artifacts,
+    validate_revision_note,
 )
 from nb.config import load_series
 from nb.proof import check_article
@@ -90,38 +90,15 @@ def _tree_paths(repo: str, *, ref: str, prefix: str) -> list[str]:
     return result.stdout.splitlines()
 
 
-def _blob_meta(repo: str, *, ref: str, path: str) -> dict | None:
+def _is_regular_blob(repo: str, *, ref: str, path: str) -> bool:
     result = subprocess.run(
-        ["git", "-C", repo, "show", f"{ref}:{path}"],
+        ["git", "-C", repo, "ls-tree", ref, "--", path],
         capture_output=True,
         text=True,
         check=True,
     )
-    return nb_meta.parse_meta(result.stdout)
-
-
-def _check_revision_identity(
-    repo: str, *, base: str, head: str, path: str, rep: Report
-) -> None:
-    try:
-        before = _blob_meta(repo, ref=base, path=path)
-        after = _blob_meta(repo, ref=head, path=path)
-    except subprocess.CalledProcessError as error:
-        rep.block("B-REVISION-IDENTITY", f"cannot read revision article: {error}")
-        return
-    if before is None or after is None:
-        rep.block(
-            "B-REVISION-IDENTITY",
-            "revision identity requires readable nb-meta before and after",
-        )
-        return
-    frozen = ("series", "slug", "date", "mode", "order")
-    changed = [field for field in frozen if before.get(field) != after.get(field)]
-    if changed:
-        rep.block(
-            "B-REVISION-IDENTITY",
-            f"revision cannot change identity fields: {', '.join(changed)}",
-        )
+    mode, _separator, _rest = result.stdout.partition(" ")
+    return mode in {"100644", "100755"}
 
 
 def run_pr_mode(
@@ -180,7 +157,7 @@ def run_pr_mode(
         rep.block(
             "B-DIFF-SHAPE",
             "PR must add one article bundle or revise one article with matching "
-            "assets and fresh agent artifacts; found "
+            "assets and one new revision note; found "
             f"{[(status, path) for status, path in changes]}",
         )
         return
@@ -189,8 +166,6 @@ def run_pr_mode(
     series_id = m.group(1)
     series_cfg, _ = load_series(cfg_repo, series_id)
     rep.strict = bool(series_cfg and series_cfg.get("strict"))
-    if revision:
-        _check_revision_identity(repo, base=base, head=head, path=path, rep=rep)
     with tempfile.TemporaryDirectory() as bundle_dir:
         slug = m.group(2)
         asset_prefix = f"library/{series_id}/{slug}/"
@@ -206,21 +181,30 @@ def run_pr_mode(
         )
         if revision:
             artifact_prefix = f"agent-artifacts/{series_id}/{slug}/"
-            issues = validate_revision_artifacts(
+            added_paths = [
+                changed_path for status, changed_path in changes if status == "A"
+            ]
+            issues = validate_revision_note(
                 pathlib.Path(bundle_dir),
                 series=series_id,
                 slug=slug,
-                added_paths=[
-                    changed_path for status, changed_path in changes if status == "A"
-                ],
+                added_paths=added_paths,
                 base_paths=_tree_paths(repo, ref=base, prefix=artifact_prefix),
             )
+            for added_path in added_paths:
+                if added_path.startswith(artifact_prefix) and not _is_regular_blob(
+                    repo, ref=head, path=added_path
+                ):
+                    issues.append(f"revision note must be a regular file: {added_path}")
         else:
             issues = validate_artifacts(
                 pathlib.Path(bundle_dir), series=series_id, slug=slug
             )
         for issue in issues:
-            rep.block("B-AGENT-ARTIFACTS", issue)
+            rep.block(
+                "B-REVISION-NOTE" if revision else "B-AGENT-ARTIFACTS",
+                issue,
+            )
         for warning in artifact_warnings(
             pathlib.Path(bundle_dir), series=series_id, slug=m.group(2)
         ):

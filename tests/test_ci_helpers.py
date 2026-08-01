@@ -56,10 +56,9 @@ def revision_ci_helper(tmp_path: pathlib.Path, command: str) -> str:
     subprocess.run(["git", "commit", "-qm", "published"], cwd=repo, check=True)
     subprocess.run(["git", "checkout", "-qb", "revision"], cwd=repo, check=True)
     article_path.write_text("<html>revised</html>\n")
-    artifacts = repo / "agent-artifacts" / "foo" / "story" / "editor" / "01"
-    artifacts.mkdir(parents=True)
-    (artifacts / "review-brief.md").write_text("# Brief\n")
-    (artifacts / "editorial-review.md").write_text("# Review\n")
+    revisions = repo / "agent-artifacts" / "foo" / "story" / "revisions"
+    revisions.mkdir(parents=True)
+    (revisions / "01.md").write_text("# Revision\n\nCorrect the article.\n")
     subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
     subprocess.run(["git", "commit", "-qm", "revision"], cwd=repo, check=True)
     return subprocess.run(

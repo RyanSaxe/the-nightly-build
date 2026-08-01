@@ -3,9 +3,10 @@
 Editorial roles work in a small directory whose ``library/`` and
 ``agent-artifacts/`` subtrees already have their final repository paths. This
 module copies that finished bundle onto a generated branch, proves the exact
-commit, pushes it, and opens or describes the pull request. Reviewed revisions
-use the same boundary while preserving published identity and artifacts. This
-module never edits the article or interprets editorial quality.
+commit, pushes it, and opens or describes the pull request. Revisions use the
+same boundary while preserving the published record and adding one explanation
+of the change. This module never edits the article or interprets editorial
+quality.
 """
 
 from __future__ import annotations
@@ -21,12 +22,7 @@ import tempfile
 from dataclasses import dataclass
 
 from nb import meta as nb_meta
-from nb.artifacts import (
-    ROLE_FILES,
-    ROOT_FILES,
-    validate_artifacts,
-    validate_revision_artifacts,
-)
+from nb.artifacts import validate_artifacts, validate_revision_note
 from nb.proof.pr import run_pr_mode
 from nb.report import Report, emit
 
@@ -102,27 +98,24 @@ def _article_from_workspace(path: pathlib.Path, *, revision: bool) -> _Article:
     return _Article(article_path, workspace, series, slug, title.strip())
 
 
-def _revision_artifact_paths(article: _Article) -> list[str]:
-    root = article.workspace / "agent-artifacts" / article.series / article.slug
-    if not root.is_dir() or root.is_symlink():
+def _revision_note_paths(article: _Article) -> list[str]:
+    root = (
+        article.workspace
+        / "agent-artifacts"
+        / article.series
+        / article.slug
+        / "revisions"
+    )
+    if not root.exists():
         return []
-    unexpected = {path.name for path in root.iterdir()} - {*ROOT_FILES, *ROLE_FILES}
-    if unexpected:
-        raise _PrepareError(
-            f"unexpected revision artifact entries: {sorted(unexpected)}"
-        )
+    if not root.is_dir() or root.is_symlink():
+        raise _PrepareError(f"revision notes must be a directory: {root}")
+
     paths: list[str] = []
-    for role in ROLE_FILES:
-        role_root = root / role
-        if not role_root.exists():
-            continue
-        if not role_root.is_dir() or role_root.is_symlink():
-            raise _PrepareError(f"revision artifact role must be a directory: {role}")
-        for path in role_root.rglob("*"):
-            if path.is_symlink():
-                raise _PrepareError("revision artifacts cannot contain symbolic links")
-            if path.is_file():
-                paths.append(path.relative_to(article.workspace).as_posix())
+    for path in root.iterdir():
+        if path.is_symlink() or not path.is_file():
+            raise _PrepareError(f"revision note must be a regular file: {path}")
+        paths.append(path.relative_to(article.workspace).as_posix())
     return sorted(paths)
 
 
@@ -183,7 +176,13 @@ def _generated_branch_is_safe(
     return classifier(changes) == expected_article
 
 
-def _copy_bundle(article: _Article, worktree: pathlib.Path, *, revision: bool) -> None:
+def _copy_bundle(
+    article: _Article,
+    worktree: pathlib.Path,
+    *,
+    revision: bool,
+    revision_notes: tuple[str, ...] = (),
+) -> None:
     relative_article = article.path.relative_to(article.workspace)
     target_article = worktree / relative_article
     target_article.parent.mkdir(parents=True, exist_ok=True)
@@ -215,12 +214,12 @@ def _copy_bundle(article: _Article, worktree: pathlib.Path, *, revision: bool) -
     )
     target_artifacts = worktree / source_artifacts.relative_to(article.workspace)
     if revision:
-        for relative_path in _revision_artifact_paths(article):
+        for relative_path in revision_notes:
             source = article.workspace / relative_path
             target = worktree / relative_path
             if target.exists():
                 raise _PrepareError(
-                    f"revision artifact already exists in the library: {relative_path}"
+                    f"revision note already exists in the library: {relative_path}"
                 )
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
@@ -278,6 +277,7 @@ def _prepare_branch(
     if not revision and is_published:
         raise _PrepareError(f"article is already published: {article_target}")
 
+    revision_notes: tuple[str, ...] = ()
     if revision:
         artifact_prefix = f"agent-artifacts/{article.series}/{article.slug}/"
         base_paths = _git(
@@ -289,15 +289,20 @@ def _prepare_branch(
             "--",
             artifact_prefix,
         ).splitlines()
-        errors = validate_revision_artifacts(
+        workspace_notes = _revision_note_paths(article)
+        base_path_set = set(base_paths)
+        revision_notes = tuple(
+            path for path in workspace_notes if path not in base_path_set
+        )
+        errors = validate_revision_note(
             article.workspace,
             series=article.series,
             slug=article.slug,
-            added_paths=_revision_artifact_paths(article),
+            added_paths=revision_notes,
             base_paths=base_paths,
         )
         if errors:
-            raise _PrepareError("invalid revision artifacts:\n- " + "\n- ".join(errors))
+            raise _PrepareError("invalid revision note:\n- " + "\n- ".join(errors))
 
     name = (
         f"nb/revision/{article.series}/{article.slug}/{base}"
@@ -320,7 +325,12 @@ def _prepare_branch(
         worktree = pathlib.Path(temporary) / "worktree"
         _git(library, "worktree", "add", "-q", "--detach", str(worktree), base)
         try:
-            _copy_bundle(article, worktree, revision=revision)
+            _copy_bundle(
+                article,
+                worktree,
+                revision=revision,
+                revision_notes=revision_notes,
+            )
             _git(worktree, "add", "--", "library", "agent-artifacts")
             _git(
                 worktree,
@@ -376,7 +386,7 @@ def _pr_body(prepared: _PreparedBranch) -> str:
     article = prepared.article
     verb = "Revises" if prepared.revision else "Publishes"
     record = (
-        "the fresh inputs and outputs required for this reviewed revision"
+        "the revision note explaining why the published article changed"
         if prepared.revision
         else "the exact inputs and outputs from every editorial role"
     )

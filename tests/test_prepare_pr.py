@@ -45,36 +45,43 @@ def make_workspace(tmp_path: pathlib.Path) -> pathlib.Path:
     return article_path
 
 
-def make_revision_workspace(tmp_path: pathlib.Path) -> pathlib.Path:
+def make_revision_workspace(
+    tmp_path: pathlib.Path, *, note_number: int = 1
+) -> pathlib.Path:
     workspace = tmp_path / "revision-workspace"
     article_path = workspace / "library" / "semiconductors" / "micron.html"
     article_path.parent.mkdir(parents=True)
     article_path.write_text(
         article().replace("</body>", "<!-- reviewed correction -->\n</body>")
     )
-    artifacts = workspace / "agent-artifacts" / "semiconductors" / "micron"
-    (artifacts / "editor").mkdir(parents=True)
-    (artifacts / "editorial-direction.md").write_text(
-        "# Current direction\n\nGenerated for the revision workspace only.\n"
+    revisions = (
+        workspace / "agent-artifacts" / "semiconductors" / "micron" / "revisions"
     )
-    invocation = artifacts / "editor" / "02"
-    invocation.mkdir()
-    (invocation / "review-brief.md").write_text(
-        "# Review brief\n\nReview the correction against the published article.\n"
-    )
-    (invocation / "editorial-review.md").write_text(
-        "# Editorial review\n\nThe correction is accurate and ready for review.\n"
+    revisions.mkdir(parents=True)
+    (revisions / f"{note_number:02d}.md").write_text(
+        "# Revision\n\nCorrect a factual error in the published article.\n"
     )
     return article_path
 
 
-def publish_article(library: pathlib.Path) -> str:
+def publish_article(library: pathlib.Path, *, prior_notes: int = 0) -> str:
     git("config", "user.name", "Test Press", cwd=str(library))
     git("config", "user.email", "test@example.com", cwd=str(library))
     target = library / "library" / "semiconductors" / "micron.html"
     target.parent.mkdir(parents=True)
     target.write_text(article())
     write_agent_artifacts(str(library), "semiconductors", slug="micron")
+    for number in range(1, prior_notes + 1):
+        note = (
+            library
+            / "agent-artifacts"
+            / "semiconductors"
+            / "micron"
+            / "revisions"
+            / f"{number:02d}.md"
+        )
+        note.parent.mkdir(exist_ok=True)
+        note.write_text(f"# Revision {number:02d}\n\nEarlier correction.\n")
     git("add", "library", "agent-artifacts", cwd=str(library))
     git("commit", "-qm", "publish micron", cwd=str(library))
     git("push", "-q", "origin", "library", cwd=str(library))
@@ -380,11 +387,8 @@ def test_revision_prepare_pr_pushes_a_reviewed_non_automerge_branch(
         check=True,
     ).stdout.splitlines()
     assert "M\tlibrary/semiconductors/micron.html" in changes
-    assert (
-        "A\tagent-artifacts/semiconductors/micron/editor/02/editorial-review.md"
-        in changes
-    )
-    assert not any("editorial-direction.md" in change for change in changes)
+    assert "A\tagent-artifacts/semiconductors/micron/revisions/01.md" in changes
+    assert not any("/editor/" in change for change in changes)
     assert "--title Revise Micron Technology" in log.read_text()
 
     article_path.write_text(
@@ -409,3 +413,59 @@ def test_revision_prepare_pr_pushes_a_reviewed_non_automerge_branch(
 
     assert retry.returncode == 0, retry.stderr
     assert commit_count == "1"
+
+
+def test_revision_prepare_pr_works_directly_from_the_library_checkout(
+    tmp_path: pathlib.Path,
+) -> None:
+    library, origin = make_library(tmp_path)
+    base = publish_article(library, prior_notes=1)
+    article_path = library / "library" / "semiconductors" / "micron.html"
+    article_path.write_text(
+        article_path.read_text().replace(
+            "</body>",
+            "<!-- local correction -->\n</body>",
+        )
+    )
+    note = (
+        library
+        / "agent-artifacts"
+        / "semiconductors"
+        / "micron"
+        / "revisions"
+        / "02.md"
+    )
+    note.write_text("# Revision\n\nCorrect the article from the local checkout.\n")
+    fake_bin = tmp_path / "bin"
+    log = tmp_path / "gh.log"
+    log.write_text("")
+    write_fake_gh(fake_bin)
+
+    result = run_prepare(
+        article_path,
+        library=library,
+        main_root=pathlib.Path(make_press()),
+        path=f"{fake_bin}{os.pathsep}{os.environ['PATH']}",
+        gh_log=log,
+        revision=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    branch = f"refs/heads/nb/revision/semiconductors/micron/{base}"
+    changes = subprocess.run(
+        [
+            "git",
+            f"--git-dir={origin}",
+            "diff",
+            "--name-status",
+            "library",
+            branch,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+    assert changes == [
+        "A\tagent-artifacts/semiconductors/micron/revisions/02.md",
+        "M\tlibrary/semiconductors/micron.html",
+    ]

@@ -24,6 +24,10 @@ PR_PATH_RE = re.compile(r"^library/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})\.html$")
 AGENT_ARTIFACT_RE = re.compile(
     r"^agent-artifacts/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})/[^/].*$"
 )
+REVISION_NOTE_RE = re.compile(
+    r"^agent-artifacts/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})/"
+    r"revisions/((?:0[1-9]|[1-9][0-9]))\.md$"
+)
 # Images, plus a chart's committed provenance (chart-N.py and its data).
 # The provenance files are inert bundle data: the engine and CI never
 # execute them, and the article sandbox cannot reference them.
@@ -40,6 +44,7 @@ __all__ = (
     "META_RE",
     "MODES",
     "PR_PATH_RE",
+    "REVISION_NOTE_RE",
     "SERIES_RE",
     "SLUG_RE",
     "TAG_RE",
@@ -151,9 +156,9 @@ def revision_bundle_path(changes: list[tuple[str, str]]) -> str | None:
     """Return the one modified article in an isolated revision diff.
 
     A revision modifies one published HTML file, may add, modify, or delete
-    assets below its matching directory, and may only add matching agent
-    artifacts. The artifact validator applies the narrower role-pair and
-    invocation-number rules after this path-level classification succeeds.
+    assets below its matching directory, and may only add a matching numbered
+    revision note. Content and sequence validation happen after this path-level
+    classification succeeds.
     """
     articles = [
         path for state, path in changes if state == "M" and PR_PATH_RE.match(path)
@@ -172,8 +177,8 @@ def revision_bundle_path(changes: list[tuple[str, str]]) -> str | None:
             if state not in ("A", "M", "D"):
                 return None
             continue
-        artifact = AGENT_ARTIFACT_RE.match(path)
-        if artifact is not None and artifact.groups() == (series_id, slug):
+        note = REVISION_NOTE_RE.match(path)
+        if note is not None and note.group(1, 2) == (series_id, slug):
             if state != "A":
                 return None
             continue

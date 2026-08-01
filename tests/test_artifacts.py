@@ -2,7 +2,7 @@
 
 These tests exercise the complete structural contract without inspecting role
 prose. They protect useful review properties—named inputs and outputs,
-contiguous revisions, no placeholders, and no unrelated files—while allowing
+contiguous invocations, no placeholders, and no unrelated files—while allowing
 the editorial language itself to evolve freely.
 """
 
@@ -15,6 +15,7 @@ from nb.artifacts import (
     artifact_root,
     artifact_warnings,
     validate_artifacts,
+    validate_revision_note,
 )
 
 
@@ -92,4 +93,54 @@ def test_a_voice_guide_without_three_studied_pieces_warns(
 
     assert warnings == [
         "writing-coach/01/voice-guide.md cites 1 exemplar(s); expected at least 3"
+    ]
+
+
+def test_revision_note_requires_content_but_not_a_prose_schema(
+    tmp_path: pathlib.Path,
+) -> None:
+    note = (
+        artifact_root(tmp_path, series="the-wire", slug="example")
+        / "revisions"
+        / "02.md"
+    )
+    note.parent.mkdir(parents=True)
+    note.write_text("The figure mislabeled the comparison, so it was regenerated.\n")
+
+    errors = validate_revision_note(
+        tmp_path,
+        series="the-wire",
+        slug="example",
+        added_paths=[
+            "agent-artifacts/the-wire/example/revisions/02.md",
+        ],
+        base_paths=[
+            "agent-artifacts/the-wire/example/revisions/01.md",
+        ],
+    )
+
+    assert errors == []
+
+
+def test_revision_note_must_be_utf8_markdown(tmp_path: pathlib.Path) -> None:
+    note = (
+        artifact_root(tmp_path, series="the-wire", slug="example")
+        / "revisions"
+        / "01.md"
+    )
+    note.parent.mkdir(parents=True)
+    note.write_bytes(b"\xff\xfe")
+
+    errors = validate_revision_note(
+        tmp_path,
+        series="the-wire",
+        slug="example",
+        added_paths=[
+            "agent-artifacts/the-wire/example/revisions/01.md",
+        ],
+        base_paths=[],
+    )
+
+    assert errors == [
+        "revisions/01.md: not UTF-8 Markdown: 01.md",
     ]
