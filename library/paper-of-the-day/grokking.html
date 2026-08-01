@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenAI's grokking paper never explained grokking · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "grokking",
+        "template": "paper",
+        "title": "OpenAI's grokking paper never explained grokking",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-01",
+        "tags": ["research"],
+        "sources": 8,
+        "words": 2496,
+        "reading_minutes": 12,
+        "dek": "Three follow-up papers have since located the cause of the delay in three different places, and none of them agrees with the others.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">OpenAI's grokking paper never explained grokking</h1>
+        <p class="nb-dekline">
+          Three follow-up papers have since located the cause of the delay in
+          three different places, and none of them agrees with the others.
+        </p>
+        <div class="nb-byline">
+          <span>12 min read</span><span>2026-08-01</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            Grokking: Generalization Beyond Overfitting on Small Algorithmic
+            Datasets
+          </p>
+          <p class="nb-paper-meta">
+            Power, Burda, Edwards, Babuschkin &amp; Misra · arXiv:2201.02177 ·
+            2022
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2201.02177"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            In this paper we propose to study generalization of neural
+            networks on small algorithmically generated datasets. In this
+            setting, questions about data efficiency, memorization,
+            generalization, and speed of learning can be studied in great
+            detail. In some situations we show that neural networks learn
+            through a process of "grokking" a pattern in the data, improving
+            generalization performance from random chance level to perfect
+            generalization, and that this improvement in generalization can
+            happen well past the point of overfitting. We also study
+            generalization as a function of dataset size and find that
+            smaller datasets require increasing amounts of optimization for
+            generalization. We argue that these datasets provide a fertile
+            ground for studying a poorly understood aspect of deep learning:
+            generalization of overparametrized neural networks beyond
+            memorization of the finite training dataset.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Abstract"
+                data-nb-url="https://arxiv.org/abs/2201.02177"
+                >1</a
+              ></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Perfect on the training set, wrong on everything else</h2>
+        <p>
+          Train a small transformer to fill in a table of arithmetic: given
+          two numbers and an operation, predict the result. Show it half the
+          table and hold out the rest. Within a few hundred update steps it
+          reproduces every training example exactly. Test it on the withheld
+          half, and for a long time it does no better than guessing. Then,
+          with no change to the data, the model, or the training routine, it
+          starts getting the withheld half right too, over a comparatively
+          short stretch of steps that follows a very long silence.
+        </p>
+        <p>
+          OpenAI researchers Alethea Power, Yuri Burda, Harri Edwards, and
+          Igor Babuschkin, working with Google's Vedant Misra, gave this jump
+          a name in a paper posted to arXiv in January 2022 as a workshop
+          submission. Their own definition: validation accuracy "sometimes
+          suddenly begins to increase from chance level toward perfect
+          generalization," long after the network has already fit the
+          training data perfectly. They called it grokking.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§3.1"
+              data-nb-url="https://ar5iv.labs.arxiv.org/html/2201.02177"
+              data-nb-note="Definition of grokking, Section 3.1."
+              >1</a
+            ></sup
+          >
+          The arXiv listing itself carries no venue field, and the one
+          workshop record found for it is dated a year before that posting, a
+          mismatch that stays unresolved.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Accepted papers, #20"
+              data-nb-url="https://mathai-iclr.github.io/papers/"
+              data-nb-note="MATH-AI's own accepted-papers page lists the paper under its ICLR 2021 workshop, a year before the arXiv posting."
+              >2</a
+            ></sup
+          >
+        </p>
+        <p>
+          That is the entire paper: a documented delay, tied to a specific
+          task and a specific optimizer setting, with no account of why the
+          delay ends when it does. The authors say so themselves. Their
+          closing words float exactly one hypothesis, about flat regions of
+          the loss landscape, and immediately flag it as untested: "It would
+          be valuable for future work to explore this hypothesis."<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§4, App. A.5"
+              data-nb-url="https://ar5iv.labs.arxiv.org/html/2201.02177"
+              data-nb-note="Discussion section and Appendix A.5; the paper offers no other candidate explanation."
+              >1</a
+            ></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-task" id="the-task">
+        <h2>Predicting a remainder the network never saw</h2>
+        <p>
+          Take a prime p = 113. Add 87 and 61: 148. Subtract 113 once, since
+          148 exceeds the modulus: 35. So 87 + 61 leaves a remainder of 35
+          when divided by 113. A network trained on this task sees thousands
+          of such pairs, along with the correct remainder, and has to predict
+          the remainder on pairs held out of that training set.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">a + b \equiv c \pmod{p}</div>
+          <figcaption>
+            The modular-addition task the mechanistic follow-on literature
+            reconstructs: predict c from a and b, for a prime p.<sup
+              class="nb-cite"
+              ><a
+                href="#s3"
+                data-nb-locator="§3"
+                data-nb-url="https://arxiv.org/html/2301.05217"
+                >3</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Power and coauthors tested something broader: twelve binary
+          operations, not addition alone, at a single prime modulus, p = 97.
+          The operations ranged from division and subtraction through
+          combinations of squares and cubes to three permutation operations
+          on five elements. Every example ran through a two-layer,
+          decoder-only transformer with roughly 400,000 non-embedding
+          parameters, trained with AdamW at a learning rate of 10⁻³ and a
+          weight decay of 1.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="App. A.1.1"
+              data-nb-url="https://ar5iv.labs.arxiv.org/html/2201.02177"
+              data-nb-note="Task family, architecture, and optimizer settings."
+              >1</a
+            ></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-measurement" id="the-measurement">
+        <h2>What Power and coauthors actually measured</h2>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">&lt;1,000</span
+            ><span class="nb-stat-l">Steps to near-perfect train accuracy</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">~1,000,000</span
+            ><span class="nb-stat-l">Steps to matching validation accuracy</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">50%</span
+            ><span class="nb-stat-l">Of pairs held out, headline curve</span>
+          </div>
+        </div>
+        <p>
+          The paper's central figure trains division mod 97 with half the
+          data held out. Training accuracy is "close to perfect" in under
+          1,000 optimization steps. Validation accuracy shows "very little
+          evidence" of moving until 100,000 steps in, and takes close to
+          1,000,000 steps to reach the same near-perfect level training
+          accuracy hit three orders of magnitude earlier.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§3.1, Fig. 1"
+              data-nb-url="https://ar5iv.labs.arxiv.org/html/2201.02177"
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          Dataset size matters more than the step count alone suggests. Near
+          the smallest training fraction that still generalizes at all,
+          removing just one more percent of the training data adds 40 to 50
+          percent to the median number of steps needed to generalize, even
+          though the network still reaches 100 percent accuracy eventually.
+          The number of steps needed to fit the training set itself barely
+          moves, staying in the 1,000-to-10,000 range regardless of dataset
+          size. Only the time to catch up on held-out data grows as the
+          dataset shrinks.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§3.1.1"
+              data-nb-url="https://ar5iv.labs.arxiv.org/html/2201.02177"
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          Weight decay changes the picture more than any other intervention
+          tested: adding it cuts the number of training examples needed by
+          more than half. Decaying weights toward the network's random
+          initialization helps too, though less than decaying them toward
+          zero.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§3.3, Fig. 2"
+              data-nb-url="https://ar5iv.labs.arxiv.org/html/2201.02177"
+              >1</a
+            ></sup
+          >
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">The paper's own limit</span>
+          <blockquote>
+            This is suggestive that grokking may only happen after the
+            network's parameters are in flatter regions of the loss
+            landscape. It would be valuable for future work to explore this
+            hypothesis.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="App. A.5"
+                data-nb-url="https://ar5iv.labs.arxiv.org/html/2201.02177"
+                data-nb-note="The paper's only candidate explanation, explicitly framed as an untested guess."
+                >1</a
+              ></sup
+            >
+            <span class="nb-note-who"
+              >Power, Burda, Edwards, Babuschkin &amp; Misra, Appendix
+              A.5</span
+            >
+          </blockquote>
+        </div>
+        <p>
+          What the network is actually computing, and why weight decay
+          accelerates the jump, is the subject of the published record that
+          followed.
+        </p>
+      </section>
+
+      <section data-nb-section="the-rotation" id="the-rotation">
+        <h2>Addition, computed as a rotation</h2>
+        <p>
+          A year after Power's paper, five researchers, Neel Nanda, Lawrence
+          Chan, Tom Lieberum, Jess Smith, and Jacob Steinhardt, trained a
+          transformer on the narrower addition-only task and
+          reverse-engineered what it had learned, down to individual
+          neurons.
+          The paper won an oral presentation at ICLR 2023, among roughly the
+          top quarter of that year's accepted work.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="ICLR 2023, Oral"
+              data-nb-url="https://arxiv.org/abs/2301.05217"
+              >3</a
+            ></sup
+          >
+        </p>
+        <p>
+          The network's embedding layer represents each input number as
+          coordinates on several circles at once. For a chosen frequency w,
+          it maps a number a to the point (cos(wa), sin(wa)) on a unit circle
+          at that frequency. Adding two numbers becomes composing two
+          rotations around the same circle, and composing rotations is
+          exactly what the angle-addition identity for cosine already
+          describes:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \htmlClass{nb-mc1}{\cos(w_k(a+b))} =
+            \htmlClass{nb-mc2}{\cos(w_k a)}\htmlClass{nb-mc3}{\cos(w_k b)} -
+            \htmlClass{nb-mc4}{\sin(w_k a)}\htmlClass{nb-mc5}{\sin(w_k b)}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\cos(w_k(a+b))</span
+              ><span
+                >the frequency-k signal the correct sum should produce</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\cos(w_k a)</span
+              ><span>a's position at frequency k</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\cos(w_k b)</span
+              ><span>b's position at frequency k</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\sin(w_k a)</span
+              ><span>a's position, a quarter-turn out of phase</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc5">\sin(w_k b)</span
+              ><span>b's position, a quarter-turn out of phase</span>
+            </li>
+          </ul>
+          <figcaption>
+            The identity the network's weights implement at each key
+            frequency: the four coordinates on the right combine into the
+            single target signal on the left.<sup class="nb-cite"
+              ><a
+                href="#s3"
+                data-nb-locator="§3.1, Fig. 1"
+                data-nb-url="https://arxiv.org/html/2301.05217"
+                data-nb-note="The rotation-composition claim underlying the network's addition algorithm."
+                >3</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The unembedding layer sums exactly this kind of term across five
+          frequencies the network converges on (k = 14, 35, 41, 42, and 52,
+          out of many it could have picked). The terms reinforce
+          constructively at the true sum and cancel out everywhere else.<sup
+            class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="§4.1, Fig. 3"
+              data-nb-url="https://arxiv.org/html/2301.05217"
+              >3</a
+            ></sup
+          >
+          This is not a plausible story fitted to the data after the fact.
+          Nanda's team checked it directly: of the network's 512 hidden
+          neurons, 433 of them, 84.6 percent, have more than 85 percent of
+          their activity explained by a single one of those five
+          frequencies.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="§4.3, Fig. 5"
+              data-nb-url="https://arxiv.org/html/2301.05217"
+              >3</a
+            ></sup
+          >
+          Removing every frequency except the five key ones cuts training
+          loss 70 percent, to 7.24×10⁻⁸; keeping only the ten directions
+          built from those five frequencies still cuts it 50 percent, to
+          1.19×10⁻⁷.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="§4.4, Fig. 6"
+              data-nb-url="https://arxiv.org/html/2301.05217"
+              >3</a
+            ></sup
+          >
+        </p>
+        <p>
+          Nanda's team borrows a framework called "progress measures" from a
+          separate 2022 result on a different task entirely, sparse-parity
+          learning, where researchers found a smooth signal of learning
+          progress hidden beneath a training curve that looked flat right up
+          until it wasn't.<sup class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/2207.08799"
+              data-nb-note="Origin of the progress-measures framing, on sparse-parity learning rather than modular arithmetic."
+              >4</a
+            ></sup
+          >
+          A progress measure is exactly that: a quantity that moves gradually
+          and predicts a jump in visible behavior before the jump appears.
+          Nanda's team builds four such measures for the addition task.
+          Restricted loss zeroes out every Fourier component except the
+          constant term and the five key frequencies. Excluded loss does the
+          reverse: it zeroes out only the five key frequencies, measured on
+          training data. The other two track how concentrated the
+          per-frequency weight norms are, and the total size of the
+          weights.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="§5.1"
+              data-nb-url="https://arxiv.org/html/2301.05217"
+              >3</a
+            ></sup
+          >
+          Tracking all four across training splits it into three phases.
+        </p>
+        <table class="nb-table">
+          <caption>
+            The three phases Nanda's team identifies inside training, read
+            off the four progress measures.<sup class="nb-cite"
+              ><a
+                href="#s3"
+                data-nb-locator="§5.2, Fig. 7"
+                data-nb-url="https://arxiv.org/html/2301.05217"
+                >3</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>Epochs</th>
+              <th class="txt">What moves</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Memorization</span></td>
+              <td>0–1 400</td>
+              <td class="txt">
+                Train and excluded loss fall; test and restricted loss stay
+                high.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Circuit formation</span></td>
+              <td>1 400–9 400</td>
+              <td class="txt">
+                Excluded loss rises, weight norm falls, restricted loss
+                starts falling; test and train loss stay flat.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Cleanup</span></td>
+              <td>9 400–14 000</td>
+              <td class="txt">
+                Test loss suddenly drops; weight norm falls sharply.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Nanda's team frames the result this way: grokking is not a sudden
+          shift but the gradual buildup of structured computation inside the
+          weights, followed by a later cleanup that discards the memorized
+          shortcut found first.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/2301.05217"
+              data-nb-note="Paraphrases the abstract's summary claim."
+              >3</a
+            ></sup
+          >
+          That account explains what the network becomes. It does not, by
+          itself, explain why weight decay is what drives it there, and on
+          that question the record disagrees with itself.
+        </p>
+      </section>
+
+      <section data-nb-section="three-explanations" id="three-explanations">
+        <h2>Three explanations for the same delay</h2>
+        <p>
+          Weight decay speeds generalization in Power's own ablations, in
+          Nanda's replication, and in every result described below. Why it
+          does that is not settled. Three sets of researchers, working
+          independently between 2022 and 2025, locate the answer in three
+          different places, and each account genuinely conflicts with at
+          least one of the others.
+        </p>
+        <div class="nb-position">
+          <div class="nb-position-top">
+            <span class="nb-position-who"
+              >Liu, Kitouni, Nolte, Michaud, Tegmark &amp; Williams; Liu,
+              Michaud &amp; Tegmark</span
+            >
+            <span class="nb-position-pill">Position</span>
+          </div>
+          <p class="nb-position-statement">
+            Generalization is a question of where a network's weight norm
+            sits, not how many optimization steps it has taken.
+          </p>
+          <p class="nb-position-summary">
+            A year of work beginning with an "effective theory" of four
+            learning phases<sup class="nb-cite"
+              ><a
+                href="#s5"
+                data-nb-locator="Abstract"
+                data-nb-url="https://arxiv.org/abs/2205.10343"
+                >5</a
+              ></sup
+            >
+            led to a specific claim. Training loss falls in an L shape
+            against weight norm. Test loss falls in a U shape. Only a
+            bounded "Goldilocks" band of norm values generalizes well. A
+            network that starts outside that band first overfits, and weight
+            decay slowly shrinks its norm back into the band. Generalization
+            time then scales as the inverse of the decay strength.
+            The same team reproduces grokking on image classification,
+            sentiment analysis, and molecule-property prediction, tasks with
+            nothing to do with modular arithmetic, though the effect is less
+            dramatic there.<sup class="nb-cite"
+              ><a
+                href="#s6"
+                data-nb-locator="§2, §4"
+                data-nb-url="https://ar5iv.labs.arxiv.org/html/2210.01117"
+                >6</a
+              ></sup
+            >
+          </p>
+        </div>
+        <div class="nb-position">
+          <div class="nb-position-top">
+            <span class="nb-position-who"
+              >Varma, Shah, Kenton, Kramár &amp; Kumar</span
+            >
+            <span class="nb-position-pill">Position</span>
+          </div>
+          <p class="nb-position-statement">
+            Generalization wins a competition: it is slower to learn than
+            memorization, but more efficient once learned.
+          </p>
+          <p class="nb-position-summary">
+            A task that admits both a memorizing solution and a generalizing
+            one eventually favors the generalizing one, because it produces
+            larger output logits for the same parameter norm, and weight
+            decay penalizes norm directly. The account predicts two
+            behaviors neither Power's data nor Nanda's account anticipate,
+            and the paper reports observing both. "Ungrokking" is a network
+            that already generalizes perfectly regressing back to
+            memorization. "Semi-grokking" is delayed generalization that
+            stalls at partial accuracy instead of reaching it.<sup class="nb-cite"
+              ><a
+                href="#s7"
+                data-nb-locator="Abstract"
+                data-nb-url="https://arxiv.org/abs/2309.02390"
+                >7</a
+              ></sup
+            >
+          </p>
+        </div>
+        <div class="nb-position">
+          <div class="nb-position-top">
+            <span class="nb-position-who"
+              >Prieto, Barsbey, Mediano &amp; Birdal</span
+            >
+            <span class="nb-position-pill">Position</span>
+          </div>
+          <p class="nb-position-statement">
+            Weight decay's job is arithmetic, not geometric: it keeps the
+            network's numbers from breaking.
+          </p>
+          <p class="nb-position-summary">
+            Without regularization, a network solving these tasks pushes some
+            output logits large enough to exceed floating-point precision
+            inside the softmax function, a failure the authors name Softmax
+            Collapse: the loss numerically floors out before learning
+            finishes. Reproducing the addition task at p = 113, they show
+            generalization halts once collapse begins, earlier in 32-bit than
+            64-bit arithmetic, and that a modified activation reaches
+            grokking with no weight decay at all.<sup class="nb-cite"
+              ><a
+                href="#s8"
+                data-nb-locator="§3.2–3.3, Figs. 2 &amp; 4"
+                data-nb-url="https://arxiv.org/html/2501.04697"
+                >8</a
+              ></sup
+            >
+            In their own words, the main roles of weight decay are preventing
+            floating-point errors and preventing runaway logit scaling, not
+            the norm-shrinking role the weight-norm account assigns it.<sup
+              class="nb-cite"
+              ><a
+                href="#s8"
+                data-nb-locator="§5.2"
+                data-nb-url="https://arxiv.org/html/2501.04697"
+                data-nb-note="Directly disputes the weight-norm reading of what weight decay does."
+                >8</a
+              ></sup
+            >
+          </p>
+        </div>
+        <p>
+          None of the three papers directly rebuts the others' central claim
+          in the sections examined here; each treats Power's original
+          weight-decay finding as the fact to explain, but not each other's
+          explanation of it. The record has not converged on one answer. It
+          has produced three, standing in genuine tension, over three years.<sup
+            class="nb-cite"
+            ><a href="#s6" data-nb-locator="§2">6</a></sup
+          ><sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Abstract">7</a></sup
+          ><sup class="nb-cite"><a href="#s8" data-nb-locator="§5.2">8</a></sup>
+          None of them confirms the flat-minima guess Power's own team
+          floated in its appendix, either. The weight-norm account is about
+          geometry, a related but distinct claim from landscape flatness; the
+          numerical account is unrelated to either. The one hypothesis the
+          original authors actually proposed was not tested and confirmed. It
+          was quietly set aside.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="App. A.5">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="where-it-stops" id="where-it-stops">
+        <h2>Where the explanation runs out</h2>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                The delay itself replicates. Power's headline curve (division
+                mod 97, half the data withheld) and Nanda's independent
+                addition run (p = 113, 30 percent of pairs trained on) show
+                the same shape. Fast training accuracy, a long flat stretch
+                on held-out data, then a jump.<sup class="nb-cite"
+                  ><a href="#s1" data-nb-locator="Fig. 1">1</a></sup
+                ><sup class="nb-cite"
+                  ><a href="#s3" data-nb-locator="§3, Fig. 2">3</a></sup
+                >
+              </li>
+              <li>
+                On the narrow setup it was tested on, the rotation account is
+                confirmed down to individual neurons and ablations, not just
+                consistent with the training curve.<sup class="nb-cite"
+                  ><a href="#s3" data-nb-locator="§4.3–4.4">3</a></sup
+                >
+              </li>
+              <li>
+                Weight decay reliably speeds the jump in every result
+                examined here, regardless of which account of it turns out
+                to be correct.<sup class="nb-cite"
+                  ><a href="#s1" data-nb-locator="§3.3">1</a></sup
+                ><sup class="nb-cite"
+                  ><a href="#s8" data-nb-locator="§3.3, Fig. 4">8</a></sup
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                The rotation account is verified on one operation, one
+                modulus, and a one-layer network, not the twelve operations,
+                p = 97, and two-layer network Power's original claim actually
+                covers.<sup class="nb-cite"
+                  ><a href="#s3" data-nb-locator="§3">3</a></sup
+                ><sup class="nb-cite"
+                  ><a href="#s1" data-nb-locator="App. A.1.1">1</a></sup
+                >
+              </li>
+              <li>
+                The three accounts of weight decay contradict each other, and
+                none has been tested head to head against the other two.<sup
+                  class="nb-cite"
+                  ><a href="#s6" data-nb-locator="§2">6</a></sup
+                ><sup class="nb-cite"
+                  ><a href="#s7" data-nb-locator="Abstract">7</a></sup
+                ><sup class="nb-cite"
+                  ><a href="#s8" data-nb-locator="§5.2">8</a></sup
+                >
+              </li>
+              <li>
+                Power's own guess, about flat minima, was never confirmed or
+                ruled out by the later work. It was replaced by other
+                questions.<sup class="nb-cite"
+                  ><a href="#s1" data-nb-locator="App. A.5">1</a></sup
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Power et al. established the delay itself: documented at p up to
+            97, across twelve operations, with a measured dependence on
+            weight decay and dataset size. They did not show why it happens,
+            and said so. Nanda et al. showed why, with neuron-level
+            ablations, for one of those twelve operations, at a different
+            modulus, on a smaller network. That is a demonstrated cause on a
+            narrower task, not a general one. Nothing in the record examined
+            here shows the same rotation account holds at p = 97, on the
+            two-layer architecture, or on the eleven other operations Power's
+            paper reported. And the deeper question, why weight decay is
+            what triggers the jump, is still open. Three papers published
+            between 2022 and 2025 answer it three different ways, and
+            disagree with each other as much as they disagree with Power's
+            own unconfirmed guess.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§4, App. A.5">1</a></sup
+            ><sup class="nb-cite"><a href="#s3" data-nb-locator="§5.2">3</a></sup
+            ><sup class="nb-cite"><a href="#s6" data-nb-locator="§2">6</a></sup
+            ><sup class="nb-cite"
+              ><a href="#s7" data-nb-locator="Abstract">7</a></sup
+            ><sup class="nb-cite"
+              ><a href="#s8" data-nb-locator="§5.2">8</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2201.02177"
+              >arXiv · Grokking: Generalization Beyond Overfitting on Small
+              Algorithmic Datasets (Power, Burda, Edwards, Babuschkin &amp;
+              Misra, 2022)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://mathai-iclr.github.io/papers/"
+              >MATH-AI (ICLR 2021 Workshop) · Accepted papers listing</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2301.05217"
+              >arXiv · Progress Measures for Grokking via Mechanistic
+              Interpretability (Nanda, Chan, Lieberum, Smith &amp;
+              Steinhardt, ICLR 2023)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2207.08799"
+              >arXiv · Hidden Progress in Deep Learning: SGD Learns Parities
+              Near the Computational Limit (Barak, Edelman, Goel, Kakade,
+              Malach &amp; Zhang, 2022)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2205.10343"
+              >arXiv · Towards Understanding Grokking: An Effective Theory of
+              Representation Learning (Liu, Kitouni, Nolte, Michaud, Tegmark
+              &amp; Williams, NeurIPS 2022)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2210.01117"
+              >arXiv · Omnigrok: Grokking Beyond Algorithmic Data (Liu,
+              Michaud &amp; Tegmark, ICLR 2023)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2309.02390"
+              >arXiv · Explaining Grokking Through Circuit Efficiency (Varma,
+              Shah, Kenton, Kramár &amp; Kumar, 2023)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2501.04697"
+              >arXiv · Grokking at the Edge of Numerical Stability (Prieto,
+              Barsbey, Mediano &amp; Birdal, 2025)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
