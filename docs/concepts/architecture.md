@@ -25,7 +25,7 @@ returns the work that is due. A `manual` series never becomes due on its own.
 
 ## The orchestrator owns the run
 
-The scheduled agent acts as the correspondent and orchestrator. It receives the
+The scheduled agent acts as the orchestrator. It receives the
 work list, turns each due item into a precise commission, creates an isolated
 article workspace, and manages that article until it either produces a valid PR
 or reports a real blocker.
@@ -39,7 +39,7 @@ result or the CI contract.
 ## One article run has four editorial roles
 
 The large box in the diagram expands one isolated article run. The
-correspondent prepares the exact input for each role, and each role records its
+orchestrator prepares the exact input for each role, and each role records its
 exact output:
 
 1. The **writing coach** studies strong writing relevant to the commission and
@@ -54,7 +54,7 @@ exact output:
 
 The arrows returning to earlier roles are deliberate. A question about voice
 returns to the writing coach, an unsupported claim returns to research, and an
-editorial revision returns to the writer. The correspondent carries those
+editorial revision returns to the writer. The orchestrator carries those
 requests with exact context instead of asking one general-purpose agent to keep
 the whole production process in memory.
 
@@ -120,7 +120,7 @@ state.
 ## Manual articles and revisions use the same gate
 
 A manually commissioned article skips only the cadence decision. Once its
-series configuration admits it, the correspondent and Article PR path are the
+series configuration admits it, the orchestrator and Article PR path are the
 same as for scheduled work.
 
 A revision may be as small as a typo correction or as large as a new

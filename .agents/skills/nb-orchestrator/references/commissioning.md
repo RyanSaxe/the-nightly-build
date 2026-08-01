@@ -1,7 +1,7 @@
 # Commissioning
 
 Plan the whole edition before launching an editorial role. This is where the
-correspondent turns deterministic duty into article-specific judgment.
+orchestrator turns deterministic duty into article-specific judgment.
 
 ## Read only the governing context
 

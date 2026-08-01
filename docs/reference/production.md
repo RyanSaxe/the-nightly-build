@@ -1,6 +1,6 @@
 # Production cost and role models
 
-The scheduled correspondent uses the model selected in your automation. Article
+The scheduled orchestrator uses the model selected in your automation. Article
 roles can use cheaper models without changing the schedule by adding the optional
 `press/production.yaml` file:
 
@@ -25,14 +25,14 @@ Profiles use portable model tiers:
 - `premium`: the strongest available model.
 - `inherit`: the model already selected by the runtime.
 
-The correspondent maps these tiers to models the current harness actually
+The orchestrator maps these tiers to models the current harness actually
 offers. To pin one provider instead, write its exact model ID. Effort is also a
 plain string because providers expose different levels.
 
-The correspondent launches every article role directly. Each role receives an
+The orchestrator launches every article role directly. Each role receives an
 exact brief and only the article context it needs; when isolated children are
 unavailable, the same artifact sequence runs in one context. The policy controls
-those four launches; it does not select the correspondent itself and does not
+those four launches; it does not select the orchestrator itself and does not
 require nested agents or a provider-specific team feature.
 
 ```yaml
@@ -50,7 +50,7 @@ the runtime cannot honor or verify the directive. A stage-level value overrides
 the paper-wide value.
 
 The configurable stages are `writing-coach`, `researcher`, `writer`, and
-`editor`. The correspondent is deliberately absent: choose its model in
+`editor`. The orchestrator is deliberately absent: choose its model in
 the automation itself, where the run begins.
 
 ## Per-series overrides

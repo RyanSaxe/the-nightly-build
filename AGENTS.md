@@ -22,9 +22,9 @@ is safe to publish.
   revision, design, curation, or maintenance: load
   `.agents/skills/nb-user-assistant/SKILL.md`.
 - **An actual unattended scheduled run:** load
-  `.agents/skills/correspondent/SKILL.md` and follow its phased references.
+  `.agents/skills/nb-orchestrator/SKILL.md` and follow its phased references.
 - **An explicit bounded editorial assignment:** load the named role under
-  `.agents/skills/<role>/SKILL.md` and use only its supplied brief and inputs.
+  `.agents/skills/nb-<role>/SKILL.md` and use only its supplied brief and inputs.
 - **An engine, documentation, or test contribution:** work from the public
   docs and repository normally; do not load a production role.
 

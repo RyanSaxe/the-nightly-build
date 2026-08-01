@@ -55,8 +55,8 @@ where each capability is controlled.
 | Per-series production overrides  | Give one demanding or inexpensive series a different profile, model, effort, or requirement                                | `production` in that `series.yaml`                                              |
 | Isolated or sequential execution | Run article roles in isolated child contexts where supported, with a sequential fallback that preserves the same artifacts | Selected by runtime capability; see [Architecture](../concepts/architecture.md) |
 
-The production policy controls article roles, not the scheduled correspondent.
-Choose the correspondent's model in the scheduler or automation where it runs.
+The production policy controls article roles, not the scheduled orchestrator.
+Choose the orchestrator's model in the scheduler or automation where it runs.
 The engine does not estimate model cost; use the provider's usage reporting.
 
 ## Design articles and the site

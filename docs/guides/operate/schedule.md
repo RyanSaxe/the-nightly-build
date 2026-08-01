@@ -29,7 +29,7 @@ Keep the external schedule prompt deliberately small:
 
 > You are the night shift for The Nightly Build repository `<repo>`. Check out
 > current `main`, read `AGENTS.md`, and load
-> `.agents/skills/correspondent/SKILL.md`. Follow that skill's phased references
+> `.agents/skills/nb-orchestrator/SKILL.md`. Follow that skill's phased references
 > as an actual scheduled run. Check out `library` beside it at `<checkout>`.
 > Use this checkout's `nb` command for system operations. Research requires web
 > access. This paragraph is the entire assignment. If the repository's current

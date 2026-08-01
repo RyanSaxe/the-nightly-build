@@ -161,7 +161,7 @@ def test_the_directory_block_states_a_choice_and_a_description(
         pytest.param({"required": "yes"}, False, id="required-string"),
         pytest.param({"stages": []}, False, id="stages-list"),
         pytest.param(
-            {"stages": {"correspondent": {"model": "premium"}}},
+            {"stages": {"orchestrator": {"model": "premium"}}},
             False,
             id="orchestrator-not-configurable",
         ),

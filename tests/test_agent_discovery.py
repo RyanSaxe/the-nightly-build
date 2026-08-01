@@ -26,13 +26,20 @@ def skill_metadata(path: pathlib.Path) -> dict[str, str]:
 
 
 def test_required_entrypoints_resolve_to_named_skills() -> None:
-    required = {"correspondent", "nb-user-assistant", *ROLE_FILES}
+    role_skills = {f"nb-{role}" for role in ROLE_FILES}
+    required = {"nb-orchestrator", "nb-user-assistant", *role_skills}
 
     for name in required:
         path = SKILLS / name / "SKILL.md"
         metadata = skill_metadata(path)
         assert metadata["name"] == name
         assert metadata.get("description", "").strip()
+
+
+def test_production_skills_have_no_generic_aliases() -> None:
+    generic_names = {"correspondent", *ROLE_FILES}
+
+    assert not any((SKILLS / name / "SKILL.md").exists() for name in generic_names)
 
 
 def test_harness_instructions_import_the_canonical_router() -> None:

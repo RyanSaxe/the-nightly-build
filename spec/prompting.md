@@ -1,6 +1,6 @@
 # Prompting
 
-Every layer the night shift reads is a prompt: the correspondent package, the
+Every layer the night shift reads is a prompt: the orchestrator package, the
 spec files, the editorial-role skills, template identities, the furniture
 catalog, and the prompts a press writes for its series. Their prose trains the
 writer's prose. A layer that rambles produces articles that ramble, and a layer

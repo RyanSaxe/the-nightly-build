@@ -27,7 +27,7 @@ existing series fits, discuss whether the request reveals a durable new series
 or is outside the paper. Do not create a throwaway series to satisfy one topic.
 
 Validate and commit the configuration on `main`. Then invoke the normal
-correspondent production path locally, using `nb start-article` and the exact
+orchestrator production path locally, using `nb start-article` and the exact
 role sequence from the current production contract. Do not impersonate the
 roles inside this workflow or weaken their artifacts.
 

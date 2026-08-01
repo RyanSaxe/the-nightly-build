@@ -1,4 +1,4 @@
-# Shift operations
+# Scheduled shift operations
 
 This reference owns the scheduled run from checkout verification through
 publication. Read it at the start of every scheduled shift.

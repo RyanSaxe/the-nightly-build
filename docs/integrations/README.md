@@ -55,7 +55,7 @@ plainly whether the run consumes a subscription allowance or a metered API.
 
 ## Harness independence
 
-The correspondent workflow does not require nested spawning or a
+The orchestrator workflow does not require nested spawning or a
 provider-specific team feature. A harness may isolate roles in separate
 contexts or execute the same recorded sequence in one context. See
 [Architecture](../concepts/architecture.md).

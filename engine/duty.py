@@ -5,7 +5,7 @@
 # ///
 """Compute tonight's work list deterministically from config and library state.
 
-The correspondent runs this before researching anything. It is the single
+The orchestrator runs this before researching anything. It is the single
 source of truth for cadence, pauses, completion, commission queues, and
 rerun safety, so no agent ever does calendar math on its own.
 

@@ -1,20 +1,25 @@
 # Desk control
 
-Read this reference before launching an editorial role. The correspondent owns
+Read this reference before launching an editorial role. The orchestrator owns
 movement and context; the named role owns its bounded editorial decisions.
 
 ## Run the role sequence
 
-Start `writing-coach` and `researcher` in parallel when isolated children are
-available. Brief `writer` only after both outputs exist. Brief `editor` only
-after the writer proves the article. Use these semantic artifacts:
+Start `nb-writing-coach` and `nb-researcher` in parallel when isolated children
+are available. Brief `nb-writer` only after both outputs exist. Brief
+`nb-editor` only after the writer proves the article. Use these semantic role
+identities and artifacts:
 
-| Role          | Input brief       | Output                |
-| ------------- | ----------------- | --------------------- |
-| writing coach | `brief.md`        | `voice-guide.md`      |
-| researcher    | `brief.md`        | `evidence.md`         |
-| writer        | `brief.md`        | `draft-handoff.md`    |
-| editor        | `review-brief.md` | `editorial-review.md` |
+| Role ID         | Input brief       | Output                |
+| --------------- | ----------------- | --------------------- |
+| `writing-coach` | `brief.md`        | `voice-guide.md`      |
+| `researcher`    | `brief.md`        | `evidence.md`         |
+| `writer`        | `brief.md`        | `draft-handoff.md`    |
+| `editor`        | `review-brief.md` | `editorial-review.md` |
+
+The `nb-*` names identify skill packages. Production-policy keys, artifact
+directories, and control signals continue to use the unprefixed role IDs in
+this table.
 
 Store each pair beneath the artifact root created by `nb start-article`:
 `<role>/01/<input-and-output>`. A later invocation of that role uses the next
@@ -59,7 +64,7 @@ writer proof and editor read.
 
 Only an editor `DONE` with no required change settles an article. There is no
 round cap, but do not repeat an unchanged attempt or prolong the loop for
-optional polish. A blocked role escalates to the correspondent, which clarifies,
+optional polish. A blocked role escalates to the orchestrator, which clarifies,
 reassigns, or takes over the owning work and records that resolution in the
 next brief. A takeover never waives writer proof or editor approval. Stop only
 for an external constraint no role can change.

@@ -21,7 +21,7 @@ never removes a role.
 
 The mode controls scheduling, not template capability. Every mode may declare
 one `template:` or several `templates:`; a multi-template series lets the
-correspondent choose the best package for each article. `template:` and
+orchestrator choose the best package for each article. `template:` and
 `templates:` are mutually exclusive, and a per-article choice is recorded in
 `nb-meta`; there is no template-level mode allowlist.
 

@@ -1,12 +1,12 @@
 ---
-name: correspondent
+name: nb-orchestrator
 description: >
   The scheduled night desk for The Nightly Build. Plans a coherent edition,
   gives each editorial role exact context, routes revisions, and sees every
   Article PR through publication. Never fires for a human request.
 ---
 
-# The Correspondent
+# The Nightly Build Orchestrator
 
 Run the complete unattended night shift. Hold the whole-paper view, commission
 the right work, prepare each role to succeed, and keep every due article moving
@@ -22,8 +22,8 @@ until it publishes or reaches an external blocker.
 3. Before launching the first editorial role, read
    [desk control](references/desk-control.md) and keep it available through
    editor approval and every repair.
-4. Load each named editorial role's `SKILL.md` when preparing that role's exact
-   invocation. Do not make a bounded role reconstruct the repository.
+4. Load the named role from `.agents/skills/nb-<role>/SKILL.md` when preparing
+   its exact invocation. Do not make a bounded role reconstruct the repository.
 
 Do not load every reference as a ritual. A quiet night needs only shift
 operations. Commissioning is irrelevant until work is due, and desk control is

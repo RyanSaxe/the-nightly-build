@@ -1,6 +1,6 @@
 """Initialize one article with the exact context its editorial team needs.
 
-The correspondent chooses the commission. This module handles only the
+The orchestrator chooses the commission. This module handles only the
 deterministic setup: resolve the selected template, copy its skeleton, and
 assemble the current authored directions without paraphrasing them.
 """
@@ -164,7 +164,7 @@ def _editorial_direction(
     chunks = [
         "# Editorial direction\n",
         "These are the exact standing directions for this article. Later "
-        "sections specialize earlier ones; the correspondent's commission "
+        "sections specialize earlier ones; the orchestrator's commission "
         "adds article-specific decisions without rewriting them.\n\n",
         f"Checkout revision: `{revision}`\n",
     ]
