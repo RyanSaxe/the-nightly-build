@@ -153,37 +153,40 @@ def article_bundle_path(
 
 
 def revision_bundle_path(changes: list[tuple[str, str]]) -> str | None:
-    """Return the one modified article in an isolated revision diff.
+    """Return the article identified by an isolated revision diff.
 
-    A revision modifies one published HTML file, may add, modify, or delete
-    assets below its matching directory, and may only add a matching numbered
-    revision note. Content and sequence validation happen after this path-level
-    classification succeeds.
+    A revision changes one published HTML file and/or its matching assets, and
+    may only add matching numbered revision notes. Content and note validation
+    happen after this path-level classification succeeds.
     """
-    articles = [
-        path for state, path in changes if state == "M" and PR_PATH_RE.match(path)
-    ]
-    if len(articles) != 1:
-        return None
-    article = articles[0]
-    match = PR_PATH_RE.match(article)
-    assert match is not None
-    series_id, slug = match.groups()
+    identities: set[tuple[str, str]] = set()
+    content_changed = False
     for state, path in changes:
-        if path == article:
+        article = PR_PATH_RE.match(path)
+        if article is not None:
+            if state != "M":
+                return None
+            identities.add((article.group(1), article.group(2)))
+            content_changed = True
             continue
         asset = ARTICLE_ASSET_RE.match(path)
-        if asset is not None and asset.groups() == (series_id, slug):
+        if asset is not None:
             if state not in ("A", "M", "D"):
                 return None
+            identities.add((asset.group(1), asset.group(2)))
+            content_changed = True
             continue
         note = REVISION_NOTE_RE.match(path)
-        if note is not None and note.group(1, 2) == (series_id, slug):
+        if note is not None:
             if state != "A":
                 return None
+            identities.add((note.group(1), note.group(2)))
             continue
         return None
-    return article
+    if not content_changed or len(identities) != 1:
+        return None
+    series_id, slug = identities.pop()
+    return f"library/{series_id}/{slug}.html"
 
 
 def series_ids(repo: str) -> list[str]:

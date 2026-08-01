@@ -22,10 +22,9 @@ requested outcome and inspect only the context needed to make it safely:
 Those are editorial choices, not CI requirements. A large LLM-assisted rewrite
 and a one-character correction produce the same narrow kind of PR.
 
-You may work in an ignored workspace, a detached worktree, or a local library
-checkout. `nb start-article` is optional. Do not commit or push changes directly
-to `library`; `nb prepare-pr` creates the generated revision branch from the
-current remote branch.
+Fetch `origin/library` and create an ordinary branch or worktree from that
+exact ref. Edit the published files in place on the new branch. Never commit or
+push directly to the `library` branch.
 
 ## Record the reason
 
@@ -50,19 +49,25 @@ local; it is not part of the revision PR.
 
 ## Prove and deliver the result
 
-Run the current full article proof. Preview the page whenever markup, layout,
-furniture, or assets changed, and compare the result with both the published
-page and the requested outcome. Then run:
+Commit the revision branch, then run the full PR proof through the current
+`main` checkout:
 
 ```sh
-nb prepare-pr library/SERIES/SLUG.html \
-  --library PATH-TO-LIBRARY-CHECKOUT \
-  --revision
+PATH-TO-MAIN/nb check --pr \
+  --repo . \
+  --main PATH-TO-MAIN \
+  --base origin/library \
+  --head HEAD \
+  --library .
 ```
+
+Preview the page whenever markup, layout, furniture, or assets changed, and
+compare it with both the published page and the requested outcome. Push the
+branch and open a human-reviewed PR against `library`.
 
 The generated PR must:
 
-- modify exactly `library/SERIES/SLUG.html`;
+- modify `library/SERIES/SLUG.html`, its matching assets, or both;
 - add, modify, or delete files only under the matching
   `library/SERIES/SLUG/` asset directory;
 - add exactly the next `agent-artifacts/SERIES/SLUG/revisions/NN.md`; and

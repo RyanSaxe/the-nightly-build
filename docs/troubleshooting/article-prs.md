@@ -7,9 +7,9 @@ the exact proposed branch with the checkout-owned `nb check`; do not edit
 ## `B-DIFF-SHAPE`
 
 A normal Article PR may add one HTML article plus matching assets and its full
-artifact tree. A revision may modify one existing HTML article, change only
-matching assets, and add exactly one matching revision note. Move configuration
-or engine changes to a separate PR against `main`.
+artifact tree. A revision may modify one existing HTML article and/or its
+matching assets, and must add exactly one matching revision note. Move
+configuration or engine changes to a separate PR against `main`.
 
 ## `B-AGENT-ARTIFACTS`
 

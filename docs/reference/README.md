@@ -18,15 +18,15 @@ where each capability is controlled.
 
 ## Control timing and publication
 
-| Capability              | What it supports                                                                                                     | Configure or learn more                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Mixed cadences          | Daily, weekdays, weekends, selected UTC weekdays, and manual-only series under one scheduled run                     | `cadence` in `series.yaml`; see [cadence, pausing, and sections](series.md#cadence-pausing-and-sections) |
-| Pause and resume        | Stop new scheduled articles while leaving the archive published                                                      | `paused` in `series.yaml`                                                                                |
-| Deterministic duty list | Computes what is due from current press configuration and published state                                            | `nb duty` and [Schedule](../guides/operate/schedule.md)                                                  |
-| Manual publication      | Commission an article from a topic, question, URL, documents, event, or detailed brief without waiting for cadence   | [Publish an article now](../guides/publish/publish-now.md)                                               |
-| Reviewed revisions      | Change one published article and its matching figures or other local assets through the normal proof and render gate | `nb prepare-pr --revision` and [Revise an article](../guides/publish/revise-an-article.md)               |
-| Retraction              | Remove one article and its matching local assets through a narrow, owner-reviewed PR                                 | [Manage your paper](../guides/operate/manage-your-paper.md)                                              |
-| Automatic publication   | Auto-merge every clean new-article PR; revisions and owner curation always wait for human review                     | [Publishing and security](../concepts/publishing-and-security.md)                                        |
+| Capability              | What it supports                                                                                                        | Configure or learn more                                                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Mixed cadences          | Daily, weekdays, weekends, selected UTC weekdays, and manual-only series under one scheduled run                        | `cadence` in `series.yaml`; see [cadence, pausing, and sections](series.md#cadence-pausing-and-sections) |
+| Pause and resume        | Stop new scheduled articles while leaving the archive published                                                         | `paused` in `series.yaml`                                                                                |
+| Deterministic duty list | Computes what is due from current press configuration and published state                                               | `nb duty` and [Schedule](../guides/operate/schedule.md)                                                  |
+| Manual publication      | Commission an article from a topic, question, URL, documents, event, or detailed brief without waiting for cadence      | [Publish an article now](../guides/publish/publish-now.md)                                               |
+| Reviewed revisions      | Change one published article and/or its matching figures or other local assets through the normal proof and render gate | [Revise an article](../guides/publish/revise-an-article.md)                                              |
+| Retraction              | Remove one article and its matching local assets through a narrow, owner-reviewed PR                                    | [Manage your paper](../guides/operate/manage-your-paper.md)                                              |
+| Automatic publication   | Auto-merge every clean new-article PR; revisions and owner curation always wait for human review                        | [Publishing and security](../concepts/publishing-and-security.md)                                        |
 
 ## Govern editorial quality
 

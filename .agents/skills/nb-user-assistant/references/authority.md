@@ -13,9 +13,9 @@ how this version of The Nightly Build works. Inspect before advising or editing.
   article creation. Do not paraphrase them into user prompts.
 - The checkout-owned `nb` command is the operational boundary. Use its help and
   current behavior rather than reconstructing commands.
-- `library` is publication state. Never commit or push to it directly. A local
-  revision working copy is input to `nb prepare-pr --revision`, not an
-  alternative publication path.
+- `library` is publication state. New articles use `nb prepare-pr`. Revisions
+  use an ordinary branch from `origin/library`; never push directly to the
+  `library` branch.
 
 One fact gets one owner. Skills provide judgment and procedure; docs and config
 own product facts. Link rather than copy field lists, provider instructions,

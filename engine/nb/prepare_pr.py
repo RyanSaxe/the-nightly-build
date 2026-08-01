@@ -3,10 +3,8 @@
 Editorial roles work in a small directory whose ``library/`` and
 ``agent-artifacts/`` subtrees already have their final repository paths. This
 module copies that finished bundle onto a generated branch, proves the exact
-commit, pushes it, and opens or describes the pull request. Revisions use the
-same boundary while preserving the published record and adding one explanation
-of the change. This module never edits the article or interprets editorial
-quality.
+commit, pushes it, and opens or describes the pull request. This module never
+edits the article or interprets editorial quality.
 """
 
 from __future__ import annotations
@@ -22,7 +20,7 @@ import tempfile
 from dataclasses import dataclass
 
 from nb import meta as nb_meta
-from nb.artifacts import validate_artifacts, validate_revision_note
+from nb.artifacts import validate_artifacts
 from nb.proof.pr import run_pr_mode
 from nb.report import Report, emit
 
@@ -50,7 +48,6 @@ class _PreparedBranch:
     article: _Article
     name: str
     commit: str
-    revision: bool
 
 
 # Git's argv is naturally variadic; ``check`` remains explicit at the call site.
@@ -67,7 +64,7 @@ def _git(repo: pathlib.Path, *arguments: str, check: bool = True) -> str:
     return result.stdout.strip()
 
 
-def _article_from_workspace(path: pathlib.Path, *, revision: bool) -> _Article:
+def _article_from_workspace(path: pathlib.Path) -> _Article:
     article_path = path.resolve()
     if not article_path.is_file() or article_path.is_symlink():
         raise _PrepareError(f"article must be a regular file: {article_path}")
@@ -91,32 +88,10 @@ def _article_from_workspace(path: pathlib.Path, *, revision: bool) -> _Article:
             f"article must be at <workspace>/{expected_tail.as_posix()}"
         )
     workspace = article_path.parents[2]
-    if not revision:
-        errors = validate_artifacts(workspace, series=series, slug=slug)
-        if errors:
-            raise _PrepareError("invalid agent artifacts:\n- " + "\n- ".join(errors))
+    errors = validate_artifacts(workspace, series=series, slug=slug)
+    if errors:
+        raise _PrepareError("invalid agent artifacts:\n- " + "\n- ".join(errors))
     return _Article(article_path, workspace, series, slug, title.strip())
-
-
-def _revision_note_paths(article: _Article) -> list[str]:
-    root = (
-        article.workspace
-        / "agent-artifacts"
-        / article.series
-        / article.slug
-        / "revisions"
-    )
-    if not root.exists():
-        return []
-    if not root.is_dir() or root.is_symlink():
-        raise _PrepareError(f"revision notes must be a directory: {root}")
-
-    paths: list[str] = []
-    for path in root.iterdir():
-        if path.is_symlink() or not path.is_file():
-            raise _PrepareError(f"revision note must be a regular file: {path}")
-        paths.append(path.relative_to(article.workspace).as_posix())
-    return sorted(paths)
 
 
 def _remote_branch(library: pathlib.Path, name: str) -> str | None:
@@ -137,7 +112,6 @@ def _generated_branch_is_safe(
     name: str,
     remote_commit: str,
     article: _Article,
-    revision: bool,
 ) -> bool:
     remote_ref = f"refs/remotes/origin/{name}"
     _git(
@@ -170,18 +144,12 @@ def _generated_branch_is_safe(
             return False
         changes.append((state, changed_path))
     expected_article = f"library/{article.series}/{article.slug}.html"
-    classifier = (
-        nb_meta.revision_bundle_path if revision else nb_meta.article_bundle_path
-    )
-    return classifier(changes) == expected_article
+    return nb_meta.article_bundle_path(changes) == expected_article
 
 
 def _copy_bundle(
     article: _Article,
     worktree: pathlib.Path,
-    *,
-    revision: bool,
-    revision_notes: tuple[str, ...] = (),
 ) -> None:
     relative_article = article.path.relative_to(article.workspace)
     target_article = worktree / relative_article
@@ -195,37 +163,14 @@ def _copy_bundle(
             raise _PrepareError(f"article assets must be a directory: {source_assets}")
         if any(path.is_symlink() for path in source_assets.rglob("*")):
             raise _PrepareError("article assets cannot contain symbolic links")
-        if revision and target_assets.exists():
-            if not target_assets.is_dir() or target_assets.is_symlink():
-                raise _PrepareError(
-                    f"published article assets must be a directory: {target_assets}"
-                )
-            shutil.rmtree(target_assets)
         shutil.copytree(source_assets, target_assets)
-    elif revision and target_assets.exists():
-        if not target_assets.is_dir() or target_assets.is_symlink():
-            raise _PrepareError(
-                f"published article assets must be a directory: {target_assets}"
-            )
-        shutil.rmtree(target_assets)
 
     source_artifacts = (
         article.workspace / "agent-artifacts" / article.series / article.slug
     )
     target_artifacts = worktree / source_artifacts.relative_to(article.workspace)
-    if revision:
-        for relative_path in revision_notes:
-            source = article.workspace / relative_path
-            target = worktree / relative_path
-            if target.exists():
-                raise _PrepareError(
-                    f"revision note already exists in the library: {relative_path}"
-                )
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-    else:
-        target_artifacts.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(source_artifacts, target_artifacts)
+    target_artifacts.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source_artifacts, target_artifacts)
 
 
 def _prove_branch(
@@ -261,7 +206,6 @@ def _prepare_branch(
     library: pathlib.Path,
     check_links: bool,
     today: dt.date | None,
-    revision: bool,
 ) -> _PreparedBranch:
     _git(library, "rev-parse", "--is-inside-work-tree")
     _git(library, "fetch", "-q", "origin", "library")
@@ -272,50 +216,15 @@ def _prepare_branch(
         capture_output=True,
     )
     is_published = published.returncode == 0
-    if revision and not is_published:
-        raise _PrepareError(f"revision article is not published: {article_target}")
-    if not revision and is_published:
+    if is_published:
         raise _PrepareError(f"article is already published: {article_target}")
-
-    revision_notes: tuple[str, ...] = ()
-    if revision:
-        artifact_prefix = f"agent-artifacts/{article.series}/{article.slug}/"
-        base_paths = _git(
-            library,
-            "ls-tree",
-            "-r",
-            "--name-only",
-            base,
-            "--",
-            artifact_prefix,
-        ).splitlines()
-        workspace_notes = _revision_note_paths(article)
-        base_path_set = set(base_paths)
-        revision_notes = tuple(
-            path for path in workspace_notes if path not in base_path_set
-        )
-        errors = validate_revision_note(
-            article.workspace,
-            series=article.series,
-            slug=article.slug,
-            added_paths=revision_notes,
-            base_paths=base_paths,
-        )
-        if errors:
-            raise _PrepareError("invalid revision note:\n- " + "\n- ".join(errors))
-
-    name = (
-        f"nb/revision/{article.series}/{article.slug}/{base}"
-        if revision
-        else f"nb/article/{article.series}/{article.slug}"
-    )
+    name = f"nb/article/{article.series}/{article.slug}"
     remote_commit = _remote_branch(library, name)
     if remote_commit and not _generated_branch_is_safe(
         library,
         name=name,
         remote_commit=remote_commit,
         article=article,
-        revision=revision,
     ):
         raise _PrepareError(
             f"origin/{name} contains unrecognized edits; preserve or remove it first"
@@ -325,12 +234,7 @@ def _prepare_branch(
         worktree = pathlib.Path(temporary) / "worktree"
         _git(library, "worktree", "add", "-q", "--detach", str(worktree), base)
         try:
-            _copy_bundle(
-                article,
-                worktree,
-                revision=revision,
-                revision_notes=revision_notes,
-            )
+            _copy_bundle(article, worktree)
             _git(worktree, "add", "--", "library", "agent-artifacts")
             _git(
                 worktree,
@@ -340,8 +244,7 @@ def _prepare_branch(
                 "user.email=nightly-build@users.noreply.github.com",
                 "commit",
                 "-qm",
-                f"article: {'revise' if revision else 'publish'} "
-                f"{article.series}/{article.slug}",
+                f"article: publish {article.series}/{article.slug}",
                 "-m",
                 COMMIT_MARKER,
                 "-m",
@@ -374,25 +277,19 @@ def _prepare_branch(
                 _git(worktree, "push", "-q", "origin", destination)
         finally:
             _git(library, "worktree", "remove", "--force", str(worktree), check=False)
-    return _PreparedBranch(article, name, commit, revision)
+    return _PreparedBranch(article, name, commit)
 
 
 def _pr_title(prepared: _PreparedBranch) -> str:
-    verb = "Revise" if prepared.revision else "Publish"
-    return f"{verb} {prepared.article.title}"
+    return f"Publish {prepared.article.title}"
 
 
 def _pr_body(prepared: _PreparedBranch) -> str:
     article = prepared.article
-    verb = "Revises" if prepared.revision else "Publishes"
-    record = (
-        "the revision note explaining why the published article changed"
-        if prepared.revision
-        else "the exact inputs and outputs from every editorial role"
-    )
     return (
-        f"{verb} **{article.title}** in `{article.series}`.\n\n"
-        f"This PR contains the article, its assets, and {record}.\n\n"
+        f"Publishes **{article.title}** in `{article.series}`.\n\n"
+        "This PR contains the article, its assets, and the exact inputs and "
+        "outputs from every editorial role.\n\n"
         f"Generated commit: `{prepared.commit}`\n"
     )
 
@@ -520,16 +417,14 @@ def _prepare(
     library: pathlib.Path,
     check_links: bool,
     today: dt.date | None = None,
-    revision: bool = False,
 ) -> int:
-    article = _article_from_workspace(article_path, revision=revision)
+    article = _article_from_workspace(article_path)
     prepared = _prepare_branch(
         article,
         main_root=main_root.resolve(),
         library=library.resolve(),
         check_links=check_links,
         today=today,
-        revision=revision,
     )
     return _open_pr(prepared, library=library.resolve())
 
@@ -547,11 +442,6 @@ def _parser() -> argparse.ArgumentParser:
         help="verify source URLs during the final local proof",
     )
     parser.add_argument("--today", type=dt.date.fromisoformat, help=argparse.SUPPRESS)
-    parser.add_argument(
-        "--revision",
-        action="store_true",
-        help="prepare a reviewed revision of an article already on origin/library",
-    )
     return parser
 
 
@@ -565,7 +455,6 @@ def main(arguments: list[str] | None = None) -> int:
             library=parsed.library,
             check_links=parsed.check_links,
             today=parsed.today,
-            revision=parsed.revision,
         )
     except _PrepareError as error:
         print(f"nb prepare-pr: {error}", file=sys.stderr)

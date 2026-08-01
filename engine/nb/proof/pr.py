@@ -165,9 +165,18 @@ def run_pr_mode(
     with tempfile.TemporaryDirectory() as bundle_dir:
         slug = m.group(2)
         asset_prefix = f"library/{series_id}/{slug}/"
-        extra_paths = (
-            _tree_paths(repo, ref=head, prefix=asset_prefix) if revision else []
-        )
+        if revision and not _is_regular_blob(repo, ref=head, path=path):
+            rep.block(
+                "B-DIFF-SHAPE",
+                f"revision article must remain a regular file: {path}",
+            )
+            return
+        extra_paths = []
+        if revision:
+            extra_paths = [
+                path,
+                *_tree_paths(repo, ref=head, prefix=asset_prefix),
+            ]
         materialize_bundle(
             repo,
             head,

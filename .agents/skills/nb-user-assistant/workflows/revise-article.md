@@ -19,9 +19,9 @@ does not make its artifact part of the revision PR.
 
 ## Make and verify the change
 
-Work from exact published HTML and exact published assets in a local workspace
-or checkout. `nb start-article` is optional. Preserve unrelated content and
-state the intended change precisely before delegating any part of it.
+Create an ordinary branch from current `origin/library`. Work directly from the
+published HTML and assets, preserve unrelated content, and state the intended
+change precisely before delegating any part of it.
 
 When another role or model would help, give it a purpose-built brief containing:
 
@@ -47,10 +47,11 @@ account of why the revision was needed, what materially changed, and any
 verification a later reviewer would need. Do not impose a template on the
 prose, modify prior notes, or rewrite historical role artifacts.
 
-Deliver with `nb prepare-pr ... --revision`. Confirm that the PR modifies one
-published article, changes only its matching assets, and adds only its one new
-revision note. The article can change anything the normal proof permits, but
-its path, series, and slug remain aligned. Revisions never auto-merge.
+Commit the result, run the checkout-owned proof in PR mode, and open a PR
+against `library`. Confirm that the PR changes one published article and/or its
+matching assets and adds only its one new revision note. The article can change
+anything the normal proof permits, but its path, series, and slug remain
+aligned. Revisions never auto-merge.
 
 Present the changed meaning, evidence, and visual result—not an invented
 workflow ceremony—so the user can decide whether to merge.

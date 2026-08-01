@@ -116,7 +116,7 @@ def test_pr_accepts_numbered_role_invocations(pr_repo: PressRepo) -> None:
     assert "B-AGENT-ARTIFACTS" not in result.codes
 
 
-def test_pr_accepts_an_article_revision_with_only_a_note(
+def test_pr_accepts_an_article_revision(
     pr_repo: PressRepo,
 ) -> None:
     head = prepare_revision(pr_repo)
@@ -144,7 +144,7 @@ def test_revision_note_uses_the_next_sequence_number(pr_repo: PressRepo) -> None
     assert not result.blocks
 
 
-def test_revision_accepts_matching_asset_additions_modifications_and_deletions(
+def test_revision_accepts_asset_only_additions_modifications_and_deletions(
     pr_repo: PressRepo,
 ) -> None:
     pr_repo.checkout("library")
@@ -154,10 +154,6 @@ def test_revision_accepts_matching_asset_additions_modifications_and_deletions(
     pr_repo.write("library/semiconductors/micron/change.png", "before")
     pr_repo.commit("publish micron with assets")
     pr_repo.checkout("owner/revise-assets", new=True)
-    pr_repo.write(
-        "library/semiconductors/micron.html",
-        article().replace("</body>", "<!-- assets revised -->\n</body>"),
-    )
     pr_repo.git("rm", "-q", "library/semiconductors/micron/old.png")
     pr_repo.write("library/semiconductors/micron/change.png", "after")
     pr_repo.write("library/semiconductors/micron/new.png", "new")
@@ -170,6 +166,25 @@ def test_revision_accepts_matching_asset_additions_modifications_and_deletions(
     result = pr_repo.run_pr(head="owner/revise-assets")
 
     assert not result.blocks
+
+
+def test_revision_rejects_a_note_without_an_article_or_asset_change(
+    pr_repo: PressRepo,
+) -> None:
+    pr_repo.checkout("library")
+    pr_repo.write("library/semiconductors/micron.html", article())
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="micron")
+    pr_repo.commit("publish micron")
+    pr_repo.checkout("owner/note-only", new=True)
+    pr_repo.write(
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+        "# Revision\n\nNo published content changed.\n",
+    )
+    pr_repo.commit("add note only")
+
+    result = pr_repo.run_pr(head="owner/note-only")
+
+    assert "B-DIFF-SHAPE" in result.blocks
 
 
 def test_revision_can_change_metadata_allowed_by_normal_proof(
