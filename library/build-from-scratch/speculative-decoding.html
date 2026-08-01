@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A rejection rule keeps speculative decoding's output exact · The Nightly Build</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "build-from-scratch",
+        "slug": "speculative-decoding",
+        "template": "article",
+        "title": "A rejection rule keeps speculative decoding's output exact",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-01",
+        "tags": ["llm", "inference", "engineering"],
+        "sources": 8,
+        "words": 3746,
+        "reading_minutes": 19,
+        "dek": "Two hand-built character models run two hundred thousand times confirm the accept-or-resample test reproduces the target's exact probabilities, and show how many draft tokens survive it as the draft improves.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Build From Scratch</div>
+        <h1 class="nb-title">A rejection rule keeps speculative decoding's output exact</h1>
+        <p class="nb-dekline">
+          Two hand-built character models run two hundred thousand times confirm the accept-or-resample test reproduces the target's exact probabilities, and show how many draft tokens survive it as the draft improves.
+        </p>
+        <div class="nb-byline">
+          <span>19 min read</span><span>2026-08-01</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A forward pass scores a whole prefix for the price of one token</h2>
+        <p>
+          Autoregressive decoding calls the target model once per output
+          token. Each call is a full forward pass: every layer's weights,
+          read from memory, produce one next-token distribution, then get
+          discarded. The same forward pass, run over a longer prefix, scores
+          every position in that prefix for roughly the same memory traffic
+          one position costs alone. A transformer's attention and
+          feed-forward layers apply to a batch of positions at once, not one
+          at a time. Hand the target model five extra draft tokens appended
+          to a prompt, and one pass returns five next-token distributions,
+          not one.
+        </p>
+        <p>
+          Speculative decoding spends that asymmetry directly: a small,
+          cheap draft model guesses several tokens ahead, and the large
+          target model checks the whole guess in one batched pass instead of
+          one serial call per token. Leviathan, Kalman, and Matias reported
+          "2X-3X acceleration compared to the standard T5X implementation,
+          with identical outputs" running exactly this scheme on an
+          11-billion-parameter T5-XXL model.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          > "Identical outputs" is the part worth rebuilding by hand. The
+          speedup does not come from trusting the draft's guesses. It comes
+          from a specific rejection-sampling rule applied to every guess.
+          That rule is provable, and small enough to run to completion in a
+          few hundred lines of Python.
+        </p>
+      </section>
+
+      <section data-nb-section="printable-target-and-draft" id="printable-target-and-draft">
+        <h2>A target and a draft small enough to print in full</h2>
+        <p>
+          Checking an exactness proof needs distributions a reader can see in
+          full, not a 70-billion-parameter black box. The target here, call
+          it <span class="nb-math-in">p</span>, is an order-1 character
+          bigram model: <span class="nb-math-in">p(x \mid \text{previous
+          character})</span>. It is trained on an 80-character corpus, so
+          every next-character distribution is a table of eighteen numbers
+          that sums to one. The draft, <span class="nb-math-in">q_w</span>,
+          is a mixture of that same bigram model and a context-free unigram
+          model: <span class="nb-math-in"
+            >q_w(x \mid \text{ctx}) = w \cdot p(x \mid \text{ctx}) + (1-w)
+            \cdot q_0(x)</span
+          >, where <span class="nb-math-in">q_0</span> ignores context
+          entirely. At <span class="nb-math-in">w=0</span> the draft has
+          thrown away the previous character: the cheapest, worst-agreeing
+          model available. As <span class="nb-math-in">w</span> rises toward
+          1, the draft converges on the target. That single knob stands in
+          for what a real draft-target pair varies by parameter count and
+          training data: how much of the target's context the draft
+          actually models. Every probability in this piece stays exactly
+          enumerable regardless.
+        </p>
+        <p>
+          This uses Leviathan et al.'s letters throughout:
+          <span class="nb-math-in">p</span> is the target,
+          <span class="nb-math-in">q</span> is the draft.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          > Chen et al. derived the identical rule independently at
+          DeepMind, with the letters swapped: <span class="nb-math-in">q</span>
+          as target, <span class="nb-math-in">p</span> as draft.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          > Any formula quoted from their paper needs relabeling before it
+          sits next to code written in the other convention.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">speculative_decoding.py</span
+            ><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">CORPUS = (
+    "to be or not to be that is the question whether tis nobler in the mind "
+    "to suffer"
+)
+VOCAB = sorted(set(CORPUS))          # tokens the models can emit
+BOS = "^"                            # start-of-sequence context, never emitted
+CONTEXTS = [BOS] + VOCAB             # possible "previous token" values
+
+def normalize(counts):
+    total = sum(counts.values())
+    return {k: v / total for k, v in counts.items()}
+
+# Order-1 bigram counts (target model), Laplace-smoothed so every
+# (context, token) pair has positive probability.
+bigram_counts = {ctx: {tok: 1 for tok in VOCAB} for ctx in CONTEXTS}
+prev = BOS
+for ch in CORPUS:
+    bigram_counts[prev][ch] += 1
+    prev = ch
+P_TABLE = {ctx: normalize(bigram_counts[ctx]) for ctx in CONTEXTS}
+
+# Order-0 unigram counts (the cheap, context-free half of the draft).
+unigram_counts = {tok: 1 for tok in VOCAB}
+for ch in CORPUS:
+    unigram_counts[ch] += 1
+Q0_TABLE = normalize(unigram_counts)
+
+def p_dist(ctx):
+    return P_TABLE[ctx]
+
+def q_dist(ctx, w):
+    p = P_TABLE[ctx]
+    return {tok: w * p[tok] + (1 - w) * Q0_TABLE[tok] for tok in VOCAB}
+
+def sample_categorical(dist, rng=random):
+    r = rng.random()
+    acc = 0.0
+    for tok, prob in dist.items():
+        acc += prob
+        if r &lt;= acc:
+            return tok
+    return next(reversed(list(dist)))  # floating-point fallback
+
+def autoregressive_sample(n_tokens, ctx=BOS, rng=random):
+    out = []
+    for _ in range(n_tokens):
+        tok = sample_categorical(p_dist(ctx), rng)
+        out.append(tok)
+        ctx = tok
+    return out</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · The target and draft as explicit tables, plus the
+            baseline sampler every later result has to reproduce.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Running <code>autoregressive_sample</code> two hundred thousand
+          times from the context <code>'t'</code>, and tallying the outcomes
+          against <code>P_TABLE['t']</code>, checks nothing about
+          speculative decoding yet. It is a sanity check on
+          <code>sample_categorical</code> itself, before anything else gets
+          built on top of it:
+        </p>
+        <table class="nb-table">
+          <caption>
+            <code>autoregressive_sample</code> from
+            <code>p(&middot; | 't')</code>, 200,000 draws, six of the
+            eighteen tokens.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>token</th>
+              <th>p(x|t) exact</th>
+              <th>measured freq</th>
+              <th class="txt">|diff|</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">' '</span></td>
+              <td>0.10345</td>
+              <td>0.10335</td>
+              <td class="txt">0.00010</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'h'</span></td>
+              <td>0.17241</td>
+              <td>0.17265</td>
+              <td class="txt">0.00024</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'i'</span></td>
+              <td>0.10345</td>
+              <td>0.10421</td>
+              <td class="txt">0.00076</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'o'</span></td>
+              <td>0.13793</td>
+              <td>0.13826</td>
+              <td class="txt">0.00033</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'a'</span></td>
+              <td>0.03448</td>
+              <td>0.03511</td>
+              <td class="txt">0.00063</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'w'</span></td>
+              <td>0.03448</td>
+              <td>0.03436</td>
+              <td class="txt">0.00012</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The largest gap over the full 18-token vocabulary is 0.00076, well
+          inside the noise a 200,000-draw Monte Carlo estimate of an 0.1-scale
+          probability should show. <code>sample_categorical</code> and
+          <code>P_TABLE</code> are trustworthy ground truth for everything
+          that follows.
+        </p>
+      </section>
+
+      <section data-nb-section="the-accept-reject-rule" id="the-accept-reject-rule">
+        <h2>What the accept/reject rule has to balance</h2>
+        <p>
+          A draft token cannot simply be kept whenever the draft model
+          produced it. If every draft token were kept, the output would
+          follow <span class="nb-math-in">q</span>, not <span class="nb-math-in"
+            >p</span
+          >. A cheaper model would quietly be steering the sequence. But a
+          rule that rejects too liberally throws away work the draft model
+          already paid for, and the whole appeal of drafting collapses back
+          into calling the target model one token at a time. The rule needs
+          three things at once. It has to keep every draft token the target
+          model would have produced at least as often as the draft did.
+          It has to discard the excess when the draft over-produced a token
+          relative to the target. And it has to route what got discarded
+          toward whatever the draft under-produced. That is exactly what a
+          ratio test does.
+        </p>
+        <p>
+          Draw a candidate <span class="nb-math-in">x \sim q</span> from the
+          draft, then draw a fresh uniform <span class="nb-math-in"
+            >r \sim U(0,1)</span
+          >. Accept <span class="nb-math-in">x</span> when
+          <span class="nb-math-in">r</span> falls under the ratio of the two
+          models' probabilities for it, capped at 1. When the draft
+          under-weighted <span class="nb-math-in">x</span> relative to the
+          target (<span class="nb-math-in">q(x) \le p(x)</span>), the ratio is
+          at least 1 and <span class="nb-math-in">x</span> is always kept.
+          When the draft over-weighted it (<span class="nb-math-in"
+            >q(x) &gt; p(x)</span
+          >), the ratio is <span class="nb-math-in">p(x)/q(x) &lt; 1</span> and
+          <span class="nb-math-in">x</span> survives only that often. On
+          rejection, resample from what is left of the target once the
+          draft's own mass is subtracted out at that token. That remainder
+          is the positive part of <span class="nb-math-in">p - q</span>,
+          renormalized to sum to 1, so it is a real distribution again.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \Pr(\text{accept } x) = \htmlClass{nb-mc1}{\min\!\left(1,
+            \frac{p(x)}{q(x)}\right)} \qquad\qquad p'(x) =
+            \htmlClass{nb-mc2}{\operatorname{norm}\big(\max(0,\ p(x)-q(x))\big)}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1"
+                >\min(1, p(x)/q(x))</span
+              ><span
+                >the accept probability: clips the draft's own ratio at 1,
+                so an over-weighted token survives less than always and an
+                under-weighted one survives every time.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2"
+                >\operatorname{norm}(\max(0,p-q))</span
+              ><span
+                >the residual: only the slice of the target the draft
+                failed to cover, renormalized, drawn from only after a
+                rejection.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            Fig. 2 · The accept/reject rule and its residual, stated in
+            Leviathan et al.'s notation.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Chen et al. state the same construction with target and draft
+            swapped.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Leviathan et al. state this exact rule in Section 2.3: sample
+          <span class="nb-math-in">x \sim q(x)</span>, "keeping it if
+          <span class="nb-math-in">q(x) \le p(x)</span>." In case
+          <span class="nb-math-in">q(x) &gt; p(x)</span>, they "reject the sample
+          with probability <span class="nb-math-in"
+            >1 - \frac{p(x)}{q(x)}</span
+          > and sample <span class="nb-math-in">x</span> again from an
+          adjusted distribution <span class="nb-math-in"
+            >p'(x) = \operatorname{norm}(\max(0, p(x) - q(x)))</span
+          > instead."<sup class="nb-cite"><a href="#s1">1</a></sup> Chen et
+          al.'s "Modified Rejection Sampling" states the identical
+          construction, target-model probability over draft-model
+          probability, with their swapped letters.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">speculative_decoding.py</span
+            ><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def residual_dist(ctx, w):
+    """norm(max(0, p(x|ctx) - q_w(x|ctx)))."""
+    p = p_dist(ctx)
+    q = q_dist(ctx, w)
+    raw = {tok: max(0.0, p[tok] - q[tok]) for tok in VOCAB}
+    z = sum(raw.values())
+    return {tok: v / z for tok, v in raw.items()}
+
+def speculative_step(ctx, gamma, w, rng=random):
+    draft, q_dists = [], []
+    c = ctx
+    for _ in range(gamma):
+        qi = q_dist(c, w)
+        xi = sample_categorical(qi, rng)
+        draft.append(xi)
+        q_dists.append(qi)
+        c = xi
+
+    # Batched verification: p at every position along the drafted
+    # prefix, computed from the original context forward.
+    p_dists = []
+    c = ctx
+    for i in range(gamma):
+        p_dists.append(p_dist(c))
+        c = draft[i]
+    p_dists.append(p_dist(c))
+
+    n = 0
+    n_tests = 0
+    for i in range(gamma):
+        x = draft[i]
+        ratio = min(1.0, p_dists[i][x] / q_dists[i][x])
+        n_tests += 1
+        if rng.random() &lt;= ratio:
+            n += 1
+        else:
+            break
+
+    if n == gamma:
+        bonus = sample_categorical(p_dists[gamma], rng)
+        return draft[:n] + [bonus], n, n_tests
+    resample_ctx = ctx if n == 0 else draft[n - 1]
+    t = sample_categorical(residual_dist(resample_ctx, w), rng)
+    return draft[:n] + [t], n, n_tests</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 3 · The full accept/reject step: draft, batch-verify,
+            accept greedily, resample on the first rejection.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Fixing <code>gamma=1</code> collapses this to a single-token test,
+          the smallest case the exactness claim has to hold for. Running it
+          two hundred thousand times from the same context <code>'t'</code>
+          used above, with the draft at <span class="nb-math-in">w=0.3</span>,
+          gives the table below. At that weight the draft keeps three tenths
+          of the target's context and throws the rest into the unigram
+          average:
+        </p>
+        <table class="nb-table">
+          <caption>
+            <code>speculative_step(ctx='t', gamma=1, w=0.3)</code>, 200,000
+            draws, against <code>p(&middot; | 't')</code>.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>token</th>
+              <th>p(x|t) exact</th>
+              <th>measured freq</th>
+              <th class="txt">|diff|</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">' '</span></td>
+              <td>0.10345</td>
+              <td>0.10436</td>
+              <td class="txt">0.00091</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'h'</span></td>
+              <td>0.17241</td>
+              <td>0.17220</td>
+              <td class="txt">0.00021</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'o'</span></td>
+              <td>0.13793</td>
+              <td>0.13939</td>
+              <td class="txt">0.00146</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'i'</span></td>
+              <td>0.10345</td>
+              <td>0.10345</td>
+              <td class="txt">0.00000</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'m'</span></td>
+              <td>0.03448</td>
+              <td>0.03392</td>
+              <td class="txt">0.00057</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">'q'</span></td>
+              <td>0.03448</td>
+              <td>0.03445</td>
+              <td class="txt">0.00003</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The largest disagreement over all 18 tokens is 0.00146. That is
+          the same order as the plain autoregressive sampler's own Monte
+          Carlo noise measured above, not a systematic gap. That is what the
+          rule in Figure 2 predicts, not a coincidence. For any fixed
+          <span class="nb-math-in">x'</span>, the chance of producing it via
+          direct acceptance is <span class="nb-math-in"
+            >q(x') \cdot \min(1, p(x')/q(x')) = \min(p(x'), q(x'))</span
+          >. The chance of reaching it via the residual path is the chance
+          of rejection, times the chance the residual draw lands on
+          <span class="nb-math-in">x'</span>. The rejection probability's
+          <span class="nb-math-in">1-\beta</span> cancels exactly against the
+          residual's own normalizing constant, leaving
+          <span class="nb-math-in">\max(0, p(x')-q(x'))</span>. Summing the
+          two paths:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            P(\text{output}=x') = \min\big(p(x'),\,q(x')\big) +
+            \max\big(0,\,p(x')-q(x')\big) = p(x')
+          </div>
+        </figure>
+        <p>
+          When <span class="nb-math-in">p(x') \ge q(x')</span> this is
+          <span class="nb-math-in">q(x') + (p(x')-q(x')) = p(x')</span>; when
+          <span class="nb-math-in">p(x') &lt; q(x')</span> it is
+          <span class="nb-math-in">p(x') + 0 = p(x')</span>. Either way the
+          two paths add up to exactly the target's own probability at
+          <span class="nb-math-in">x'</span>, for any <span class="nb-math-in"
+            >x'</span
+          >, regardless of how <span class="nb-math-in">p</span> and
+          <span class="nb-math-in">q</span> compare there. Leviathan et al.
+          prove this in Appendix A.1; Chen et al. prove it independently as
+          their Theorem 1, with the letters swapped and
+          <span class="nb-math-in">q</span> the recovered target.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s2">2</a></sup> The table above is
+          that proof, run.
+        </p>
+      </section>
+
+      <section data-nb-section="extending-to-a-drafted-run" id="extending-to-a-drafted-run">
+        <h2>Extending the rule from one token to a drafted run</h2>
+        <p>
+          The payoff from speculative decoding comes from drafting several
+          tokens at once and verifying all of them in one batched pass, not
+          from any single token. <code>speculative_step</code> above already
+          does this for any <code>gamma</code>. It drafts
+          <span class="nb-math-in">\gamma</span> tokens from
+          <span class="nb-math-in">q</span>, computes
+          <span class="nb-math-in">p</span> at all <span class="nb-math-in"
+            >\gamma+1</span
+          > positions along that draft in one batch, then walks the accept
+          test left to right and stops at the first rejection. If every
+          drafted token survives, a bonus token is sampled from the target's
+          own distribution at the position after the draft. That
+          distribution is already computed for free in the same batch,
+          since the pass covers one position more than there are draft
+          tokens. Chaining these steps, each one picking up where the last
+          left off, produces a full sequence:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">speculative_decoding.py</span
+            ><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def speculative_generate(n_tokens, gamma, w, ctx=BOS, rng=random):
+    out, steps = [], []
+    c = ctx
+    while len(out) &lt; n_tokens:
+        tokens, n, n_tests = speculative_step(c, gamma, w, rng)
+        steps.append((len(tokens), n, n_tests))
+        out.extend(tokens)
+        c = tokens[-1]
+    return out[:n_tokens], steps</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 4 · Chaining accept/reject steps into a generated
+            sequence, one step's output context feeding the next.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Neither paper states a separate theorem for the joint distribution
+          of a whole chained sequence. The single-position result above,
+          applied position by position with each step conditioned on the
+          accepted prefix so far, is what a real decoding loop actually
+          relies on. It is worth checking directly rather than taking it on
+          faith. Generating two tokens from the start-of-sequence context two
+          hundred thousand times, with <span class="nb-math-in">\gamma=2</span>
+          and <span class="nb-math-in">w=0.3</span>, gives one way to check
+          that composition. Compare the joint frequency of each
+          two-character pair against the target chain's own exact joint,
+          <span class="nb-math-in">p(x_1)\cdot p(x_2 \mid x_1)</span>,
+          computed directly from the same tables:
+        </p>
+        <table class="nb-table">
+          <caption>
+            Joint frequency of the first two tokens from
+            <code>speculative_generate(2, gamma=2, w=0.3)</code>, 200,000
+            draws, top six of 324 pairs by exact probability.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>pair</th>
+              <th>p(x1,x2) exact</th>
+              <th class="txt">measured freq</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">th</span></td>
+              <td>0.01815</td>
+              <td class="txt">0.01792</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">to</span></td>
+              <td>0.01452</td>
+              <td class="txt">0.01474</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">he</span></td>
+              <td>0.01144</td>
+              <td class="txt">0.01123</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">t&nbsp;</span></td>
+              <td>0.01089</td>
+              <td class="txt">0.01059</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">ti</span></td>
+              <td>0.01089</td>
+              <td class="txt">0.01095</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">&nbsp;t</span></td>
+              <td>0.01053</td>
+              <td class="txt">0.01051</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Every one of the 324 possible pairs occurred in both the exact and
+          the empirical distribution. Summed over that full support, the
+          total variation distance between the two joint distributions is
+          0.01523. That is the same kind of sampling noise as the
+          single-token checks above, spread over a larger outcome space, not
+          a bias that compounds as the draft runs longer. The proof composes
+          the way a real decoding loop needs it to.
+        </p>
+      </section>
+
+      <section data-nb-section="tokens-per-call" id="tokens-per-call">
+        <h2>What draft accuracy buys, measured in tokens per call</h2>
+        <p>
+          Exactness alone does not explain why speculative decoding is
+          faster. A draft that resamples from the residual on almost every
+          token is exact and useless. What makes it worth building is how
+          often a draft token survives the test, since a survived token is
+          one output token produced without a serial call to the target
+          model. Leviathan et al. name the per-position survival probability
+          <span class="nb-math-in">\beta</span>, and its average over a
+          generated sequence <span class="nb-math-in">\alpha := E[\beta]</span
+          >:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \beta = \sum_{x} \min\big(p(x),\, q(x)\big)
+          </div>
+        </figure>
+        <p>
+          <span class="nb-math-in">\beta</span> is exactly the overlap
+          between <span class="nb-math-in">p</span> and
+          <span class="nb-math-in">q</span> at a given context: the mass the
+          two distributions already agree on. It can be computed directly
+          from the tables above, with no sampling at all. Sum the smaller of
+          the two probabilities at every token, then average over the target
+          chain's own long-run distribution of contexts:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">speculative_decoding.py</span
+            ><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def beta_exact(ctx, w):
+    p, q = p_dist(ctx), q_dist(ctx, w)
+    return sum(min(p[t], q[t]) for t in VOCAB)
+
+def alpha_exact(w):
+    # PI_P: the target chain's stationary context distribution,
+    # found by power-iterating P_TABLE to convergence.
+    return sum(PI_P[ctx] * beta_exact(ctx, w) for ctx in VOCAB)
+
+def expected_tokens(alpha, gamma):
+    if alpha &gt;= 1.0:
+        return gamma + 1
+    return (1 - alpha ** (gamma + 1)) / (1 - alpha)</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 5 · Acceptance rate and expected tokens per iteration,
+            computed exactly from the tables rather than estimated from a
+            run.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          With <span class="nb-math-in">\gamma=4</span> draft tokens per
+          step, each iteration produces a geometric count of tokens capped at
+          <span class="nb-math-in">\gamma+1</span>, in expectation
+          <span class="nb-math-in"
+            >E[\#\text{tokens}] = \frac{1-\alpha^{\gamma+1}}{1-\alpha}</span
+          > (Leviathan et al., Equation 1).<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          > Running <code>speculative_generate</code> for 200,000 tokens at
+          each draft weight and counting the accepted fraction directly
+          checks that formula against the run, not just against itself:
+        </p>
+        <table class="nb-table">
+          <caption>
+            Acceptance rate and tokens produced per target-model call,
+            γ=4, 200,000 tokens generated per row.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>w</th>
+              <th>α exact</th>
+              <th>α measured</th>
+              <th>E[tok] formula</th>
+              <th>tok/step measured</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">0.00</span></td>
+              <td>0.7258</td>
+              <td>0.7271</td>
+              <td>2.9126</td>
+              <td>2.9216</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">0.30</span></td>
+              <td>0.8081</td>
+              <td>0.8073</td>
+              <td>3.4152</td>
+              <td>3.4061</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">0.60</span></td>
+              <td>0.8903</td>
+              <td>0.8897</td>
+              <td>4.0171</td>
+              <td>4.0145</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">0.90</span></td>
+              <td>0.9726</td>
+              <td>0.9726</td>
+              <td>4.7332</td>
+              <td>4.7336</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">1.00</span></td>
+              <td>1.0000</td>
+              <td>1.0000</td>
+              <td>5.0000</td>
+              <td>5.0000</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The measured acceptance rate tracks the exact one within four
+          thousandths at every weight, and the measured tokens per step
+          tracks the formula within 0.01 throughout. At
+          <span class="nb-math-in">w=0</span>, the draft keeps no context at
+          all, yet 72.6% of draft tokens still survive. A plain unigram
+          model already recovers most of a bigram model's mass in a corpus
+          this repetitive, and that alone yields 2.92 tokens per target call
+          instead of 1. At <span class="nb-math-in">w=1</span> the draft is
+          the target, every token survives, and each call produces the full
+          <span class="nb-math-in">\gamma+1=5</span>.
+        </p>
+        <p>
+          Real acceptance rates span a comparable range. Leviathan et al.
+          measured <span class="nb-math-in">\alpha \approx 0.20</span> for a
+          bigram draft against an 11-billion-parameter T5-XXL target, barely
+          better than this toy's worst case. The same paper measured
+          <span class="nb-math-in">\alpha = 0.88</span>–0.89 for a
+          6-million-parameter draft against a 97-million-parameter GPT-like
+          target, and 0.74–0.75 for an 8-billion-parameter LaMDA draft
+          against the 137-billion-parameter version.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          > What this section measures, agreement between two explicit
+          distributions setting how many tokens one target call buys, is
+          the same relationship producing those numbers on models eleven
+          orders of magnitude larger.
+        </p>
+      </section>
+
+      <section data-nb-section="what-changes-with-real-models" id="what-changes-with-real-models">
+        <h2>What changes when the draft and target are real models</h2>
+        <p>
+          This build sidesteps three things by using dictionaries instead of
+          weights, and all three matter once <span class="nb-math-in">p</span>
+          and <span class="nb-math-in">q</span> are transformers. First, a KV
+          cache. Recomputing <code>p_dist(ctx)</code> here costs a
+          dictionary lookup regardless of how far into the sequence
+          <code>ctx</code> is. A transformer's cost to score a position
+          depends instead on reusing the key and value tensors computed for
+          every earlier position. A real verification pass has to extend the
+          cache from the last accepted token, not recompute the whole
+          prefix, or the "one batched pass" in Figure 3 is not actually
+          cheap. Second, the batch itself. The loop building
+          <code>p_dists</code> above runs one Python call per position. A
+          real target model's verification is worth doing because those
+          <span class="nb-math-in">\gamma+1</span> positions are one matrix
+          multiply, not <span class="nb-math-in">\gamma+1</span> sequential
+          ones. Third, the draft model itself. This piece built one by
+          blending the target with a weaker version of itself. A real
+          system has to choose what plays that role.
+        </p>
+        <p>
+          Leviathan and Chen's original setups use a separate, smaller
+          checkpoint of the same model family.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s2">2</a></sup> Later work changes
+          what a draft even is. Medusa removes the second model outright. It
+          adds extra decoding heads to the target's own weights that
+          "predict multiple subsequent tokens in parallel," verified with a
+          tree-structured attention pattern. Medusa-1 reaches over 2.2×
+          speedup and Medusa-2 2.3–3.6×, both by the authors' own
+          measurement.<sup class="nb-cite"><a href="#s3">3</a></sup> EAGLE
+          drafts at the level of the target's own hidden features instead of
+          output tokens, on the claim that "autoregression at the feature...
+          level is more straightforward than at the token level." It still
+          keeps the exact accept/reject construction, stating that it is
+          "maintaining the distribution of the generated text," and reports
+          a 2.7×–3.5× latency speedup on LLaMA2-Chat 70B.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          > "Draft &amp; Verify" skips this problem differently. It drafts by
+          "selectively skipping certain intermediate layers" of the target
+          model itself, needing no second model at all. It states plainly
+          that "this process ensures the final output remains identical to
+          that produced by the unaltered LLM," and reports up to 1.99×
+          measured on LLaMA-2 variants.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          > Lookahead decoding drops the draft model entirely, in favor of
+          an "exact, parallel decoding algorithm" built on n-gram extraction
+          against the target alone. It reports up to 1.8× on MT-bench and up
+          to 4× on multi-GPU code completion; the 4× figure is specific to
+          multi-GPU scaling.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          All four keep the same rejection test this piece proved; they
+          disagree only about where the cheap candidate comes from.
+        </p>
+      </section>
+
+      <section data-nb-section="acceptance-rate-versus-cost" id="acceptance-rate-versus-cost">
+        <h2>Acceptance rate has to beat cost, and often doesn't</h2>
+        <p>
+          Tokens per call is not the same as wall-clock speed. A draft that
+          is accurate but expensive to run can cost more time than it
+          saves. Cost ratio <span class="nb-math-in">c</span> is defined as
+          one draft call's time over one target call's time. Leviathan et
+          al.'s Theorem 3.8 gives the expected walltime improvement as
+          <span class="nb-math-in">E[\#\text{tokens}] / (\gamma c + 1)</span
+          >.<sup class="nb-cite"><a href="#s1">1</a></sup> Corollary 3.9
+          states the condition plainly: a speedup exists only when
+          <span class="nb-math-in">\alpha &gt; c</span>. This is not
+          measured wall-clock time, since dictionary lookups carry no
+          meaningful cost asymmetry. It is a computed projection, using the
+          paper's own theorem and this run's own measured
+          <span class="nb-math-in">\alpha</span> at <span class="nb-math-in"
+            >w=0.9</span
+          >, γ=4. That projection gives 3.381× at an illustrative
+          <span class="nb-math-in">c=0.1</span> and 2.367× at
+          <span class="nb-math-in">c=0.25</span>. At <span class="nb-math-in"
+            >w=0</span
+          >, the same formula gives 2.080× and 1.456× respectively: a worse
+          draft still helps, just less.
+        </p>
+        <p>
+          Real systems show the same condition biting in both directions.
+          The PyTorch team's own <code>gpt-fast</code> benchmark states it
+          directly. "When running CodeLlama-34B + CodeLlama-7B, we're able
+          to obtain a 2x boost in tokens/s for generating code," but "when
+          using Llama-7B + TinyLlama-1B, we're only able to obtain about a
+          1.3x boost in tokens/s." Both numbers come from the same codebase;
+          a weaker agreement between draft and target cuts the win by
+          roughly a third.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          vLLM's own benchmark shows the sign of the effect flipping with
+          load. At low query rate, draft-model speculative decoding gets
+          "up to a 1.5x speedup" on ShareGPT, and n-gram matching gets "up
+          to 2.8x" on CNN/DailyMail. At higher request rates, the same post
+          reports that "the overhead of speculative decoding can outweigh
+          its benefits, leading to reduced performance," roughly a
+          1.4–1.8x slowdown on the same hardware and models.<sup
+            class="nb-cite"
+            ><a href="#s8">8</a></sup
+          > Autoregressive decoding is normally memory-bandwidth-bound. The
+          GPU spends most of a token's time waiting on weights to arrive
+          from memory, not on arithmetic, which is why a batched
+          verification pass over several positions costs barely more than
+          one. Under enough concurrent load, the GPU runs out of that idle
+          compute; every draft attempt then competes for cycles the system
+          would rather have spent serving other requests, and a rejected
+          draft has bought nothing.
+        </p>
+        <p>
+          None of this is a flaw in the proof. Every
+          run in this piece, real or toy, produced exactly
+          <span class="nb-math-in">p</span>'s own distribution, checked
+          directly against the tables that define it. What acceptance rate
+          and cost ratio govern is only how much of the memory-bandwidth
+          idle time a given draft-target pair can actually spend. At
+          <span class="nb-math-in">w=0.9</span> agreement and γ=4 draft
+          tokens, this build's own run produced 4.7336 tokens per target
+          call, and a computed 3.381× walltime speedup at
+          <span class="nb-math-in">c=0.1</span>. That sits just above the 2X-3X
+          range Leviathan et al. measured on a real 11-billion-parameter
+          model. Their own Corollary 3.9 names the reason: the win needs a
+          draft cheap and accurate enough that <span class="nb-math-in"
+            >\alpha</span
+          > clears <span class="nb-math-in">c</span>. Nothing about a bigger
+          target model changes that arithmetic.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2211.17192"
+              >arXiv (Leviathan, Kalman, Matias) · Fast Inference from
+              Transformers via Speculative Decoding</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2302.01318"
+              >arXiv (Chen, Borgeaud, Irving, Lespiau, Sifre, Jumper) ·
+              Accelerating Large Language Model Decoding with Speculative
+              Sampling</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2401.10774"
+              >arXiv (Cai, Li, Geng, Peng, Lee, Chen, Dao) · Medusa: Simple
+              LLM Inference Acceleration Framework with Multiple Decoding
+              Heads</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2401.15077"
+              >arXiv (Li, Wei, Zhang, Zhang) · EAGLE: Speculative Sampling
+              Requires Rethinking Feature Uncertainty</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2309.08168"
+              >arXiv (Zhang, Wang, Li, Shou, Chen, Chen, Mehrotra) · Draft &amp;
+              Verify: Lossless Large Language Model Acceleration via
+              Self-Speculative Decoding</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2402.02057"
+              >arXiv (Fu, Bailis, Stoica, Zhang) · Break the Sequential
+              Dependency of LLM Inference Using Lookahead Decoding</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pytorch.org/blog/accelerating-generative-ai-2/"
+              >PyTorch · Accelerating Generative AI with PyTorch II: GPT,
+              Fast!</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blog.vllm.ai/2024/10/17/spec-decode.html"
+              >vLLM · How Speculative Decoding Boosts vLLM Performance by up
+              to 2.8x</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
