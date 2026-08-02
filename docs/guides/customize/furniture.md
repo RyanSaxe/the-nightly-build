@@ -40,3 +40,13 @@ Treat each component as product design, not decoration:
 Owner-declared JavaScript or CSS libraries belong under `assets` in
 `site.yaml`. They must use HTTPS and Subresource Integrity. Articles themselves
 remain script-free. Prefer CSS and semantic HTML when they are sufficient.
+
+The proof also guards class names against likely typos. It builds an inventory
+from `nb.css`, the composed `theme.css`, and every stylesheet declared under
+`assets`, fetching each external sheet and verifying it against its pinned
+integrity hash before counting its classes. Article markup naming a class no
+inventoried stylesheet defines earns `W-DEAD-CLASS`; classes the engine's code
+highlighting injects at runtime are known built-ins. When an external sheet
+cannot be fetched or verified, the check suppresses itself for that run and
+notes why instead of guessing. This is feedback, not a user-maintained
+allowlist.
