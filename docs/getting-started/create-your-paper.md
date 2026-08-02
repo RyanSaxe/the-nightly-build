@@ -30,7 +30,10 @@ press/
 
 Use [Series reference](../reference/series.md) for the exact configuration
 contract. Use [appearance and voice](../guides/customize/appearance-and-voice.md)
-when the editorial concept needs a distinct visual system. Once the proposed
-press validates, continue to
+when the editorial concept needs a distinct visual system.
+
+Once the proposed press validates, commit it and push to `main`. The scheduled
+run reads the press from the remote `main` branch, so a press that exists only
+in a working tree publishes nothing. Then continue to
 [scheduled-runtime verification](first-run.md) if you want to test the
 automation before relying on it.

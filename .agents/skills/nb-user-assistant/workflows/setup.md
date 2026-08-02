@@ -21,9 +21,10 @@ provider authorization, billing-bearing choice, or setting that automation
 cannot change. Give one manual action at a time, state its expected result, and
 verify it before continuing. Never ask for a pasted token.
 
-Run `nb setup` only when the publishing boundary is absent. Hand editorial
-definition to [create paper](create-paper.md), then configure the scheduled
-runtime with the repository's publication prompt.
+Run `nb setup` to create or repair the publishing boundary; it is idempotent
+and safe to re-run over a healthy setup. Hand editorial definition to
+[create paper](create-paper.md), then configure the scheduled runtime with the
+repository's publication prompt.
 
 ## Offer scheduled verification
 

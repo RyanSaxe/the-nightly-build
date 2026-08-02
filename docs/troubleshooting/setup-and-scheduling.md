@@ -7,6 +7,14 @@ repository. If it lacks authority, complete the one requested GitHub action or
 use the manual path in [Set up](../getting-started/setup.md). Do not paste a
 token into chat.
 
+## Article PR checks never register
+
+If an Article PR sits with no `validate` check and never merges, the fork's
+workflows are probably disabled: forks start that way, and GitHub runs no
+Actions until they are enabled. Enable workflows from the fork's Actions tab
+(or re-run `nb setup`, which enables them when it can), then close and reopen
+the stalled PR so the check triggers.
+
 ## The schedule starts but produces no work
 
 Run `nb duty` in the scheduled checkout and read its idle reasons. Confirm the

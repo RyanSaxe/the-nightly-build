@@ -25,16 +25,22 @@ Start with [Ask your AI](ask-your-ai.md). A capable assistant should:
    test.
 
 `nb setup` scaffolds `press/`, creates the protected `library` branch, seeds its
-publishing workflows, and configures GitHub Pages and auto-merge. The local
-command requires `git`, an authenticated `gh`, `uv`, and Python 3.10 or newer.
+publishing workflows, enables Actions, and configures GitHub Pages and
+auto-merge. The local command requires `git`, an authenticated `gh`, `uv`, and
+Python 3.10 or newer.
+
+Forks start with workflows disabled. If `nb setup` warns that it could not
+enable Actions, enable workflows from the fork's Actions tab before relying on
+the schedule: without them the `validate` check never runs and no article can
+merge.
 
 ## Manual fork-and-clone fallback
 
 Fork this repository with **Copy the main branch only** enabled, then:
 
 ```sh
-git clone https://github.com/YOU/YOUR-PAPER.git
-cd YOUR-PAPER
+git clone https://github.com/<you>/<your-paper>.git
+cd <your-paper>
 ./nb setup
 ```
 
