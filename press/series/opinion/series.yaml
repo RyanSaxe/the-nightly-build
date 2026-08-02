@@ -5,7 +5,6 @@ mode: open
 section: "Current Affairs"
 template: opinion
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 8
 cadence: [wed, sat]

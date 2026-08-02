@@ -6,7 +6,6 @@ mode: open
 section: "Daily Reading"
 template: article
 prompt: prompt.md
-autopublish: true
 strict: false
 bands:
   words: [550, 800]

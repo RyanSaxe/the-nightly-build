@@ -6,7 +6,6 @@ mode: open
 section: "Investing"
 template: lesson
 prompt: prompt.md
-autopublish: true
 strict: false
 bands:
   words: [1200, 2200]

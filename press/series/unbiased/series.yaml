@@ -6,7 +6,6 @@ mode: open
 section: "Current Affairs"
 template: unbiased
 prompt: prompt.md
-autopublish: true
 strict: true
 min_sources: 10
 sources_by_kind:

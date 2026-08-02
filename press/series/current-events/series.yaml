@@ -6,7 +6,6 @@ mode: rolling
 section: "Daily Reading"
 template: brief
 prompt: prompt.md
-autopublish: true
 strict: false
 bands:
   items: [4, 6]

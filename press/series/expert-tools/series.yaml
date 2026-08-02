@@ -5,7 +5,6 @@ mode: open
 section: "Technical Practice"
 template: article
 prompt: prompt.md
-autopublish: true
 strict: false
 bands:
   words: [1200, 3000]

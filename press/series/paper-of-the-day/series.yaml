@@ -6,7 +6,6 @@ mode: open
 section: "Daily Reading"
 template: paper
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 8
 cadence: daily

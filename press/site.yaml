@@ -5,19 +5,14 @@ front: comfortable # show deks on front-page story cells (compact hides them)
 footer: "Filed while you slept."
 
 # Trusted external libraries, injected into every page (owner-authored on
-# main, https + Subresource-Integrity-pinned; see docs/customization.md).
-# The engine now ships the code listing's Prism and the equation's KaTeX
+# main, https + Subresource-Integrity-pinned; see docs/reference/site.md).
+# The engine ships the code listing's Prism and the equation's KaTeX
 # itself, pinned and loaded only on pages that carry the furniture, so
 # this press declares nothing. Declare libraries here again the day a
 # desk needs more Prism languages or another renderer.
 # assets:
 #   scripts: []
 #   styles: []
-
-# Morning email delivery (also requires the MAIL_* repo secrets; see
-# docs/delivery.md). Without this block, the Atom feed is the push channel.
-# email:
-#   send_utc_hour: 12
 
 # Listed in The Nightly Build directory. Listing is on by default; the public
 # URL is derived from your GitHub Pages URL, so a one-line description is the
