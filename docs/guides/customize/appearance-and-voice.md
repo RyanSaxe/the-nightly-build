@@ -26,3 +26,38 @@ To create a custom theme:
 The builder republishes the selected theme as `assets/theme.css`, so theme and
 furniture CSS restyle the back catalog. Template HTML keeps the font links it
 was authored with; changing a font token alone does not install a web font.
+
+## Banned terms: press/banned-terms.yaml
+
+One banned habit gets mechanical teeth. The proof counts every article against
+a list of ruled-out strings; each entry carries the exact strings to match, the
+most uses an article may keep, and the note the writer sees when the count runs
+over. The engine seeds the list in `spec/banned-terms.yaml`. An over-limit
+count is a `W-BANNED-TERM` warning, promoted to a block when the series sets
+`strict`. Counting covers the rendered text (title, dek, headings, body) minus
+the sources section, case-insensitively, so "leverage" also catches
+"leveraged".
+
+Your press layers `press/banned-terms.yaml` over the seed, by `id`:
+
+```yaml
+# A new id adds a ban. State every field: the strings to count, the
+# ceiling, and the note the writer acts on.
+- id: synergy
+  terms: [synergy, synergies]
+  max: 0
+  suggestion: name the mechanism; what does the combination actually do?
+
+# Reusing an engine id changes only the fields you state.
+- id: em-dash
+  max: 8
+
+# Retire an engine entry outright.
+- id: leverage
+  enabled: false
+```
+
+Write each `suggestion` as the correction you would give a writer, aimed at the
+rewrite. A ban satisfied by swapping in a synonym trades one tell for another;
+the sentence that reached for the term is the thing to fix. `nb validate`
+checks both files, so a typo surfaces before a scheduled run trips on it.
