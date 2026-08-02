@@ -81,13 +81,23 @@ Preserve full series when a chart may be useful.
 ### Source assets
 
 For each cited primary or public document, name exact visual evidence that
-could carry an argument better than prose, or write `None found`. Record its
-source location, what a reader can learn, and what a crop must retain or omit.
+could carry an argument better than prose, or write `None found`:
+
+```text
+Asset: the exact visual and where it lives in the source
+Shows: what a reader can learn from it
+Crop:  what a crop must retain or omit
+```
+
 Do not prescribe crop coordinates or decorative images.
 
 ### Discarded
 
-Every source read far enough to reject, one line each with the reason.
+Every source read far enough to reject, one line each:
+
+```text
+URL: the reason it was rejected
+```
 
 The evidence record has two readers: a writer drafting from it and an editor
 trying to break the result. Make each claim traceable enough for either reader
