@@ -245,6 +245,13 @@ wait_for_library() {
 	die "sync PR #$pr did not merge in time. Inspect https://github.com/$repo/pull/$pr, fix main, then rerun nb sync"
 }
 
+validate_press() {
+	[ -d "$ROOT/press" ] || return 0
+	say "validating press configuration against the synced engine"
+	"$ROOT/nb" validate --repo "$ROOT" ||
+		die "the press no longer validates against this engine. Report the errors above to the paper owner before continuing"
+}
+
 sync_library() {
 	say "checking protected library workflows"
 	git -C "$ROOT" fetch -q origin main library
@@ -335,12 +342,16 @@ update_main_from_upstream() {
 	ok "fork main updated from upstream"
 	say "schedule prompts live outside Git; compare yours with docs/guides/operate/schedule.md"
 	sync_library
+	validate_press
 }
 
 main() {
 	require_tools
 	case "${1-}" in
-	"") sync_library ;;
+	"")
+		sync_library
+		validate_press
+		;;
 	--update-main-from-upstream)
 		[ "$#" = 1 ] || die "usage: nb sync [--update-main-from-upstream]"
 		update_main_from_upstream

@@ -624,8 +624,9 @@ def check_series(repo, registry, *, errors):
             continue
         if "autopublish" in cfg:
             errors.append(
-                f"{where}: 'autopublish' was removed; delete it because every "
-                "valid new article now publishes automatically"
+                f"{where}: 'autopublish' was removed; every valid new article "
+                "now publishes automatically. Report this to the paper owner "
+                "and delete the key to acknowledge the new behavior"
             )
         unknown = set(cfg) - SERIES_KEYS - {"autopublish"}
         if unknown:

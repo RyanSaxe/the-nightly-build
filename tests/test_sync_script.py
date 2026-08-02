@@ -231,6 +231,25 @@ def test_default_sync_is_idempotent_and_never_fetches_upstream(
     assert "pr create" not in repo.gh_log.read_text()
 
 
+def test_sync_surfaces_a_config_migration_error(tmp_path: pathlib.Path) -> None:
+    repo = make_sync_repo(tmp_path, drift="none")
+    shutil.copytree(REPO / "templates", repo.checkout / "templates")
+    shutil.copytree(REPO / "spec", repo.checkout / "spec")
+    series = repo.checkout / "press" / "series" / "daily"
+    series.mkdir(parents=True)
+    (repo.checkout / "press" / "site.yaml").write_text('title: "Test Paper"\n')
+    (series / "series.yaml").write_text(
+        "name: Daily\nmode: rolling\ntemplate: brief\nprompt: prompt.md\n"
+        "autopublish: false\n"
+    )
+    (series / "prompt.md").write_text("A daily brief.\n")
+
+    result = repo.run()
+
+    assert result.returncode != 0
+    assert "'autopublish' was removed" in result.stdout + result.stderr
+
+
 def test_current_workflows_do_not_require_gh(tmp_path: pathlib.Path) -> None:
     repo = make_sync_repo(tmp_path, drift="none")
 

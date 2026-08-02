@@ -13,7 +13,9 @@ official source, then continue.
 
 Run `nb sync`. When it exits 3 with `NB_SYNC_PR_REQUIRED`, carry the printed
 request to the runtime's connected GitHub tool, wait for validation and merge,
-then rerun `nb sync`. Diagnose and repair any other recoverable failure. For an
+then rerun `nb sync`. A configuration migration error is the paper owner's
+decision: report it with the printed message and do not edit the press to
+clear it. Diagnose and repair any other recoverable failure. For an
 external permission or service failure, report the evidence, exact manual
 action, and command to resume; never report an unpublished run as successful.
 
