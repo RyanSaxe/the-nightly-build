@@ -51,6 +51,12 @@ it from outside the authoring party, and a different website is not
 necessarily an independent author. A wrong label is a sourcing failure,
 especially when it hides a missing independent source.
 
+Open every citation's `href` as the article prints it. The link must land on
+the source itself. An endpoint that returns the text still fails whoever
+clicks it, and the evidence record's entry does not prove the printed
+address. The exception is an endpoint the article deliberately examines as
+its artifact.
+
 Fix a miscitation when the right cited source is already at hand. Cut an
 unsupported nonessential claim. A broken central claim, missing evidence, or
 source-policy failure belongs to the researcher and writer. Name the needed
@@ -68,6 +74,10 @@ Cut self-grading, summaries of the article's own method, and signposts
 describing where the piece has been or will go. Cut unearned punchlines:
 sentences that announce stakes the argument has not built. The editorial
 direction defines that family. Enforce it as written there.
+
+Check the article for correctness in writing, not just content. Every
+sentence must be grammatically and syntactically correct, including the
+prose in display text and furniture. Fix breaks directly.
 
 The cut also catches prompt leakage: language drawn from instructions rather
 than reporting. Compare all authored text with the briefing stack. The exact
