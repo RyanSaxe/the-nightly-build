@@ -265,7 +265,28 @@ def test_revision_rejects_a_symlinked_note(pr_repo: PressRepo) -> None:
 
     result = pr_repo.run_pr(head=head)
 
-    assert "B-REVISION-NOTE" in result.blocks
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_revision_rejects_a_symlinked_asset(pr_repo: PressRepo) -> None:
+    pr_repo.checkout("library")
+    pr_repo.write("library/semiconductors/micron.html", article())
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="micron")
+    pr_repo.write("library/semiconductors/micron/real.png", "pixels")
+    pr_repo.commit("publish micron with an asset")
+    pr_repo.checkout("owner/symlink-asset", new=True)
+    pathlib.Path(pr_repo.path, "library/semiconductors/micron/loot.png").symlink_to(
+        "real.png"
+    )
+    pr_repo.write(
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+        "# Asset revision\n\nAdd a figure.\n",
+    )
+    pr_repo.commit("symlinked asset revision")
+
+    result = pr_repo.run_pr(head="owner/symlink-asset")
+
+    assert "B-DIFF-SHAPE" in result.blocks
 
 
 def test_revision_rejects_committed_role_artifacts(pr_repo: PressRepo) -> None:

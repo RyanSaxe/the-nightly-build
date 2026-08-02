@@ -157,6 +157,13 @@ def run_pr_mode(
             f"{[(status, path) for status, path in changes]}",
         )
         return
+    for status, changed_path in changes:
+        if status != "D" and not _is_regular_blob(repo, ref=head, path=changed_path):
+            rep.block(
+                "B-DIFF-SHAPE",
+                f"every changed path must be a regular file: {changed_path}",
+            )
+            return
     m = PR_PATH_RE.match(path)
     assert m is not None
     series_id = m.group(1)
@@ -165,12 +172,6 @@ def run_pr_mode(
     with tempfile.TemporaryDirectory() as bundle_dir:
         slug = m.group(2)
         asset_prefix = f"library/{series_id}/{slug}/"
-        if revision and not _is_regular_blob(repo, ref=head, path=path):
-            rep.block(
-                "B-DIFF-SHAPE",
-                f"revision article must remain a regular file: {path}",
-            )
-            return
         extra_paths = []
         if revision:
             extra_paths = [
@@ -196,11 +197,6 @@ def run_pr_mode(
                 added_paths=added_paths,
                 base_paths=_tree_paths(repo, ref=base, prefix=artifact_prefix),
             )
-            for added_path in added_paths:
-                if added_path.startswith(artifact_prefix) and not _is_regular_blob(
-                    repo, ref=head, path=added_path
-                ):
-                    issues.append(f"revision note must be a regular file: {added_path}")
         else:
             issues = validate_artifacts(
                 pathlib.Path(bundle_dir), series=series_id, slug=slug
