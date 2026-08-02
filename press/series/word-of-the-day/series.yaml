@@ -4,10 +4,8 @@
 name: Word of the Day
 mode: open
 section: "Daily Reading"
-template: article
+template: word
 prompt: prompt.md
 strict: false
-bands:
-  words: [550, 800]
 min_sources: 4
 cadence: daily

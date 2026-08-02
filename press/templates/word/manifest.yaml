@@ -1,0 +1,13 @@
+# The machine contract for the word template: the definition card is an
+# anchored section above everything else, mirroring how the paper template
+# anchors its abstract card. The story sections stay flexible.
+about: "One word a night: the definition card anchored first, then the documented story of the word's origin and use."
+class: shortread
+bands:
+  words: [550, 800]
+  flex_sections: [2, 5]
+sections: [definition, orientation, sources]
+cite_rule: per-section
+chrome:
+  - '<body class="nb-article">'
+  - "<h2>Sources</h2>"
