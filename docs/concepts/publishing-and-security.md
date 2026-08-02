@@ -21,7 +21,11 @@ curation never auto-merge. A revision may change one published article's HTML an
 assets. It adds one numbered Markdown note explaining the change and cannot
 rewrite earlier notes or the historical production record.
 
-Protect `main` as well as `library` if the scheduled identity should not be
-able to change trusted engine or press configuration directly. Review
-`press/site.yaml` changes carefully because owner-declared, integrity-pinned
-page assets run for readers.
+`main` starts unprotected on purpose: the owner can edit the press and push
+directly, without the ceremony of approving their own pull request. The cost
+is that the scheduled identity holds the same power, so a prompt-injected run
+could change trusted engine or press configuration. Protect `main` when you
+will accept the ceremony: every change, including yours, then goes through a
+reviewed PR, and the scheduled identity cannot touch the trusted side at all.
+Review `press/site.yaml` changes carefully either way, because
+owner-declared, integrity-pinned page assets run for readers.

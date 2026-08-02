@@ -14,6 +14,12 @@ demonstrate.
 Preserve a valid fork, checkout, press, branch, or schedule. Resume from the
 first incomplete requirement instead of restarting setup.
 
+Offer the `main` protection choice once, plainly: unprotected keeps the
+owner's quick direct edits; protected routes every change through a reviewed
+PR and keeps the scheduled identity out of trusted configuration entirely.
+The tradeoff lives in `docs/concepts/publishing-and-security.md`. Either
+answer is valid; record which the user chose.
+
 ## Minimize handoffs
 
 Perform every safe action already authorized. Ask the user only for a sign-in,
