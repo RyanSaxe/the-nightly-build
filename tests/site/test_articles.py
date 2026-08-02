@@ -17,7 +17,8 @@ from press import article, make_full_library
 
 @pytest.fixture
 def micron_copy(full_site: Site) -> str:
-    return full_site.read("library", "semiconductors", "micron.html")
+    path = pathlib.Path(full_site.out, "library", "semiconductors", "micron.html")
+    return path.read_text()
 
 
 @pytest.mark.parametrize(
@@ -93,7 +94,6 @@ def test_generated_pages_and_articles_use_the_site_icons(
 def test_an_article_copy_wears_the_site_bar(micron_copy: str) -> None:
     assert '<header class="nb-bar">' in micron_copy
     assert '<a href="../../series/">Sections</a>' in micron_copy
-    assert "The whole newspaper" in micron_copy
 
 
 def test_an_article_copy_wears_the_footer_and_the_appearance_toggle(

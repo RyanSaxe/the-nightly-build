@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+"""Write the computable nb-meta counts, so no agent declares them by hand.
+
+words, reading_minutes, and sources are properties of the article text, not
+editorial decisions. This command computes them with the same parser the
+proof uses and rewrites only the numbers inside the nb-meta block, leaving
+every other byte of the file alone. The proof's W-SELF-COUNT then verifies
+instead of policing hand-kept numbers.
+
+Run: python3 engine/stamp.py <article.html>. Exits 0 after writing (or when
+already stamped), 2 when the file has no readable nb-meta block or lacks one
+of the count keys.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+
+from nb import meta as nb_meta
+from nb.article import Article
+from nb.site.library import WORDS_PER_MINUTE
+
+COUNT_KEY_RE = {
+    key: re.compile(rf'("{key}"\s*:\s*)(-?\d+)') for key in ("words", "sources")
+}
+READING_KEY_RE = re.compile(r'("reading_minutes"\s*:\s*)(-?\d+)')
+
+
+def computed_counts(source: str) -> dict[str, int]:
+    ed = Article()
+    ed.feed(source)
+    words = ed.word_count
+    minutes = max(1, round(words / WORDS_PER_MINUTE)) if words else 1
+    return {"words": words, "reading_minutes": minutes, "sources": len(ed.sources)}
+
+
+def stamp_source(source: str) -> tuple[str, dict[str, int]]:
+    """Return the stamped article text and the counts written into it.
+
+    Raises ValueError when the nb-meta block is absent/unreadable or a count
+    key is missing, naming exactly what the writer must repair. Replacement
+    happens inside the matched block only, so formatting, key order, and the
+    rest of the file stay byte-identical.
+    """
+    m = nb_meta.META_RE.search(source)
+    if m is None or nb_meta.parse_meta(source) is None:
+        raise ValueError("no readable nb-meta block; add the template's block first")
+
+    counts = computed_counts(source)
+    block = source[m.start(1) : m.end(1)]
+    missing = []
+    for key, pattern in {**COUNT_KEY_RE, "reading_minutes": READING_KEY_RE}.items():
+        block, n = pattern.subn(rf"\g<1>{counts[key]}", block, count=1)
+        if n == 0:
+            missing.append(key)
+    if missing:
+        raise ValueError(f"nb-meta lacks count keys: {', '.join(sorted(missing))}")
+    return source[: m.start(1)] + block + source[m.end(1) :], counts
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(
+        description="Write the computable nb-meta counts into an article."
+    )
+    p.add_argument("file", help="article HTML file to stamp in place")
+    args = p.parse_args(argv)
+
+    with open(args.file, encoding="utf-8") as fh:
+        source = fh.read()
+    try:
+        stamped, counts = stamp_source(source)
+    except ValueError as err:
+        sys.stderr.write(f"stamp: {err}\n")
+        return 2
+
+    if stamped != source:
+        with open(args.file, "w", encoding="utf-8") as fh:
+            fh.write(stamped)
+    state = "stamped" if stamped != source else "already stamped"
+    print(" ".join([state] + [f"{k}={v}" for k, v in counts.items()]))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

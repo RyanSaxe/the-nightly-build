@@ -1,4 +1,4 @@
-# A collection: items publish front-to-back, one per night at the cadence, until
+# A collection: items publish front-to-back, one per scheduled date, until
 # the list is done. A canon of the techniques behind modern inference, appraised
 # once each. Grow it by appending items. Published appraisals stay put.
 name: The Inference Stack
@@ -6,7 +6,6 @@ mode: collection
 section: "Foundations"
 template: article
 prompt: prompt.md
-autopublish: true
 strict: false
 bands:
   words: [1500, 3500] # appraisals stay tight: the technique carries the piece

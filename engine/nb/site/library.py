@@ -9,6 +9,7 @@ the article dicts every renderer reads, and nothing here emits markup.
 import html
 import os
 import re
+import subprocess
 import sys
 
 from nb import meta as nb_meta
@@ -22,6 +23,21 @@ except ImportError:
 WORDS_PER_MINUTE = 230
 
 NO_DATE = "unknown"
+
+__all__ = (
+    "article_body_html",
+    "article_text",
+    "assign_positions",
+    "by_date_and_slug",
+    "collect_articles",
+    "date_sort_key",
+    "load_series_configs",
+    "load_site_config",
+    "load_yaml",
+    "night_date",
+    "reading_minutes",
+    "scan_library",
+)
 
 
 def night_date(meta):
@@ -92,6 +108,52 @@ def scan_library(root):
                 yield sid, f[:-5], os.path.join(d, f)
 
 
+_TOUCHED_PATH_RE = re.compile(r"^library/([a-z0-9-]+)/([a-z0-9-]+)(?:\.html$|/)")
+
+
+def _last_touched_dates(library_root) -> dict[tuple[str, str], str]:
+    """Map (series, slug) to the timestamp of the last commit touching the
+    article or its assets, so a revision merge moves the feed's `updated`.
+
+    Returns {} without full git history: a plain directory or a shallow
+    checkout (where the grafted boundary commit misattributes every file to
+    one date). The build stays a pure function of the tree in those cases.
+    """
+    shallow = subprocess.run(
+        ["git", "-C", library_root, "rev-parse", "--is-shallow-repository"],
+        capture_output=True,
+        text=True,
+    )
+    if shallow.returncode != 0 or shallow.stdout.strip() != "false":
+        return {}
+    log = subprocess.run(
+        [
+            "git",
+            "-C",
+            library_root,
+            "log",
+            "--format=%x01%cI",
+            "--name-only",
+            "--",
+            "library/",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if log.returncode != 0:
+        return {}
+    dates: dict[tuple[str, str], str] = {}
+    stamp = None
+    for line in log.stdout.splitlines():
+        if line.startswith("\x01"):
+            stamp = line[1:]
+        elif line and stamp:
+            m = _TOUCHED_PATH_RE.match(line)
+            if m:  # newest-first log: the first date seen is the last touch
+                dates.setdefault((m.group(1), m.group(2)), stamp)
+    return dates
+
+
 def reading_minutes(meta):
     rm = meta.get("reading_minutes")
     if isinstance(rm, (int, float)) and rm > 0:
@@ -111,6 +173,7 @@ def collect_articles(
     article replaces it, which is how press-check promotion previews work.
     """
     articles = {}
+    revised = _last_touched_dates(library_root) if library_root else {}
     sources = [(library_root, False)]
     if preview_root:
         sources.append((preview_root, True))
@@ -129,6 +192,7 @@ def collect_articles(
                 "file": path,
                 "draft": is_draft,
                 "reading_minutes": reading_minutes(meta),
+                "revised": None if is_draft else revised.get((sid, slug)),
             }
     assign_positions(articles, series_cfgs)
     return articles

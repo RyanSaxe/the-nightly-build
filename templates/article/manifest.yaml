@@ -1,5 +1,5 @@
 # The machine contract for the article template: the geometry engine/check.py
-# enforces (PROTOCOL step 2.4 reads it). A template is a citation geometry, not a
+# enforces. A template is a citation geometry, not a
 # genre; the `article` template is enforced prose (two anchors plus 2-6 sections,
 # every section cited), and genres live in series prompts. Bands are template
 # defaults that a series may replace in either direction. A press adds or

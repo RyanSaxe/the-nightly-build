@@ -1,9 +1,9 @@
-"""What a series lets through: which slug, in which order, on which night.
+"""What a series permits: which slug, in which order, on which UTC date.
 
 Mode is the rule that says a collection publishes each item once, a rolling
-series publishes tonight's date, a sequence publishes in order, and an open
-series publishes whatever it likes until the owner commissions something.
-Rhythm is the rule that says whether the series publishes at all tonight.
+series publishes the selected UTC date, a sequence publishes in order, and an
+open series publishes whatever it likes until the owner commissions something.
+Cadence says whether the series publishes on the selected UTC date.
 """
 
 import datetime as dt
@@ -17,7 +17,7 @@ from collections.abc import Callable
 import pytest
 
 from findings import Findings
-from press import OPEN_YAML, REPO, TODAY, article, brief, mut
+from press import OPEN_YAML, REPO, SEMICONDUCTORS_YAML, TODAY, article, brief, mut
 
 VALID = article()
 VALID_BRIEF = brief(TODAY)
@@ -68,25 +68,25 @@ def test_rolling_slug_must_be_a_real_date_not_in_the_future(
     assert "B-SLUG" in result.blocks
 
 
-def test_tonights_rolling_slug_passes_west_of_utc(testrepo: str) -> None:
+def test_the_current_utc_rolling_slug_passes_west_of_utc(testrepo: str) -> None:
     """The proof keeps duty's clock: UTC.
 
-    It used to keep the machine's, so a night shift running west of UTC — after
-    its own evening rollover, when the local date is still yesterday — read
-    tonight's correct rolling slug as a date in the future and blocked it. TZ
+    It used to keep the machine's local date, so a scheduled runtime west of
+    UTC read the correct rolling slug as a date in the future after UTC midnight
+    but before local midnight. TZ
     forces that machine, so the bug is reproducible rather than a thing that
     only bites after 8pm in New York.
     """
     utc_now = dt.datetime.now(dt.timezone.utc).date().isoformat()
-    tonight = pathlib.Path(tempfile.mkdtemp()) / "library" / "ai-briefs"
-    tonight.mkdir(parents=True)
-    (tonight / f"{utc_now}.html").write_text(brief(utc_now))
+    article_dir = pathlib.Path(tempfile.mkdtemp()) / "library" / "ai-briefs"
+    article_dir.mkdir(parents=True)
+    (article_dir / f"{utc_now}.html").write_text(brief(utc_now))
 
     run = subprocess.run(
         [
             sys.executable,
             str(REPO / "engine" / "check.py"),
-            str(tonight / f"{utc_now}.html"),
+            str(article_dir / f"{utc_now}.html"),
             "--series",
             "ai-briefs",
             "--repo",
@@ -115,6 +115,7 @@ def test_rolling_already_published_blocks(
 
 
 def test_sequence_first_item_into_an_empty_library_is_block_clean(
+    *,
     run_local: Callable[..., Findings],
     seq_repo: Callable[[], str],
     make_library: Callable[..., str],
@@ -130,6 +131,7 @@ def test_sequence_first_item_into_an_empty_library_is_block_clean(
 
 
 def test_sequence_wrong_next_item_blocks(
+    *,
     run_local: Callable[..., Findings],
     seq_repo: Callable[[], str],
     make_library: Callable[..., str],
@@ -145,6 +147,7 @@ def test_sequence_wrong_next_item_blocks(
 
 
 def test_sequence_wrong_order_number_blocks(
+    *,
     run_local: Callable[..., Findings],
     seq_repo: Callable[[], str],
     make_library: Callable[..., str],
@@ -172,13 +175,15 @@ def test_paused_series_blocks_publication(
     [
         ("cadence: weekdays\n", "semiconductors", True),
         ("cadence: [mon, thu]\n", "semiconductors", True),
+        ("cadence: manual\n", "semiconductors", True),
         ("cadence: fortnightly\n", "semiconductors", False),
         ("selection: random\n", "semiconductors", True),
         ("selection: random\n", "ai-briefs", False),
         ("cadance: daily\n", "semiconductors", False),
     ],
 )
-def test_rhythm_configuration_validates(
+def test_cadence_configuration_validates(
+    *,
     vc_rc: Callable[[str], int],
     patched_repo: Callable[..., str],
     patch: str,
@@ -189,6 +194,7 @@ def test_rhythm_configuration_validates(
 
 
 def test_open_freestyle_pick_is_block_clean(
+    *,
     run_local: Callable[..., Findings],
     open_press: Callable[..., str],
     make_library: Callable[..., str],
@@ -205,6 +211,7 @@ def test_open_freestyle_pick_is_block_clean(
 
 
 def test_open_duplicate_slug_blocks(
+    *,
     run_local: Callable[..., Findings],
     open_press: Callable[..., str],
     make_library: Callable[..., str],
@@ -221,6 +228,7 @@ def test_open_duplicate_slug_blocks(
 
 
 def test_open_template_outside_the_choice_list_blocks(
+    *,
     run_local: Callable[..., Findings],
     open_press: Callable[..., str],
     make_library: Callable[..., str],
@@ -239,6 +247,7 @@ def test_open_template_outside_the_choice_list_blocks(
 
 
 def test_pending_commission_blocks_a_freestyle_pick(
+    *,
     run_local: Callable[..., Findings],
     open_press: Callable[..., str],
     make_library: Callable[..., str],
@@ -255,6 +264,7 @@ def test_pending_commission_blocks_a_freestyle_pick(
 
 
 def test_publishing_the_commissioned_item_is_block_clean(
+    *,
     run_local: Callable[..., Findings],
     open_press: Callable[..., str],
     make_library: Callable[..., str],
@@ -264,6 +274,120 @@ def test_publishing_the_commissioned_item_is_block_clean(
         "wildcard",
         slug="commissioned-piece",
         repo=open_press(QUEUE_YAML),
+        library=make_library({"wildcard": []}),
+    )
+
+    assert not result.blocks
+
+
+def test_manual_open_series_requires_a_configured_commission(
+    *,
+    run_local: Callable[..., Findings],
+    open_press: Callable[..., str],
+    make_library: Callable[..., str],
+) -> None:
+    result = run_local(
+        OPEN,
+        "wildcard",
+        slug="the-cuda-moat",
+        repo=open_press(OPEN_YAML + "cadence: manual\n"),
+        library=make_library({"wildcard": []}),
+    )
+
+    assert "B-SLUG" in result.blocks
+
+
+def test_manual_open_revision_of_an_unlisted_published_slug_passes(
+    *,
+    run_local: Callable[..., Findings],
+    open_press: Callable[..., str],
+    make_library: Callable[..., str],
+) -> None:
+    result = run_local(
+        OPEN,
+        "wildcard",
+        slug="the-cuda-moat",
+        repo=open_press(OPEN_YAML + "cadence: manual\n"),
+        library=make_library({"wildcard": ["the-cuda-moat"]}),
+        revision=True,
+    )
+
+    assert not result.blocks
+
+
+@pytest.mark.parametrize(
+    ("_name", "flags", "blocked"),
+    [
+        ("a published slug blocks the plain local check", [], True),
+        ("--revision preflights it like the PR proof", ["--revision"], False),
+    ],
+)
+def test_local_revision_flag_matches_the_pr_proof(
+    *,
+    run_main_json: Callable[[list[str]], dict],
+    make_library: Callable[..., str],
+    testrepo: str,
+    tmp_path: pathlib.Path,
+    _name: str,
+    flags: list[str],
+    blocked: bool,
+) -> None:
+    art = tmp_path / "library" / "semiconductors" / "micron.html"
+    art.parent.mkdir(parents=True)
+    art.write_text(VALID)
+
+    out = run_main_json(
+        [
+            str(art),
+            "--series",
+            "semiconductors",
+            "--repo",
+            testrepo,
+            "--library",
+            make_library({"semiconductors": ["micron"]}),
+            "--today",
+            TODAY,
+            "--json",
+            "--no-check-links",
+            *flags,
+        ]
+    )
+
+    codes = {f["code"] for f in out["findings"] if f["level"] == "BLOCK"}
+    assert ("B-MODE" in codes) is blocked
+
+
+def test_revision_of_a_removed_collection_item_passes_the_slug_gate(
+    *,
+    run_local: Callable[..., Findings],
+    overwrite_series: Callable[..., str],
+    make_library: Callable[..., str],
+) -> None:
+    result = run_local(
+        VALID,
+        "semiconductors",
+        repo=overwrite_series(
+            SEMICONDUCTORS_YAML.replace("slug: micron", "slug: a-different-item"),
+            series="semiconductors",
+        ),
+        library=make_library({"semiconductors": ["micron"]}),
+        revision=True,
+    )
+
+    assert not result.blocks
+
+
+def test_manual_open_series_accepts_its_configured_commission(
+    *,
+    run_local: Callable[..., Findings],
+    open_press: Callable[..., str],
+    make_library: Callable[..., str],
+) -> None:
+    result = run_local(
+        OPEN.replace("the-cuda-moat", "commissioned-piece"),
+        "wildcard",
+        slug="commissioned-piece",
+        repo=open_press(QUEUE_YAML + "cadence: manual\n"),
         library=make_library({"wildcard": []}),
     )
 

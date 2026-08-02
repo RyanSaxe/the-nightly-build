@@ -1,7 +1,7 @@
 """Production guidance stays portable while resolving deterministically.
 
 The resolver is the single source of truth for profile, press, and series
-precedence, so a correspondent never has to reproduce configuration logic in a
+precedence, so an orchestrator never has to reproduce configuration logic in a
 prompt. These tests also protect the deliberate boundary between portable
 semantic tiers and exact provider model overrides.
 """

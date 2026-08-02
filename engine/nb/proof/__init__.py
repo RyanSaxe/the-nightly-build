@@ -48,18 +48,20 @@ def check_article(
     rep,
     today=None,
     check_links=False,
+    revision=False,
 ) -> dict | None:
     """Run every check against one article and record the findings on rep.
 
-    `today` defaults to the date in UTC, which is the clock duty.py keeps and
-    the clock PROTOCOL's rolling-slug rule names. The local clock would fail a
-    correct article: a night shift running west of UTC, after its own evening
-    rollover, computes yesterday and then reads tonight's rolling slug as a
-    date in the future.
+    `today` defaults to the date in UTC, which is the clock duty.py and the
+    rolling-slug proof use. A local clock could fail a correct article: after
+    UTC midnight but before local midnight, a runtime west of UTC would compute
+    the prior date and reject the current UTC slug as a date in the future.
     """
     today = today or _dt.datetime.now(_dt.timezone.utc).date()
 
-    resolved = resolve_series_and_template(repo, series_id, rep)
+    resolved = resolve_series_and_template(
+        repo, series_id, rep=rep, allow_paused=revision
+    )
     if resolved is None:
         return None
     series, registry, allowed_templates = resolved
@@ -110,10 +112,11 @@ def check_article(
         slug=slug,
         pub=pub,
         today=today,
+        revision=revision,
         rep=rep,
     )
 
-    check_required_sections(ed, treg, rep)
+    check_required_sections(ed, treg, rep=rep)
     check_chrome(raw, treg=treg, rep=rep)
     check_classes(raw, repo=repo, rep=rep)
     check_deprecated(raw, repo=repo, rep=rep)

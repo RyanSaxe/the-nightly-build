@@ -40,7 +40,7 @@ COMMANDS = {
         "scripts/sync.sh", "Synchronize protected publishing workflows", "orchestrator"
     ),
     "duty": Command(
-        "engine/duty.py", "Resolve the articles due tonight", "orchestrator"
+        "engine/duty.py", "Resolve articles due for a UTC date", "orchestrator"
     ),
     "validate": Command(
         "engine/validate_config.py", "Validate press configuration", "human"
@@ -57,6 +57,9 @@ COMMANDS = {
     ),
     "check": Command(
         "engine/check.py", "Check an article or Article PR", "writer, editor, CI"
+    ),
+    "stamp": Command(
+        "engine/stamp.py", "Write the computed nb-meta counts", "writer, editor"
     ),
     "preview": Command(
         "engine/build_site.py",

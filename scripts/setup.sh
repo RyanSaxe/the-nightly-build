@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # The Nightly Build scripts/setup.sh
 # Idempotent bootstrap: creates the library branch, enables Pages + auto-merge,
-# validates configuration. Safe to re-run; callable by the Librarian skill.
+# validates configuration. Safe to re-run; callable by the user-assistant skill.
 # POSIX sh so it runs on any shell (dash, bash, zsh, ...), not just zsh.
 set -eu
 
@@ -67,7 +67,7 @@ background: make the paper yours. Ask your agent to interview you and fill
 this in, or write it by hand.
 MD
 	cat >press/production.yaml <<'YAML'
-# Portable role guidance. See docs/production.md.
+# Portable role guidance. See docs/reference/production.md.
 profile: balanced
 required: false
 YAML
@@ -172,16 +172,27 @@ if gh api "repos/$repo/pages" >/dev/null 2>&1; then
 	fi
 fi
 
+# 4c. Actions run the publishing gate; forks start with workflows disabled ---
+if [ "$(gh api "repos/$repo/actions/permissions" -q .enabled 2>/dev/null)" = "true" ]; then
+	ok "GitHub Actions enabled"
+elif gh api -X PUT "repos/$repo/actions/permissions" -F enabled=true >/dev/null 2>&1; then
+	ok "GitHub Actions enabled (forks start with workflows disabled)"
+else
+	warn "could not enable GitHub Actions. Without it the 'validate' check never"
+	warn "  runs and no article can merge. Enable workflows at:"
+	warn "  https://github.com/$repo/actions"
+fi
+
 # 5. Auto-merge + library protection -----------------------------------------
 if gh api -X PATCH "repos/$repo" -F allow_auto_merge=true >/dev/null 2>&1; then
 	ok "repository auto-merge enabled"
 else
 	warn "could not enable auto-merge. Flip it at https://github.com/$repo/settings"
 fi
-# enforce_admins:true is deliberate: the night shift holds your (admin) token,
+# enforce_admins:true is deliberate: the scheduled runtime holds your (admin) token,
 # so the required 'validate' check must bind admins too, or a prompt-injected
 # run could merge past the proof. Auto-merge still works (it merges only after
-# 'validate' passes). See docs/scheduling.md § Security.
+# 'validate' passes). See docs/concepts/publishing-and-security.md.
 if gh api -X PUT "repos/$repo/branches/library/protection" --input - >/dev/null 2>&1 <<'JSON'; then
 {
   "required_status_checks": { "strict": false, "contexts": ["validate"] },
@@ -201,7 +212,14 @@ fi
 
 # 6. Existing libraries synchronize through the protected PR path ------------
 if [ "$library_created" = false ]; then
-	"$ROOT/nb" sync
+	sync_rc=0
+	"$ROOT/nb" sync || sync_rc=$?
+	if [ "$sync_rc" -eq 3 ]; then
+		warn "the publishing workflows need a protected update: open and merge"
+		warn "  the sync PR described above, then re-run nb setup"
+	elif [ "$sync_rc" -ne 0 ]; then
+		die "nb sync failed; fix the failure above, then re-run nb setup"
+	fi
 fi
 
 # 7. Status ------------------------------------------------------------------
@@ -209,9 +227,14 @@ echo
 ok "The presses are ready."
 printf '%s\n' "
 Next steps:
-  1. Configure a series, or ask your agent to set you up (the Librarian skill).
-  2. Rehearse:   run a press check; see skills/correspondent/SKILL.md.
-  3. Schedule:   pick a path in docs/scheduling.md (a native scheduler, or the
-                 universal GitHub Actions cron) and use the schedule prompt there.
-  4. Morning:    your site lives at the Pages URL for $repo.
+  1. Configure:  add a series (copy a working example from examples/), or open
+                 this checkout in your AI tool and ask it to set you up; see
+                 docs/getting-started/ask-your-ai.md.
+  2. Publish it: commit and push press/ to main. The scheduled run reads the
+                 press from the remote main branch, not this working tree.
+  3. Verify:     run the non-publishing smoke test in your real automation
+                 environment; see docs/getting-started/first-run.md.
+  4. Schedule:   pick a scheduler in docs/guides/operate/schedule.md and point
+                 it at .agents/prompts/run-scheduled-publication.md.
+  5. Morning:    your site lives at the Pages URL for $repo.
 "

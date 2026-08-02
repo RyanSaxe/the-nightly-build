@@ -1,6 +1,6 @@
 """Initialize one article with the exact context its editorial team needs.
 
-The correspondent chooses the commission. This module handles only the
+The orchestrator chooses the commission. This module handles only the
 deterministic setup: resolve the selected template, copy its skeleton, and
 assemble the current authored directions without paraphrasing them.
 """
@@ -164,7 +164,7 @@ def _editorial_direction(
     chunks = [
         "# Editorial direction\n",
         "These are the exact standing directions for this article. Later "
-        "sections specialize earlier ones; the correspondent's commission "
+        "sections specialize earlier ones; the orchestrator's commission "
         "adds article-specific decisions without rewriting them.\n\n",
         f"Checkout revision: `{revision}`\n",
     ]
@@ -279,7 +279,10 @@ def initialize(
     _read(skeleton, label=f"template skeleton for {template_id}")
 
     item = _selected_item(series, slug)
-    if item is None and series.get("mode") in ("collection", "sequence"):
+    requires_item = series.get("mode") in ("collection", "sequence") or (
+        series.get("mode") == "open" and series.get("cadence") == "manual"
+    )
+    if item is None and requires_item:
         raise StartArticleError(f"series {series_id!r} has no item {slug!r}")
     resolved_tags = _resolve_tags(item=item, requested=tags)
     direction = _editorial_direction(

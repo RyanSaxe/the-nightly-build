@@ -8,7 +8,40 @@ named head's committed blobs rather than a checkout or PR-body description.
 import pathlib
 
 from conftest import PressRepo
-from press import article
+from press import article, write_agent_artifacts
+
+
+def prepare_revision(
+    pr_repo: PressRepo,
+    *,
+    legacy: bool = False,
+    paused: bool = False,
+    prior_notes: int = 0,
+) -> str:
+    pr_repo.checkout("library")
+    if paused:
+        series = pathlib.Path(pr_repo.path, "press/series/semiconductors/series.yaml")
+        series.write_text(series.read_text() + "paused: true\n")
+    pr_repo.write("library/semiconductors/micron.html", article())
+    if not legacy:
+        write_agent_artifacts(pr_repo.path, "semiconductors", slug="micron")
+    for number in range(1, prior_notes + 1):
+        pr_repo.write(
+            f"agent-artifacts/semiconductors/micron/revisions/{number:02d}.md",
+            f"# Revision {number:02d}\n\nEarlier correction.\n",
+        )
+    pr_repo.commit("publish micron")
+    pr_repo.checkout("owner/revise-micron", new=True)
+    pr_repo.write(
+        "library/semiconductors/micron.html",
+        article().replace("</body>", "<!-- corrected -->\n</body>"),
+    )
+    pr_repo.write(
+        f"agent-artifacts/semiconductors/micron/revisions/{prior_notes + 1:02d}.md",
+        "# Revision\n\nCorrect a factual error in the published article.\n",
+    )
+    pr_repo.commit("revise micron")
+    return "owner/revise-micron"
 
 
 def test_pr_happy_path(pr_repo: PressRepo) -> None:
@@ -20,9 +53,9 @@ def test_pr_happy_path(pr_repo: PressRepo) -> None:
 def test_preflight_passes_from_the_library_checkout(pr_repo: PressRepo) -> None:
     """Proof reads proposed blobs even when the checkout lacks the new bundle.
 
-    On 2026-07-16 two desks hit a false file-not-found block because preflight
-    ran from the library checkout. The named head, not the working tree, is the
-    exact content a merge would publish.
+    On 2026-07-16 two article runs hit a false file-not-found block because
+    preflight ran from the library checkout. The named head, not the working
+    tree, is the exact content a merge would publish.
     """
     pr_repo.checkout("library")
 
@@ -70,7 +103,7 @@ def test_pr_requires_the_complete_matching_artifact_tree(pr_repo: PressRepo) -> 
     assert "B-AGENT-ARTIFACTS" in result.blocks
 
 
-def test_pr_accepts_numbered_revision_artifacts(pr_repo: PressRepo) -> None:
+def test_pr_accepts_numbered_role_invocations(pr_repo: PressRepo) -> None:
     for filename in ("brief.md", "draft-handoff.md"):
         pr_repo.write(
             f"agent-artifacts/semiconductors/micron/writer/02/{filename}",
@@ -81,6 +114,262 @@ def test_pr_accepts_numbered_revision_artifacts(pr_repo: PressRepo) -> None:
     result = pr_repo.run_pr()
 
     assert "B-AGENT-ARTIFACTS" not in result.codes
+
+
+def test_pr_accepts_an_article_revision(
+    pr_repo: PressRepo,
+) -> None:
+    head = prepare_revision(pr_repo)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+
+
+def test_revision_of_a_legacy_article_starts_notes_at_01(
+    pr_repo: PressRepo,
+) -> None:
+    head = prepare_revision(pr_repo, legacy=True)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+
+
+def test_revision_note_uses_the_next_sequence_number(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo, prior_notes=2)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+
+
+def test_revision_accepts_asset_only_additions_modifications_and_deletions(
+    pr_repo: PressRepo,
+) -> None:
+    pr_repo.checkout("library")
+    pr_repo.write("library/semiconductors/micron.html", article())
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="micron")
+    pr_repo.write("library/semiconductors/micron/old.png", "old")
+    pr_repo.write("library/semiconductors/micron/change.png", "before")
+    pr_repo.commit("publish micron with assets")
+    pr_repo.checkout("owner/revise-assets", new=True)
+    pr_repo.git("rm", "-q", "library/semiconductors/micron/old.png")
+    pr_repo.write("library/semiconductors/micron/change.png", "after")
+    pr_repo.write("library/semiconductors/micron/new.png", "new")
+    pr_repo.write(
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+        "# Asset revision\n\nReplace an inaccurate figure and its source data.\n",
+    )
+    pr_repo.commit("revise assets")
+
+    result = pr_repo.run_pr(head="owner/revise-assets")
+
+    assert not result.blocks
+
+
+def test_revision_rejects_a_note_without_an_article_or_asset_change(
+    pr_repo: PressRepo,
+) -> None:
+    pr_repo.checkout("library")
+    pr_repo.write("library/semiconductors/micron.html", article())
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="micron")
+    pr_repo.commit("publish micron")
+    pr_repo.checkout("owner/note-only", new=True)
+    pr_repo.write(
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+        "# Revision\n\nNo published content changed.\n",
+    )
+    pr_repo.commit("add note only")
+
+    result = pr_repo.run_pr(head="owner/note-only")
+
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_revision_can_change_metadata_allowed_by_normal_proof(
+    pr_repo: PressRepo,
+) -> None:
+    head = prepare_revision(pr_repo)
+    revised = pathlib.Path(pr_repo.path, "library/semiconductors/micron.html")
+    revised.write_text(
+        revised.read_text().replace('"date": "2026-07-06"', '"date": "2026-07-05"')
+    )
+    pr_repo.commit("correct publication date")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+
+
+def test_revision_requires_a_note(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    pr_repo.git(
+        "rm",
+        "-q",
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+    )
+    pr_repo.commit("omit revision note")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-REVISION-NOTE" in result.blocks
+
+
+def test_revision_rejects_multiple_notes(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    pr_repo.write(
+        "agent-artifacts/semiconductors/micron/revisions/02.md",
+        "# Another note\n\nThis revision should have one explanation.\n",
+    )
+    pr_repo.commit("add two revision notes")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-REVISION-NOTE" in result.blocks
+
+
+def test_revision_rejects_an_out_of_sequence_note(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    pr_repo.git(
+        "mv",
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+        "agent-artifacts/semiconductors/micron/revisions/02.md",
+    )
+    pr_repo.commit("skip revision note 01")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-REVISION-NOTE" in result.blocks
+
+
+def test_revision_rejects_an_empty_note(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    pr_repo.write("agent-artifacts/semiconductors/micron/revisions/01.md", "")
+    pr_repo.commit("empty revision note")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-REVISION-NOTE" in result.blocks
+
+
+def test_revision_rejects_a_symlinked_note(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    note = pathlib.Path(
+        pr_repo.path,
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+    )
+    note.unlink()
+    note.symlink_to("explanation.md")
+    pr_repo.commit("symlink revision note")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_revision_rejects_a_symlinked_asset(pr_repo: PressRepo) -> None:
+    pr_repo.checkout("library")
+    pr_repo.write("library/semiconductors/micron.html", article())
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="micron")
+    pr_repo.write("library/semiconductors/micron/real.png", "pixels")
+    pr_repo.commit("publish micron with an asset")
+    pr_repo.checkout("owner/symlink-asset", new=True)
+    pathlib.Path(pr_repo.path, "library/semiconductors/micron/loot.png").symlink_to(
+        "real.png"
+    )
+    pr_repo.write(
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+        "# Asset revision\n\nAdd a figure.\n",
+    )
+    pr_repo.commit("symlinked asset revision")
+
+    result = pr_repo.run_pr(head="owner/symlink-asset")
+
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_revision_rejects_committed_role_artifacts(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    for filename in ("brief.md", "draft-handoff.md"):
+        pr_repo.write(
+            f"agent-artifacts/semiconductors/micron/writer/02/{filename}",
+            f"# Writer revision\n\nComplete {filename}.\n",
+        )
+    pr_repo.commit("commit optional process artifacts")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_revision_cannot_modify_published_artifacts(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    review = pathlib.Path(
+        pr_repo.path,
+        "agent-artifacts/semiconductors/micron/editor/01/editorial-review.md",
+    )
+    review.write_text(review.read_text() + "Changed history.\n")
+    pr_repo.commit("rewrite old review")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_revision_cannot_modify_an_earlier_revision_note(
+    pr_repo: PressRepo,
+) -> None:
+    head = prepare_revision(pr_repo, prior_notes=1)
+    note = pathlib.Path(
+        pr_repo.path,
+        "agent-artifacts/semiconductors/micron/revisions/01.md",
+    )
+    note.write_text(note.read_text() + "Rewritten history.\n")
+    pr_repo.commit("rewrite earlier revision note")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_revision_rejects_a_note_for_another_article(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo)
+    pr_repo.write(
+        "agent-artifacts/semiconductors/tsmc/revisions/01.md",
+        "# Wrong article\n\nThis note belongs somewhere else.\n",
+    )
+    pr_repo.commit("add unrelated revision note")
+
+    result = pr_repo.run_pr(head=head)
+
+    assert "B-DIFF-SHAPE" in result.blocks
+
+
+def test_paused_series_can_receive_a_revision(pr_repo: PressRepo) -> None:
+    head = prepare_revision(pr_repo, paused=True)
+
+    result = pr_repo.run_pr(head=head)
+
+    assert not result.blocks
+
+
+def test_paused_series_still_blocks_a_new_article(pr_repo: PressRepo) -> None:
+    pr_repo.checkout("library")
+    series = pathlib.Path(pr_repo.path, "press/series/semiconductors/series.yaml")
+    series.write_text(series.read_text() + "paused: true\n")
+    pr_repo.commit("pause semiconductors")
+    pr_repo.checkout("nb/paused-new-article", new=True)
+    pr_repo.write(
+        "library/semiconductors/tsmc.html",
+        article().replace('"slug": "micron"', '"slug": "tsmc"'),
+    )
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="tsmc")
+    pr_repo.commit("try paused publication")
+
+    result = pr_repo.run_pr(head="nb/paused-new-article")
+
+    assert "B-SERIES" in result.blocks
 
 
 def test_pr_rejects_another_articles_figure_asset(pr_repo: PressRepo) -> None:
@@ -160,12 +449,19 @@ def test_workflow_sync_rejects_a_noncanonical_blob(pr_repo: PressRepo) -> None:
     assert "B-WORKFLOW-SYNC" in result.blocks
 
 
-def retract_on_a_curation_branch(pr_repo: PressRepo) -> None:
+def retract_on_a_curation_branch(
+    pr_repo: PressRepo, *, leave_record: bool = False
+) -> None:
     pr_repo.checkout("library")
     pr_repo.write("library/semiconductors/tsmc.html", article())
+    pr_repo.write("library/semiconductors/tsmc/fab-map.png", "png bytes\n")
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="tsmc")
     pr_repo.commit("published")
     pr_repo.checkout("owner/curation", new=True)
     pr_repo.git("rm", "-q", "library/semiconductors/tsmc.html")
+    pr_repo.git("rm", "-q", "library/semiconductors/tsmc/fab-map.png")
+    if not leave_record:
+        pr_repo.git("rm", "-qr", "agent-artifacts/semiconductors/tsmc")
     pr_repo.git("commit", "-qm", "retract")
 
 
@@ -183,6 +479,16 @@ def test_owner_curation_deletion_only_pr(pr_repo: PressRepo) -> None:
     result = pr_repo.run_pr(head="owner/curation", deletions_by_owner=True)
 
     assert not result.blocks
+
+
+def test_owner_curation_must_delete_the_production_record(
+    pr_repo: PressRepo,
+) -> None:
+    retract_on_a_curation_branch(pr_repo, leave_record=True)
+
+    result = pr_repo.run_pr(head="owner/curation", deletions_by_owner=True)
+
+    assert "B-DIFF-SHAPE" in result.blocks
 
 
 def test_owner_curation_deleting_engine_files(pr_repo: PressRepo) -> None:

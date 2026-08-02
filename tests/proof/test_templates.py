@@ -40,26 +40,6 @@ MEMO = f"""<!DOCTYPE html>
 <section data-nb-section="sources"><ol>{SOURCES}</ol></section>
 </body></html>"""
 
-# preamble is cite-exempt, so it carries no citation; the exchange does.
-INTERVIEW_SECTIONS = (
-    f'<section data-nb-section="preamble"><p>{LOREM * 20}</p></section>'
-    f'<section data-nb-section="exchange"><p>{LOREM * 20}'
-    f'<sup class="nb-cite"><a href="#s1">1</a></sup></p></section>'
-)
-
-INTERVIEW = f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>A Conversation</title>
-<script type="application/json" id="nb-meta">
-{{"protocol": "1.0", "series": "voices", "slug": "first-voice",
-  "template": "interview", "title": "A Conversation",
-  "mode": "collection", "order": null, "date": "2026-07-06", "tags": [],
-  "sources": 5, "words": 1280, "reading_minutes": 6, "dek": "A talk.",
-  "harness": "test-fixture", "model": "claude-fable-5"}}
-</script>
-</head><body>{INTERVIEW_SECTIONS}
-<section data-nb-section="sources"><ol>{SOURCES}</ol></section>
-</body></html>"""
-
 USER_TEMPLATES = {
     "memo": (
         "class: shortread\nbands:\n  words: [200, 3000]\n"
@@ -73,14 +53,6 @@ USER_TEMPLATES = {
         "cite_rule: per-section\ncite_exempt: [context]\n",
         ("YOUR-LABEL", "sources"),
     ),
-    # the exact manifest from the docs/customization.md walkthrough, so the
-    # tutorial cannot drift from what the proof enforces
-    "interview": (
-        "class: longread\nbands:\n  words: [1200, 3000]\n"
-        "sections: [preamble, exchange, sources]\n"
-        "cite_rule: per-section\ncite_exempt: [preamble]\n",
-        ("preamble", "exchange", "sources"),
-    ),
     # a per-item template NOT named 'brief', to prove the per-item cite rule is
     # manifest-driven rather than hardcoded to the shipped brief template
     "digest": (
@@ -91,14 +63,12 @@ USER_TEMPLATES = {
 }
 
 USER_SERIES = {
-    "memos": "name: Memos\nmode: collection\ntemplate: memo\nautopublish: true\n"
+    "memos": "name: Memos\nmode: collection\ntemplate: memo\n"
     "strict: false\nitems:\n  - {slug: first, title: First Memo}\n",
     "notes": "name: Field Notes\nmode: collection\ntemplate: fieldnotes\n"
     "items:\n  - {slug: first-notes, title: First Notes}\n",
     "digests": "name: Digests\nmode: collection\ntemplate: digest\n"
     "items:\n  - {slug: first-digest, title: First Digest}\n",
-    "voices": "name: Voices\nmode: collection\ntemplate: interview\n"
-    "items:\n  - {slug: first-voice, title: A Conversation}\n",
 }
 
 
@@ -133,21 +103,21 @@ def template_repo() -> str:
     series.mkdir(parents=True)
     (series / "series.yaml").write_text(
         "name: histories\nmode: collection\ntemplate: article\n"
-        "autopublish: true\nstrict: false\n"
+        "strict: false\n"
         "items:\n  - {slug: unix, title: Unix}\n"
     )
     debates = repo / "press" / "series" / "debates"
     debates.mkdir(parents=True)
     (debates / "series.yaml").write_text(
         "name: Debates\nmode: collection\ntemplate: unbiased\n"
-        "autopublish: true\nstrict: false\n"
+        "strict: false\n"
         "items:\n  - {slug: carbon, title: Carbon}\n"
     )
     columns = repo / "press" / "series" / "columns"
     columns.mkdir(parents=True)
     (columns / "series.yaml").write_text(
         "name: Columns\nmode: collection\ntemplate: opinion\n"
-        "autopublish: true\nstrict: false\n"
+        "strict: false\n"
         "items:\n  - {slug: tariffs, title: Tariffs}\n"
     )
     return str(repo)
@@ -303,6 +273,7 @@ def test_unbiased_blocks_when_the_divide_chrome_is_reworded(
     ("nb-side-camp", "nb-side-thesis", "nb-side-argument", "nb-side-champion"),
 )
 def test_unbiased_blocks_when_either_side_loses_required_furniture(
+    *,
     run_local: Callable[..., Findings],
     template_repo: str,
     component: str,
@@ -384,22 +355,15 @@ def test_user_template_enforces_its_own_sections(
     assert "B-HTML" in result.blocks
 
 
-def test_docs_walkthrough_interview_template_passes(
-    run_local: Callable[..., Findings], user_repo: str
-) -> None:
-    result = run_local(INTERVIEW, "voices", slug="first-voice", repo=user_repo)
-    assert not result.blocks
-
-
 def test_undeclared_extra_section_blocks_on_a_fixed_outline(
     run_local: Callable[..., Findings], user_repo: str
 ) -> None:
-    rogue = INTERVIEW.replace(
+    rogue = MEMO.replace(
         '<section data-nb-section="sources">',
         '<section data-nb-section="rogue"><p>extra</p></section>'
         '<section data-nb-section="sources">',
     )
-    result = run_local(rogue, "voices", slug="first-voice", repo=user_repo)
+    result = run_local(rogue, "memos", slug="first", repo=user_repo)
     assert "B-HTML" in result.blocks
 
 

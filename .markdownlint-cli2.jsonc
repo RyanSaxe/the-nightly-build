@@ -9,8 +9,9 @@
   },
   "globs": ["**/*.md"],
   // press/ is the reader's own config; docs/agent-only is gitignored scratch.
-  // .claude/skills symlinks into skills/, so linting it reports every skill
-  // twice; skills/ is the real copy.
+  // CLAUDE.md and GEMINI.md are exact provider-native import directives, not
+  // standalone Markdown documents. .claude contains the one native adapter;
+  // canonical skill prose is linted under .agents/skills.
   "ignores": [
     "node_modules",
     "press",
@@ -19,5 +20,7 @@
     ".byor",
     "docs/agent-only",
     ".claude",
+    "CLAUDE.md",
+    "GEMINI.md",
   ],
 }

@@ -3,8 +3,8 @@
 Editorial roles work in a small directory whose ``library/`` and
 ``agent-artifacts/`` subtrees already have their final repository paths. This
 module copies that finished bundle onto a generated branch, proves the exact
-commit, pushes it, and opens or describes the pull request. It never edits the
-article or interprets editorial quality.
+commit, pushes it, and opens or describes the pull request. This module never
+edits the article or interprets editorial quality.
 """
 
 from __future__ import annotations
@@ -107,7 +107,11 @@ def _remote_branch(library: pathlib.Path, name: str) -> str | None:
 
 
 def _generated_branch_is_safe(
-    library: pathlib.Path, *, name: str, remote_commit: str, article: _Article
+    library: pathlib.Path,
+    *,
+    name: str,
+    remote_commit: str,
+    article: _Article,
 ) -> bool:
     remote_ref = f"refs/remotes/origin/{name}"
     _git(
@@ -143,22 +147,23 @@ def _generated_branch_is_safe(
     return nb_meta.article_bundle_path(changes) == expected_article
 
 
-def _copy_bundle(article: _Article, worktree: pathlib.Path) -> None:
+def _copy_bundle(
+    article: _Article,
+    worktree: pathlib.Path,
+) -> None:
     relative_article = article.path.relative_to(article.workspace)
     target_article = worktree / relative_article
     target_article.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(article.path, target_article)
 
     source_assets = article.path.with_suffix("")
+    target_assets = worktree / source_assets.relative_to(article.workspace)
     if source_assets.exists():
         if not source_assets.is_dir() or source_assets.is_symlink():
             raise _PrepareError(f"article assets must be a directory: {source_assets}")
         if any(path.is_symlink() for path in source_assets.rglob("*")):
             raise _PrepareError("article assets cannot contain symbolic links")
-        shutil.copytree(
-            source_assets,
-            worktree / source_assets.relative_to(article.workspace),
-        )
+        shutil.copytree(source_assets, target_assets)
 
     source_artifacts = (
         article.workspace / "agent-artifacts" / article.series / article.slug
@@ -210,13 +215,16 @@ def _prepare_branch(
         ["git", "-C", str(library), "cat-file", "-e", f"{base}:{article_target}"],
         capture_output=True,
     )
-    if published.returncode == 0:
+    is_published = published.returncode == 0
+    if is_published:
         raise _PrepareError(f"article is already published: {article_target}")
-
     name = f"nb/article/{article.series}/{article.slug}"
     remote_commit = _remote_branch(library, name)
     if remote_commit and not _generated_branch_is_safe(
-        library, name=name, remote_commit=remote_commit, article=article
+        library,
+        name=name,
+        remote_commit=remote_commit,
+        article=article,
     ):
         raise _PrepareError(
             f"origin/{name} contains unrecognized edits; preserve or remove it first"
@@ -272,6 +280,10 @@ def _prepare_branch(
     return _PreparedBranch(article, name, commit)
 
 
+def _pr_title(prepared: _PreparedBranch) -> str:
+    return f"Publish {prepared.article.title}"
+
+
 def _pr_body(prepared: _PreparedBranch) -> str:
     article = prepared.article
     return (
@@ -293,14 +305,13 @@ def _repository_name(library: pathlib.Path, gh: str) -> str | None:
 
 
 def _handoff(prepared: _PreparedBranch, *, reason: str, repository: str | None) -> int:
-    article = prepared.article
     print("NB_ARTICLE_PR_REQUIRED")
     print(f"reason={reason}")
     if repository:
         print(f"repository={repository}")
     print("base=library")
     print(f"head={prepared.name}")
-    print(f"title=Publish {article.title}")
+    print(f"title={_pr_title(prepared)}")
     print("body<<NB_ARTICLE_BODY")
     print(_pr_body(prepared), end="")
     print("NB_ARTICLE_BODY")
@@ -368,7 +379,7 @@ def _open_pr(prepared: _PreparedBranch, *, library: pathlib.Path) -> int:
                 "--repo",
                 repository,
                 "--title",
-                f"Publish {prepared.article.title}",
+                _pr_title(prepared),
                 "--body-file",
                 body_file.name,
             ]
@@ -384,7 +395,7 @@ def _open_pr(prepared: _PreparedBranch, *, library: pathlib.Path) -> int:
                 "--head",
                 prepared.name,
                 "--title",
-                f"Publish {prepared.article.title}",
+                _pr_title(prepared),
                 "--body-file",
                 body_file.name,
             ]

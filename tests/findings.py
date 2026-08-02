@@ -18,8 +18,6 @@ from check import Finding, Report
 
 
 class Tier:
-    """The findings the proof raised at one level."""
-
     def __init__(self, findings: list[Finding]) -> None:
         self._findings = tuple(findings)
 
@@ -34,16 +32,8 @@ class Tier:
 
     @property
     def codes(self) -> list[str]:
-        return sorted({f.code for f in self._findings})
-
-    def saying(self, fragment: str) -> bool:
-        """Whether a finding at this tier carries `fragment` in its message.
-
-        Several rules share a code (B-SANDBOX covers scripts, tags, handlers and
-        external refs), so a code alone cannot tell which one fired. Where the
-        rule matters on its own, name it.
-        """
-        return any(fragment in f.message for f in self._findings)
+        unique_codes = {finding.code for finding in self._findings}
+        return sorted(unique_codes)
 
     def __repr__(self) -> str:
         if not self._findings:
@@ -52,8 +42,6 @@ class Tier:
 
 
 class Findings:
-    """One proof run's verdict."""
-
     def __init__(self, report: Report) -> None:
         self.report = report
         self.blocks = Tier(report.blocks)
@@ -61,8 +49,8 @@ class Findings:
 
     @property
     def codes(self) -> list[str]:
-        """Every code raised, at any tier. For asserting a finding is absent."""
-        return sorted({f.code for f in self.report.findings})
+        unique_codes = {finding.code for finding in self.report.findings}
+        return sorted(unique_codes)
 
     @property
     def notes(self) -> list[str]:
@@ -70,8 +58,3 @@ class Findings:
 
     def __repr__(self) -> str:
         return f"Findings(blocks={self.blocks!r}\nwarns={self.warns!r}\n)"
-
-
-def findings_of(report: Report) -> Findings:
-    """Wrap a Report the test filled by calling into check.py directly."""
-    return Findings(report)

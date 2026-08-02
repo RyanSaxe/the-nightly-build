@@ -1,4 +1,4 @@
-"""Configuration is checked before the night shift runs, not after it fails.
+"""Configuration is checked before scheduled publication, not after it fails.
 
 These tests exercise the author-facing validator against real copied press
 trees. They focus on readable errors and on the contract's deliberately loose
@@ -161,7 +161,7 @@ def test_the_directory_block_states_a_choice_and_a_description(
         pytest.param({"required": "yes"}, False, id="required-string"),
         pytest.param({"stages": []}, False, id="stages-list"),
         pytest.param(
-            {"stages": {"correspondent": {"model": "premium"}}},
+            {"stages": {"orchestrator": {"model": "premium"}}},
             False,
             id="orchestrator-not-configurable",
         ),
@@ -186,7 +186,7 @@ def test_production_policy_has_a_small_portable_schema(
 @pytest.mark.parametrize(
     ("patch", "rc"),
     [
-        pytest.param("autopublish: 'false'\n", 1, id="autopublish-truthy-string"),
+        pytest.param("autopublish: true\n", 1, id="autopublish-removed"),
         pytest.param("strict: 'no'\n", 1, id="strict-truthy-string"),
         pytest.param("min_sources: lots\n", 1, id="min_sources-string"),
         pytest.param("min_sources: -1\n", 1, id="min_sources-negative"),
@@ -199,9 +199,23 @@ def test_production_policy_has_a_small_portable_schema(
     ],
 )
 def test_a_mistyped_series_key_is_a_validation_error(
-    patched_repo: Callable[..., str], vc_rc: Callable[[str], int], patch: str, rc: int
+    *,
+    patched_repo: Callable[..., str],
+    vc_rc: Callable[[str], int],
+    patch: str,
+    rc: int,
 ) -> None:
     assert vc_rc(patched_repo(patch)) == rc
+
+
+def test_autopublish_has_a_migration_error(
+    patched_repo: Callable[..., str],
+    vc_output: Callable[[str], subprocess.CompletedProcess[str]],
+) -> None:
+    result = vc_output(patched_repo("autopublish: false\n"))
+
+    assert result.returncode == 1
+    assert "'autopublish' was removed" in result.stdout
 
 
 def test_unparseable_series_yaml_is_a_readable_error_not_a_traceback(
@@ -241,6 +255,7 @@ def test_a_non_dict_series_yaml_is_a_readable_error_not_a_traceback(
     ],
 )
 def test_a_malformed_series_reports_what_is_wrong(
+    *,
     overwrite_series: Callable[..., str],
     vc_output: Callable[[str], subprocess.CompletedProcess[str]],
     series_yaml: str,
@@ -273,6 +288,7 @@ def test_two_slugless_items_never_report_a_false_duplicate(
     ],
 )
 def test_declared_chrome_must_appear_in_the_template_skeleton(
+    *,
     manifest_patched_repo: Callable[..., str],
     vc_rc: Callable[[str], int],
     patch: str,
@@ -291,6 +307,7 @@ def test_declared_chrome_must_appear_in_the_template_skeleton(
     ),
 )
 def test_flexible_component_contract_is_a_unique_css_class_list(
+    *,
     manifest_patched_repo: Callable[..., str],
     vc_rc: Callable[[str], int],
     patch: str,
@@ -308,6 +325,7 @@ def test_flexible_components_require_a_flexible_outline(
 
 @pytest.mark.parametrize("component_count", (0, 2))
 def test_every_skeleton_flex_section_contains_each_component_once(
+    *,
     manifest_patched_repo: Callable[..., str],
     vc_output: Callable[[str], subprocess.CompletedProcess[str]],
     component_count: int,

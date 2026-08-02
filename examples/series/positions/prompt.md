@@ -10,7 +10,7 @@ Rotate the section:
 - Cover whichever name has waited longest and has real news to carry, so each
   comes up about once a week. Lead with what changed since that name last ran.
 - If nothing material happened for the name that is due, cover the standing
-  question that would most change how a reader values the business. No filler.
+  question that would most change how the business should be valued. No filler.
 
 Shape the dossier to the company, not to a template: orientation, then two to
 four sections you name for this business. Reach into the catalog only where a

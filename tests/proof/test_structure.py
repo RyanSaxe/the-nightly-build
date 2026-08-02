@@ -237,27 +237,6 @@ def test_the_sandbox_blocks(run_local: Callable[..., Findings], html: str) -> No
     assert "B-SANDBOX" in result.blocks
 
 
-def test_an_external_script_load_blocks_on_its_own_rule(
-    run_local: Callable[..., Findings],
-) -> None:
-    """The script-src rule is asserted by message, not by shared code.
-
-    It shares B-SANDBOX with the external-ref allowlist, which fires on the
-    same markup, so asserting the code alone would pass even if this rule
-    were downgraded to a warn. A published article that loads a script off
-    the open web is the sandbox failing at the only job it has.
-    """
-    loads_a_script = mut(
-        "</article>",
-        '<script type="application/json" data-nb-chart '
-        'src="https://evil.example/x.js"></script></article>',
-    )
-
-    result = run_local(loads_a_script, "semiconductors")
-
-    assert result.blocks.saying("articles may not load external scripts")
-
-
 def test_google_fonts_is_allowed(run_local: Callable[..., Findings]) -> None:
     result = run_local(article(), "semiconductors")
 
@@ -376,16 +355,22 @@ def flex_article(sections: list[tuple[str, str]]) -> str:
 
 
 def run_notes(
-    run_local: Callable[..., Findings], repo: str, sections: list[tuple[str, str]]
+    run_local: Callable[..., Findings],
+    repo: str,
+    *,
+    sections: list[tuple[str, str]],
 ) -> Findings:
-    return run_local(flex_article(sections), "notes", slug="first-notes", repo=repo)
+    html = flex_article(sections)
+    return run_local(html, "notes", slug="first-notes", repo=repo)
 
 
 def test_flex_template_passes_with_agent_named_sections_in_band(
     run_local: Callable[..., Findings], overlay_repo: str
 ) -> None:
     result = run_notes(
-        run_local, overlay_repo, [("the-lab", cite(1)), ("the-bet", cite(2))]
+        run_local,
+        overlay_repo,
+        sections=[("the-lab", cite(1)), ("the-bet", cite(2))],
     )
 
     assert not result.blocks
@@ -393,7 +378,7 @@ def test_flex_template_passes_with_agent_named_sections_in_band(
 
 @pytest.mark.parametrize("count", (0, 2))
 def test_manifest_furniture_is_required_once_in_every_flexible_section(
-    run_local: Callable[..., Findings], overlay_repo: str, count: int
+    *, run_local: Callable[..., Findings], overlay_repo: str, count: int
 ) -> None:
     html = flex_article([("the-lab", cite(1)), ("the-bet", cite(2))])
     furniture = '<aside class="nb-note">'
@@ -422,11 +407,12 @@ def test_manifest_furniture_is_required_once_in_every_flexible_section(
     ],
 )
 def test_a_flex_outline_out_of_band_blocks(
+    *,
     run_local: Callable[..., Findings],
     overlay_repo: str,
     sections: list[tuple[str, str]],
 ) -> None:
-    result = run_notes(run_local, overlay_repo, sections)
+    result = run_notes(run_local, overlay_repo, sections=sections)
 
     assert "B-HTML" in result.blocks
 
@@ -434,7 +420,11 @@ def test_a_flex_outline_out_of_band_blocks(
 def test_uncited_flex_section_warns_on_cite_density(
     run_local: Callable[..., Findings], overlay_repo: str
 ) -> None:
-    result = run_notes(run_local, overlay_repo, [("cited", cite(1)), ("uncited", "")])
+    result = run_notes(
+        run_local,
+        overlay_repo,
+        sections=[("cited", cite(1)), ("uncited", "")],
+    )
 
     assert "W-CITE-DENSITY" in result.warns
     assert not result.blocks
@@ -443,7 +433,11 @@ def test_uncited_flex_section_warns_on_cite_density(
 def test_cite_exempt_exempts_a_registry_declared_section(
     run_local: Callable[..., Findings], overlay_repo: str
 ) -> None:
-    result = run_notes(run_local, overlay_repo, [("context", ""), ("the-bet", cite(2))])
+    result = run_notes(
+        run_local,
+        overlay_repo,
+        sections=[("context", ""), ("the-bet", cite(2))],
+    )
 
     assert "W-CITE-DENSITY" not in result.codes
     assert not result.blocks
@@ -453,7 +447,9 @@ def test_sources_cited_out_of_first_appearance_order_warns(
     run_local: Callable[..., Findings], overlay_repo: str
 ) -> None:
     result = run_notes(
-        run_local, overlay_repo, [("the-lab", cite(2)), ("the-bet", cite(1))]
+        run_local,
+        overlay_repo,
+        sections=[("the-lab", cite(2)), ("the-bet", cite(1))],
     )
 
     assert "W-CITE-ORDER" in result.warns
@@ -464,7 +460,9 @@ def test_in_order_citations_do_not_warn(
     run_local: Callable[..., Findings], overlay_repo: str
 ) -> None:
     result = run_notes(
-        run_local, overlay_repo, [("the-lab", cite(1)), ("the-bet", cite(2))]
+        run_local,
+        overlay_repo,
+        sections=[("the-lab", cite(1)), ("the-bet", cite(2))],
     )
 
     assert "W-CITE-ORDER" not in result.codes

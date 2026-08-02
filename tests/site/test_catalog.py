@@ -1,4 +1,9 @@
-"""The catalog: what the builder tells every other reader of the site."""
+"""The catalog: what the builder tells every other reader of the site.
+
+These tests pin article ordering, build and tag grouping, series progress, and
+the protocol fields consumed by renderers. They also cover repository identity
+and directory opt-out because those values leave the paper through catalog.json.
+"""
 
 import pathlib
 from collections.abc import Callable
@@ -77,7 +82,7 @@ def test_a_press_is_listed_by_default(full_site: Site) -> None:
     ids=["derived from a Pages URL", "explicit wins", "underivable"],
 )
 def test_self_repository_derivation(
-    explicit: str | None, base_url: str, expected: str | None
+    *, explicit: str | None, base_url: str, expected: str | None
 ) -> None:
     assert build_site.derive_self_repository(explicit, base_url) == expected
 

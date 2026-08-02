@@ -19,7 +19,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     outputs:
-      autopublish: ${{ steps.proof.outputs.autopublish }}
+      new_article: ${{ steps.proof.outputs.new_article }}
       sync: ${{ steps.proof.outputs.sync }}
     steps:
       - name: Checkout PR head (full history for diff)
@@ -60,7 +60,7 @@ jobs:
             --library _library > /tmp/proof.txt
           code=$?
           cat /tmp/proof.txt
-          echo "autopublish=$(_main/nb ci autopublish --repo _main --diff-base origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
+          echo "new_article=$(_main/nb ci new-article --diff-base origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
           echo "sync=$(_main/nb ci sync --repo _main --diff-base origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
           exit $code
 
@@ -69,7 +69,7 @@ jobs:
       - name: Render probe
         run: |
           path=$(_main/nb ci article-path --diff-base "origin/${{ github.base_ref }}")
-          if [ -z "$path" ]; then echo "no added article; probe skipped"; exit 0; fi
+          if [ -z "$path" ]; then echo "no publishable article; probe skipped"; exit 0; fi
           _main/nb build --repo _main --library . --out /tmp/site
           _main/nb render-check --site /tmp/site --article "$path" | tee -a /tmp/proof.txt
 
@@ -102,7 +102,7 @@ jobs:
 
   automerge:
     needs: validate
-    if: needs.validate.outputs.autopublish == 'true' || needs.validate.outputs.sync == 'true'
+    if: needs.validate.outputs.new_article == 'true' || needs.validate.outputs.sync == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -136,13 +136,13 @@ jobs:
       # (recursion guard), so the merge above cannot start the press by
       # itself, so dispatch it explicitly. Human merges trigger it normally.
       - name: Start the press
-        if: needs.validate.outputs.autopublish == 'true'
+        if: needs.validate.outputs.new_article == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run publish.yml --repo ${{ github.repository }} --ref library || true
 
       - name: Supersede competing PRs for the same slug
-        if: needs.validate.outputs.autopublish == 'true'
+        if: needs.validate.outputs.new_article == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

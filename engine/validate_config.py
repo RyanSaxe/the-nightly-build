@@ -6,7 +6,7 @@
 """Validate the press configuration before anything schedules or publishes.
 
 Covers press/site.yaml, the banned-terms lists, the merged template
-registry, and every series/<id>/series.yaml. Both scripts/setup.sh and the librarian run it after
+registry, and every series/<id>/series.yaml. Both scripts/setup.sh and the user assistant run it after
 each configuration change; it applies the same constraints the proof enforces
 at publish time, so mistakes surface while a human is watching instead of
 during an unattended nightly run.
@@ -56,7 +56,6 @@ SERIES_KEYS = {
     "template",
     "templates",
     "prompt",
-    "autopublish",
     "strict",
     "min_sources",
     "sources_by_kind",
@@ -443,7 +442,7 @@ def check_registry(repo, errors):
     return registry
 
 
-def check_required_docs(docs, root, sid, where, errors):
+def check_required_docs(docs, root, *, sid, where, errors):
     if docs is None:
         return
     if not isinstance(docs, list):
@@ -539,7 +538,7 @@ def check_kinded_skeletons(repo, templates, *, where, errors):
 
     A skeleton whose sources carry no `data-nb-kind` renders an article the
     writer fills faithfully and the proof then blocks for "0 primary source(s)".
-    Say it at the author's desk instead.
+    Report it while the author is configuring the template instead.
     """
     for tid, folder in build_site.template_dirs(repo).items():
         skeleton = os.path.join(folder, "skeleton.html")
@@ -623,7 +622,13 @@ def check_series(repo, registry, *, errors):
         if not isinstance(cfg, dict):
             errors.append(f"{where}: series.yaml must be a mapping")
             continue
-        unknown = set(cfg) - SERIES_KEYS
+        if "autopublish" in cfg:
+            errors.append(
+                f"{where}: 'autopublish' was removed; every valid new article "
+                "now publishes automatically. Report this to the paper owner "
+                "and delete the key to acknowledge the new behavior"
+            )
+        unknown = set(cfg) - SERIES_KEYS - {"autopublish"}
         if unknown:
             errors.append(
                 f"{where}: unknown keys {sorted(unknown)} — "
@@ -637,12 +642,12 @@ def check_series(repo, registry, *, errors):
         cadence = cfg.get("cadence")
         if cadence is not None and not duty.cadence_is_valid(cadence):
             errors.append(
-                f"{where}: cadence must be daily | weekdays | "
-                f"weekends | a list of day names {list(duty.DAY_NAMES)}"
+                f"{where}: cadence must be daily | weekdays | weekends | "
+                f"manual | a list of day names {list(duty.DAY_NAMES)}"
             )
         if not isinstance(cfg.get("paused", False), bool):
             errors.append(f"{where}: 'paused' must be true or false")
-        for flag in ("autopublish", "strict"):
+        for flag in ("strict",):
             if not isinstance(cfg.get(flag, False), bool):
                 errors.append(f"{where}: '{flag}' must be true or false")
         production = cfg.get("production")
@@ -771,8 +776,12 @@ def check_series(repo, registry, *, errors):
                 if slug in seen:
                     errors.append(f"{where}: duplicate item slug '{slug}'")
                 seen.add(slug)  # only valid slugs seed the duplicate check
-            check_required_docs(item.get("required_docs"), root, sid, where, errors)
-        check_required_docs(cfg.get("required_docs"), root, sid, where, errors)
+            check_required_docs(
+                item.get("required_docs"), root, sid=sid, where=where, errors=errors
+            )
+        check_required_docs(
+            cfg.get("required_docs"), root, sid=sid, where=where, errors=errors
+        )
         consult = cfg.get("consult")
         if consult is not None and not isinstance(consult, list):
             errors.append(f"{where}: 'consult' must be a list of https:// prefixes")

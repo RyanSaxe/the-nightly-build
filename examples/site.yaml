@@ -5,7 +5,7 @@ front: comfortable # show deks on front-page story cells (compact hides them)
 footer: "Filed while you slept." # left imprint on every page. Unset -> "A Nightly Build paper"
 
 # Trusted external libraries (owner-authored on main, https + Subresource-
-# Integrity-pinned; docs/customization.md). The engine ships the code
+# Integrity-pinned; docs/reference/site.md). The engine ships the code
 # listing's highlighter itself, python and javascript included, so most
 # papers declare nothing here. This paper teaches CUDA, so it pins its own
 # Prism chain to add C and C++: a press-declared copy outranks the

@@ -1,11 +1,10 @@
-"""Tonight's work list: what publishes, what idles, and when duty refuses to answer.
+"""Scheduled work: what publishes, what idles, and when duty refuses to answer.
 
-duty.py decides whether a series publishes tonight. Every branch of that
-decision is a night the paper either ships or stays quiet, so the work list is
-asserted whole: the due entry, the idle reason, the candidates. Malformed
-configuration idles one series and never takes down the run. A tree that is not
-a press is not a quiet night — it exits 2 and prints nothing, because a run once
-read an empty work list as permission to go find a configuration of its own.
+duty.py decides whether a series publishes on the selected UTC date. The work
+list is asserted whole: the due entry, the idle reason, and the candidates.
+Malformed configuration idles one series and never takes down the run. A tree
+that is not a press exits 2 and prints nothing, because a scheduled run once
+read an empty work list as permission to find configuration of its own.
 """
 
 import json
@@ -29,7 +28,6 @@ COLLECTION_MISSING_SLUG = (
 
 
 def duty_of(report: dict, series: str) -> dict:
-    """The series' entry in tonight's work list, due or idle. Absence is a failure."""
     entries = report["due"] + report["idle"]
     matched = [entry for entry in entries if entry["series"] == series]
     assert matched, f"{series} is in neither due nor idle: {report}"
@@ -38,11 +36,12 @@ def duty_of(report: dict, series: str) -> dict:
 
 @pytest.fixture
 def empty_lib(make_library: Callable[..., str]) -> str:
-    return make_library({"semiconductors": [], "ai-briefs": []})
+    published = {"semiconductors": [], "ai-briefs": []}
+    return make_library(published)
 
 
-def test_rolling_series_is_due_tonight_with_tonights_slug(
-    duty: Callable[..., dict], testrepo: str, empty_lib: str
+def test_rolling_series_is_due_with_the_selected_utc_date_slug(
+    *, duty: Callable[..., dict], testrepo: str, empty_lib: str
 ) -> None:
     report = duty(testrepo, empty_lib)
 
@@ -50,16 +49,19 @@ def test_rolling_series_is_due_tonight_with_tonights_slug(
     assert duty_of(report, "ai-briefs")["slug"] == TODAY
 
 
-def test_rolling_already_published_tonight_is_idle(
-    duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
+def test_rolling_already_published_on_the_selected_date_is_idle(
+    *, duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
 ) -> None:
     report = duty(testrepo, make_library({"ai-briefs": [TODAY]}))
 
-    assert duty_of(report, "ai-briefs")["reason"] == "already published tonight"
+    assert (
+        duty_of(report, "ai-briefs")["reason"]
+        == "already published on selected UTC date"
+    )
 
 
 def test_collection_in_order_offers_exactly_the_next_item(
-    duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
+    *, duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
 ) -> None:
     report = duty(testrepo, make_library({"semiconductors": ["micron"]}))
 
@@ -67,6 +69,7 @@ def test_collection_in_order_offers_exactly_the_next_item(
 
 
 def test_collection_random_offers_every_unpublished_item(
+    *,
     duty: Callable[..., dict],
     patched_repo: Callable[..., str],
     make_library: Callable[..., str],
@@ -85,22 +88,49 @@ def test_collection_random_offers_every_unpublished_item(
 
 
 def test_paused_series_is_idle(
-    duty: Callable[..., dict], patched_repo: Callable[..., str], empty_lib: str
+    *, duty: Callable[..., dict], patched_repo: Callable[..., str], empty_lib: str
 ) -> None:
     report = duty(patched_repo("paused: true\n"), empty_lib)
 
     assert duty_of(report, "semiconductors")["reason"] == "paused"
 
 
-def test_cadence_off_night_is_idle(
-    duty: Callable[..., dict], patched_repo: Callable[..., str], empty_lib: str
+def test_cadence_excluding_the_selected_date_is_idle(
+    *, duty: Callable[..., dict], patched_repo: Callable[..., str], empty_lib: str
 ) -> None:
     report = duty(patched_repo("cadence: [tue]\n", series="ai-briefs"), empty_lib)
 
     assert duty_of(report, "ai-briefs") in report["idle"]
 
 
+@pytest.mark.parametrize("mode", ["collection", "sequence", "rolling", "open"])
+def test_manual_cadence_is_always_idle(
+    *,
+    duty: Callable[..., dict],
+    patched_repo: Callable[..., str],
+    empty_lib: str,
+    mode: str,
+) -> None:
+    report = duty(
+        patched_repo(f"mode: {mode}\ncadence: manual\n", series="ai-briefs"),
+        empty_lib,
+    )
+
+    entry = duty_of(report, "ai-briefs")
+    assert entry in report["idle"]
+    assert entry["reason"] == "cadence manual excludes the selected UTC date"
+
+
+def test_list_form_manual_cadence_is_idle_not_daily(
+    *, duty: Callable[..., dict], patched_repo: Callable[..., str], empty_lib: str
+) -> None:
+    report = duty(patched_repo("cadence: [manual]\n", series="ai-briefs"), empty_lib)
+
+    assert duty_of(report, "ai-briefs") in report["idle"]
+
+
 def test_open_series_with_a_queue_lists_commissions(
+    *,
     duty: Callable[..., dict],
     open_press: Callable[..., str],
     make_library: Callable[..., str],
@@ -110,8 +140,8 @@ def test_open_series_with_a_queue_lists_commissions(
     assert duty_of(report, "wildcard")["commissions"] == ["commissioned-piece"]
 
 
-def test_an_article_published_tonight_idles_its_series(
-    duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
+def test_an_article_published_on_the_selected_date_idles_its_series(
+    *, duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
 ) -> None:
     library = make_library({"semiconductors": []})
     pathlib.Path(library, "library", "semiconductors", "micron.html").write_text(
@@ -120,11 +150,14 @@ def test_an_article_published_tonight_idles_its_series(
 
     report = duty(testrepo, library)
 
-    assert duty_of(report, "semiconductors")["reason"] == "already published tonight"
+    assert (
+        duty_of(report, "semiconductors")["reason"]
+        == "already published on selected UTC date"
+    )
 
 
 def test_complete_collection_is_idle(
-    duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
+    *, duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
 ) -> None:
     everything = make_library(
         {"semiconductors": ["micron", "tsmc", "asml", "sk-hynix", "nvidia"]}
@@ -136,6 +169,7 @@ def test_complete_collection_is_idle(
 
 
 def test_a_dict_item_without_a_slug_is_dropped_not_crashed_on(
+    *,
     duty: Callable[..., dict],
     overwrite_series: Callable[..., str],
     make_library: Callable[..., str],
@@ -148,7 +182,7 @@ def test_a_dict_item_without_a_slug_is_dropped_not_crashed_on(
 
 
 def test_a_non_mapping_series_yaml_idles_that_one_series_with_a_reason(
-    duty: Callable[..., dict], overwrite_series: Callable[..., str], empty_lib: str
+    *, duty: Callable[..., dict], overwrite_series: Callable[..., str], empty_lib: str
 ) -> None:
     report = duty(overwrite_series("just a bare string\n"), empty_lib)
 
@@ -158,7 +192,7 @@ def test_a_non_mapping_series_yaml_idles_that_one_series_with_a_reason(
 
 
 def test_unparseable_series_yaml_idles_rather_than_aborting_the_run(
-    duty: Callable[..., dict], overwrite_series: Callable[..., str], empty_lib: str
+    *, duty: Callable[..., dict], overwrite_series: Callable[..., str], empty_lib: str
 ) -> None:
     report = duty(overwrite_series("a: b: c\n"), empty_lib)
 
@@ -166,7 +200,7 @@ def test_unparseable_series_yaml_idles_rather_than_aborting_the_run(
 
 
 def test_a_non_mapping_nb_meta_payload_does_not_crash_published_state(
-    duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
+    *, duty: Callable[..., dict], testrepo: str, make_library: Callable[..., str]
 ) -> None:
     library = make_library({"semiconductors": []})
     pathlib.Path(library, "library", "semiconductors", "micron.html").write_text(
@@ -180,18 +214,19 @@ def test_a_non_mapping_nb_meta_payload_does_not_crash_published_state(
 
 @pytest.mark.parametrize("cadence", ["[Mon]", "[Fortnight]"])
 def test_list_cadence_matches_case_insensitively_and_fails_open(
+    *,
     duty: Callable[..., dict],
     patched_repo: Callable[..., str],
     empty_lib: str,
     cadence: str,
 ) -> None:
-    """2026-07-06 is a Monday. Mon is due; an unrecognized day name is due too."""
     report = duty(patched_repo(f"cadence: {cadence}\n"), empty_lib)
 
     assert duty_of(report, "semiconductors") in report["due"]
 
 
 def test_sequence_progress_counts_syllabus_items_not_library_extras(
+    *,
     duty: Callable[..., dict],
     seq_repo: Callable[[], str],
     make_library: Callable[..., str],
@@ -204,10 +239,10 @@ def test_sequence_progress_counts_syllabus_items_not_library_extras(
 
 
 # The 2026-07-14 failure: pointed at a tree with no press, duty printed an empty
-# work list and exited 0. The night shift read that as "nothing due", went
+# work list and exited 0. The scheduled agent read that as "nothing due", went
 # looking for a configuration, and adopted the engine's examples/ folder. An
 # empty answer is an invitation. A missing press must refuse, and it must not be
-# confusable with a paper whose desks are simply all idle tonight.
+# confusable with a paper whose series are simply all idle for the UTC date.
 
 
 @pytest.fixture
@@ -217,7 +252,8 @@ def no_press() -> str:
     return tmp
 
 
-def test_a_tree_with_no_press_refuses_instead_of_reporting_a_quiet_night(
+def test_a_tree_with_no_press_refuses_instead_of_reporting_no_scheduled_work(
+    *,
     run_duty: Callable[..., subprocess.CompletedProcess[str]],
     no_press: str,
     empty_lib: str,
@@ -229,6 +265,7 @@ def test_a_tree_with_no_press_refuses_instead_of_reporting_a_quiet_night(
 
 
 def test_the_refusal_says_which_tree_and_that_examples_is_not_a_press(
+    *,
     run_duty: Callable[..., subprocess.CompletedProcess[str]],
     no_press: str,
     empty_lib: str,
@@ -242,7 +279,6 @@ def test_the_refusal_says_which_tree_and_that_examples_is_not_a_press(
 def test_examples_copied_into_press_is_a_real_press(
     run_duty: Callable[..., subprocess.CompletedProcess[str]], empty_lib: str
 ) -> None:
-    """The trap is the path, not the folder: examples/ is a complete working paper."""
     tmp = tempfile.mkdtemp()
     shutil.copytree(REPO / "examples", pathlib.Path(tmp) / "press")
 
@@ -251,41 +287,40 @@ def test_examples_copied_into_press_is_a_real_press(
     assert run.returncode == 0
 
 
-def test_a_press_whose_desks_are_all_idle_is_a_quiet_night_not_a_refusal(
+def test_a_press_whose_series_are_all_idle_returns_an_empty_work_list(
+    *,
     run_duty: Callable[..., subprocess.CompletedProcess[str]],
     clone_testrepo: Callable[..., str],
     empty_lib: str,
 ) -> None:
-    quiet = clone_testrepo("press", "templates")
-    for series_yaml in pathlib.Path(quiet, "press", "series").glob("*/series.yaml"):
+    idle = clone_testrepo("press", "templates")
+    for series_yaml in pathlib.Path(idle, "press", "series").glob("*/series.yaml"):
         series_yaml.write_text(series_yaml.read_text() + "paused: true\n")
 
-    run = run_duty("--repo", quiet, "--library", empty_lib)
+    run = run_duty("--repo", idle, "--library", empty_lib)
 
     assert run.returncode == 0
     assert json.loads(run.stdout)["due"] == []
 
 
 @pytest.fixture
-def night_clone(clone_testrepo: Callable[..., str]) -> tuple[str, str]:
-    """The press as the night shift sees it: a checkout tracking an origin."""
+def scheduled_clone(clone_testrepo: Callable[..., str]) -> tuple[str, str]:
     origin = tempfile.mkdtemp()
     git("init", "--bare", "-q", "-b", "main", cwd=origin)
-    night = clone_testrepo("press", "templates")
-    git("init", "-q", "-b", "main", cwd=night)
-    git("config", "user.email", "t@t", cwd=night)
-    git("config", "user.name", "t", cwd=night)
-    git("remote", "add", "origin", origin, cwd=night)
-    git("add", "-A", cwd=night)
-    git("commit", "-qm", "the press as the night shift sees it", cwd=night)
-    git("push", "-q", "origin", "main", cwd=night)
-    return night, origin
+    scheduled = clone_testrepo("press", "templates")
+    git("init", "-q", "-b", "main", cwd=scheduled)
+    git("config", "user.email", "t@t", cwd=scheduled)
+    git("config", "user.name", "t", cwd=scheduled)
+    git("remote", "add", "origin", origin, cwd=scheduled)
+    git("add", "-A", cwd=scheduled)
+    git("commit", "-qm", "the press as the scheduled runtime sees it", cwd=scheduled)
+    git("push", "-q", "origin", "main", cwd=scheduled)
+    return scheduled, origin
 
 
 @pytest.fixture
-def stale_clone(night_clone: tuple[str, str]) -> str:
-    """The owner retires a series on main; the night shift's clone never hears."""
-    night, origin = night_clone
+def stale_clone(scheduled_clone: tuple[str, str]) -> str:
+    scheduled, origin = scheduled_clone
     owner = tempfile.mkdtemp()
     git("clone", "-q", origin, owner, cwd=tempfile.gettempdir())
     git("config", "user.email", "t@t", cwd=owner)
@@ -294,20 +329,22 @@ def stale_clone(night_clone: tuple[str, str]) -> str:
     git("add", "-A", cwd=owner)
     git("commit", "-qm", "retire the old press", cwd=owner)
     git("push", "-q", "origin", "main", cwd=owner)
-    return night
+    return scheduled
 
 
 def test_a_checkout_level_with_origin_main_computes_the_work_list(
+    *,
     run_duty: Callable[..., subprocess.CompletedProcess[str]],
-    night_clone: tuple[str, str],
+    scheduled_clone: tuple[str, str],
     empty_lib: str,
 ) -> None:
-    night, _ = night_clone
+    scheduled, _ = scheduled_clone
 
-    assert run_duty("--repo", night, "--library", empty_lib).returncode == 0
+    assert run_duty("--repo", scheduled, "--library", empty_lib).returncode == 0
 
 
 def test_a_checkout_behind_origin_main_refuses_to_compute_a_work_list(
+    *,
     run_duty: Callable[..., subprocess.CompletedProcess[str]],
     stale_clone: str,
     empty_lib: str,
@@ -319,6 +356,7 @@ def test_a_checkout_behind_origin_main_refuses_to_compute_a_work_list(
 
 
 def test_the_stale_refusal_names_the_drift_and_the_command_that_fixes_it(
+    *,
     run_duty: Callable[..., subprocess.CompletedProcess[str]],
     stale_clone: str,
     empty_lib: str,
@@ -331,6 +369,7 @@ def test_the_stale_refusal_names_the_drift_and_the_command_that_fixes_it(
 
 
 def test_allow_stale_is_the_offline_escape_hatch(
+    *,
     run_duty: Callable[..., subprocess.CompletedProcess[str]],
     stale_clone: str,
     empty_lib: str,
@@ -342,9 +381,9 @@ def test_allow_stale_is_the_offline_escape_hatch(
 
 
 def test_a_tree_with_no_git_is_never_called_stale(
+    *,
     run_duty: Callable[..., subprocess.CompletedProcess[str]],
     testrepo: str,
     empty_lib: str,
 ) -> None:
-    """A press check builds its fixture press in a temp dir, outside any repo."""
     assert run_duty("--repo", testrepo, "--library", empty_lib).returncode == 0

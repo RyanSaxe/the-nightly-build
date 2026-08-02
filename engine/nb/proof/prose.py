@@ -249,7 +249,7 @@ def check_warns(
             rep.warn(
                 "W-SELF-COUNT",
                 f"nb-meta sources={meta['sources']} vs counted {actual}",
-                suggestion="update nb-meta sources to the counted total",
+                suggestion="run nb stamp to write the counted totals",
             )
     if isinstance(meta.get("words"), int):
         actual = ed.word_count
@@ -257,7 +257,7 @@ def check_warns(
             rep.warn(
                 "W-SELF-COUNT",
                 f"nb-meta words={meta['words']} vs counted {actual}",
-                suggestion="update nb-meta words to the counted total",
+                suggestion="run nb stamp to write the counted totals",
             )
 
     # banned terms (soft): the lexical tells spec/banned-terms.yaml rules out,

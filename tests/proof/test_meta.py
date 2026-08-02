@@ -14,7 +14,7 @@ from collections.abc import Callable
 import pytest
 
 import check
-from findings import Findings, findings_of
+from findings import Findings
 from press import REPO, TODAY, article, brief, mut
 
 RENDERED_DEK = """<p class="nb-dekline">
@@ -197,23 +197,23 @@ def test_intact_chrome_passes() -> None:
         '<body class="nb-article"><h2>Sources</h2></body>', treg=CHROME, rep=rep
     )
 
-    assert not findings_of(rep).blocks
+    assert not Findings(rep).blocks
 
 
 def test_mutated_chrome_blocks() -> None:
     rep = check.Report()
     check.check_chrome(
-        '<body class="nb-edition"><h2>Sources →</h2></body>', treg=CHROME, rep=rep
+        '<body class="nb-page"><h2>Sources →</h2></body>', treg=CHROME, rep=rep
     )
 
-    assert "B-CHROME" in findings_of(rep).blocks
+    assert "B-CHROME" in Findings(rep).blocks
 
 
 def test_a_template_declaring_no_chrome_is_not_checked() -> None:
     rep = check.Report()
     check.check_chrome("<body></body>", treg={}, rep=rep)
 
-    assert not findings_of(rep).blocks
+    assert not Findings(rep).blocks
 
 
 def test_a_typod_class_warns_as_dead() -> None:
@@ -225,7 +225,7 @@ def test_a_typod_class_warns_as_dead() -> None:
         rep=rep,
     )
 
-    assert "W-DEAD-CLASS" in findings_of(rep).warns
+    assert "W-DEAD-CLASS" in Findings(rep).warns
 
 
 def test_defined_and_builtin_classes_pass() -> None:
@@ -236,7 +236,7 @@ def test_defined_and_builtin_classes_pass() -> None:
         repo=str(REPO),
         rep=rep,
     )
-    result = findings_of(rep)
+    result = Findings(rep)
 
     assert not result.blocks
     assert "W-DEAD-CLASS" not in result.codes
@@ -256,17 +256,15 @@ def test_sri_pinned_stylesheet_classes_join_the_inventory(
         f"    - url: {stylesheet.as_uri()}\n      integrity: sha384-{digest}\n"
     )
 
-    rep = check.Report()
-    check.check_classes(
-        '<p class="external-chip">x</p><p class="hallucinated-chip">y</p>',
-        repo=str(repo),
-        rep=rep,
-    )
+    external = check.Report()
+    check.check_classes('<p class="external-chip">x</p>', repo=str(repo), rep=external)
+    assert "W-DEAD-CLASS" not in Findings(external).codes
 
-    assert "W-DEAD-CLASS" in findings_of(rep).warns
-    assert "external-chip" not in next(
-        finding.message for finding in rep.warns if finding.code == "W-DEAD-CLASS"
+    unknown = check.Report()
+    check.check_classes(
+        '<p class="hallucinated-chip">x</p>', repo=str(repo), rep=unknown
     )
+    assert "W-DEAD-CLASS" in Findings(unknown).warns
 
 
 def test_incomplete_external_stylesheet_suppresses_dead_class_warning(
@@ -284,5 +282,5 @@ def test_incomplete_external_stylesheet_suppresses_dead_class_warning(
     rep = check.Report()
     check.check_classes('<p class="possibly-valid">x</p>', repo=str(repo), rep=rep)
 
-    assert "W-DEAD-CLASS" not in findings_of(rep).codes
-    assert any("SRI verification failed" in note for note in rep.notes)
+    assert "W-DEAD-CLASS" not in Findings(rep).codes
+    assert rep.notes

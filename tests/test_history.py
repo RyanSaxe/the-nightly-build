@@ -3,7 +3,9 @@
 The fixtures contain tempting structural labels and markup to prove that query
 results expose only clean prose excerpts and metadata. Search behavior stays
 deliberately small: all supplied terms must match, limits are strict, and an
-empty query is just a recency listing.
+empty query is just a recency listing. `--structure` is the one deliberate
+window onto ordered structure: an outline of headings and furniture names for
+repetition checks, still never the markup itself.
 """
 
 from __future__ import annotations
@@ -201,6 +203,82 @@ def test_nb_history_show_returns_readable_blocks_for_grep(
     assert "secret" not in result.stdout
     assert "<section" not in result.stdout
     assert "nb-note" not in result.stdout
+
+
+def test_nb_history_structure_outlines_headings_and_furniture(
+    tmp_path: pathlib.Path,
+) -> None:
+    target = tmp_path / "library" / "the-wire" / "furnished.html"
+    target.parent.mkdir(parents=True)
+    meta = json.dumps(
+        {
+            "series": "the-wire",
+            "slug": "furnished",
+            "title": "The Wires Between the Chips",
+            "dek": "How links move bits",
+            "date": "2026-07-28",
+            "tags": ["test"],
+        }
+    )
+    target.write_text(
+        f'<script type="application/json" id="nb-meta">{meta}</script>'
+        '<body class="nb-article">'
+        '<section data-nb-section="orientation">'
+        '<h2>Why links matter<sup class="nb-cite"><a href="#s1">1</a></sup></h2>'
+        '<p>Prose with a cite<sup class="nb-cite"><a href="#s1">1</a></sup>.</p>'
+        '<figure class="nb-math"><code>E = mc^2</code></figure>'
+        '<div class="nb-verdict-card">holds up</div></section>'
+        '<section data-nb-section="sources"><h2>Sources</h2>'
+        "<ol><li>one</li></ol></section>"
+        "</body>"
+    )
+
+    result = subprocess.run(
+        [
+            str(REPO / "nb"),
+            "history",
+            "--structure",
+            "the-wire/furnished",
+            "--library",
+            str(tmp_path),
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "# The Wires Between the Chips" in result.stdout
+    assert "How links move bits" in result.stdout
+    assert "## Why links matter" in result.stdout
+    assert "furniture: nb-math, nb-verdict-card" in result.stdout
+    assert "## Sources" in result.stdout
+    assert result.stdout.count("furniture:") == 1
+    assert "<" not in result.stdout
+    assert "nb-cite" not in result.stdout
+
+
+def test_nb_history_structure_rejects_an_unknown_reference(
+    tmp_path: pathlib.Path,
+) -> None:
+    (tmp_path / "library").mkdir()
+
+    result = subprocess.run(
+        [
+            str(REPO / "nb"),
+            "history",
+            "--structure",
+            "the-wire/missing",
+            "--library",
+            str(tmp_path),
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "published article not found" in result.stderr
 
 
 def test_nb_history_show_rejects_search_arguments(tmp_path: pathlib.Path) -> None:

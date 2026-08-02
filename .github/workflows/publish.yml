@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Checkout library (content)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history: revision merges date the feed's <updated>
 
       - name: Checkout engine + templates from main
         uses: actions/checkout@v4
