@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A chipmaker's cost of capital runs more than double a utility's · Investing Course</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "investing",
+        "slug": "cost-of-capital",
+        "template": "lesson",
+        "title": "A chipmaker's cost of capital runs more than double a utility's",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-02",
+        "tags": ["accounting", "valuation", "wacc"],
+        "sources": 11,
+        "words": 2148,
+        "reading_minutes": 9,
+        "dek": "Cost of capital sets the hurdle a company's return on invested capital has to beat for growth to create value instead of destroying it.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Investing Course</div>
+        <h1 class="nb-title">A chipmaker's cost of capital runs more than double a utility's</h1>
+        <p class="nb-dekline">
+          Cost of capital sets the hurdle a company's return on
+          invested capital has to beat for growth to create value instead of
+          destroying it.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-08-02</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          In 2025 Intel spent $14.6 billion building capacity and still
+          lost money for the year. That is what happens when spending
+          fails the one test that decides whether growth is worth funding:
+          does the return clear what the money actually costs? Every
+          dollar a company raises, borrowed or invested by a shareholder,
+          carries a price rarely the interest rate printed on a loan. This
+          lesson builds that price from its two pieces, what lenders
+          charge after tax and what shareholders require for the risk they
+          bear, and blends them into the single hurdle a company's return
+          on invested capital has to beat. Cost of equity is estimated, not
+          measured, and even the regulators whose job is setting it can
+          run four standard methods on one company and get four different
+          answers. By the end, a reader should be able to state what
+          return a business has to earn to be creating value, and why
+          that number is an estimate, not an observed fact.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../investing/return-on-capital.html"
+              >Costco turns each invested dollar into 37 cents of
+              profit</a
+            >: builds the return this lesson's hurdle compares against.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../investing/what-a-company-owns-and-owes.html"
+              >Balancing a balance sheet is arithmetic. Pricing what's on
+              it is judgment.</a
+            >: the debt and equity lines this lesson prices and weights.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The number Intel's spending didn't clear</h2>
+        <p>
+          Intel spent $14.6 billion in fiscal 2025 building factories and
+          buying equipment.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="condensed consolidated statement of cash flows"
+              >1</a
+            ></sup
+          >
+          The company still closed the year with a net loss, $(0.06) of
+          earnings per share, while carrying $46.6 billion of debt.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="condensed consolidated statement of income and balance sheet"
+              >1</a
+            ></sup
+          >
+          A company posting a net loss did not clear any positive return
+          requirement, let alone the specific one its lenders and
+          shareholders were actually charging it. That gap, between what a
+          company earns and what its money is priced to require, is the
+          hurdle this lesson builds: the cost of capital.
+        </p>
+        <p>
+          Aswath Damodaran, the NYU Stern professor, arrives at that hurdle
+          by naming three
+          questions before answering them with one number. What does it
+          cost a company to raise money? What is an investor giving up by
+          investing here instead of an equally risky alternative? What rate
+          should a future dollar be discounted at, to price what it is
+          worth today? For an outside investor, the answer to all three is
+          an opportunity cost, "the rate of return that they would expect
+          to make in other investments of equivalent risk."<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="The Mechanics and Role in Corporate Finance"
+              >2</a
+            ></sup
+          >
+          For the company raising it, that same number is what the money
+          costs. For a project inside the company, it is the hurdle rate
+          the project has to beat.
+        </p>
+        <p>
+          The return-on-capital lesson in this course built the other half
+          of that comparison: after-tax profit, divided by the money it
+          took to produce it. It asked whether that return was good by
+          comparing it to a hurdle this course had not yet built. Cost of
+          capital is that hurdle, priced from two sources: what a company
+          pays its lenders, and what it must return to its shareholders.
+        </p>
+      </section>
+
+      <section data-nb-section="cost-of-debt" id="cost-of-debt">
+        <h2>Why borrowed money is cheaper than it looks</h2>
+        <p>
+          A dollar of interest a company pays a lender is, in the United
+          States, a dollar it can deduct before computing the tax it owes:
+          "there shall be allowed as a deduction all interest paid or
+          accrued within the taxable year on indebtedness."<sup
+            class="nb-cite"
+            ><a href="#s3" data-nb-locator="26 U.S.C. §163(a)">3</a></sup
+          >
+          A separate cap limits the deduction to roughly 30 percent of
+          taxable income for a highly indebted company. Most large,
+          profitable companies never reach it.<sup class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="the 30% adjusted-taxable-income limitation"
+              >4</a
+            ></sup
+          >
+        </p>
+        <p>
+          That deduction is why the cost of debt is computed after tax:
+          the long-term borrowing rate, times one minus the tax rate. Use
+          the marginal, statutory rate the tax code sets, not a company's
+          effective or book rate for the year, which can swing with
+          one-time items unrelated to how the company actually finances
+          itself.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="cost of debt formula and marginal tax rate"
+              >5</a
+            ></sup
+          >
+          Say you can borrow today at 6 percent, and the statutory rate you
+          owe on the next dollar of income is 25 percent. Every dollar of
+          interest you pay saves you 25 cents of tax. Your after-tax cost
+          of debt is not 6 percent. It is 6 percent times 0.75, or 4.5
+          percent.
+        </p>
+        <p>
+          The tax shield narrows the gap between industries that price very
+          differently on the equity side. Aswath Damodaran's live industry
+          dataset, fetched August 2, 2026, puts the after-tax cost of debt
+          at 3.55 percent for the general utility industry and 3.97
+          percent for semiconductor companies, close together.<sup
+            class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="Utility (General) and Semiconductor rows"
+              >6</a
+            ></sup
+          >
+          Lenders mostly care whether they get paid back, not how much
+          upside a business has, so debt prices closer to a floor even
+          where equity does not.
+        </p>
+      </section>
+
+      <section data-nb-section="cost-of-equity" id="cost-of-equity">
+        <h2>A return nobody can actually observe</h2>
+        <p>
+          Debt is a contract: a company promises a lender a fixed payment.
+          Equity has no such contract. A shareholder is owed nothing
+          beyond what the business generates after every other claim is
+          paid. So the cost of equity is the required return given that
+          risk, inclusive of both dividend and price appreciation,
+          explicitly not the dividend yield alone or the
+          earnings-to-price ratio.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="the cost of equity is / is not"
+              >5</a
+            ></sup
+          >
+          Unlike interest, that return is never paid out, so it has to be
+          estimated. The standard tool for estimating it is the capital
+          asset pricing model, CAPM: a stock's required return sits above
+          the risk-free rate by beta, its sensitivity to the overall
+          market, scaled by the extra return investors demand for holding
+          the market at all.<sup class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="p. 25, textbook prescription of Sharpe-Lintner CAPM"
+              >7</a
+            ></sup
+          >
+        </p>
+        <p>
+          CAPM is standard, but it is not accurate, and the economists who
+          established that are honest about the gap. Eugene Fama and
+          Kenneth French tested CAPM's central prediction, that required
+          return rises with beta in a straight line, against decades of US
+          stock returns. The actual relationship is flatter: high-beta
+          stocks earn less than CAPM says they should, low-beta stocks
+          earn more.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="p. 33, Figure 2">7</a></sup
+          >
+          The inputs are uncertain enough to swamp the answer on their
+          own. The average annual US equity risk premium is 8.3 percent,
+          but its standard error is wide enough that a two-standard-error
+          range runs from 3.5 to 13.1 percent, "sufficient to make most
+          projects appear either profitable or unprofitable."<sup
+            class="nb-cite"
+            ><a href="#s7" data-nb-locator="p. 44, footnote 7">7</a></sup
+          >
+          Fama and French still teach CAPM, "but we also warn students that
+          despite its seductive simplicity, the CAPM's empirical problems
+          probably invalidate its use in applications."<sup
+            class="nb-cite"
+            ><a href="#s7" data-nb-locator="p. 44, seductive simplicity"
+              >7</a
+            ></sup
+          >
+          It survives because nothing has replaced it, not because its
+          problems were resolved.
+        </p>
+        <p>
+          A real regulator setting a real required return shows what that
+          means. The Federal Energy Regulatory Commission sets utilities'
+          allowed return on equity, and for years leaned mainly on one
+          model, discounted cash flow. In 2018, doubting that model amid
+          unusually low bond yields, FERC proposed averaging four instead:
+          DCF, CAPM, an "expected earnings" model, and a risk-premium
+          model.<sup
+            class="nb-cite"
+            ><a
+              href="#s8"
+              data-nb-locator="Use of Multiple Financial Models"
+              >8</a
+            ></sup
+          >
+          Four standard models, applied to the same utilities in the same
+          proceeding, produced four different numbers. FERC's response was
+          not to pick the "true" one. It was to average them. That
+          standard traces back further than any of the four models. In
+          1944 the Supreme Court held that a utility's allowed return has
+          to be set in opportunity-cost terms:
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label"
+            >Federal Power Commission v. Hope Natural Gas Co., 1944</span
+          >
+          <blockquote>
+            "the return to the equity owner should be commensurate with
+            returns on investments in other enterprises having corresponding
+            risks. That return, moreover, should be sufficient to assure
+            confidence in the financial integrity of the enterprise, so as to
+            maintain its credit and to attract capital."<sup
+              class="nb-cite"
+              ><a href="#s9" data-nb-locator="320 U.S. 591, 603"
+                >9</a
+              ></sup
+            >
+            <span class="nb-note-who"
+              >U.S. Supreme Court, Federal Power Commission v. Hope Natural
+              Gas Co., 320 U.S. 591</span
+            >
+          </blockquote>
+        </div>
+        <p>
+          Hope Natural Gas sets an opportunity-cost standard without
+          specifying how to estimate it, and as FERC's own four-model
+          proceeding shows, that "how" is still contested more than eighty
+          years later. "What a company's own regulators call fair" is this
+          standard: a return set by comparison, not produced by a formula.
+        </p>
+      </section>
+
+      <section data-nb-section="wacc" id="wacc">
+        <h2>One hurdle built from two different prices</h2>
+        <p>
+          A company is financed by lenders and shareholders at once, so its
+          cost of capital blends the two prices, weighted by how much of
+          the company each one actually finances:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \text{WACC} = \htmlClass{nb-mc1}{k_e}
+            \htmlClass{nb-mc2}{\left(\dfrac{E}{D+E}\right)} +
+            \htmlClass{nb-mc3}{k_d}
+            \htmlClass{nb-mc4}{\left(\dfrac{D}{D+E}\right)}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">k_e</span
+              ><span
+                >Cost of equity, the required return shareholders
+                demand.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">E/(D+E)</span
+              ><span
+                >Equity's share of the company's financing, at market
+                value.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">k_d</span
+              ><span>After-tax cost of debt, from the section above.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">D/(D+E)</span
+              ><span
+                >Debt's share of the company's financing, at market
+                value.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            Weighted average cost of capital, WACC: the market-value-
+            weighted blend of what a company pays lenders after tax and what
+            it must return to shareholders.<sup class="nb-cite"
+              ><a href="#s5" data-nb-locator="WACC formula, slide 3"
+                >5</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Market value, not book value, belongs in those weights. Book
+          equity is an accounting residual, small, negative, or stale, and
+          weighting by it is "not only irrelevant when it comes to cost of
+          capital but come with problems that can be insurmountable."<sup
+            class="nb-cite"
+            ><a href="#s2" data-nb-locator="Market versus Book Value"
+              >2</a
+            ></sup
+          >
+          A low-risk business and a high-risk one end up with very
+          different hurdles, not only because their costs of debt and
+          equity differ but because they finance themselves in different
+          proportions. The general utility industry funds nearly half of
+          itself with cheap debt. Semiconductor companies finance
+          themselves almost entirely with pricier equity.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Two industries' cost of capital, Aswath Damodaran's live,
+            continuously updated dataset, fetched August 2, 2026. A later
+            reader will see different numbers.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Industry</th>
+              <th>Cost of equity</th>
+              <th>After-tax cost of debt</th>
+              <th>Equity weight</th>
+              <th>WACC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Utility</span></td>
+              <td>5.02%</td>
+              <td>3.55%</td>
+              <td>55.10%</td>
+              <td>4.36%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Semiconductor</span></td>
+              <td>10.72%</td>
+              <td>3.97%</td>
+              <td>97.47%</td>
+              <td>10.55%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          A semiconductor company's cost of capital, 10.55 percent, runs
+          more than double a utility's, 4.36 percent. That gap is why the
+          same return on invested capital means something different
+          depending on what financed it.
+        </p>
+        <p>
+          The return-on-capital lesson stated the rule this hurdle
+          enforces: a business earning more than its cost of capital
+          creates value as it grows, and one earning less destroys it.<sup
+            class="nb-cite"
+            ><a
+              href="#s10"
+              data-nb-locator="when managers generate returns on invested capital above their cost of capital, they create value"
+              >10</a
+            ></sup
+          >
+          That rule is not a claim about one company. Across roughly 4,000
+          of the world's largest public companies by revenue, from 2005 to
+          2009 the ten biggest averaged an 8-point gap between return on
+          invested capital and cost of capital. The next 90 largest
+          averaged 4 points, the smallest 3,500 barely more than 1. By the
+          following decade the smallest group's gap had approached zero,
+          and its share of global economic profit fell from 19 percent to
+          3 percent.<sup class="nb-cite"
+            ><a href="#s11" data-nb-locator="The wider the spread"
+              >11</a
+            ></sup
+          >
+          The size of that gap, not the return alone, tracks how much
+          economic profit a company actually earns. Intel's fiscal 2025
+          result, a net loss on $14.6 billion of spending, is what the gap
+          looks like when it goes negative: a return that did not clear
+          zero.
+        </p>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Every dollar a company raises has a price, even the dollars that
+          never show up as a payment on an income statement. Debt's price
+          is the after-tax borrowing rate. Equity's price is the return
+          shareholders require for bearing risk with no contract behind
+          it, a number nobody observes and CAPM only estimates,
+          imperfectly by its own authors' admission. Blend the two by how
+          much of the company each finances, and the result is the cost
+          of capital, the hurdle a company's return on invested capital
+          has to clear for growth to create value instead of destroy it.
+          That hurdle is not one number for every business: a utility
+          financed mostly with cheap debt can clear it around 4 percent,
+          while a semiconductor company financed almost entirely with
+          pricier equity needs more than double that. Intel's $14.6
+          billion of fiscal 2025 spending, next to a full-year net loss,
+          is what it looks like when a company fails to clear its own
+          hurdle. Across thousands of companies, the size of that gap,
+          not the return alone, tracks how much value growth creates.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/papers/costofcapital.pdf"
+              >Aswath Damodaran, "The Cost of Capital: The Swiss Army Knife
+              of Finance"</a
+            >: the full paper this lesson's framework is drawn from.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a
+              href="https://mba.tuck.dartmouth.edu/bespeneckbo/default/AFA611-Eckbo%20web%20site/AFA611-S6B-FamaFrench-CAPM-JEP04.pdf"
+              >Eugene Fama and Kenneth French, "The Capital Asset Pricing
+              Model: Theory and Evidence"</a
+            >: the complete case against CAPM's empirical reliability.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/50863/000005086326000009/q425earningsrelease.htm"
+              >SEC EDGAR · Intel Corporation, Q4/FY2025 earnings release
+              (Exhibit 99.1 to Form 8-K)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/papers/costofcapital.pdf"
+              >Aswath Damodaran, NYU Stern · "The Cost of Capital: The Swiss
+              Army Knife of Finance"</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://uscode.house.gov/view.xhtml?req=%28title%3A26+section%3A163+edition%3Aprelim%29"
+              >Office of the Law Revision Counsel · 26 U.S.C. §163</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.irs.gov/newsroom/questions-and-answers-about-the-limitation-on-the-deduction-for-business-interest-expense"
+              >IRS · "Questions and Answers About the Limitation on the
+              Deduction for Business Interest Expense"</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/ovhds/ch8.pdf"
+              >Aswath Damodaran, NYU Stern · "Finding the Right Financing
+              Mix: The Capital Structure Decision"</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/wacc.htm"
+              >Aswath Damodaran, NYU Stern · Cost of Capital by Industry
+              dataset</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://mba.tuck.dartmouth.edu/bespeneckbo/default/AFA611-Eckbo%20web%20site/AFA611-S6B-FamaFrench-CAPM-JEP04.pdf"
+              >Eugene F. Fama and Kenneth R. French, Journal of Economic
+              Perspectives · "The Capital Asset Pricing Model: Theory and
+              Evidence"</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.ferc.gov/sites/default/files/2020-05/E-6_71.pdf"
+              >Federal Energy Regulatory Commission · Order Directing
+              Briefs, 165 FERC ¶ 61,118</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://caselaw.findlaw.com/court/us-supreme-court/320/591.html"
+              >U.S. Supreme Court · Federal Power Commission v. Hope Natural
+              Gas Co., 320 U.S. 591 (1944)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/comparing-performance-when-invested-capital-is-low"
+              >McKinsey & Company · "Comparing Performance When Invested
+              Capital Is Low"</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/working-hard-for-the-money-the-crunch-on-global-economic-profit"
+              >McKinsey & Company · "Working Hard for the Money: The Crunch
+              on Global Economic Profit"</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
