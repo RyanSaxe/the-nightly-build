@@ -31,7 +31,11 @@ the orchestrator rather than reconstructing it yourself.
    by parties in a position to know, and two retellings of one origin count
    as one.
 4. Confirm every recorded URL. A 403, paywall, or fetch restriction is gated,
-   not dead. Try an appropriate browser request before giving up.
+   not dead. Try an appropriate browser request before giving up. Record the
+   address where the source lives, never the transport it was fetched through.
+   A fetch endpoint can return the text and still strand the person who clicks
+   it. Resolve it to the document's own page, unless the endpoint itself is
+   the artifact the article examines, recorded deliberately with the reason.
 5. Classify every source as primary or secondary and state why. A primary owns
    the claim. A secondary reports on it from outside the authoring party. The
    test is authorship and stake, not document type or domain.
@@ -115,7 +119,8 @@ overwrite an earlier invocation.
 
 Before reporting, reread the commission and brief against the record. Every
 commissioned question is answered or its gap recorded. Every figure was
-checked against its owner. Contradictions is empty only after a real search.
+checked against its owner. Every URL is the source's own page, not the route
+used to reach it. Contradictions is empty only after a real search.
 Nothing appears that you did not open.
 
 Report the evidence path and the record's important limitation. If the
