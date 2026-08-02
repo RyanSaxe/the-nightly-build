@@ -61,7 +61,9 @@ not to repeat, neighboring articles, output paths, actual harness and model
 choices, and the article's required contribution. Write directions, never
 sample article sentences.
 
-Create each numbered role brief only when its inputs exist. Name exact inputs,
+Create each numbered role brief only when its inputs exist. The coach and
+researcher briefs have no upstream outputs, so write them with the commissions
+and launch every article's opening roles in one burst. Name exact inputs,
 outputs, permitted changes, useful `nb` commands, unresolved decisions, and the
 owner of anything missing. Preserve fixed labels or markup where necessary,
 but do not restate configuration or ask a role to rediscover it.

@@ -32,6 +32,8 @@ commission is complete.
   exact `nb duty` result; manual work is the article configured by the user
   assistant.
 - Give every article an isolated workspace and one Article PR.
+- Run independent articles in parallel when the runtime allows. Never
+  serialize one article behind another.
 - Complete the commission before editorial roles begin.
 - Preserve each role's named input and output as the production record.
 - Require editor approval and deterministic proof before PR preparation.

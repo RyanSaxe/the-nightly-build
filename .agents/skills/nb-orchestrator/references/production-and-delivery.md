@@ -4,10 +4,15 @@ Coordinate the editorial roles without duplicating their judgment. The
 orchestrator owns sequencing, context, and delivery; each named role owns its
 bounded editorial decisions.
 
-## Run the role sequence
+## Run the edition as a parallel pipeline
 
-Start `nb-writing-coach` and `nb-researcher` in parallel when isolated children
-are available. Brief `nb-writer` only after both outputs exist. Brief
+Launch every commissioned article at once. When isolated children are
+available, fire each article's `nb-writing-coach` and `nb-researcher` together
+in one burst at the start of production. Do not stage a warmup article and do
+not hold one article's roles for another's progress. Wall-clock is the slowest
+single article's chain, so any late start lands on the critical path.
+
+Within one article, brief `nb-writer` only after both outputs exist. Brief
 `nb-editor` only after the writer proves the article. Use these semantic role
 identities and artifacts:
 
@@ -70,7 +75,8 @@ When the editor approves after making direct cuts, no writer round is owed for
 the proof alone. Run `nb stamp` and `nb check` on the edited article yourself.
 Return to the writer only if the proof demands new prose.
 
-After editor approval and a fresh proof, run:
+After editor approval and a fresh proof, deliver that article immediately. Do
+not hold a finished article for the rest of the edition. Run:
 
 ```text
 nb prepare-pr <workspace>/library/<series>/<slug>.html --library <library>
@@ -79,10 +85,13 @@ nb prepare-pr <workspace>/library/<series>/<slug>.html --library <library>
 The command creates the branch and commit from current `origin/library`, proves
 the submitted diff, pushes it, and opens or describes the one Article PR. If it
 prints `NB_ARTICLE_PR_REQUIRED`, use the connected GitHub tool exactly as the
-handoff directs. Never recreate or edit its generated branch manually.
+handoff directs. Never recreate or edit its generated branch manually. When its
+proof fails, fix a mechanical fault yourself or route the finding to its owning
+role. A prose change needs a fresh editor approval before preparing again.
 
-Monitor every Article PR through CI, merge, and the published website. Route a
-failure back through production, update the existing PR, and prove it again.
+Monitor every Article PR through CI, merge, and the published website while
+other articles continue. Route a CI failure back through production, update the
+existing PR, and prove it again.
 The run ends only with published articles or a clearly recorded external
 blocker; it never leaves an abandoned red PR.
 
