@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-02</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-02",
+        "template": "brief",
+        "title": "The EU's AI transparency law takes effect today, and it reaches ordinary chatbots",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-02",
+        "tags": ["ai", "policy", "research", "benchmarks"],
+        "sources": 11,
+        "words": 1331,
+        "reading_minutes": 6,
+        "dek": "Brussels' AI transparency rules take effect with detailed compliance guidance behind them while a parallel deadline in Washington passes without a public trace.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">The EU's AI transparency law takes effect today, and it reaches ordinary chatbots</h1>
+        <p class="nb-dekline">Brussels' AI transparency rules take effect with detailed compliance guidance behind them while a parallel deadline in Washington passes without a public trace.</p>
+        <div class="nb-byline">
+          <span>6 min read</span><span>2026-08-02</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">EU Policy</span>
+          <h3>
+            <a href="https://artificialintelligenceact.eu/article/50/"
+              >EU AI Act transparency duties take effect, reaching past
+              high-risk systems</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            The European Union's AI Act reaches its Article 50 application
+            date today, and the four disclosure duties it sets don't carry a
+            high-risk qualifier anywhere in the text.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Two of the duties fall on the company that builds a system, two
+            on the company that deploys it.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </p>
+          <table class="nb-table">
+            <caption>
+              Article 50's four transparency duties, split by who owes
+              them.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </caption>
+            <thead>
+              <tr>
+                <th>Actor</th>
+                <th class="txt">Duty</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="nb-table-token">Provider</span></td>
+                <td class="txt">
+                  Disclose that a person is interacting with an AI system
+                </td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">Provider</span></td>
+                <td class="txt">
+                  Mark general-purpose AI's synthetic output as
+                  machine-generated, in a machine-readable format
+                </td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">Deployer</span></td>
+                <td class="txt">
+                  Disclose that a deepfake is artificially generated or
+                  manipulated
+                </td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">Deployer</span></td>
+                <td class="txt">
+                  Label AI-generated text on matters of public interest
+                  published without human editorial review
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            The rule's own language leaves little room to read around it.
+            "Providers shall ensure that AI systems intended to interact
+            directly with natural persons are designed and developed in
+            such a way that the natural persons concerned are informed that
+            they are interacting with an AI system," it reads.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            The European Commission's own FAQ sets the marking-obligation
+            grace period at four months, to 2 December 2026, for systems
+            already on the market before today.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            It puts the penalty at up to €15 million or 3% of a company's
+            total worldwide turnover from the preceding financial year,
+            whichever is higher, with proportionality for small and mid-size
+            firms.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            K&amp;L Gates's independent read of the Commission's final guidance
+            names what falls inside Article 50's reach: "chatbots, generative
+            AI tools, emotion recognition systems, biometric categorization
+            tools, and deepfake technologies." None of them carries a
+            high-risk gate.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            It also warns that the fallback most companies reach for won't
+            satisfy the rule: "Generic references hidden in terms and
+            conditions, website footers, or vague labels are unlikely to be
+            sufficient."<sup class="nb-cite"><a href="#s3">3</a></sup>
+            A company that spent two years preparing for the Act's
+            high-risk provisions and treated a line in its terms of service
+            as covering the rest now owes a disclosure duty its compliance
+            plan may not have budgeted for.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI Research</span>
+          <h3>
+            <a href="https://openai.com/index/scientific-computing-agentic-ai/"
+              >OpenAI's coding agents cut genomics-tool runtimes 60x, and
+              can't judge their own code</a
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </h3>
+          <p>
+            OpenAI published a field report on coding agents in scientific
+            computing August 1.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            Independent accounts that read the report directly put it at
+            eight case studies run with outside research groups: five that
+            used Codex alone, three that paired Codex with Claude
+            Code.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            One of them, RustQC, consolidates 15 RNA-sequencing
+            quality-control tools into one Rust codebase and, per the
+            report as quoted directly by an independent blog, cut runtime by
+            60 times and disk input/output by 25 times.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+          </p>
+          <p>
+            Two smaller tools folded into that consolidation, FastQC-Rust and
+            Trim Galore, ran 7 times and 3 times faster than their
+            predecessors.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            A separate case study rewrote STAR, a 20,000-line genome aligner,
+            from C/C++ into Rust, checked by comparing 900 of its outputs by
+            eye.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            The Decoder, reporting independently, puts that rewrite's
+            agreement with the original aligner's output at 99.8
+            percent.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            A third case study, HI.SIM, cut runtime 31 percent across a
+            representative test set. Its output stayed byte-identical to
+            the original.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+          <p>
+            The Decoder adds context OpenAI's own report doesn't. A METR
+            study found maintainers rejected roughly half of AI-generated
+            solutions that had already passed industry benchmarks.<sup
+              class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+            curl's bug-bounty program collapsed under a flood of
+            AI-generated noise.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            Brent Pedersen, who develops the genomics tool cyvcf2, told the
+            outlet: "With coding agents, it's quite easy to go fast; for
+            now, to go far in science, there's still a need for expert
+            guidance, understanding, taste, and care."<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+            Philip Ewels, who leads RustQC, said agent output can be
+            "eloquent, convincing, and confidently wrong in ways that are
+            easy to miss."<sup class="nb-cite"><a href="#s6">6</a></sup>
+            OpenAI's own case studies land on the same worry from the other
+            side: agents "handled well-scoped implementation requests
+            capably but couldn't judge whether their own output was
+            scientifically sound."<sup class="nb-cite"><a href="#s5">5</a></sup>
+            The agents did the work. Whether the work was right still needed
+            a scientist checking it by hand.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">US Policy</span>
+          <h3>
+            <a
+              href="https://www.presidency.ucsb.edu/documents/executive-order-14409-promoting-advanced-artificial-intelligence-innovation-and-security"
+              >Washington's 60-day frontier-AI deadline passes without a
+              public trace</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            Executive Order 14409, which the Trump administration signed June
+            2, set a 60-day clock in Section 3, "Secure Frontier Model
+            Deployment."<sup class="nb-cite"><a href="#s7">7</a></sup>
+            By day 60, August 1, the Treasury, the Secretary of War through
+            NSA, and Homeland Security through CISA were to build a
+            classified benchmarking process for "covered frontier models"
+            and a voluntary disclosure framework.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            The National Cyber Director, OSTP, and NIST were also named as
+            responsible officials.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            That deadline passed. As of July 31, per Forkast's reporting
+            syndicated through Yahoo Finance, none of it had surfaced
+            publicly. "There were no Federal Register notices, no NIST or
+            CISA publications, and no statements from the Office of Science
+            and Technology Policy (OSTP)," Forkast reported.<sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            A third deliverable, a federal cyber-workforce expansion plan
+            from the Office of Personnel Management, was also unfulfilled as
+            of that report.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            A separate initiative the order set in motion, standardizing
+            jailbreak-severity scoring across OpenAI, Anthropic, Google,
+            Microsoft, and xAI, remains without a public status
+            update.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The EU hit its clock the same week, with a Commission FAQ and a
+            law firm's compliance guidance already published around it.
+            Washington's 60-day clock ran out a day earlier with, as of the
+            last independently confirmed check, nothing published to show
+            for it.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI Models</span>
+          <h3>
+            <a href="https://artificialanalysis.ai/models/deepseek-v4-flash"
+              >Third-party testing puts DeepSeek's Flash update at rank 3 of
+              101</a
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </h3>
+          <p>
+            Two days after DeepSeek shipped V4-Flash-0731 on July 31,
+            Artificial Analysis ran its own evaluation rather than
+            reprinting the vendor's numbers.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            It scored the model 50 on its Intelligence Index, ranking it
+            third of 101 models in its class, exactly double the group's
+            median score of 25 among comparably sized open-weight
+            models.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            DeepSeek's own changelog describes the release plainly: it "keeps
+            the same model architecture and size as DeepSeek-V4-Flash-Preview,
+            and was only re-post-trained," with no pricing or
+            weight-publication detail in the entry itself.<sup
+              class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+            Artificial Analysis's own test independently confirms the
+            architecture behind that description: 284 billion parameters
+            total, 13 billion active in its mixture-of-experts routing.<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            Pricing lands at $0.14 per million input tokens and $0.28 per
+            million output tokens, with a 98% discount on cached input down
+            to $0.003 per million, ranking first of the 101 models on that
+            measure.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            Whether the checkpoint's weights are actually downloadable
+            remains unsettled. digitalapplied.com, publishing the same day
+            as the release, reported the 0731 checkpoint had "no published
+            weights" at the time.<sup class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+            It also noted that DeepSeek's agent-benchmark figures, including
+            a Terminal Bench 2.1 score of 82.7, were vendor-stated with "zero
+            third-party reproductions."<sup class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+            The number that matters two days on isn't in DeepSeek's own
+            release notes. It's that a benchmarking group with no stake in
+            the outcome ran the model itself and ranked it third of 101.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://artificialintelligenceact.eu/article/50/"
+              >EU Artificial Intelligence Act · Article 50 — Transparency
+              Obligations for Providers and Deployers of Certain AI
+              Systems</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act"
+              >European Commission · Transparency Obligations Under Article
+              50 AI Act (FAQ)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://natlawreview.com/article/eu-ai-act-final-guidelines-transparency-obligations-under-article-50"
+              >National Law Review (K&amp;L Gates LLP) · EU AI Act Final
+              Guidelines: Transparency Obligations Under Article 50</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/scientific-computing-agentic-ai/"
+              >OpenAI · Scientific Computing and Agentic AI (field
+              report)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://michaelbriancotter.wordpress.com/2026/07/29/openai-report-links-coding-agents-to-faster-science-software-builds/"
+              >Michael Brian Cotter · OpenAI Report Links Coding Agents to
+              Faster Science Software Builds</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://the-decoder.com/ai-coding-agents-can-modernize-research-software-but-cant-judge-if-the-science-is-right/"
+              >The Decoder · AI Coding Agents Can Modernize Research Software
+              but Can't Judge if the Science Is Right</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.presidency.ucsb.edu/documents/executive-order-14409-promoting-advanced-artificial-intelligence-innovation-and-security"
+              >The American Presidency Project (UCSB) · Executive Order
+              14409 — Promoting Advanced Artificial Intelligence Innovation
+              and Security</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://finance.yahoo.com/technology/ai/articles/white-house-ai-framework-deadline-002011007.html"
+              >Forkast News via Yahoo Finance · White House AI Framework
+              Deadline</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://artificialanalysis.ai/models/deepseek-v4-flash"
+              >Artificial Analysis · DeepSeek V4 Flash 0731 (model
+              evaluation)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://api-docs.deepseek.com/updates"
+              >DeepSeek · API Changelog</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.digitalapplied.com/blog/deepseek-v4-flash-0731-official-release-agent-benchmarks"
+              >Digital Applied · DeepSeek V4 Flash 0731: Official Release and
+              Agent Benchmarks</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
