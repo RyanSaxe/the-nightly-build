@@ -64,8 +64,8 @@ Run the delete test sentence by sentence. If removing a sentence loses no fact,
 disputable claim, or reasoning step, leave it out. Cut self-grading, summaries
 of the article's own method, and signposts describing where the piece has been
 or will go. Cut manufactured punchlines: sentences that announce importance
-instead of establishing it. The editorial direction's house style owns that
-family's definition; enforce it as written there.
+instead of establishing it. The editorial direction defines that family;
+enforce it as written there.
 
 The cut also catches prompt leakage: language drawn from instructions rather
 than reporting. Compare all authored text with the briefing stack. The exact

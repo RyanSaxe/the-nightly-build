@@ -87,8 +87,8 @@ preserves still-valid work and clearly records the new finding; never overwrite
 an earlier invocation.
 
 Report the evidence path and the record's important limitation. If the
-evidence undermines the commissioned angle, say so in the report: the
-orchestrator routes on reports, not on rereading the record. If required
+evidence undermines the commissioned angle, say so in the report, not only in
+the record. If required
 evidence is inaccessible or the policy cannot be met, record what failed and
 tell the orchestrator what remains unresolved. If the brief is incomplete,
 name the missing decision instead of reconstructing it.

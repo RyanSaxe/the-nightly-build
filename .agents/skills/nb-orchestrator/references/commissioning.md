@@ -67,5 +67,4 @@ and launch every article's opening roles in one burst.
 A brief that names its exact inputs and its output path is complete. Add prose
 only for a decision the named inputs do not carry, such as an unresolved
 question and its owner. Never restate what a named input carries: the role
-reads its inputs itself, and a digest drifts from the file it copies. Anything
-true of every article belongs in the role's skill, not the brief.
+reads its inputs itself, and a digest drifts from the file it copies.

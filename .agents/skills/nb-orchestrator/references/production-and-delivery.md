@@ -47,10 +47,9 @@ the editorial record or gate.
 
 ## Follow each invocation
 
-Role reports are the control plane. Artifacts are the data plane, and they
-flow role to role by name, never through your context. Ask each role to report
-its output path, decision, and any missing input in plain language, then act
-on the report.
+Artifacts flow role to role by name, never through your context. Ask each role
+to report its output path, decision, and any missing input in plain language,
+then act on the report.
 
 Before treating an invocation as complete, verify the named pair structurally:
 present in the right place, not empty. The file, not a chat phrase, is the
