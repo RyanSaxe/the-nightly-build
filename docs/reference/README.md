@@ -24,7 +24,7 @@ the released engine supports and where each capability is controlled.
 | Deterministic duty list | Computes what is due from current press configuration and published state                                                | `nb duty` and [Schedule](../guides/operate/schedule.md)                                                  |
 | Manual publication      | Commission an article from a topic, question, URL, documents, event, or detailed brief without waiting for cadence       | [Publish an article now](../guides/publish/publish-now.md)                                               |
 | Reviewed revisions      | Change one published article and/or its matching figures or other local assets through the normal proof and render gate  | [Revise an article](../guides/publish/revise-an-article.md)                                              |
-| Retraction              | Remove one article and its matching local assets through a narrow, owner-reviewed PR                                     | [Manage your paper](../guides/operate/manage-your-paper.md)                                              |
+| Retraction              | Remove one article, its assets, and its production record through a narrow, owner-reviewed PR                            | [Manage your paper](../guides/operate/manage-your-paper.md)                                              |
 | Automatic publication   | Auto-merge every clean new-article PR and exact workflow sync; revisions and owner curation always wait for human review | [Publishing and security](../concepts/publishing-and-security.md)                                        |
 
 ## Govern editorial quality

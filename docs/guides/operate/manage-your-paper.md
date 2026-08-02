@@ -18,11 +18,11 @@ Configuration changes do not edit the published archive. To correct an article
 already on `library`, use [Revise an article](../publish/revise-an-article.md).
 
 To retract an article, open a PR against `library` that only deletes
-`library/SERIES/SLUG.html` and its matching `library/SERIES/SLUG/` assets. CI
-accepts that shape only when the PR author is the repository owner, and a
-curation PR never auto-merges. You review and merge it yourself. The next
-build removes the article from every index, feed, and the catalog. The
-article's production record under `agent-artifacts/` is not part of the
-retraction and stays on `library`.
+`library/SERIES/SLUG.html`, its matching `library/SERIES/SLUG/` assets, and
+the article's `agent-artifacts/SERIES/SLUG/` production record. CI accepts
+that shape only when the PR author is the repository owner, and a curation PR
+never auto-merges. You review and merge it yourself. The next build removes
+the article from every index, feed, and the catalog. Git history preserves
+everything a retraction deletes.
 
 The exact series fields live in [Series reference](../../reference/series.md).

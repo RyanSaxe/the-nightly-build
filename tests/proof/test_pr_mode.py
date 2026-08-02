@@ -449,12 +449,19 @@ def test_workflow_sync_rejects_a_noncanonical_blob(pr_repo: PressRepo) -> None:
     assert "B-WORKFLOW-SYNC" in result.blocks
 
 
-def retract_on_a_curation_branch(pr_repo: PressRepo) -> None:
+def retract_on_a_curation_branch(
+    pr_repo: PressRepo, *, leave_record: bool = False
+) -> None:
     pr_repo.checkout("library")
     pr_repo.write("library/semiconductors/tsmc.html", article())
+    pr_repo.write("library/semiconductors/tsmc/fab-map.png", "png bytes\n")
+    write_agent_artifacts(pr_repo.path, "semiconductors", slug="tsmc")
     pr_repo.commit("published")
     pr_repo.checkout("owner/curation", new=True)
     pr_repo.git("rm", "-q", "library/semiconductors/tsmc.html")
+    pr_repo.git("rm", "-q", "library/semiconductors/tsmc/fab-map.png")
+    if not leave_record:
+        pr_repo.git("rm", "-qr", "agent-artifacts/semiconductors/tsmc")
     pr_repo.git("commit", "-qm", "retract")
 
 
@@ -472,6 +479,16 @@ def test_owner_curation_deletion_only_pr(pr_repo: PressRepo) -> None:
     result = pr_repo.run_pr(head="owner/curation", deletions_by_owner=True)
 
     assert not result.blocks
+
+
+def test_owner_curation_must_delete_the_production_record(
+    pr_repo: PressRepo,
+) -> None:
+    retract_on_a_curation_branch(pr_repo, leave_record=True)
+
+    result = pr_repo.run_pr(head="owner/curation", deletions_by_owner=True)
+
+    assert "B-DIFF-SHAPE" in result.blocks
 
 
 def test_owner_curation_deleting_engine_files(pr_repo: PressRepo) -> None:

@@ -14,8 +14,8 @@ path, and never repair protected `library` workflow files by hand.
 
 For curation, distinguish correction from removal. A correction uses the
 revision workflow. A retraction is an owner-authored deletion-only PR
-containing one article and its matching local assets. It does not delete or
-rewrite role history as part of an article production PR. Never push the
+removing one article, its matching local assets, and its `agent-artifacts`
+production record. Git history preserves what it removes. Never push the
 deletion directly to `library`.
 
 When troubleshooting, report the failing boundary, direct evidence, and the

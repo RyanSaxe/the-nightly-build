@@ -132,16 +132,37 @@ def run_pr_mode(
             )
         return
     if deletions_by_owner and changes and all(status == "D" for status, _ in changes):
-        if nb_meta.article_bundle_path(changes, status="D") is None:
+        retracted = nb_meta.article_bundle_path(changes, status="D")
+        if retracted is None:
             rep.block(
                 "B-DIFF-SHAPE",
-                "an owner curation PR deletes one article and only its matching "
-                f"local article assets; found {changes}",
+                "an owner curation PR deletes one article with its matching "
+                f"local assets and agent-artifacts record; found {changes}",
+            )
+            return
+        match = PR_PATH_RE.match(retracted)
+        assert match is not None
+        series_id, slug = match.groups()
+        deleted = {path for _, path in changes}
+        remaining = [
+            path
+            for prefix in (
+                f"library/{series_id}/{slug}/",
+                f"agent-artifacts/{series_id}/{slug}/",
+            )
+            for path in _tree_paths(repo, ref=base, prefix=prefix)
+            if path not in deleted
+        ]
+        if remaining:
+            rep.block(
+                "B-DIFF-SHAPE",
+                "a retraction deletes the article, its full asset directory, and "
+                f"its full agent-artifacts record; still present: {remaining}",
             )
         else:
             rep.notes.append(
-                f"owner curation: retracts {len(changes)} published article(s); "
-                "nothing to proof"
+                "owner curation: retracts one published article with its assets "
+                "and production record; nothing to proof"
             )
         return
     path = nb_meta.article_bundle_path(changes)
