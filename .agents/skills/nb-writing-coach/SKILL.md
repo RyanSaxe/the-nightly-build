@@ -33,9 +33,11 @@ prose.
 ## Write the voice guide
 
 Lead with a concise directive: register, reader relationship, and only the
-moves that will change sentences in this article. Specify how to write, never
-what to say. Do not restate the subject, source findings, or template rules.
-Do not coin catchphrases or reusable lines.
+moves that will change sentences in this article. License the expressive forms
+this article may use, naming each form and the exemplar move it transfers. An
+empty license keeps the house default. Specify how to write, never what to
+say. Do not restate the subject, source findings, or template rules. Do not
+coin catchphrases or reusable lines.
 
 End the directive with `Recently used, do not reuse:` and the structural or
 verbal habits the brief says this article should avoid. Prior articles are a

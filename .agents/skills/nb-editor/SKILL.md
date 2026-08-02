@@ -60,12 +60,14 @@ Record the read in the review's Skeptic section.
 
 ## Second read: the cut
 
-Run the delete test sentence by sentence. If removing a sentence loses no fact,
-disputable claim, or reasoning step, leave it out. Cut self-grading, summaries
-of the article's own method, and signposts describing where the piece has been
-or will go. Cut manufactured punchlines: sentences that announce importance
-instead of establishing it. The editorial direction defines that family;
-enforce it as written there.
+Run the earns-its-place test sentence by sentence. A sentence stays for a
+fact, a disputable claim, a reasoning step, or a move the voice guide
+licenses. Remove the rest. Cut any form no license admits and any licensed
+use that misses its exemplar's bar. Protect the licensed use that clears it.
+Cut self-grading, summaries of the article's own method, and signposts
+describing where the piece has been or will go. Cut unearned punchlines:
+sentences that announce stakes the argument has not built. The editorial
+direction defines that family; enforce it as written there.
 
 The cut also catches prompt leakage: language drawn from instructions rather
 than reporting. Compare all authored text with the briefing stack. The exact

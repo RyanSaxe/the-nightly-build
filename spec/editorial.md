@@ -15,6 +15,9 @@ research-grade writing. It reads in two registers.
   `press/editorial.md` and the series prompts. This standard sets the quality of those
   choices, never the choices themselves.
 
+The standard bans failures, never forms. Any form is open to a voice that
+earns it and a paper that licenses it.
+
 The standard does not legislate trivia: no paper-wide rule on the Oxford comma. Be
 consistent within a piece.
 
@@ -70,9 +73,11 @@ the abstraction itself is the subject, and build it up like any other term.
 Name a thing one way and keep that name. Once a term is set, reuse it exactly. A synonym
 reached for variety reads as a new thing.
 
-Write short, single-purpose sentences. If a sentence can be misread, rewrite it rather
-than trust the next one to rescue it. Shorten by cutting, never by packing ideas denser. A
-paragraph carrying more ideas than sentences has stopped explaining.
+Default to short, single-purpose sentences, and vary length for rhythm: a long
+sentence in control is craft, and a page of uniform declaratives is a metronome. If a
+sentence can be misread, rewrite it rather than trust the next one to rescue it.
+Shorten by cutting, never by packing ideas denser. A paragraph carrying more ideas
+than sentences has stopped explaining.
 
 ## Prose
 
@@ -89,21 +94,21 @@ tells of slop.
 - **Run-ons.** A sentence that piles clause on clause until the reader loses the thread
   gets broken. A semicolon chain is the same failure wearing punctuation, and often an
   em-dash swap: write the period, or write the list. Let the verbs carry the weight.
-  Vary length for rhythm; a long sentence in control is craft.
-- **Manufactured punchlines.** Cut any sentence engineered to sound quotable while
-  carrying little ("that's the whole point", "here's the kicker", "the catch is"). The
+- **Unearned punchlines.** Cut the sentence that announces stakes the argument has not
+  built ("that's the whole point", "here's the kicker", "the catch is"). The
   "X is the whole Y" family belongs here too ("that identity is the whole guarantee",
   "where it is sent is the whole argument"): a sentence that announces its own stakes has
   stopped making the argument and started grading it. A closer or section opener reused
-  as a formula across articles is the same failure. So is a house catchphrase.
+  as a formula across articles is the same failure. So is a house catchphrase. A punch
+  sentence the argument has built and a license admits is craft, not a punchline.
 - **Hedged contrast.** The "X is not Y; it is Z" mold and its softer cousins ("not X but
   Y", "rather than") stay only when the misconception they correct is real and named, and
   fall wherever the "not" clause is a strawman the sentence invented. One or two earned
   contrasts per piece is the ceiling.
 - **Self-reference.** The piece never narrates itself or its newsroom ("this dossier",
-  "what follows"), never addresses its audience, and never mentions a reader at all
-  ("a reader will notice", "where a reader's scrutiny belongs"). Report the subject;
-  what deserves notice is shown by making it noticeable.
+  "what follows") and never gestures at a hypothetical reader ("a reader will
+  notice", "where a reader's scrutiny belongs"). Report the subject; what deserves
+  notice is shown by making it noticeable.
 - **Banned terms.** `spec/banned-terms.yaml` lists the words and marks the corpus has
   ruled out and how many uses each may keep. A press extends or adjusts the list in
   `press/banned-terms.yaml`, and the proof counts every article against the merged list.
@@ -111,6 +116,12 @@ tells of slop.
   vagueness, and repunctuating an em-dash keeps the fluff the dash was carrying. Delete
   first, then rewrite what remains. Keep an em-dash for a real aside or a sharp
   break, not as a reflex.
+
+That is the default register. An expressive form beyond it (e.g., direct
+address, fragments, open humor, etc.) is licensed, never free.
+`press/editorial.md` or the article's voice guide grants the license by naming
+the form, the move being transferred, and the exemplar standard it must meet.
+An unlicensed form is cut. A licensed use still meets every test above.
 
 Break any rule here sooner than write a sentence no honest voice would say aloud.
 

@@ -82,10 +82,9 @@ researcher's immutable evidence artifact.
 ## Prove and hand off
 
 While iterating, run the proof with `--no-check-links` and fix warnings in
-batches, not one re-proof per fix. Short single-purpose sentences from the
-first draft avoid most density warnings entirely. Treat every warning as an
-editorial note: fix it or record why it stands. Use `nb preview` when layout
-or an asset changed and inspect the rendered result.
+batches, not one re-proof per fix. Treat every warning as an editorial note:
+fix it or record why it stands. Use `nb preview` when layout or an asset
+changed and inspect the rendered result.
 
 Before handing off, make the display-text pass. An error here costs a full
 editor round and is the paper's most visible kind:
