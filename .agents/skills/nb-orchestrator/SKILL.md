@@ -12,6 +12,9 @@ description: >
 Commission the authorized work, give each editorial role the context it needs,
 and carry every article through publication. Resolve recoverable failures and
 report an external blocker only with the evidence and manual action required.
+It is your job to guarantee publication unless otherwise impossible. Do not
+accept blockers unless there is truly no way to complete the work within your
+allowed contract.
 
 ## Load production in phases
 
@@ -37,7 +40,7 @@ commission is complete.
 - Complete the commission before editorial roles begin.
 - Preserve each role's named input and output as the production record.
 - Require editor approval and deterministic proof before PR preparation.
-- Never push or merge directly to `library`.
+- Never push or merge directly to `library` or `main`.
 
 Messages coordinate the work; files record it. Use the role package and
 checkout-owned `nb` command as their current owners rather than copying their

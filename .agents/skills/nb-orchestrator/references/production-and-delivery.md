@@ -60,8 +60,13 @@ stalls or repeats a failed round, or you take the work over.
 Use the harness's actual task state to supervise active roles. When a role
 fails, stalls, or returns without its artifact, inspect the available evidence
 and supply missing context before relaunching it. Do not start a duplicate
-while the original invocation is still active. Interrupt, reassign, or take
-over only when the owning role cannot complete the work.
+while the original invocation is still active. However, do not assume silence
+means progress. Issues can occur where an agent may fail or stall without any
+notification, and it is your job to make sure that does not happen. If a process
+is silent for more than 10 minutes, just check in to see what is going on.
+
+Lastly, interrupt, reassign, or take over only when the owning role cannot
+complete the work.
 
 ## Route repairs without waiving gates
 
