@@ -48,5 +48,6 @@ responsibilities are clean.
 The contract belongs to the user. Confirm with them which anchors and rules
 are enforced and which stay flexible before the manifest hardens. Offer to
 open the rendered fills in their browser for reaction and iterate from what
-they say. A fill the user approves can graduate into the package's `samples/`
-directory.
+they say. A fill the user approves can graduate into the package's samples at
+`press/templates/<id>/samples/`. The package under design always lives in
+`press/templates/`, including when it shadows a shipped template.
