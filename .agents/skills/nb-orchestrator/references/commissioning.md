@@ -64,7 +64,21 @@ Create each numbered role brief only when its inputs exist. The coach and
 researcher briefs have no upstream outputs, so write them with the commissions
 and launch every article's opening roles in one burst.
 
-A brief that names its exact inputs and its output path is complete. Add prose
-only for a decision the named inputs do not carry, such as an unresolved
-question and its owner. Never restate what a named input carries: the role
-reads its inputs itself, and a digest drifts from the file it copies.
+A brief that names its exact inputs and its output path is complete. Write
+every brief in this shape:
+
+```text
+# <role> brief: <series>/<slug> (<NN>)
+
+Inputs: the named files, one line each, with a clarifying phrase only where
+        a file's job is not obvious from its name
+Output: <path>
+Proof:  the exact nb check command        (writer and editor briefs only)
+
+Nothing else, unless a decision the inputs do not carry needs stating
+(e.g., a run-environment caveat, recent shapes to break, this round's focus).
+```
+
+Never restate what a named input carries: the role reads its inputs itself,
+and a digest drifts from the file it copies. The role's own risk surface,
+method, and standards are the role's to derive from its skill and inputs.
