@@ -9,7 +9,9 @@ brief.
 State the prompt's job before drafting. Identify the decisions its reader must
 make, the context only this layer owns, and the observable failure it should
 prevent. Delete anything already encoded by YAML, a manifest, the proof
-contract, a catalog, or another prompt layer.
+contract, a catalog, or another prompt layer. When the same guidance belongs
+in two prompts, give it one home: a shared fragment under `press/series/_tags/`
+selected by tag, so the copies cannot drift.
 
 Write editorial judgment with consequences. Define territory by the principle
 that admits and excludes work. Define evidence by what a claim must survive.

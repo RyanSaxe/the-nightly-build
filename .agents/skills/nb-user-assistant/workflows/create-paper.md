@@ -31,10 +31,19 @@ parts cohere.
 ## Implement the approved press
 
 Write the smallest `press/` that expresses the approved concept. Keep schema in
-YAML and editorial judgment in prose. Apply `spec/prompting.md` to
+YAML and editorial judgment in prose. When an editorial standard has an engine
+gate (e.g., source policy fields, bands, strict, banned terms, etc.), prefer
+the gate over prompt prose, and confirm with the user which standards are
+enforced and which stay advisory. Apply `spec/prompting.md` to
 `editorial.md`, every `prompt.md`, item prompt, template identity, and custom
 catalog entry. Do not duplicate cadence, source bands, template sections, or
 other config inside prompts.
+
+Ask how each series should sound, not only what it covers. Record register
+intent where production can act on it: a standing license in `editorial.md` or
+a register line in the series prompt. When two series share a border, write
+the settled boundary into both prompts so the next scheduled run inherits the
+resolution instead of the ambiguity.
 
 Run `nb validate`, build a preview where presentation changed, and show the
 user the material consequences. Commit the press configuration separately from

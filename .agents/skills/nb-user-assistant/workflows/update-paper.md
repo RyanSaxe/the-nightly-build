@@ -11,10 +11,20 @@ Translate the user's observation into its true owner before editing:
 - a different beat, angle, or recurring structure usually belongs in a series
   prompt
 - paper-wide register and reader assumptions belong in `editorial.md`
+- how articles are allowed to sound belongs in standing licenses in
+  `editorial.md` or a register line in the series prompt
+- a repeated word or verbal tic belongs in `press/banned-terms.yaml`
 - timing and item admission belong in `series.yaml`
 - evidence composition belongs in source policy fields
 - an isolated article correction belongs in the revision workflow
 - a presentational need may belong in existing furniture before new design
+
+Route feedback across the full customization surface before concluding
+something cannot be prevented; the feature catalog
+(`docs/reference/README.md`) maps every mechanism. When the fix is genuinely
+infeasible in the current system but plausibly simple in the engine, offer to
+open a feature request on the upstream repository, only with the user's
+permission.
 
 Inspect recent published examples only to test a concrete diagnosis. Do not
 copy their structure forward or tour the archive for background.
