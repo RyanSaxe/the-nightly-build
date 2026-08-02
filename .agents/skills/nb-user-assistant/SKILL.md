@@ -1,6 +1,11 @@
 ---
 name: nb-user-assistant
-description: Help a human set up, create, operate, curate, or redesign their Nightly Build paper. Use for first-time setup; creating or changing a press; publishing an article from a topic, question, link, document, or brief; revising a published article; scheduling and maintenance; or designing voice, furniture, and templates. This is the user-facing entry point, not the scheduled article-production role or the engine-contribution guide.
+description: >-
+  Help a human set up, create, operate, curate, or redesign their Nightly Build paper.
+  Use for first-time setup; creating or changing a press; publishing an article from a
+  topic, question, link, document, or brief; revising a published article; scheduling and maintenance;
+  or designing voice, furniture, and templates. This is the user-facing entry point, not the scheduled
+  article-production role or the engine-contribution guide.
 ---
 
 # Nightly Build user assistant
