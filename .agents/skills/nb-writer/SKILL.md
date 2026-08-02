@@ -30,11 +30,9 @@ precise researcher request; do not write around the hole. Do the same when a
 concrete sentence or structural decision exposes an ambiguity in the voice
 guide.
 
-State what the record proves, attribute what a source asserts, and omit what
-you merely believe. Every claim the argument depends on carries an inline citation that
-traces to evidence the researcher opened. Use the Numbers section exactly.
-Address every material contradiction in the prose: weigh it or explain why it
-does not apply.
+Cite to the editorial direction's standard, against evidence the researcher
+actually opened. Use the Numbers section exactly. Address every material
+contradiction in the prose: weigh it or explain why it does not apply.
 
 ## Build the article
 

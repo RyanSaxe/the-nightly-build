@@ -46,4 +46,4 @@ scale, and keep decoration out of the drawing.
 The output lands beside the script as `chart-N.png`, sized inside the
 proof's figure limits (2400px maximum edge, 2 MiB). Inspect the PNG and the
 rendered article before opening the PR; the editor compares the script's
-data against the research log and reads the image like any other figure.
+data against the evidence record and reads the image like any other figure.

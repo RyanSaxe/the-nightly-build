@@ -130,8 +130,9 @@ The proof counts the kinds the article declares. It does not judge them, and
 there is no rule here about hosts or domains: a paper and its own lab's write-up
 of it can sit on two websites, and a journal's reporters covering a paper it
 published is genuinely independent of that paper's authors while sharing their
-domain. No counter can tell those apart. The research log makes the call and
-records the reason, and the editor's skeptic read audits it. A source labeled
+domain. No counter can tell those apart. The researcher's evidence record
+makes the call and records the reason, and the editor's skeptic read audits
+it. A source labeled
 `secondary` that is the primary's own author speaking again is a broken claim
 about the sourcing, and it is caught by a reader or not at all.
 

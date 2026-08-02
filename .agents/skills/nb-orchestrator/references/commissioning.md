@@ -14,9 +14,9 @@ Read the layers that apply to the selected article in this order:
 3. the selected template's manifest, skeleton, identity, and furniture;
 4. the series prompt, declared tag fragments in order, and selected item.
 
-Later layers specialize earlier ones; they do not silently waive them. Use the
-generated `editorial-direction.md` as the exact composed record supplied to
-roles instead of paraphrasing these layers.
+Later layers specialize earlier ones; they do not silently waive them. Never
+paraphrase these layers: supply the generated `editorial-direction.md` itself,
+to exactly the roles production and delivery names as its recipients.
 
 Start history work with targeted `nb history` queries. Use
 `nb history --show <series>/<slug>` or a raw article only when a concrete

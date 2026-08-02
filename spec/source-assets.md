@@ -29,9 +29,9 @@ nb asset web SOURCE-PAGE-URL \
   library/SERIES/SLUG/asset-1.png --selector 'CSS-SELECTOR'
 ```
 
-The helper normalizes outputs to a 2400-pixel maximum edge. Research logs name
-the source asset, its location, its argumentative use, and the evidence a crop
-must retain or remove; they do not prescribe coordinates. The writer makes the
+The helper normalizes outputs to a 2400-pixel maximum edge. The evidence
+record names the source asset, its location, its argumentative use, and the
+evidence a crop must retain or remove; it does not prescribe coordinates. The writer makes the
 first crop, then inspects the asset and rendered article. The editor compares
 both with the source and can request a recrop that names what must remain and
 what must leave. Crop away surrounding page furniture and printed source

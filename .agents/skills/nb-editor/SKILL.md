@@ -63,9 +63,9 @@ Record: `Skeptic: thesis "…"; tested N claims; broke: …` or `none`.
 Run the delete test sentence by sentence. If removing a sentence loses no fact,
 disputable claim, or reasoning step, leave it out. Cut self-grading, summaries
 of the article's own method, and signposts describing where the piece has been
-or will go. Cut stock revelation frames such as "the trap is", "the real story
-is", "the catch is", and "here's the kicker". They announce importance instead
-of establishing it.
+or will go. Cut manufactured punchlines: sentences that announce importance
+instead of establishing it. The editorial direction's house style owns that
+family's definition; enforce it as written there.
 
 The cut also catches prompt leakage: language drawn from instructions rather
 than reporting. Compare all authored text with the briefing stack. The exact
@@ -74,9 +74,9 @@ rewritten instructions, planning labels, selection rules, and claims that the
 article fulfilled its assignment. Fixed template labels, necessary names, and
 sourced facts are not leaks. If the repair needs new prose, request the writer.
 
-Trim inside survivors. Apply the prose and punctuation standards in the review
-brief. Cut from middles, never the ending. The fix for a reflex mark is the
-sentence boundary the thought wanted, not a different decorative mark.
+Trim inside survivors. Apply the prose and punctuation standards in the
+editorial direction, including its repairs for reflex punctuation. Cut from
+middles, never the ending.
 
 Read paragraph endings in sequence. Compare opener, closer, headings, dek,
 furniture, and rhetorical shapes with the orchestrator's recent-pattern notes.
