@@ -92,13 +92,11 @@ Preserve settled work unless a change logically affects it. New evidence comes
 through a new researcher artifact; do not independently expand the claim set.
 Rerun the complete proof.
 
-Write `draft-handoff.md` with:
-
-- the original-work sentence;
-- article and asset paths changed;
-- proof result and any warnings intentionally left;
-- every editorial request addressed in a revision; and
-- any remaining evidence or voice question.
+Write `draft-handoff.md` with exactly what no other file carries: the
+original-work sentence, the proof result with any warnings intentionally left,
+and any open evidence or voice question. On a revision, add one line per
+editorial request resolved. The article and its diff speak for themselves; do
+not inventory paths or furniture.
 
 After `BLOCK: 0`, report the draft-handoff path and any warning intentionally
 left. When work cannot continue, name the exact evidence, voice, or commission

@@ -55,15 +55,16 @@ numbered `02`, `03`, and onward without overwriting earlier work.
 
 ## Write the record
 
-Write `commission.md` with the assignment, angle, intended reader, mode,
-template, source obligations, starting sources, relevant history, structures
-not to repeat, neighboring articles, output paths, actual harness and model
-choices, and the article's required contribution. Write directions, never
-sample article sentences.
+Write `commission.md` as the record of every decision production needs. A
+reader should reconstruct the assignment, its boundaries, and its required
+contribution without the chat. Record the actual harness and model choices.
+Write directions, never sample article sentences.
 
 Create each numbered role brief only when its inputs exist. The coach and
 researcher briefs have no upstream outputs, so write them with the commissions
 and launch every article's opening roles in one burst. Name exact inputs,
 outputs, permitted changes, useful `nb` commands, unresolved decisions, and the
-owner of anything missing. Preserve fixed labels or markup where necessary,
-but do not restate configuration or ask a role to rediscover it.
+owner of anything missing. Never restate what a named input carries: the role
+reads its inputs itself, and a digest drifts from the file it copies. Preserve
+fixed labels or markup where necessary, but do not restate configuration or
+ask a role to rediscover it.

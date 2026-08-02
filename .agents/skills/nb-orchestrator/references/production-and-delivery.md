@@ -34,10 +34,12 @@ brief or output. `commission.md` and the generated `editorial-direction.md`
 remain at the artifact root.
 
 The writer and editor both receive `editorial-direction.md`; the editor also
-receives the exact writer brief so instruction leakage remains visible. Every
-launch begins with its named inputs and permits focused tool use. A role may
-ask for more context; expand its inputs or route the question to the owner
-rather than inviting repository exploration.
+receives the exact writer brief so instruction leakage remains visible. A
+`review-brief.md` carries the named inputs, your recent-pattern notes, and the
+round's focus. Nothing more. Every launch begins with its named inputs and
+permits focused tool use. A role may ask for more context; expand its inputs
+or route the question to the owner rather than inviting repository
+exploration.
 
 If isolated children are unavailable, perform the same numbered sequence in
 one context and preserve the same artifacts. Isolation changes execution, not
@@ -45,9 +47,16 @@ the editorial record or gate.
 
 ## Follow each invocation
 
-Ask each role to report its output path, decision, and any missing input in
-plain language. Inspect the named artifact before treating the invocation as
-complete; the file, not a chat phrase, is the production record.
+Role reports are the control plane. Artifacts are the data plane, and they
+flow role to role by name, never through your context. Ask each role to report
+its output path, decision, and any missing input in plain language, then act
+on the report.
+
+Before treating an invocation as complete, verify the named pair structurally:
+present in the right place, not empty. The file, not a chat phrase, is the
+production record, and the consuming role judges its content. Read an
+artifact's content only on exception: a report flags a contradiction, a role
+stalls or repeats a failed round, or you take the work over.
 
 Use the harness's actual task state to supervise active roles. When a role
 fails, stalls, or returns without its artifact, inspect the available evidence
