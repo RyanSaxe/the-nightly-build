@@ -60,7 +60,7 @@ supporting GitHub plan.
 
 Before unattended publication, you can verify that the exact scheduled runtime
 can reach the repository, install the required tools, browse real sources, and
-open then clean up a draft smoke-test PR. See
+open and then clean up a draft smoke-test PR. See
 [Verify the scheduled runtime](docs/getting-started/first-run.md).
 
 ## FAQ
@@ -74,7 +74,7 @@ open then clean up a draft smoke-test PR. See
 
 <p>By anchoring on strong real human writers as examples, and having an aggressive editor
 that is prompted to look for common indicators of AI slop as well as bad writing, the quality
-that comes out of The Nightly Build is quite a bit higher than my initial expectations. Importantly
+that comes out of The Nightly Build is quite a bit higher than my initial expectations. Importantly,
 the agents have to pass explicitly codified gates before publishing. Words can be banned. Long
 sentences with lots of parentheticals and semicolons can be blocked. Basically, every time I saw
 an instance of writing that made me go "ugh that's AI", I tried my best to codify something in the
@@ -94,8 +94,7 @@ my best to avoid hamstringing the engine from being able to express what downstr
 true of people. The system takes quite a bit of time and uses more tokens than you'd expect because it is
 forced to actually read every single source it cites. The editor will even force sentences to be cut if they
 cannot properly be demonstrated, and will meticulously try and find issues adversarially. Personally, I have
-found this makes hallucinations almost go away entirely. However, I am not going to claim that, as I
-am sure there will be instances of incorrectness.</p>
+found this makes hallucinations almost go away entirely. However, I will not promise it.</p>
 
 ---
 
@@ -135,7 +134,7 @@ your respective AI agent. If you'd like to see how that might work, take a look 
 ---
 
 <p>The PR is both the review record and the publishing gate. It carries the
-article, earned assets, exact agent inputs and outputs, and validation result. Nothing
+article, its assets, exact agent inputs and outputs, and validation result. Nothing
 reaches <code>library</code> without passing CI. This makes it easy to audit
 the process if there are issues, as well as give more direct feedback in prompts.
 Additionally, PRs are a natural entity that basically every AI harness interacts with.</p>
@@ -177,7 +176,7 @@ fork is the simplest free setup.</p>
 
 ---
 
-<p>Yes. Most changes belong in <code>press/</code>; start with
+<p>Yes. Most changes belong in <code>press/</code>. Start with
 <a href="docs/README.md">the documentation</a>. If you modify the engine
 itself, you also own any conflicts when syncing upstream updates.</p>
 
