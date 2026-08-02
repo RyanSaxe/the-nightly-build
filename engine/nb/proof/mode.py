@@ -60,6 +60,9 @@ def check_sequence_slug(meta, *, items, idx, slug, pub, revision, rep):
 def check_ordered_mode(meta, *, series_id, items, slug, pub, mode, revision, rep):
     idx = next((i for i, it in enumerate(items) if it.get("slug") == slug), None)
     if idx is None:
+        if revision:
+            # published is a fact: revising never requires the item's config
+            return None
         rep.block(
             "B-SLUG",
             f"slug '{slug}' is not a configured item of series '{series_id}'",
@@ -106,14 +109,15 @@ def check_rolling_mode(meta, *, slug, pub, today, revision, rep):
 
 def check_open_slug(*, items, slug, pub, manual, revision, rep):
     item_cfg = next((it for it in items if it.get("slug") == slug), None)
+    if revision:
+        # published is a fact: revising never requires the item's config
+        return item_cfg
     if manual and item_cfg is None:
         rep.block(
             "B-SLUG",
             f"manual open series requires '{slug}' to be a configured item",
         )
         return None
-    if revision:
-        return item_cfg
     if pub is None:
         rep.notes.append(
             "library state not provided (--library); "

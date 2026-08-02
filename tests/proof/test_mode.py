@@ -17,7 +17,7 @@ from collections.abc import Callable
 import pytest
 
 from findings import Findings
-from press import OPEN_YAML, REPO, TODAY, article, brief, mut
+from press import OPEN_YAML, REPO, SEMICONDUCTORS_YAML, TODAY, article, brief, mut
 
 VALID = article()
 VALID_BRIEF = brief(TODAY)
@@ -295,6 +295,44 @@ def test_manual_open_series_requires_a_configured_commission(
     )
 
     assert "B-SLUG" in result.blocks
+
+
+def test_manual_open_revision_of_an_unlisted_published_slug_passes(
+    *,
+    run_local: Callable[..., Findings],
+    open_press: Callable[..., str],
+    make_library: Callable[..., str],
+) -> None:
+    result = run_local(
+        OPEN,
+        "wildcard",
+        slug="the-cuda-moat",
+        repo=open_press(OPEN_YAML + "cadence: manual\n"),
+        library=make_library({"wildcard": ["the-cuda-moat"]}),
+        revision=True,
+    )
+
+    assert not result.blocks
+
+
+def test_revision_of_a_removed_collection_item_passes_the_slug_gate(
+    *,
+    run_local: Callable[..., Findings],
+    overwrite_series: Callable[..., str],
+    make_library: Callable[..., str],
+) -> None:
+    result = run_local(
+        VALID,
+        "semiconductors",
+        repo=overwrite_series(
+            SEMICONDUCTORS_YAML.replace("slug: micron", "slug: a-different-item"),
+            series="semiconductors",
+        ),
+        library=make_library({"semiconductors": ["micron"]}),
+        revision=True,
+    )
+
+    assert not result.blocks
 
 
 def test_manual_open_series_accepts_its_configured_commission(

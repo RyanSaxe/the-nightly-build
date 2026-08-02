@@ -80,5 +80,7 @@ the `series` and `slug` metadata must still agree with
 revision.
 
 CI reruns the normal proof and browser-render check. It permits corrections to
-paused and already-published series, but the series must still exist and the
-result must satisfy its current configuration and template contract.
+paused and already-published series, and to articles whose slug is no longer a
+configured item: published is a fact, and revising it never requires
+resurrecting configuration. The series must still exist, and the result must
+satisfy its template contract.

@@ -79,6 +79,7 @@ def run_local(testrepo: str) -> Callable[..., Findings]:
         repo: str | None = None,
         today: str = TODAY,
         assets: dict[str, bytes] | None = None,
+        revision: bool = False,
     ) -> Findings:
         repo = repo or testrepo
         tmp = tempfile.mkdtemp()
@@ -101,6 +102,7 @@ def run_local(testrepo: str) -> Callable[..., Findings]:
             library_dir=library,
             rep=rep,
             today=dt.date.fromisoformat(today),
+            revision=revision,
         )
         return Findings(rep)
 
