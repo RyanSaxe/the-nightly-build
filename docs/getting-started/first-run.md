@@ -10,10 +10,12 @@ article.
 Create a one-off or on-demand task in the same automation environment used by
 the publication schedule. Give it this assignment:
 
-> Work in The Nightly Build repository `<repo>` on current `main`. Read
-> `.agents/prompts/verify-scheduled-runtime.md` and follow it in this agent.
-> This paragraph is the entire assignment. If that file is unavailable, stop
-> and report the missing repository entrypoint.
+> Work in The Nightly Build repository `<repo>`. Update the checkout to the
+> current remote `main` before reading anything; a stale clone may predate
+> the entrypoint. Read `.agents/prompts/verify-scheduled-runtime.md` and
+> follow it in this agent. This paragraph is the entire assignment. If that
+> file is missing from up-to-date remote `main`, stop and report the missing
+> repository entrypoint.
 
 Keep the repository identity, credentials, network access, and approval mode
 identical to normal scheduled publication. A local run or a different cloud
