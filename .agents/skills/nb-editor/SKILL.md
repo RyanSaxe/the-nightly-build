@@ -56,7 +56,7 @@ unsupported nonessential claim. A broken central claim, missing evidence, or
 source-policy failure belongs to the researcher and writer. Name the needed
 finding so nobody can reword around the gap.
 
-Record: `Skeptic: thesis "…"; tested N claims; broke: …` or `none`.
+Record the read in the review's Skeptic section.
 
 ## Second read: the cut
 
@@ -92,7 +92,7 @@ When presentation leaves material harder to understand or experience than it
 should be, request the writer to consider the documented furniture. Fixed
 labels required by the current template are not formulas.
 
-Record: `Cut: N sentences; worst tell: …`.
+Record the read in the review's Cut section.
 
 ## Third read: the reader
 
@@ -103,8 +103,7 @@ article. If neither answer survives, the article restates its sources and needs
 a redraft. State whether the prose is closer to the voice-guide exemplars or a
 median AI summary. Finally, reread the headline as the largest claim.
 
-Record: `Reader: this gives me …` or
-`nothing beyond the sources; redraft`.
+Record the answer in the review's Reader section.
 
 ## Inspect visual evidence
 
@@ -140,11 +139,35 @@ it.
 
 ## Write the editorial review
 
-Write the named `editorial-review.md`. Include the three required lines
-(`Skeptic`, `Cut`, and `Reader`), direct edits made, required work by owner, and
-the final decision. Write in your own words, never the draft's. Later editor
-invocations write a new numbered artifact; never append to or overwrite an
-earlier review.
+Write the named `editorial-review.md` in this shape, each section as
+extensive as its read deserves:
+
+```text
+# Editorial review: <series>/<slug> (editor/<NN>)
+
+## Skeptic
+The thesis and the claims it stands on. Each load-bearing claim tested and
+how it held. Each break with its evidence and the fix made or routed.
+
+## Cut
+The cuts made and why, the worst tell found, and any repeated pattern named.
+
+## Reader
+What the piece gives beyond its sources, and whether the prose sits closer
+to the voice-guide exemplars or a median summary.
+
+## Edits
+Every direct change made, one per line.
+
+## Required work
+Each remaining item with its owner: researcher | writer | orchestrator.
+
+## Decision
+approve | revise, with the reason in a sentence.
+```
+
+Write in your own words, never the draft's. Later editor invocations write a
+new numbered artifact; never append to or overwrite an earlier review.
 
 Report the editorial-review path and final decision. When more work is needed,
 name its owner: researcher for evidence; writer for prose, structure, markup,
