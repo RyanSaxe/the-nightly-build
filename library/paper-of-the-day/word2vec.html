@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>word2vec's most famous demo predates word2vec · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "word2vec",
+        "template": "paper",
+        "title": "word2vec's most famous demo predates word2vec",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-02",
+        "tags": [],
+        "sources": 9,
+        "words": 2828,
+        "reading_minutes": 12,
+        "dek": "The King–Queen analogy that made the paper famous first appeared in an earlier RNN model, and the version word2vec actually ran only works with its own question words ruled out as candidates.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">word2vec's most famous demo predates word2vec</h1>
+        <p class="nb-dekline">
+          The King&ndash;Queen analogy that made the paper famous first
+          appeared in an earlier RNN model, and the version word2vec actually
+          ran only works with its own question words ruled out as candidates.
+        </p>
+        <div class="nb-byline">
+          <span>12 min read</span><span>2026-08-02</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            Efficient Estimation of Word Representations in Vector Space
+          </p>
+          <p class="nb-paper-meta">
+            Tomas Mikolov, Kai Chen, Greg Corrado, Jeffrey Dean &middot;
+            arXiv:1301.3781 &middot; 2013
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1301.3781"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We propose two novel model architectures for computing continuous
+            vector representations of words from very large data sets. The
+            quality of these representations is measured in a word similarity
+            task, and the results are compared to the previously best
+            performing techniques based on different types of neural
+            networks. We observe large improvements in accuracy at much lower
+            computational cost, i.e. it takes less than a day to learn high
+            quality word vectors from a 1.6 billion words data set.
+            Furthermore, we show that these vectors provide state-of-the-art
+            performance on our test set for measuring syntactic and semantic
+            word similarities.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The cost word2vec was built to cut</h2>
+        <p>
+          Before 2013, the strongest word-vector models ran every prediction
+          through a nonlinear hidden layer. A language model read a window
+          of context words, mixed them together in a layer that squashed
+          the combination nonlinearly, and only then predicted a word. That
+          layer
+          gave the older neural language models their expressive power, and
+          it is also what made them slow to train on more than a few hundred
+          million words at a time.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          Mikolov, Chen, Corrado, and Dean's answer was to remove it.
+          Continuous bag-of-words (CBOW) predicts a word from the words
+          around it. Skip-gram runs the same idea backward, predicting the
+          surrounding words from one word in the middle. Neither model passes
+          its input through anything nonlinear, so a training step costs a
+          sum and a lookup instead of a matrix mixture. The paper states the
+          saving as a formula: CBOW costs N&middot;D + D&middot;log<sub
+            >2</sub
+          >(V) per training example, and skip-gram costs C&middot;(D +
+          D&middot;log<sub>2</sub>(V)). D is the vector size and V the
+          vocabulary. The older, nonlinear language models added a much
+          larger term instead.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="&sect;3.1&ndash;3.2"
+              data-nb-note="CBOW and skip-gram architecture definitions and their complexity formulas."
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          On identical training data and vector size, the paper's own
+          comparison shows what removing that layer bought.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <table class="nb-table">
+          <caption>
+            Same data, same vector size: accuracy on the paper's own analogy
+            test, by architecture.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Architecture</th>
+              <th>Semantic</th>
+              <th>Syntactic</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">RNNLM</span></td>
+              <td>9%</td>
+              <td>36%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">NNLM</span></td>
+              <td>23%</td>
+              <td>53%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">CBOW</span></td>
+              <td>24%</td>
+              <td>64%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Skip-gram</span></td>
+              <td>55%</td>
+              <td>59%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Turned loose on more data, skip-gram's best reported run reached
+          52.2% semantic and 55.1% syntactic accuracy on the paper's own
+          19,544-question test. That run used 300 dimensions, trained on 1.6
+          billion words drawn from a 6-billion-token Google News corpus, with
+          the vocabulary capped at the million most frequent words.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Google never released that training corpus or the resulting
+          vectors. Every accuracy figure attached to it is the number
+          Mikolov and coauthors reported, not a number
+          anyone outside Google has independently reproduced on the same
+          data.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="scoring-every-word" id="scoring-every-word">
+        <h2>Scoring every word was still too slow</h2>
+        <p>
+          Removing the hidden layer fixed one cost. It left another standing:
+          both models still trained by ranking the correct next word against
+          every other word in the vocabulary, a full softmax over hundreds of
+          thousands of candidates at each step. On a billion-word corpus,
+          that ranking is more of the same expense the paper had just spent
+          its effort cutting.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          So what happens when the vocabulary the model has to score, at
+          every single step of training, runs past a million words? Mikolov,
+          Sutskever, Chen, Corrado, and Dean's companion paper, published
+          nine months after the first, answered by not scoring the vocabulary
+          at all.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          Negative sampling trains the model to tell the true neighbor apart
+          from a handful of words drawn at random, rather than ranking it
+          above every word in the language. Picture a five-word toy
+          vocabulary: cat, dog, ran, fast, moon, and a training pair (ran,
+          fast). Negative sampling does not ask the model to rank fast above
+          cat, dog, and moon all at once. It asks a few small yes-or-no
+          questions instead: is fast the right neighbor for ran (yes), is
+          moon (no), is cat (no), is dog (no). The paper recommends drawing
+          five to twenty such negative words for a small corpus, and as few
+          as two to five for a large one.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="&sect;2 (Eq. 4)"
+              data-nb-note="'values of k in the range 5–20 are useful for small training datasets, while for large datasets the k can be as small as 2–5.'"
+              >2</a
+            ></sup
+          >
+          Multiply the toy example by a real vocabulary, and a training step
+          costs a handful of comparisons instead of one comparison per word
+          in the language.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="the-demo-before-the-paper"
+        id="the-demo-before-the-paper"
+      >
+        <h2>Where King &minus; Man + Woman = Queen actually comes from</h2>
+        <p>
+          The sentence that made &ldquo;Efficient Estimation&rdquo; famous
+          sits early, in the paper's own statement of its goals. It reads:
+          &ldquo;Using a word offset technique where simple algebraic
+          operations are performed on the word vectors, it was shown for
+          example that vector('King') &minus; vector('Man') +
+          vector('Woman') results in a vector that is closest to the vector
+          representation of the word Queen.&rdquo;<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Introduction &sect;1.1, &ldquo;Goals of the Paper&rdquo;"
+              data-nb-note="The sentence carries citation [20], crediting the example to prior work rather than claiming to originate it."
+              >1</a
+            ></sup
+          >
+          That sentence carries a citation, numbered [20], to a different
+          paper: Mikolov, Yih, and Zweig, &ldquo;Linguistic Regularities in
+          Continuous Space Word Representations.&rdquo;<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Abstract; &sect;5, The Vector Offset Method"
+              data-nb-note="Origin of the vector-offset method and the King/Queen example, on RNNLM vectors, not CBOW or skip-gram."
+              >3</a
+            ></sup
+          >
+        </p>
+        <p>
+          That earlier paper, not the one this piece opened with, is where
+          the vector-offset method and the King/Queen example both
+          originate. Its vectors come from a recurrent neural network
+          language model, the same family of architecture &ldquo;Efficient
+          Estimation&rdquo; was built to replace. It trained on 320 million
+          words of Broadcast News transcripts with an 82,000-word vocabulary,
+          roughly a tenth the data of the Google News runs that made
+          skip-gram's own numbers. On its own 8,000-question syntactic test,
+          the best RNN model reported 39.6% accuracy.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+        </p>
+        <p>
+          &ldquo;Efficient Estimation&rdquo; adopted the offset idea and
+          reran it, at far larger scale, on the two new architectures the
+          paper actually introduces. The popular account credits CBOW and
+          skip-gram with discovering that word vectors encode analogies
+          through direction and distance in vector space. The offset
+          technique itself credits an earlier, smaller, differently built
+          model, in a bracketed citation most retellings of the story drop.
+        </p>
+      </section>
+
+      <section data-nb-section="the-excluded-words" id="the-excluded-words">
+        <h2>Why the search never considers King, Man, or Woman</h2>
+        <p>
+          Picture the vectors for King, Man, Woman, and Queen as four points
+          in a high-dimensional space. The offset technique computes a new
+          point, X = vector(King) &minus; vector(Man) + vector(Woman). It
+          then asks which word's vector sits closest to X by the angle
+          between them, cosine distance rather than straight-line distance.
+          Word2vec's own paper adds one more step, stated plainly in its
+          results section: &ldquo;we discard the input question words during
+          this search.&rdquo;<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="&sect;4, opening paragraphs before &sect;4.1"
+              data-nb-note="Word2vec's own statement of the exclusion rule."
+              >1</a
+            ></sup
+          >
+          King, Man, and Woman are not allowed to be the answer to a question
+          that already contains them.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \operatorname*{arg\,max}_{b^* \in V} \cos\!\left(b^*,\ b - a +
+            a^*\right)
+          </div>
+        </figure>
+        <p>
+          Levy and Goldberg's 2014 paper gave that rule a name and a formal
+          definition, 3CosAdd: the highest-cosine word in a vocabulary V that
+          specifically excludes the three question words, a, a*, and b.<sup
+            class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="&sect;3.2&ndash;3.3 (Eq. 1, Eq. 3)"
+              data-nb-note="Formal definition of 3CosAdd with the query-word exclusion built into the domain of V."
+              >4</a
+            ></sup
+          >
+          They also showed the formula rearranges, once vectors are unit
+          length, into cos(b*,b) &minus; cos(b*,a) + cos(b*,a*). That is the
+          candidate word's similarity to Queen, minus its similarity to Man,
+          plus its similarity to Woman. Read that way, an analogy answer is
+          three ordinary similarity scores added together. The term with the
+          largest raw similarity can swamp the other two. London:England
+          :: Baghdad:? answers &ldquo;Mosul&rdquo; under 3CosAdd, because
+          Mosul sits close to Baghdad geographically and that one term
+          dominates the sum. The actual answer, Iraq, only wins once the
+          three terms are multiplied instead of added, the fix Levy and
+          Goldberg call 3CosMul.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+        </p>
+        <p>
+          Which formula runs the search changes which kind of vector looks
+          smarter, not just by how much it wins but by whether it wins at
+          all. The comparison below runs on the same Wikipedia corpus, the
+          same skip-gram embeddings, and the GOOGLE test set: 19,258 of its
+          original 19,544 questions, after removing entries with
+          out-of-vocabulary words. An older count-based representation
+          trails badly under 3CosAdd and comes out ahead under
+          3CosMul.<sup class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="Table 1, Table 3"
+              data-nb-note="Head-to-head embedding-vs-explicit accuracy under 3CosAdd and 3CosMul on MSR and GOOGLE."
+              >4</a
+            ></sup
+          >
+        </p>
+        <table class="nb-table">
+          <caption>
+            Same corpus, same skip-gram vectors: which representation wins
+            depends on the scoring rule.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Rule, dataset</th>
+              <th>Skip-gram</th>
+              <th>Explicit PPMI</th>
+              <th class="txt">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">3CosAdd, MSR</span></td>
+              <td>53.98%</td>
+              <td>29.04%</td>
+              <td class="txt">skip-gram wins by 25 points</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">3CosAdd, GOOGLE</span></td>
+              <td>62.70%</td>
+              <td>45.05%</td>
+              <td class="txt">skip-gram wins by 18 points</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">3CosMul, MSR</span></td>
+              <td>59.09%</td>
+              <td>56.83%</td>
+              <td class="txt">a 2-point margin</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">3CosMul, GOOGLE</span></td>
+              <td>66.72%</td>
+              <td>68.24%</td>
+              <td class="txt">explicit vectors edge ahead</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Levy and Goldberg add one further complication neither 2013 paper
+          discloses. On the semantic half of Mikolov and coauthors' own
+          published evaluation, the answers were actually scored with a
+          different formula, PAIR_DIRECTION, not 3CosAdd. Levy and Goldberg
+          say they confirmed that by corresponding with the original
+          authors, not by reading it in the published text.<sup
+            class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="&sect;11, Discussion"
+              data-nb-note="'This was confirmed both by our independent trials and by corresponding with the authors.' Not stated in either 2013 word2vec paper."
+              >4</a
+            ></sup
+          >
+          That detail rests on one paper's account of a conversation, not on
+          anything either 2013 paper states in print.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="exclusion-turned-off"
+        id="exclusion-turned-off"
+      >
+        <h2>Turn off the exclusion and the analogy falls apart</h2>
+        <p>
+          Tal Linzen tested what the search finds without that rule, training
+          his own skip-gram-with-negative-sampling spaces and running the
+          raw, unconstrained version of the offset method: search the entire
+          vocabulary, King, Man, and Woman included.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="&sect;4 Results, &ldquo;Baselines&rdquo; and &ldquo;Reversed analogies&rdquo;"
+              data-nb-note="Ablation measuring the offset method with the query-word exclusion removed."
+              >5</a
+            ></sup
+          >
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">98%</span
+            ><span class="nb-stat-l"
+              >Top match was one of the three question words</span
+            >
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">0.71&rarr;0.21</span
+            ><span class="nb-stat-l"
+              >3CosAdd accuracy, exclusion on vs off</span
+            >
+          </div>
+        </div>
+        <p>
+          Broken down, the nearest neighbor to X was Woman, the input word
+          itself, in 93% of cases, and King, the other input word, in another
+          5%. It was never Man.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          In word2vec's own famous example, the unconstrained search's top
+          guess for King &minus; Man + Woman is Woman, not Queen, because the
+          input word already sitting in the search is, geometrically, the
+          closest point to X there is. The exclusion rule is not a footnote
+          to the offset technique. It is most of what makes the technique
+          look correct at all.
+        </p>
+        <p>
+          Nissim, van Noord, and van der Goot ran the same test on the
+          actual, publicly distributed GoogleNews vectors, the ones millions
+          of people have downloaded and used. They found the same collapse.
+          Macro-accuracy under 3CosAdd fell from 0.71 with the exclusion
+          enforced to 0.21 without it, and macro-accuracy under 3CosMul fell
+          from 0.73 to 0.45.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="&sect;4.1, Table 1"
+              data-nb-note="Independent reproduction of the exclusion effect on the standard pretrained GoogleNews vectors and the original Mikolov test set."
+              >6</a
+            ></sup
+          >
+          In most of the failures, the model's answer was simply the second
+          input word handed back to the questioner.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+        <p>
+          The same rule shapes a debate well outside the analogy literature.
+          A bias analysis asking &ldquo;man is to doctor as woman is to
+          X&rdquo; can never return &ldquo;doctor&rdquo; as X. That holds
+          whatever the embedding actually encodes, because the code running
+          the search has already ruled the input words out. Nissim and
+          coauthors point out that the
+          constraint is documented, in word2vec's own paper and in several
+          papers that followed it, and still is not common knowledge among
+          people running the test.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+      </section>
+
+      <section
+        data-nb-section="the-count-inside-skip-gram"
+        id="the-count-inside-skip-gram"
+      >
+        <h2>The count hiding inside skip-gram</h2>
+        <p>
+          Negative sampling is a training shortcut, not an explanation of
+          what the resulting vectors mean. Omer Levy and Yoav Goldberg went
+          looking for one, in a separate paper, and found that skip-gram with
+          negative sampling is, under the right conditions, doing something
+          with a much older name: counting.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+        </p>
+        <p>
+          Consider a large enough vector dimension, one big enough to let the
+          model fit every word-context pair's target value exactly. At that
+          size, the objective skip-gram with negative sampling optimizes has
+          an exact solution, and that solution is not arbitrary.<sup
+            class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="&sect;3, &sect;3.1 (Eq. 3&ndash;7)"
+              data-nb-note="Derivation of the implicit shifted-PMI factorization identity, exact 'for sufficiently large dimensionality d.'"
+              >7</a
+            ></sup
+          >
+          It equals a quantity computed straight from word co-occurrence
+          counts in the training corpus, shifted by a constant fixed by how
+          many negative samples the model draws:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \htmlClass{nb-mc1}{\vec{w}_i \cdot \vec{c}_j} =
+            \htmlClass{nb-mc2}{\operatorname{PMI}(w_i, c_j)} -
+            \htmlClass{nb-mc3}{\log k}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">w&#8407;<sub>i</sub> &middot; c&#8407;<sub>j</sub></span
+              ><span
+                >The dot product skip-gram's training actually optimizes,
+                between a word i and a context word j.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">PMI(w<sub>i</sub>, c<sub>j</sub>)</span
+              ><span
+                >Pointwise mutual information: how much more often i and j
+                co-occur than independent counts would predict.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">log k</span
+              ><span
+                >A constant set by k, the number of negative samples drawn
+                per positive example.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            At the objective's exact optimum, skip-gram's trained dot product
+            equals a corpus co-occurrence statistic shifted by a constant the
+            negative-sampling count sets.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Pointwise mutual information is an old idea in distributional
+          semantics, nothing more exotic than a ratio of counts. Levy and
+          Goldberg's theorem says the vectors skip-gram spends its training
+          budget arriving at are, at the mathematical optimum, a compressed
+          encoding of that same ratio, for every word and context in the
+          corpus at once.<sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+        <p>
+          The theorem carries a condition the paper states itself. It holds
+          exactly only when the dimension is large enough to reconstruct the
+          full word-context matrix without loss, a condition real,
+          low-dimensional word vectors do not meet. On the analogy task
+          specifically, trained skip-gram clears an exact factorization of
+          that same matrix by the paper's own correlation measure: 0.627
+          against 0.448 on the syntactic analogy set.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          The paper offers a conjecture for why, not a proof. Skip-gram's
+          training weighs frequent word pairs more heavily than rare ones.
+          An exact factorization of the matrix treats every pair the
+          same.<sup
+            class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+        </p>
+        <p>
+          The picture of King, Man, Woman, and Queen as four points whose
+          distances and directions can be read off directly still holds for
+          describing what the search finds. It stops explaining why
+          skip-gram's particular arrangement of those points beats a matrix
+          built to hit the identical target on the analogy task. That gap
+          stays open in the very paper that proved the two were connected in
+          the first place.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="what-word2vec-established"
+        id="what-word2vec-established"
+      >
+        <h2>What word2vec actually established</h2>
+        <p>
+          Word2vec's practical case rests on more than the King-Queen demo.
+          Marco Baroni, Georgiana Dinu, and German Kruszewski ran an
+          independent, much larger test in 2014. They trained 36 traditional
+          count-based vector configurations against 48 predict-based ones,
+          word2vec and its relatives among them, all on the same
+          2.8-billion-word corpus, and scored each across 14 separate tasks.
+          Predict models won 13
+          of the 14, often by a wide margin, and the authors, who expected
+          the older count methods to hold up, called the result a
+          &ldquo;thorough and resounding victory.&rdquo;<sup class="nb-cite"
+            ><a
+              href="#s8"
+              data-nb-locator="&sect;4 Results, Table 2"
+              data-nb-note="Independent 36-count-vs-48-predict benchmark across 14 lexical-semantics tasks, on a shared corpus neither word2vec paper trained on."
+              >8</a
+            ></sup
+          >
+        </p>
+        <p>
+          Levy and Goldberg's CoNLL paper, published the same year,
+          complicates that victory rather than confirming it. Their own
+          head-to-head, run on a shared corpus, put 3CosMul-scored count
+          vectors essentially tied with skip-gram. On the GOOGLE analogy set
+          specifically, count vectors even edged ahead, 68.24% to 66.72%.
+          The paper says
+          so directly: the result runs &ldquo;contrary to the recent findings
+          of Baroni et al. (2014).&rdquo;<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Two papers, the same year, reached opposite conclusions from the
+          same kind of test.
+        </p>
+        <p>
+          Levy, Goldberg, and Dagan's 2015 paper is often read as the
+          resolution. Word2vec's own tooling popularized a set of
+          hyperparameters: context distribution smoothing, dynamically sized
+          windows, and more. Port those into the older count-based pipeline
+          on equal terms, and &ldquo;there is no consistent advantage to one
+          algorithmic approach over another.&rdquo;<sup class="nb-cite"
+            ><a
+              href="#s9"
+              data-nb-locator="Abstract; &sect;1 Introduction"
+              data-nb-note="Reframes the 2014 predict-vs-count dispute as a hyperparameter-tuning artifact."
+              >9</a
+            ></sup
+          >
+          That is a careful, controlled result, and it is also the same two
+          authors' account of a dispute they were already one side of. No
+          outside group has run the adjudicating fourth experiment.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Two things stay fixed across every source here. The
+            architecture is cheap enough to train on a billion-plus words in
+            about a day. And the resulting vectors are practically useful on
+            ordinary similarity and category tasks, confirmed by a lab that
+            trained on its own corpus, not word2vec's.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            Three things vary, and the analogy claim depends on all three.
+            Which formula runs the search: 3CosAdd and 3CosMul flip which
+            representation wins.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            Whether the three question words are barred from being the
+            answer: removing that rule collapses 3CosAdd's accuracy from
+            0.71 to 0.21 on the paper's own test set.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+            And whose hyperparameters the count-versus-predict comparison
+            inherits: the closest thing to a resolution is one lab's
+            account, not an outside referee's.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            The King &minus; Man + Woman demo that carries the popular story
+            is not even word2vec's demo. It is an earlier RNN paper's,
+            rerun at scale.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            Word2vec itself established one thing nothing collected here
+            overturns: removing a nonlinear hidden layer and training on far
+            more data produces vectors good enough to win on nearly every
+            practical benchmark tried against them since. It did not
+            establish that linear offsets are a stable, general property of
+            the space. What the demo shows is one scoring rule, applied to
+            one excluded set, on one test.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1301.3781"
+              >arXiv &middot; Efficient Estimation of Word Representations in
+              Vector Space (Mikolov, Chen, Corrado &amp; Dean, 2013)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1310.4546"
+              >arXiv &middot; Distributed Representations of Words and
+              Phrases and their Compositionality (Mikolov, Sutskever, Chen,
+              Corrado &amp; Dean, 2013)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aclanthology.org/N13-1090/"
+              >ACL Anthology &middot; Linguistic Regularities in Continuous
+              Space Word Representations (Mikolov, Yih &amp; Zweig, NAACL-HLT
+              2013)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aclanthology.org/W14-1618/"
+              >ACL Anthology &middot; Linguistic Regularities in Sparse and
+              Explicit Word Representations (Levy &amp; Goldberg, CoNLL
+              2014)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aclanthology.org/W16-2503/"
+              >ACL Anthology &middot; Issues in Evaluating Semantic Spaces
+              Using Word Analogies (Linzen, RepEval 2016)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aclanthology.org/2020.cl-2.7/"
+              >ACL Anthology &middot; Fair Is Better than Sensational: Man Is
+              to Doctor as Woman Is to Doctor (Nissim, van Noord &amp; van der
+              Goot, Computational Linguistics 2020)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://proceedings.neurips.cc/paper_files/paper/2014/hash/b78666971ceae55a8e87efb7cbfd9ad4-Abstract.html"
+              >NeurIPS Proceedings &middot; Neural Word Embedding as Implicit
+              Matrix Factorization (Levy &amp; Goldberg, NeurIPS 2014)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aclanthology.org/P14-1023/"
+              >ACL Anthology &middot; Don't Count, Predict! A Systematic
+              Comparison of Context-Counting vs. Context-Predicting Semantic
+              Vectors (Baroni, Dinu &amp; Kruszewski, ACL 2014)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aclanthology.org/Q15-1016/"
+              >ACL Anthology &middot; Improving Distributional Similarity
+              with Lessons Learned from Word Embeddings (Levy, Goldberg &amp;
+              Dagan, TACL 2015)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
