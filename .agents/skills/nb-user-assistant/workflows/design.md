@@ -20,6 +20,12 @@ both themes, keyboard navigation, and a reader who cannot see color or run
 JavaScript. Use the existing gallery and site preview as design tools, not just
 build checks. Inspect results and iterate before presenting the work as done.
 
+Design belongs to the user's taste, so iterate with them, not at them. Build a
+few genuinely different candidates with realistic content, render each exactly
+as the site will show it, and offer to open the rendered pages in the user's
+browser for reaction. Revise from what they say and return with the next
+render. Never present a single take as the finished design.
+
 Keep all paper-specific design under `press/`. A requested change to generated
 site navigation or page layout is an engine contribution, not customization.
 State that maintenance cost before proceeding.
