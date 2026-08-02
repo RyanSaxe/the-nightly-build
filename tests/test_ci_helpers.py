@@ -169,6 +169,17 @@ def test_check_yml_routes_exact_syncs_to_the_protected_merge_job() -> None:
     assert "needs.validate.outputs.sync == 'true'" in automerge["if"]
 
 
+def test_check_yml_automerges_every_valid_new_article() -> None:
+    workflow = yaml.safe_load(
+        (REPO / ".github" / "workflows" / "check.yml").read_text()
+    )
+    validate = workflow["jobs"]["validate"]
+    automerge = workflow["jobs"]["automerge"]
+
+    assert "new_article" in validate["outputs"]
+    assert "needs.validate.outputs.new_article == 'true'" in automerge["if"]
+
+
 def test_canonical_workflows_use_the_checkout_owned_command() -> None:
     for name in ("check.yml", "publish.yml"):
         workflow = (REPO / ".github" / "workflows" / name).read_text()

@@ -33,6 +33,10 @@ def complete_tree(root: pathlib.Path) -> pathlib.Path:
     return artifacts
 
 
+def test_the_production_has_exactly_four_editorial_roles() -> None:
+    assert set(ROLE_FILES) == {"writing-coach", "researcher", "writer", "editor"}
+
+
 def test_complete_semantic_tree_passes(tmp_path: pathlib.Path) -> None:
     complete_tree(tmp_path)
 
