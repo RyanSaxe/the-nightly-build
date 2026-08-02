@@ -1,6 +1,6 @@
 ---
 name: nb-writer
-description: >
+description: >-
   Drafts or revises one article from an exact brief, voice guide, and evidence
   record, then carries it through the deterministic proof.
 ---

@@ -1,6 +1,6 @@
 ---
 name: nb-researcher
-description: >
+description: >-
   Reads and verifies the sources for one commissioned article, then writes the
   exact evidence record used by the writer and editor.
 ---

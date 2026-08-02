@@ -1,6 +1,6 @@
 ---
 name: nb-writing-coach
-description: >
+description: >-
   Studies strong writing in the commissioned domain and turns it into a
   practical voice guide for one article. Runs only from an orchestrator brief.
 ---

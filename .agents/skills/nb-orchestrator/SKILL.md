@@ -1,6 +1,6 @@
 ---
 name: nb-orchestrator
-description: >
+description: >-
   Orchestrate authorized Nightly Build article work through commissioning,
   editorial roles, proof, and publication. Load after a scheduled prompt supplies
   the exact duty result or after the user assistant configures a manual article.

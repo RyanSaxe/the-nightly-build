@@ -1,6 +1,6 @@
 ---
 name: nb-editor
-description: >
+description: >-
   Gives one drafted article three ordered reads: skeptic, cut, and reader.
   Makes surgical edits, records the review, and requests any true redraft.
 ---
