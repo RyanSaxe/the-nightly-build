@@ -19,10 +19,13 @@ paraphrase these layers: supply the generated `editorial-direction.md` itself,
 to exactly the roles production and delivery names as its recipients.
 
 Start history work with targeted `nb history` queries. Use
-`nb history --show <series>/<slug>` or a raw article only when a concrete
-commissioning question requires it. Record relevant prior coverage and recent
-openers, section shapes, furniture, and conclusions as habits not to inherit
-automatically. Publication history informs context; it is never a template.
+`nb history --structure <series>/<slug>` for a recent article's outline and
+furniture, and `--show` or a raw article only when a concrete commissioning
+question requires the prose itself. Record relevant prior coverage and recent
+openers, conclusions, and outline shapes as habits not to inherit
+automatically. Never record template-required furniture or fixed labels as
+habits to avoid: the proof requires them, and only optional choices repeat.
+Publication history informs context; it is never a template.
 
 ## Plan the articles together
 
