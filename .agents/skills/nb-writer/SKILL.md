@@ -81,11 +81,25 @@ researcher's immutable evidence artifact.
 
 ## Prove and hand off
 
-Run `nb stamp` on the article to write the computed counts, then run the exact
-`nb check` command supplied by the brief until `BLOCK: 0`. Stamp again after
-any edit that changes the text. Treat
-every warning as an editorial note: fix it or record why it stands. Use
-`nb preview` when layout or an asset changed and inspect the rendered result.
+While iterating, run the proof with `--no-check-links` and fix warnings in
+batches, not one re-proof per fix. Short single-purpose sentences from the
+first draft avoid most density warnings entirely. Treat every warning as an
+editorial note: fix it or record why it stands. Use `nb preview` when layout
+or an asset changed and inspect the rendered result.
+
+Before handing off, make the display-text pass. An error here costs a full
+editor round and is the paper's most visible kind:
+
+- Check every date, number, name, title, and place in the headline, dek, and
+  subheads against the evidence record.
+- Check that each display-text claim is attributed to the source that owns it,
+  not one that merely reports it.
+- Check the headline and dek against the banned molds in the editorial
+  direction and the voice guide's do-not-reuse list.
+- Check that nb-meta `dek` and the rendered dekline are identical.
+
+Then run `nb stamp` and the exact `nb check` command supplied by the brief,
+links included, until `BLOCK: 0`.
 
 On a revision, apply every required item in the named `editorial-review.md`.
 Preserve settled work unless a change logically affects it. New evidence comes
