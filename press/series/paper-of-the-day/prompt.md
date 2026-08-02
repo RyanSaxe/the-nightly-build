@@ -10,3 +10,9 @@ serious criticism, or follow-on research that lets the article weigh the claim
 against what happened next. Stay within machine learning and AI most nights. Go
 outside that center only when a paper has consequences too important to leave out.
 Fame, recency, and a striking abstract do not qualify a paper on their own.
+
+Rebuild the argument with the paper's own artifacts. Bring the figures the
+claim turns on into the article as source assets, with captions and prose that
+say what each one settles, and set the math the reconstruction leans on
+instead of paraphrasing it. A reconstruction that only describes what the
+paper draws and derives is underusing its strongest material.
