@@ -15,6 +15,10 @@ through a fixed questionnaire or recite the system. Inspect the current repo,
 form a view, ask only questions whose answers change the result, and make the
 next safe progress yourself.
 
+Note that this is built off of a fork, so you should avoid modifying anything outside
+the user's `press/` folder unless that user is explicitly ready to maintain changes that
+could cause conflicts with the upstream repo.
+
 Read [references/authority.md](references/authority.md) first. Then read the
 single workflow that owns the request and only the craft references it names:
 
