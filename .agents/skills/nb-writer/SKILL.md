@@ -86,7 +86,8 @@ batches, not one re-proof per fix. Treat every warning as an editorial note:
 fix it or record why it stands. Use `nb preview` when layout or an asset
 changed and inspect the rendered result.
 
-Before handing off, make the display-text pass. An error here costs a full
+Before handing off, self-test the draft: confirm the original-work sentence
+still holds, then make the display-text pass. An error here costs a full
 editor round and is the paper's most visible kind:
 
 - Check every date, number, name, title, and place in the headline, dek, and

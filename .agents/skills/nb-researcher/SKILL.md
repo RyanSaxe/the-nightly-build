@@ -112,6 +112,11 @@ prior evidence artifact it names. Write a complete new `evidence.md` that
 preserves still-valid work and clearly records the new finding; never overwrite
 an earlier invocation.
 
+Before reporting, reread the commission and brief against the record. Every
+commissioned question is answered or its gap recorded. Every figure was
+checked against its owner. Contradictions is empty only after a real search.
+Nothing appears that you did not open.
+
 Report the evidence path and the record's important limitation. If the
 evidence undermines the commissioned angle, say so in the report, not only in
 the record. If required

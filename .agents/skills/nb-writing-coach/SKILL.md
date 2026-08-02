@@ -23,6 +23,9 @@ it from the orchestrator.
 1. Identify the domain and genre from the brief.
 2. Find at least three exemplars by writers the field itself rates. Skip
    influencers and SEO content. Prefer the primary piece over commentary.
+   Choose exemplars that already sound the way this article should sound. A
+   playful series needs writers who are fun to read; expertise alone does not
+   qualify a dry writer for it.
 3. Read each as a writer studies a writer. Capture cadence, argument, evidence,
    stance, notice, diction, relationship with the reader, and the important
    move those axes miss. If two notes differ only in adjectives, read again.
@@ -35,15 +38,26 @@ prose.
 ## Write the voice guide
 
 Lead with a concise directive: register, reader relationship, and only the
-moves that will change sentences in this article. License the expressive forms
-this article may use, naming each form and the exemplar move it transfers. An
-empty license keeps the house default. Specify how to write, never what to
-say. Do not restate the subject, source findings, or template rules. Do not
-coin catchphrases or reusable lines.
+moves that will change sentences in this article. Specify how to write, never
+what to say. Do not restate the subject, source findings, or template rules.
+Do not coin catchphrases or reusable lines.
 
-End the directive with `Recently used, do not reuse:` and the structural or
-verbal habits the brief says this article should avoid. Prior articles are a
-negative constraint, never voice exemplars.
+Then license the expressive forms this article may use, one entry per form:
+
+```text
+## Licenses
+
+form: the expressive form being licensed
+move: what the studied exemplar does with it, and when it deploys the form
+bar:  what any single use must accomplish to stay in the article
+```
+
+A license is good only when the editor can judge one sentence against it and
+defend the verdict. An empty license keeps the house default.
+
+Then add `Recently used, do not reuse:` and the structural or verbal habits
+the brief says this article should avoid. Prior articles are a negative
+constraint, never voice exemplars.
 
 Then record each exemplar:
 
@@ -62,6 +76,10 @@ Craft:
 ```
 
 Write clean working prose: concrete words, no filler, no article-ready lines.
+
+Before reporting, self-test the guide. If a writer following it would produce
+prose indistinguishable from the house default, it has said nothing. Name what
+this article should sound like that the default does not already give.
 
 ## Complete the invocation
 

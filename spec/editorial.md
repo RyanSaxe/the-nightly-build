@@ -120,8 +120,8 @@ tells of slop.
 That is the default register. An expressive form beyond it (e.g., direct
 address, fragments, open humor, etc.) is licensed, never free.
 `press/editorial.md` or the article's voice guide grants the license by naming
-the form, the move being transferred, and the exemplar standard it must meet.
-An unlicensed form is cut. A licensed use still meets every test above.
+the form, the exemplar move being transferred, and the bar any single use must
+meet. An unlicensed form is cut. A licensed use still meets every test above.
 
 Break any rule here sooner than write a sentence no honest voice would say aloud.
 
