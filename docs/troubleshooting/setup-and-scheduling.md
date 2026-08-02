@@ -31,9 +31,10 @@ network capability for that runtime, then rerun the failed test step.
 ## The run cannot push or open a PR
 
 Verify the scheduled identity can push a generated branch and create a PR
-against `library`. On GitHub Actions, the job needs `contents: write` and
-`pull-requests: write`. Provider-hosted schedulers may need separate repository
-app permissions.
+against `library`. Provider-hosted schedulers may need separate repository app
+permissions. A runtime authenticated with a GitHub Actions `GITHUB_TOKEN` also
+cannot trigger the `validate` check on PRs it opens; scheduled runtimes need an
+identity whose PRs run checks.
 
 ## Verification works locally but fails on schedule
 

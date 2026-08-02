@@ -24,6 +24,11 @@ requirements. Candidate provider entrypoints are listed in
 [Integrations](../../integrations/README.md), but a link to an automation
 product is not proof that it satisfies this contract.
 
+A self-hosted GitHub Actions cron path is planned but not yet verified: a PR
+opened with the workflow's own `GITHUB_TOKEN` cannot trigger the required
+`validate` check, so that recipe needs a separately scoped token and an
+end-to-end test before this documentation can recommend it.
+
 ## Canonical prompt
 
 Keep the external schedule prompt deliberately small:
