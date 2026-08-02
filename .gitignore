@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 .DS_Store
 .nb-work/
+# Legacy: older engine versions wrote these locally; keep ignoring them so a
+# migrating fork's git status stays clean.
+docs/agent-only/
+.nb-voice/
