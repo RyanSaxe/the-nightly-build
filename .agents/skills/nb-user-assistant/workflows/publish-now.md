@@ -22,7 +22,7 @@ or urgency. Synthesize:
 
 Give the article a configured home before production. The publish-now guide
 you read states what each mode admits and that publishing now never consumes
-a future slot; apply it to the chosen series. If no existing series fits,
+a future slot. Apply it to the chosen series. If no existing series fits,
 discuss whether the request reveals a durable new series or is outside the
 paper. Do not create a throwaway series to satisfy one topic.
 

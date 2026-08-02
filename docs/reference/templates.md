@@ -14,8 +14,9 @@ or user-owned `press/templates/<id>/`:
 ```
 
 `manifest.yaml` and `skeleton.html` are required. The other files add editorial
-identity, bespoke furniture, and gallery examples. A press package replaces a
-shipped package with the same ID wholesale.
+identity, bespoke furniture, and gallery examples. Skeleton placeholders are
+uppercase instructions, never sample prose a writer could preserve. A press
+package replaces a shipped package with the same ID wholesale.
 
 ## Shipped templates
 

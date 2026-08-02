@@ -28,11 +28,9 @@ Write a brief naming:
 Choose fixed or flexible outline deliberately. Manifest bands are proof
 recommendations, not a substitute for editorial identity. Put machine facts in
 the manifest, instructional placeholders in the skeleton, editorial character
-in `identity.md`, and bespoke components in furniture files. Write skeleton
-placeholders as uppercase instructions, never sample prose a writer could
-preserve. The brief itself is working material: land its conclusions in the
-package, with enforcement rationale as manifest comments and character in
-`identity.md`, and do not commit the brief.
+in `identity.md`, and bespoke components in furniture files. Do not commit
+the brief. Record its decisions in the package files: the reason each anchor
+is fixed as a manifest comment, the editorial character in `identity.md`.
 
 ## Rehearse the contract
 

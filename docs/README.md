@@ -39,11 +39,9 @@ the path that matches what you are trying to do.
 - Troubleshoot [setup and scheduling](troubleshooting/setup-and-scheduling.md)
   or [Article PRs](troubleshooting/article-prs.md)
 
-These pages tell you how the paper works: what exists, what is enforced, what
-will happen, and which decisions are yours. How an agent accomplishes the work
-lives in the skills under `.agents/`, which your assistant reads itself. When
-a guide describes a process, it is setting your expectations, not assigning
-you the steps.
+These pages explain how the paper works and which decisions are yours. The
+skills under `.agents/` tell agents how to do the work; your assistant reads
+those itself.
 
 Files under `spec/` are production contracts for article-making agents and the
 engine. They are useful to contributors, but they are not the user manual.

@@ -22,18 +22,12 @@ Use shared press furniture when several series may need it. Keep a component
 inside a template when its meaning depends on that template. Use your own CSS
 prefix because `nb-` is reserved.
 
-A component is product design, not decoration. It earns its place by making
-specific information easier to understand than prose would, and it must hold
-up for every reader: semantic markup, keyboard and screen-reader behavior, a
-no-JavaScript fallback, long content, narrow screens, and both themes. Its
-catalog entry is the component's contract: when to use it, the exact markup,
-and its constraints.
-
-Your assistant designs furniture with you. Expect it to draft candidates with
-realistic content, render them in the furniture gallery
-(`uv run python scripts/gallery/build.py`, written to the gitignored
-`press-check/gallery/`) and in article previews, and iterate from your
-reaction in the browser. You judge rendered pages, not CSS.
+A component makes specific information easier to understand than prose would.
+Its catalog entry is its contract, giving the purpose, exact markup, and
+constraints. Components must work without JavaScript, on narrow screens, in
+both themes, and for screen readers. The furniture gallery renders every
+piece for inspection: `uv run python scripts/gallery/build.py`, output under
+the gitignored `press-check/`.
 
 Owner-declared JavaScript or CSS libraries belong under `assets` in
 `site.yaml`. They must use HTTPS and Subresource Integrity. Articles themselves
