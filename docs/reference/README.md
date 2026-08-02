@@ -14,7 +14,7 @@ where each capability is controlled.
 | Sections                  | One level of named grouping for the home page, Sections page, and article kickers                    | `section` in `series.yaml`; see [cadence, pausing, and sections](series.md#cadence-pausing-and-sections)         |
 | Commissions and queues    | Required topics for collection and sequence series, plus a priority commission queue for open series | `items` and optional item prompts or tags in `series.yaml`                                                       |
 | Shared prompt fragments   | Reusable editorial instructions selected by item tags                                                | `tags` in `series.yaml` and Markdown fragments under `press/series/_tags/`                                       |
-| Multiple article packages | One enforced template for a series or several choices selected article by article                    | `template` or `templates` in `series.yaml`; see [Template reference](templates.md)                               |
+| Multiple article packages | One enforced template for a series or several choices selected article by article                    | `template` or `templates` in `series.yaml`; see [Template reference](./templates.md)                             |
 
 ## Control timing and publication
 
@@ -69,7 +69,7 @@ The engine does not estimate model cost; use the provider's usage reporting.
 | Custom templates         | Press-owned article skeletons with enforceable sections, citation geometry, chrome, and furniture  | `press/templates/<id>/`; see [Customize templates](../guides/customize/templates.md)                             |
 | Figures and charts       | Local, reviewable images and data-backed charts stored with an article; revisions can replace them | The article's matching asset directory and [Architecture](../concepts/architecture.md)                           |
 | Trusted external assets  | Owner-selected HTTPS scripts and styles with exact Subresource Integrity pins                      | `assets` in `site.yaml`; see [Site reference](site.md)                                                           |
-| Accessible static output | Semantic, script-free article content with responsive layouts and browser-render checks            | [Template reference](templates.md) and [Publishing and security](../concepts/publishing-and-security.md)         |
+| Accessible static output | Semantic, script-free article content with responsive layouts and browser-render checks            | [Template reference](./templates.md) and [Publishing and security](../concepts/publishing-and-security.md)       |
 
 ## Operate and deliver
 

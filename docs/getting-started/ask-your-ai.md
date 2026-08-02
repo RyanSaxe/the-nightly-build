@@ -21,5 +21,5 @@ like. The assistant should test those decisions with examples rather than hand
 you a generic questionnaire.
 
 If your current AI cannot access GitHub, use the manual fork-and-clone path in
-[Set up](setup.md), then open the checkout in a coding agent and repeat the
+[Set up](./setup.md), then open the checkout in a coding agent and repeat the
 request above.

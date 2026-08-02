@@ -49,6 +49,14 @@ correct. If a list could be read either way, reword it or delete it.
 
 ## References and labels
 
+Link a file when the reader should open it. Name it in backticks when the
+sentence is about the file itself: something to edit, create, or paste. A
+backtick path is repo-rooted. A layer that gets composed into
+`editorial-direction.md` never carries a relative link, because the composed
+file resolves links from a different directory. Give every link target a
+directory component (`./setup.md`, never `setup.md`) so same-named files stay
+unambiguous.
+
 Never name the reader in a series prompt. The audience lives in
 `press/editorial.md`; prompt rules are stated about the article, the series,
 or the subject.
