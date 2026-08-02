@@ -18,10 +18,13 @@ is safe to publish.
 
 ## Route by invocation
 
+- **A connector-only ChatGPT Scheduled Task** with public-web access and a
+  connected GitHub app, but no checkout or shell: read `WEB_TASK.md`. It adapts
+  scheduled publication to that runtime and keeps GitHub Actions deterministic.
 - **A human paper owner** asking for setup, configuration, publication,
   revision, design, curation, or maintenance: load
   `.agents/skills/nb-user-assistant/SKILL.md`.
-- **An actual unattended scheduled run:** follow
+- **An actual unattended scheduled run with a checkout and shell:** follow
   `.agents/prompts/run-scheduled-publication.md` in this agent. It resolves
   scheduled work, loads the orchestrator skill, and remains the orchestrator.
 - **An explicit bounded editorial assignment:** load the named role under
@@ -31,4 +34,5 @@ is safe to publish.
 
 Use this checkout's `nb` command for deterministic operations. Article
 publication and revision go through the validated PR paths owned by the
-relevant workflow.
+relevant workflow. A connector-only runtime must not claim it ran local
+commands; GitHub CI owns executable proof for that route.
