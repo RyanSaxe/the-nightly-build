@@ -75,6 +75,8 @@ def cadence_includes(cadence, day: str) -> bool:
         return False
     if isinstance(cadence, list):
         days = [str(d).lower() for d in cadence]
+        if "manual" in days:
+            return False  # a stated manual must never fail open into daily work
         if not any(d in DAY_NAMES for d in days):
             return True  # no recognized day name: fail open, like an unknown scalar
         return day in days

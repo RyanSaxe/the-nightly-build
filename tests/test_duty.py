@@ -121,6 +121,14 @@ def test_manual_cadence_is_always_idle(
     assert entry["reason"] == "cadence manual excludes the selected UTC date"
 
 
+def test_list_form_manual_cadence_is_idle_not_daily(
+    *, duty: Callable[..., dict], patched_repo: Callable[..., str], empty_lib: str
+) -> None:
+    report = duty(patched_repo("cadence: [manual]\n", series="ai-briefs"), empty_lib)
+
+    assert duty_of(report, "ai-briefs") in report["idle"]
+
+
 def test_open_series_with_a_queue_lists_commissions(
     *,
     duty: Callable[..., dict],
