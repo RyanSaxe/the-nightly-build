@@ -49,8 +49,11 @@ local; it is not part of the revision PR.
 
 ## Prove and deliver the result
 
-Commit the revision branch, then run the full PR proof through the current
-`main` checkout:
+While iterating on the file itself, preflight it locally with
+`nb check FILE --series ID --library DIR --revision`; the flag skips the
+already-published and paused-series blocks exactly as the PR proof does for a
+revision diff. Commit the revision branch, then run the full PR proof through
+the current `main` checkout:
 
 ```sh
 PATH-TO-MAIN/nb check --pr \

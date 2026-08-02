@@ -315,6 +315,48 @@ def test_manual_open_revision_of_an_unlisted_published_slug_passes(
     assert not result.blocks
 
 
+@pytest.mark.parametrize(
+    ("_name", "flags", "blocked"),
+    [
+        ("a published slug blocks the plain local check", [], True),
+        ("--revision preflights it like the PR proof", ["--revision"], False),
+    ],
+)
+def test_local_revision_flag_matches_the_pr_proof(
+    *,
+    run_main_json: Callable[[list[str]], dict],
+    make_library: Callable[..., str],
+    testrepo: str,
+    tmp_path: pathlib.Path,
+    _name: str,
+    flags: list[str],
+    blocked: bool,
+) -> None:
+    art = tmp_path / "library" / "semiconductors" / "micron.html"
+    art.parent.mkdir(parents=True)
+    art.write_text(VALID)
+
+    out = run_main_json(
+        [
+            str(art),
+            "--series",
+            "semiconductors",
+            "--repo",
+            testrepo,
+            "--library",
+            make_library({"semiconductors": ["micron"]}),
+            "--today",
+            TODAY,
+            "--json",
+            "--no-check-links",
+            *flags,
+        ]
+    )
+
+    codes = {f["code"] for f in out["findings"] if f["level"] == "BLOCK"}
+    assert ("B-MODE" in codes) is blocked
+
+
 def test_revision_of_a_removed_collection_item_passes_the_slug_gate(
     *,
     run_local: Callable[..., Findings],
