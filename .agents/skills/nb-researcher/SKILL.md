@@ -43,11 +43,18 @@ thin. Then use these stable sections:
 
 ### Sources
 
-One entry per source read: URL; primary/secondary classification and reason;
-what it establishes firsthand or repeats; a precise paraphrase; and honest
-section, page, or paragraph locators. Include a short quotation only when the
-source's exact wording is itself evidence. A repetition supports that a claim
-was made, not that it is true.
+One entry per source read, in this shape:
+
+```text
+URL:         ...
+Kind:        primary | secondary, and why
+Establishes: what it establishes firsthand or merely repeats
+Paraphrase:  precise, in the record's own words
+Locators:    honest section, page, or paragraph
+Quote:       only when the exact wording is itself evidence
+```
+
+A repetition supports that a claim was made, not that it is true.
 
 When the record names a person or body, give it the exact title, role, and
 affiliation the primary states. A headline inherits whatever label the record
@@ -61,8 +68,15 @@ only after looking.
 
 ### Numbers
 
-Every figure the argument depends on: owning primary, exact reading, unit, denominator,
-and relevant period. Preserve full series when a chart may be useful.
+One line per figure the argument depends on:
+
+```text
+Figure: exact reading, with unit
+Owner:  the primary that owns it
+Scope:  denominator and relevant period
+```
+
+Preserve full series when a chart may be useful.
 
 ### Source assets
 
