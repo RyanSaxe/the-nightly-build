@@ -33,12 +33,20 @@ in `identity.md`, and bespoke components in furniture files.
 ## Rehearse the contract
 
 Validate configuration, then fill the skeleton for at least two materially
-different representative subjects. Run the full article proof and browser
-preview. Inspect narrow and wide widths, both themes, source-heavy content,
-long headings, and optional sections at their bounds.
+different representative subjects. Write the fills cheaply: representative
+content and citations good enough not to distract, never the production
+pipeline. Run the article proof to exercise the contract and the browser
+preview to see it. Inspect narrow and wide widths, both themes, source-heavy
+content, long headings, and optional sections at their bounds.
 
 Review the output as a reader and as an adversarial writer. If weak content can
 satisfy the manifest, strengthen the smallest enforceable contract. If strong
 content is forced into filler or repeated geometry, loosen it. Iterate the
 brief, manifest, skeleton, identity, and furniture together until their
 responsibilities are clean.
+
+The contract belongs to the user. Confirm with them which anchors and rules
+are enforced and which stay flexible before the manifest hardens. Offer to
+open the rendered fills in their browser for reaction and iterate from what
+they say. A fill the user approves can graduate into the package's `samples/`
+directory.
