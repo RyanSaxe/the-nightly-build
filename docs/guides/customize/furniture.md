@@ -41,6 +41,16 @@ Owner-declared JavaScript or CSS libraries belong under `assets` in
 `site.yaml`. They must use HTTPS and Subresource Integrity. Articles themselves
 remain script-free. Prefer CSS and semantic HTML when they are sufficient.
 
+The two components that need a real library ship with the engine: `nb.js`
+loads KaTeX for equations and Prism for code listings, version-pinned,
+SRI-hashed, and only on pages that carry the furniture, so most papers
+declare nothing. Declare a library under `assets` for anything beyond them,
+such as more Prism languages or a different typesetter. A press-declared copy
+of a library the engine also ships wins: `nb.js` sees it in the page and
+loads nothing. Readers with JavaScript off still get the raw content, the TeX
+source of an equation and plain monospace code, and charts are plain PNGs
+readable everywhere.
+
 The proof also guards class names against likely typos. It builds an inventory
 from `nb.css`, the composed `theme.css`, and every stylesheet declared under
 `assets`, fetching each external sheet and verifying it against its pinned

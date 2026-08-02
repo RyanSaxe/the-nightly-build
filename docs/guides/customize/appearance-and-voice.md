@@ -27,6 +27,14 @@ The builder republishes the selected theme as `assets/theme.css`, so theme and
 furniture CSS restyle the back catalog. Template HTML keeps the font links it
 was authored with; changing a font token alone does not install a web font.
 
+Themes, furniture, and templates are yours to define in `press/` with no
+engine edit. The site's frame is not: the top navigation, the front-page
+layout, and how each series-page mode renders are fixed by the engine. A new
+navigation entry or a different front page is an engine contribution, which
+takes the fork off the conflict-free `press/`-only update path. The look and
+structure inside a page are unbounded; the frame around it is the ceiling of
+customizing within `press/`.
+
 ## Banned terms: press/banned-terms.yaml
 
 One banned habit gets mechanical teeth. The proof counts every article against
