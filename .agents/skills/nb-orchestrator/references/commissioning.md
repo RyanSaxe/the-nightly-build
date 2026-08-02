@@ -41,8 +41,10 @@ remain coherent and non-redundant.
 ## Initialize each article
 
 Resolve the selected series with `nb source-policy` and
-`nb production-policy`. Honor required model selections and record the actual
-model and effort used for each role.
+`nb production-policy`. A `required` model or effort directive is never yours
+to trade down by judgment. If the runtime cannot honor or verify it, use the
+closest available option and record the deviation in the commission. Record
+the actual model and effort used for each role.
 
 Initialize the chosen series, slug, template, and tags with:
 

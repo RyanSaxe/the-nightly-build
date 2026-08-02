@@ -43,11 +43,15 @@ stages:
     required: true
 ```
 
-`required: false` is guidance: if the harness cannot select the requested model
-or effort, it chooses the closest available option and records that choice in
-the commission. With `required: true`, the article stops before that role when
-the runtime cannot honor or verify the directive. A stage-level value overrides
-the paper-wide value.
+`required` controls who may change a directive, and it never stops an
+article. With `required: false`, the setting is guidance: the orchestrator
+may deviate when its judgment calls for it, recording the choice in the
+commission. With `required: true`, the directive is not the orchestrator's to
+change: no judgment call, no cost-driven downgrade. When the runtime
+genuinely cannot honor or verify a required directive, the orchestrator uses
+the closest available option, records the deviation prominently in the
+commission, and production continues. A stage-level value overrides the
+paper-wide value.
 
 The configurable stages are `writing-coach`, `researcher`, `writer`, and
 `editor`. The orchestrator is deliberately absent: choose its model in
