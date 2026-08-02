@@ -89,7 +89,10 @@ def atom_feed(base_url, feed_path, *, title, eds, generated, author=None):
     for i, ed in enumerate(eds[:FEED_LIMIT]):
         meta = ed["meta"]
         link = absolutize_url(base_url, f"/library/{ed['series']}/{ed['slug']}.html")
-        updated = f"{meta.get('date', generated.date().isoformat())}T00:00:00Z"
+        updated = (
+            ed.get("revised")
+            or f"{meta.get('date', generated.date().isoformat())}T00:00:00Z"
+        )
         entry_id = feed_tag_id(
             base_url,
             f"library/{ed['series']}/{ed['slug']}",
