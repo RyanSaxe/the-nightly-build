@@ -34,10 +34,12 @@ tracked in
 
 Keep the external schedule prompt deliberately small:
 
-> Work in The Nightly Build repository `<repo>` on current `main`. Read
-> `.agents/prompts/run-scheduled-publication.md` and follow it in this agent.
-> This paragraph is the entire assignment. If that file is unavailable, stop
-> and report the missing repository entrypoint.
+> Work in The Nightly Build repository `<repo>`. Update the checkout to the
+> current remote `main` before reading anything; a stale clone may predate
+> the entrypoint. Read `.agents/prompts/run-scheduled-publication.md` and
+> follow it in this agent. This paragraph is the entire assignment. If that
+> file is missing from up-to-date remote `main`, stop and report the missing
+> repository entrypoint.
 
 The repository owns the workflow. The scheduler owns only location and
 authority. The scheduled agent loads the orchestrator skill in the same
@@ -50,10 +52,12 @@ because those copies drift.
 To test the exact scheduled environment without publishing, trigger an
 on-demand task with this assignment:
 
-> Work in The Nightly Build repository `<repo>` on current `main`. Read
-> `.agents/prompts/verify-scheduled-runtime.md` and follow it in this agent.
-> This paragraph is the entire assignment. If that file is unavailable, stop
-> and report the missing repository entrypoint.
+> Work in The Nightly Build repository `<repo>`. Update the checkout to the
+> current remote `main` before reading anything; a stale clone may predate
+> the entrypoint. Read `.agents/prompts/verify-scheduled-runtime.md` and
+> follow it in this agent. This paragraph is the entire assignment. If that
+> file is missing from up-to-date remote `main`, stop and report the missing
+> repository entrypoint.
 
 The smoke prompt opens and cleans up a draft PR against `main`. It never loads
 the orchestrator or touches `library`.
