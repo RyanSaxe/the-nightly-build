@@ -10,12 +10,25 @@ press, choose an existing series and template, clarify only what materially
 changes the piece, and turn the request into a rigorous configured commission.
 Every article needs that home before production starts.
 
-For an open series, add an `items` entry containing a stable slug and the
-article-specific prompt. For a collection or sequence, add or select the
-corresponding configured item. A `cadence: manual` series is a good home for
-pieces that should never be scheduled automatically.
+What a home requires depends on the series mode:
 
-After the configuration change is validated and merged into `main`, the
+- An open series on a schedule usually needs no configuration change: any new
+  slug is admissible. When the series has a pending commission queue, add the
+  article to `items` so it joins the queue. Adding an item is always a valid
+  way to record the commission.
+- A `cadence: manual` series requires a matching `items` entry for every
+  article. It is the natural home for pieces that should never be scheduled.
+- A collection takes any configured, unpublished item; add one if needed. A
+  sequence admits only its next unpublished item.
+- A rolling series publishes one dated edition per UTC day, so publishing now
+  means producing today's edition early. A second same-day edition is not
+  possible.
+
+Publishing now never consumes a future slot. The scheduled run skips a series
+only when an article dated the same UTC day is already published, so a manual
+article can stand in for that day's scheduled one. Tomorrow is never affected.
+
+When configuration changed, after it is validated and merged into `main`, the
 assistant runs the normal production chain: initialize with `nb start-article`,
 research and draft, conduct editorial review, preview, and call
 `nb prepare-pr`. The result is an ordinary Article PR with the same CI gate as
