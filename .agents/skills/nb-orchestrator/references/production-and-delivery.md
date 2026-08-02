@@ -1,0 +1,116 @@
+# Production and delivery
+
+Coordinate the editorial roles without duplicating their judgment. The
+orchestrator owns sequencing, context, and delivery. Each named role owns its
+bounded editorial decisions.
+
+## Run the edition as a parallel pipeline
+
+Launch every commissioned article at once. When isolated children are
+available, fire each article's `nb-writing-coach` and `nb-researcher` together
+in one burst at the start of production. Do not stage a warmup article and do
+not hold one article's roles for another's progress. Wall-clock is the slowest
+single article's chain, so any late start lands on the critical path.
+
+Within one article, brief `nb-writer` only after both outputs exist. Brief
+`nb-editor` only after the writer proves the article. Use these semantic role
+identities and artifacts:
+
+| Role ID         | Input brief       | Output                |
+| --------------- | ----------------- | --------------------- |
+| `writing-coach` | `brief.md`        | `voice-guide.md`      |
+| `researcher`    | `brief.md`        | `evidence.md`         |
+| `writer`        | `brief.md`        | `draft-handoff.md`    |
+| `editor`        | `review-brief.md` | `editorial-review.md` |
+
+The `nb-*` names identify skill packages. Production-policy keys (called
+`stages:` in `press/production.yaml`) and artifact directories use the
+unprefixed role IDs in this table.
+
+Store each pair beneath the artifact root created by `nb start-article`:
+`<role>/01/<input-and-output>`. A later invocation of that role uses the next
+contiguous directory (`02`, `03`, and so on) and never overwrites an earlier
+brief or output. `commission.md` and the generated `editorial-direction.md`
+remain at the artifact root.
+
+Every role receives `editorial-direction.md` with its brief. The editor also
+receives the exact writer brief so instruction leakage remains visible. A
+`review-brief.md` carries the named inputs, your recent-pattern notes, and the
+round's focus. Nothing more. Every launch begins with its named inputs and
+permits focused tool use. When a role asks for more context, expand its
+inputs or route the question to the owner rather than inviting repository
+exploration.
+
+If isolated children are unavailable, perform the same numbered sequence in
+one context and preserve the same artifacts. Isolation changes execution, not
+the editorial record or gate.
+
+## Follow each invocation
+
+Artifacts flow role to role by name, never through your context. Ask each role
+to report its output path, decision, and any missing input in plain language,
+then act on the report.
+
+Before treating an invocation as complete, verify the named pair structurally:
+present in the right place, not empty. The file, not a chat phrase, is the
+production record, and the consuming role judges its content. Read an
+artifact's content only on exception: a report flags a contradiction, a role
+stalls or repeats a failed round, or you take the work over.
+
+Use the harness's actual task state to supervise active roles. When a role
+fails, stalls, or returns without its artifact, inspect the available evidence
+and supply missing context before relaunching it. Do not start a duplicate
+while the original invocation is still active. Do not assume silence means
+progress: a role can fail or stall without any notification. Check on any
+invocation that has been silent for more than 10 minutes.
+
+Lastly, interrupt, reassign, or take over only when the owning role cannot
+complete the work.
+
+## Route repairs without waiving gates
+
+Missing voice guidance returns to the coach. Missing evidence returns to the
+researcher. Prose, structure, markup, assets, and proof return through the
+writer. Give every repair a new numbered brief and output, then require a fresh
+writer proof and editor read.
+
+A single-owner repair needs no authored brief. Relaunch the role with a stub
+that names the review or request to apply, and write real content only when
+routing work between owners or resolving a loop that stopped progressing.
+
+Only an editorial review with no required change settles an article. There is
+no round cap, but do not repeat an unchanged attempt or prolong the loop for
+optional polish. Clarify, reassign, or take over work a role cannot complete,
+and record that resolution in the next brief. A takeover never waives writer
+proof or editor approval. Stop only for an external constraint no role can
+change.
+
+## Prepare and monitor the Article PR
+
+When the editor approves after making direct cuts, no writer round is owed for
+the proof alone. Run `nb stamp` and `nb check` on the edited article yourself.
+Return to the writer only if the proof demands new prose.
+
+After editor approval and a fresh proof, deliver that article immediately. Do
+not hold a finished article for the rest of the edition. Run:
+
+```text
+nb prepare-pr <workspace>/library/<series>/<slug>.html --library <library>
+```
+
+The command creates the branch and commit from current `origin/library`, proves
+the submitted diff, pushes it, and opens or describes the one Article PR. If it
+prints `NB_ARTICLE_PR_REQUIRED`, use the connected GitHub tool exactly as the
+handoff directs. Never recreate or edit its generated branch manually. When its
+proof fails, fix a mechanical fault yourself or route the finding to its owning
+role. A prose change needs a fresh editor approval before preparing again.
+
+Monitor every Article PR through CI, merge, and the published website while
+other articles continue. Route a CI failure back through production, update
+the existing PR, and prove it again. The run ends only with published
+articles or a clearly recorded external blocker. It never leaves an abandoned
+red PR.
+
+Never merge or push to `library` directly. The protected workflow branch
+created by `nb sync` is the sole non-article exception and may be used only as
+that command directs.

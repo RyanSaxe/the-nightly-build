@@ -4,7 +4,7 @@
    change. Bespoke, single-template furniture lives in that template's folder
    instead; this piece is shared across sections, so it lives here. */
 
-/* Case docket — the standing facts of a legal matter as reference data, set
+/* Case docket: the standing facts of a legal matter as reference data, set
    apart from the prose so the prose can argue instead of recite. Used by
    Docket. A box earns its place here because it holds a table, not sentences. */
 .rs-docket {

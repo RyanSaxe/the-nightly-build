@@ -1,7 +1,7 @@
 """Resolve the source obligations that a commission must make explicit.
 
 The proof has always applied template-class defaults, but an agent reading only
-series.yaml cannot see them. The correspondent's command uses this deliberately
+series.yaml cannot see them. The orchestrator's command uses this deliberately
 small copy of that stable policy to make the requirement visible before research.
 """
 

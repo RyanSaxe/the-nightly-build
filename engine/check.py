@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["pyyaml", "tinycss2"]
 # ///
-"""Validate an article against the protocol and series config: the proof.
+"""Validate an article against the publication and series contracts: the proof.
 
 Findings come in two tiers. BLOCK findings are integrity failures and CI
 refuses to publish on any of them. WARN findings are quality calibration:
@@ -83,6 +83,13 @@ def main(argv=None):
         help="main checkout for configs/registry (PR mode; defaults to --repo)",
     )
     p.add_argument("--library", help="published library state (branch checkout dir)")
+    p.add_argument(
+        "--revision",
+        action="store_true",
+        help="preflight a revision of a published article (local mode): "
+        "skips the already-published and paused-series blocks exactly as "
+        "the PR proof does for a revision diff",
+    )
     p.add_argument("--pr", action="store_true", help="CI mode")
     p.add_argument(
         "--deletions-by-owner",
@@ -134,6 +141,7 @@ def main(argv=None):
             rep=rep,
             today=args.today and _dt.date.fromisoformat(args.today),
             check_links=args.check_links,
+            revision=args.revision,
         )
 
     return emit(rep, args.json)

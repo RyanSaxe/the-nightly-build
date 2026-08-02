@@ -3,7 +3,9 @@
 The site builder already turns article HTML into metadata and clean prose. This
 module reuses those readers to provide small, predictable history results for
 agents that need continuity or repetition checks without inviting a repository
-tour or returning an earlier article's markup and ordered structure.
+tour or returning an earlier article's markup. `--structure` is the one
+deliberate window onto ordered structure: a bounded outline of headings and
+furniture names for repetition checks, still never the markup itself.
 """
 
 from __future__ import annotations
@@ -13,7 +15,7 @@ import os
 import pathlib
 import re
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from html.parser import HTMLParser
 
 from nb import meta as nb_meta
@@ -29,6 +31,7 @@ __all__ = (
     "parser",
     "readable_text",
     "search",
+    "structure_outline",
 )
 
 DEFAULT_LIMIT = 8
@@ -58,6 +61,20 @@ BLOCK_TAGS = frozenset(
     }
 )
 IGNORED_TAGS = frozenset({"script", "style"})
+HEADING_TAGS = frozenset({"h2", "h3"})
+# Furniture lives on block components; prose and inline chrome never count.
+COMPONENT_TAGS = frozenset({"aside", "blockquote", "div", "dl", "figure", "table"})
+CHROME_CLASSES = frozenset(
+    {
+        "nb-article",
+        "nb-cite",
+        "nb-dekline",
+        "nb-meta",
+        "nb-reading",
+        "nb-sources",
+        "nb-title",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -118,6 +135,75 @@ class _ReadableTextParser(HTMLParser):
             for line in "".join(self.parts).splitlines()
         )
         return "\n".join(line for line in lines if line)
+
+
+@dataclass
+class _Section:
+    id: str
+    heading: str = ""
+    furniture: set[str] = field(default_factory=set)
+
+
+class _StructureParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.sections: list[_Section] = []
+        self._heading: list[str] | None = None
+        self._sup_depth = 0
+
+    def _current(self) -> _Section | None:
+        return self.sections[-1] if self.sections else None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        if tag == "section" and attributes.get("data-nb-section"):
+            self.sections.append(_Section(id=attributes["data-nb-section"] or ""))
+            return
+        section = self._current()
+        if section is None:
+            return
+        if tag == "sup":
+            self._sup_depth += 1
+        elif tag in HEADING_TAGS and not section.heading:
+            self._heading = []
+        elif tag in COMPONENT_TAGS:
+            classes = (attributes.get("class") or "").split()
+            section.furniture.update(
+                name for name in classes if "-" in name and name not in CHROME_CLASSES
+            )
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "sup":
+            self._sup_depth = max(0, self._sup_depth - 1)
+        elif tag in HEADING_TAGS and self._heading is not None:
+            section = self._current()
+            if section is not None:
+                section.heading = re.sub(r"\s+", " ", "".join(self._heading)).strip()
+            self._heading = None
+
+    def handle_data(self, data: str) -> None:
+        if self._heading is not None and not self._sup_depth:
+            self._heading.append(data)
+
+
+def structure_outline(path: pathlib.Path) -> str:
+    """Return an article's bounded outline: title, dek, headings, furniture.
+
+    This is the repetition-check window onto structure. It names what the
+    article's sections are called and which furniture components each uses,
+    and returns none of the markup that carries them.
+    """
+    source = path.read_text(encoding="utf-8", errors="replace")
+    meta = nb_meta.parse_meta(source) or {}
+    walker = _StructureParser()
+    walker.feed(source)
+    lines = [f"# {_string(meta.get('title'))}", "", _string(meta.get("dek")), ""]
+    for section in walker.sections:
+        lines.append(f"## {section.heading or section.id}")
+        if section.furniture:
+            lines.append("furniture: " + ", ".join(sorted(section.furniture)))
+        lines.append("")
+    return "\n".join(lines).strip() + "\n"
 
 
 def _string(value: object, fallback: str = "") -> str:
@@ -320,6 +406,12 @@ def parser() -> argparse.ArgumentParser:
         metavar="SERIES/SLUG",
         help="print one selected article as clean, grep-friendly text",
     )
+    command.add_argument(
+        "--structure",
+        metavar="SERIES/SLUG",
+        help="print one article's outline: title, dek, headings, and the "
+        "furniture each section uses",
+    )
     return command
 
 
@@ -331,7 +423,7 @@ def _shown_article(library: pathlib.Path, reference: str) -> pathlib.Path | None
         or nb_meta.SERIES_RE.fullmatch(series) is None
         or nb_meta.SLUG_RE.fullmatch(slug) is None
     ):
-        raise ValueError("--show expects SERIES/SLUG")
+        raise ValueError("expected SERIES/SLUG")
     directory = nb_meta.series_dir(str(library), series)
     if directory is None:
         return None
@@ -342,6 +434,19 @@ def _shown_article(library: pathlib.Path, reference: str) -> pathlib.Path | None
 def main(arguments: list[str] | None = None) -> None:
     command = parser()
     options = command.parse_args(arguments)
+    if options.structure:
+        if options.query or options.series or options.show:
+            command.error(
+                "--structure cannot be combined with a query, --series, or --show"
+            )
+        try:
+            article = _shown_article(options.library, options.structure)
+        except ValueError as error:
+            command.error(str(error))
+        if article is None:
+            raise SystemExit(f"published article not found: {options.structure}")
+        print(structure_outline(article), end="")
+        return
     if options.show:
         if options.query or options.series:
             command.error("--show cannot be combined with a query or --series")

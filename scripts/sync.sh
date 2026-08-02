@@ -156,7 +156,7 @@ Use the runtime's connected GitHub tools to finish this generated sync:
 2. Never edit the generated branch or reproduce its commit by hand.
 3. Wait for the `validate` check. If it fails or never appears, stop and report it.
 4. After `validate` passes, squash-merge the PR through the protected branch.
-5. Rerun `nb sync`; continue the night only after it verifies the blobs.
+5. Rerun `nb sync`; continue the scheduled run only after it verifies the blobs.
 EOF
 }
 
@@ -243,6 +243,13 @@ wait_for_library() {
 	done
 	gh pr checks "$pr" --repo "$repo" 2>/dev/null || true
 	die "sync PR #$pr did not merge in time. Inspect https://github.com/$repo/pull/$pr, fix main, then rerun nb sync"
+}
+
+validate_press() {
+	[ -d "$ROOT/press" ] || return 0
+	say "validating press configuration against the synced engine"
+	"$ROOT/nb" validate --repo "$ROOT" ||
+		die "the press no longer validates against this engine. Report the errors above to the paper owner before continuing"
 }
 
 sync_library() {
@@ -333,14 +340,18 @@ update_main_from_upstream() {
 	fi
 	git -C "$ROOT" push origin main
 	ok "fork main updated from upstream"
-	say "schedule prompts live outside Git; compare yours with docs/scheduling.md"
+	say "schedule prompts live outside Git; compare yours with docs/guides/operate/schedule.md"
 	sync_library
+	validate_press
 }
 
 main() {
 	require_tools
 	case "${1-}" in
-	"") sync_library ;;
+	"")
+		sync_library
+		validate_press
+		;;
 	--update-main-from-upstream)
 		[ "$#" = 1 ] || die "usage: nb sync [--update-main-from-upstream]"
 		update_main_from_upstream

@@ -15,7 +15,12 @@ Your paper and its archive live in your fork. You own it.
 > [!NOTE]
 > Your articles will be searchable from [the-nightly-build.github.io](https://the-nightly-build.github.io/)
 >
-> If you don't want that, disable it via setting `directory.publish = false` in your `site.yaml`
+> If you don't want that, opt out in your `site.yaml`:
+>
+> ```yaml
+> directory:
+>   publish: false
+> ```
 
 ## How it works
 
@@ -23,12 +28,25 @@ Your paper and its archive live in your fork. You own it.
 
 ## Get started
 
-### 1. Fork and bootstrap
+Give this repository URL to the AI tool you already use and say:
 
-Fork this repository with **Copy the main branch only** enabled. Keep the fork
-public if you want to use GitHub Pages on the free plan.
+> Help me set up my own Nightly Build paper. Follow the repository's
+> instructions, tell me only the manual action you need from me right now, and
+> offer to verify the actual scheduled environment before we rely on it.
 
-Clone the fork and run setup (or ask your agent to do this in the next step):
+The assistant will determine what it can do, walk you through the few actions
+that require your permission, interview you about the paper, configure the
+fork, and verify the actual scheduled environment. The AI you talk to now and
+the AI that works overnight can be different products.
+
+Start with [Ask your AI](docs/getting-started/ask-your-ai.md), or read the full
+[documentation](docs/README.md). The [feature catalog](docs/reference/README.md)
+lists everything the released engine supports and where to configure it.
+
+### Manual fallback
+
+If your current AI cannot access GitHub, fork this repository with **Copy the
+main branch only** enabled, then:
 
 ```sh
 git clone https://github.com/<you>/<your-paper>.git
@@ -36,70 +54,14 @@ cd <your-paper>
 ./nb setup
 ```
 
-The command scaffolds `press/`, creates the empty `library` branch, seeds its
-workflows, and configures GitHub Pages and auto-merge. It requires `git`,
-`gh` (authenticated), `uv`, and Python 3.10+.
+Open that checkout in a coding agent and ask it to continue setup. Keep the
+fork public for GitHub Pages on the free plan; private Pages requires a
+supporting GitHub plan.
 
-### 2. Configure your paper
-
-Ask your agent to **set me up**, or copy a starting point from [`examples/`](examples/README.md).
-Your paper lives in one small configuration tree:
-
-```text
-press/
-├── site.yaml                 # title and appearance
-├── editorial.md              # paper-wide voice
-└── series/<id>/
-    ├── series.yaml           # cadence and publishing rules
-    └── prompt.md             # what this section covers
-```
-
-See [Your paper](docs/press.md) and [Series](docs/series.md) for the full
-configuration model.
-
-### 3. Rehearse once
-
-Ask your agent for a **press check**. It runs the article workflow locally,
-builds a preview, and lets you tune your paper before anything is published.
-This is useful for getting a feel for your prompts as well as the HTML components
-that come with the repo and/or your own custom ones, which you can read about in
-[Customization](docs/customization.md).
-
-### 4. Schedule the night shift
-
-Ask your agent to help you schedule the night shift. You'll need to make sure
-it is set up with wider internet access permissions and the ability to raise
-a PR in your repository.
-
-The run derives its work from `press/`, so you do not need to update the schedule
-when you add or pause a section. The automation only needs to be updated if the
-[automation prompt](docs/scheduling.md#the-schedule-prompt) changes.
-
-Choose a provider schedule or the universal GitHub Actions path in
-[Scheduling](docs/scheduling.md). [Harnesses](docs/harnesses.md) lists the
-supported agents and how their usage is billed.
-
-### 5. Read your paper
-
-The night shift opens pull requests against `library`. Once the first article
-merges, GitHub Pages publishes the newsstand, archive, search index, and feeds.
-See [Delivery](docs/delivery.md) for the URLs and feed formats.
-
-### 6. Iterate until you love it
-
-The first set of articles you get might not be perfect. You may want some formatting changes.
-A less formal voice. Different topics, you name it. The point is, it will probably take a few
-days to end up with a `press/` configuration that you love. Below are where you can configure:
-
-- Change the title and appearance in `press/site.yaml`.
-- Set the paper-wide voice in `press/editorial.md`.
-- Add sections, beats, cadence, and source requirements under `press/series/`.
-- Customize themes, furniture, and templates in `press/`.
-
-For inspiration, take a look at [examples](examples/README.md) as a living reference. Or even
-read [my personal fork](https://github.com/RyanSaxe/the-nightly-build/tree/main/press).
-
-[Customization](docs/customization.md) covers the extension points without requiring engine changes.
+Before unattended publication, you can verify that the exact scheduled runtime
+can reach the repository, install the required tools, browse real sources, and
+open and then clean up a draft smoke-test PR. See
+[Verify the scheduled runtime](docs/getting-started/first-run.md).
 
 ## FAQ
 
@@ -112,12 +74,12 @@ read [my personal fork](https://github.com/RyanSaxe/the-nightly-build/tree/main/
 
 <p>By anchoring on strong real human writers as examples, and having an aggressive editor
 that is prompted to look for common indicators of AI slop as well as bad writing, the quality
-that comes out of The Nightly Build is quite a bit higher than my initial expectations. Importantly
+that comes out of The Nightly Build is quite a bit higher than my initial expectations. Importantly,
 the agents have to pass explicitly codified gates before publishing. Words can be banned. Long
 sentences with lots of parentheticals and semicolons can be blocked. Basically, every time I saw
 an instance of writing that made me go "ugh that's AI", I tried my best to codify something in the
 system itself to prevent it. That being said, given this is something that is customizable, I did
-my best to avoid ham-stringing the engine from being able to express what downstream users may want.</p>
+my best to avoid hamstringing the engine from being able to express what downstream users may want.</p>
 
 ---
 
@@ -132,22 +94,22 @@ my best to avoid ham-stringing the engine from being able to express what downst
 true of people. The system takes quite a bit of time and uses more tokens than you'd expect because it is
 forced to actually read every single source it cites. The editor will even force sentences to be cut if they
 cannot properly be demonstrated, and will meticulously try and find issues adversarially. Personally, I have
-found this leads to hallucinations to almost go away entirely. However, I am not going to claim that, as I
-am sure there will be instances of incorrectness.</p>
+found this makes hallucinations almost go away entirely. However, I will not promise it.</p>
 
 ---
 
 </details>
 
 <details>
-<summary><strong>What can the night shift access?</strong></summary>
+<summary><strong>What can the scheduled runtime access?</strong></summary>
 
 ---
 
 <p>Only what you grant it. A normal run needs the web, both repository branches,
 and permission to open a PR against <code>library</code>. Validation reads
 untrusted article code without the scheduler's secrets. See
-<a href="docs/scheduling.md">Scheduling</a> for the full trust boundary.</p>
+<a href="docs/concepts/publishing-and-security.md">Publishing and security</a>
+for the full trust boundary.</p>
 
 ---
 
@@ -172,7 +134,7 @@ your respective AI agent. If you'd like to see how that might work, take a look 
 ---
 
 <p>The PR is both the review record and the publishing gate. It carries the
-article, earned assets, exact agent inputs and outputs, and validation result. Nothing
+article, its assets, exact agent inputs and outputs, and validation result. Nothing
 reaches <code>library</code> without passing CI. This makes it easy to audit
 the process if there are issues, as well as give more direct feedback in prompts.
 Additionally, PRs are a natural entity that basically every AI harness interacts with.</p>
@@ -188,9 +150,9 @@ Additionally, PRs are a natural entity that basically every AI harness interacts
 
 <p>The Nightly Build has no hosted service or fee. You pay for the agent or model
 runner you choose. More articles, broader research, and longer drafts use more
-tokens. The optional <a href="docs/production.md">production policy</a> routes
+tokens. The optional <a href="docs/reference/production.md">production policy</a> routes
 article roles to portable model tiers while leaving the automation's orchestrator
-under your control. See <a href="docs/harnesses.md">Harnesses</a> for runner and
+under your control. See <a href="docs/integrations/README.md">Integrations</a> for runner and
 billing options.</p>
 
 ---
@@ -214,8 +176,8 @@ fork is the simplest free setup.</p>
 
 ---
 
-<p>Yes. Most changes belong in <code>press/</code>; start with
-<a href="docs/customization.md">Customization</a>. If you modify the engine
+<p>Yes. Most changes belong in <code>press/</code>. Start with
+<a href="docs/README.md">the documentation</a>. If you modify the engine
 itself, you also own any conflicts when syncing upstream updates.</p>
 
 ---

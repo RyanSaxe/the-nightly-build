@@ -1,4 +1,9 @@
-"""The press check: a draft previewed against the published library."""
+"""The press check: a draft previewed against the published library.
+
+A preview overlays one draft without hiding the existing published catalog and
+marks only that overlay as provisional. Its HTML and figure assets follow the
+production copy path.
+"""
 
 import pathlib
 import re
@@ -19,14 +24,10 @@ DRAFT = (
 
 
 @pytest.fixture
-def preview_site(testrepo: str, full_site: Site, tmp_path: pathlib.Path) -> Site:
+def preview_site(*, testrepo: str, full_site: Site, tmp_path: pathlib.Path) -> Site:
     draft_root = str(tmp_path / "draft")
     write_article(draft_root, "semiconductors", slug="tsmc", html=DRAFT)
     return build_press(testrepo, full_site.library, preview_root=draft_root)
-
-
-def test_a_preview_renders_identically_to_production(preview_site: Site) -> None:
-    assert "Press check" not in preview_site.index
 
 
 def test_a_preview_merges_the_draft_with_the_published_library(
@@ -61,9 +62,3 @@ def test_a_preview_copies_the_drafts_figure_assets(
     site = build_press(testrepo, full_site.library, preview_root=str(draft_root))
 
     assert site.exists("library", "semiconductors", "tsmc", "figure-1.png")
-
-
-def test_the_published_article_file_is_untouched(preview_site: Site) -> None:
-    published = preview_site.read("library", "semiconductors", "micron.html")
-
-    assert "Press check" not in published

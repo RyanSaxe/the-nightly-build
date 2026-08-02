@@ -7,15 +7,12 @@ reads this folder. Copy pieces into your `press/` and edit:
 cp -r examples/series/kernels press/series/my-course
 ```
 
-`production.yaml` makes the balanced cost profile visible. Presses that omit it
-receive the same cost-aware default; set `profile: inherit` to keep the harness
-model for every role.
+`production.yaml` makes the balanced cost profile visible. Presses that omit
+it receive the same cost-aware default. Set `profile: inherit` to keep the
+harness model for every role.
 
-- `the-divide/`: an open section on the shipped `unbiased` template, run
-  `strict: true` so the per-side citation checks become hard BLOCKs. For
-  building a template of your own, follow the lesson walkthrough in
-  `docs/customization.md`: build one when the proof should guarantee
-  structure.
+- `the-divide/`: an open section on the shipped `unbiased` template, run with
+  `strict: true` so the per-side citation checks become hard BLOCKs.
 - `the-brief/`: a rolling nightly brief on the `brief` template, slugged by
   date.
 - `docket/`: an open section tracking AI legal cases, carried by the
@@ -30,9 +27,9 @@ model for every role.
 Together they exercise all four modes, three shipped templates (`article`,
 `brief`, and `unbiased`), multiple furniture components, the source policy,
 `cadence` scheduling, word-band and source-floor calibration, tag fragments,
-and a voice file. How templates, themes, and furniture fit together is
-[docs/customization.md](../docs/customization.md). The shipped palette in
-`themes/newsroom.css` is kept unchanged on purpose.
+and a voice file. The [furniture guide](../docs/guides/customize/furniture.md)
+explains how templates, themes, and furniture fit together. The shipped
+palette in `themes/newsroom.css` is kept unchanged on purpose.
 
 The upstream repo is engine-only and runs no site of its own. The maintainer
 dogfoods by forking this repo like any other user.

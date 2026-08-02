@@ -1,16 +1,25 @@
-"""The Atom feeds: what a reader's feed reader gets, and how it tells papers apart."""
+"""The Atom feeds: what a reader's feed reader gets, and how it tells papers apart.
 
+The suite parses generated XML to verify global and per-series scope, embedded
+script-free article content, and author metadata. Stable IDs include each
+paper's host and path so independent publications never collide in feed readers.
+"""
+
+import os
+import pathlib
 import xml.etree.ElementTree as ET
 
 import build_site
+from nb.site.library import collect_articles
 from pages import Site, build_press
-from press import NOW, make_full_library
+from press import NOW, article, git, make_full_library
 
 NS = "{http://www.w3.org/2005/Atom}"
 
 
 def entries(xml_text: str) -> list[ET.Element]:
-    return ET.fromstring(xml_text).findall(f"{NS}entry")
+    feed = ET.fromstring(xml_text)
+    return feed.findall(f"{NS}entry")
 
 
 def find_text(elem: ET.Element, path: str) -> str:
@@ -67,3 +76,50 @@ def test_the_same_slug_on_two_papers_gets_distinct_entry_ids(testrepo: str) -> N
     assert id_a != id_b
     assert "a.example" in id_a
     assert "b.example" in id_b
+
+
+def commit_all(lib: str, message: str, *, when: str) -> None:
+    env_backup = dict(os.environ)
+    os.environ.update({"GIT_AUTHOR_DATE": when, "GIT_COMMITTER_DATE": when})
+    try:
+        git("add", "-A", cwd=lib)
+        git(
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@t",
+            "commit",
+            "-m",
+            message,
+            cwd=lib,
+        )
+    finally:
+        os.environ.clear()
+        os.environ.update(env_backup)
+
+
+def test_a_revision_merge_moves_updated_but_not_the_entry_id(
+    tmp_path: pathlib.Path,
+) -> None:
+    lib = str(tmp_path)
+    art = tmp_path / "library" / "semiconductors" / "micron.html"
+    art.parent.mkdir(parents=True)
+    git("init", "-q", cwd=lib)
+    art.write_text(article())
+    commit_all(lib, "publish", when="2026-07-06T09:00:00+00:00")
+
+    published = collect_articles({}, lib)[("semiconductors", "micron")]
+    art.write_text(article().replace("brutal capacity cycle", "harsh capacity cycle"))
+    commit_all(lib, "revise", when="2026-07-20T09:00:00+00:00")
+    revised = collect_articles({}, lib)[("semiconductors", "micron")]
+
+    def entry(ed: dict) -> ET.Element:
+        feed = build_site.atom_feed(
+            "https://a.example", "feed.xml", title="A", eds=[ed], generated=NOW
+        )
+        return entries(feed)[0]
+
+    before, after = entry(published), entry(revised)
+    assert find_text(before, f"{NS}updated").startswith("2026-07-06")
+    assert find_text(after, f"{NS}updated").startswith("2026-07-20")
+    assert find_text(before, f"{NS}id") == find_text(after, f"{NS}id")

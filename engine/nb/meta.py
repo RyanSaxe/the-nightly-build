@@ -24,6 +24,10 @@ PR_PATH_RE = re.compile(r"^library/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})\.html$")
 AGENT_ARTIFACT_RE = re.compile(
     r"^agent-artifacts/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})/[^/].*$"
 )
+REVISION_NOTE_RE = re.compile(
+    r"^agent-artifacts/([a-z0-9-]{1,32})/([a-z0-9-]{1,64})/"
+    r"revisions/((?:0[1-9]|[1-9][0-9]))\.md$"
+)
 # Images, plus a chart's committed provenance (chart-N.py and its data).
 # The provenance files are inert bundle data: the engine and CI never
 # execute them, and the article sandbox cannot reference them.
@@ -40,13 +44,16 @@ __all__ = (
     "META_RE",
     "MODES",
     "PR_PATH_RE",
+    "REVISION_NOTE_RE",
     "SERIES_RE",
     "SLUG_RE",
     "TAG_RE",
     "article_bundle_path",
     "is_meta_script",
     "is_safe_tag",
+    "parse_meta",
     "read_meta",
+    "revision_bundle_path",
     "series_dir",
     "series_ids",
 )
@@ -79,9 +86,15 @@ def is_meta_script(attrs: dict) -> bool:
     ).strip().lower() == "application/json" and attrs.get("id") == "nb-meta"
 
 
-def read_meta(path: str) -> dict | None:
-    with open(path, encoding="utf-8", errors="replace") as fh:
-        m = META_RE.search(fh.read())
+def parse_meta(source: str) -> dict | None:
+    """Read the first typed nb-meta object from article source text.
+
+    Return ``None`` when no recognized block exists, its JSON is invalid, or
+    the decoded value is not an object. Field-level validation belongs to the
+    proof; this shared reader only establishes the object boundary used by
+    scheduling, building, PR identity checks, and file-backed ``read_meta``.
+    """
+    m = META_RE.search(source)
     if not m:
         return None
     try:
@@ -89,6 +102,11 @@ def read_meta(path: str) -> dict | None:
     except ValueError:
         return None
     return meta if isinstance(meta, dict) else None
+
+
+def read_meta(path: str) -> dict | None:
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        return parse_meta(fh.read())
 
 
 def series_dir(library: str, series_id: str) -> str | None:
@@ -132,6 +150,43 @@ def article_bundle_path(
         ):
             return None
     return article
+
+
+def revision_bundle_path(changes: list[tuple[str, str]]) -> str | None:
+    """Return the article identified by an isolated revision diff.
+
+    A revision changes one published HTML file and/or its matching assets, and
+    may only add matching numbered revision notes. Content and note validation
+    happen after this path-level classification succeeds.
+    """
+    identities: set[tuple[str, str]] = set()
+    content_changed = False
+    for state, path in changes:
+        article = PR_PATH_RE.match(path)
+        if article is not None:
+            if state != "M":
+                return None
+            identities.add((article.group(1), article.group(2)))
+            content_changed = True
+            continue
+        asset = ARTICLE_ASSET_RE.match(path)
+        if asset is not None:
+            if state not in ("A", "M", "D"):
+                return None
+            identities.add((asset.group(1), asset.group(2)))
+            content_changed = True
+            continue
+        note = REVISION_NOTE_RE.match(path)
+        if note is not None:
+            if state != "A":
+                return None
+            identities.add((note.group(1), note.group(2)))
+            continue
+        return None
+    if not content_changed or len(identities) != 1:
+        return None
+    series_id, slug = identities.pop()
+    return f"library/{series_id}/{slug}.html"
 
 
 def series_ids(repo: str) -> list[str]:

@@ -1,4 +1,9 @@
-"""The pages around the front page: builds, sections, series, tags, search."""
+"""The pages around the front page: builds, sections, series, tags, and search.
+
+Archive navigation must move chronologically while section and tag pages expose
+only published material. Search carries clean prose rather than copied markup,
+while human-facing labels remain free to improve.
+"""
 
 import json
 
@@ -47,8 +52,15 @@ def test_a_collection_page_renders_no_placeholder_for_unpublished_items(
 ) -> None:
     page = full_site.read("series", "semiconductors", "index.html")
 
-    assert page.count("coming") == 0
-    assert "commissioned" not in page
+    unpublished = (
+        ("tsmc", "TSMC"),
+        ("asml", "ASML"),
+        ("sk-hynix", "SK Hynix"),
+        ("nvidia", "Nvidia"),
+    )
+    for slug, title in unpublished:
+        assert f'href="../../library/semiconductors/{slug}.html"' not in page
+        assert title not in page
 
 
 def test_a_rolling_page_groups_by_month_reverse_chron(full_site: Site) -> None:

@@ -97,8 +97,8 @@ def check_source_kinds(ed, *, series, treg, rep):
     min_sources counts. A series can also declare the mix it wants, and the mix
     blocks regardless of `strict`, because sourcing is not a matter of
     calibration. Whether a declared kind is the TRUE kind is judgment: the
-    research log makes the call and the editor audits it. The engine counts the
-    labels the writer declared, and says nothing about their honesty.
+    evidence record makes the call and the editor audits it. The engine counts
+    the labels the writer declared, and says nothing about their honesty.
     """
     by_kind = series.get("sources_by_kind")
     per_item = series.get("per_item_sources")

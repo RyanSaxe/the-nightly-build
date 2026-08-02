@@ -1,4 +1,9 @@
-"""Series modes the builder renders: a numbered sequence, and an open series."""
+"""Series modes the builder renders: a numbered sequence and an open series.
+
+Sequence pages preserve configured positions for published entries, while open
+series expose template choice and cadence without a fixed total. Neither mode
+renders pending configuration items as fake articles.
+"""
 
 import pathlib
 from collections.abc import Callable
@@ -13,7 +18,6 @@ name: Wildcard
 mode: open
 templates: [article, brief]
 cadence: weekdays
-autopublish: true
 strict: false
 items:
   - {slug: commissioned-piece, title: On Commission}
@@ -75,8 +79,9 @@ def test_a_sequence_page_renders_no_placeholder_for_unpublished_items(
     page = sequence_site.read("series", "semiconductors", "index.html")
 
     assert "nb-seq-unpub" not in page
-    assert "continue here" not in page
     assert "nb-progress-wide" not in page
+    assert 'href="../../library/semiconductors/tsmc.html"' not in page
+    assert "TSMC" not in page
 
 
 def test_a_sequence_shows_a_published_count_not_progress(sequence_site: Site) -> None:
@@ -107,8 +112,8 @@ def test_an_open_series_renders_no_placeholder_for_a_pending_commission(
 ) -> None:
     page = open_site.read("series", "wildcard", "index.html")
 
+    assert 'href="../../library/wildcard/commissioned-piece.html"' not in page
     assert "On Commission" not in page
-    assert "commissioned" not in page
 
 
 def test_an_open_series_page_shows_the_template_choice_list(open_site: Site) -> None:

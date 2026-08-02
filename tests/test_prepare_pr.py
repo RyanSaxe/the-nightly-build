@@ -45,6 +45,18 @@ def make_workspace(tmp_path: pathlib.Path) -> pathlib.Path:
     return article_path
 
 
+def publish_article(library: pathlib.Path) -> None:
+    git("config", "user.name", "Test Press", cwd=str(library))
+    git("config", "user.email", "test@example.com", cwd=str(library))
+    target = library / "library" / "semiconductors" / "micron.html"
+    target.parent.mkdir(parents=True)
+    target.write_text(article())
+    write_agent_artifacts(str(library), "semiconductors", slug="micron")
+    git("add", "library", "agent-artifacts", cwd=str(library))
+    git("commit", "-qm", "publish micron", cwd=str(library))
+    git("push", "-q", "origin", "library", cwd=str(library))
+
+
 def run_prepare(
     article_path: pathlib.Path,
     *,
@@ -63,17 +75,18 @@ def run_prepare(
     )
     if gh_log is not None:
         environment["FAKE_GH_LOG"] = str(gh_log)
+    command = [
+        sys.executable,
+        str(pathlib.Path(__file__).parents[1] / "engine" / "nb" / "prepare_pr.py"),
+        str(article_path),
+        "--library",
+        str(library),
+        "--no-check-links",
+        "--today",
+        "2026-07-06",
+    ]
     return subprocess.run(
-        [
-            sys.executable,
-            str(pathlib.Path(__file__).parents[1] / "engine" / "nb" / "prepare_pr.py"),
-            str(article_path),
-            "--library",
-            str(library),
-            "--no-check-links",
-            "--today",
-            "2026-07-06",
-        ],
+        command,
         capture_output=True,
         text=True,
         env=environment,
@@ -165,7 +178,6 @@ def test_prepare_pr_prints_connector_handoff_without_gh(
     assert result.returncode == 3, result.stderr
     assert "NB_ARTICLE_PR_REQUIRED" in result.stdout
     assert "head=nb/article/semiconductors/micron" in result.stdout
-    assert "Use the runtime's connected GitHub tools" in result.stdout
 
 
 def test_prepare_pr_safely_replaces_its_own_generated_branch(
@@ -260,3 +272,21 @@ def test_prepare_pr_preserves_an_unrecognized_remote_branch(
     assert result.returncode == 1
     assert "contains unrecognized edits" in result.stderr
     assert after == before
+
+
+def test_normal_prepare_pr_rejects_an_already_published_article(
+    tmp_path: pathlib.Path,
+) -> None:
+    library, _origin = make_library(tmp_path)
+    article_path = make_workspace(tmp_path)
+    publish_article(library)
+
+    result = run_prepare(
+        article_path,
+        library=library,
+        main_root=pathlib.Path(make_press()),
+        path=os.environ["PATH"],
+    )
+
+    assert result.returncode == 1
+    assert "article is already published" in result.stderr

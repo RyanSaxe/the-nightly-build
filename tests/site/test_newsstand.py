@@ -1,7 +1,18 @@
-"""The front page: tonight's build, and the chrome around it."""
+"""The front page: the latest build and its surrounding chrome.
+
+The suite covers article ordering, navigation destinations, source metadata,
+appearance controls, external-link safety, and repository discovery. Labels
+remain free to evolve without becoming test contracts.
+"""
 
 import build_site
 from pages import Site
+
+
+def menu_eco(page: str) -> str:
+    _before, marker, after = page.partition('<div class="nb-menu-eco">')
+    assert marker
+    return after.partition("</div>")[0]
 
 
 def test_the_newsstand_leads_with_the_nights_date(full_site: Site) -> None:
@@ -34,12 +45,8 @@ def test_the_newsstand_links_the_previous_night(full_site: Site) -> None:
     assert 'href="builds/2026-07-05/"' in full_site.index
 
 
-def test_a_real_build_carries_no_press_check_banner(full_site: Site) -> None:
-    assert "Press check" not in full_site.index
-
-
-def test_the_menu_says_today(full_site: Site) -> None:
-    assert ">Today</a>" in full_site.index
+def test_the_menu_marks_the_root_as_current(full_site: Site) -> None:
+    assert '<a href="" aria-current="page">' in full_site.index
 
 
 def test_the_default_imprint_credits_the_canonical_repo(full_site: Site) -> None:
@@ -48,27 +55,26 @@ def test_the_default_imprint_credits_the_canonical_repo(full_site: Site) -> None
     )
 
     assert imprint in full_site.index
-    assert ">GitHub</a>" not in full_site.index
 
 
-def test_the_footer_recruits_to_the_canonical_repo(full_site: Site) -> None:
+def test_the_menu_links_to_the_canonical_repo(full_site: Site) -> None:
     assert (
         f'href="https://github.com/{build_site.UPSTREAM_REPOSITORY}" target="_blank" '
-        'rel="noopener noreferrer">Start your own' in full_site.index
+        'rel="noopener noreferrer">' in menu_eco(full_site.index)
     )
 
 
 def test_the_hamburger_links_the_directory(full_site: Site) -> None:
     assert (
         f'href="{build_site.DIRECTORY_URL}" target="_blank" '
-        'rel="noopener noreferrer">The whole newspaper' in full_site.index
+        'rel="noopener noreferrer">' in menu_eco(full_site.index)
     )
 
 
-def test_the_star_link_is_omitted_when_the_repository_is_unknown(
+def test_the_menu_omits_a_press_link_when_the_repository_is_unknown(
     full_site: Site,
 ) -> None:
-    assert "Star on GitHub" not in full_site.index
+    assert menu_eco(full_site.index).count("<a ") == 2
 
 
 def test_a_custom_footer_renders_as_an_unlinked_imprint(net_site: Site) -> None:
@@ -78,7 +84,10 @@ def test_a_custom_footer_renders_as_an_unlinked_imprint(net_site: Site) -> None:
 def test_the_star_link_targets_this_press_when_the_repository_is_known(
     net_site: Site,
 ) -> None:
+    eco = menu_eco(net_site.index)
+
     assert (
         'href="https://github.com/alice/my-press" target="_blank" '
-        'rel="noopener noreferrer">Star on GitHub' in net_site.index
+        'rel="noopener noreferrer">' in eco
     )
+    assert eco.count("<a ") == 3

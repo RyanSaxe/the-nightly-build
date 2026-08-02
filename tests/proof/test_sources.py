@@ -58,7 +58,7 @@ def test_an_article_with_no_sources_at_all_blocks(
 
 
 @pytest.mark.parametrize(
-    ("name", "old", "new"),
+    ("_name", "old", "new"),
     [
         (
             "http rather than https",
@@ -78,7 +78,7 @@ def test_an_article_with_no_sources_at_all_blocks(
     ],
 )
 def test_a_source_link_that_is_not_absolute_https_blocks(
-    run_local: Callable[..., Findings], name: str, old: str, new: str
+    *, run_local: Callable[..., Findings], _name: str, old: str, new: str
 ) -> None:
     result = run_local(mut(old, new), "semiconductors")
 
@@ -98,14 +98,14 @@ def test_a_required_source_may_cite_a_repo_relative_local_file(
 
 
 @pytest.mark.parametrize(
-    ("name", "new"),
+    ("_name", "new"),
     [
         ("a source number that does not exist", '<a href="#s99">99</a>'),
         ("an id that is not a source", '<a href="#nb-meta">5</a>'),
     ],
 )
 def test_a_citation_that_does_not_reach_a_source_blocks(
-    run_local: Callable[..., Findings], name: str, new: str
+    *, run_local: Callable[..., Findings], _name: str, new: str
 ) -> None:
     result = run_local(mut('<a href="#s5">5</a>', new), "semiconductors")
 
@@ -123,7 +123,6 @@ def series_yaml(repo: str, series: str = "semiconductors") -> pathlib.Path:
 
 @pytest.fixture
 def exclusive_repo(clone_testrepo: Callable[..., str]) -> str:
-    """A press whose semiconductors series may cite only sec.gov and example.org."""
     tmp = clone_testrepo("press", "templates")
     y = series_yaml(tmp)
     y.write_text(
@@ -188,7 +187,6 @@ def test_exclusive_declared_required_doc_entries_are_exempt(
 
 
 def kinded_brief(items: list[list[tuple[str, str]]]) -> str:
-    """A brief whose items cite the (href, kind) sources named, in first-cite order."""
     numbered: dict[str, tuple[int, str]] = {}
     for item in items:
         for href, kind in item:
@@ -228,36 +226,34 @@ def kinded_brief(items: list[list[tuple[str, str]]]) -> str:
 
 
 def brief_with(first_item: list[tuple[str, str]]) -> str:
-    """The conforming brief, with its first item's sources swapped out."""
-    return kinded_brief(
+    items = [
+        first_item,
         [
-            first_item,
-            [
-                ("https://www.sec.gov/filings/x", "primary"),
-                ("https://ft.com/b", "secondary"),
-            ],
-            [
-                ("https://curia.europa.eu/r", "primary"),
-                ("https://apnews.com/c", "secondary"),
-            ],
-            [
-                ("https://www.federalregister.gov/d", "primary"),
-                ("https://wsj.com/e", "secondary"),
-            ],
-        ]
-    )
+            ("https://www.sec.gov/filings/x", "primary"),
+            ("https://ft.com/b", "secondary"),
+        ],
+        [
+            ("https://curia.europa.eu/r", "primary"),
+            ("https://apnews.com/c", "secondary"),
+        ],
+        [
+            ("https://www.federalregister.gov/d", "primary"),
+            ("https://wsj.com/e", "secondary"),
+        ],
+    ]
+    return kinded_brief(items)
 
 
 @pytest.fixture
 def per_item_briefs(patched_repo: Callable[..., str]) -> str:
-    """The brief series, asking every item for one primary and up to two reads."""
-    return patched_repo(PER_ITEM_PATCH, series="ai-briefs")
+    repo = patched_repo(PER_ITEM_PATCH, series="ai-briefs")
+    return repo
 
 
 @pytest.fixture
 def by_kind_semis(patched_repo: Callable[..., str]) -> str:
-    """The article series, asking the piece as a whole for a mix."""
-    return patched_repo(BY_KIND_PATCH)
+    repo = patched_repo(BY_KIND_PATCH)
+    return repo
 
 
 def test_a_brief_pairing_every_primary_with_an_independent_read_passes(
@@ -424,20 +420,18 @@ def test_a_band_the_config_botched_is_a_finding_not_a_traceback(
 
 
 def open_briefs_repo(
-    clone_testrepo: Callable[..., str], templates: list[str], patch: str = ""
+    clone_testrepo: Callable[..., str], templates: list[str], *, patch: str = ""
 ) -> str:
-    """The rolling brief series reopened as an open section with a template choice."""
     tmp = clone_testrepo("press", "templates", "engine")
     y = pathlib.Path(tmp) / "press" / "series" / "ai-briefs" / "series.yaml"
     y.write_text(
         f"name: AI & Semiconductors\nmode: open\ntemplates: [{', '.join(templates)}]\n"
-        f"prompt: prompt.md\nautopublish: true\nstrict: false\nmin_sources: 5\n{patch}"
+        f"prompt: prompt.md\nstrict: false\nmin_sources: 5\n{patch}"
     )
     return tmp
 
 
 def unkinded_template_repo(patched_repo: Callable[..., str]) -> str:
-    """A series constraining the mix, on a template whose sources carry no kind."""
     tmp = patched_repo("sources_by_kind:\n  primary: [4, null]\n")
     skel = pathlib.Path(tmp) / "templates" / "article" / "skeleton.html"
     skel.write_text(skel.read_text().replace(' data-nb-kind="primary"', ""))
@@ -459,14 +453,16 @@ def test_per_item_sources_on_a_per_section_template_is_a_config_error(
 def test_per_item_sources_validates_when_every_template_choice_cites_per_item(
     vc_rc: Callable[[str], int], clone_testrepo: Callable[..., str]
 ) -> None:
-    assert vc_rc(open_briefs_repo(clone_testrepo, ["brief"], PER_ITEM_PATCH)) == 0
+    assert vc_rc(open_briefs_repo(clone_testrepo, ["brief"], patch=PER_ITEM_PATCH)) == 0
 
 
 def test_per_item_sources_a_template_choice_could_dodge_is_a_config_error(
     vc_rc: Callable[[str], int], clone_testrepo: Callable[..., str]
 ) -> None:
     assert (
-        vc_rc(open_briefs_repo(clone_testrepo, ["brief", "article"], PER_ITEM_PATCH))
+        vc_rc(
+            open_briefs_repo(clone_testrepo, ["brief", "article"], patch=PER_ITEM_PATCH)
+        )
         == 1
     )
 
@@ -478,7 +474,7 @@ def test_sources_by_kind_with_a_null_ceiling_validates(
 
 
 @pytest.mark.parametrize(
-    ("name", "patch"),
+    ("_name", "patch"),
     [
         ("a kind outside primary/secondary", "sources_by_kind:\n  tertiary: [1, 2]\n"),
         ("a band whose high is below its low", "sources_by_kind:\n  primary: [4, 2]\n"),
@@ -486,9 +482,10 @@ def test_sources_by_kind_with_a_null_ceiling_validates(
     ],
 )
 def test_a_composition_the_config_botched_is_rejected(
+    *,
     vc_rc: Callable[[str], int],
     patched_repo: Callable[..., str],
-    name: str,
+    _name: str,
     patch: str,
 ) -> None:
     assert vc_rc(patched_repo(patch)) == 1
@@ -508,7 +505,7 @@ def test_a_composition_on_a_template_that_omits_data_nb_kind_is_a_config_error(
 
 
 @pytest.mark.parametrize(
-    ("name", "status", "error", "verdict"),
+    ("_name", "status", "error", "verdict"),
     [
         ("404", 404, None, "dead"),
         ("410", 410, None, "dead"),
@@ -520,7 +517,7 @@ def test_a_composition_on_a_template_that_omits_data_nb_kind_is_a_config_error(
     ],
 )
 def test_classify_link(
-    name: str, status: int | None, error: str | None, verdict: str
+    *, _name: str, status: int | None, error: str | None, verdict: str
 ) -> None:
     assert check.classify_link(status, error) == verdict
 
@@ -529,7 +526,7 @@ def test_no_links_to_probe_returns_empty() -> None:
     assert check.dead_source_links([]) == []
 
 
-# The local (rehearsal) branch of main() must forward --check-links, or a dead
+# The local test path through main() must forward --check-links, or a dead
 # citation passes the press check yet fails B-SOURCE-DEAD in CI. Every source
 # points at the reserved `.invalid` TLD (RFC 6761), which never resolves — so
 # the probe classifies it dead offline or online, making this deterministic
@@ -543,17 +540,18 @@ DEAD_ARTICLE = (
 
 
 @pytest.mark.parametrize(
-    ("name", "flags", "dead"),
+    ("_name", "flags", "dead"),
     [
         ("local mode probes links by default", [], True),
         ("--no-check-links suppresses probing locally", ["--no-check-links"], False),
     ],
 )
-def test_rehearsal_honors_check_links(
+def test_local_mode_honors_check_links(
+    *,
     run_main_json: Callable[[list[str]], dict],
     testrepo: str,
     tmp_path: pathlib.Path,
-    name: str,
+    _name: str,
     flags: list[str],
     dead: bool,
 ) -> None:

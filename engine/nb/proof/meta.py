@@ -98,7 +98,7 @@ def validate_meta_fields(meta, rep):
                     )
 
 
-def resolve_series_and_template(repo, series_id, rep):
+def resolve_series_and_template(repo, series_id, *, rep, allow_paused=False):
     """B-SERIES: load the series config and resolve its template choices.
 
     Returns ``(series, registry, allowed_templates)`` or None when a blocking
@@ -113,7 +113,7 @@ def resolve_series_and_template(repo, series_id, rep):
     if not isinstance(series, dict):
         rep.block("B-SERIES", f"series '{series_id}' config must be a mapping")
         return None
-    if series.get("paused"):
+    if series.get("paused") and not allow_paused:
         rep.block(
             "B-SERIES",
             f"series '{series_id}' is paused — remove "

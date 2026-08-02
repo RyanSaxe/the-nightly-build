@@ -1,4 +1,4 @@
-/* Newsroom — this paper's theme: the color tokens and nothing else.
+/* Newsroom, this paper's theme: the color tokens and nothing else.
    The palette below is the shipped newspaper palette, UNCHANGED: this paper
    keeps the default look on purpose, so anyone copying this example sees the
    familiar paper and re-skins only if they want to (edit the tokens in all four
@@ -8,7 +8,7 @@
    not inside it: shared pieces live in press/furniture/ (rs-docket) and a
    template's bespoke pieces live in its own folder. */
 :root {
-  /* DAY — the base and universal fallback */
+  /* DAY: the base and universal fallback */
   --bg: #f4f7fb;
   --panel: #fcfdff;
   --wash: #e9eff7;

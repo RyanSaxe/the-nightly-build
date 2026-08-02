@@ -49,7 +49,7 @@ ALLOWED_EXTERNAL_HOSTS = frozenset({"fonts.googleapis.com", "fonts.gstatic.com"}
 # The one executable script an article may load: the engine-owned runtime
 # (§7.4 — contextual nav + chart renderer), by relative or root-absolute path.
 ENGINE_SCRIPT_RE = re.compile(r"^(?:(?:\.\./)+|/)assets/nb\.js$")
-# Classes styled by owner-declared external assets (docs/customization.md's
+# Classes styled by owner-declared external assets (docs/reference/site.md's
 # syntax-highlighter recipe), so no shipped stylesheet defines them.
 CLASS_ALLOW_PREFIXES = ("language-", "token")
 # A retired component leaves its CSS in place so the frozen back-catalog keeps
@@ -83,7 +83,7 @@ def external_ref_allowed(normalized_url):
     return host.lower() in ALLOWED_EXTERNAL_HOSTS
 
 
-def check_required_sections(ed, treg, rep):
+def check_required_sections(ed, treg, *, rep):
     required_sections = treg.get("sections") or []
     counts = {s: ed.sections.count(s) for s in required_sections}
     for s in required_sections:
@@ -137,7 +137,7 @@ def check_sandbox(ed, rep):
                 "B-SANDBOX",
                 "declarative data-nb-chart charts are retired; render a PNG "
                 "with engine/render_chart.py and embed it as a figure "
-                "(docs/charts.md)",
+                "(spec/charts.md)",
             )
         elif a.get("id") != "nb-meta":
             rep.block("B-SANDBOX", "JSON <script> blocks must be #nb-meta")

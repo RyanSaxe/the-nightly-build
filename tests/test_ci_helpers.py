@@ -1,4 +1,4 @@
-"""The facts the workflow reads: whether to auto-merge, and what the PR published.
+"""The facts the workflow reads: whether a PR is new, and what it publishes.
 
 The trigger tests are the fork-token guarantee. The editor auto-merges article
 PRs, so the only thing stopping a stranger from force-publishing to a fork is
@@ -12,33 +12,66 @@ import subprocess
 import sys
 from collections.abc import Callable
 
-import pytest
 import yaml
 
 from press import REPO
 
 
-@pytest.mark.parametrize(
-    ("series_yaml", "expected"),
-    [
-        pytest.param("autopublish: true\n", "true", id="true-enables-auto-merge"),
-        pytest.param("autopublish: false\n", "false", id="false-disables-it"),
-        pytest.param("mode: rolling\n", "false", id="absent-disables-it"),
-        pytest.param("autopublish: 'false'\n", "false", id="string-false"),
-        pytest.param("autopublish: 'true'\n", "false", id="string-true"),
-        pytest.param("autopublish: 1\n", "false", id="int-one"),
-    ],
-)
-def test_only_a_real_boolean_true_auto_merges(
-    ci_helper: Callable[[str, str], str], series_yaml: str, expected: str
+def test_new_articles_are_always_classified_for_auto_merge(
+    ci_helper: Callable[[str, str], str],
 ) -> None:
-    assert ci_helper("autopublish", series_yaml) == expected
+    assert ci_helper("new-article", "mode: rolling\n") == "true"
 
 
 def test_article_path_prints_the_prs_one_added_article(
     ci_helper: Callable[[str, str], str],
 ) -> None:
-    assert ci_helper("article-path", "autopublish: true\n") == "library/foo/story.html"
+    assert ci_helper("article-path", "mode: rolling\n") == "library/foo/story.html"
+
+
+def revision_ci_helper(tmp_path: pathlib.Path, command: str) -> str:
+    repo = tmp_path / "revision-ci"
+    series = repo / "press" / "series" / "foo"
+    article_path = repo / "library" / "foo" / "story.html"
+    series.mkdir(parents=True)
+    article_path.parent.mkdir(parents=True)
+    (series / "series.yaml").write_text("mode: rolling\n")
+    article_path.write_text("<html>published</html>\n")
+    subprocess.run(["git", "init", "-q", "-b", "library"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "t@t"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "published"], cwd=repo, check=True)
+    subprocess.run(["git", "checkout", "-qb", "revision"], cwd=repo, check=True)
+    article_path.write_text("<html>revised</html>\n")
+    revisions = repo / "agent-artifacts" / "foo" / "story" / "revisions"
+    revisions.mkdir(parents=True)
+    (revisions / "01.md").write_text("# Revision\n\nCorrect the article.\n")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "revision"], cwd=repo, check=True)
+    return subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "engine" / "ci_helpers.py"),
+            command,
+            "--repo",
+            str(repo),
+            "--diff-base",
+            "library",
+        ],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
+def test_article_path_includes_a_revised_article(tmp_path: pathlib.Path) -> None:
+    assert revision_ci_helper(tmp_path, "article-path") == "library/foo/story.html"
+
+
+def test_revisions_are_not_classified_as_new_articles(tmp_path: pathlib.Path) -> None:
+    assert revision_ci_helper(tmp_path, "new-article") == "false"
 
 
 def run_sync_helper(
@@ -134,6 +167,17 @@ def test_check_yml_routes_exact_syncs_to_the_protected_merge_job() -> None:
 
     assert "sync" in validate["outputs"]
     assert "needs.validate.outputs.sync == 'true'" in automerge["if"]
+
+
+def test_check_yml_automerges_every_valid_new_article() -> None:
+    workflow = yaml.safe_load(
+        (REPO / ".github" / "workflows" / "check.yml").read_text()
+    )
+    validate = workflow["jobs"]["validate"]
+    automerge = workflow["jobs"]["automerge"]
+
+    assert "new_article" in validate["outputs"]
+    assert "needs.validate.outputs.new_article == 'true'" in automerge["if"]
 
 
 def test_canonical_workflows_use_the_checkout_owned_command() -> None:

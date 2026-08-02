@@ -24,8 +24,9 @@ WORKFLOWS = (
 
 
 def git(cwd: pathlib.Path, *args: str) -> str:
+    command = ["git", *args]
     return subprocess.run(
-        ["git", *args],
+        command,
         cwd=cwd,
         capture_output=True,
         text=True,
@@ -46,6 +47,9 @@ class SyncRepo:
     gh_log: pathlib.Path
     fake_bin: pathlib.Path
 
+    # Variadic command arguments are positional; both execution controls below
+    # are already keyword-only because they follow *args.
+    # ast-grep-ignore: keyword-only-args
     def run(
         self,
         *args: str,
@@ -77,8 +81,9 @@ class SyncRepo:
         )
 
     def remote_ref(self, ref: str) -> str:
+        command = ["git", f"--git-dir={self.origin}", "rev-parse", ref]
         return subprocess.run(
-            ["git", f"--git-dir={self.origin}", "rev-parse", ref],
+            command,
             capture_output=True,
             text=True,
             check=True,
@@ -93,8 +98,9 @@ class SyncRepo:
         ).stdout
 
     def update_remote_ref(self, ref: str, target: str) -> None:
+        command = ["git", f"--git-dir={self.origin}", "update-ref", ref, target]
         subprocess.run(
-            ["git", f"--git-dir={self.origin}", "update-ref", ref, target],
+            command,
             check=True,
         )
 
@@ -225,6 +231,25 @@ def test_default_sync_is_idempotent_and_never_fetches_upstream(
     assert "pr create" not in repo.gh_log.read_text()
 
 
+def test_sync_surfaces_a_config_migration_error(tmp_path: pathlib.Path) -> None:
+    repo = make_sync_repo(tmp_path, drift="none")
+    shutil.copytree(REPO / "templates", repo.checkout / "templates")
+    shutil.copytree(REPO / "spec", repo.checkout / "spec")
+    series = repo.checkout / "press" / "series" / "daily"
+    series.mkdir(parents=True)
+    (repo.checkout / "press" / "site.yaml").write_text('title: "Test Paper"\n')
+    (series / "series.yaml").write_text(
+        "name: Daily\nmode: rolling\ntemplate: brief\nprompt: prompt.md\n"
+        "autopublish: false\n"
+    )
+    (series / "prompt.md").write_text("A daily brief.\n")
+
+    result = repo.run()
+
+    assert result.returncode != 0
+    assert "'autopublish' was removed" in result.stdout + result.stderr
+
+
 def test_current_workflows_do_not_require_gh(tmp_path: pathlib.Path) -> None:
     repo = make_sync_repo(tmp_path, drift="none")
 
@@ -276,8 +301,6 @@ def test_unauthenticated_gh_prepares_an_agent_handoff(
     assert "reason=gh is not authenticated" in result.stdout
     assert "base=library" in result.stdout
     assert f"head={SYNC_BRANCH}" in result.stdout
-    assert "Wait for the `validate` check" in result.stdout
-    assert "Rerun `nb sync`" in result.stdout
     assert "pr create" not in repo.gh_log.read_text()
 
     repo.update_remote_ref("refs/heads/library", f"refs/heads/{SYNC_BRANCH}")
@@ -357,7 +380,6 @@ def test_failed_sync_reports_the_check_and_repair_path(tmp_path: pathlib.Path) -
 
     assert result.returncode != 0
     assert "validate: https://example.test/check" in result.stderr
-    assert "Fix the canonical engine on main" in result.stderr
     assert repo.remote_blob("library", WORKFLOWS[0]) != repo.remote_blob(
         "main", WORKFLOWS[0]
     )

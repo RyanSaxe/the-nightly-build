@@ -1,22 +1,25 @@
-"""Validate the exact editorial artifacts committed with one article.
+"""Validate the editorial record committed with an article.
 
 Git already supplies immutable bytes, file identity, and commit provenance, so
 the artifact contract is intentionally structural. Each role invocation has a
-semantic brief and output filename; numbered directories preserve revisions
-without a second manifest or metadata language.
+semantic brief and output filename. A later article revision adds one numbered
+Markdown note without rewriting that production history.
 """
 
 from __future__ import annotations
 
 import pathlib
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+
+from nb import meta as nb_meta
 
 __all__ = (
     "ROLE_FILES",
-    "artifact_warnings",
+    "ROOT_FILES",
     "artifact_root",
     "validate_artifacts",
+    "validate_revision_note",
 )
 
 ROLE_FILES: Mapping[str, tuple[str, str]] = {
@@ -27,8 +30,6 @@ ROLE_FILES: Mapping[str, tuple[str, str]] = {
 }
 ROOT_FILES = ("editorial-direction.md", "commission.md")
 INVOCATION_RE = re.compile(r"^[0-9]{2}$")
-SOURCE_LINE_RE = re.compile(r"^\s*Source:\s*https?://\S+", re.IGNORECASE | re.MULTILINE)
-VOICE_EXEMPLARS_MIN = 3
 
 
 def artifact_root(root: pathlib.Path, *, series: str, slug: str) -> pathlib.Path:
@@ -107,25 +108,42 @@ def validate_artifacts(root: pathlib.Path, *, series: str, slug: str) -> list[st
     return errors
 
 
-def artifact_warnings(root: pathlib.Path, *, series: str, slug: str) -> list[str]:
-    """Return quality warnings that can be proven from semantic artifacts.
+def validate_revision_note(
+    root: pathlib.Path,
+    *,
+    series: str,
+    slug: str,
+    added_paths: Sequence[str],
+    base_paths: Sequence[str],
+) -> list[str]:
+    prefix = f"agent-artifacts/{series}/{slug}/"
+    added = [path for path in added_paths if path.startswith(prefix)]
+    if len(added) != 1:
+        return [f"revision must add exactly one Markdown note; found {sorted(added)}"]
 
-    Structure remains the publishing gate. This narrower audit preserves the
-    writing coach's longstanding quality signal: a guide that names outlets or
-    gestures at a voice without citing three pieces was not actually studied.
-    """
-    coach = artifact_root(root, series=series, slug=slug) / "writing-coach"
-    if not coach.is_dir():
-        return []
-    warnings = []
-    for invocation in sorted(coach.iterdir(), key=lambda path: path.name):
-        guide = invocation / "voice-guide.md"
-        if not guide.is_file():
-            continue
-        count = len(SOURCE_LINE_RE.findall(guide.read_text(encoding="utf-8")))
-        if count < VOICE_EXEMPLARS_MIN:
-            warnings.append(
-                f"writing-coach/{invocation.name}/voice-guide.md cites "
-                f"{count} exemplar(s); expected at least {VOICE_EXEMPLARS_MIN}"
-            )
-    return warnings
+    path = added[0]
+    match = nb_meta.REVISION_NOTE_RE.fullmatch(path)
+    if match is None or match.group(1, 2) != (series, slug):
+        return [f"invalid revision note path: {path}"]
+
+    prior_numbers = {
+        int(prior.group(3))
+        for base_path in base_paths
+        if (prior := nb_meta.REVISION_NOTE_RE.fullmatch(base_path)) is not None
+        and prior.group(1, 2) == (series, slug)
+    }
+    expected = max(prior_numbers, default=0) + 1
+    number = int(match.group(3))
+    errors: list[str] = []
+    if expected > 99:
+        errors.append("revision note numbering is exhausted at 99")
+    elif number != expected:
+        errors.append(
+            f"revision note must be revisions/{expected:02d}.md; "
+            f"found revisions/{number:02d}.md"
+        )
+
+    issue = _readable_markdown(root / path)
+    if issue:
+        errors.append(f"revisions/{number:02d}.md: {issue}")
+    return errors

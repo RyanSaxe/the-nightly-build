@@ -1,10 +1,8 @@
-# The house floor
+# Editorial standard
 
-The editorial standard every article meets, whatever its template. It composes under
-`PROTOCOL.md` and over the series, tag, and item prompts. A paper's own voice in
-`press/editorial.md` composes immediately after this file and specializes it.
+This is the editorial standard every article meets, whatever its template.
 
-The floor is prescriptive on purpose. Its job is to make the default professional:
+The standard is prescriptive on purpose. Its job is to make the default professional:
 research-grade writing. It reads in two registers.
 
 - **Standards a paper cannot loosen.** The quality bar below: sourced claims, teach don't
@@ -12,10 +10,13 @@ research-grade writing. It reads in two registers.
 - **Defaults a paper may override.** Everything that is taste rather than quality:
   register, formality, the assumed reader and that reader's background, how far to
   press a judgment, and any other choice of that kind. These belong to
-  `press/editorial.md` and the series prompts. The floor sets the quality of those
+  `press/editorial.md` and the series prompts. This standard sets the quality of those
   choices, never the choices themselves.
 
-The floor does not legislate trivia: no house-wide rule on the Oxford comma. Be
+The standard bans failures, never forms. Any form is open to a voice that
+earns it and a paper that licenses it.
+
+The standard does not legislate trivia: no paper-wide rule on the Oxford comma. Be
 consistent within a piece.
 
 ## Teach, don't summarize
@@ -29,7 +30,7 @@ Ground abstract claims in a worked example.
 The declared reader centers the paper: the profile chooses what to cover and when, and
 what background to assume. Write each piece for the natural audience around that center.
 A paper declaring a new parent gets articles any parent could be handed. A declared
-practitioner gets pieces worth forwarding to a colleague. Narrowing a desk to
+practitioner gets pieces worth forwarding to a colleague. Narrowing a series to
 the reader personally takes an explicit ask in `press/editorial.md` or the series prompt.
 
 ## Report and analyze
@@ -40,7 +41,7 @@ Keep three things distinct: reported fact, estimate, and synthesis. Never write 
 someone hinted, implied, or signalled. That is the writer's guess wearing attribution.
 Synthesis with a point of view is welcome. Cut unsupported opinion. How hard to
 press a view is the paper's call, and a press that wants opinion may have a
-column or an editorial desk. The floor bans the unearned verdict, never the
+column or an opinion series. The standard bans the unearned verdict, never the
 verdict: an opinion meets the same bar as any analysis, cited, reasoned, shown.
 
 ## Citations
@@ -70,9 +71,11 @@ the abstraction itself is the subject, and build it up like any other term.
 Name a thing one way and keep that name. Once a term is set, reuse it exactly. A synonym
 reached for variety reads as a new thing.
 
-Write short, single-purpose sentences. If a sentence can be misread, rewrite it rather
-than trust the next one to rescue it. Shorten by cutting, never by packing ideas denser. A
-paragraph carrying more ideas than sentences has stopped explaining.
+Default to short, single-purpose sentences, and vary length for rhythm: a long
+sentence in control is craft, and a page of uniform declaratives is a metronome. If a
+sentence can be misread, rewrite it rather than trust the next one to rescue it.
+Shorten by cutting, never by packing ideas denser. A paragraph carrying more ideas
+than sentences has stopped explaining.
 
 ## Prose
 
@@ -89,21 +92,21 @@ tells of slop.
 - **Run-ons.** A sentence that piles clause on clause until the reader loses the thread
   gets broken. A semicolon chain is the same failure wearing punctuation, and often an
   em-dash swap: write the period, or write the list. Let the verbs carry the weight.
-  Vary length for rhythm; a long sentence in control is craft.
-- **Manufactured punchlines.** Cut any sentence engineered to sound quotable while
-  carrying little ("that's the whole point", "here's the kicker", "the catch is"). The
+- **Unearned punchlines.** Cut the sentence that announces stakes the argument has not
+  built ("that's the whole point", "here's the kicker", "the catch is"). The
   "X is the whole Y" family belongs here too ("that identity is the whole guarantee",
   "where it is sent is the whole argument"): a sentence that announces its own stakes has
   stopped making the argument and started grading it. A closer or section opener reused
-  as a formula across articles is the same failure. So is a house catchphrase.
+  as a formula across articles is the same failure. So is a house catchphrase. A punch
+  sentence the argument has built and a license admits is craft, not a punchline.
 - **Hedged contrast.** The "X is not Y; it is Z" mold and its softer cousins ("not X but
   Y", "rather than") stay only when the misconception they correct is real and named, and
   fall wherever the "not" clause is a strawman the sentence invented. One or two earned
   contrasts per piece is the ceiling.
 - **Self-reference.** The piece never narrates itself or its newsroom ("this dossier",
-  "what follows"), never addresses its audience, and never mentions a reader at all
-  ("a reader will notice", "where a reader's scrutiny belongs"). Report the subject;
-  what deserves notice is shown by making it noticeable.
+  "what follows") and never gestures at a hypothetical reader ("a reader will
+  notice", "where a reader's scrutiny belongs"). Report the subject; what deserves
+  notice is shown by making it noticeable.
 - **Banned terms.** `spec/banned-terms.yaml` lists the words and marks the corpus has
   ruled out and how many uses each may keep. A press extends or adjusts the list in
   `press/banned-terms.yaml`, and the proof counts every article against the merged list.
@@ -111,6 +114,12 @@ tells of slop.
   vagueness, and repunctuating an em-dash keeps the fluff the dash was carrying. Delete
   first, then rewrite what remains. Keep an em-dash for a real aside or a sharp
   break, not as a reflex.
+
+That is the default register. An expressive form beyond it (e.g., direct
+address, fragments, open humor, etc.) is licensed, never free.
+`press/editorial.md` or the article's voice guide grants the license by naming
+the form, the exemplar move being transferred, and the bar any single use must
+meet. An unlicensed form is cut. A licensed use still meets every test above.
 
 Break any rule here sooner than write a sentence no honest voice would say aloud.
 
@@ -136,12 +145,12 @@ is right, and when in doubt the period is the default.
 - **Parentheses.** A true aside the sentence survives without. If the sentence
   needs what is inside them, it is not an aside, so fold it back in.
 
-A press extends this section for its own house. It does not loosen it.
+A press extends this section for its own paper. It does not loosen it.
 
 ## Form
 
 Each template's identity sets its own form: paragraph length, how the dek reads, how the
-piece closes. A press may shadow them. The floor holds those choices to a standard. Keep
+piece closes. A press may shadow them. This file holds those choices to a standard. Keep
 the writing easy to follow. End on the conclusion the argument built. Skip the generic
 moral. Let the teaching and the citations equip the reader to go further.
 
@@ -165,5 +174,5 @@ it no longer belongs.
 
 Use a chart when a trend or comparison is the point. Charts are PNGs
 rendered from the committed `chart-N.py` script beside the article
-(docs/charts.md), never hand-drawn images or script blocks. Keep them honest:
+(spec/charts.md), never hand-drawn images or script blocks. Keep them honest:
 label axes, note a non-linear scale, and cite the data source in the caption.

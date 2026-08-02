@@ -31,7 +31,6 @@ name: Semiconductors
 mode: collection
 template: article
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 8
 tags:
@@ -62,7 +61,6 @@ name: Wildcard
 mode: open
 templates: [article, brief]
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 8
 """
@@ -72,7 +70,6 @@ name: AI & Semiconductors
 mode: rolling
 template: brief
 prompt: prompt.md
-autopublish: true
 strict: false
 min_sources: 5
 cadence: daily
@@ -356,10 +353,6 @@ def make_full_library() -> str:
     write_article(lib, "ai-briefs", slug="2026-07-05", html=brief("2026-07-05"))
     write_article(lib, "ai-briefs", slug="2026-07-06", html=brief("2026-07-06"))
     return lib
-
-
-def read_text(root: str, *parts: str) -> str:
-    return pathlib.Path(root, *parts).read_text()
 
 
 def git(*args: str, cwd: str) -> None:
