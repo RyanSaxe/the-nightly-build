@@ -85,6 +85,8 @@ The engine does not estimate model cost; use the provider's usage reporting.
 | Shared directory                       | Makes a public fork discoverable from the Nightly Build directory, with an explicit opt-out                                                  | `directory` in `site.yaml`; see [Delivery](delivery.md#the-directory)    |
 | Article history search                 | Gives production agents narrowly requested prior coverage without loading the whole archive                                                  | The `nb history` command and [Architecture](../concepts/architecture.md) |
 
-For a complete working press, browse `examples/`. It demonstrates the supported
-modes, cadences, source policies, production policy, themes, furniture, and
-series prompts without acting as configuration for your own paper.
+For a complete working press, browse `examples/`. It demonstrates all four
+modes, daily and day-list cadences, source policies, production policy,
+themes, furniture, and series prompts without acting as configuration for your
+own paper. Not every capability in this catalog has an example; the reference
+pages above are the complete contract.

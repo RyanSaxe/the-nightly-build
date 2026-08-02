@@ -31,8 +31,9 @@ Treat each component as product design, not decoration:
 3. Define responsive behavior, long-content behavior, and light/dark theme
    treatment.
 4. Add an exact catalog example and a gallery sample.
-5. Run the furniture gallery and an article preview; inspect narrow and wide
-   layouts, both themes, and realistic edge cases.
+5. Run the furniture gallery (`uv run python scripts/gallery/build.py`; it
+   writes to the gitignored `press-check/gallery/`) and an article preview;
+   inspect narrow and wide layouts, both themes, and realistic edge cases.
 6. Iterate until the component improves comprehension in a representative
    article.
 

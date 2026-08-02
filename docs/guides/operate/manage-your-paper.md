@@ -20,7 +20,12 @@ article's slug must be a configured item; both article initialization and CI
 enforce that.
 
 Configuration changes do not edit the published archive. To correct an article
-already on `library`, use [Revise an article](../publish/revise-an-article.md). To remove
-one, use an owner-authored deletion-only curation PR.
+already on `library`, use [Revise an article](../publish/revise-an-article.md).
+
+To retract an article, open a PR against `library` that only deletes
+`library/SERIES/SLUG.html` and its matching `library/SERIES/SLUG/` assets. CI
+accepts that shape only when the PR author is the repository owner, and a
+curation PR never auto-merges; you review and merge it yourself. The next
+build removes the article from every index, feed, and the catalog.
 
 The exact series fields live in [Series reference](../../reference/series.md).

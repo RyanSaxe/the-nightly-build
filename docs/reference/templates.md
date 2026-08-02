@@ -17,6 +17,22 @@ or user-owned `press/templates/<id>/`:
 identity, bespoke furniture, and gallery examples. A press package replaces a
 shipped package with the same ID wholesale.
 
+## Shipped templates
+
+The engine ships six packages. Each manifest carries the exact enforced
+geometry; these are their one-line identities:
+
+- `article`: enforced cited prose, two anchors plus flexible sections, every
+  section cited.
+- `brief`: enforced structure, several tagged items, every item cited.
+- `lesson`: a teaching piece framed by two anchored bookends the proof
+  requires.
+- `opinion`: an argued position that discloses its stance up front and can
+  never skip the strongest opposing case.
+- `paper`: reporting on one research paper, with the source's abstract and
+  link anchored first.
+- `unbiased`: an enforced two-sided format; a one-sided article blocks.
+
 ## Manifest
 
 ```yaml
