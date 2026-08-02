@@ -33,7 +33,7 @@ contiguous directory (`02`, `03`, and so on) and never overwrites an earlier
 brief or output. `commission.md` and the generated `editorial-direction.md`
 remain at the artifact root.
 
-The writer and editor both receive `editorial-direction.md`; the editor also
+Every role receives `editorial-direction.md` with its brief. The editor also
 receives the exact writer brief so instruction leakage remains visible. A
 `review-brief.md` carries the named inputs, your recent-pattern notes, and the
 round's focus. Nothing more. Every launch begins with its named inputs and
