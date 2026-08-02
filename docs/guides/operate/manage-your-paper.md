@@ -15,9 +15,9 @@ Common requests include:
 - change appearance or add carefully designed furniture.
 
 Use `cadence: manual` for a series that should publish only when someone asks.
-It is never returned as due by `nb duty`. A manual open series also requires
-each article to have a configured item before article initialization or CI
-will accept it.
+It is never returned as due by `nb duty`. In a manual open series, every new
+article's slug must be a configured item; both article initialization and CI
+enforce that.
 
 Configuration changes do not edit the published archive. To correct an article
 already on `library`, use [Revise an article](../publish/revise-an-article.md). To remove

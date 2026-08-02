@@ -19,10 +19,10 @@ The paper owner describes the publication under `press/` on `main`:
   each article-making role.
 
 This is configuration, not publication state. Scheduled work always starts
-from the current `main` branch, while published articles, assets, production
-records, and the catalog live on `library`. `nb duty` compares the press with
-that catalog and returns the work that is due. A `manual` series never becomes
-due on its own.
+from the current `main` branch, while published articles, assets, and
+production records live on `library`. `nb duty` compares the press with the
+published articles in a library checkout and returns the work that is due. A
+`manual` series never becomes due on its own.
 
 ## The orchestrator owns the run
 
@@ -102,8 +102,9 @@ article metadata, source and prose contracts, artifact history, rendered site,
 and article behavior in a browser.
 
 If CI fails, the failure returns to the orchestrator for a targeted repair and
-another proof. If it passes, GitHub automatically merges every new article.
-Revisions and owner curation always require human review.
+another proof. If it passes, GitHub automatically merges every new article, as
+it does an exact workflow-synchronization PR. Revisions and owner curation
+always require human review.
 
 See [Publishing and security](publishing-and-security.md) for the complete
 permission and threat model.

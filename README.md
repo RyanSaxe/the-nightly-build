@@ -15,7 +15,12 @@ Your paper and its archive live in your fork. You own it.
 > [!NOTE]
 > Your articles will be searchable from [the-nightly-build.github.io](https://the-nightly-build.github.io/)
 >
-> If you don't want that, disable it via setting `directory.publish = false` in your `site.yaml`
+> If you don't want that, opt out in your `site.yaml`:
+>
+> ```yaml
+> directory:
+>   publish: false
+> ```
 
 ## How it works
 
@@ -74,7 +79,7 @@ the agents have to pass explicitly codified gates before publishing. Words can b
 sentences with lots of parentheticals and semicolons can be blocked. Basically, every time I saw
 an instance of writing that made me go "ugh that's AI", I tried my best to codify something in the
 system itself to prevent it. That being said, given this is something that is customizable, I did
-my best to avoid ham-stringing the engine from being able to express what downstream users may want.</p>
+my best to avoid hamstringing the engine from being able to express what downstream users may want.</p>
 
 ---
 
@@ -89,7 +94,7 @@ my best to avoid ham-stringing the engine from being able to express what downst
 true of people. The system takes quite a bit of time and uses more tokens than you'd expect because it is
 forced to actually read every single source it cites. The editor will even force sentences to be cut if they
 cannot properly be demonstrated, and will meticulously try and find issues adversarially. Personally, I have
-found this leads to hallucinations to almost go away entirely. However, I am not going to claim that, as I
+found this makes hallucinations almost go away entirely. However, I am not going to claim that, as I
 am sure there will be instances of incorrectness.</p>
 
 ---

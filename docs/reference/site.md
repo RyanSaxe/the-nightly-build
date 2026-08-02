@@ -9,23 +9,26 @@ appearance: auto
 front: compact
 footer: "Filed while you slept."
 assets:
-  scripts: []
+  scripts:
+    - url: https://cdn.example.com/katex.min.js
+      integrity: sha384-EXACT-HASH-OF-THE-PINNED-FILE
+      defer: true
   styles: []
 directory:
   description: "One line describing the paper."
   publish: true
 ```
 
-| Key                     | Contract                                                 |
-| ----------------------- | -------------------------------------------------------- |
-| `title`                 | Required, non-empty masthead title                       |
-| `theme`                 | Local CSS path; defaults to the shipped newspaper theme  |
-| `appearance`            | `auto`, `light`, or `dark`                               |
-| `front`                 | `compact` or `comfortable`                               |
-| `footer`                | Optional non-empty imprint, at most 80 characters        |
-| `assets.scripts/styles` | HTTPS resources with an exact Subresource Integrity hash |
-| `directory.description` | Optional public description, at most 280 characters      |
-| `directory.publish`     | Boolean; set `false` to opt out of the shared directory  |
+| Key                     | Contract                                                                     |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `title`                 | Masthead title; defaults to "The Nightly Build"                              |
+| `theme`                 | Local CSS path; defaults to the shipped newspaper theme                      |
+| `appearance`            | `auto`, `light`, or `dark`                                                   |
+| `front`                 | `compact` or `comfortable`                                                   |
+| `footer`                | Imprint, at most 80 characters; defaults to a product credit                 |
+| `assets.scripts/styles` | Entries of `url` (HTTPS), `integrity` (exact SRI hash), and optional `defer` |
+| `directory.description` | Optional public description, at most 280 characters                          |
+| `directory.publish`     | Boolean; set `false` to opt out of the shared directory                      |
 
 External assets are owner-authored configuration. Scripts do not relax the
 article sandbox: articles still cannot add scripts, handlers, frames, forms,

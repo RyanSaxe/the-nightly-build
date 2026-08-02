@@ -6,7 +6,7 @@ alone.
 
 From GitHub, use **Sync fork**. The next scheduled run starts with `nb sync` and
 repairs protected publishing workflows through their own CI-gated PR when
-needed.
+needed; an exact sync PR merges automatically once validated.
 
 From a clean local checkout, the complete update is:
 

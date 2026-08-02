@@ -85,8 +85,8 @@ loosen or tighten any supplied band, add a band where the template has no
 default, or omit `bands` for no geometry default. `min_sources` remains a
 separate source floor; it defaults to
 `8` for a longread template and `5` for a shortread one, while an explicit
-`min_sources: 0` disables that default. `strict: true` turns every WARN into a
-BLOCK. Every clean new-article PR auto-merges; revisions and owner curation
+`min_sources: 0` disables that default. `strict: true` promotes proof warnings
+to blocks, except the few advisory warnings the proof marks non-promotable. Every clean new-article PR auto-merges; revisions and owner curation
 wait for human review. The source policy is `required_docs`, `consult`, and
 `sources_exclusive`: required documents must be cited, consulted documents
 must be read but need not appear, and an exclusive source set forbids research
