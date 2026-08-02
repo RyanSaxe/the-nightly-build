@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-02</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-02",
+        "template": "brief",
+        "title": "Tech News · 2026-08-02",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-02",
+        "tags": ["ai", "infrastructure", "security", "robotics"],
+        "sources": 10,
+        "words": 779,
+        "reading_minutes": 3,
+        "dek": "GPT-5.6 rewrote the code that serves it, and OpenAI cut its cheapest tier's price 80% in the same release.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Tech News · 2026-08-02</h1>
+        <p class="nb-dekline">
+          GPT-5.6 rewrote the code that serves it, and OpenAI cut its
+          cheapest tier's price 80% in the same release.
+        </p>
+        <div class="nb-byline">
+          <span>3 min read</span><span>2026-08-02</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Inference Pricing</span>
+          <h3>
+            <a
+              href="https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6/"
+              >GPT-5.6 Sol rewrites its own serving code, cutting Luna's price
+              80%</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            GPT-5.6 Sol rewrote and optimized OpenAI's own production
+            inference kernels, OpenAI says, cutting serving costs 20% and
+            lifting token-generation efficiency more than 15% through the
+            model's own experimentation.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Luna, OpenAI's cheapest tier, now costs $0.20 per million input
+            tokens and $1.20 per million output tokens, an 80% drop that
+            undercuts Google's Gemini 3.1 Flash-Lite at equivalent price
+            points.<sup class="nb-cite"><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s2">2</a></sup> Terra fell 20% to
+            $2 per million input tokens and $12 per million output tokens.
+            Sol's own per-token price held, gaining only a Fast mode that
+            runs 2.5 times faster at twice the cost.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            > A lab that rewrites and prices its own serving stack turns an
+            internal efficiency claim into a retail price the same day.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Open Models</span>
+          <h3>
+            <a href="https://api-docs.deepseek.com/quick_start/pricing"
+              >DeepSeek's V4-Flash exits preview at half its old price</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            DeepSeek's own pricing page puts V4-Flash-0731's output price at
+            $0.28 per million tokens, a cut Caixin reports as roughly 50%
+            below the prior rate.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            ><sup class="nb-cite"><a href="#s4">4</a></sup> The release
+            supersedes April's preview, ships without the V4-Pro companion
+            DeepSeek had targeted for mid-July, and still trails Moonshot's
+            Kimi K3 on capability by Caixin's account.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            > Axios frames the release as one entry in a broader price war
+            running the same week across OpenAI, Google, and Meta.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            > It quotes an unnamed OpenAI adviser: "spending tens of billions
+            to build a slightly smarter model may buy only a temporary lead,
+            without creating lasting pricing power."<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            > Two labs cutting inference prices the same week means the floor
+            is now set by competition, not by how much headroom either
+            company's own engineers found.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Standards</span>
+          <h3>
+            <a href="https://www.rfc-editor.org/rfc/rfc10015.html"
+              >IETF bans RSA and Diffie-Hellman key exchange in TLS 1.2</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            RFC 10015 converts what had been non-normative guidance into a
+            hard prohibition. TLS 1.2 and DTLS 1.2 clients and servers must
+            not offer or select any RSA or finite-field Diffie-Hellman
+            key-exchange cipher suite.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            > The change touches more than 175 named suites and updates 17
+            prior IETF documents.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            The RFC cites the 2020 Raccoon timing-side-channel attack as the
+            rationale for banning finite-field DH, rather than continuing to
+            merely discourage it.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            Tech Times notes PCI-DSS 4.0 does not name the newly prohibited
+            suites, so a payment system can stay card-industry compliant
+            while running a cipher the IETF now forbids.<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            > Practitioners flagged the resulting bind in discussion threads.
+            Pre-2013 embedded and government systems that cannot negotiate
+            TLS 1.3 will need explicit configuration carve-outs.<sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            > Some peers already hard-disconnect on any offered insecure
+            suite, which forces the upgrade even on hardware nobody can
+            patch.<sup class="nb-cite"><a href="#s8">8</a></sup> TLS 1.2
+            itself, and both TLS 1.3 branches, stay untouched. A decade of
+            informal warnings just became something a compliance scanner can
+            fail you on.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Robotics</span>
+          <h3>
+            <a
+              href="https://deepmind.google/blog/gemini-robotics-2-brings-whole-body-intelligence-to-robots/"
+              >Gemini Robotics 2 learns new robot bodies from fewer than 200
+              examples</a
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </h3>
+          <p>
+            Gemini Robotics 2 adapts to a new bi-arm robot body from
+            typically fewer than 200 examples, DeepMind says.<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            > The same release ships that adaptation across five named
+            hardware partners: Apptronik's Apollo 2 humanoid, Franka's Duo
+            arm, Dexmate, SO101, and Trossen platforms.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            > A second model in the release, Gemini Robotics ER 2, plans and
+            coordinates task sequences that run several minutes and hundreds
+            of decisions, evaluated on a new ASIMOV-Agentic safety benchmark
+            DeepMind built for exactly that longer-horizon class of task.<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            > Engadget's independent look at the demonstrations found each
+            one specifically trained through teleoperation, video examples,
+            and simulation, not the general-purpose autonomy DeepMind's
+            "real-time, fully autonomous" framing implies.<sup
+              class="nb-cite"
+              ><a href="#s10">10</a></sup
+            > It is the same gap that undercut Tesla's Optimus demonstrations
+            once their teleoperators came to light.<sup class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+            Fewer than 200 examples is now enough to move a trained policy
+            onto hardware it has never seen, but nothing in the release shows
+            the model reaching that hardware without a human demonstrating
+            the task first.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6/"
+              >OpenAI · Advancing the price-performance frontier with
+              GPT-5.6</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://simonwillison.net/2026/Jul/30/luna-price-drop/"
+              >Simon Willison · GPT-5.6 Luna's 80% price drop</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://api-docs.deepseek.com/quick_start/pricing"
+              >DeepSeek API Docs · Models & Pricing</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.caixinglobal.com/2026-08-01/deepseek-releases-official-v4-flash-model-as-chinas-ai-race-intensifies-102470292.html"
+              >Caixin Global · DeepSeek Releases Official V4-Flash Model as
+              China's AI Race Intensifies</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.axios.com/2026/08/01/deepseek-model-cheap-ai-price-war"
+              >Axios · DeepSeek's new bargain model accelerates AI's race to
+              zero</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.rfc-editor.org/rfc/rfc10015.html"
+              >RFC Editor · RFC 10015: Deprecating Obsolete Key Exchange
+              Methods in TLS 1.2 and DTLS 1.2</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.techtimes.com/articles/322673/20260802/ietf-formally-bans-rsa-dhe-tls-12-over-175-cipher-suites-off-limits.htm"
+              >Tech Times · IETF Formally Bans RSA and DHE from TLS 1.2: Over
+              175 Cipher Suites Off-Limits</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://news.ycombinator.com/item?id=49139711"
+              >Hacker News · RFC 10015 discussion thread</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://deepmind.google/blog/gemini-robotics-2-brings-whole-body-intelligence-to-robots/"
+              >Google DeepMind · Gemini Robotics 2 Brings Whole Body
+              Intelligence to Robots</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.engadget.com/2227268/google-gemini-robotics-2-platform-intelligent-whole-body-control/"
+              >Engadget · Google's New Gemini Robotics 2 Platform Allows for
+              "Intelligent Whole-Body Control"</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
