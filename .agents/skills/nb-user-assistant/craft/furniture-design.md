@@ -1,6 +1,6 @@
 # Furniture design
 
-Read `docs/guides/customize/furniture.md`, the current catalogs, styles, and
+Read `docs/reference/furniture.md`, the current catalogs, styles, and
 gallery tooling before proposing a new component.
 
 ## Design brief

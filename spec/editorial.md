@@ -1,8 +1,6 @@
 # Editorial standard
 
-The editorial standard every article meets, whatever its template. The engine
-places it first in generated editorial direction, before a paper's voice in
-`press/editorial.md` and the applicable template, series, tag, and item layers.
+This is the editorial standard every article meets, whatever its template.
 
 The standard is prescriptive on purpose. Its job is to make the default professional:
 research-grade writing. It reads in two registers.

@@ -35,7 +35,7 @@ article sandbox: articles still cannot add scripts, handlers, frames, forms,
 or other active content. Pin exact versions and preview both success and
 no-JavaScript behavior. Declared stylesheets also join the proof's class
 inventory, so a dependency's classes are never reported dead. See
-[Furniture](../guides/customize/furniture.md).
+[Furniture reference](furniture.md).
 
 See [Appearance and voice](../guides/customize/appearance-and-voice.md) for
 design practice and [Delivery](delivery.md) for published URLs.

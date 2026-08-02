@@ -1,9 +1,9 @@
 # Headlines, deks, and section headings
 
-This file defines the standard for the three surfaces a reader meets first. It
-composes directly after `spec/editorial.md`, and that file's prose rules apply
-here word for word. One test runs under everything below: the line commits to
-something the piece establishes. The tells this file names all fail it.
+This file defines the standard for the three surfaces a reader meets first.
+The prose rules of `spec/editorial.md` apply here word for word. One test
+runs under everything below: the line commits to something the piece
+establishes. The tells this file names all fail it.
 
 ## The headline
 

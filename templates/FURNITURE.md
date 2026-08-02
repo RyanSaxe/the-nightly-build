@@ -16,8 +16,7 @@ article structure, not furniture. Template manifests and deterministic proof
 define them. This base catalogue is the engine's, always available to every
 template. A paper can add its own
 furniture (paper-wide in `press/furniture/`, or bespoke inside one template's
-folder) and instruct sections to use it in prompt.md (see
-docs/guides/customize/furniture.md).
+folder) and instruct sections to use it in prompt.md.
 
 The catalogue is small on purpose: a few primitives the writer adapts beat a
 component per idea. Retired components (callout, epigraph, aside, cast,
@@ -205,9 +204,9 @@ one sentence with the prose around it.
 A listing the reader should actually read: code whose behavior is evidence,
 never decoration. The header names the source (a path, or a short context) and
 the language; the `language-…` class drives the highlighter (python and
-javascript ship with the engine; a press pins more via `site.yaml` assets,
-see docs/guides/customize/furniture.md). Escape the code as HTML. The caption states
-what the listing shows and carries the citation.
+javascript ship with the engine; a press pins more via `site.yaml` assets).
+Escape the code as HTML. The caption states what the listing shows and
+carries the citation.
 
 ```html
 <figure class="nb-code">
