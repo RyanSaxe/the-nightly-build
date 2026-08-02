@@ -21,5 +21,5 @@ JavaScript. Use the existing gallery and site preview as design tools, not just
 build checks. Inspect results and iterate before presenting the work as done.
 
 Keep all paper-specific design under `press/`. A requested change to generated
-site navigation or page layout is an engine contribution, not customization;
-state that maintenance cost before proceeding.
+site navigation or page layout is an engine contribution, not customization.
+State that maintenance cost before proceeding.

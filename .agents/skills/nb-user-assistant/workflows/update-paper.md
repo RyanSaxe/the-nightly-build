@@ -9,15 +9,15 @@ change.
 Translate the user's observation into its true owner before editing:
 
 - a different beat, angle, or recurring structure usually belongs in a series
-  prompt;
-- paper-wide register and reader assumptions belong in `editorial.md`;
-- timing and item admission belong in `series.yaml`;
-- evidence composition belongs in source policy fields;
-- an isolated article correction belongs in the revision workflow;
-- a presentational need may belong in existing furniture before new design.
+  prompt
+- paper-wide register and reader assumptions belong in `editorial.md`
+- timing and item admission belong in `series.yaml`
+- evidence composition belongs in source policy fields
+- an isolated article correction belongs in the revision workflow
+- a presentational need may belong in existing furniture before new design
 
 Inspect recent published examples only to test a concrete diagnosis. Do not
-copy their structure forward or conduct an ambient archive tour.
+copy their structure forward or tour the archive for background.
 
 ## Propose the smallest durable change
 

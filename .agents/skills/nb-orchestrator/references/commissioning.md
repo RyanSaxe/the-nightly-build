@@ -9,10 +9,10 @@ is already the authorized work set.
 
 Read the layers that apply to the selected article in this order:
 
-1. `spec/editorial.md` and `spec/headlines.md`;
-2. `press/editorial.md`, when present;
-3. the selected template's manifest, skeleton, identity, and furniture;
-4. the series prompt, declared tag fragments in order, and selected item.
+1. `spec/editorial.md` and `spec/headlines.md`
+2. `press/editorial.md`, when present
+3. the selected template's manifest, skeleton, identity, and furniture
+4. the series prompt, declared tag fragments in order, and selected item
 
 Later layers specialize earlier ones; they do not silently waive them. Never
 paraphrase these layers: supply the generated `editorial-direction.md` itself,
@@ -26,8 +26,8 @@ automatically. Publication history informs context; it is never a template.
 
 ## Plan the articles together
 
-Prevent both editorial repetition—a topic, claim, or angle already covered—and
-structural repetition inherited from prior articles. Record neighboring
+Prevent editorial repetition, meaning a topic, claim, or angle already covered.
+Prevent structural repetition inherited from prior articles. Record neighboring
 articles from this run so every piece adds distinct value and the articles read
 as one paper.
 

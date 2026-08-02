@@ -7,14 +7,14 @@ gallery tooling before proposing a new component.
 
 Write the brief before markup:
 
-- the information relationship or deliberate emphasis the component reveals;
+- the information relationship or deliberate emphasis the component reveals
 - when to use it and when prose, a table, a figure, or existing furniture is
-  better;
-- the smallest semantic HTML that carries that meaning;
-- content constraints, edge cases, and citation behavior;
-- screen-reader and keyboard behavior;
-- narrow, wide, print-like, light, and dark presentation;
-- behavior without JavaScript or when an optional library fails.
+  better
+- the smallest semantic HTML that carries that meaning
+- content constraints, edge cases, and citation behavior
+- screen-reader and keyboard behavior
+- narrow, wide, print-like, light, and dark presentation
+- behavior without JavaScript or when an optional library fails
 
 Use representative real content, including the longest plausible label and
 the sparsest valid case. A component designed around lorem ipsum has not been

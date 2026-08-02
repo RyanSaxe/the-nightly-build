@@ -51,11 +51,10 @@ Follow these universal rules:
 - Add `data-nb-locator`, `data-nb-url`, or `data-nb-note` only when the evidence
   record supplies that detail. Never invent a locator.
 - Plan prose and furniture together. Search the supplied catalogs before
-  drafting, then review the rendered page for missed opportunities and
-  components with no clear communicative or editorial purpose. Deliberate
-  emphasis is a valid purpose. Use documented markup, never classes inferred
-  from CSS or dependency URLs. A component does not belong merely because a
-  prior article used it.
+  drafting. Review the rendered page for missed opportunities and for
+  components with no clear purpose. Deliberate emphasis is a valid purpose.
+  Use documented markup, never classes inferred from CSS or dependency URLs.
+  A component does not belong merely because a prior article used it.
 - Runtime dependencies declared by the press are already supplied by the site.
   Use only capabilities documented in the furniture, template identity, or
   editorial direction. Never add article-authored scripts or styles.
@@ -67,8 +66,8 @@ Follow these universal rules:
   what it shows. Capture it with `nb asset`; preserve the relevant evidence,
   remove unrelated clutter, and inspect the asset and rendered article. Use
   helpful alt text and a factual cited caption. Never use an external image URL.
-- Fill `nb-meta` with actual counts, dates, harness, and selected writer model.
-  Never inflate a field to satisfy a threshold.
+- Fill the `nb-meta` fields the engine cannot compute: dates, harness, and the
+  selected writer model. `nb stamp` writes the counts.
 
 ## Do original work
 

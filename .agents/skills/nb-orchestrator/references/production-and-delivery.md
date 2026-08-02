@@ -67,8 +67,8 @@ change.
 ## Prepare and monitor the Article PR
 
 When the editor approves after making direct cuts, no writer round is owed for
-the proof alone: run `nb stamp` and `nb check` on the edited article yourself,
-and return to the writer only if the proof demands new prose.
+the proof alone. Run `nb stamp` and `nb check` on the edited article yourself.
+Return to the writer only if the proof demands new prose.
 
 After editor approval and a fresh proof, run:
 

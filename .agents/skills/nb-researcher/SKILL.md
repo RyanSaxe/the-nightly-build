@@ -13,7 +13,7 @@ Drafting belongs to the writer.
 
 Begin with the named brief. Use web, document, `nb history`, and other available
 tools to answer specific research questions. Do not browse the repository, Git
-history, or archive as ambient context. Request missing commission context from
+history, or archive for background. Request missing commission context from
 the orchestrator rather than reconstructing it yourself.
 
 ## Research procedure

@@ -9,15 +9,8 @@ custom presentation or an enforceable new structure.
 ## Discover before configuring
 
 Inspect `examples/`, the current `press/` if one exists, and the public docs.
-Conduct a contextual interview, not a field-by-field questionnaire. Establish
-these outcomes:
-
-- the paper's purpose and the change it should make in the reader;
-- a concrete reader model and reading situation;
-- series with distinct territory, exclusions, evidence standards, and cadence;
-- an editorial voice grounded in examples and anti-examples;
-- the first week's range, coherence, and likely failure modes; and
-- the user's review appetite and budget posture.
+Conduct a contextual interview, not a field-by-field questionnaire, and reach
+the outcomes the interview craft requires.
 
 Ask from hypotheses. If the user wants a daily paper on AI, propose two or
 three meaningfully different editorial shapes and test them with candidate

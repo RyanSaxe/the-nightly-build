@@ -37,5 +37,5 @@ shortest exact action, say what success looks like, and resume from the result.
 Do not burden the user with actions the current assistant can safely perform.
 
 Validate every config change with `nb validate`. Before any Article PR, run the
-proof through this checkout's `nb`. New articles publish automatically;
-revisions never auto-merge.
+proof through this checkout's `nb`. New articles publish automatically.
+Revisions never auto-merge.

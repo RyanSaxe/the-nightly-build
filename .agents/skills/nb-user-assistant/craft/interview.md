@@ -7,8 +7,9 @@ choose the next move.
 
 ## Required outcomes
 
-Reach confidence on purpose, reader, territory, evidence, voice, recurring
-series, reading rhythm, visual appetite, review posture, and first-week
+Reach confidence on purpose, reader, territory, evidence standard, voice,
+recurring series, reading rhythm, how visual the paper should be, how much the
+user wants to review before publication and spend on production, and first-week
 coherence. These are goals, not a prescribed order. Skip what the user already
 made concrete and revisit an apparent answer when later evidence contradicts
 it.

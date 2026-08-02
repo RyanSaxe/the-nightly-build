@@ -16,14 +16,14 @@ the proposed template is too broad or the genre belongs in prose.
 
 Write a brief naming:
 
-- the reader's job and the article's distinctive contribution;
-- fixed anchors and why each is invariant;
-- where subject-specific reasoning must remain flexible;
-- citation behavior and any justified exemptions;
-- required furniture and what understanding it enables;
-- headline, opener, transition, and ending character without sample copy;
-- accessibility, responsive behavior, both themes, and long-content risks;
-- representative cases, a counterexample, and acceptance criteria.
+- the reader's job and the article's distinctive contribution
+- fixed anchors and why each is invariant
+- where subject-specific reasoning must remain flexible
+- citation behavior and any justified exemptions
+- required furniture and what understanding it enables
+- headline, opener, transition, and ending character without sample copy
+- accessibility, responsive behavior, both themes, and long-content risks
+- representative cases, a counterexample, and acceptance criteria
 
 Choose fixed or flexible outline deliberately. Manifest bands are proof
 recommendations, not a substitute for editorial identity. Put machine facts in

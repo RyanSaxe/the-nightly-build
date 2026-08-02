@@ -25,11 +25,11 @@ change precisely before delegating any part of it.
 
 When another role or model would help, give it a purpose-built brief containing:
 
-- the defect or requested outcome, with the exact relevant passage or asset;
-- the current article, sources, and press constraints it actually needs;
-- what may change and what must remain stable;
-- factual, editorial, visual, and accessibility acceptance criteria; and
-- the exact output to return for integration.
+- the defect or requested outcome, with the exact relevant passage or asset
+- the current article, sources, and press constraints it actually needs
+- what may change and what must remain stable
+- factual, editorial, visual, and accessibility acceptance criteria
+- the exact output to return for integration
 
 Reopen and verify evidence when claims, citations, numbers, or interpretations
 change. For a figure, inspect its source data, labels, caption, alternative
@@ -53,5 +53,5 @@ matching assets and adds only its one new revision note. The article can change
 anything the normal proof permits, but its path, series, and slug remain
 aligned. Revisions never auto-merge.
 
-Present the changed meaning, evidence, and visual result—not an invented
-workflow ceremony—so the user can decide whether to merge.
+Present the changed meaning, evidence, and visual result, so the user can
+decide whether to merge. Do not invent a workflow ceremony around it.

@@ -11,9 +11,10 @@ target `library`, merge a pull request, or trigger Pages.
   anything.
 - Preserve existing tracked and untracked work. Use an isolated worktree from
   `origin/main` when the checkout is not clean.
-- Never print or commit secrets, tokens, cookies, authorization headers, full
-  environment dumps, or secret values. Report only the authenticated account
-  name and permission result when they are safe to expose.
+- Never print or commit a secret value in any form (e.g., tokens, cookies,
+  authorization headers, environment dumps, etc.). Report only the
+  authenticated account name and permission result when they are safe to
+  expose.
 - Name the run with its UTC timestamp plus a short random suffix. Use
   `nb/smoke/<run-id>` for the temporary branch and
   `.nb-smoke/<run-id>.md` for its report.
@@ -48,11 +49,24 @@ target `library`, merge a pull request, or trigger Pages.
 
 ## Report evidence
 
-Return one row for each of these capabilities: repository identity, both
-branch fetches, `uv`, checkout-owned `nb`, press validation when applicable,
-web search, both opened pages, branch push, draft PR creation, CI registration,
-PR closure, and branch cleanup. Mark each `passed`, `failed`, or `not verified`
-and include concise non-secret evidence.
+Return exactly these rows, each marked `passed`, `failed`, or `not verified`
+with concise non-secret evidence:
+
+```text
+repository identity:       passed | failed | not verified - <evidence>
+fetch origin/main:         ...
+fetch origin/library:      ...
+uv available:              ...
+checkout-owned nb:         ...
+press validation:          ... (not applicable without press/)
+web search:                ...
+opened source page 1:      ...
+opened source page 2:      ...
+branch push:               ...
+draft PR creation:         ...
+CI registration:           ...
+PR closed and branch deleted: ...
+```
 
 For every failure, give the single next action and the narrow step to rerun.
 Do not claim the smoke passed while a temporary PR or branch remains. State

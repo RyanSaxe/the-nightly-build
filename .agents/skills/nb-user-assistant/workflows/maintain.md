@@ -2,11 +2,11 @@
 
 Route maintenance to the canonical guide before acting:
 
-- engine update: `docs/guides/operate/update-engine.md`;
+- engine update: `docs/guides/operate/update-engine.md`
 - schedule or capability failure: `docs/guides/operate/schedule.md` and
-  `docs/troubleshooting/setup-and-scheduling.md`;
-- Article PR failure: `docs/troubleshooting/article-prs.md`;
-- feeds, catalog, directory, or Pages URLs: `docs/reference/delivery.md`.
+  `docs/troubleshooting/setup-and-scheduling.md`
+- Article PR failure: `docs/troubleshooting/article-prs.md`
+- feeds, catalog, directory, or Pages URLs: `docs/reference/delivery.md`
 
 Inspect state and diagnose before mutating. Preserve user changes and keep
 engine updates separate from press edits. Run `nb sync` through the documented

@@ -16,9 +16,9 @@ that admits and excludes work. Define evidence by what a claim must survive.
 Define voice through attention, compression, rhythm, stance, and concrete
 examples or anti-examples, not through celebrity names or empty adjectives.
 
-Use requirements lists only for closed contracts. Prose territory should
-remain generative. Never write sample article sentences; any line the writer
-could paste into publication is a defect.
+Use requirements lists only for closed contracts. Territory prose stays open
+ground. Never write sample article sentences; any line the writer could paste
+into publication is a defect.
 
 ## Critique before shipping
 

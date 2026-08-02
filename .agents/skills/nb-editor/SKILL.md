@@ -27,10 +27,10 @@ If you cannot, that is the first finding. Treat headline and dek as claims, and
 every section subhead and kicker as one too. A dek that grades the article's
 selection or method instead of making a claim about the world requires revision.
 
-Try to break each claim, hardest whichever delights you. Open the evidence as
-a map and reopen cited sources as an opponent. Hunt for the sentence that
-retires a claim, not the sentence that permits it. A piece can pass citation by
-citation while its premise is false.
+Try to break each claim. Push hardest on the one you most want to keep. Open
+the evidence as a map and reopen cited sources as an opponent. Hunt for the
+sentence that retires a claim, not the sentence that permits it. A piece can
+pass citation by citation while its premise is false.
 
 Confirm that passages support claims, then read their full sentences and
 surrounding paragraphs. Recompute arithmetic and compare figures with their
@@ -40,11 +40,11 @@ For every directional claim, check the source's exact direction. Check claims
 about named people most deeply.
 
 Verify display text descriptor by descriptor, not only as a claim: the
-headline, the dek, and every subhead. A true claim can carry a false label, so
-check that each named person's title, role, and affiliation, and every place,
-date, and quantity in display text, matches the owning primary exactly. A reader
-who reads nothing else keeps the display text, so a wrong label there is the
-costliest and most visible error the paper can print.
+headline, the dek, and every subhead. A true claim can carry a false label.
+Check every named person's title, role, and affiliation against the owning
+primary. Check every place, date, and quantity in display text the same way.
+A reader who reads nothing else keeps the display text, so a wrong label there
+is the costliest and most visible error the paper can print.
 
 Audit every `data-nb-kind`. A primary owns the claim. A secondary reports on it
 from outside the authoring party; a different website is not necessarily an
@@ -117,8 +117,8 @@ recrops by what to retain or remove, never coordinates.
 
 For every chart, inspect its committed provenance and compare the numbers with
 the evidence record and cited primary. Then read the image as a reader: labels,
-scales, legend, and visual implications must be honest. Request corrections;
-never edit assets or markup yourself.
+scales, legend, and visual implications must be honest. Request corrections.
+Never edit assets or markup yourself.
 
 ## Surgical, never a rewrite
 
