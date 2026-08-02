@@ -62,9 +62,10 @@ Write directions, never sample article sentences.
 
 Create each numbered role brief only when its inputs exist. The coach and
 researcher briefs have no upstream outputs, so write them with the commissions
-and launch every article's opening roles in one burst. Name exact inputs,
-outputs, permitted changes, useful `nb` commands, unresolved decisions, and the
-owner of anything missing. Never restate what a named input carries: the role
-reads its inputs itself, and a digest drifts from the file it copies. Preserve
-fixed labels or markup where necessary, but do not restate configuration or
-ask a role to rediscover it.
+and launch every article's opening roles in one burst.
+
+A brief that names its exact inputs and its output path is complete. Add prose
+only for a decision the named inputs do not carry, such as an unresolved
+question and its owner. Never restate what a named input carries: the role
+reads its inputs itself, and a digest drifts from the file it copies. Anything
+true of every article belongs in the role's skill, not the brief.

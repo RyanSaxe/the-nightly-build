@@ -71,6 +71,10 @@ researcher. Prose, structure, markup, assets, and proof return through the
 writer. Give every repair a new numbered brief and output, then require a fresh
 writer proof and editor read.
 
+A single-owner repair needs no authored brief. Relaunch the role with a stub
+that names the review or request to apply, and write real content only when
+routing work between owners or resolving a loop that stopped progressing.
+
 Only an editorial review with no required change settles an article. There is
 no round cap, but do not repeat an unchanged attempt or prolong the loop for
 optional polish. Clarify, reassign, or take over work a role cannot complete,
