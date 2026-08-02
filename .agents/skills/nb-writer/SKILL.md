@@ -84,7 +84,9 @@ researcher's immutable evidence artifact.
 
 ## Prove and hand off
 
-Run the exact `nb check` command supplied by the brief until `BLOCK: 0`. Treat
+Run `nb stamp` on the article to write the computed counts, then run the exact
+`nb check` command supplied by the brief until `BLOCK: 0`. Stamp again after
+any edit that changes the text. Treat
 every warning as an editorial note: fix it or record why it stands. Use
 `nb preview` when layout or an asset changed and inspect the rendered result.
 

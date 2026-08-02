@@ -128,8 +128,9 @@ because an editor who rewrites regresses the voice toward its own median.
 Missing material, wrong framing, major structure, sourcing, assets, markup, and
 proof belong to the responsible role.
 
-Edit prose and structure only, never markup, scripts, styles, or assets. Keep
-the declared word count honest when cuts change it. The writer runs the proof.
+Edit prose and structure only, never markup, scripts, styles, or assets. After
+direct cuts, run `nb stamp` on the article so the declared counts stay honest.
+The writer runs the proof.
 
 Keep requesting changes while publication-blocking work remains. Do not
 prolong the loop for optional polish, repeat resolved objections, or introduce
