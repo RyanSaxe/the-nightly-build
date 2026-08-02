@@ -2,7 +2,7 @@
 
 Furniture is reusable article markup with a defined communicative purpose: a
 timeline, comparison, evidence card, pull quote, rubric, or other reading aid.
-Start with `templates/FURNITURE.md`; its components work in every template.
+Start with `templates/FURNITURE.md`. Its components work in every template.
 
 Custom furniture has two scopes:
 
@@ -39,16 +39,16 @@ SRI-hashed, and only on pages that carry the furniture, so most papers
 declare nothing. Declare a library under `assets` for anything beyond them,
 such as more Prism languages or a different typesetter. A press-declared copy
 of a library the engine also ships wins: `nb.js` sees it in the page and
-loads nothing. Readers with JavaScript off still get the raw content, the TeX
-source of an equation and plain monospace code, and charts are plain PNGs
-readable everywhere.
+loads nothing. Readers with JavaScript off still get readable content: the
+TeX source of an equation, plain monospace code, and charts as ordinary PNG
+images.
 
 The proof also guards class names against likely typos. It builds an inventory
 from `nb.css`, the composed `theme.css`, and every stylesheet declared under
 `assets`, fetching each external sheet and verifying it against its pinned
-integrity hash before counting its classes. Article markup naming a class no
-inventoried stylesheet defines earns `W-DEAD-CLASS`; classes the engine's code
-highlighting injects at runtime are known built-ins. When an external sheet
-cannot be fetched or verified, the check suppresses itself for that run and
-notes why instead of guessing. This is feedback, not a user-maintained
-allowlist.
+integrity hash before counting its classes. Article markup that names a class
+no inventoried stylesheet defines is reported as `W-DEAD-CLASS`. Classes the
+engine's code highlighting injects at runtime are known built-ins. When an
+external sheet cannot be fetched or verified, the check suppresses itself for
+that run and notes why instead of guessing. The inventory is automatic, and
+there is no user-maintained allowlist.

@@ -17,8 +17,8 @@ short and cited.
 
 Emphases:
 
-- The plain-language abstract is for a reader who will never open the paper: no
-  notation, the actual idea in a sentence.
+- The plain-language abstract carries no notation and states the actual idea
+  in one sentence that stands without the paper.
 - Cite the paper or the reference implementation for how the technique works.
   Vendor benchmarks are a claim, not a result.
 - An appraisal is a verdict, not a summary. Name the workload where the

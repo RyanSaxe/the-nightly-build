@@ -29,7 +29,7 @@ target `library`, merge a pull request, or trigger Pages.
    cannot install it, record the exact non-secret failure and required
    permission.
 3. Run `./nb --help` from this checkout. If `press/` exists, also run
-   `./nb validate --repo .`; otherwise record press validation as not
+   `./nb validate --repo .`. Otherwise record press validation as not
    applicable.
 4. Use the same search and browsing tools scheduled research will use. Search
    for a harmless current topic, then open two independent non-GitHub source
@@ -40,7 +40,7 @@ target `library`, merge a pull request, or trigger Pages.
    to open a draft pull request against `main`. Never open it against
    `library`.
 6. Confirm that GitHub registers the ordinary `main` pull-request checks. A
-   registered check may still be running; the purpose here is to prove the
+   registered check may still be running. The purpose here is to prove the
    trigger and permissions, not to certify the engine through a smoke-only
    change.
 7. Close the draft pull request without merging it, delete the remote branch,

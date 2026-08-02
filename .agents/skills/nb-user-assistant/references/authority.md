@@ -14,12 +14,12 @@ how this version of The Nightly Build works. Inspect before advising or editing.
 - The checkout-owned `nb` command is the operational boundary. Use its help and
   current behavior rather than reconstructing commands.
 - `library` is publication state. New articles use `nb prepare-pr`. Revisions
-  use an ordinary branch from `origin/library`; never push directly to the
+  use an ordinary branch from `origin/library`. Never push directly to the
   `library` branch.
 
-One fact gets one owner. Skills provide judgment and procedure; docs and config
-own product facts. Link rather than copy field lists, provider instructions,
-or engine contracts into a workflow.
+One fact gets one owner. Skills provide judgment and procedure. Docs and
+config own product facts. Link rather than copy field lists, provider
+instructions, or engine contracts into a workflow.
 
 ## Working agreement
 

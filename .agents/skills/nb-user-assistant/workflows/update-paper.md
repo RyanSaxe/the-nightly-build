@@ -1,8 +1,8 @@
 # Update a paper
 
-Read `docs/guides/operate/manage-your-paper.md` and the relevant reference page. Read
-[prompt authoring](../craft/prompt-authoring.md) whenever prose direction will
-change.
+Read `docs/guides/operate/manage-your-paper.md` and the relevant reference
+page. Read [prompt authoring](../craft/prompt-authoring.md) whenever prose
+direction will change.
 
 ## Diagnose the request
 
@@ -20,7 +20,7 @@ Translate the user's observation into its true owner before editing:
 - a presentational need may belong in existing furniture before new design
 
 Route feedback across the full customization surface before concluding
-something cannot be prevented; the feature catalog
+something cannot be prevented. The feature catalog
 (`docs/reference/README.md`) maps every mechanism. When the fix is genuinely
 infeasible in the current system but plausibly simple in the engine, offer to
 open a feature request on the upstream repository, only with the user's
@@ -34,7 +34,7 @@ copy their structure forward or tour the archive for background.
 Explain the observed failure, the owning layer, and how the proposed change
 will alter future output. Test it against at least one intended case and one
 case it should not affect. A prompt addition that merely describes the last
-bad article is overfit; rederive the editorial principle.
+bad article is overfit. Rederive the editorial principle.
 
 Apply the change on `main`, run `nb validate`, and preview when appearance,
 furniture, or templates change. Keep unrelated improvements out of the diff.

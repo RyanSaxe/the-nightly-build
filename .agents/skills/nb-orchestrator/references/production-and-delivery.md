@@ -1,7 +1,7 @@
 # Production and delivery
 
 Coordinate the editorial roles without duplicating their judgment. The
-orchestrator owns sequencing, context, and delivery; each named role owns its
+orchestrator owns sequencing, context, and delivery. Each named role owns its
 bounded editorial decisions.
 
 ## Run the edition as a parallel pipeline
@@ -37,8 +37,8 @@ Every role receives `editorial-direction.md` with its brief. The editor also
 receives the exact writer brief so instruction leakage remains visible. A
 `review-brief.md` carries the named inputs, your recent-pattern notes, and the
 round's focus. Nothing more. Every launch begins with its named inputs and
-permits focused tool use. A role may ask for more context; expand its inputs
-or route the question to the owner rather than inviting repository
+permits focused tool use. When a role asks for more context, expand its
+inputs or route the question to the owner rather than inviting repository
 exploration.
 
 If isolated children are unavailable, perform the same numbered sequence in
@@ -60,10 +60,9 @@ stalls or repeats a failed round, or you take the work over.
 Use the harness's actual task state to supervise active roles. When a role
 fails, stalls, or returns without its artifact, inspect the available evidence
 and supply missing context before relaunching it. Do not start a duplicate
-while the original invocation is still active. However, do not assume silence
-means progress. Issues can occur where an agent may fail or stall without any
-notification, and it is your job to make sure that does not happen. If a process
-is silent for more than 10 minutes, just check in to see what is going on.
+while the original invocation is still active. Do not assume silence means
+progress: a role can fail or stall without any notification. Check on any
+invocation that has been silent for more than 10 minutes.
 
 Lastly, interrupt, reassign, or take over only when the owning role cannot
 complete the work.
@@ -107,10 +106,10 @@ proof fails, fix a mechanical fault yourself or route the finding to its owning
 role. A prose change needs a fresh editor approval before preparing again.
 
 Monitor every Article PR through CI, merge, and the published website while
-other articles continue. Route a CI failure back through production, update the
-existing PR, and prove it again.
-The run ends only with published articles or a clearly recorded external
-blocker; it never leaves an abandoned red PR.
+other articles continue. Route a CI failure back through production, update
+the existing PR, and prove it again. The run ends only with published
+articles or a clearly recorded external blocker. It never leaves an abandoned
+red PR.
 
 Never merge or push to `library` directly. The protected workflow branch
 created by `nb sync` is the sole non-article exception and may be used only as

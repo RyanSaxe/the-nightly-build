@@ -24,8 +24,8 @@ it from the orchestrator.
 2. Find at least three exemplars by writers the field itself rates. Skip
    influencers and SEO content. Prefer the primary piece over commentary.
    Choose exemplars that already sound the way this article should sound. A
-   playful series needs writers who are fun to read; expertise alone does not
-   qualify a dry writer for it.
+   playful series needs writers who are fun to read, and expertise alone does
+   not qualify a dry writer for it.
 3. Read each as a writer studies a writer. Capture cadence, argument, evidence,
    stance, notice, diction, relationship with the reader, and the important
    move those axes miss. If two notes differ only in adjectives, read again.

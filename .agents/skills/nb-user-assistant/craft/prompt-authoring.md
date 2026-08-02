@@ -19,7 +19,7 @@ Define voice through attention, compression, rhythm, stance, and concrete
 examples or anti-examples, not through celebrity names or empty adjectives.
 
 Use requirements lists only for closed contracts. Territory prose stays open
-ground. Never write sample article sentences; any line the writer could paste
+ground. Never write sample article sentences. Any line the writer could paste
 into publication is a defect.
 
 ## Critique before shipping

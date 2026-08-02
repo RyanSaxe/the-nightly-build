@@ -8,7 +8,7 @@ Paper-wide identity has two owners:
   footer, and directory settings. See [Site reference](../../reference/site.md).
 
 Write editorial direction as decisions a writer can apply. Ground it in
-specific examples and counterexamples; naming an outlet or asking for
+specific examples and counterexamples. Naming an outlet or asking for
 "engaging" prose is not enough. Put paper-wide commitments here, series
 territory in each `prompt.md`, and one-off angles in configured item prompts.
 
@@ -25,26 +25,23 @@ To create a custom theme:
 
 The builder republishes the selected theme as `assets/theme.css`, so theme and
 furniture CSS restyle the back catalog. Template HTML keeps the font links it
-was authored with; changing a font token alone does not install a web font.
+was authored with, so changing a font token alone does not install a web font.
 
 Themes, furniture, and templates are yours to define in `press/` with no
 engine edit. The site's frame is not: the top navigation, the front-page
 layout, and how each series-page mode renders are fixed by the engine. A new
 navigation entry or a different front page is an engine contribution, which
-takes the fork off the conflict-free `press/`-only update path. The look and
-structure inside a page are unbounded; the frame around it is the ceiling of
-customizing within `press/`.
+takes the fork off the conflict-free `press/`-only update path.
 
 ## Banned terms: press/banned-terms.yaml
 
-One banned habit gets mechanical teeth. The proof counts every article against
-a list of ruled-out strings; each entry carries the exact strings to match, the
-most uses an article may keep, and the note the writer sees when the count runs
-over. The engine seeds the list in `spec/banned-terms.yaml`. An over-limit
-count is a `W-BANNED-TERM` warning, promoted to a block when the series sets
-`strict`. Counting covers the rendered text (title, dek, headings, body) minus
-the sources section, case-insensitively, so "leverage" also catches
-"leveraged".
+The proof counts every article against a list of ruled-out strings. Each
+entry carries the exact strings to match, the most uses an article may keep,
+and the note the writer sees when the count runs over. The engine seeds the
+list in `spec/banned-terms.yaml`. An over-limit count is a `W-BANNED-TERM`
+warning, promoted to a block when the series sets `strict`. Counting covers
+the rendered text (title, dek, headings, body) minus the sources section,
+case-insensitively, so "leverage" also catches "leveraged".
 
 Your press layers `press/banned-terms.yaml` over the seed, by `id`:
 
@@ -65,7 +62,7 @@ Your press layers `press/banned-terms.yaml` over the seed, by `id`:
   enabled: false
 ```
 
-Write each `suggestion` as the correction you would give a writer, aimed at the
-rewrite. A ban satisfied by swapping in a synonym trades one tell for another;
-the sentence that reached for the term is the thing to fix. `nb validate`
-checks both files, so a typo surfaces before a scheduled run trips on it.
+Write each `suggestion` as the correction you would give a writer. A synonym
+swap keeps the underlying problem, so point the note at rewriting the
+sentence, not replacing the word. `nb validate` checks both files, so a typo
+surfaces before a scheduled run trips on it.

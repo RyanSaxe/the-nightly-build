@@ -36,3 +36,8 @@ ordinary prose so it improves the page rather than dominating it.
 Revise until the component remains legible, useful, and visually part of the
 paper under all tested cases. A passing stylesheet or attractive screenshot is
 not sufficient evidence.
+
+The component belongs to the user's taste. Build the candidates as genuinely
+different options, offer to open the rendered gallery and article pages in
+their browser for reaction, and iterate from what they say before treating
+the design as done.

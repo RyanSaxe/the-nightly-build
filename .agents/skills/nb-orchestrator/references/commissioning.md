@@ -14,7 +14,7 @@ Read the layers that apply to the selected article in this order:
 3. the selected template's manifest, skeleton, identity, and furniture
 4. the series prompt, declared tag fragments in order, and selected item
 
-Later layers specialize earlier ones; they do not silently waive them. Never
+Later layers specialize earlier ones. They do not silently waive them. Never
 paraphrase these layers: supply the generated `editorial-direction.md` itself,
 to exactly the roles production and delivery names as its recipients.
 
@@ -25,7 +25,7 @@ question requires the prose itself. Record relevant prior coverage and recent
 openers, conclusions, and outline shapes as habits not to inherit
 automatically. Never record template-required furniture or fixed labels as
 habits to avoid: the proof requires them, and only optional choices repeat.
-Publication history informs context; it is never a template.
+Publication history informs context. It is never a template.
 
 ## Plan the articles together
 

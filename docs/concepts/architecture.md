@@ -11,12 +11,12 @@ work is safe to publish.
 
 The paper owner describes the publication under `press/` on `main`:
 
-- `site.yaml` defines paper-wide identity, appearance, and delivery;
-- `editorial.md` defines the shared editorial direction;
+- `site.yaml` defines paper-wide identity, appearance, and delivery
+- `editorial.md` defines the shared editorial direction
 - each `series/` entry defines a recurring section, its cadence, article mode,
-  source policy, prompt, and publication policy; and
-- production policy selects the model profile and reasoning effort available to
-  each article-making role.
+  source policy, prompt, and publication policy
+- production policy selects the model profile and reasoning effort available
+  to each article-making role
 
 This is configuration, not publication state. Scheduled work always starts
 from the current `main` branch, while published articles, assets, and
@@ -37,7 +37,7 @@ user assistant configures it.
 When the runtime supports isolated child agents, separate articles can proceed
 in parallel. A runtime without that capability can execute the same commissions
 sequentially. Isolation prevents one article's sources, drafts, or instructions
-from leaking into another article's context; it does not change the published
+from leaking into another article's context. It does not change the published
 result or the CI contract.
 
 ## One article run has four editorial roles
@@ -73,10 +73,10 @@ Agents use the repository-owned `nb` command for operations that should not
 depend on model judgment. The right side of the diagram calls out four common
 ones:
 
-- searching published history for narrowly requested prior coverage;
-- checking article structure, metadata, sources, prose, and PR shape;
-- rendering charts and capturing permitted article assets; and
-- previewing the article with its real template and site styles.
+- searching published history for narrowly requested prior coverage
+- checking article structure, metadata, sources, prose, and PR shape
+- rendering charts and capturing permitted article assets
+- previewing the article with its real template and site styles
 
 The same proof code runs locally and in CI. Local success is therefore useful
 evidence before delivery, but it never replaces the server-side gate.
@@ -89,8 +89,8 @@ against the exact commit, and creates or describes an Article PR. A normal new
 article PR contains one HTML article, its local assets, and its complete role
 record.
 
-Generated branches and `.nb-work/` are disposable production machinery. The PR
-commit is the proposed publication; merging that commit is the only way an
+Generated branches and `.nb-work/` are disposable working state. The PR
+commit is the proposed publication. Merging that commit is the only way an
 article becomes part of the paper.
 
 ## CI is the trust boundary

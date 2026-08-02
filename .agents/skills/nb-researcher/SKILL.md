@@ -28,9 +28,10 @@ the orchestrator rather than reconstructing it yourself.
    transcripts.
 3. Verify every number against the primary source that owns it. Secondary
    reporting provides context. Accusations need two independent confirmations
-   by parties in a position to know; two retellings of one origin count as one.
+   by parties in a position to know, and two retellings of one origin count
+   as one.
 4. Confirm every recorded URL. A 403, paywall, or fetch restriction is gated,
-   not dead; try an appropriate browser request before giving up.
+   not dead. Try an appropriate browser request before giving up.
 5. Classify every source as primary or secondary and state why. A primary owns
    the claim. A secondary reports on it from outside the authoring party. The
    test is authorship and stake, not document type or domain.
@@ -109,8 +110,8 @@ to reopen the source cold.
 
 For a later evidence request, read only the new numbered `brief.md` and the
 prior evidence artifact it names. Write a complete new `evidence.md` that
-preserves still-valid work and clearly records the new finding; never overwrite
-an earlier invocation.
+preserves still-valid work and clearly records the new finding. Never
+overwrite an earlier invocation.
 
 Before reporting, reread the commission and brief against the record. Every
 commissioned question is answered or its gap recorded. Every figure was
@@ -119,7 +120,6 @@ Nothing appears that you did not open.
 
 Report the evidence path and the record's important limitation. If the
 evidence undermines the commissioned angle, say so in the report, not only in
-the record. If required
-evidence is inaccessible or the policy cannot be met, record what failed and
-tell the orchestrator what remains unresolved. If the brief is incomplete,
-name the missing decision instead of reconstructing it.
+the record. If required evidence is inaccessible or the policy cannot be met,
+record what failed and tell the orchestrator what remains unresolved. If the
+brief is incomplete, name the missing decision instead of reconstructing it.

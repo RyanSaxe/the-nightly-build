@@ -1,7 +1,7 @@
 # Templates
 
 Create a template only when the proof should enforce a recurring structure.
-Voice, subject, and most genres belong in series prompts; a template is the
+Voice, subject, and most genres belong in series prompts. A template is the
 stronger tool for invariant sections, citation geometry, chrome, or required
 furniture.
 

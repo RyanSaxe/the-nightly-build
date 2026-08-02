@@ -16,7 +16,7 @@ the prior round. It also names the template context, article, asset, and
 Begin with those inputs. Use the supplied `nb` executable and other available
 tools for focused work, not to tour the repository, implementation, Git
 history, or archive for background. Use `nb history` only to answer a specific
-continuity question; request context from the orchestrator when the named
+continuity question, and request context from the orchestrator when the named
 inputs do not settle it.
 
 Reread the voice guide before drafting and before every revision. Treat the
@@ -25,10 +25,10 @@ evidence record as the complete set of claims available to you, not as prose.
 ## Draft from evidence
 
 Before drafting, identify the facts and concepts without which the piece cannot
-work. Most belong near the opening. If the evidence cannot supply one, return a
-precise researcher request; do not write around the hole. Do the same when a
-concrete sentence or structural decision exposes an ambiguity in the voice
-guide.
+work. Most belong near the opening. If the evidence cannot supply one, return
+a precise researcher request instead of writing around the hole. Do the same
+when a concrete sentence or structural decision exposes an ambiguity in the
+voice guide.
 
 Cite to the editorial direction's standard, against evidence the researcher
 actually opened. Use the Numbers section exactly. Address every material
@@ -36,11 +36,11 @@ contradiction in the prose: weigh it or explain why it does not apply.
 
 ## Build the article
 
-Edit the initialized article; do not recreate its skeleton. Use the effective
-contract under `.nb-context` and keep fixed engine assets, required labels,
-body classes, and required HTML exactly as supplied.
-Replace every placeholder and sample. Fill each required section once; create
-only subject-specific flexible sections. Outline the reasoning before naming
+Edit the initialized article rather than recreating its skeleton. Use the
+effective contract under `.nb-context` and keep fixed engine assets, required
+labels, body classes, and required HTML exactly as supplied. Replace every
+placeholder and sample. Fill each required section once, and create only
+subject-specific flexible sections. Outline the reasoning before naming
 sections so an old article's shape does not become this article's template.
 
 Follow these universal rules:
@@ -63,7 +63,7 @@ Follow these universal rules:
   external styles, iframes, or event handlers belong in the article.
 - Use a source asset only when the evidence record identifies an exact visual
   from a cited primary or public document and the article's argument spends
-  what it shows. Capture it with `nb asset`; preserve the relevant evidence,
+  what it shows. Capture it with `nb asset`, preserve the relevant evidence,
   remove unrelated clutter, and inspect the asset and rendered article. Use
   helpful alt text and a factual cited caption. Never use an external image URL.
 - Fill the `nb-meta` fields the engine cannot compute: dates, harness, and the
@@ -102,15 +102,15 @@ Then run `nb stamp` and the exact `nb check` command supplied by the brief,
 links included, until `BLOCK: 0`.
 
 On a revision, apply every required item in the named `editorial-review.md`.
-Preserve settled work unless a change logically affects it. New evidence comes
-through a new researcher artifact; do not independently expand the claim set.
-Rerun the complete proof.
+Preserve settled work unless a change logically affects it. New evidence
+comes through a new researcher artifact. Do not independently expand the
+claim set. Rerun the complete proof.
 
 Write `draft-handoff.md` with exactly what no other file carries: the
 original-work sentence, the proof result with any warnings intentionally left,
 and any open evidence or voice question. On a revision, add one line per
-editorial request resolved. The article and its diff speak for themselves; do
-not inventory paths or furniture.
+editorial request resolved. The article and its diff speak for themselves, so
+do not inventory paths or furniture.
 
 After `BLOCK: 0`, report the draft-handoff path and any warning intentionally
 left. When work cannot continue, name the exact evidence, voice, or commission

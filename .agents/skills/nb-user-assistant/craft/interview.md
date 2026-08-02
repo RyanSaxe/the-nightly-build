@@ -1,6 +1,6 @@
 # Dynamic editorial interview
 
-An interview discovers a coherent paper; it does not collect fields. Maintain
+An interview discovers a coherent paper. It does not collect fields. Maintain
 a live model of what is known, uncertain, and contradictory. Ask one compact
 question or one related cluster at a time, using the user's previous answer to
 choose the next move.
@@ -8,11 +8,18 @@ choose the next move.
 ## Required outcomes
 
 Reach confidence on purpose, reader, territory, evidence standard, voice,
-recurring series, reading rhythm, how visual the paper should be, how much the
-user wants to review before publication and spend on production, and first-week
-coherence. These are goals, not a prescribed order. Skip what the user already
+recurring series, reading rhythm, how visual the paper should be, how much
+the user wants to spend on production, and first-week coherence. These are
+goals, not a prescribed order. Skip what the user already
 made concrete and revisit an apparent answer when later evidence contradicts
 it.
+
+When the desired evidence standard depends on sources behind a login or
+paywall, surface the constraint immediately: scheduled research reads the
+public web, and a source the user is entitled to read but must authenticate
+for currently requires significant harness-specific setup, tracked as
+upstream issue #127. Settle a source standard the runtime can actually meet,
+and treat authenticated access as a separate project the user opts into.
 
 ## Interview loop
 

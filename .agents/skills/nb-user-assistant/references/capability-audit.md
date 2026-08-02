@@ -1,8 +1,9 @@
 # Capability audit
 
 Audit the conversational assistant and scheduled runtime separately. Record
-each requirement as `passed`, `failed`, or `not verified`; never infer that one
-environment has another environment's tools, identity, network, or approvals.
+each requirement as `passed`, `failed`, or `not verified`. Never infer that
+one environment has another environment's tools, identity, network, or
+approvals.
 
 ## Current assistant
 

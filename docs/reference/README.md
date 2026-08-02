@@ -1,8 +1,7 @@
 # Feature catalog
 
-The Nightly Build is a configurable publishing system, not one fixed newspaper.
-This catalog is the quickest way to see what the released engine supports and
-where each capability is controlled.
+The Nightly Build is a configurable publishing system. This catalog maps what
+the released engine supports and where each capability is controlled.
 
 ## Shape the paper
 
@@ -57,7 +56,7 @@ where each capability is controlled.
 
 The production policy controls article roles, not the scheduled orchestrator.
 Choose the orchestrator's model in the scheduler or automation where it runs.
-The engine does not estimate model cost; use the provider's usage reporting.
+The engine does not estimate model cost. Use the provider's usage reporting.
 
 ## Design articles and the site
 
@@ -88,5 +87,5 @@ The engine does not estimate model cost; use the provider's usage reporting.
 For a complete working press, browse `examples/`. It demonstrates all four
 modes, daily and day-list cadences, source policies, production policy,
 themes, furniture, and series prompts without acting as configuration for your
-own paper. Not every capability in this catalog has an example; the reference
+own paper. Not every capability in this catalog has an example. The reference
 pages above are the complete contract.

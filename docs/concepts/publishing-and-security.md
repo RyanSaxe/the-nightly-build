@@ -17,9 +17,9 @@ and requires rendered-browser success.
 
 Every valid new-article PR auto-merges, as does a workflow-synchronization PR
 that exactly copies the protected workflows from `main`. Revisions and owner
-curation never auto-merge. A revision may change one published article's HTML and/or matching
-assets. It adds one numbered Markdown note explaining the change and cannot
-rewrite earlier notes or the historical production record.
+curation never auto-merge. A revision may change one published article's HTML
+and/or matching assets. It adds one numbered Markdown note explaining the
+change and cannot rewrite earlier notes or the historical production record.
 
 `main` starts unprotected on purpose: the owner can edit the press and push
 directly, without the ceremony of approving their own pull request. The cost

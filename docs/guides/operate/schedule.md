@@ -20,9 +20,8 @@ list. One schedule can run the whole paper because series own their cadence.
 `cadence: manual` series never appear as due.
 
 Choose a scheduler only after its actual unattended environment meets all six
-requirements. Candidate provider entrypoints are listed in
-[Integrations](../../integrations/README.md), but a link to an automation
-product is not proof that it satisfies this contract.
+requirements. Verified runtimes and remaining candidates are listed in
+[Integrations](../../integrations/README.md).
 
 A self-hosted GitHub Actions cron path is planned but not yet verified: a PR
 opened with the workflow's own `GITHUB_TOKEN` cannot trigger the required
@@ -40,10 +39,11 @@ Keep the external schedule prompt deliberately small:
 > This paragraph is the entire assignment. If that file is unavailable, stop
 > and report the missing repository entrypoint.
 
-The repository owns the workflow; the scheduler only owns location and
-authority. The scheduled agent itself becomes the orchestrator; it never
-launches an orchestrator subagent. Replace prompts that restate commands, role
-sequences, validation rules, or branch mechanics because those copies drift.
+The repository owns the workflow. The scheduler owns only location and
+authority. The scheduled agent loads the orchestrator skill in the same
+context. It does not launch an orchestrator subagent. Replace prompts that
+restate commands, role sequences, validation rules, or branch mechanics
+because those copies drift.
 
 ## Verification prompt
 

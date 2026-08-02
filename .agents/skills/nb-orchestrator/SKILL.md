@@ -26,7 +26,7 @@ allowed contract.
    its exact invocation. Do not make a bounded role reconstruct the repository.
 
 Do not load a bounded role until its inputs exist. Commissioning owns article
-planning and initialization; production and delivery owns everything after the
+planning and initialization. Production and delivery owns everything after the
 commission is complete.
 
 ## Hold the invariants

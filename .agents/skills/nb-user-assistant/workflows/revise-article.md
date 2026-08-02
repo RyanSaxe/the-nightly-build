@@ -12,10 +12,10 @@ from a change to meaning, evidence, voice, structure, or visual communication,
 and surface any consequence the user may not have intended.
 
 Choose the smallest process that can produce a trustworthy result. Do not
-assign a tier or require a questionnaire. A direct local edit can be right for
-a typo; a researcher, writer, editor, writing coach, web search, or complete
-redraft can be right for deeper work. No role is mandatory, and using a role
-does not make its artifact part of the revision PR.
+assign a tier or require a questionnaire. A direct local edit can be right
+for a typo, and a researcher, writer, editor, writing coach, web search, or
+complete redraft can be right for deeper work. No role is mandatory, and
+using a role does not make its artifact part of the revision PR.
 
 ## Make and verify the change
 
@@ -33,8 +33,8 @@ When another role or model would help, give it a purpose-built brief containing:
 
 Reopen and verify evidence when claims, citations, numbers, or interpretations
 change. For a figure, inspect its source data, labels, caption, alternative
-text, article references, and narrow/wide rendering; regenerate or replace the
-matching asset rather than preserving a misleading visual.
+text, article references, and narrow/wide rendering. Regenerate or replace
+the matching asset rather than preserving a misleading visual.
 
 Run the full current proof. Preview every visual or structural change and
 compare it with the published page and the user's requested outcome.

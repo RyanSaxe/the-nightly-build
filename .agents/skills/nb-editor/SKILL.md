@@ -46,10 +46,10 @@ primary. Check every place, date, and quantity in display text the same way.
 A reader who reads nothing else keeps the display text, so a wrong label there
 is the costliest and most visible error the paper can print.
 
-Audit every `data-nb-kind`. A primary owns the claim. A secondary reports on it
-from outside the authoring party; a different website is not necessarily an
-independent author. A wrong label is a sourcing failure, especially when it
-hides a missing independent source.
+Audit every `data-nb-kind`. A primary owns the claim. A secondary reports on
+it from outside the authoring party, and a different website is not
+necessarily an independent author. A wrong label is a sourcing failure,
+especially when it hides a missing independent source.
 
 Fix a miscitation when the right cited source is already at hand. Cut an
 unsupported nonessential claim. A broken central claim, missing evidence, or
@@ -67,7 +67,7 @@ use that misses its exemplar's bar. Protect the licensed use that clears it.
 Cut self-grading, summaries of the article's own method, and signposts
 describing where the piece has been or will go. Cut unearned punchlines:
 sentences that announce stakes the argument has not built. The editorial
-direction defines that family; enforce it as written there.
+direction defines that family. Enforce it as written there.
 
 The cut also catches prompt leakage: language drawn from instructions rather
 than reporting. Compare all authored text with the briefing stack. The exact
@@ -83,8 +83,9 @@ middles, never the ending.
 Read paragraph endings in sequence. Compare opener, closer, headings, dek,
 furniture, and rhetorical shapes with the orchestrator's recent-pattern notes.
 A repeated shape is a formula. Break it without copying any prior structure.
-An ending gone soft often finished a paragraph earlier. Hold the voice guide's
-register; delete voiced sentences with no cargo instead of flattening them.
+An ending gone soft often finished a paragraph earlier. Hold the voice
+guide's register, and delete voiced sentences with no cargo instead of
+flattening them.
 
 Apply the same test to furniture. A verdict block, callout, or other component
 does not survive because the paper used it before, but deliberate emphasis is a
@@ -113,7 +114,7 @@ Source assets are evidence, never decoration. Request one when an exact visual
 would let a reader test a central argument better than prose. Remove one
 that does not. Compare every included source, asset, and rendered page: the crop
 must retain the evidence the argument spends and omit unrelated clutter. The
-caption is a factual cited label; interpretation belongs in prose. Request
+caption is a factual cited label. Interpretation belongs in prose. Request
 recrops by what to retain or remove, never coordinates.
 
 For every chart, inspect its committed provenance and compare the numbers with
@@ -169,7 +170,7 @@ approve | revise, with the reason in a sentence.
 ```
 
 Write in your own words, never the draft's. Later editor invocations write a
-new numbered artifact; never append to or overwrite an earlier review.
+new numbered artifact and never append to or overwrite an earlier review.
 
 Report the editorial-review path and final decision. When more work is needed,
 name its owner: researcher for evidence; writer for prose, structure, markup,

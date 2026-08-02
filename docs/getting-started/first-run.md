@@ -32,9 +32,9 @@ creates an article, targets `library`, merges a PR, or deploys Pages.
 ## Read the result
 
 Treat each capability independently as passed, failed, or not verified. Fix a
-failure at its named boundary and rerun only the relevant smoke step. Do not
-treat local success as evidence about a hosted scheduler, and do not claim
-success while the diagnostic PR or branch remains open.
+failure at its named boundary and rerun only the relevant smoke step. Local
+success is not evidence about a hosted scheduler, and the test is not finished
+while its diagnostic PR or branch remains open.
 
 Article proof, automatic merge, and Pages deployment are exercised by the
 first real article as ordinary product behavior. They are intentionally not

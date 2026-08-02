@@ -4,9 +4,9 @@ Your press and the engine have separate ownership. A normal upstream update
 changes engine-owned files on `main` and leaves both `press/` and `library`
 alone.
 
-From GitHub, use **Sync fork**. The next scheduled run starts with `nb sync` and
-repairs protected publishing workflows through their own CI-gated PR when
-needed; an exact sync PR merges automatically once validated. The sync also
+From GitHub, use **Sync fork**. The next scheduled run starts with `nb sync`
+and repairs protected publishing workflows through their own CI-gated PR when
+needed. An exact sync PR merges automatically once validated. The sync also
 validates the press against the updated engine, so a key the engine retired
 surfaces immediately instead of changing publication behavior silently.
 

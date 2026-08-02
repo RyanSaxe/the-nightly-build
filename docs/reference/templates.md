@@ -21,7 +21,7 @@ package replaces a shipped package with the same ID wholesale.
 ## Shipped templates
 
 The engine ships six packages. Each manifest carries the exact enforced
-geometry; these are their one-line identities:
+geometry. Their one-line identities:
 
 - `article`: enforced cited prose, two anchors plus flexible sections, every
   section cited.
@@ -32,7 +32,7 @@ geometry; these are their one-line identities:
   never skip the strongest opposing case.
 - `paper`: reporting on one research paper, with the source's abstract and
   link anchored first.
-- `unbiased`: an enforced two-sided format; a one-sided article blocks.
+- `unbiased`: an enforced two-sided format where a one-sided article blocks.
 
 ## Manifest
 
@@ -77,7 +77,7 @@ composition policies also require skeleton source entries to declare
 The skeleton supplies the complete article shell, one typed `#nb-meta` JSON
 block, engine asset links, title and dek chrome, declared sections, source
 markup, and instructional placeholders. Use uppercase placeholders so they
-cannot be mistaken for finished copy; surviving placeholder text produces a
+cannot be mistaken for finished copy. Surviving placeholder text produces a
 warning.
 
 Finished articles must remain inside the article sandbox: no authored scripts,

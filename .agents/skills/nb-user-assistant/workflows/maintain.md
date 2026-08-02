@@ -10,13 +10,13 @@ Route maintenance to the canonical guide before acting:
 
 Inspect state and diagnose before mutating. Preserve user changes and keep
 engine updates separate from press edits. Run `nb sync` through the documented
-path; never repair protected `library` workflow files by hand.
+path, and never repair protected `library` workflow files by hand.
 
 For curation, distinguish correction from removal. A correction uses the
-revision workflow. A retraction is an owner-authored deletion-only PR containing
-one article and its matching local assets; it does not delete or rewrite role
-history as part of an article production PR. Never push the deletion directly
-to `library`.
+revision workflow. A retraction is an owner-authored deletion-only PR
+containing one article and its matching local assets. It does not delete or
+rewrite role history as part of an article production PR. Never push the
+deletion directly to `library`.
 
 When troubleshooting, report the failing boundary, direct evidence, and the
 next test. Do not retry unchanged work indefinitely or paper over a permission

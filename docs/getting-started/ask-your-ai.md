@@ -1,7 +1,7 @@
 # Ask your AI
 
 The easiest setup path is to give this repository to the AI tool you already
-use. It needs to be able to work with GitHub; it does not need to be the same
+use. It needs to be able to work with GitHub. It does not need to be the same
 tool that will run scheduled publication.
 
 Send it this repository URL and say:

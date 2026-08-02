@@ -34,7 +34,7 @@ External assets are owner-authored configuration. Scripts do not relax the
 article sandbox: articles still cannot add scripts, handlers, frames, forms,
 or other active content. Pin exact versions and preview both success and
 no-JavaScript behavior. Declared stylesheets also join the proof's class
-inventory, so a dependency's classes are never reported dead; see
+inventory, so a dependency's classes are never reported dead. See
 [Furniture](../guides/customize/furniture.md).
 
 See [Appearance and voice](../guides/customize/appearance-and-voice.md) for

@@ -1,8 +1,8 @@
 # Production cost and role models
 
 The scheduled orchestrator uses the model selected in your automation. Article
-roles can use cheaper models without changing the schedule by adding the optional
-`press/production.yaml` file:
+roles can use cheaper models without changing the schedule by adding the
+optional `press/production.yaml` file:
 
 ```yaml
 profile: balanced
@@ -15,8 +15,8 @@ stages:
 
 The four profiles are `inherit`, `economy`, `balanced`, and `quality`. A press
 with no production file uses `balanced`, the cost-aware default. Set
-`profile: inherit` explicitly to preserve the harness's existing model and effort
-for every role.
+`profile: inherit` explicitly to preserve the harness's existing model and
+effort for every role.
 
 Profiles use portable model tiers:
 
@@ -30,10 +30,10 @@ offers. To pin one provider instead, write its exact model ID. Effort is also a
 plain string because providers expose different levels.
 
 The orchestrator launches every article role directly. Each role receives an
-exact brief and only the article context it needs; when isolated children are
-unavailable, the same artifact sequence runs in one context. The policy controls
-those four launches; it does not select the orchestrator itself and does not
-require nested agents or a provider-specific team feature.
+exact brief and only the article context it needs. When isolated children are
+unavailable, the same artifact sequence runs in one context. The policy
+controls those four launches. It does not select the orchestrator itself and
+does not require nested agents or a provider-specific team feature.
 
 ```yaml
 stages:
