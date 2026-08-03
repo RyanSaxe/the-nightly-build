@@ -9,10 +9,9 @@ choose the next move.
 
 Reach confidence on purpose, reader, territory, evidence standard, voice,
 recurring series, reading rhythm, how visual the paper should be, how much
-the user wants to spend on production, and first-week coherence. These are
-goals, not a prescribed order. Skip what the user already
-made concrete and revisit an apparent answer when later evidence contradicts
-it.
+production usage the user can sustain, and first-week coherence. These are
+goals, not a prescribed order. Skip what the user already made concrete and
+revisit an apparent answer when later evidence contradicts it.
 
 When the desired evidence standard depends on sources behind a login or
 paywall, surface the constraint immediately: scheduled research reads the
@@ -20,6 +19,28 @@ public web, and a source the user is entitled to read but must authenticate
 for currently requires significant harness-specific setup, tracked as
 upstream issue #127. Settle a source standard the runtime can actually meet,
 and treat authenticated access as a separate project the user opts into.
+
+## Settle sustainable production usage
+
+Learn how the scheduled runtime is billed before discussing production cost.
+A subscription has provider-specific plan limits. Token totals do not reveal
+what share of a weekly or monthly allowance one run will consume. Say that
+plainly. Use the provider's usage report after the first normal production run
+as the baseline, then help the user adjust the paper from measured experience.
+The scheduled-runtime smoke test does not produce articles and cannot supply
+that baseline.
+
+A metered API supports a dollar estimate only when the exact provider, models,
+and current input, output, and cached-token prices are known. Give an estimate
+only when the user asks for one. Include likely repeated role invocations and
+identify continuing orchestrator usage as unknown unless the runtime measured
+it. Never convert a published token observation into a subscription estimate.
+
+Turn the user's tolerance into editorial and production choices. Article count
+and cadence set how much work becomes due. Series boundaries and commissioned
+items control how much discovery the researcher must do. Production policy can
+assign different model tiers to each role and series. Preserve every editorial
+role, evidence requirement, and proof gate when reducing usage.
 
 ## Interview loop
 

@@ -16,6 +16,8 @@ Translate the user's observation into its true owner before editing:
 - a repeated word or verbal tic belongs in `press/banned-terms.yaml`
 - timing and item admission belong in `series.yaml`
 - evidence composition belongs in source policy fields
+- recurring production usage may belong in cadence, series boundaries,
+  commissioned items, or production policy
 - an isolated article correction belongs in the revision workflow
 - a presentational need may belong in existing furniture before new design
 
@@ -40,3 +42,11 @@ Apply the change on `main`, run `nb validate`, and preview when appearance,
 furniture, or templates change. Keep unrelated improvements out of the diff.
 If confidence depends on article output, recommend a local preview before the
 change lands.
+
+When the user wants to reduce production usage, read
+`docs/reference/production.md` and establish the runtime's billing model. Do
+not promise a subscription percentage from token counts. For metered API use,
+estimate dollars only when the exact models and current prices are known. Name
+the expected direction of the change, then use the provider's report from the
+next normal production run to judge its effect. Never trade away an evidence
+rule, editorial role, editor approval, or deterministic proof to lower usage.

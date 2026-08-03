@@ -13,7 +13,7 @@ Every decision the press encodes gets settled this way. At a minimum:
 - what counts as evidence and which sources qualify
 - how the paper should sound, tested against real examples
 - the reading rhythm: how often, how long, how visual
-- how much you want to spend on production
+- how the runtime is billed and how much production usage you can sustain
 
 The output becomes a small configuration tree:
 
