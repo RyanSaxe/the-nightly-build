@@ -59,7 +59,9 @@ COMMANDS = {
         "engine/check.py", "Check an article or Article PR", "writer, editor, CI"
     ),
     "stamp": Command(
-        "engine/stamp.py", "Write the computed nb-meta counts", "writer, editor"
+        "engine/stamp.py",
+        "Write computed article counts and reading time",
+        "writer, editor",
     ),
     "preview": Command(
         "engine/build_site.py",

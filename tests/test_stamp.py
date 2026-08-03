@@ -2,15 +2,21 @@
 
 words, sources, and reading_minutes are properties of the article text; no
 agent hand-declares them. Stamping writes the same numbers the proof counts,
-touches nothing outside the nb-meta block, and refuses files it cannot
+projects reading time into the standard byline, and refuses files it cannot
 stamp precisely.
 """
+
+import pathlib
 
 import pytest
 
 import stamp
 from nb import meta as nb_meta
 from press import article
+
+TEMPLATES = sorted(
+    (pathlib.Path(__file__).parents[1] / "templates").glob("*/skeleton.html")
+)
 
 
 def test_stamp_writes_the_counted_totals() -> None:
@@ -23,7 +29,33 @@ def test_stamp_writes_the_counted_totals() -> None:
     assert meta["reading_minutes"] == counts["reading_minutes"] >= 1
 
 
-def test_stamp_is_idempotent_and_touches_only_the_meta_block() -> None:
+@pytest.mark.parametrize("template", TEMPLATES, ids=lambda path: path.parent.name)
+def test_stamp_writes_shipped_template_reading_time(template: pathlib.Path) -> None:
+    stamped, counts = stamp.stamp_source(template.read_text(encoding="utf-8"))
+
+    assert "N min read" not in stamped
+    assert f"<span>{counts['reading_minutes']} min read</span>" in stamped
+
+
+def test_stamp_refreshes_reading_time_after_the_article_changes() -> None:
+    source = article().replace(
+        "</header>",
+        "<p>N min read outside the byline.</p>\n"
+        '<div class="nb-byline">\n<span>N min read</span>'
+        "<span>2026-07-06</span>\n</div>\n</header>",
+        1,
+    )
+    stamped, before = stamp.stamp_source(source)
+    expanded = stamped.replace("</article>", f"<p>{'word ' * 1000}</p></article>", 1)
+
+    restamped, after = stamp.stamp_source(expanded)
+
+    assert after["reading_minutes"] > before["reading_minutes"]
+    assert f"<span>{after['reading_minutes']} min read</span>" in restamped
+    assert "<p>N min read outside the byline.</p>" in restamped
+
+
+def test_stamp_is_idempotent_and_preserves_unrelated_markup() -> None:
     source = article()
     stamped, _ = stamp.stamp_source(source)
 

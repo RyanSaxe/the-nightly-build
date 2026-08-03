@@ -3,8 +3,8 @@
 
 words, reading_minutes, and sources are properties of the article text, not
 editorial decisions. This command computes them with the same parser the
-proof uses and rewrites only the numbers inside the nb-meta block, leaving
-every other byte of the file alone. The proof's W-SELF-COUNT then verifies
+proof uses, rewrites the numbers inside the nb-meta block, and writes the
+reading time into the standard byline. The proof's W-SELF-COUNT then verifies
 instead of policing hand-kept numbers.
 
 Run: python3 engine/stamp.py <article.html>. Exits 0 after writing (or when
@@ -26,6 +26,9 @@ COUNT_KEY_RE = {
     key: re.compile(rf'("{key}"\s*:\s*)(-?\d+)') for key in ("words", "sources")
 }
 READING_KEY_RE = re.compile(r'("reading_minutes"\s*:\s*)(-?\d+)')
+BYLINE_READING_RE = re.compile(
+    r'(<div class="nb-byline">\s*<span>)(?:N|\d+) min read(</span>)'
+)
 
 
 def computed_counts(source: str) -> dict[str, int]:
@@ -41,8 +44,8 @@ def stamp_source(source: str) -> tuple[str, dict[str, int]]:
 
     Raises ValueError when the nb-meta block is absent/unreadable or a count
     key is missing, naming exactly what the writer must repair. Replacement
-    happens inside the matched block only, so formatting, key order, and the
-    rest of the file stay byte-identical.
+    preserves formatting and key order. Outside the metadata block, only the
+    standard byline's reading-time span can change.
     """
     m = nb_meta.META_RE.search(source)
     if m is None or nb_meta.parse_meta(source) is None:
@@ -57,12 +60,16 @@ def stamp_source(source: str) -> tuple[str, dict[str, int]]:
             missing.append(key)
     if missing:
         raise ValueError(f"nb-meta lacks count keys: {', '.join(sorted(missing))}")
-    return source[: m.start(1)] + block + source[m.end(1) :], counts
+    stamped = source[: m.start(1)] + block + source[m.end(1) :]
+    stamped = BYLINE_READING_RE.sub(
+        rf"\g<1>{counts['reading_minutes']} min read\g<2>", stamped, count=1
+    )
+    return stamped, counts
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
-        description="Write the computable nb-meta counts into an article."
+        description="Write computed article counts and reading time."
     )
     p.add_argument("file", help="article HTML file to stamp in place")
     args = p.parse_args(argv)
