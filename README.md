@@ -22,10 +22,6 @@ Your paper and its archive live in your fork. You own it.
 >   publish: false
 > ```
 
-## How it works
-
-![The Nightly Build architecture](assets/architecture.svg)
-
 ## Get started
 
 Give this repository URL to the AI tool you already use and say:
@@ -62,6 +58,43 @@ Before unattended publication, you can verify that the exact scheduled runtime
 can reach the repository, install the required tools, browse real sources, and
 open and then clean up a draft smoke-test PR. See
 [Verify the scheduled runtime](docs/getting-started/first-run.md).
+
+## How it works
+
+![The Nightly Build architecture](assets/architecture.svg)
+
+Setup gives two branches different jobs. `main` holds the engine and your
+press. `library` holds published articles and their production records. Each
+series in the press defines its subject, cadence, article mode, templates,
+evidence rules, and production policy. One scheduled task can run the whole
+paper from those declarations.
+
+Each scheduled run updates `main`, synchronizes the protected publishing
+workflows, and runs `nb duty` against a separate `library` checkout. Duty
+compares the press with the published archive. It applies cadence, pause,
+queue, sequence, completion, and same-day publication rules. The result is the
+exact work authorized for that run. The agent makes editorial choices within
+that result instead of interpreting the schedule itself.
+
+The orchestrator plans all due articles together so the edition does not
+repeat itself. It then creates an isolated workspace for each article with the
+exact house, press, series, item, template, and production directions from the
+current revision. Research and voice work can begin together. The writer uses
+their saved outputs, then the editor challenges the result. A failed check or
+editorial concern returns to the role that owns it. Several articles can move
+through this chain in parallel.
+
+After approval, `nb prepare-pr` packages one article, its assets, and its full
+production record onto a generated commit based on the latest `library`. It
+proves that commit before opening an Article PR. GitHub checks the submitted
+content with the trusted engine from `main` and without scheduler secrets. A
+valid new article merges automatically. The publication workflow then builds
+the static paper from the engine and press on `main` and the archive on
+`library`.
+
+Read the full [architecture](docs/concepts/architecture.md) and
+[publishing and security](docs/concepts/publishing-and-security.md) guides for
+the branch, permission, and validation boundaries.
 
 ## FAQ
 
