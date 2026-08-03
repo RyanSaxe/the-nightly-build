@@ -48,8 +48,25 @@ room for orchestration. The orchestrator selects topics, commissions articles,
 supervises roles, routes repairs, prepares PRs, and follows publication. That
 work sits outside the four configured role stages.
 
-The README records one paper's observed time and token ranges. Those figures
-describe workload. They do not guarantee a subscription allowance or API bill.
+## Observed workload
+
+One working configuration produced five to seven articles in 45 to 90 minutes
+because independent articles ran in parallel. Its role invocations consumed:
+
+| Work                       | Observed time | Observed tokens |
+| -------------------------- | ------------- | --------------- |
+| Initial orchestration      | 10–15 minutes | About 100k      |
+| Researcher, per article    | 10–15 minutes | 100k–200k       |
+| Writing coach, per article | 5–10 minutes  | 50k–100k        |
+| Writer, per article        | 15–25 minutes | 150k–350k       |
+| Editor, per article        | 5–15 minutes  | 150k–250k       |
+
+These are observations, not limits or promises. A role may run again after an
+editorial request or failed check. The table also excludes continuing
+orchestrator work because it has not been measured reliably. It describes
+workload, not a guaranteed subscription allowance or API bill.
+
+## Stage directives
 
 The orchestrator launches every article role directly. Each role receives an
 exact brief and only the article context it needs. When isolated children are
@@ -93,9 +110,6 @@ Use paper-wide defaults for the common case and per-series overrides for the
 exceptions. Lowering cadence or running fewer series reduces total article
 work. Parallel execution reduces elapsed time, but every article still consumes
 its own role invocations.
-
-Production policy never removes an editorial stage. A cheaper run still keeps
-research, voice guidance, writing, editor approval, and deterministic proof.
 
 ## Per-series overrides
 

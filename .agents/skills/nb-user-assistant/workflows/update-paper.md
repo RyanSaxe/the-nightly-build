@@ -43,10 +43,5 @@ furniture, or templates change. Keep unrelated improvements out of the diff.
 If confidence depends on article output, recommend a local preview before the
 change lands.
 
-When the user wants to reduce production usage, read
-`docs/reference/production.md` and establish the runtime's billing model. Do
-not promise a subscription percentage from token counts. For metered API use,
-estimate dollars only when the exact models and current prices are known. Name
-the expected direction of the change, then use the provider's report from the
-next normal production run to judge its effect. Never trade away an evidence
-rule, editorial role, editor approval, or deterministic proof to lower usage.
+For a production-usage request, read `docs/reference/production.md` before
+proposing a change and use the next normal run to evaluate its effect.

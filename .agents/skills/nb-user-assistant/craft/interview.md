@@ -22,25 +22,10 @@ and treat authenticated access as a separate project the user opts into.
 
 ## Settle sustainable production usage
 
-Learn how the scheduled runtime is billed before discussing production cost.
-A subscription has provider-specific plan limits. Token totals do not reveal
-what share of a weekly or monthly allowance one run will consume. Say that
-plainly. Use the provider's usage report after the first normal production run
-as the baseline, then help the user adjust the paper from measured experience.
-The scheduled-runtime smoke test does not produce articles and cannot supply
-that baseline.
-
-A metered API supports a dollar estimate only when the exact provider, models,
-and current input, output, and cached-token prices are known. Give an estimate
-only when the user asks for one. Include likely repeated role invocations and
-identify continuing orchestrator usage as unknown unless the runtime measured
-it. Never convert a published token observation into a subscription estimate.
-
-Turn the user's tolerance into editorial and production choices. Article count
-and cadence set how much work becomes due. Series boundaries and commissioned
-items control how much discovery the researcher must do. Production policy can
-assign different model tiers to each role and series. Preserve every editorial
-role, evidence requirement, and proof gate when reducing usage.
+Read `docs/reference/production.md` before a budget conversation. Learn how the
+scheduled runtime is billed and what usage the user can sustain, then translate
+that tolerance into cadence, series scope, and production policy. When an
+answer depends on measurement, use the provider report from a normal run.
 
 ## Interview loop
 
