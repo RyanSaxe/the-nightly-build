@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A dollar next year is worth 95 cents today · Investing Course</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "investing",
+        "slug": "present-value",
+        "template": "lesson",
+        "title": "A dollar next year is worth 95 cents today",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-03",
+        "tags": ["valuation", "discounting", "present-value"],
+        "sources": 8,
+        "words": 1980,
+        "reading_minutes": 9,
+        "dek": "Divide each future payment by the return you could have earned while you waited, and a stream of future cash collapses into a single value today.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Investing Course</div>
+        <h1 class="nb-title">A dollar next year is worth 95 cents today</h1>
+        <p class="nb-dekline">
+          Divide each future payment by the return you could have earned while
+          you waited, and a stream of future cash collapses into a single value
+          today.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-08-03</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Every investment is a claim on cash that arrives later: a bond's
+          coupons, a company's future profits, the rent on a building. To
+          decide what any of them is worth, you have to answer one question
+          first. What is a payment that lands years from now worth to you
+          today? Discounting is the arithmetic that answers it, and it is the
+          same arithmetic under a Treasury quote, a stock valuation, and the
+          full discounted-cash-flow models this course will build later. This
+          lesson does the mechanics by hand. It then ties the discount
+          rate to the cost of capital the previous lesson built. By the end you
+          should be able to take any schedule of future cash, a rate, and a
+          calculator, and turn them into one number: what that cash is worth
+          now.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../investing/cost-of-capital.html"
+              >A chipmaker's cost of capital runs more than double a
+              utility's</a
+            >: builds the discount rate this lesson divides by.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../investing/profit-versus-cash.html"
+              >A business can turn a profit and still run low on cash</a
+            >: the cash flows a valuation actually discounts.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A payment's date is part of its price</h2>
+        <p>
+          A payment of $100 due next year is not worth $100 to you now.
+          Aswath Damodaran, who teaches valuation at NYU Stern, gives three
+          reasons a future dollar is worth less than one in hand. People would
+          rather spend now than wait. Inflation eats away at what the money will
+          buy. And the payment promised for later might never
+          arrive.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="slide 2, Intuition Behind Present Value"
+              >1</a
+            ></sup
+          >
+          The one thing you cannot do is line up cash from different years and
+          add it, any more than you can add distances measured in different
+          units. The dollars have to be carried to the same point in time
+          first.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="slide 4, Present Value Principle 1"
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          The tool that carries them is the discount rate. It is an opportunity
+          cost: the return you could earn on your next best alternative, and so
+          the return you give up by waiting for this payment instead.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="slide 3, Discounting and Compounding"
+              >1</a
+            ></sup
+          >
+          It helps to attach a real number to it. The safest alternative most
+          investors have is lending to the U.S. government, and on July 31,
+          2026 a ten-year U.S. Treasury paid 4.75 percent a year.<sup
+            class="nb-cite"
+            ><a href="#s2" data-nb-locator="Daily Treasury Par Yield Curve Rates, 07/31/2026 row, 10 Yr"
+              >2</a
+            ></sup
+          >
+          The Federal Reserve reads the same anchor independently: its ten-year
+          constant-maturity series put the yield at 4.68 percent on July 30. The
+          small gap is a matter of construction and date, a constant-maturity
+          figure a day earlier against the Treasury's par yield, not a
+          disagreement about the rate.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="DGS10, 10-Year Constant Maturity, 07/30/2026 observation"
+              >3</a
+            ></sup
+          >
+          A Treasury carries almost no risk that the payment fails to arrive,
+          so 4.75 percent is close to the pure price of waiting.
+        </p>
+      </section>
+
+      <section data-nb-section="one-payment" id="one-payment">
+        <h2>One payment, moved back a year</h2>
+        <p>
+          Start with the rate going forward, where the intuition is easy. A
+          4.75 percent annual return means $100 today becomes $104.75 in a
+          year, the way 50 miles per hour means you cover 50 miles in an hour.
+          The rate is just how fast money grows. Discounting runs the same
+          rate backward. To end up with $100 a year from now, how much do you
+          need today? Exactly the amount that grows to $100 at 4.75 percent.
+          That is $100 divided by 1.0475, or $95.47. You can check it: $95.47
+          earning 4.75 percent gains $4.53, which brings it back to $100. So a
+          $100 payment due next year is worth $95.47 now, and the speedometer
+          has done its job and can be put away.
+        </p>
+        <p>
+          Why divide by 1.0475 rather than subtract 4.75 percent? Because the
+          return compounds. It is earned on the whole balance, and a year of
+          growth multiplies that balance by 1.0475, so a year of discounting
+          undoes the growth by dividing by 1.0475. Subtracting would treat the
+          return as a flat, one-time toll, which is only right for a single
+          year and wrong the moment there are several. Discounting is
+          compounding read in reverse, the same growth factor turned into a
+          divisor.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Time Value of Money, present value as the inverse of compounding"
+              >4</a
+            ></sup
+          >
+          To move a payment back
+          two years you divide by 1.0475 twice; to move it back
+          <span class="nb-math-in">t</span> years you divide by 1.0475 raised
+          to the power <span class="nb-math-in">t</span>. That is the whole
+          formula, and it holds for any cash flow and any rate.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \text{PV} = \dfrac{\htmlClass{nb-mc1}{CF}}{(1 +
+            \htmlClass{nb-mc2}{r})^{\htmlClass{nb-mc3}{t}}}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">CF</span
+              ><span
+                >The future cash flow, the dollars that arrive later.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">r</span
+              ><span
+                >The discount rate, the return you give up by waiting.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">t</span
+              ><span
+                >The number of years until the payment, and the number of
+                times the return compounds.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            Present value of a single future cash flow: the payment divided by
+            one plus the rate, compounded once for each year of
+            waiting.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="slide 7, I. Simple Cash Flows"
+                >1</a
+              ></sup
+            ><sup class="nb-cite"
+              ><a href="#s5" data-nb-locator="section 9.1, Equation 9.12"
+                >5</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="a-stream" id="a-stream">
+        <h2>From one payment to a stream</h2>
+        <p>
+          Investments rarely pay once. They pay a stream: a little next year, a
+          little the year after, on down the schedule. Once every payment can
+          be carried back to today, they are all in the same units, so you can
+          finally add them. The present value of a stream is the sum of the
+          present value of each payment,
+          <span class="nb-math-in"
+            >\text{PV} = \frac{CF_1}{(1+r)^1} + \frac{CF_2}{(1+r)^2} +
+            \cdots</span
+          >, each term discounted by its own number of years.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="slides 4 and 7"
+              >1</a
+            ></sup
+          ><sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="section 9.1, discount each unequal cash flow then sum"
+              >5</a
+            ></sup
+          >
+          The table below runs an illustrative stream, $100 a year for four
+          years, back through the 4.75 percent rate. The cash flows are a
+          teaching example and not a real security. Only the rate is a real
+          figure.
+        </p>
+        <table class="nb-table">
+          <caption>
+            An illustrative $100 a year for four years, each payment discounted
+            at the risk-free 4.75 percent rate. Values are $100 divided by
+            1.0475 raised to the year.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="Daily Treasury Par Yield Curve Rates, 07/31/2026 row, 10 Yr"
+                >2</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Cash flow</th>
+              <th>Value today</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">1</span></td>
+              <td>$100.00</td>
+              <td>$95.47</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">2</span></td>
+              <td>$100.00</td>
+              <td>$91.14</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">3</span></td>
+              <td>$100.00</td>
+              <td>$87.00</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">4</span></td>
+              <td>$100.00</td>
+              <td>$83.06</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Total</span></td>
+              <td>$400.00</td>
+              <td>$356.67</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Four hundred dollars of future cash is worth $356.67 today. The
+          missing $43.33 is not a fee anyone charges; it is the return you skip
+          by holding claims on later dollars instead of dollars you could put
+          to work now. Two simplifications keep the table clean. The rate is
+          held flat across all four years, and real schedules can use a
+          different rate for each year. Taxes are ignored, which Damodaran
+          flags as its own decision every time he works an example.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="slide 24, We've ignored taxes in this analysis"
+              >1</a
+            ></sup
+          >
+          Neither changes the machinery, only the inputs you feed it.
+        </p>
+      </section>
+
+      <section data-nb-section="risk-and-the-rate" id="risk-and-the-rate">
+        <h2>Risk lifts the rate and lowers the value</h2>
+        <p>
+          The 4.75 percent came from a Treasury, and that choice was doing
+          quiet work. A Treasury is about as certain as a future payment gets,
+          so its rate carries the price of waiting and almost nothing for the
+          third reason a future dollar is worth less: the chance it never
+          arrives.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="slide 3, discount rate incorporates uncertainty"
+              >1</a
+            ></sup
+          >
+          A company's future cash is not that safe. It might come in below plan
+          or not at all, and a saver deciding whether to fund that company will
+          demand extra return for taking the chance. So a risky payment is
+          discounted at a higher rate: the risk-free figure as a floor, plus a
+          premium for the risk on top of it.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="section 15.3, Equation 15.12, required return as risk-free rate plus risk premium; Treasury securities as the risk-free proxy"
+              >6</a
+            ></sup>
+        </p>
+        <p>
+          That higher rate is the cost of capital the previous lesson built. It
+          weighed together what a company pays lenders and what its
+          shareholders require, and the shareholder piece is exactly this risk
+          premium sitting above the risk-free rate. The same number now has a
+          second job: it was the hurdle a company's
+          return had to clear, and it is also the rate you discount that
+          company's future cash at. Raising the rate makes every divisor in the
+          table bigger, so the value today falls. Run the same four years of
+          $100 at an illustrative 10 percent, the kind of rate a risky business
+          might face, and the stream is worth about $317 today rather than
+          $357. The riskier the cash, the steeper the discount, and the less a
+          future dollar is worth now.
+        </p>
+      </section>
+
+      <section data-nb-section="never-ending" id="never-ending">
+        <h2>Valuing cash that never stops</h2>
+        <p>
+          A four-year table has an obvious limit. A healthy company is not
+          expected to pay out for four years and shut down; it is expected to
+          go on producing cash indefinitely. You cannot add infinitely many
+          discounted terms by hand, but you do not have to. A constant payment
+          that continues forever, a perpetuity, has a closed form: the payment
+          divided by the rate,
+          <span class="nb-math-in">\text{PV} = CF / r</span>.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="slide 32, IV. Perpetuity"
+              >1</a
+            ></sup
+          ><sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="section 8.1, Equation 8.1, PV = C/Rs"
+              >7</a
+            ></sup
+          >
+          If the payment instead grows at a constant rate
+          <span class="nb-math-in">g</span> every year, the value has a
+          shortcut too.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \text{PV} = \dfrac{CF_1}{r - g}
+          </div>
+          <figcaption>
+            Present value of a growing perpetuity, where
+            <span class="nb-math-in">CF_1</span> is next year's cash flow,
+            <span class="nb-math-in">r</span> the discount rate, and
+            <span class="nb-math-in">g</span> the constant growth rate.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="slide 34, V. Growing Perpetuities"
+                >1</a
+              ></sup
+            ><sup class="nb-cite"
+              ><a href="#s7" data-nb-locator="section 8.1, Equation 8.3, PV = C/(Rs-G)"
+                >7</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Two details decide whether the shortcut gives a sane answer. The
+          <span class="nb-math-in">CF_1</span> on top is next year's payment,
+          not this year's, a step ahead of where you are standing. And
+          <span class="nb-math-in">g</span> has to stay strictly below
+          <span class="nb-math-in">r</span>. If growth equals or beats the
+          discount rate, the denominator hits zero or turns negative and the
+          formula returns a meaningless value, so this is a hard constraint and
+          not a footnote.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="section 11.20, for this formula to work g cannot equal or exceed r"
+              >8</a
+            ></sup
+          >
+          When growth is zero the growing form collapses back to the plain
+          perpetuity, <span class="nb-math-in">CF / r</span>.<sup
+            class="nb-cite"
+            ><a href="#s8" data-nb-locator="section 11.20, ordinary perpetuity as the g=0 case"
+              >8</a
+            ></sup
+          >
+        </p>
+        <p>
+          This shortcut is how a full valuation handles the years it cannot
+          forecast one by one. You discount a decade of estimated cash flows in
+          a table, then use a perpetuity to stand in for everything after it, a
+          single figure called the terminal value. Building that full model,
+          projecting the cash flows, choosing a growth rate, and pinning down
+          the cost of capital for one specific company, is a later lesson. The
+          point to carry out of this one is narrower. Every piece of that model
+          is the discounting you just did by hand, run on longer schedules.
+        </p>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A future dollar is worth less than one today by exactly the return
+          you give up while you wait for it. To find that worth, divide the
+          payment by one plus the rate, compounded once for every year until it
+          arrives; a $100 payment due next year is worth $95.47 at a 4.75
+          percent rate. A whole schedule of payments works the same way, each
+          carried back to today and then added, which turned $400 of future
+          cash into $356.67 now. The rate you divide by is a floor plus a
+          premium: the risk-free return for the pure wait, and extra for the
+          risk that the cash disappoints, which together are the cost of
+          capital from the last lesson. Raise the rate and every value today
+          falls. A stream that never ends is not a wall but a shortcut, the
+          payment over the rate, or over the rate minus its growth as long as
+          growth stays below the rate. Put those pieces on longer schedules and
+          you have a discounted-cash-flow valuation, which is where this course
+          goes next.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/acf4E/presentations/timevalue.pdf"
+              >Aswath Damodaran, "The Time Value of Money"</a
+            >: the full set of slides these formulas and worked examples come
+            from.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a
+              href="https://betterexplained.com/articles/a-visual-guide-to-simple-compound-and-continuous-interest-rates/"
+              >Kalid Azad, "A Visual Guide to Simple, Compound and Continuous
+              Interest Rates"</a
+            >: builds the compounding that discounting reverses, one step at a
+            time.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/acf4E/presentations/timevalue.pdf"
+              >Aswath Damodaran, NYU Stern · "The Time Value of Money"</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve&field_tdr_date_value=2026"
+              >U.S. Department of the Treasury · Daily Treasury Par Yield Curve
+              Rates, 2026</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://fred.stlouisfed.org/series/DGS10"
+              >Board of Governors of the Federal Reserve System, via FRED ·
+              "Market Yield on U.S. Treasury Securities at 10-Year Constant
+              Maturity, Quoted on an Investment Basis" (DGS10)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://corporatefinanceinstitute.com/resources/valuation/time-value-of-money/"
+              >Corporate Finance Institute · "Time Value of Money"</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openstax.org/books/principles-finance/pages/9-1-timing-of-cash-flows"
+              >OpenStax, Rice University · "Principles of Finance," §9.1 Timing
+              of Cash Flows</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openstax.org/books/principles-finance/pages/15-3-the-capital-asset-pricing-model-capm"
+              >OpenStax, Rice University · "Principles of Finance," §15.3 The
+              Capital Asset Pricing Model (CAPM)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openstax.org/books/principles-finance/pages/8-1-perpetuities"
+              >OpenStax, Rice University · "Principles of Finance," §8.1
+              Perpetuities</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://biz.libretexts.org/Bookshelves/Finance/Introduction_to_Financial_Analysis_(Bigel)/03%3A_Part_III-_The_Time_Value_of_Money/11%3A_The_Time_Value_of_Money-_Annuities_Perpetuities_and_Mortgages/11.20%3A_Growth_Perpetuities"
+              >Kenneth S. Bigel, LibreTexts · "Introduction to Financial
+              Analysis," §11.20 Growth Perpetuities</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
