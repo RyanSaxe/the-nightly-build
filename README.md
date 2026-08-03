@@ -96,6 +96,73 @@ Read the full [architecture](docs/concepts/architecture.md) and
 [publishing and security](docs/concepts/publishing-and-security.md) guides for
 the branch, permission, and validation boundaries.
 
+## Why I built this
+
+I built The Nightly Build because I could not get the morning reading I
+wanted. Asking an AI tool for each subject was manual, and checking its
+citations took more work than the answer saved. News coverage also pushed me
+toward other people's frames. Forming my own view meant finding several pieces,
+checking their claims, and holding their disagreements in my head. I wanted to
+choose what I read, how it was presented, and which evidence it had to earn.
+
+The overnight schedule made a different production process possible. A useful
+paper could spend an hour researching, writing, checking, and revising without
+making me wait for each response. I wanted to see how far that process could
+push two stubborn problems. The writing should stop advertising that an AI
+wrote it, and the citations should support the claims that depend on them. The
+system cannot guarantee truth, but it can make unsupported work much harder to
+publish.
+
+I also wanted to test a different way to distribute software. Each paper is a
+fork, so its owner has the code, configuration, archive, and deployment
+environment. The upstream project ships a system that downstream owners change
+and operate for themselves. That model gives the user real ownership and lets
+the AI run inside a provider environment the user chose.
+
+## What it costs
+
+The Nightly Build charges no hosted-service fee. You pay for the AI product or
+models that produce the paper. A public fork can use GitHub Pages for free. A
+private fork needs a GitHub plan that supports private Pages.
+
+One working configuration gives a useful sense of the workload. A run of five
+to seven articles usually finishes in 45 to 90 minutes because separate
+articles proceed in parallel. These are approximate observations, not limits or
+promises:
+
+| Work                       | Observed time | Observed tokens |
+| -------------------------- | ------------- | --------------- |
+| Initial orchestration      | 10–15 minutes | About 100k      |
+| Researcher, per article    | 10–15 minutes | 100k–200k       |
+| Writing coach, per article | 5–10 minutes  | 50k–100k        |
+| Writer, per article        | 15–25 minutes | 150k–350k       |
+| Editor, per article        | 5–15 minutes  | 150k–250k       |
+
+The role figures describe one invocation. A role may run again when the editor
+requests a revision, the writer needs better evidence, or a check fails. Later
+turns are often cheaper because they answer a narrower question with less
+ambiguity. They still add usage. The orchestrator also supervises active roles,
+routes repairs, prepares PRs, and follows publication to completion. I have not
+measured that continuing overhead reliably, so the table includes only its
+initial setup and first role launches.
+
+Subscriptions and metered APIs turn that workload into cost differently. A
+subscription provider decides how a run counts against its plan limits, and
+token totals do not reliably predict weekly or monthly usage. The provider's
+usage report is the authority. Metered API users can estimate dollars after
+choosing exact models and checking their current input, output, and cached-token
+prices. That estimate also needs room for repeated role turns and the
+unmeasured orchestration above.
+
+Ambiguity is a major usage driver. A broad current-events series must search a
+larger field, choose among more candidates, and verify more contested claims.
+A narrow commission begins with more of those decisions settled. Production
+policy can also reserve stronger models for the roles that matter most to a
+series. A research-heavy series may keep its researcher strong while using
+cheaper models for voice or drafting. See the
+[production reference](docs/reference/production.md) for the available
+controls.
+
 ## FAQ
 
 <!-- markdownlint-disable MD033 -->
@@ -181,12 +248,10 @@ Additionally, PRs are a natural entity that basically every AI harness interacts
 
 ---
 
-<p>The Nightly Build has no hosted service or fee. You pay for the agent or model
-runner you choose. More articles, broader research, and longer drafts use more
-tokens. The optional <a href="docs/reference/production.md">production policy</a> routes
-article roles to portable model tiers while leaving the automation's orchestrator
-under your control. See <a href="docs/integrations/README.md">Integrations</a> for runner and
-billing options.</p>
+<p>See <a href="#what-it-costs">What it costs</a> for observed production
+workload, billing caveats, and ways to reduce usage. The
+<a href="docs/reference/production.md">production reference</a> explains the
+available role and model controls.</p>
 
 ---
 

@@ -29,6 +29,28 @@ The orchestrator maps these tiers to models the current harness actually
 offers. To pin one provider instead, write its exact model ID. Effort is also a
 plain string because providers expose different levels.
 
+## Billing model comes first
+
+Production policy controls model selection. It cannot predict how a provider
+bills or limits the resulting work.
+
+A subscription converts model work into plan usage according to rules owned by
+the provider. Token observations do not reliably predict the share of a weekly
+or monthly allowance that one run will consume. Use the provider's usage report
+after the first normal production run as the baseline for that paper. The
+scheduled-runtime smoke test verifies access and permissions without producing
+articles, so it is not a usage baseline.
+
+A metered API charges for the exact models and token classes used. Estimate
+dollars only after those models are selected and their current input, output,
+and cached-token prices are known. Include repeated role invocations and leave
+room for orchestration. The orchestrator selects topics, commissions articles,
+supervises roles, routes repairs, prepares PRs, and follows publication. That
+work sits outside the four configured role stages.
+
+The README records one paper's observed time and token ranges. Those figures
+describe workload. They do not guarantee a subscription allowance or API bill.
+
 The orchestrator launches every article role directly. Each role receives an
 exact brief and only the article context it needs. When isolated children are
 unavailable, the same artifact sequence runs in one context. The policy
@@ -56,6 +78,24 @@ paper-wide value.
 The configurable stages are `writing-coach`, `researcher`, `writer`, and
 `editor`. The orchestrator is deliberately absent: choose its model in
 the automation itself, where the run begins.
+
+## Reduce usage without weakening the paper
+
+Start with the commission. A broad or ambiguous series spends more work
+discovering candidate subjects and deciding what belongs. Current-events
+coverage often adds verification because claims change quickly and sources
+disagree. Narrower series boundaries and precise queued commissions settle more
+of those decisions before research begins.
+
+Then match models to the role each series needs. Research quality may dominate
+a news-heavy series, while another series depends more on voice or drafting.
+Use paper-wide defaults for the common case and per-series overrides for the
+exceptions. Lowering cadence or running fewer series reduces total article
+work. Parallel execution reduces elapsed time, but every article still consumes
+its own role invocations.
+
+Production policy never removes an editorial stage. A cheaper run still keeps
+research, voice guidance, writing, editor approval, and deterministic proof.
 
 ## Per-series overrides
 
