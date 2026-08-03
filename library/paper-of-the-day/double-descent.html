@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bigger models get better again past the interpolation threshold · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "double-descent",
+        "template": "paper",
+        "title": "Bigger models get better again past the interpolation threshold",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-03",
+        "tags": ["machine-learning", "generalization", "double-descent", "bias-variance", "over-parameterization"],
+        "sources": 8,
+        "words": 2412,
+        "reading_minutes": 10,
+        "dek": "Belkin and Nakkiran rebuilt double descent from random features to ResNets, and the after-record narrows it from a law in parameter count to a curve that depends on how you measure complexity.",
+        "harness": "Claude Code (Agent SDK), scheduled publication run",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Bigger models get better again past the interpolation threshold</h1>
+        <p class="nb-dekline">
+          Belkin and Nakkiran rebuilt double descent from random features to ResNets, and the after-record narrows it from a law in parameter count to a curve that depends on how you measure complexity.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-08-03</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Reconciling modern machine learning practice and the bias-variance trade-off</p>
+          <p class="nb-paper-meta">Mikhail Belkin, Daniel Hsu, Siyuan Ma &amp; Soumik Mandal · arXiv:1812.11118, published in PNAS 116(32) · 2019</p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1812.11118"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            <p>
+              Breakthroughs in machine learning are rapidly changing science and
+              society, yet our fundamental understanding of this technology has
+              lagged far behind. Indeed, one of the central tenets of the field,
+              the bias-variance trade-off, appears to be at odds with the
+              observed behavior of methods used in the modern machine learning
+              practice. The bias-variance trade-off implies that a model should
+              balance under-fitting and over-fitting: rich enough to express
+              underlying structure in data, simple enough to avoid fitting
+              spurious patterns. However, in the modern practice, very rich
+              models such as neural networks are trained to exactly fit (i.e.,
+              interpolate) the data. Classically, such models would be considered
+              over-fit, and yet they often obtain high accuracy on test data.
+              This apparent contradiction has raised questions about the
+              mathematical foundations of machine learning and their relevance to
+              practitioners.
+            </p>
+            <p>
+              In this paper, we reconcile the classical understanding and the
+              modern practice within a unified performance curve. This "double
+              descent" curve subsumes the textbook U-shaped bias-variance
+              trade-off curve by showing how increasing model capacity beyond the
+              point of interpolation results in improved performance. We provide
+              evidence for the existence and ubiquity of double descent for a wide
+              spectrum of models and datasets, and we posit a mechanism for its
+              emergence. This connection between the performance and the structure
+              of machine learning models delineates the limits of classical
+              analyses, and has implications for both the theory and practice of
+              machine learning.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </p>
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The overfitting rule modern networks break</h2>
+        <p>
+          Classical statistical learning reads test risk as a U in model
+          capacity. Too little capacity and the model underfits. Too much and it
+          fits the noise. Between them sits a sweet spot. The operational rule
+          that follows is the one every textbook states: a model with zero
+          training error is overfit to the training data and will typically
+          generalize poorly.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Modern networks break that rule in plain sight. A ResNet with millions
+          of parameters drives its training error to zero and still generalizes
+          well. Belkin and colleagues,<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          and then Nakkiran and colleagues for deep networks,<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          answer with a single curve. Once capacity passes the point where the
+          model can exactly fit the data, test risk peaks and then falls a second
+          time. That the capacity is genuinely there is not in doubt. Zhang
+          and colleagues showed the same architectures fit a random labeling of
+          their training set to zero error, and fit even unstructured random-noise
+          inputs, largely unaffected by explicit regularization.<sup
+            class="nb-cite"><a href="#s3">3</a></sup
+          >
+          Interpolation is the normal operating point, not a pathology.
+        </p>
+      </section>
+
+      <section data-nb-section="second-descent" id="second-descent">
+        <h2>A second descent past the interpolation threshold</h2>
+        <p>
+          Let us start where Belkin starts, with the shape itself. Their
+          schematic sets the classical picture beside the one the data actually
+          draw.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="double-descent/asset-1.png"
+            alt="Two risk-versus-capacity plots. Left (a): a classical U-shaped test-risk curve with a sweet spot and a dashed training-risk curve. Right (b): the double descent curve, where test risk rises to a peak at a dotted interpolation threshold separating an under-parameterized classical regime from an over-parameterized modern regime, then descends a second time while training risk stays at zero."
+          />
+          <figcaption>
+            Fig. 1 · The classical U-curve (a) against the double descent curve
+            (b): test risk peaks at the interpolation threshold, then descends
+            through the interpolating regime.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 1 · p. 3"
+                data-nb-url="https://arxiv.org/pdf/1812.11118#page=3"
+                data-nb-note="Belkin's schematic defining the double descent curve and the interpolation threshold; training risk is zero at and past the threshold."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Read panel (b) against panel (a). In (a) the solid test-risk curve dips
+          to the sweet spot and rises again as capacity grows: the whole story
+          classical theory tells. In (b) the same rise continues to a spike at the
+          dotted interpolation threshold, and then the curve turns and descends
+          again through the "modern" regime, often below the classical sweet spot.
+          The dashed training-risk curve reaches zero at the threshold and holds
+          there, so every predictor to the right of the dotted line fits the
+          training data exactly.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The threshold has a definite location. Belkin identifies capacity with
+          the number of parameters a function needs, and the model can first
+          interpolate once that count reaches the number of training points.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            N \;=\; n \qquad (K\text{-class classifiers: } N = nK)
+          </div>
+        </figure>
+        <p>
+          Here <span class="nb-math-in">N</span> is the number of parameters (for
+          the random-feature model below, the number of features),
+          <span class="nb-math-in">n</span> the number of training points, and
+          <span class="nb-math-in">K</span> the number of classes.<sup
+            class="nb-cite"><a href="#s1">1</a></sup
+          >
+          The peak is not an artifact of one setup. Working from a
+          statistical-physics angle, Spigler and colleagues had independently
+          found a sharp "jamming" transition at the same interpolation point, with
+          generalization error rising to a cusp there before a slow decay across
+          the over-parameterized regime.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="smoother-interpolants" id="smoother-interpolants">
+        <h2>Larger classes hold smoother interpolants</h2>
+        <p>
+          If every predictor past the threshold has zero training error, why
+          should the larger ones test better? Belkin's cleanest evidence answers
+          on real data. They fit a random Fourier features model to a
+          ten-thousand-example subset of MNIST, sweeping the number of features
+          <span class="nb-math-in">N</span> straight through the threshold at
+          <span class="nb-math-in">N = n = 10^{4}</span>.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="double-descent/asset-2.png"
+            alt="A grid of six plots for a random Fourier features model on MNIST versus the number of features N in thousands. Top row: test risk (log scale) under zero-one and squared loss, each spiking at N equals ten thousand then descending. Middle row: coefficient L2 norm (log scale), peaking at the same N equals ten thousand and then falling toward a flat minimum-norm kernel reference line. Bottom row: training risk falling to zero by N equals ten thousand and staying there."
+          />
+          <figcaption>
+            Fig. 2 · RFF on MNIST: test risk (top) and the coefficient norm
+            (middle) both peak at N = n = 10<sup>4</sup>. The norm then falls
+            toward the min-norm kernel solution while training risk (bottom) holds
+            at zero.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 2 · p. 5"
+                data-nb-url="https://arxiv.org/pdf/1812.11118#page=5"
+                data-nb-note="The coefficient-norm peak coinciding with the test-risk peak at N=n is Belkin's evidence for the small-norm inductive bias behind the second descent."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Look at the top and middle rows together. Test risk climbs to its spike
+          exactly at <span class="nb-math-in">N = 10^{4}</span> and then descends;
+          the coefficient <span class="nb-math-in">\ell_2</span> norm peaks at the
+          same point and then falls. Past the
+          threshold the training data no longer pin down a single fit; infinitely
+          many predictors interpolate them, and squared-loss minimization selects
+          the one of smallest norm. Choosing the smoothest function that fits the
+          data exactly is a form of Occam's razor, and a larger feature class
+          contains lower-norm interpolants, so risk keeps falling as
+          <span class="nb-math-in">N</span> grows. The flat reference line is the
+          min-norm kernel predictor the finite models approach from above, and it
+          beats every finite-<span class="nb-math-in">N</span> fit.<sup
+            class="nb-cite"><a href="#s1">1</a></sup
+          >
+          The small-norm story is not only a picture. For minimum-<span
+            class="nb-math-in">\ell_2</span
+          >-norm ("ridgeless") interpolation in high dimensions, Hastie and
+          colleagues recover the double descent curve and the benefit of
+          over-parameterization in a precise, closed form.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="effective-complexity" id="effective-complexity">
+        <h2>Effective model complexity ties the axes together</h2>
+        <p>
+          Belkin drew the curve in parameter count. Nakkiran and colleagues showed
+          that parameter count is only one way to walk along it. In deep networks
+          the same shape appears whether you grow the model or simply train it
+          longer.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="double-descent/asset-3.png"
+            alt="Two plots for ResNet18 on CIFAR-10 with 15 percent label noise. Left: train and test error versus model width, with a shaded critical region around a marked interpolation threshold where test error rises to a peak before falling through the modern regime. Right: test error versus training epochs for many widths, colored from 1 to 1000 epochs, showing the same rise-then-fall shape along the epoch axis."
+          />
+          <figcaption>
+            Fig. 3 · Deep double descent in a ResNet18 on CIFAR-10 (15% label
+            noise): a test-error peak at the interpolation width (left) and the
+            same shape traced along training epochs (right).<sup class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Fig. 1 · p. 1"
+                data-nb-url="https://arxiv.org/pdf/1912.02292#page=1"
+                data-nb-note="Model-wise (left) and epoch-wise (right) double descent for ResNet18; establishes two of the three axes in one figure."
+                >2</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The left panel is Belkin's curve in a real network: test error peaks at
+          the interpolation width and falls again as the ResNet18 grows toward its
+          standard width of 64. The right panel traces test error against training
+          epochs at fixed size and finds the same rise-then-fall in time. To hold
+          both under one description, Nakkiran defines the effective model
+          complexity of a training procedure as the largest training set it can
+          still drive to near-zero error.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \htmlClass{nb-mc1}{\mathrm{EMC}_{\mathcal{D},\epsilon}}(\htmlClass{nb-mc2}{T})
+            \;=\; \max\Bigl\{\, \htmlClass{nb-mc3}{n} \;\Big|\;
+            \mathbb{E}_{S \sim \mathcal{D}^{\,n}}\!\bigl[\,
+            \htmlClass{nb-mc4}{\mathrm{Error}_S(T(S))} \,\bigr] \le
+            \htmlClass{nb-mc5}{\epsilon} \,\Bigr\}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\mathrm{EMC}_{\mathcal{D},\epsilon}</span
+              ><span>the effective complexity, measured in training samples.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">T</span
+              ><span>the training procedure taken whole: architecture, optimizer, and length of training.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">n</span
+              ><span>the largest sample size the procedure still fits to near-zero error.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\mathrm{Error}_S(T(S))</span
+              ><span>the mean training error of the learned model on the sample S.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc5">\epsilon</span
+              ><span>the "near-zero error" cutoff, used heuristically at 0.1.</span>
+            </li>
+          </ul>
+          <figcaption>
+            Effective model complexity counts how much data a procedure can
+            interpolate, so any change that raises it moves the model along the
+            double descent curve.<sup class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Def. 1 · p. 3"
+                data-nb-url="https://arxiv.org/pdf/1912.02292#page=3"
+                data-nb-note="Nakkiran's Definition 1; Hypothesis 1 places the critical regime at EMC ≈ n."
+                >2</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The definition earns its keep by fixing where the peak sits. Nakkiran's
+          Generalized Double Descent hypothesis says that raising complexity
+          lowers test error when the effective complexity is well below
+          <span class="nb-math-in">n</span> or well above it. Only in a critical
+          band around <span class="nb-math-in">\mathrm{EMC} \approx n</span> can
+          raising it hurt.<sup class="nb-cite"><a href="#s2">2</a></sup> Because
+          the peak tracks <span class="nb-math-in">n</span> rather than any fixed
+          model, adding data can slide the critical band onto a network that used
+          to sit safely past it. This is the abstract's counterintuitive claim
+          that more data can hurt. On a fixed Transformer for German-to-English
+          translation, raising the training set from 4k to 18k sentences, a factor
+          of 4.5, pushes test loss up across a band of model sizes.<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Fig. 3, Sec. 7 · pp. 3, 8"
+              data-nb-url="https://arxiv.org/pdf/1912.02292#page=3"
+              data-nb-note="Sample-wise non-monotonicity: the 18k-sample curve is lower overall but shifted right, so for a band of model sizes 18k samples give worse test loss than 4k."
+              >2</a
+            ></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="x-axis-question" id="x-axis-question">
+        <h2>How much of it is the x-axis</h2>
+        <p>
+          Does the curve survive its own x-axis? Belkin's strongest claim is
+          reach: one curve across random features, neural nets, random forests,
+          and boosting, presented as evidence for the existence and ubiquity of
+          double descent.<sup class="nb-cite"><a href="#s1">1</a></sup> Curth and
+          colleagues took the non-deep half of that claim at full strength and
+          reproduced it, then asked what the single parameter-count axis was
+          actually counting.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="double-descent/asset-5.png"
+            alt="Three plots decomposing double descent in trees. Left: squared test error over a composite axis of leaf count times ensemble size, reproducing a double-descent shape with a peak at the hand-off. Center: error versus leaf parameters at fixed ensemble size, a plain convex U or L curve for each ensemble size. Right: error versus ensemble size at fixed leaf count, a plain descending L curve for each leaf setting."
+          />
+          <figcaption>
+            Fig. 4 · Curth's decomposition of tree double descent: the composite
+            peak (left) vanishes once each complexity axis is held separately
+            (center, right), leaving plain convex curves.<sup class="nb-cite"
+              ><a
+                href="#s6"
+                data-nb-locator="Fig. 2 · p. 3"
+                data-nb-url="https://arxiv.org/pdf/2310.18988#page=3"
+                data-nb-note="The double descent peak in trees appears only at the hand-off between P_leaf and P_ens; along either single axis the error is convex."
+                >6</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Their finding is that the axis quietly changes what it measures. A single
+          tree grows capacity by adding leaves, but it cannot have more leaves than
+          it has training points. Once the leaf count caps out, the experiment keeps
+          "adding parameters" by averaging more full-depth trees, so the model has
+          become a random forest at exactly the peak. Hold the
+          ensemble size fixed and error is a plain convex curve in leaf count
+          (center); hold the leaf count fixed and error is a plain descending curve
+          in ensemble size (right). The composite peak (left) exists only at the
+          hand-off between the two. Choose a different hand-off point and the peak
+          moves or disappears. Along an effective-parameter axis the curves fold
+          back to convex shapes, so the second descent's location is "not
+          inherently tied to the interpolation threshold."<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          The same reading covers boosting and the linear RFF case.
+        </p>
+        <p>
+          The scope of the correction matters as much as the correction. Curth and
+          colleagues confine their re-analysis to non-deep methods and do not
+          touch Nakkiran's ResNet, CNN, and Transformer results.<sup
+            class="nb-cite"><a href="#s6">6</a></sup
+          >
+          Read honestly, this trims Belkin's claim of ubiquity across model
+          families; it leaves model-wise and epoch-wise double descent in deep
+          networks standing.
+        </p>
+      </section>
+
+      <section data-nb-section="noise-and-regularization" id="noise-and-regularization">
+        <h2>What noise and regularization do to the peak</h2>
+        <p>
+          Even where the deep effect is real, two knobs decide how sharp it is.
+          The first is label noise. Nakkiran and colleagues report seeing double
+          descent most strongly under label noise, which invites the reading that
+          the peak is really a noise artifact. Their own figure refuses that
+          reading.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="double-descent/asset-4.png"
+            alt="Four plots of ResNet18 error versus width. Top left: CIFAR-100 test error showing a peak near the interpolation width even at zero label noise, with higher peaks as noise rises. Top right: CIFAR-10 test error showing only a plateau at zero noise that grows into a clear peak as label noise increases to 20 percent. Bottom row: training error falling to zero for both datasets."
+          />
+          <figcaption>
+            Fig. 5 · Label noise sharpens but does not create the peak: a
+            model-wise peak on CIFAR-100 with no added noise (a), and a CIFAR-10
+            plateau that grows into a peak as noise is added (b).<sup
+              class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Fig. 4 · p. 5"
+                data-nb-url="https://arxiv.org/pdf/1912.02292#page=5"
+                data-nb-note="CIFAR-100 shows a peak at 0% label noise; CIFAR-10 shows a no-noise plateau that added noise turns into a peak. Evidence that noise amplifies rather than causes the effect."
+                >2</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Compare the two panels. On CIFAR-100 (a) a test-error peak sits near the
+          interpolation width even with no added label noise, and grows taller as
+          noise rises. On CIFAR-10 (b) the no-noise curve shows only a plateau at
+          the interpolation point, which added noise deepens into a clear peak.<sup
+            class="nb-cite"><a href="#s2">2</a></sup
+          >
+          So label noise amplifies and sharpens the peak, and it can be enough to
+          turn a plateau into one, but it is not strictly required for the effect
+          to appear.
+        </p>
+        <p>
+          The second knob is regularization, and here the after-record is sharper
+          still. Nakkiran, Venkat, Kakade and Ma prove that for isotropic linear
+          regression, optimally-tuned ridge regularization makes test risk
+          monotone in both sample size and model size. Once
+          <span class="nb-math-in">\lambda</span> is tuned, bigger is never worse
+          and more data never hurts. The same tuning empirically flattens the peak
+          for CNNs on CIFAR-100.<sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="double-descent/asset-6.png"
+            alt="Expected excess test risk versus number of samples for isotropic ridge regression in 500 dimensions, with curves for many regularization strengths. The unregularized curve at lambda equals zero spikes sharply into a sample-wise double-descent peak near 500 samples, while the optimal-lambda curve descends monotonically with no peak; intermediate strengths interpolate between the two."
+          />
+          <figcaption>
+            Fig. 6 · Optimal ridge removes the sample-wise peak: unregularized
+            regression spikes near the threshold while the
+            <span class="nb-math-in">\lambda = \lambda_{\mathrm{opt}}</span> curve
+            descends monotonically.<sup class="nb-cite"
+              ><a
+                href="#s7"
+                data-nb-locator="Fig. 1 · p. 2"
+                data-nb-url="https://arxiv.org/pdf/2003.01897#page=2"
+                data-nb-note="Isotropic ridge in d=500: unregularized regression is sample-wise non-monotonic; optimally-tuned ridge is monotone."
+                >7</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The unregularized curve in the figure is a textbook sample-wise double
+          descent, spiking as the sample count nears the dimension; the
+          optimal-<span class="nb-math-in">\lambda</span> curve simply descends.<sup
+            class="nb-cite"><a href="#s7">7</a></sup
+          >
+          Belkin had already noted that regularization can attenuate or mask the
+          interpolation peak, so this does not contradict the original account; it
+          bounds it.<sup class="nb-cite"><a href="#s1">1</a></sup> Double descent
+          is largely a description of under-regularized training. The bound has its
+          own limits worth stating: the optimal <span class="nb-math-in">\lambda</span>
+          changes with model size, so no single value serves everywhere, and for
+          non-Gaussian, heteroscedastic data optimally-tuned ridge can still be
+          non-monotone.<sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>A real effect, not a universal law</h2>
+        <p>
+          One open question sits underneath the rest: what actually drives the
+          peak. Nakkiran and colleagues argue it is not fundamentally about label
+          noise but about model misspecification.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Mei and Montanari cut against a tidy answer there: their analytically
+          tractable random-features model produces the full double descent curve
+          without assuming any ad hoc misspecification, from the variance of the
+          min-norm interpolant alone.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+          The honest reading is that label noise and misspecification each amplify
+          the peak, and neither has been shown to be necessary.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The effect is real and reproduces widely: from random features and
+            kernels to ResNets, CNNs and Transformers, and along model size,
+            training epochs, and dataset size.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            What the after-record removes is the strong reading, that double
+            descent is a fixed law in parameter count extending the classical
+            U-curve. Its peak can be relocated by relabeling the complexity
+            axis,<sup class="nb-cite"><a href="#s6">6</a></sup> sharpened or nearly
+            erased by label noise, and removed outright by optimal ridge
+            regularization.<sup class="nb-cite"><a href="#s7">7</a></sup> Treat it
+            as a robust account of under-regularized interpolation rather than a
+            universal law. A well-regularized deep architecture that showed no
+            interpolation peak in standard training would narrow the claim
+            further; an unregularized one that showed none would be the result
+            that breaks it.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1812.11118"
+              >arXiv / PNAS · Belkin, Hsu, Ma &amp; Mandal, "Reconciling modern
+              machine learning practice and the bias-variance trade-off" (2019)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1912.02292"
+              >arXiv / ICLR 2020 · Nakkiran, Kaplun, Bansal, Yang, Barak &amp;
+              Sutskever, "Deep Double Descent: Where Bigger Models and More Data
+              Hurt" (2019)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1611.03530"
+              >arXiv / ICLR 2017 · Zhang, Bengio, Hardt, Recht &amp; Vinyals,
+              "Understanding deep learning requires rethinking generalization"
+              (2017)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1810.09665"
+              >arXiv / J. Phys. A · Spigler, Geiger, d'Ascoli, Sagun, Biroli &amp;
+              Wyart, "A jamming transition from under- to over-parametrization
+              affects loss landscape and generalization" (2018)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1903.08560"
+              >arXiv · Hastie, Montanari, Rosset &amp; Tibshirani, "Surprises in
+              High-Dimensional Ridgeless Least Squares Interpolation" (2019)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2310.18988"
+              >arXiv / NeurIPS 2023 · Curth, Jeffares &amp; van der Schaar, "A
+              U-turn on Double Descent: Rethinking the Role of the Number of
+              Parameters" (2023)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2003.01897"
+              >arXiv / ICLR 2021 · Nakkiran, Venkat, Kakade &amp; Ma, "Optimal
+              Regularization Can Mitigate Double Descent" (2020)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1908.05355"
+              >arXiv · Mei &amp; Montanari, "The Generalization Error of Random
+              Features Regression: Precise Asymptotics and the Double Descent
+              Curve" (2019)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
