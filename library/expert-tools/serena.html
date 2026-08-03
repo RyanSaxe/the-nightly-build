@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Serena gives a coding agent a language server, so it reads and edits code by symbol instead of grepping for it · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "serena",
+        "template": "article",
+        "title": "Serena gives a coding agent a language server, so it reads and edits code by symbol instead of grepping for it",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-03",
+        "tags": ["mcp", "coding-agents", "language-server", "developer-tools"],
+        "sources": 9,
+        "words": 1649,
+        "reading_minutes": 7,
+        "dek": "The agent addresses code by symbol name instead of grepping whole files into context, though the free backend that does the work is narrower than the 40-language banner suggests.",
+        "harness": "Claude Code (Agent SDK)",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">Serena gives a coding agent a language server, so it reads and edits code by symbol instead of grepping for it</h1>
+        <p class="nb-dekline">
+          The agent addresses code by symbol name instead of grepping whole files into context, though the free backend that does the work is narrower than the 40-language banner suggests.
+        </p>
+        <div class="nb-byline">
+          <span>N min read</span><span>2026-08-03</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Serena puts a language server between the agent and the code</h2>
+        <p>
+          Point a coding agent at an unfamiliar function it needs to change, and
+          watch what it does without help. It runs
+          <code>grep -rn "my_method" src/</code> and gets a page of line hits. It
+          opens the files those hits sit in and reads each one whole to find the
+          definition and reason about the callers. Every one of those reads
+          spends context on lines the task never touches.
+        </p>
+        <p>
+          Serena removes that loop. It is an MIT-licensed toolkit that runs as a
+          Model Context Protocol server and exposes semantic retrieval and
+          editing tools that operate at the symbol level, backed by a language
+          server rather than by text search.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Any MCP-speaking harness can register it, so the same tools reach
+          Claude Code, Codex, Cursor, or a desktop client without a plugin per
+          host.<sup class="nb-cite"><a href="#s2">2</a></sup> The agent stops
+          asking the filesystem where the text <code>my_method</code> appears and
+          starts asking the language server where the symbol
+          <code>my_method</code> is defined, what it means, and who calls it.
+        </p>
+      </section>
+
+      <section data-nb-section="register-server" id="register-server">
+        <h2>One command registers Serena as the agent's MCP server</h2>
+        <p>
+          Serena enters a workflow at the client's launch config. MCP is a
+          client-server protocol: the host process spins up one client per
+          server, and each server advertises tools the model can call. Serena is
+          one such server, and its tools are code operations.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          Install it once, then hand the client a single line that tells it how
+          to start the server and which context to run.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">terminal</span><span>SHELL</span>
+          </div>
+          <pre><code class="language-bash">uv tool install -p 3.13 serena-agent
+serena init
+claude mcp add --scope user serena -- serena start-mcp-server --context claude-code --project-from-cwd</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · The official Claude Code registration; other clients paste
+            an equivalent JSON block naming the same
+            <code>start-mcp-server</code> command.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Read the last line back. The client now launches
+          <code>serena start-mcp-server</code> as a child process and talks to it
+          over stdio, the local-subprocess transport MCP defines for a server on
+          the same machine; the alternative is to start the server in HTTP mode
+          and give the client a URL.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          The <code>--project-from-cwd</code> flag activates the current
+          directory as the project so the language server knows what tree to
+          index. Take the install commands from the official docs and nowhere
+          else. The README warns that the versions circulating in plugin
+          marketplaces and third-party guides are outdated, and independent
+          write-ups already carry commands that no longer match the binary.<sup
+            class="nb-cite"><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="symbol-arc" id="symbol-arc">
+        <h2>Serena finds a symbol, traces its callers, and rewrites it without a file read</h2>
+        <p>
+          With the server registered, the agent addresses code by
+          <em>name path</em>, a route through the symbol tree of one file. The
+          method <code>my_method</code> defined in class <code>MyClass</code> has
+          the name path <code>MyClass/my_method</code>, and three tools carry the
+          whole edit.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">the agent's three tool calls</span
+            ><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">find_symbol(
+    name_path_pattern="MyClass/my_method",
+    relative_path="src/foo.py",
+    include_body=True,
+)  # returns the symbol, its location, and its body
+
+find_referencing_symbols(
+    name_path="MyClass/my_method",
+    relative_path="src/foo.py",
+)  # returns each caller with a snippet of code around the reference
+
+replace_symbol_body(
+    name_path="MyClass/my_method",
+    relative_path="src/foo.py",
+    body="def my_method(self, ...):\n        ...",
+)  # swaps the whole definition in place</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · The retrieve-trace-edit arc, with the parameters each tool
+            takes from its source docstring.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The first call returns the definition and its body, and nothing else in
+          the file. The instinct is to read this as grep with a parser bolted on.
+          But grep returns lines, and <code>find_symbol</code> returns the symbol:
+          the definition with its exact span, addressable for the next step
+          without the surrounding hundreds of lines entering context. The
+          second call answers the question grep answers badly. A text search for
+          the string also matches its uses inside comments, inside other strings,
+          and inside unrelated methods that share the name.
+          <code>find_referencing_symbols</code> returns instead the symbols that
+          actually reference this one, each with a snippet of the calling code.<sup
+            class="nb-cite"><a href="#s5">5</a></sup
+          >
+          The third call replaces the definition by name path. Its docstring is
+          blunt about the precondition: only replace a body after retrieving it
+          with <code>include_body=True</code>, so the agent knows what it is
+          overwriting.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          The saving is in tokens, and one hands-on reviewer put a number on it.
+          A cross-file rename in a TypeScript monorepo that had run to roughly
+          38,000 tokens across iterations of grep-and-read dropped to about 4,000
+          in a single symbol operation, close to a tenfold cut.<sup
+            class="nb-cite"><a href="#s6">6</a></sup
+          >
+          That is one reviewer measuring one task, not a benchmark. The shape of
+          the win is what generalizes, not the ratio: the agent pays for the
+          symbol and its references, not for every file they live in.
+        </p>
+        <div class="nb-pull">
+          <p>
+            The agent stops asking where a string appears and starts asking where
+            a symbol is defined and who calls it.
+          </p>
+        </div>
+      </section>
+
+      <section data-nb-section="free-backend" id="free-backend">
+        <h2>The free backend does less than Serena's 40-language banner</h2>
+        <p>
+          Serena advertises "semantic code retrieval, editing, refactoring and
+          debugging tools" across more than 40 languages, and both halves of that
+          line need reading with care.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The tools run on one of two backends. The default is free and
+          open-source: a language server per language, speaking LSP. The other is
+          a paid JetBrains plugin. The README's own capability tables draw the
+          line between them, and the marquee refactorings sit on the far side of
+          it.
+        </p>
+        <table class="nb-table">
+          <caption>
+            What the free language-server backend does, against the paid
+            JetBrains plugin, from the README's capability tables.<sup
+              class="nb-cite"><a href="#s1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Operation</th>
+              <th class="txt">Free LSP backend</th>
+              <th class="txt">JetBrains plugin (paid)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">find_symbol</span> / overview / references</td>
+              <td class="txt">yes</td>
+              <td class="txt">yes</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">replace_symbol_body</span>, insert, safe delete</td>
+              <td class="txt">yes</td>
+              <td class="txt">yes</td>
+            </tr>
+            <tr>
+              <td>rename</td>
+              <td class="txt">symbol-only</td>
+              <td class="txt">yes</td>
+            </tr>
+            <tr>
+              <td>find implementations</td>
+              <td class="txt">language-dependent</td>
+              <td class="txt">yes</td>
+            </tr>
+            <tr>
+              <td>move, inline, propagate deletions</td>
+              <td class="txt">no</td>
+              <td class="txt">yes</td>
+            </tr>
+            <tr>
+              <td>type hierarchy, dependency search</td>
+              <td class="txt">no</td>
+              <td class="txt">yes</td>
+            </tr>
+            <tr>
+              <td>interactive debugging</td>
+              <td class="txt">no</td>
+              <td class="txt">yes</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The retrieve-trace-edit arc above runs entirely on the free backend, so
+          the workflow costs nothing. What does not run on
+          it is the refactoring the word first brings to mind. Move, inline, and
+          propagate-deletions live only in the paid plugin. LSP rename reaches a
+          symbol but not a whole move, and find-declaration fails on symbols from
+          an external dependency.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The 40-language count is real and current, and it is tiered. A handful
+          of languages work with minimal setup; many need a toolchain installed;
+          a cluster including Angular, Solidity, and several markup formats is
+          marked experimental. The banner counts an integration, not a promise of
+          equal quality across the list.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="adoption-cost" id="adoption-cost">
+        <h2>Adopting Serena costs a toolchain per language and one slow first index</h2>
+        <p>
+          The setup cost lands in three places, and it lands before the first
+          useful call. The first is per-language. The turnkey set is small: Java,
+          JavaScript, TypeScript, Bash, and Lua. Everything past it wants a
+          toolchain already on the machine. Go needs
+          <code>gopls</code>, Rust needs <code>rustup</code>, C and C++ need a
+          <code>compile_commands.json</code> at the repository root, the Python
+          servers need <code>uv</code> or <code>uvx</code> on the path, and
+          GDScript needs the Godot editor running with its LSP enabled.<sup
+            class="nb-cite"><a href="#s7">7</a></sup
+          >
+          The gap bites exactly when the agent first touches a file in that
+          language and the server cannot start.
+        </p>
+        <p>
+          The second cost is indexing. On a fresh checkout the language server
+          builds its symbol picture from scratch, and for a large repository the
+          docs recommend running <code>serena project index</code> once to
+          pre-cache it, after which the index updates as files change.<sup
+            class="nb-cite"><a href="#s8">8</a></sup
+          >
+          The docs do not say how long that first pass takes. The same review
+          that measured the token saving reports it running for several minutes
+          on a large monorepo, and puts first-time setup for a new project at
+          around thirty minutes.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          The third cost is reliability of the setup itself. Handed only the
+          project URL, the reviewer got Serena working on the first try about a
+          quarter of the time and had to finagle the rest.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          That is one person's rate, and it aligns with the README's own warning
+          that stale install commands are in wide circulation. The practical
+          reading is to spend the setup deliberately, from the official
+          instructions, once per project rather than per session.
+        </p>
+      </section>
+
+      <section data-nb-section="maintenance" id="maintenance">
+        <h2>Serena ships steadily and hardens one language server at a time</h2>
+        <p>
+          A tool that sits between an agent and its edits has to be maintained
+          well enough to trust with a write path. The public signals are strong.
+          The repository carries about 27,400 stars and 1,800 forks over roughly
+          3,200 commits on <code>main</code>, with dozens of issues and pull
+          requests open at once, under the oraios organization and an MIT
+          license.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The commit history matters more than the star count for a trust
+          judgment, and it reads like correctness work rather than churn. The
+          latest tagged release is v1.6.1, dated 2026-07-21. The unreleased
+          section on <code>main</code> is dense with per-server fixes: a
+          TypeScript indexing race, duplicated results from Go's
+          <code>gopls</code>, Java runtime handling, and Rust memory use. Each is
+          named against the specific language server it repairs, alongside new
+          client support and an auto-migrated config rename.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+          The work is spread across the individual backends, which is where a
+          multi-language tool actually breaks.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            For the free workflow, symbol retrieval and
+            symbol-level edits over LSP, Serena is worth the setup for an agent
+            working a codebase it will return to. The maintenance signals
+            support trusting it with the edits.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            Adjust that only if your languages sit in the experimental tier or
+            your workflow needs the move, inline, and cross-file refactorings that
+            stay behind the paid plugin.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/oraios/serena/blob/main/README.md"
+              >oraios/serena · README</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/oraios/serena"
+              >GitHub · oraios/serena repository</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://modelcontextprotocol.io/docs/concepts/architecture"
+              >Model Context Protocol · Architecture</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://oraios.github.io/serena/02-usage/030_clients.html"
+              >oraios/serena docs · Clients</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/oraios/serena/blob/main/src/serena/tools/symbol_tools.py"
+              >oraios/serena · src/serena/tools/symbol_tools.py</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://andrew.ooo/posts/serena-mcp-coding-agent-ide-review/"
+              >Andrew · Serena MCP coding-agent review</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://oraios.github.io/serena/01-about/020_programming-languages.html"
+              >oraios/serena docs · Programming Languages</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://oraios.github.io/serena/02-usage/040_workflow.html"
+              >oraios/serena docs · Workflow</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/oraios/serena/blob/main/CHANGELOG.md"
+              >oraios/serena · CHANGELOG</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
