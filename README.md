@@ -22,10 +22,6 @@ Your paper and its archive live in your fork. You own it.
 >   publish: false
 > ```
 
-## How it works
-
-![The Nightly Build architecture](assets/architecture.svg)
-
 ## Get started
 
 Give this repository URL to the AI tool you already use and say:
@@ -63,9 +59,42 @@ can reach the repository, install the required tools, browse real sources, and
 open and then clean up a draft smoke-test PR. See
 [Verify the scheduled runtime](docs/getting-started/first-run.md).
 
+## How it works
+
+![The Nightly Build architecture](assets/architecture.svg)
+
+[Read how the pieces fit together](docs/concepts/architecture.md).
+
 ## FAQ
 
 <!-- markdownlint-disable MD033 -->
+
+<details>
+<summary><strong>Why did you build this?</strong></summary>
+
+---
+
+<p>I built The Nightly Build because I could not get the morning reading I
+wanted. Asking an AI for each subject was manual, checking its citations often
+erased the time saved, and news coverage still began from other people's
+frames. I wanted to choose what I read, how it was presented, and what evidence
+it had to earn.</p>
+
+<p>An overnight schedule makes a different production process practical: the
+paper can spend an hour researching, writing, checking, and revising without
+making me wait. I wanted to see how far that process could push two problems:
+the writing should stop advertising that an AI wrote it, and citations should
+support the claims that depend on them. It cannot guarantee truth, but it can
+make unsupported work harder to publish.</p>
+
+<p>I also wanted to test a different way to distribute software. Each paper is
+a fork, so its owner holds the code, configuration, archive, and deployment
+environment. The upstream project provides a system that owners change and
+operate for themselves, using the AI provider they choose.</p>
+
+---
+
+</details>
 
 <details>
 <summary><strong>How do you keep the writing from sounding like AI?</strong></summary>
@@ -148,12 +177,11 @@ Additionally, PRs are a natural entity that basically every AI harness interacts
 
 ---
 
-<p>The Nightly Build has no hosted service or fee. You pay for the agent or model
-runner you choose. More articles, broader research, and longer drafts use more
-tokens. The optional <a href="docs/reference/production.md">production policy</a> routes
-article roles to portable model tiers while leaving the automation's orchestrator
-under your control. See <a href="docs/integrations/README.md">Integrations</a> for runner and
-billing options.</p>
+<p>There is no hosted-service fee. You pay for the AI runtime you choose, and
+hosting can be free. One five-to-seven-article configuration took roughly
+45–90 minutes per run, but provider billing and limits vary. See
+<a href="docs/reference/production.md">Production cost and role models</a> for
+the observed workload and controls.</p>
 
 ---
 

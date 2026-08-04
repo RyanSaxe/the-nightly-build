@@ -9,10 +9,9 @@ choose the next move.
 
 Reach confidence on purpose, reader, territory, evidence standard, voice,
 recurring series, reading rhythm, how visual the paper should be, how much
-the user wants to spend on production, and first-week coherence. These are
-goals, not a prescribed order. Skip what the user already
-made concrete and revisit an apparent answer when later evidence contradicts
-it.
+production usage the user can sustain, and first-week coherence. These are
+goals, not a prescribed order. Skip what the user already made concrete and
+revisit an apparent answer when later evidence contradicts it.
 
 When the desired evidence standard depends on sources behind a login or
 paywall, surface the constraint immediately: scheduled research reads the
@@ -20,6 +19,13 @@ public web, and a source the user is entitled to read but must authenticate
 for currently requires significant harness-specific setup, tracked as
 upstream issue #127. Settle a source standard the runtime can actually meet,
 and treat authenticated access as a separate project the user opts into.
+
+## Settle sustainable production usage
+
+Read `docs/reference/production.md` before a budget conversation. Learn how the
+scheduled runtime is billed and what usage the user can sustain, then translate
+that tolerance into cadence, series scope, and production policy. When an
+answer depends on measurement, use the provider report from a normal run.
 
 ## Interview loop
 

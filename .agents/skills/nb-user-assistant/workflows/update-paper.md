@@ -16,6 +16,8 @@ Translate the user's observation into its true owner before editing:
 - a repeated word or verbal tic belongs in `press/banned-terms.yaml`
 - timing and item admission belong in `series.yaml`
 - evidence composition belongs in source policy fields
+- recurring production usage may belong in cadence, series boundaries,
+  commissioned items, or production policy
 - an isolated article correction belongs in the revision workflow
 - a presentational need may belong in existing furniture before new design
 
@@ -40,3 +42,6 @@ Apply the change on `main`, run `nb validate`, and preview when appearance,
 furniture, or templates change. Keep unrelated improvements out of the diff.
 If confidence depends on article output, recommend a local preview before the
 change lands.
+
+For a production-usage request, read `docs/reference/production.md` before
+proposing a change and use the next normal run to evaluate its effect.
