@@ -1,0 +1,22 @@
+# writer brief: unbiased/iran-war-powers (01)
+
+Inputs:
+- .nb-work/unbiased/iran-war-powers/agent-artifacts/unbiased/iran-war-powers/editorial-direction.md — governing standard, `unbiased` template identity (strict), series prompt, declared reader
+- .nb-work/unbiased/iran-war-powers/agent-artifacts/unbiased/iran-war-powers/commission.md — subject, two positions, required contribution, strict sourcing, non-overlap boundaries
+- .nb-work/unbiased/iran-war-powers/agent-artifacts/unbiased/iran-war-powers/writing-coach/01/voice-guide.md — craft standard, symmetry rule, licenses
+- .nb-work/unbiased/iran-war-powers/agent-artifacts/unbiased/iran-war-powers/researcher/01/evidence.md — the complete verified claim set; cite only what it opened; use Numbers exactly
+- .nb-work/unbiased/iran-war-powers/library/unbiased/iran-war-powers.html — the initialized article to edit
+- .nb-work/unbiased/iran-war-powers/.nb-context/ — effective template contract (strict gates) and furniture catalogs
+
+Output: .nb-work/unbiased/iran-war-powers/agent-artifacts/unbiased/iran-war-powers/writer/01/draft-handoff.md
+
+Proof: ./nb check .nb-work/unbiased/iran-war-powers/library/unbiased/iran-war-powers.html --series unbiased --library /tmp/claude-0/-home-user-the-nightly-build/2d5b8802-c025-5b79-bf1d-234ffd5a3463/scratchpad/library-checkout
+
+Focus:
+- The researcher materially corrected the anchor: the war began Feb 28, 2026; the President filed a War Powers report Mar 2; the WPR 60-day clock expired ~May 1 (or ~May 31 with the extension); strikes have continued ~3 months past it, with 18 US military deaths by July 23. Anchor the piece on the ongoing use of force past the clock, NOT a single day's strike. Use the evidence record's verified timeline and Numbers exactly.
+- The single sharpest legal fact, and the spine of the disagreement: Congress has NOT legally ordered withdrawal. The nonbinding concurrent resolutions (H.Con.Res.86, June, 215-208 House / 50-48 Senate; H.Con.Res.89, July 23, 214-208) invoke WPR §5(c) — the mechanism gutted by INS v. Chadha — so they don't reach the President. The one binding joint resolution, Van Hollen's S.J.Res.180, FAILED 47-49 on July 23. Do not blur these into "Congress passed a war-powers resolution." The concurrent-vs-joint distinction is a load-bearing fact the reader must finish understanding.
+- Steelman both, symmetric scrutiny (voice guide): Position A on the OLC April-2018 Syria two-part test (important national interests + not "war in the constitutional sense") and Art. II/self-defense; break it with the OLC opinion's OWN concession that some "imperfect wars" are so prolonged/substantial as to require authorization, applied to a 3-month reciprocal campaign with 18 US dead (Goldsmith/Vladeck). Position B on Art. I §8, WPR §1541(c)/§1544(b), and members' words; break it with §1541(c) widely treated as hortatory, the failed binding resolution, and Campbell/Dellums keeping courts out. Every skeptical question asked of one side gets its twin asked of the other in the same section.
+- CITATION CARE (strict desk): the two justiciability cases (Campbell v. Clinton, 203 F.3d 19; Dellums v. Bush, 752 F. Supp. 1141) were read via Wikipedia/Quimbee summaries because primary hosts 403'd. Cite each case to a canonical page that RESOLVES in the link check, assert only the well-established holding, and do NOT print verbatim opinion language you cannot confirm against the slip opinion. Mark data-nb-kind honestly: the March 2 report was read via Lawfare's reproduction — if you cite the report's content, the resolving link is Lawfare (secondary) unless the letter's own page resolves. Do not label a secondary reproduction as primary. Drop the lightly-sourced "Operation Epic Fury" codename / Khamenei-killed context; it is not load-bearing.
+- Strict source policy: min 10 sources, primary ≥4, secondary ≥3. Source composition is an evidence requirement, not a labeling game; the proof enforces it and the strict template makes structure/citation hard gates.
+- Do NOT pick a partisan winner; the article decides what the law says, never who wins (voice guide). Avoid the "everyone agrees X; the fight is Y" headline mold and the semicolon-reversal dek. Keep the day's tactical war news out of the spine except as the timely anchor (current-events carries the news this edition).
+- Name the piece's one act of original work in draft-handoff.md and make it visible.
