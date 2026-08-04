@@ -96,6 +96,10 @@ The configurable stages are `writing-coach`, `researcher`, `writer`, and
 `editor`. The orchestrator is deliberately absent: choose its model in
 the automation itself, where the run begins.
 
+A series that pins a voice guide never launches the writing coach, so its
+`writing-coach` directives do not apply. Nothing else changes: the article
+still carries a `writing-coach/01` record holding the pinned guide.
+
 ## Reduce usage without weakening the paper
 
 Start with the commission. A broad or ambiguous series spends more work
@@ -103,6 +107,12 @@ discovering candidate subjects and deciding what belongs. Current-events
 coverage often adds verification because claims change quickly and sources
 disagree. Narrower series boundaries and precise queued commissions settle more
 of those decisions before research begins.
+
+Pin a voice guide on any series whose sound is settled. This is the only
+reduction that removes a role invocation rather than making one cheaper: the
+writing coach does not run, and the observed 5 to 10 minutes and 50k to 100k
+tokens above go with it, every article, every night. See
+[Series](series.md#pinning-a-voice-guide).
 
 Then match models to the role each series needs. Research quality may dominate
 a news-heavy series, while another series depends more on voice or drafting.

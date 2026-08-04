@@ -33,6 +33,30 @@ layout, and how each series-page mode renders are fixed by the engine. A new
 navigation entry or a different front page is an engine contribution, which
 takes the fork off the conflict-free `press/`-only update path.
 
+## Pinning a series voice guide
+
+The writing coach normally studies exemplars fresh for every article. That is
+right for a section whose voice should track its subject, and wasteful for one
+that has settled. A course should sound the same lesson to lesson.
+
+Pin the standard with `voice_guide:` in `series.yaml` and the coach stops
+running for that section. See
+[Series reference](../../reference/series.md#pinning-a-voice-guide) for the
+key and [Production](../../reference/production.md) for what it saves.
+
+Write the guide the way the coach would, because the writer and the editor
+both read it as one. Ask your assistant to study strong writers in the
+section's territory and produce the guide from that reading rather than
+drafting it cold: the value is in the exemplars and in licensing specific
+expressive forms, not in adjectives about tone. A guide states register, the
+relationship with the reader, the forms an article may use and the bar each
+use must clear, and the craft notes drawn from each exemplar. Working examples
+live in `examples/series/kernels/voice-guide.md`.
+
+A pinned guide never mentions a particular article. Revisit it when the
+section's voice genuinely moves, and expect a fresh coach reading to beat a
+stale pin.
+
 ## Banned terms: press/banned-terms.yaml
 
 The proof counts every article against a list of ruled-out strings. Each

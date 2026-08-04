@@ -37,6 +37,13 @@ coach, evidence gaps to the researcher, and prose or structure changes to the
 writer. The orchestrator routes those requests instead of silently resolving
 them in a shared context.
 
+The writing coach is the one role a run may skip. A series that pins a standing
+voice guide has already made the judgment the coach exists to make, so the
+engine supplies that guide and production starts at research. Skipping it is a
+cost decision the press owner makes, never a waived gate: the article carries
+the same coach record either way, and the writer and editor read it as they
+read any other.
+
 Every invocation saves its exact input and output. Later repairs append to that
 record rather than replacing it, so the submitted article carries the history
 that produced it.
