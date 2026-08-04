@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-04</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-04",
+        "template": "brief",
+        "title": "OpenAI released proofs it says settle ten previously open problems in mathematics and computer science",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-04",
+        "tags": ["ai", "mathematics", "scientific-computing", "neuroscience", "security"],
+        "sources": 9,
+        "words": 875,
+        "reading_minutes": 4,
+        "dek": "It released the proofs as Lean 4 files a checker can verify line by line, and credits the work to an internal model it calls Astra.",
+        "harness": "Claude Code / The Nightly Build",
+        "model": "Opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">OpenAI released proofs it says settle ten previously open problems in mathematics and computer science</h1>
+        <p class="nb-dekline">It released the proofs as Lean 4 files a checker can verify line by line, and credits the work to an internal model it calls Astra.</p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-08-04</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Mathematics</span>
+          <h3>
+            <a href="https://github.com/openai/ten-proofs"
+              >OpenAI released a Lean proof file for each of ten newly settled math and CS problems</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            OpenAI posted the repository on August 1: ten Lean 4 files, one for
+            each result, running from a high-dimensional sphere-packing bound that
+            had not improved since 1978 to the first explicit construction of a
+            non-sofic group.<sup class="nb-cite"><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s2">2</a></sup> Every problem was
+            genuinely open, and each result now sits behind a machine-checkable
+            proof. But no one outside OpenAI has confirmed them yet: the README
+            hands verification to a separate Comparator challenge, and the
+            manuscript's claim of zero unproven steps is still its own.<sup
+              class="nb-cite"><a href="#s1">1</a></sup>
+          </p>
+          <table class="nb-table">
+            <caption>
+              The ten results and the Lean 4 file that formalizes each in OpenAI's
+              repository.<sup class="nb-cite"><a href="#s1">1</a></sup
+              ><sup class="nb-cite"><a href="#s2">2</a></sup>
+            </caption>
+            <thead>
+              <tr>
+                <th>Lean file</th>
+                <th class="txt">What it settles</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="nb-table-token">SpherePacking.lean</span></td>
+                <td class="txt">Fixes the exact high-dimensional decay rate of the Cohn-Elkies sphere-packing bound, its first improvement since 1978.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">MetricCodes.lean</span></td>
+                <td class="txt">Improves the classical upper bounds for binary and spherical codes by exponential factors.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">NonSoficGroup.lean</span></td>
+                <td class="txt">Constructs an explicit non-sofic group, settling whether every countable group has finite permutation approximations.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">ConnesRigidity.lean</span></td>
+                <td class="txt">Disproves Connes's rigidity conjecture with infinitely many property-(T) groups sharing one von Neumann algebra.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">Permanent.lean</span></td>
+                <td class="txt">Proves circuit and formula lower bounds for the permanent.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">QuantumParallelRepetition.lean</span></td>
+                <td class="txt">Establishes exponential parallel repetition for every finite two-player entangled game.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">GapCVP.lean</span></td>
+                <td class="txt">Reduces 3SAT to give new hardness for the Euclidean closest vector problem.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">EhrhartVolumeInequality.lean</span></td>
+                <td class="txt">Proves Ehrhart's sharp volume conjecture in every dimension.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">MulticolorTriangleRamsey.lean</span></td>
+                <td class="txt">Proves a superexponential lower bound for the multicolor Ramsey numbers of a triangle.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">CompactnessAndDegeneracy.lean</span></td>
+                <td class="txt">Disproves two extremal-graph conjectures of Erdos, on compactness and on degeneracy.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            OpenAI credits an internal model it calls Astra, its next major model,
+            and puts the compute to generate all ten proofs at about $2,000 at its
+            Sol API rates.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Scientific Computing</span>
+          <h3>
+            <a href="https://openai.com/index/scientific-computing-agentic-ai/"
+              >Coding agents sped up eight scientific codebases by as much as 60-fold in an OpenAI field report</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Across eight case studies, most in the life sciences, research groups
+            turned coding agents loose on aging software. One quality-control tool
+            for RNA sequencing dropped from 15.5 hours to under 15 minutes per run,
+            and a 20,000-line C and C++ genome aligner was rebuilt from scratch in
+            Rust.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            The developer Philip
+            Ewels, quoted in the report, found the agents "eloquent, convincing, and
+            confidently wrong in ways that are easy to miss," and every gain rested
+            on a scientist fixing what "correct" meant and checking that the
+            rewrite met it.<sup class="nb-cite"><a href="#s4">4</a></sup> The
+            agents did the engineering. Defining the question and verifying the
+            answer stayed human work.<sup class="nb-cite"><a href="#s3">3</a></sup
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Neuroscience</span>
+          <h3>
+            <a href="https://www.biospace.com/press-releases/feinstein-institutes-unveils-worlds-first-comprehensive-vagus-nerve-map-substantiating-decades-of-leadership-in-bioelectronic-medicine"
+              >The Feinstein Institutes mapped more than 200,000 fibers in the human vagus nerve</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            More than 200,000 individual fibers run through a single human vagus
+            nerve, and a team at Northwell Health's Feinstein Institutes has now
+            traced them across 60 nerves from 30 donors, the first comprehensive
+            anatomical atlas of the nerve.<sup class="nb-cite"><a href="#s5">5</a></sup
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+            The three-year effort, Reconstructing Vagal Anatomy, ran on a $6.7
+            million NIH grant awarded in 2022, combined microCT imaging,
+            immunohistochemistry, and ultrasound, and put its data in public on the
+            NIH-backed SPARC platform.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            Which fascicle carries which organ's signals is exactly what
+            vagus-nerve-stimulation devices need in order to reach one organ
+            without disturbing the rest, the use the Feinstein team says the
+            atlas is meant to inform.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+          <div class="nb-stat-strip">
+            <div class="nb-stat">
+              <span class="nb-stat-n">200,000+</span
+              ><span class="nb-stat-l">fibers per vagus nerve</span>
+            </div>
+            <div class="nb-stat">
+              <span class="nb-stat-n">60</span
+              ><span class="nb-stat-l">nerves imaged</span>
+            </div>
+            <div class="nb-stat">
+              <span class="nb-stat-n">30</span
+              ><span class="nb-stat-l">human donors</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Security</span>
+          <h3>
+            <a href="https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fmc-static-cred-BET3Cjh"
+              >Attackers are exploiting a Cisco firewall flaw rated only 5.3</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            The Cisco firewall bug that is actually being exploited,
+            <code>CVE-2026-20316</code>, carries a CVSS score of just 5.3: a static
+            credential in the Secure Firewall Management Center web interface that
+            lets an unauthenticated attacker sign into a low-privilege account and
+            read system data.<sup class="nb-cite"><a href="#s7">7</a></sup> Cisco's
+            advisory says its security team saw the flaw exploited in the wild in
+            July 2026. Cisco rates its Security Impact High despite the 5.3 score,
+            because the flaw "can be used with other Cisco Secure FMC Software
+            vulnerabilities to elevate privileges."<sup class="nb-cite"
+              ><a href="#s7">7</a></sup> Those other bugs are the ones scored 10.0.
+            The authentication-bypass flaw <code>CVE-2026-20079</code>, disclosed in
+            March, was shown to reach root in a proof of concept, and Cisco says it
+            has seen no sign of anyone exploiting it.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup>
+            Cisco shipped hot fixes for FMC releases 7.0 through 10.0 with no
+            workarounds.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/openai/ten-proofs"
+              >OpenAI · Lean 4 formalizations for "Ten Advances in Mathematics and Theoretical Computer Science" (GitHub repository)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thenextweb.com/news/openai-astra-model-ten-math-proofs-non-sofic-groups"
+              >The Next Web · OpenAI's Astra model produces proofs for ten open math problems</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/scientific-computing-agentic-ai/"
+              >OpenAI · Scientific computing in the age of agentic AI (field report)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://the-decoder.com/ai-coding-agents-can-modernize-research-software-but-cant-judge-if-the-science-is-right/"
+              >The Decoder · AI coding agents can modernize research software but can't judge if the science is right</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.biospace.com/press-releases/feinstein-institutes-unveils-worlds-first-comprehensive-vagus-nerve-map-substantiating-decades-of-leadership-in-bioelectronic-medicine"
+              >Feinstein Institutes for Medical Research (Northwell Health) · World's first comprehensive human vagus-nerve map (press release, via BioSpace)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.genengnews.com/topics/translational-medicine/comprehensive-human-vagus-nerve-map-unveiled/"
+              >Genetic Engineering &amp; Biotechnology News · Comprehensive human vagus nerve map unveiled</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fmc-static-cred-BET3Cjh"
+              >Cisco · Secure Firewall Management Center Software Static Credential Vulnerability (CVE-2026-20316 advisory)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.bleepingcomputer.com/news/security/cisco-warns-of-fmc-static-credential-flaw-exploited-in-zero-day-attacks/"
+              >BleepingComputer · Cisco warns of FMC static credential flaw exploited in zero-day attacks</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.vulncheck.com/blog/cisco-fmc-auth-bypass-cve-2026-20079"
+              >VulnCheck · Cisco Secure Firewall Management Center authentication bypass (CVE-2026-20079)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
