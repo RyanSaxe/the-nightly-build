@@ -63,33 +63,38 @@ open and then clean up a draft smoke-test PR. See
 
 ![The Nightly Build architecture](assets/architecture.svg)
 
-Your press defines what is due. An orchestrator turns that work into isolated
-article runs, where specialized agents research, write, and edit. Every article
-must pass deterministic checks in a pull request before it reaches the
-published paper.
-
 [Read how the pieces fit together](docs/concepts/architecture.md).
-
-## Why I built this
-
-I wanted a morning paper shaped by my questions instead of someone else's news
-agenda, without manually prompting for every subject or checking every citation
-from scratch. Running the editorial process overnight makes room for research,
-revision, and adversarial review; distributing it as a fork keeps the code,
-configuration, archive, and deployment under the reader's control.
-
-## What it costs
-
-There is no hosted-service fee. You pay for the AI runtime you choose, and
-hosting can be free. One five-to-seven-article configuration has taken roughly
-45–90 minutes per run, but provider billing and limits vary.
-
-See [Production cost and role models](docs/reference/production.md) for the
-observed workload, caveats, and controls.
 
 ## FAQ
 
 <!-- markdownlint-disable MD033 -->
+
+<details>
+<summary><strong>Why did you build this?</strong></summary>
+
+---
+
+<p>I built The Nightly Build because I could not get the morning reading I
+wanted. Asking an AI for each subject was manual, checking its citations often
+erased the time saved, and news coverage still began from other people's
+frames. I wanted to choose what I read, how it was presented, and what evidence
+it had to earn.</p>
+
+<p>An overnight schedule makes a different production process practical: the
+paper can spend an hour researching, writing, checking, and revising without
+making me wait. I wanted to see how far that process could push two problems:
+the writing should stop advertising that an AI wrote it, and citations should
+support the claims that depend on them. It cannot guarantee truth, but it can
+make unsupported work harder to publish.</p>
+
+<p>I also wanted to test a different way to distribute software. Each paper is
+a fork, so its owner holds the code, configuration, archive, and deployment
+environment. The upstream project provides a system that owners change and
+operate for themselves, using the AI provider they choose.</p>
+
+---
+
+</details>
 
 <details>
 <summary><strong>How do you keep the writing from sounding like AI?</strong></summary>
@@ -162,6 +167,21 @@ article, its assets, exact agent inputs and outputs, and validation result. Noth
 reaches <code>library</code> without passing CI. This makes it easy to audit
 the process if there are issues, as well as give more direct feedback in prompts.
 Additionally, PRs are a natural entity that basically every AI harness interacts with.</p>
+
+---
+
+</details>
+
+<details>
+<summary><strong>What does it cost?</strong></summary>
+
+---
+
+<p>There is no hosted-service fee. You pay for the AI runtime you choose, and
+hosting can be free. One five-to-seven-article configuration took roughly
+45–90 minutes per run, but provider billing and limits vary. See
+<a href="docs/reference/production.md">Production cost and role models</a> for
+the observed workload and controls.</p>
 
 ---
 
