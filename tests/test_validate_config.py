@@ -29,6 +29,9 @@ DUP_SLUG = (
     "name: X\nmode: collection\ntemplate: article\n"
     "items:\n  - {slug: alpha}\n  - {slug: alpha}\n"
 )
+MISSING_VOICE_GUIDE = (
+    "name: X\nmode: rolling\ntemplate: brief\nvoice_guide: voice-guide.md\n"
+)
 
 
 def site_errors(yaml_text: str) -> list[str]:
@@ -252,6 +255,11 @@ def test_a_non_dict_series_yaml_is_a_readable_error_not_a_traceback(
             id="required_docs-entry-mapping",
         ),
         pytest.param(DUP_SLUG, "duplicate item slug 'alpha'", id="duplicate-slug"),
+        pytest.param(
+            MISSING_VOICE_GUIDE,
+            "voice guide file 'voice-guide.md' not found",
+            id="voice_guide-missing-file",
+        ),
     ],
 )
 def test_a_malformed_series_reports_what_is_wrong(
