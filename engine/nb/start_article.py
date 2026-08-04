@@ -200,6 +200,49 @@ def _site_assets(repo: pathlib.Path) -> object:
     return site.get("assets") or {}
 
 
+def _pinned_voice_guide(
+    repo: pathlib.Path,
+    *,
+    series_id: str,
+    series: Mapping[str, object],
+) -> tuple[pathlib.Path, str] | None:
+    configured = series.get("voice_guide")
+    if configured is None:
+        return None
+    if not isinstance(configured, str) or not configured:
+        raise StartArticleError("series voice_guide must be a path string")
+    path = repo / "press" / "series" / series_id / configured
+    return path, _read(path, label=f"pinned voice guide for {series_id}")
+
+
+def _write_pinned_coach_record(
+    artifacts: pathlib.Path,
+    *,
+    repo: pathlib.Path,
+    revision: str,
+    guide_path: pathlib.Path,
+    guide: str,
+) -> None:
+    """Stand the pinned guide in for the coach's first invocation.
+
+    The artifact contract expects a writing-coach invocation whether or not the
+    role ran, so a published article carries the guide that governed it either
+    way.
+    """
+    invocation = artifacts / "writing-coach" / "01"
+    invocation.mkdir(parents=True)
+    (invocation / "brief.md").write_text(
+        "# Writing coach brief\n\n"
+        f"This series pins a standing voice guide at "
+        f"`{_relative(guide_path, repo)}`, so no writing coach was invoked for "
+        f"this article. The `voice-guide.md` beside this brief is that file at "
+        f"checkout revision `{revision}`.\n\n"
+        "Edit the pinned guide in the press to change how the series sounds.\n",
+        encoding="utf-8",
+    )
+    (invocation / "voice-guide.md").write_text(guide, encoding="utf-8")
+
+
 def _write_context(
     workspace: pathlib.Path,
     *,
@@ -285,9 +328,11 @@ def initialize(
     if item is None and requires_item:
         raise StartArticleError(f"series {series_id!r} has no item {slug!r}")
     resolved_tags = _resolve_tags(item=item, requested=tags)
+    pinned = _pinned_voice_guide(repo, series_id=series_id, series=series)
+    revision = _checkout_revision(repo)
     direction = _editorial_direction(
         repo,
-        revision=_checkout_revision(repo),
+        revision=revision,
         series_id=series_id,
         series=series,
         template_folder=template_folder,
@@ -312,6 +357,15 @@ def initialize(
     artifacts = workspace / "agent-artifacts" / series_id / slug
     artifacts.mkdir(parents=True)
     (artifacts / "editorial-direction.md").write_text(direction, encoding="utf-8")
+    if pinned is not None:
+        guide_path, guide = pinned
+        _write_pinned_coach_record(
+            artifacts,
+            repo=repo,
+            revision=revision,
+            guide_path=guide_path,
+            guide=guide,
+        )
     return article
 
 
