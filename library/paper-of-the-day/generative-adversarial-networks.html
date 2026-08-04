@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GANs train a loss their optimality proof leaves out · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "generative-adversarial-networks",
+        "template": "paper",
+        "title": "GANs train a loss their optimality proof leaves out",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-04",
+        "tags": [],
+        "sources": 8,
+        "words": 3034,
+        "reading_minutes": 13,
+        "dek": "The optimum at p_g = p_data is a real theorem about function-space minimax, and the loss Algorithm 1 actually descends is the one later work shows yields an unstable, infinite-variance gradient.",
+        "harness": "Claude Code / The Nightly Build",
+        "model": "Opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          GANs train a loss their optimality proof leaves out
+        </h1>
+        <p class="nb-dekline">
+          The optimum at p_g = p_data is a real theorem about function-space
+          minimax, and the loss Algorithm 1 actually descends is the one later
+          work shows yields an unstable, infinite-variance gradient.
+        </p>
+        <div class="nb-byline">
+          <span>15 min read</span><span>2026-08-04</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Generative Adversarial Nets</p>
+          <p class="nb-paper-meta">
+            Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David
+            Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua Bengio ·
+            NeurIPS 2014 · arXiv:1406.2661
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1406.2661"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We propose a new framework for estimating generative models via an
+            adversarial process, in which we simultaneously train two models: a
+            generative model G that captures the data distribution, and a
+            discriminative model D that estimates the probability that a sample
+            came from the training data rather than G. The training procedure
+            for G is to maximize the probability of D making a mistake. This
+            framework corresponds to a minimax two-player game. In the space of
+            arbitrary functions G and D, a unique solution exists, with G
+            recovering the training data distribution and D equal to 1/2
+            everywhere. In the case where G and D are defined by multilayer
+            perceptrons, the entire system can be trained with backpropagation.
+            There is no need for any Markov chains or unrolled approximate
+            inference networks during either training or generation of samples.
+            Experiments demonstrate the potential of the framework through
+            qualitative and quantitative evaluation of the generated
+            samples.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Before GANs, fitting a generator meant writing its likelihood</h2>
+        <p>
+          A generative model has to answer one question about any point in its
+          space: how probable is it? Fit the model by maximum likelihood and
+          that question is the training signal itself, which is why the
+          successful generative models before 2014 were the ones whose
+          likelihood could be computed or usefully bounded. Restricted Boltzmann
+          machines and deep belief nets paid for an intractable partition
+          function with Markov chain sampling; variational autoencoders
+          optimized a bound instead of the likelihood. Each design bent around
+          the same obstacle, that scoring a sample under a flexible
+          high-dimensional density is hard.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Introduction">1</a></sup
+          >
+        </p>
+        <p>
+          Goodfellow and co-authors removed the question rather than answering
+          it. A generator never scores a point; it only produces one, by pushing
+          a noise sample through a network. What tells it whether the point looks
+          real is a second network trained to separate real data from generated
+          data, and the generator learns by making that classifier fail. No
+          density is ever evaluated, no partition function summed, no Markov
+          chain run. The paper's claim is that this substitution costs nothing at
+          the ideal: played to its optimum, the game has a single solution, and
+          at that solution the generator's distribution equals the data's. The
+          claim is exactly right, and it is a claim about a setting the training
+          algorithm does not run in.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1, §4">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-value-function" id="the-value-function">
+        <h2>Two networks, one value function</h2>
+        <p>
+          Write <span class="nb-math-in">D(x)</span> for the discriminator's
+          estimate that <span class="nb-math-in">x</span> is real and
+          <span class="nb-math-in">G(z)</span> for the sample the generator
+          builds from noise <span class="nb-math-in">z \sim p_z</span>. The
+          discriminator wants <span class="nb-math-in">D(x)</span> near 1 on
+          data and near 0 on generated samples; the generator wants the opposite
+          for its own output. One value function scores both wants at once, and
+          the two networks pull on it in opposite directions.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Eq. 1, §3">1</a></sup
+          >
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \min_G \max_D V(D,G) = \mathbb{E}_{x \sim p_{\text{data}}}\!\bigl[\log
+            D(x)\bigr] + \mathbb{E}_{z \sim p_z}\!\bigl[\log\bigl(1 -
+            D(G(z))\bigr)\bigr]
+          </div>
+          <figcaption>
+            The generator minimizes over G what the discriminator maximizes over
+            D: the value function of the two-player minimax game.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="Eq. 1, §3">1</a></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          The inner maximization is what makes this more than a moving-target
+          classifier. For a fixed generator, the outer minimum is taken against
+          the best discriminator that exists, not the one a few gradient steps
+          have produced. That is the object the paper analyzes, and it is what
+          lets the generator's problem be rewritten as a statement about the two
+          distributions alone, with the discriminator solved away. Figure 1
+          shows the target: across four snapshots the generator's density (green)
+          slides onto the data's (black dots) while the discriminator (blue)
+          flattens toward a horizontal line.
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="generative-adversarial-networks/asset-1.png"
+            alt="Four panels labeled (a) through (d). In each, a lower horizontal line is the noise domain z and an upper horizontal line the data domain x, with arrows mapping z up to x. A black dotted curve is the data density, a green solid curve the generator density, and a blue dashed curve the discriminator. From (a) to (d) the green curve moves to coincide with the black dotted curve and the blue curve flattens from a varying shape to a constant horizontal line at mid-height."
+          />
+          <figcaption>
+            Fig. 1 · The generator density (green) converging onto the data
+            density (black dotted) as the discriminator (blue dashed) is driven
+            toward 1/2 everywhere; the lower line is the noise domain, mapped
+            upward to the data domain.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 1 · §3"
+                data-nb-url="https://arxiv.org/pdf/1406.2661#page=3"
+                data-nb-note="The paper's schematic of the two distributions; across (a)-(d) p_g moves onto p_data and the optimal discriminator flattens to 1/2, the picture of Prop. 1 and Thm. 1 together."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="optimal-discriminator" id="optimal-discriminator">
+        <h2>Solve the discriminator first</h2>
+        <p>
+          The derivation opens on the question the picture poses: what is the
+          best discriminator against a fixed generator? Hold G fixed and the
+          value function is an integral over <span class="nb-math-in">x</span> of
+          <span class="nb-math-in"
+            >p_{\text{data}}(x)\log D(x) + p_g(x)\log(1 - D(x))</span
+          >, one independent term per point. A term of the form
+          <span class="nb-math-in">a\log(y) + b\log(1-y)</span> is maximized at
+          <span class="nb-math-in">y = \tfrac{a}{a+b}</span>, so the optimal
+          discriminator is fixed pointwise by the two densities.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Prop. 1, Eqs. 2–3, §4.1">1</a></sup
+          >
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            D_G^{*}(x) = \frac{p_{\text{data}}(x)}{p_{\text{data}}(x) + p_g(x)}
+          </div>
+        </figure>
+
+        <p>
+          This closes the inner game exactly, and it changes what the generator
+          is fighting. Against <span class="nb-math-in">D_G^{*}</span> the
+          generator no longer faces an adversary with its own state and its own
+          errors; it faces a fixed function of <span class="nb-math-in"
+            >p_{\text{data}}</span
+          >
+          and <span class="nb-math-in">p_g</span>. Substituting
+          <span class="nb-math-in">D_G^{*}</span> back into the value function
+          therefore removes the discriminator from the problem, leaving a
+          quantity that depends on the two distributions and nothing else.
+        </p>
+      </section>
+
+      <section data-nb-section="jensen-shannon" id="jensen-shannon">
+        <h2>The game is minimizing a Jensen-Shannon divergence</h2>
+        <p>
+          Put <span class="nb-math-in">D_G^{*}</span> back in and the generator's
+          objective <span class="nb-math-in">C(G) = \max_D V(D,G)</span> collapses
+          to a single divergence between the two distributions. The
+          Jensen-Shannon divergence is the symmetric, smoothed cousin of the
+          Kullback-Leibler divergence,
+          <span class="nb-math-in"
+            >\mathrm{JSD}(p\|q) = \tfrac{1}{2}\mathrm{KL}(p\|M) +
+            \tfrac{1}{2}\mathrm{KL}(q\|M)</span
+          >
+          with <span class="nb-math-in">M = (p+q)/2</span> the average of the two.
+          It is bounded and it treats its two arguments alike, which is the
+          property the result turns on: the game does not prefer covering the
+          data to avoiding fantasy, or the reverse. It scores the two
+          symmetrically.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Thm. 1, Eqs. 4–6, §4.1">1</a></sup
+          >
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            C(G) = \htmlClass{nb-mc1}{-\log 4} + \htmlClass{nb-mc2}{2}\,
+            \htmlClass{nb-mc3}{\mathrm{JSD}}\!\bigl(\htmlClass{nb-mc4}{p_{\text{data}}}
+            \,\big\|\, \htmlClass{nb-mc5}{p_g}\bigr)
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">-\log 4</span
+              ><span
+                >the floor: the smallest value the game can reach, and its value
+                at the optimum.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">2</span
+              ><span
+                >the divergence enters at twice its size, so the game moves
+                exactly as the divergence moves.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\mathrm{JSD}</span
+              ><span
+                >Jensen-Shannon divergence: symmetric, and zero only when its two
+                arguments are equal.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">p_{\text{data}}</span
+              ><span>the data distribution, fixed and unknown, the target.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc5">p_g</span
+              ><span
+                >the generator's distribution, the only thing training can
+                move.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            With the optimal discriminator substituted in, the generator is
+            minimizing the Jensen-Shannon divergence between its distribution
+            and the data's.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Eq. 6, §4.1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          Because the divergence is zero only when its arguments coincide, the
+          objective has one global minimum, at
+          <span class="nb-math-in">p_g = p_{\text{data}}</span>, where it equals
+          <span class="nb-math-in">-\log 4 \approx -1.386</span>. There the
+          optimal discriminator reduces to
+          <span class="nb-math-in">D_G^{*}(x) = 1/2</span> for every
+          <span class="nb-math-in">x</span>: with the two distributions
+          identical, no classifier can do better than a coin, which is panel (d)
+          of Figure 1. This is the abstract's promise, made exact. A generator
+          with enough capacity, played against a discriminator held at its
+          optimum, has one best distribution to reach, and it is the true
+          one.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Thm. 1, §4.1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="function-space" id="function-space">
+        <h2>The proof optimizes in function space; Algorithm 1 does not</h2>
+        <p>
+          Read the theorem's assumptions with the same care as its conclusion.
+          The uniqueness result lives &ldquo;in the space of arbitrary
+          functions.&rdquo; The convergence result that follows, Proposition 2,
+          spells out what carrying it into training would require. It asks that
+          <span class="nb-math-in">G</span> and <span class="nb-math-in">D</span>
+          have enough capacity, and that at each step the discriminator
+          &ldquo;is allowed to reach its optimum given G.&rdquo; The generator is
+          then improved on the criterion <span class="nb-math-in">C(G)</span>,
+          which is convex in <span class="nb-math-in">p_g</span>. The argument is
+          a statement about updating a probability density directly, with its
+          adversary solved to optimality at every step.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Prop. 2, §4.2">1</a></sup
+          >
+        </p>
+        <p>
+          Algorithm 1 meets neither condition, and the paper writes it out
+          plainly. It runs alternating stochastic gradient descent in parameter
+          space: a network's weights, not a free density. It takes
+          <span class="nb-math-in">k</span> discriminator steps for each
+          generator step, and the paper sets
+          <span class="nb-math-in">k = 1</span>, &ldquo;the least expensive
+          option.&rdquo; The inner classifier is nudged once, not driven to
+          <span class="nb-math-in">D_G^{*}</span>, so the outer step improves
+          against a discriminator that is not the one the divergence argument
+          assumed.
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="generative-adversarial-networks/asset-2.png"
+            alt="The boxed pseudocode of Algorithm 1. A header notes the number of discriminator steps k is a hyperparameter, set to k equals 1, the least expensive option. An outer loop over training iterations contains an inner loop of k steps that samples a minibatch of noise and a minibatch of data and updates the discriminator by ascending its stochastic gradient of the mean of log D of x plus log of one minus D of G of z. After the inner loop, one generator step samples noise and updates the generator by descending its stochastic gradient of the mean of log of one minus D of G of z."
+          />
+          <figcaption>
+            Fig. 2 · The training loop: k discriminator ascent steps, then a
+            single generator descent step, with k = 1 in the paper's runs. The
+            asymmetry between the two is where the inner-loop-to-optimality
+            assumption is dropped.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Algorithm 1 · §3"
+                data-nb-url="https://arxiv.org/pdf/1406.2661#page=4"
+                data-nb-note="The alternating-SGD loop; the header sets k=1, so the discriminator is never trained to the optimum the convergence proof assumes."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          The gap widens one more turn, and again the paper is the one that
+          opens it. The generator half of the value function is
+          <span class="nb-math-in">\log(1 - D(G(z)))</span>, and early in
+          training, when the generator is poor, the discriminator rejects its
+          samples with high confidence, where that term is flat. So the authors
+          substitute a different generator loss: rather than minimize
+          <span class="nb-math-in">\log(1 - D(G(z)))</span>, maximize
+          <span class="nb-math-in">\log D(G(z))</span>. They report it has
+          &ldquo;the same fixed point&rdquo; but &ldquo;much stronger gradients
+          early in learning.&rdquo; The theorem grades the first loss; training
+          descends the second. The theorem and the training loop are about
+          different objects, and both facts are stated in the same section.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="vanishing-gradient" id="vanishing-gradient">
+        <h2>Where the generator's gradient goes</h2>
+        <p>
+          The obvious worry is that alternating SGD only approximates the inner
+          optimum, and a better-trained discriminator would close the gap.
+          Arjovsky and Bottou show the opposite: the closer the discriminator
+          gets to optimal, the worse the generator's signal, and they locate the
+          cause in the same divergence the optimum is built on.<sup
+            class="nb-cite"
+            ><a href="#s2" data-nb-locator="§2, Thms. 2.1–2.4">2</a></sup
+          >
+        </p>
+        <p>
+          A generator maps a low-dimensional noise vector into a
+          high-dimensional sample space, so its distribution is supported on a
+          thin set, one of measure zero in that space; natural data is believed
+          to lie on a low-dimensional surface too. Two such surfaces meeting a
+          high-dimensional space are like two curves drawn in a room: generically
+          they miss each other, or touch on a set too small to matter. Where
+          their supports fail to align, a discriminator exists that separates
+          them perfectly, with zero gradient on each support. The Jensen-Shannon
+          divergence then sits pinned at its maximum of
+          <span class="nb-math-in">\log 2</span>. And the generator's gradient
+          through the original minimax loss is bounded by
+          <span class="nb-math-in"
+            >\lVert \nabla_\theta \mathbb{E}_z[\log(1 - D(g_\theta(z)))]
+            \rVert_2 < \tfrac{M\varepsilon}{1-\varepsilon}</span
+          >, which vanishes as the discriminator error
+          <span class="nb-math-in">\varepsilon</span> goes to zero. A perfect
+          discriminator hands the generator nothing to move on.<sup
+            class="nb-cite"
+            ><a href="#s2" data-nb-locator="Thm. 2.4, Cor. 2.1, §2.2.1">2</a></sup
+          >
+        </p>
+        <p>
+          That is the exact diagnosis of the minimax loss, and it is not the loss
+          GANs are trained on. For the non-saturating substitute the paper
+          actually uses, the same authors prove something different, and
+          arguably worse than a vanishing gradient. Its expected update equals
+          the gradient of <span class="nb-math-in"
+            >\mathrm{KL}(p_g\|p_{\text{data}}) - 2\,\mathrm{JSD}(p_g\|p_{\text{data}})</span
+          >: a direction that pushes the wrong way on the Kullback-Leibler term
+          and <em>subtracts</em> the divergence the training is supposed to
+          reduce. And each coordinate of the update is a centered Cauchy
+          variable, with no finite mean and infinite variance, so the signal
+          does not vanish but jitters without settling.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Thms. 2.5–2.6, §2.2.2">2</a></sup
+          >
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \mathbb{E}_{z}\!\bigl[-\nabla_\theta \log
+            D^{*}(g_\theta(z))\bigr]_{\theta=\theta_0} = \nabla_\theta\!\bigl[
+            \mathrm{KL}(p_{g_\theta}\|p_{\text{data}}) - 2\,
+            \mathrm{JSD}(p_{g_\theta}\|p_{\text{data}}) \bigr]_{\theta=\theta_0}
+          </div>
+          <figcaption>
+            The non-saturating loss the paper trains does not minimize the
+            Jensen-Shannon divergence; its expected gradient subtracts it, and
+            the update has infinite variance.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="Thm. 2.5, §2.2.2">2</a></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          The famous
+          one-line verdict, that the Jensen-Shannon divergence gives a vanishing
+          gradient, is precise about a loss the paper set aside in Section 3. The
+          loss the field trained through the DCGAN era carries its own flaw, an
+          erratic signal where the minimax loss had an absent one. Both flaws
+          trace to the same fact: matching distributions on thin, badly
+          overlapping supports is not something a divergence that saturates can
+          guide.
+        </p>
+      </section>
+
+      <section data-nb-section="wasserstein" id="wasserstein">
+        <h2>Wasserstein's fix and the patches it needed</h2>
+        <p>
+          If a saturating divergence is the problem, a distance that never
+          saturates is the proposed cure. Arjovsky, Chintala and Bottou reach for
+          the Earth-Mover, or Wasserstein-1, distance: the least total cost of
+          transporting the mass of one distribution to match the other, cost
+          measured as distance moved. Their Example 1 makes the contrast a
+          calculation. Take a vertical segment
+          <span class="nb-math-in">P_0</span> and a copy
+          <span class="nb-math-in">P_\theta</span> shifted sideways by
+          <span class="nb-math-in">\theta</span>. As the copy slides toward the
+          original, the three candidate objectives behave in three different
+          ways.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Example 1, §2">3</a></sup
+          >
+        </p>
+
+        <table class="nb-table">
+          <caption>
+            Two parallel segments offset by &theta;: only the Earth-Mover
+            distance varies smoothly as the offset closes, so only it supplies a
+            usable gradient.<sup class="nb-cite"
+              ><a href="#s3" data-nb-locator="Example 1, §2">3</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Objective</th>
+              <th>Value at &theta; &ne; 0</th>
+              <th class="txt">As the offset &theta; closes to 0</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Earth-Mover</span></td>
+              <td>|&theta;|</td>
+              <td class="txt">
+                falls smoothly to 0; its gradient points home the whole way.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Jensen-Shannon</span></td>
+              <td>log 2</td>
+              <td class="txt">
+                stays pinned at the maximum until &theta; hits 0, then jumps; no
+                gradient.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Kullback-Leibler</span></td>
+              <td>+&infin;</td>
+              <td class="txt">
+                infinite for every nonzero offset; not a usable objective at all.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          The Earth-Mover distance is continuous everywhere and differentiable
+          almost everywhere under a mild condition on the generator. It also
+          induces a weaker topology than the divergences, so a sequence of
+          generators can converge under it in strictly more cases. Its dual form
+          turns the distance into a maximization over 1-Lipschitz functions,
+          which a network can approximate; the paper calls that network a critic
+          and holds it Lipschitz by clipping its weights into a small box.<sup
+            class="nb-cite"
+            ><a href="#s3" data-nb-locator="Thms. 1–2, Eq. 2, §2–3">3</a></sup
+          >
+          This is the principled account: a real failure of the original
+          objective, and a distance built to avoid it.
+        </p>
+        <p>
+          It is also not the last word, and the qualifications arrived fast. The
+          weight-clipping constraint was the first to go. Within months Gulrajani
+          and co-authors, Arjovsky among them, reported that clipping &ldquo;can
+          lead to undesired behavior,&rdquo; pushing critic weights to the
+          extremes of the box and wasting capacity. They replaced it with a
+          penalty on the norm of the critic's gradient.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="§1, §3">4</a></sup
+          >
+          Mescheder, Geiger and Nowozin then showed the deeper trouble was not
+          the clip. Wasserstein GAN and its gradient-penalty successor, run with
+          a finite number of critic steps per generator step, &ldquo;do not
+          always converge to the equilibrium point.&rdquo; The property that
+          restores convergence is a gradient penalty rather than the Wasserstein
+          distance itself.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="§1, convergence theorems">5</a></sup
+          >
+          The finite inner loop that broke the 2014 proof breaks the fix too.
+        </p>
+        <p>
+          The frame under the diagnosis has been contested as well, and from
+          inside. Fedus and co-authors, with Goodfellow among them, argue that
+          treating a divergence as the quantity every training step must
+          decrease is &ldquo;overly restrictive.&rdquo; They exhibit cases where
+          the discriminator supplies a useful signal precisely where the
+          divergence gradients would be useless, and where GANs learn
+          distributions the divergence-minimization view predicts they cannot.
+          On that reading, GAN training approaches a Nash equilibrium along a
+          path that need not decrease any fixed divergence at all, which is a
+          different picture from the one the vanishing-gradient result
+          assumes.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Abstract, Introduction">6</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="what-training-did" id="what-training-did">
+        <h2>What training did, and what the theorem is right about</h2>
+        <p>
+          None of this stopped GANs from working. Within about eighteen months,
+          Radford, Metz and Chintala's DCGANs trained stably enough on images to
+          learn &ldquo;a hierarchy of representations from object parts to
+          scenes in both the generator and the discriminator,&rdquo; and the
+          image-generation line the paper opened ran for years on that
+          footing.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Abstract">7</a></sup
+          >
+          The theory does not cover the loss its own successors trained, and the
+          method succeeded anyway, which is itself evidence that the
+          divergence-minimization account is not the whole of what GAN training
+          does.
+        </p>
+        <p>
+          The failure that actually defined GAN training in practice is one the
+          theorem does not predict: mode collapse. The generator maps many noise
+          vectors to a single output the discriminator currently rates well.
+          Once it does, Salimans and co-authors note, the discriminator's
+          gradient &ldquo;may point in similar directions for many similar
+          points,&rdquo; so the network cannot recover the variety it dropped.
+          This is a pathology of the alternating game between two finite
+          networks, invisible to an analysis that assumes an optimal
+          discriminator and a free density.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="§3.2">8</a></sup
+          >
+          Figure 3 shows what the 2014 model produced, with the memorization
+          check the authors built into it.
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="generative-adversarial-networks/asset-3.png"
+            alt="A grid of generated MNIST digits, four rows of six. The five left columns are model samples of handwritten digits; the rightmost column is boxed in yellow and holds the nearest real training example to each adjacent sample, which is visibly a different digit image, not a copy."
+          />
+          <figcaption>
+            Fig. 3 · Generated MNIST digits; the yellow rightmost column is the
+            nearest training example to each adjacent sample, shown to
+            demonstrate the model is drawing new samples rather than memorizing
+            the set.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 2 · §5"
+                data-nb-url="https://arxiv.org/pdf/1406.2661#page=6"
+                data-nb-note="MNIST panel of the samples figure; the nearest-neighbor column is the paper's evidence against memorization."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          Weighed as a reviewer would, the paper's soft spot is not its theory
+          but its evaluation. It scores samples by fitting a Gaussian Parzen
+          window to them and reporting test log-likelihood: 225 &plusmn; 2 nats
+          on MNIST, 2057 &plusmn; 26 on the Toronto Face Database. The authors
+          say in the same breath that the estimator &ldquo;has somewhat high
+          variance and does not perform well in high dimensional spaces.&rdquo;
+          It is the best number they had and a weak one, which the field
+          confirmed by abandoning it for the Inception score and its successors
+          within two years.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 1, §5">1</a></sup
+          >
+        </p>
+
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                The optimal discriminator and the reduction of the game to a
+                Jensen-Shannon divergence are exact.
+              </li>
+              <li>
+                The global optimum at p_g = p_data with value &minus;log 4 is a
+                correct theorem about function-space minimax.
+              </li>
+              <li>
+                The framework needs no Markov chain and no tractable likelihood,
+                and it launched a working line of image generation.
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                Convergence is proved for a free density with the discriminator
+                at its optimum; Algorithm 1 runs parameter-space SGD with k = 1.
+              </li>
+              <li>
+                The analyzed minimax loss is not the non-saturating loss the
+                paper trains, and later work diagnoses the two differently.
+              </li>
+              <li>
+                The Parzen-window evaluation is high-variance and poor in high
+                dimensions, as the authors themselves flag.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The theorem is right about exactly what it claims and silent about
+            what training does, and the paper draws that boundary itself rather
+            than hiding it. Read the optimum as a proof that the adversarial
+            substitution costs nothing at the ideal, not as a promise about
+            alternating SGD. The later diagnoses of instability then map the
+            space between the two; they do not refute either one. What
+            would change the assessment is a convergence result for the loss and
+            the optimizer GANs actually use; the field has spent a decade on it
+            and does not have a clean one.<sup class="nb-cite"
+              ><a href="#s6" data-nb-locator="Introduction">6</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1406.2661"
+              >arXiv · Goodfellow et al., &ldquo;Generative Adversarial Nets&rdquo;
+              (NeurIPS 2014)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1701.04862"
+              >arXiv · Arjovsky &amp; Bottou, &ldquo;Towards Principled Methods
+              for Training Generative Adversarial Networks&rdquo; (2017)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1701.07875"
+              >arXiv · Arjovsky, Chintala &amp; Bottou, &ldquo;Wasserstein
+              GAN&rdquo; (2017)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1704.00028"
+              >arXiv · Gulrajani et al., &ldquo;Improved Training of Wasserstein
+              GANs&rdquo; (NeurIPS 2017)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1801.04406"
+              >arXiv · Mescheder, Geiger &amp; Nowozin, &ldquo;Which Training
+              Methods for GANs do actually Converge?&rdquo; (ICML 2018)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1710.08446"
+              >arXiv · Fedus et al., &ldquo;Many Paths to Equilibrium: GANs Do
+              Not Need to Decrease a Divergence At Every Step&rdquo; (ICLR
+              2018)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1511.06434"
+              >arXiv · Radford, Metz &amp; Chintala, &ldquo;Unsupervised
+              Representation Learning with Deep Convolutional GANs&rdquo; (ICLR
+              2016)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1606.03498"
+              >arXiv · Salimans et al., &ldquo;Improved Techniques for Training
+              GANs&rdquo; (NeurIPS 2016)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
