@@ -33,10 +33,13 @@ contiguous directory (`02`, `03`, and so on) and never overwrites an earlier
 brief or output. `commission.md` and the generated `editorial-direction.md`
 remain at the artifact root.
 
-Every role receives `editorial-direction.md` with its brief. The editor also
-receives the exact writer brief so instruction leakage remains visible. A
-`review-brief.md` carries the named inputs, your recent-pattern notes, and the
-round's focus. Nothing more. Every launch begins with its named inputs and
+Every role receives `editorial-direction.md` with its brief. The writer's brief
+carries the recent openers, conclusions, and outline shapes the commission
+recorded as habits not to inherit. The voice guide states the craft standard
+and never names the last article, so the habits to avoid travel with the
+article rather than with the guide. The editor also receives the exact writer
+brief so instruction leakage remains visible. A `review-brief.md` carries the
+named inputs, your recent-pattern notes, and the round's focus. Nothing more. Every launch begins with its named inputs and
 permits focused tool use. When a role asks for more context, expand its
 inputs or route the question to the owner rather than inviting repository
 exploration.
