@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Predicting the noise, not the image, is what made diffusion models work · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "denoising-diffusion",
+        "template": "paper",
+        "title": "Predicting the noise, not the image, is what made diffusion models work",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-05",
+        "tags": [],
+        "sources": 9,
+        "words": 2750,
+        "reading_minutes": 12,
+        "dek": "Ho, Jain, and Abbeel reached a state-of-the-art CIFAR-10 FID of 3.17 in 2020 by dropping one weighting term from the diffusion variational bound, and every later text-to-image model inherited the objective that was left.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          Predicting the noise, not the image, is what made diffusion models
+          work
+        </h1>
+        <p class="nb-dekline">
+          Ho, Jain, and Abbeel reached a state-of-the-art CIFAR-10 FID of 3.17
+          in 2020 by dropping one weighting term from the diffusion variational
+          bound, and every later text-to-image model inherited the objective
+          that was left.
+        </p>
+        <div class="nb-byline">
+          <span>12 min read</span><span>2026-08-05</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Denoising Diffusion Probabilistic Models</p>
+          <p class="nb-paper-meta">
+            Jonathan Ho, Ajay Jain, Pieter Abbeel · NeurIPS 2020 ·
+            arXiv:2006.11239
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2006.11239"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We present high quality image synthesis results using diffusion
+            probabilistic models, a class of latent variable models inspired by
+            considerations from nonequilibrium thermodynamics. Our best results
+            are obtained by training on a weighted variational bound designed
+            according to a novel connection between diffusion probabilistic
+            models and denoising score matching with Langevin dynamics, and our
+            models naturally admit a progressive lossy decompression scheme that
+            can be interpreted as a generalization of autoregressive decoding.
+            On the unconditional CIFAR10 dataset, we obtain an Inception score
+            of 9.46 and a state-of-the-art FID score of 3.17. On 256x256 LSUN,
+            we obtain sample quality similar to ProgressiveGAN.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="p. 1, Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A five-year-old model that had never made a competitive image</h2>
+        <p>
+          The forward-and-reverse diffusion idea was not new in 2020. Five years
+          earlier, Sohl-Dickstein and colleagues had proposed exactly this
+          shape. Destroy the structure in an image with a slow forward
+          diffusion, then learn a reverse diffusion that restores it, for "a
+          highly flexible and tractable generative model of the
+          data."<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Abstract">2</a></sup
+          >
+          The framework was tractable and it was flexible. What it was not was
+          competitive: nobody had made it produce images that stood next to a
+          good GAN's. A parallel line, Song and Ermon's noise-conditional score
+          networks, reached a CIFAR-10 Inception score of 8.87 by estimating the
+          gradient of the log data density at many noise levels and sampling
+          with annealed Langevin dynamics.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Abstract; §CIFAR-10">3</a></sup
+          >
+          Promising, still short of the best adversarial models.
+        </p>
+        <p>
+          This paper changed one thing and won. It kept the 2015 forward and
+          reverse chains almost untouched, and it replaced the training target.
+          Instead of asking the network to predict the slightly cleaner image at
+          each step, it asked the network to predict the noise that had been
+          added. The loss became a plain squared error with a weighting term
+          thrown away. That single substitution took CIFAR-10 from the
+          score-based field's 25.32 FID down to 3.17, the best reported for an
+          unconditional model at publication.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 1">1</a></sup
+          >
+          The rest of the paper is the derivation that explains why the
+          substitution was available and why dropping the weight helped.
+        </p>
+      </section>
+
+      <section data-nb-section="forward-process" id="forward-process">
+        <h2>The forward process throws information away on a fixed schedule</h2>
+        <p>
+          The forward process is not learned. It is a fixed Markov chain that
+          adds a small amount of Gaussian noise at each of
+          <span class="nb-math-in">T</span> steps, shrinking the signal by a set
+          factor as it goes.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2, Eqn. 2">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            q(\mathbf{x}_t \mid \mathbf{x}_{t-1}) := \mathcal{N}\!\left(\mathbf{x}_t;\ \sqrt{1-\beta_t}\,\mathbf{x}_{t-1},\ \beta_t \mathbf{I}\right)
+          </div>
+        </figure>
+        <p>
+          Each step scales the previous image by
+          <span class="nb-math-in">\sqrt{1-\beta_t}</span> and injects variance
+          <span class="nb-math-in">\beta_t</span>. The paper uses a linear
+          schedule from
+          <span class="nb-math-in">\beta_1 = 10^{-4}</span> to
+          <span class="nb-math-in">\beta_T = 0.02</span> over
+          <span class="nb-math-in">T = 1000</span> steps. Run it to the end and
+          the image is indistinguishable from a draw of
+          <span class="nb-math-in">\mathcal{N}(\mathbf{0}, \mathbf{I})</span>.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="§4">1</a></sup
+          >
+          Nothing here is a choice the model gets to make. The forward process
+          is a definition, and the reverse process is the only part that learns.
+        </p>
+        <p>
+          A property worth the entire construction falls out of this
+          definition. Because a sum of Gaussians is Gaussian, the composition of
+          <span class="nb-math-in">t</span> noising steps has a closed form. You
+          can jump straight to any noise level in one draw, without simulating
+          the chain.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2, Eqn. 4">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            q(\mathbf{x}_t \mid \mathbf{x}_0) = \mathcal{N}\!\left(\mathbf{x}_t;\ \sqrt{\bar\alpha_t}\,\mathbf{x}_0,\ (1-\bar\alpha_t)\mathbf{I}\right), \qquad \mathbf{x}_t = \sqrt{\bar\alpha_t}\,\mathbf{x}_0 + \sqrt{1-\bar\alpha_t}\,\boldsymbol{\epsilon}
+          </div>
+          <figcaption>
+            With
+            <span class="nb-math-in">\alpha_t := 1-\beta_t</span> and
+            <span class="nb-math-in">\bar\alpha_t := \prod_{s=1}^{t}\alpha_s</span>,
+            the marginal at step <span class="nb-math-in">t</span> is a single
+            Gaussian centered on a shrunk
+            <span class="nb-math-in">\mathbf{x}_0</span>. The
+            reparameterization on the right builds any
+            <span class="nb-math-in">\mathbf{x}_t</span> from the clean image
+            and one noise draw
+            <span class="nb-math-in">\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0},\mathbf{I})</span>.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="§2, Eqn. 4">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          This closed form is what makes training affordable. Without it, every
+          gradient step would have to march an image through the chain to reach
+          a random <span class="nb-math-in">t</span>. With it, training draws a
+          timestep uniformly and constructs
+          <span class="nb-math-in">\mathbf{x}_t</span> in one operation. The
+          <span class="nb-math-in">\boldsymbol{\epsilon}</span> in that
+          equation is about to become the regression target the whole method
+          turns on.
+        </p>
+      </section>
+
+      <section data-nb-section="reverse-posterior" id="reverse-posterior">
+        <h2>The step you want to learn is intractable until you condition on
+          the clean image</h2>
+        <p>
+          The reverse process is a second Markov chain, this one with learned
+          Gaussian transitions, that starts from pure noise and walks back to an
+          image.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2, Eqn. 1">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t) := \mathcal{N}\!\left(\mathbf{x}_{t-1};\ \boldsymbol{\mu}_\theta(\mathbf{x}_t, t),\ \boldsymbol{\Sigma}_\theta(\mathbf{x}_t, t)\right)
+          </div>
+        </figure>
+        <p>
+          Training this by maximum likelihood is intractable, so the paper does
+          what latent-variable models do and optimizes a variational bound on
+          the negative log-likelihood. The bound decomposes over timesteps into
+          a term at the endpoint, a denoising term at every interior step, and a
+          final reconstruction term.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3, Eqn. 5">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \mathbb{E}_q\Big[\ \underbrace{D_{\mathrm{KL}}\!\left(q(\mathbf{x}_T \mid \mathbf{x}_0)\,\|\,p(\mathbf{x}_T)\right)}_{L_T} + \sum_{t>1} \underbrace{D_{\mathrm{KL}}\!\left(q(\mathbf{x}_{t-1} \mid \mathbf{x}_t, \mathbf{x}_0)\,\|\,p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t)\right)}_{L_{t-1}} \underbrace{-\ \log p_\theta(\mathbf{x}_0 \mid \mathbf{x}_1)}_{L_0}\ \Big]
+          </div>
+          <figcaption>
+            The variational bound, term by term.
+            <span class="nb-math-in">L_T</span> has no learnable parameters,
+            because the forward process has none. The work is in the sum of
+            <span class="nb-math-in">L_{t-1}</span> terms, each a KL between the
+            true reverse step and the learned one.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§3, Eqn. 5">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The obstacle sits inside
+          <span class="nb-math-in">L_{t-1}</span>. The true reverse step
+          <span class="nb-math-in">q(\mathbf{x}_{t-1} \mid \mathbf{x}_t)</span>
+          is not a Gaussian anyone can write down. Condition it on the clean
+          image <span class="nb-math-in">\mathbf{x}_0</span>, though, and it
+          collapses to a closed-form Gaussian with a known mean and
+          variance.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3, Eqn. 6-7">1</a></sup
+          >
+          That is the move that makes the bound computable, and it is available
+          only because training has <span class="nb-math-in">\mathbf{x}_0</span>
+          in hand.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            q(\mathbf{x}_{t-1} \mid \mathbf{x}_t, \mathbf{x}_0) = \mathcal{N}\!\left(\mathbf{x}_{t-1};\ \tilde{\boldsymbol{\mu}}_t(\mathbf{x}_t, \mathbf{x}_0),\ \tilde\beta_t \mathbf{I}\right), \qquad \tilde\beta_t = \frac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}\,\beta_t
+          </div>
+          <figcaption>
+            Conditioned on
+            <span class="nb-math-in">\mathbf{x}_0</span>, the reverse step is a
+            Gaussian with a fixed variance
+            <span class="nb-math-in">\tilde\beta_t</span> and a mean
+            <span class="nb-math-in">\tilde{\boldsymbol{\mu}}_t</span> that is a
+            weighted combination of
+            <span class="nb-math-in">\mathbf{x}_0</span> and
+            <span class="nb-math-in">\mathbf{x}_t</span>.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§3, Eqn. 6-7">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The paper fixes the reverse variance to
+          <span class="nb-math-in">\tilde\beta_t</span> rather than learning
+          it, so only the mean is left to match. With both sides Gaussian, the
+          KL term reduces to a scaled squared distance between the two
+          means.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3, Eqn. 8">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L_{t-1} = \mathbb{E}_q\!\left[\frac{1}{2\sigma_t^2}\,\left\|\tilde{\boldsymbol{\mu}}_t(\mathbf{x}_t, \mathbf{x}_0) - \boldsymbol{\mu}_\theta(\mathbf{x}_t, t)\right\|^2\right] + C
+          </div>
+        </figure>
+        <p>
+          The problem is now a regression. The only open question is what,
+          exactly, the network should regress onto.
+        </p>
+      </section>
+
+      <section data-nb-section="noise-objective" id="noise-objective">
+        <h2>Predict the noise, then drop the weight</h2>
+        <p>
+          Two parameterizations of that regression are available, and they are a
+          genuine fork. Predicting the mean asks the network to output where the
+          slightly cleaner image sits. Predicting the noise asks it to output
+          what was added. They are algebraically interchangeable, because the
+          closed-form marginal already ties
+          <span class="nb-math-in">\mathbf{x}_t</span>,
+          <span class="nb-math-in">\mathbf{x}_0</span>, and
+          <span class="nb-math-in">\boldsymbol{\epsilon}</span> together. The
+          paper substitutes that relation into
+          <span class="nb-math-in">\tilde{\boldsymbol{\mu}}_t</span> and finds
+          the mean the network must produce.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.2, Eqn. 11">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \boldsymbol{\mu}_\theta(\mathbf{x}_t, t) = \frac{1}{\sqrt{\alpha_t}}\left(\mathbf{x}_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\,\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)\right)
+          </div>
+          <figcaption>
+            Reparameterizing the mean. The network no longer outputs
+            <span class="nb-math-in">\boldsymbol{\mu}_\theta</span> directly; it
+            outputs a noise estimate
+            <span class="nb-math-in">\boldsymbol{\epsilon}_\theta</span>, and
+            the mean is assembled from it. The
+            <span class="nb-math-in">\mathbf{x}_t</span> term is already an input,
+            so the network only has to supply the correction.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§3.2, Eqn. 11">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Take a single timestep to see what this does to the loss. At that
+          <span class="nb-math-in">t</span>, matching the mean
+          <span class="nb-math-in">\tilde{\boldsymbol{\mu}}_t</span> becomes
+          matching the noise once the substitution is made. The network sees the
+          noised image
+          <span class="nb-math-in">\mathbf{x}_t = \sqrt{\bar\alpha_t}\mathbf{x}_0 + \sqrt{1-\bar\alpha_t}\boldsymbol{\epsilon}</span>.
+          It is scored on how close its
+          <span class="nb-math-in">\boldsymbol{\epsilon}_\theta</span> lands to
+          the exact <span class="nb-math-in">\boldsymbol{\epsilon}</span> that
+          produced it. Do that for every <span class="nb-math-in">t</span>, and
+          the interior loss is the noise-prediction term below. It carries a
+          coefficient that depends on the step.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.2, Eqn. 12">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L_{t-1} = \mathbb{E}_{\mathbf{x}_0, \boldsymbol{\epsilon}}\left[\frac{\beta_t^2}{2\sigma_t^2\,\alpha_t\,(1-\bar\alpha_t)}\,\left\|\boldsymbol{\epsilon} - \boldsymbol{\epsilon}_\theta\!\left(\sqrt{\bar\alpha_t}\,\mathbf{x}_0 + \sqrt{1-\bar\alpha_t}\,\boldsymbol{\epsilon},\ t\right)\right\|^2\right]
+          </div>
+          <figcaption>
+            The variational bound written as noise prediction, with the exact
+            step-dependent weight the derivation produces.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§3.2, Eqn. 12">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The decisive move is to throw that coefficient away and train on the
+          bare squared error. This is not a derivation. It is a choice, and the
+          paper defends it with a result rather than an identity. The dropped
+          coefficient is largest at small <span class="nb-math-in">t</span>,
+          where the image is nearly clean and denoising is easy. Keeping it
+          would spend most of the training signal on the easiest steps. Setting
+          it to one up-weights the hard, heavily-noised steps, and the authors
+          report that this trains more stably and yields better
+          samples.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.4, Eqn. 14">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L_{\mathrm{simple}}(\theta) := \mathbb{E}_{t, \mathbf{x}_0, \boldsymbol{\epsilon}}\left[\left\|\,\htmlClass{nb-mc1}{\boldsymbol{\epsilon}} - \htmlClass{nb-mc2}{\boldsymbol{\epsilon}_\theta}\!\left(\htmlClass{nb-mc3}{\sqrt{\bar\alpha_t}\,\mathbf{x}_0 + \sqrt{1-\bar\alpha_t}\,\boldsymbol{\epsilon}},\ \htmlClass{nb-mc4}{t}\right)\right\|^2\right]
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\boldsymbol{\epsilon}</span
+              ><span
+                >the actual Gaussian noise added in the forward step, and the
+                target the network regresses onto.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\boldsymbol{\epsilon}_\theta</span
+              ><span>the network's estimate of that noise, its only output.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3"
+                >\sqrt{\bar\alpha_t}\mathbf{x}_0 + \sqrt{1-\bar\alpha_t}\boldsymbol{\epsilon}</span
+              ><span
+                >the noised image <span class="nb-math-in">\mathbf{x}_t</span>,
+                built in one shot by the closed-form marginal.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">t</span
+              ><span
+                >the timestep, fed in so one network covers every noise
+                level.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            <span class="nb-math-in">L_{\mathrm{simple}}</span>: the Eqn. 12
+            objective with the
+            <span class="nb-math-in">\frac{\beta_t^2}{2\sigma_t^2\alpha_t(1-\bar\alpha_t)}</span>
+            coefficient set to one. A plain mean-squared error on predicted
+            noise, and the objective the paper's best models train
+            on.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§3.4, Eqn. 14">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          What that objective buys is a training loop with no adversary, no
+          reconstruction decoder, and no per-step targets to precompute. Sample
+          a clean image, sample a timestep, sample noise, and take a gradient
+          step on the squared error. Sampling reverses the same network: start
+          from noise and walk the chain back, subtracting the network's noise
+          estimate at each step and adding a controlled amount of fresh noise
+          until the last step.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="denoising-diffusion/asset-1.png"
+            alt="Two boxed pseudocode listings side by side. Algorithm 1, Training: repeat, sample a clean image and a timestep and Gaussian noise, then take a gradient step on the squared error between the noise and the network's prediction on the noised image. Algorithm 2, Sampling: start from Gaussian noise, then for t from T down to 1 update the image using the network's noise estimate plus a scaled fresh-noise term, returning the image at step zero."
+          />
+          <figcaption>
+            Fig. 1 · The full method in two boxes. Training (left) is a single
+            noise-prediction regression with no adversary and no decoder;
+            sampling (right) is <span class="nb-math-in">T</span> sequential
+            denoising steps, one network evaluation each. The pairing is where
+            the paper's later cost shows: the loop that is cheap to train is
+            expensive to sample.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="§3.2, Algorithms 1-2"
+                data-nb-url="https://arxiv.org/abs/2006.11239"
+                data-nb-note="The training and sampling procedures, transcribed from the paper's Algorithm 1 and Algorithm 2 boxes."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The parameterization is not a matter of taste, and the paper's own
+          ablation settles it. Predicting the mean under the true weighted bound
+          reaches an FID of 13.51. The same architecture, switched to noise
+          prediction and trained on the unweighted
+          <span class="nb-math-in">L_{\mathrm{simple}}</span>, reaches
+          3.17. Trying to also learn the reverse variances, rather than fixing
+          them, was unstable.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 2">1</a></sup
+          >
+        </p>
+        <table class="nb-table">
+          <caption>
+            CIFAR-10 sample quality by reverse-process parameterization and
+            objective. Lower FID is better, higher IS is better.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 2">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Parameterization and objective</th>
+              <th>FID</th>
+              <th>IS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">Mean prediction, true weighted bound</td>
+              <td>13.51</td>
+              <td>7.67</td>
+            </tr>
+            <tr>
+              <td class="txt">
+                Noise prediction, unweighted
+                <span class="nb-math-in">L_{\mathrm{simple}}</span>
+              </td>
+              <td>3.17</td>
+              <td>9.46</td>
+            </tr>
+            <tr>
+              <td class="txt">Learned diagonal reverse variances</td>
+              <td>unstable</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section data-nb-section="what-it-measured" id="what-it-measured">
+        <h2>Strong samples, a likelihood that lost, and a cost left unnamed</h2>
+        <p>
+          The headline number is CIFAR-10. The
+          <span class="nb-math-in">L_{\mathrm{simple}}</span> model scores an
+          FID of 3.17 and an Inception score of 9.46, the best FID among the
+          unconditional entries the paper tabulates and ahead of the score-based
+          and adversarial baselines it lists.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 1">1</a></sup
+          >
+        </p>
+        <table class="nb-table">
+          <caption>
+            Unconditional CIFAR-10, as the paper reports it. StyleGAN2 + ADA is
+            an augmented adversarial comparator, listed for scale.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Model</th>
+              <th>FID</th>
+              <th>IS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">
+                NCSN<sup class="nb-cite"><a href="#s3">3</a></sup>
+              </td>
+              <td>25.32</td>
+              <td>8.87</td>
+            </tr>
+            <tr>
+              <td class="txt">SNGAN</td>
+              <td>21.7</td>
+              <td>8.22</td>
+            </tr>
+            <tr>
+              <td class="txt">SNGAN-DDLS</td>
+              <td>15.42</td>
+              <td>9.09</td>
+            </tr>
+            <tr>
+              <td class="txt">StyleGAN2 + ADA</td>
+              <td>3.26</td>
+              <td>9.74</td>
+            </tr>
+            <tr>
+              <td class="txt">DDPM (<span class="nb-math-in">L_{\mathrm{simple}}</span>)</td>
+              <td>3.17</td>
+              <td>9.46</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          At 256x256 the paper shows LSUN Church samples at an FID of 7.89 and
+          LSUN Bedroom at 4.90, with the scores printed in the figure captions
+          rather than a comparison table.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Figures 3-4">1</a></sup
+          >
+          The abstract claims parity here, "sample quality similar to
+          ProgressiveGAN," and hedges to a 2018 adversarial model. One of those
+          Church samples reproduces a stock-photo watermark from the training
+          set intact, a visible instance of the training-data memorization these
+          models can exhibit at this resolution.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="denoising-diffusion/asset-2.png"
+            alt="A grid of generated 256 by 256 photographs of church exteriors, showing varied architecture, towers, sky, and surrounding landscape at photographic quality."
+          />
+          <figcaption>
+            Fig. 2 · Generated LSUN Church samples at 256x256, FID 7.89. The
+            grid is the paper's evidence for the parity claim, and the figure
+            caption is where that number lives. The top-left sample carries a
+            legible "www.shutterstock.com 193883335" watermark, present in the
+            paper's own Figure 3.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Figure 3, FID=7.89"
+                data-nb-url="https://arxiv.org/abs/2006.11239"
+                data-nb-note="LSUN Church sample grid; the FID of 7.89 is stated in the paper's Figure 3 caption."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The number the abstract does not lead with is log-likelihood, and the
+          reason is that the winning model loses on it. The
+          <span class="nb-math-in">L_{\mathrm{simple}}</span> model reaches a
+          negative log-likelihood bound of at most 3.75 bits per dimension. The
+          paper's own variant, trained on the true variational bound with a
+          fixed isotropic reverse variance, does better on likelihood at 3.70
+          and worse on samples. The objective that maximizes image quality is
+          not the objective that maximizes likelihood. The paper concedes
+          the codelengths "are not competitive with other types of
+          likelihood-based generative models."<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 1; §4.3">1</a></sup
+          >
+        </p>
+        <p>
+          The second gap is one the paper never names as a limitation. Sampling
+          runs the reverse chain for all
+          <span class="nb-math-in">T = 1000</span> steps, one network
+          evaluation each, and the only stated reason for that count is to match
+          the neural-network evaluations of prior work.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§4">1</a></sup
+          >
+          A thousand sequential forward passes to draw one image is treated as a
+          setting, not a cost. It is the sharpest distance between how the paper
+          framed its method and how the field would come to see it.
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                The sample-quality claim: FID 3.17 and IS 9.46 on unconditional
+                CIFAR-10, a real state of the art at publication.
+              </li>
+              <li>
+                The
+                <span class="nb-math-in">\boldsymbol{\epsilon}</span>-prediction
+                objective with the weight dropped, which trained stably and
+                became the recipe later systems reused unchanged.
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                Log-likelihood is not the win. The best-FID model is beaten on
+                bits per dimension by the paper's own bound-trained variant, and
+                by likelihood-based models generally.
+              </li>
+              <li>
+                Sampling cost is unaddressed. 1000 sequential network passes per
+                image is fixed by fiat and never weighed.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>A training recipe the whole field kept</h2>
+        <p>
+          Read as a reviewer, the paper's real contribution is narrower than its
+          abstract and more durable than its own numbers. The forward-and-reverse
+          diffusion framework is Sohl-Dickstein 2015, and the score-matching and
+          Langevin half of the "novel connection" is Song and Ermon
+          2019.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          What is new here is the
+          <span class="nb-math-in">\boldsymbol{\epsilon}</span>-parameterization
+          and the unweighted
+          <span class="nb-math-in">L_{\mathrm{simple}}</span> objective, the
+          two changes that turned a tractable-but-uncompetitive idea into the
+          best unconditional image model of its moment. That is a training
+          recipe, not a model family. The recipe is what the field kept.
+        </p>
+        <p>
+          The two soft spots were both closed within a year, and by follow-ups
+          that read directly against them. DDIM keeps the identical training
+          objective but replaces the sampler with a non-Markovian process,
+          reaching comparable quality 10 to 50 times faster, which reframes the
+          1000-step chain as one point on a speed-quality curve rather than a
+          fixed price.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Abstract">4</a></sup
+          >
+          Nichol and Dhariwal answer the likelihood gap on its own terms. Learn
+          the reverse variances the paper held fixed, add a cosine schedule and a
+          hybrid loss, and DDPMs reach competitive log-likelihoods. The same
+          changes cut sampling to an order of magnitude fewer forward passes at
+          negligible quality cost.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Abstract">5</a></sup
+          >
+          Song and colleagues then showed DDPM and the score networks are two
+          discretizations of one stochastic differential equation. Its
+          probability-flow ODE computes exact likelihoods and reaches an FID of
+          2.20 on CIFAR-10, evidence of how much headroom the family still
+          held.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Abstract">6</a></sup
+          >
+        </p>
+        <p>
+          Even the hedged LSUN claim understated the method. Within two years
+          Dhariwal and Nichol added classifier guidance and architecture search,
+          and had diffusion models beating the strongest GANs on ImageNet. The
+          abstract's "similar to ProgressiveGAN" was a floor, not a
+          ceiling.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Abstract">7</a></sup
+          >
+          The plain unconditional objective extended to controllable generation
+          without a separate classifier through classifier-free
+          guidance,<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="Abstract">8</a></sup
+          >
+          and moving the same denoising process into a pretrained
+          autoencoder's latent space made it cheap enough for public
+          text-to-image systems.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="Abstract">9</a></sup
+          >
+          Every one of those inherited
+          <span class="nb-math-in">L_{\mathrm{simple}}</span> as written.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The paper oversells the novelty and undersells the reach. Its
+            architecture is 2015 and its score-matching link is 2019. Its
+            likelihood is beaten by its own variant, and its sampler is a
+            thousand steps it never questions. Set all of that against the one
+            thing it
+            got exactly right. The
+            <span class="nb-math-in">\boldsymbol{\epsilon}</span>-prediction
+            objective was simple enough to train without tricks and general
+            enough to survive every scale-up that followed, and that makes it
+            the more important paper. What would have changed the assessment is
+            narrow. Had the unweighted objective failed to generalize past
+            CIFAR and LSUN, or had the 1000-step cost proven irreducible, DDPM
+            would read today as a well-executed curiosity. Neither
+            held.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2006.11239"
+              >arXiv · Jonathan Ho, Ajay Jain, Pieter Abbeel, "Denoising
+              Diffusion Probabilistic Models" (NeurIPS 2020)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1503.03585"
+              >arXiv · Jascha Sohl-Dickstein et al., "Deep Unsupervised Learning
+              using Nonequilibrium Thermodynamics" (ICML 2015)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1907.05600"
+              >arXiv · Yang Song, Stefano Ermon, "Generative Modeling by
+              Estimating Gradients of the Data Distribution" (NeurIPS 2019)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2010.02502"
+              >arXiv · Jiaming Song, Chenlin Meng, Stefano Ermon, "Denoising
+              Diffusion Implicit Models" (ICLR 2021)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2102.09672"
+              >arXiv · Alexander Quinn Nichol, Prafulla Dhariwal, "Improved
+              Denoising Diffusion Probabilistic Models" (ICML 2021)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2011.13456"
+              >arXiv · Yang Song et al., "Score-Based Generative Modeling through
+              Stochastic Differential Equations" (ICLR 2021)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2105.05233"
+              >arXiv · Prafulla Dhariwal, Alexander Nichol, "Diffusion Models
+              Beat GANs on Image Synthesis" (NeurIPS 2021)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2207.12598"
+              >arXiv · Jonathan Ho, Tim Salimans, "Classifier-Free Diffusion
+              Guidance" (2022)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2112.10752"
+              >arXiv · Robin Rombach et al., "High-Resolution Image Synthesis
+              with Latent Diffusion Models" (CVPR 2022)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>

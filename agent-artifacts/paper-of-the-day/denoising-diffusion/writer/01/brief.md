@@ -1,0 +1,24 @@
+# writer brief: paper-of-the-day/denoising-diffusion (01)
+
+Inputs:
+- /home/user/the-nightly-build/.nb-work/paper-of-the-day/denoising-diffusion/agent-artifacts/paper-of-the-day/denoising-diffusion/editorial-direction.md — governing standard, `paper` template identity, series prompt, declared reader (math/CS/ML background)
+- /home/user/the-nightly-build/.nb-work/paper-of-the-day/denoising-diffusion/agent-artifacts/paper-of-the-day/denoising-diffusion/commission.md — the paper, the required reconstruction, math/figure obligations
+- /home/user/the-nightly-build/.nb-work/paper-of-the-day/denoising-diffusion/agent-artifacts/paper-of-the-day/denoising-diffusion/writing-coach/01/voice-guide.md — craft standard and licenses (equation transitions read as forced decisions)
+- /home/user/the-nightly-build/.nb-work/paper-of-the-day/denoising-diffusion/agent-artifacts/paper-of-the-day/denoising-diffusion/researcher/01/evidence.md — verbatim equations, figure/asset candidates, after-record, the verdict-feeding limitation; cite only what it opened
+- /home/user/the-nightly-build/.nb-work/paper-of-the-day/denoising-diffusion/library/paper-of-the-day/denoising-diffusion.html — the initialized article to edit
+- /home/user/the-nightly-build/.nb-work/paper-of-the-day/denoising-diffusion/.nb-context/ — effective template contract and furniture catalogs (equation, table, source-asset, etc.)
+
+Output: /home/user/the-nightly-build/.nb-work/paper-of-the-day/denoising-diffusion/agent-artifacts/paper-of-the-day/denoising-diffusion/writer/01/draft-handoff.md
+
+Proof: ./nb check /home/user/the-nightly-build/.nb-work/paper-of-the-day/denoising-diffusion/library/paper-of-the-day/denoising-diffusion.html --series paper-of-the-day --library /tmp/claude-0/-home-user-the-nightly-build/5ac05fa8-7516-5815-8999-41be6fa389b4/scratchpad/library-checkout
+
+Run environment: harness = claude-code, model = capable (Opus-class), medium effort.
+
+Focus:
+- Fill the abstract card first (title, authors — Ho, Jain, Abbeel; venue NeurIPS 2020; arXiv:2006.11239 link) with the abstract verbatim from the evidence. Then reconstruct in the order that teaches best, not the paper's order.
+- **Set the load-bearing math with the equation furniture — do not paraphrase it.** Use the evidence's captured equations: the forward process and the closed-form marginal q(x_t|x_0) with the alpha-bar reparameterization; the reverse parameterization and the variational bound; the tractable posterior; and the decisive move — the reduction to the epsilon-prediction objective and **L_simple with the weighting term dropped**. Per the voice guide, each transition must read as a decision forced by a named constraint (tractability / variance / a reported empirical result), not algebra resolving itself. Do not overload the piece: set the equations the claim actually turns on, and reference the appendix for the rest.
+- **Bring the figures the claim turns on in as SOURCE ASSETS via `nb asset`** (from the paper itself): the strongest candidates per the evidence are Algorithm 1 (training) and Algorithm 2 (sampling) — these two are the paper's clearest artifacts and may be better as a code/algorithm listing or captured boxes; and one sample-quality figure (Fig 3 LSUN Church FID 7.89 or Fig 4 Bedroom FID 4.90, FID in-caption). Only spend an asset the prose actually reads. Capture with `nb asset`, inspect the rendered asset and page, use factual cited captions (the FID lives in the caption — quote it as the paper states). The Table 2 parameterization/objective ablation is better as a TABLE (furniture), not an image.
+- Verify every number against the paper's own tables (CIFAR-10 FID 3.17 / Inception 9.46 as the paper reports; the L_simple-vs-variational NLL bound 3.75 vs 3.70 bits/dim; LSUN FIDs only in figure captions). Do not carry a secondary's restatement of a paper number.
+- Weigh the evidence as a reviewer and state a verdict before Sources: sample quality vs. non-competitive log-likelihood, and unaddressed 1000-step sampling cost — using the after-record (DDIM, Improved DDPM, Score-SDE, Diffusion-beats-GANs, classifier-free guidance, latent diffusion) only where it changes the interpretation of DDPM's claim. Place the paper against its lineage (Sohl-Dickstein 2015; NCSN 2019). Another source never replaces the focal paper or pads the list.
+- Headline/dek per the `paper` identity: the abstract card discloses the paper; title and dek carry the claim/consequence, not a colon-subtitle or a banned dek mold. Section headings are argument steps in the paper's own nouns (no scaffolding).
+- Name the piece's one act of original work (what the reconstruction does to the evidence) in draft-handoff.md. Run `nb stamp` then the exact proof to BLOCK: 0, links included. Use `nb preview` and inspect the rendered page after assets/equations are placed.
