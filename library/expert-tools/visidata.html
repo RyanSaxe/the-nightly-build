@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VisiData turns each new question about a table into a keystroke on the current column · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "visidata",
+        "template": "article",
+        "title": "VisiData turns each new question about a table into a keystroke on the current column",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-05",
+        "tags": [],
+        "sources": 17,
+        "words": 1658,
+        "reading_minutes": 7,
+        "dek": "The sheet is already loaded and every transform lands on the column under the cursor, so asking a new question costs a keystroke instead of a rewrite.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">VisiData turns each new question about a table into a keystroke on the current column</h1>
+        <p class="nb-dekline">
+          The sheet is already loaded and every transform lands on the column under the cursor, so asking a new question costs a keystroke instead of a rewrite.
+        </p>
+        <div class="nb-byline">
+          <span>7 min read</span><span>2026-08-05</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>In pandas, the next question is another cell</h2>
+        <p>
+          You have a CSV of sales rows and a question: what is revenue by
+          region. In a notebook the shape of the work is fixed before you know
+          the answer. You write a cell that reads the file, computes a column,
+          groups, and sums; you run it; you read the result. If the grouping
+          was wrong, or you now want product broken out too, you edit the cell
+          and run it again. Each new question about the same data is another
+          round of write, run, reread. The data sits in memory the whole time.
+          What you keep paying is the round trip from question to typed code to
+          result. VisiData (<code>vd</code>), Saul Pwanson's
+          <q>interactive multitool for tabular data,</q> attacks that round
+          trip rather than the compute, and its current release is v3.4, from
+          30 June 2026.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="three-keystrokes" id="three-keystrokes">
+        <h2>Three keystrokes answer revenue by region</h2>
+        <p>
+          Open the file and the sheet is already there to work on:
+          <code>vd sales.csv</code> draws the rows and hands you a cursor. The
+          first question, revenue per row, is a column that does not exist yet.
+          Press <code>=</code> and VisiData prompts for a Python expression;
+          type <code>total = Units * Unit_Cost</code> and a new
+          <code>total</code> column appears, with the existing column names
+          available as variables.<sup class="nb-cite"><a href="#s2">2</a></sup
+          ><sup class="nb-cite"><a href="#s3">3</a></sup> In pandas this is
+          <code>df['total'] = df.Units * df.Unit_Cost</code>; here it is one key
+          and the same expression, evaluated against every row.
+        </p>
+        <p>
+          Summing that column by region takes two more keys, each landing on
+          the column the cursor is on. On <code>total</code>, press
+          <code>+</code> and choose <code>sum</code> from the list of
+          aggregators, which attaches a running sum to the
+          column.<sup class="nb-cite"><a href="#s4">4</a></sup
+          ><sup class="nb-cite"><a href="#s5">5</a></sup> Move the cursor to
+          <code>Region</code> and press <code>F</code>. VisiData pushes a
+          frequency table grouped on the current column and carrying the
+          aggregations of the other columns, so each region gets a row with its
+          count and the summed <code>total</code> beside
+          it.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">a VisiData session, sales.csv</span><span>VISIDATA</span>
+          </div>
+          <pre><code class="language-python">$ vd sales.csv
+
+ Date       | Region | Product | Units | Unit_Cost
+ 2026-07-01 | West   | Widget  |     3 |      4.00
+ 2026-07-01 | East   | Gadget  |     1 |      9.00
+ 2026-07-02 | West   | Gadget  |     2 |      9.00
+ 2026-07-02 | East   | Widget  |     5 |      4.00
+ 2026-07-03 | West   | Widget  |     4 |      4.00
+ 2026-07-03 | East   | Gadget  |     2 |      9.00
+
+=   new column expression:   total = Units * Unit_Cost
+
+ Region | Product | Units | Unit_Cost | total
+ West   | Widget  |     3 |      4.00 |    12
+ East   | Gadget  |     1 |      9.00 |     9
+ West   | Gadget  |     2 |      9.00 |    18
+ East   | Widget  |     5 |      4.00 |    20
+ West   | Widget  |     4 |      4.00 |    16
+ East   | Gadget  |     2 |      9.00 |    18
+
++   (on total)   choose aggregator:   sum
+F   (on Region)  Frequency Table
+
+ Region | count | total_sum
+ West   |     3 |        46
+ East   |     3 |        47</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · <code>=</code> computes <code>total = Units * Unit_Cost</code>,
+            <code>+</code> sets a sum on that column, and <code>F</code> on
+            <code>Region</code> groups the rows and carries the sum. Keybindings
+            confirmed in source.<sup class="nb-cite"><a href="#s5">5</a></sup
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          That is the whole loop: no dataframe named twice, no cell rerun,
+          three keys after the file opened. The keys are not memorized up
+          front. Each acts on wherever the cursor sits, and the full command
+          list is one keypress away at <code>Ctrl+H</code>.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="reshape" id="reshape">
+        <h2>W pivots the same sheet, and M puts it back</h2>
+        <p>
+          A grid of region against product is a different question, and in a
+          notebook it is a different call,
+          <code>df.pivot_table(...)</code>. In VisiData it is the pivot key.
+          A pivot groups by whatever columns you have marked as keys, and
+          marking a column as a key is one more keystroke. With
+          <code>Region</code> marked as the key and the cursor on
+          <code>Product</code>, press <code>W</code> and VisiData opens a pivot
+          table that groups rows by the key column and summarizes the current
+          column: one column per product value, the summed <code>total</code>
+          in each cell.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <p>
+          The inverse question, a wide table folded back to one row per
+          observation, is the melt key. Press <code>M</code> and VisiData opens
+          a melted sheet: the key columns stay, and every non-key column
+          collapses into <code>Variable</code> and <code>Value</code>
+          rows, the tall shape a database load or a plotting call
+          wants.<sup class="nb-cite"><a href="#s9">9</a></sup> The pivot and its
+          inverse, the two reshapes a pandas session spells out as
+          <code>pivot_table</code> and <code>melt</code>, are one keystroke each
+          on the sheet already in front of you.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">the same sheet, reshaped</span><span>VISIDATA</span>
+          </div>
+          <pre><code class="language-python">W   (Region key, cursor on Product)   Pivot Table
+
+ Region | Widget | Gadget
+ West   |     28 |     18
+ East   |     20 |     27
+
+M   (on the pivot)   Melted Sheet
+
+ Region | Variable | Value
+ West   | Widget   |    28
+ West   | Gadget   |    18
+ East   | Widget   |    20
+ East   | Gadget   |    27</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · <code>W</code> spreads <code>Product</code> across the top
+            and fills each cell with the summed total; <code>M</code> folds the
+            same sheet back to one row per region-product
+            pair.<sup class="nb-cite"><a href="#s8">8</a></sup
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </figcaption>
+        </figure>
+        <table class="nb-table">
+          <caption>
+            Four questions about one CSV: the pandas idiom, and the VisiData
+            keystrokes that stand in for it.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Question</th>
+              <th class="txt">In pandas</th>
+              <th class="txt">In VisiData</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">revenue per row</td>
+              <td class="txt"><code>df['total'] = df.Units * df.Unit_Cost</code></td>
+              <td class="txt"><code>=</code>&nbsp; <code>total = Units * Unit_Cost</code></td>
+            </tr>
+            <tr>
+              <td class="txt">revenue by region</td>
+              <td class="txt"><code>df.groupby('Region').total.sum()</code></td>
+              <td class="txt"><code>+</code> sum, then <code>F</code> on Region</td>
+            </tr>
+            <tr>
+              <td class="txt">region against product</td>
+              <td class="txt"><code>df.pivot_table(index='Region', columns='Product', values='total', aggfunc='sum')</code></td>
+              <td class="txt"><code>W</code> on Product</td>
+            </tr>
+            <tr>
+              <td class="txt">wide back to tall</td>
+              <td class="txt"><code>df.melt(id_vars='Region')</code></td>
+              <td class="txt"><code>M</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section data-nb-section="async-load" id="async-load">
+        <h2>You can move through the file before it loads, but not total it</h2>
+        <p>
+          The sheet you are working is often not fully loaded. VisiData's base
+          sheet loads asynchronously by default. Its <code>reload</code> is
+          decorated <code>@asyncthread</code> and runs in a separate thread,
+          and a loader is a generator that yields rows one at a time. Rows
+          become available as they are parsed, not after a full
+          read.<sup class="nb-cite"><a href="#s10">10</a></sup
+          ><sup class="nb-cite"><a href="#s11">11</a></sup
+          ><sup class="nb-cite"><a href="#s12">12</a></sup> Pwanson's own
+          account of the design: a sheet stays dormant until it is about to be
+          drawn, then loads in a background thread while the interface stays
+          responsive. Open 100 GB of CSVs with <code>vd *.csv</code> and only
+          the top sheet loads, the rest on
+          demand.<sup class="nb-cite"><a href="#s13">13</a></sup> On a large
+          file you can scroll, jump, and open a column the instant the first
+          rows arrive.
+        </p>
+        <p>
+          What you cannot do mid-load is trust a whole-column result.
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">The loader's fine print</span>
+          <p>
+            Navigation and viewing are correct the moment rows appear, but a
+            frequency count, a sort, or an aggregate sum reflects only the rows
+            loaded so far; those results are final only once loading
+            finishes.<sup class="nb-cite"><a href="#s10">10</a></sup>
+          </p>
+        </div>
+        <p>
+          The loader is also not unbounded. A precious sheet stops at
+          <code>options.max_rows</code>, which defaults to 1,000,000,000 rows,
+          so past a billion rows the sheet is truncated, not merely
+          slow.<sup class="nb-cite"><a href="#s11">11</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-cost" id="the-cost">
+        <h2>What the keystrokes cost, and where a notebook still wins</h2>
+        <p>
+          The cost is the keys themselves. VisiData is modal and vim-flavored:
+          early on you look most commands up, and users report the tool pays
+          back only after that stretch, once the frequent keys are in the
+          hands.<sup class="nb-cite"><a href="#s14">14</a></sup> The five keys
+          here (<code>=</code>, <code>+</code>, <code>F</code>, <code>W</code>,
+          <code>M</code>), plus grouped variants like <code>gF</code> and
+          <code>gM</code>, are a fraction of the set, and each is a character to
+          learn rather than a phrase to read.
+        </p>
+        <p>
+          The boundary is not the learning. A notebook or a database still wins
+          wherever the work outlives the exploration. A reproducible,
+          version-controlled, multi-step pipeline belongs in code a colleague
+          can rerun. Custom plotting belongs in a plotting library. A join or
+          aggregation over data too large for one machine belongs in
+          SQL.<sup class="nb-cite"><a href="#s15">15</a></sup> VisiData's
+          command log replays a session and can be saved and rerun, which
+          narrows the reproducibility gap without closing it. The changelog
+          records that the log now stores long command names rather than raw
+          keystrokes. That helps, but it is still a session record, not a
+          program.<sup class="nb-cite"><a href="#s16">16</a></sup> VisiData is
+          for the exploratory pass, the part of the work where you do not yet
+          know which questions are worth writing down.
+        </p>
+      </section>
+
+      <section data-nb-section="one-persons-tool" id="one-persons-tool">
+        <h2>The loop is won by one person's GPL-3.0 project</h2>
+        <p>
+          The trade is clear once the keys are learned: the exploratory loop a
+          notebook spends in write, run, and reread, VisiData spends in move
+          the cursor and press a key, and on that pass it wins. The same
+          design that makes it coherent is also its risk. VisiData is conceived
+          and developed by Saul Pwanson, with Anja Kefala maintaining the
+          documentation and packages; it is effectively a single-primary-author
+          project, licensed GPL-3.0, with about 9,200 GitHub
+          stars.<sup class="nb-cite"><a href="#s17">17</a></sup> Its releases
+          are regular: v3.4 shipped in June 2026, roughly one minor release
+          every two to three quarters across the 3.x line since late 2023, so
+          the project is active rather than
+          stalled.<sup class="nb-cite"><a href="#s16">16</a></sup
+          ><sup class="nb-cite"><a href="#s1">1</a></sup> The judgment for a
+          practitioner is not whether VisiData is maintained but whether a tool
+          that lives on one person's attention is one to route a daily workflow
+          through. For the pass before the pipeline, where the alternative is a
+          stack of throwaway cells, the keystrokes earn it.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="landing page; version banner; supported-formats listing"
+              href="https://www.visidata.org/"
+              >visidata.org · VisiData home (version and description)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Creating derivative columns"
+              href="https://www.visidata.org/docs/columns/"
+              >VisiData docs · Columns (derivative columns)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="addCommand('=', 'addcol-expr', ...)"
+              href="https://github.com/saulpw/visidata/blob/develop/visidata/expr.py"
+              >saulpw/visidata · visidata/expr.py</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="addCommand('+', 'aggregate-col', ...); registered aggregators"
+              href="https://github.com/saulpw/visidata/blob/develop/visidata/aggregators.py"
+              >saulpw/visidata · visidata/aggregators.py</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Grouping data and descriptive statistics (F, + name, W)"
+              href="https://www.visidata.org/docs/group/"
+              >VisiData docs · Grouping data and descriptive statistics</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="addCommand('F', 'freq-col', ...)"
+              href="https://github.com/saulpw/visidata/blob/develop/visidata/freqtbl.py"
+              >saulpw/visidata · visidata/freqtbl.py</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="docs index; command reference via man vd, quick reference, or Ctrl+H"
+              href="https://www.visidata.org/docs/"
+              >VisiData docs · documentation index</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="addCommand('W', 'pivot', ...)"
+              href="https://github.com/saulpw/visidata/blob/develop/visidata/pivot.py"
+              >saulpw/visidata · visidata/pivot.py</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="addCommand('M', 'melt', ...)"
+              href="https://github.com/saulpw/visidata/blob/develop/visidata/features/melt.py"
+              >saulpw/visidata · visidata/features/melt.py</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="asynchronous loader by default"
+              href="https://www.visidata.org/docs/api/loaders"
+              >VisiData docs · Loaders (asynchronous by default)</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Sheet.reload (@asyncthread); _iterloader; option('max_rows', 1_000_000_000)"
+              href="https://github.com/saulpw/visidata/blob/develop/visidata/sheets.py"
+              >saulpw/visidata · visidata/sheets.py</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="CSVSheet.iterload (yield row)"
+              href="https://github.com/saulpw/visidata/blob/develop/visidata/loaders/csv.py"
+              >saulpw/visidata · visidata/loaders/csv.py</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="body; 100 GB of .csv files example"
+              href="https://www.visidata.org/blog/2020/unloaded/"
+              >visidata.org · &quot;Unloaded Sheets&quot; (Saul Pwanson, 2020)</a
+            >
+          </li>
+          <li id="s14">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="top-level thread comments on the modal learning curve"
+              href="https://news.ycombinator.com/item?id=36502435"
+              >Hacker News · discussion, item 36502435</a
+            >
+          </li>
+          <li id="s15">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="thread: VisiData is not a spreadsheet"
+              href="https://news.ycombinator.com/item?id=28826348"
+              >Hacker News · discussion, item 28826348</a
+            >
+          </li>
+          <li id="s16">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="per-version headers; max_rows (#2356); cmdlog longnames"
+              href="https://github.com/saulpw/visidata/blob/develop/CHANGELOG.md"
+              >saulpw/visidata · CHANGELOG.md</a
+            >
+          </li>
+          <li id="s17">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="repo header (license, stars); README credits"
+              href="https://github.com/saulpw/visidata"
+              >saulpw/visidata · GitHub repository</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
