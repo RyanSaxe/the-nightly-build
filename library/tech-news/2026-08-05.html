@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-05</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-05",
+        "template": "brief",
+        "title": "Alibaba ships Qwen3.8-Max without the weights or the proof",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-05",
+        "tags": ["ai", "immunology", "photonics", "quantum-networking"],
+        "sources": 13,
+        "words": 862,
+        "reading_minutes": 4,
+        "dek": "The 2.4-trillion-parameter release leads a quiet AI week whose firmest results were three peer-reviewed physics and immunology papers dated July 15 to 30.",
+        "harness": "Claude Code / The Nightly Build",
+        "model": "Opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Alibaba ships Qwen3.8-Max without the weights or the proof</h1>
+        <p class="nb-dekline">The 2.4-trillion-parameter release leads a quiet AI week whose firmest results were three peer-reviewed physics and immunology papers dated July 15 to 30.</p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-08-05</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Artificial Intelligence</span>
+          <h3>
+            <a href="https://qwen.ai/blog?id=qwen3.8"
+              >Alibaba reports frontier-level scores for its 2.4-trillion-parameter Qwen3.8-Max</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Alibaba released Qwen3.8-Max on August 3, its largest model to date.
+            It carries 2.4 trillion parameters with 95 billion active per forward
+            pass through a sparse mixture-of-experts, runs a one-million-token
+            context, and lists at $2 and $6 per million input and output
+            tokens.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            The company had previewed the model at WAIC on July 19 and held the
+            numbers back until the August 3 release.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+          </p>
+          <table class="nb-table">
+            <caption>
+              Alibaba's reported scores for Qwen3.8-Max, run on mixed harnesses of
+              its own choosing and not independently reproduced.<sup class="nb-cite"
+                ><a href="#s4">4</a></sup
+              >
+            </caption>
+            <thead>
+              <tr>
+                <th>Benchmark</th>
+                <th>Score</th>
+                <th class="txt">What it measures, and Alibaba's framing</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="nb-table-token">Terminal-Bench 2.1</span></td>
+                <td>86.6</td>
+                <td class="txt">
+                  Agentic command-line work; Alibaba places it above Claude Fable 5
+                  (84.6) and below GPT-5.6 Sol (88.8).
+                </td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">OSWorld-Verified</span></td>
+                <td>86.1</td>
+                <td class="txt">Computer-use tasks driven from screenshots.</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">PaperBench</span></td>
+                <td>93.0</td>
+                <td class="txt">Reproducing published machine-learning papers.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Every score is Alibaba's own, and none has been reproduced outside the
+            company. The open weights that would let anyone check were still not on
+            Hugging Face or ModelScope as of August 5, and no license had been
+            named. Even the headline agentic demonstration stays out of reach.
+            Alibaba says a company-run coding agent worked a codebase for about
+            sixteen days across 265 commits, but there is no public model to rerun
+            it.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Immunology</span>
+          <h3>
+            <a href="https://www.cell.com/cell/abstract/S0092-8674(26)00818-4"
+              >Dietary arginine sets how much MHC-I a cell can build, a Rockefeller team finds in mice</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            In a July 30 <em>Cell</em> paper, a Rockefeller University group led by
+            Qiushuang Wu and Sohail Tavazoie traced antigen display back to the
+            supply of a single amino acid.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+            When arginine outside the cell runs low, the cell represses the transfer
+            RNAs that carry arginine to the ribosome. Translation then stalls on the
+            arginine-rich MHC-I message, and the amount of MHC-I reaching the cell
+            surface falls.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          </p>
+          <p>
+            The effect is codon-specific. Rewriting the MHC-I gene with synonymous
+            arginine codons abolishes it, which rules out a general slowdown in
+            protein synthesis.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            Arginine-restricted mice fared worse against influenza and SARS-CoV-2 and
+            grew more colon tumors; extra dietary arginine reversed both. The authors
+            read the result as an argument for arginine intake as a possible adjunct
+            to cancer immunotherapy, not a standalone treatment.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Ultrafast Optics</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41586-026-10825-9"
+              >An École Polytechnique team builds the first all-optical photonic time crystal and halves its light loss</a
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </h3>
+          <p>
+            Reported in <em>Nature</em> on July 29, a collaboration led by Tingwen
+            Guo at École Polytechnique, with Collège de France and Germany's HZDR,
+            pushed a metamaterial into the photonic-time-crystal regime with light
+            alone.<sup class="nb-cite"><a href="#s9">9</a></sup
+            ><sup class="nb-cite"><a href="#s10">10</a></sup>
+            A photonic time crystal is a material whose optical properties are
+            switched in time rather than patterned in space, and until now the
+            switching had been too slow to reach one all-optically.
+          </p>
+          <p>
+            The team modulated a gold surface-plasmon structure on an
+            indium-antimonide layer with HZDR's terahertz source. That switched its
+            reflectivity on picosecond timescales, roughly a thousand times faster
+            than the electronic modulation these schemes had relied on.<sup class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+            The switching cut the plasmonic loss inside the metamaterial by half, the
+            number that has kept surface-plasmon devices impractical, and points
+            toward terahertz lasers and optical computing.<sup class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Quantum Networking</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41377-026-02399-y"
+              >A cesium atom and a quantum dot interfere their photons for the first time</a
+            ><sup class="nb-cite"><a href="#s12">12</a></sup>
+          </h3>
+          <p>
+            Published July 15 in <em>Light: Science &amp; Applications</em>, groups at
+            Pusan National University and UNIST observed Hong-Ou-Mandel interference
+            between single photons from two physically unlike sources: a warm cesium
+            vapor and an InAs/GaAs semiconductor quantum dot.<sup class="nb-cite"
+              ><a href="#s12">12</a></sup
+            ><sup class="nb-cite"><a href="#s13">13</a></sup>
+            Coaxing indistinguishable photons from unlike emitters usually demands
+            active spectral or temporal correction; here the two photons interfered
+            without it.
+          </p>
+          <p>
+            The two-photon visibility was 0.65 ± 0.14 after correcting for detector
+            resolution, with a spectral overlap of 0.88.<sup class="nb-cite"
+              ><a href="#s13">13</a></sup
+            >
+            Reaching that took cooling the quantum dot to about 12 kelvin, tuning its
+            emission onto the cesium line near 917 nanometers.<sup class="nb-cite"
+              ><a href="#s13">13</a></sup
+            >
+            A modular quantum network will have to link different kinds of qubit, and
+            this is the first direct interference between an atomic and a solid-state
+            single-photon source.<sup class="nb-cite"><a href="#s12">12</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://qwen.ai/blog?id=qwen3.8"
+              >Qwen (Alibaba) · Qwen3.8-Max announcement and benchmark table</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://siliconangle.com/2026/08/03/alibaba-debuts-qwen3-8-max-model-2-4t-parameters/"
+              >SiliconANGLE · Alibaba debuts Qwen3.8-Max model with 2.4T parameters</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.implicator.ai/alibaba-publishes-the-qwen3-8-max-benchmarks-it-withheld-two-weeks-ago/"
+              >Implicator.ai · Alibaba publishes the Qwen3.8-Max benchmarks it withheld two weeks ago</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://the-decoder.com/alibabas-open-weight-qwen3-8-max-takes-on-long-horizon-ai-tasks-with-2-4-trillion-parameters/"
+              >The Decoder · Alibaba's open-weight Qwen3.8-Max takes on long-horizon AI tasks with 2.4 trillion parameters</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.cell.com/cell/abstract/S0092-8674(26)00818-4"
+              >Cell · Wu et al., Dietary arginine drives codon-dependent MHC class I translation and improves immunity</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.rockefeller.edu/news/40196-amino-acid-arginine-diet-tumor-virus-infection/"
+              >The Rockefeller University · The amino acid arginine helps the body fight tumors and viral infections</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.sciencenews.org/article/amino-acid-argininine-colon-cancer-diet"
+              >Science News · How one amino acid might help fight colon cancer and infections</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.technologynetworks.com/applied-sciences/news/dietary-amino-acid-helps-the-body-fight-tumors-and-viral-infections-415256"
+              >Technology Networks · Dietary amino acid helps the body fight tumors and viral infections</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41586-026-10825-9"
+              >Nature · Guo et al., Plasmonic metamaterial time crystal</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.polytechnique.edu/en/press-room/press-releases/shaping-light-never-photonic-time-crystals"
+              >École Polytechnique · Shaping light as never before: photonic time crystals</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://phys.org/news/2026-07-photonic-crystals-ultrafast-terahertz-range.html"
+              >Phys.org · Photonic time crystals reach the ultrafast terahertz range</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41377-026-02399-y"
+              >Light: Science &amp; Applications · Moon, Kim et al., Two-photon interference between independent atomic and quantum dot single-photon sources</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://phys.org/news/2026-07-cesium-atoms-quantum-dots-generate.html"
+              >Phys.org · Cesium atoms and quantum dots generate interfering photons</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
