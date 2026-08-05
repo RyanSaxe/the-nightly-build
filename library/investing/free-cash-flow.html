@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apple's profit rose while its free cash flow fell · Investing</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "investing",
+        "slug": "free-cash-flow",
+        "template": "lesson",
+        "title": "Apple's profit rose while its free cash flow fell",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-05",
+        "tags": ["free-cash-flow", "valuation", "financial-statements"],
+        "sources": 6,
+        "words": 2084,
+        "reading_minutes": 9,
+        "dek": "The cash a company has left for its investors after it pays to keep the business running is a number you build yourself, and no accounting rule pins down how.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Investing</div>
+        <h1 class="nb-title">Apple's profit rose while its free cash flow fell</h1>
+        <p class="nb-dekline">
+          The cash a company has left for its investors after it pays to keep
+          the business running is a number you build yourself, and no accounting
+          rule pins down how.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-08-05</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Free cash flow is the number that says how much cash a business
+          actually produces for the people who funded it, and it is the number a
+          company's worth ultimately rests on. It is also the easiest of the
+          headline figures to misread, in two specific ways. The first is to
+          treat it as if it were profit, and to assume that a company earning
+          more must be generating more cash. Apple's most recent year is a clean
+          counterexample: its profit rose while its free cash flow fell. The
+          second is to treat "free cash flow" as one fixed number, when the same
+          company can be described by several versions that disagree, and nothing
+          in the name tells you which one you have been handed. By the end of
+          this lesson you will be able to build free cash flow from a company's
+          own cash-flow statement, and you will know the two questions to ask
+          before you trust anyone else's version of it.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../investing/profit-versus-cash.html"
+              >A business can turn a profit and still run low on cash</a
+            >: why profit and cash are not the same, the fact this lesson builds
+            on.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../investing/what-a-company-owns-and-owes.html"
+              >Balancing a balance sheet is arithmetic. Pricing what's on it is
+              judgment.</a
+            >: where working capital and long-lived assets sit on a company's
+            books.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../investing/present-value.html"
+              >A dollar next year is worth 95 cents today</a
+            >: how a future stream of this cash is discounted into a value today.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Free cash flow is a number you build, not one you look up</h2>
+        <p>
+          Every other figure an investor leans on has an official home. Net
+          income sits at the bottom of the income statement, its meaning fixed by
+          accounting rules. Free cash flow has no such home. It never appears as
+          a line in a company's financial statements, because no rule requires it
+          and no rule defines it. The United States Securities and Exchange
+          Commission, which polices what public companies may report, says so
+          plainly: free cash flow "does not have a uniform definition and its
+          title does not describe how it is calculated."<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          It is a measure companies construct and disclose voluntarily, outside
+          the official accounting rules, which is what the SEC means by calling
+          it a non-GAAP measure.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          So the first thing to know about free cash flow is that you build it.
+          The most common construction, and the one the SEC describes, starts
+          from a figure the rules do define, cash generated by operating
+          activities, and subtracts the cash the company spent on long-lived
+          assets.<sup class="nb-cite"><a href="#s1">1</a></sup> The result is
+          meant to answer a question net income cannot. After a business collects
+          its cash and pays for the equipment, buildings, and other assets it
+          needs to keep running, how much cash is actually left for the people
+          who funded it, its lenders and its shareholders?
+        </p>
+        <p>
+          That question matters because profit and cash are not the same thing.
+          An earlier lesson in this course showed how a business can report a
+          healthy profit and still run short of cash, because accounting profit
+          records a sale when it is made, not when the money arrives. Free cash
+          flow ignores that timing and counts only cash that has actually moved.
+          It is the cash a business could hand to its investors this year without
+          borrowing or selling assets to do it.
+        </p>
+      </section>
+
+      <section data-nb-section="apple-build" id="apple-build">
+        <h2>Building Apple's number, line by line</h2>
+        <p>
+          The cash-flow statement is where the raw material lives. Every company
+          that reports under the international or the US accounting rules sorts
+          its cash into three groups.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Operating activities are the cash the core business throws off.
+          Investing activities are cash spent on or raised from long-term assets.
+          Financing activities are cash moving to and from lenders and
+          shareholders. Free cash flow is built from the first two.
+        </p>
+        <p>
+          Take Apple's most recent filing, its Form 10-K for the fiscal year that
+          ended September 27, 2025, filed with the SEC on October 31,
+          2025.<sup class="nb-cite"><a href="#s3">3</a></sup> Its statement of
+          cash flows begins with net income of $112,010 million and works toward
+          a cash figure by reversing the parts of profit that never involved
+          cash.<sup class="nb-cite"><a href="#s4">4</a></sup> (Every figure here
+          is in millions of US dollars, read from that statement.) The two
+          largest reversals are non-cash charges. Depreciation and amortization
+          of $11,698 million is the accounting cost of assets wearing out over
+          the year, which lowered profit but moved no cash.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Share-based compensation of $12,863 million is the value of stock
+          granted to employees, a genuine cost to existing shareholders that
+          again moved no cash.<sup class="nb-cite"><a href="#s4">4</a></sup> Both
+          get added back. The statement then adjusts for changes in working
+          capital, the cash tied up in unpaid customer bills, inventory, and
+          unpaid supplier bills as those rise and fall across the year. In fiscal
+          2025 the working-capital changes and a small remainder together
+          subtracted about $25 billion.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          After all of it, Apple's cash generated by operating activities was
+          $111,482 million.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          That operating figure is the starting point. From it, subtract what the
+          company spent to acquire long-lived assets. In the investing section
+          Apple reports "Payments for acquisition of property, plant and
+          equipment" of $12,715 million, its capital expenditure, or capex, the
+          cash it laid out for things like manufacturing equipment and
+          facilities.<sup class="nb-cite"><a href="#s4">4</a></sup> Operating
+          cash of $111,482 million less capex of $12,715 million leaves free cash
+          flow of $98,767 million.
+        </p>
+
+        <table class="nb-table">
+          <caption>
+            Apple's free cash flow, built from its cash-flow statement, fiscal
+            years ended September 27, 2025 and September 28, 2024, in millions of
+            US dollars.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Line</th>
+              <th>FY2025</th>
+              <th>FY2024</th>
+              <th class="txt">What it is</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Operating cash flow</span></td>
+              <td>111 482</td>
+              <td>118 254</td>
+              <td class="txt">
+                Cash generated by operating activities, the statement's operating
+                subtotal.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-table-token">Less: capital expenditure</span>
+              </td>
+              <td>−12 715</td>
+              <td>−9 447</td>
+              <td class="txt">
+                Payments to acquire property, plant, and equipment.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Free cash flow</span></td>
+              <td>98 767</td>
+              <td>108 807</td>
+              <td class="txt">
+                What is left for lenders and shareholders. Not a line in the
+                filing.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          One honest caveat sits in that capex line. The filing reports a single
+          capex number. It does not tell you how much was spent merely to keep
+          the existing business running versus how much went to expand it. If you
+          want to separate the maintenance capex a business cannot avoid from the
+          growth capex it chooses, you have to estimate the split yourself. The
+          statement will not do it for you.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="profit-up-cash-down" id="profit-up-cash-down">
+        <h2>Why Apple's profit rose while its cash fell</h2>
+        <p>
+          A year earlier,
+          in fiscal 2024, Apple's operating cash was higher, at $118,254 million,
+          and its capex was lower, at $9,447 million, so its free cash flow was
+          $108,807 million.<sup class="nb-cite"><a href="#s4">4</a></sup> Between
+          the two years free cash flow fell about 9 percent, from roughly $108.8
+          billion to $98.8 billion. Over the same two years net income went the
+          other way, rising from $93,736 million to $112,010 million, an increase
+          of about 19 percent.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          Profit up by nearly a fifth, free cash flow down by nearly a tenth: the
+          same company, the same two years, two numbers pointing in opposite
+          directions.
+        </p>
+        <p>
+          Neither number is wrong. They measure different things. Net income rose
+          because the business earned more. Free cash flow fell for two reasons
+          the statement shows. Capex climbed by about $3.3 billion as Apple spent
+          more on long-lived assets. And operating cash fell even though profit
+          rose, because working capital swung hard. The single line "other
+          current and non-current liabilities" moved from adding about $15.6
+          billion to operating cash in 2024 to subtracting about $11.1 billion in
+          2025, a swing near $27 billion.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Working capital is lumpy. A company that pays down a large bill it had
+          been carrying, or builds inventory ahead of a product launch, ties up
+          cash that year and frees it the next, and none of that touches reported
+          profit.
+        </p>
+        <p>
+          That is why a single year of free cash flow is a weak verdict on a
+          business. The year-to-year fall says nothing about whether Apple's
+          business weakened, and it did not. It records a heavier year of
+          investment and an ordinary swing in working capital. Read free cash
+          flow across several years, and against the lines that moved it.
+        </p>
+      </section>
+
+      <section data-nb-section="which-variant" id="which-variant">
+        <h2>Which free cash flow are you being handed</h2>
+        <p>
+          Because free cash flow has no fixed definition, the phrase can name more
+          than one number, and the versions do not agree. The one built above,
+          operating cash minus capex, is the construction the SEC describes, and
+          it is the most common.<sup class="nb-cite"><a href="#s1">1</a></sup> It
+          is not the only one a careful analyst uses.
+        </p>
+        <p>
+          Aswath Damodaran, a finance professor at NYU whose definitions are
+          standard across the field, builds free cash flow from a different
+          starting line. His free cash flow to the firm, or FCFF, begins not with
+          reported operating cash but with after-tax operating income, and
+          subtracts reinvestment, defined as capital expenditure minus
+          depreciation plus the change in non-cash working capital.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          His free cash flow to equity, or FCFE, starts from net income and
+          subtracts both reinvestment and the net cash paid to lenders.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          The two answer different questions. FCFF is the cash available to
+          everyone who funded the business, lenders and shareholders together,
+          before any debt is served. FCFE is what is left for shareholders alone,
+          after the lenders are paid. A company repaying debt can report a
+          positive FCFF and a negative FCFE in the very same year.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \begin{aligned} \text{FCFF} &= \text{After-tax operating income} -
+            (\text{Capex} - \text{Depreciation} + \Delta\,\text{Working
+            capital}) \\[4pt] \text{FCFE} &= \text{Net income} -
+            \text{Reinvestment} - \text{Net debt repaid} \end{aligned}
+          </div>
+          <figcaption>
+            Two constructions that both wear the name "free cash flow" and start
+            from different lines of the accounts.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          These constructions can diverge sharply even on Apple's own numbers.
+          The SEC's operating-cash-minus-capex version keeps every non-cash
+          add-back that sits inside operating cash, including that $12,863 million
+          of share-based compensation. Damodaran's FCFF adds back only
+          depreciation, not stock compensation, so it treats that cost very
+          differently.<sup class="nb-cite"><a href="#s6">6</a></sup> Capex of
+          $12,715 million minus
+          depreciation of $11,698 million is just $1,017 million.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Gross capex looks large, but net of the assets wearing out Apple added
+          only about a billion dollars of fixed assets, a different picture of the
+          same company than the headline capex figure gives.
+        </p>
+        <p>
+          So before you compare one company's free cash flow to another's, or to
+          its own past, you have to know which number you are holding, and confirm
+          it was built the same way each time. The label alone will not tell you.
+        </p>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Free cash flow is operating cash minus the cash spent on long-lived
+          assets: what a business has left for its investors after paying to stay
+          in business. Building it yourself, line by line, is what guards against
+          the two misreadings. Because you built it, you can answer the two
+          questions that catch them. First, how was this number constructed,
+          operating cash minus capex, or one of Damodaran's firm and equity
+          versions that start from different lines and reach different answers?
+          Second, what did it do across several years, and what moved it? Apple's
+          fell while its profit rose, driven by a heavier year of capital spending
+          and a swing in working capital, not by a weaker business. A single
+          year's free cash flow, taken from a label you did not build, tells you
+          almost nothing. Build it, learn which version it is, and read it across
+          time, and it becomes the cash number a valuation can actually stand on.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://pages.stern.nyu.edu/~adamodar/pdfiles/blog/FreeCF.pdf"
+              >Aswath Damodaran, "Earnings and Cash Flows: A Primer on Free Cash
+              Flows"</a
+            >: a fuller derivation of FCFF and FCFE, and the line items where the
+            two diverge.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a
+              href="https://www.sec.gov/rules-regulations/staff-guidance/corporation-finance-interpretations/non-gaap-financial-measures"
+              >SEC, Non-GAAP Financial Measures Compliance and Disclosure
+              Interpretations</a
+            >: the regulator's own rules on how a company may present free cash
+            flow in a filing.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/rules-regulations/staff-guidance/corporation-finance-interpretations/non-gaap-financial-measures"
+              >US Securities and Exchange Commission, Division of Corporation
+              Finance · Non-GAAP Financial Measures, Compliance and Disclosure
+              Interpretations, Question 102.07</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.ifrs.org/issued-standards/list-of-standards/ias-7-statement-of-cash-flows/"
+              >IFRS Foundation · IAS 7 Statement of Cash Flows</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+              >SEC EDGAR · Apple Inc., Form 10-K for the fiscal year ended
+              September 27, 2025</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/R8.htm"
+              >SEC EDGAR · Apple Inc., Consolidated Statements of Cash Flows
+              (fiscal 2025 Form 10-K)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/littlebook/cashflows.htm"
+              >Aswath Damodaran, NYU Stern · "The Little Book of Valuation,"
+              cash-flows chapter (FCFF and FCFE)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/blog/FreeCF.pdf"
+              >Aswath Damodaran, NYU Stern · "Earnings and Cash Flows: A Primer
+              on Free Cash Flows"</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
