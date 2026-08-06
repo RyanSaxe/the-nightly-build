@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Labelers preferred a 1.3B InstructGPT to 175B GPT-3 · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "instructgpt",
+        "template": "paper",
+        "title": "Labelers preferred a 1.3B InstructGPT to 175B GPT-3",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-06",
+        "tags": ["rlhf", "alignment", "language-models", "reinforcement-learning", "preference-learning"],
+        "sources": 9,
+        "words": 3214,
+        "reading_minutes": 14,
+        "dek": "Ouyang and colleagues fit a reward model to human comparisons and optimized GPT-3 against it under a KL penalty, an objective whose closed form later made both the reward model and its reinforcement-learning loop optional.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Labelers preferred a 1.3B InstructGPT to 175B GPT-3</h1>
+        <p class="nb-dekline">
+          Ouyang and colleagues fit a reward model to human comparisons and
+          optimized GPT-3 against it under a KL penalty, an objective whose
+          closed form later made both the reward model and its
+          reinforcement-learning loop optional.
+        </p>
+        <div class="nb-byline">
+          <span>14 min read</span><span>2026-08-06</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            Training language models to follow instructions with human feedback
+          </p>
+          <p class="nb-paper-meta">
+            Long Ouyang, Jeff Wu, Xu Jiang, et al. (OpenAI) · arXiv:2203.02155 ·
+            2022
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2203.02155"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            Making language models bigger does not inherently make them better at
+            following a user's intent. For example, large language models can
+            generate outputs that are untruthful, toxic, or simply not helpful to
+            the user. In other words, these models are not aligned with their
+            users. In this paper, we show an avenue for aligning language models
+            with user intent on a wide range of tasks by fine-tuning with human
+            feedback. Starting with a set of labeler-written prompts and prompts
+            submitted through the OpenAI API, we collect a dataset of labeler
+            demonstrations of the desired model behavior, which we use to
+            fine-tune GPT-3 using supervised learning. We then collect a dataset
+            of rankings of model outputs, which we use to further fine-tune this
+            supervised model using reinforcement learning from human feedback. We
+            call the resulting models InstructGPT. In human evaluations on our
+            prompt distribution, outputs from the 1.3B parameter InstructGPT
+            model are preferred to outputs from the 175B GPT-3, despite having
+            100x fewer parameters. Moreover, InstructGPT models show improvements
+            in truthfulness and reductions in toxic output generation while
+            having minimal performance regressions on public NLP datasets. Even
+            though InstructGPT still makes simple mistakes, our results show that
+            fine-tuning with human feedback is a promising direction for aligning
+            language models with human intent.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The gap between predicting text and following instructions</h2>
+        <p>
+          A pretrained language model is trained to do one thing: assign high
+          probability to the next token, given the text so far, over a large
+          corpus scraped from the web. Optimize that objective well and the
+          model becomes an excellent continuation engine, not a model that does
+          what a user asks. Prompt GPT-3 with "Explain the moon landing to a
+          six-year-old" and a faithful next-token predictor may answer with more
+          instructions of the same kind, because a list of similar prompts is a
+          plausible continuation of that string on the internet. Ouyang and
+          colleagues name the problem directly: the language-modeling objective
+          is <em>misaligned</em> with "follow the user's instructions helpfully
+          and safely."<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1">1</a></sup
+          >
+        </p>
+        <p>
+          The paper's target is not a better next-token predictor but a model
+          that is helpful, honest, and harmless in the sense of Askell et
+          al.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§1">1</a></sup
+          >
+          Its answer is to stop hand-specifying that behavior and to learn it
+          from human judgment: collect what people prefer, fit a model of that
+          preference, and optimize GPT-3 against it. The method is three stages,
+          and the case for it is that each stage does something the one before
+          it could not.
+        </p>
+      </section>
+
+      <section data-nb-section="pipeline" id="pipeline">
+        <h2>How preference becomes a training signal</h2>
+        <p>
+          The pipeline keeps the GPT-3 architecture fixed at every stage and
+          changes only what is optimized.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3">1</a></sup
+          >
+          Figure 1 lays the three steps out end to end. A supervised policy is
+          trained on demonstrations. A reward model is trained on rankings of
+          that policy's samples. A reinforcement-learning stage then pushes the
+          policy up the reward model's score. This three-stage shape was not new.
+          Stiennon et al. had assembled the same supervised-fine-tuning,
+          reward-model, and PPO-with-KL sequence a year earlier for
+          summarization, with an author set that overlaps InstructGPT's, and
+          shown it beat both human reference summaries and much larger
+          supervised models.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Abstract, §3">2</a></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="instructgpt/asset-1.png"
+            alt="A three-column diagram of the method. Step 1 is supervised fine-tuning. A prompt such as 'Explain the moon landing to a 6 year old' is sampled, a labeler writes the desired answer, and the data fine-tunes GPT-3 into an SFT policy. Step 2 is reward-model training. A prompt and several outputs A through D are sampled, a labeler ranks them best to worst, and the ranking trains a reward model. Step 3 is reinforcement learning. A new prompt is sampled, the policy generates an output, the reward model scores it as a reward r sub k, and PPO uses that reward to update the policy in a loop."
+          />
+          <figcaption>
+            Fig. 1 · The three stages of the method: supervised fine-tuning on
+            labeler demonstrations, reward-model training on ranked comparisons,
+            and PPO against that reward model. The reward model's ranking loss
+            lives in Step 2 and the KL-penalized objective in Step 3.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 2, §3"
+                data-nb-url="https://arxiv.org/abs/2203.02155"
+                data-nb-note="The paper's Figure 2, the three-step method diagram; the caption text is transcribed from the paper."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Stage one is ordinary supervised fine-tuning. Roughly forty
+          contractors write demonstrations of the desired behavior on API and
+          labeler-written prompts, about thirteen thousand of them, and GPT-3 is
+          fine-tuned on that data to produce a policy
+          <span class="nb-math-in">\pi^{\mathrm{SFT}}</span>.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.3, §3.4">1</a></sup
+          >
+          This alone makes the model markedly more instruction-shaped. But it is
+          bounded by how many demonstrations people can afford to write, and by a
+          deeper limit: a demonstration teaches one good answer, not which of two
+          answers is better. The next two stages exist to learn from comparisons,
+          which labelers produce faster and more consistently than gold answers.
+        </p>
+      </section>
+
+      <section data-nb-section="reward-model" id="reward-model">
+        <h2>Fitting a scalar reward to human rankings</h2>
+        <p>
+          The reward model turns a ranking into a number. For a prompt
+          <span class="nb-math-in">x</span> and completion
+          <span class="nb-math-in">y</span> it outputs a single scalar
+          <span class="nb-math-in">r_\theta(x,y)</span>, a linear head on a 6B
+          model. To connect that scalar to observed preferences, the paper
+          adopts the Bradley-Terry model, the same preference-to-reward device
+          Christiano et al. introduced for deep reinforcement learning on Atari
+          and simulated robotics: a reward predictor fit to human pairwise
+          choices by cross-entropy, then optimized as the RL reward.<sup
+            class="nb-cite"
+            ><a href="#s3" data-nb-locator="§2.2.3, Eq. 1">3</a></sup
+          >
+          Under it, the probability a labeler prefers
+          <span class="nb-math-in">y_w</span> over
+          <span class="nb-math-in">y_l</span> is the sigmoid of the reward gap,
+          <span class="nb-math-in"
+            >\sigma\!\left(r_\theta(x,y_w) - r_\theta(x,y_l)\right)</span
+          >. Training then maximizes the likelihood of the rankings labelers
+          actually gave, the negative log-likelihood below.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Eq. 1, §3.5">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \operatorname{loss}(\theta) = -\frac{1}{\binom{K}{2}}\,
+            \mathbb{E}_{(x,\,y_w,\,y_l)\sim D}\!\left[\log
+            \sigma\!\left(r_\theta(x, y_w) - r_\theta(x, y_l)\right)\right]
+          </div>
+          <figcaption>
+            The reward-model ranking loss.
+            <span class="nb-math-in">y_w</span> is the completion the labeler
+            preferred and <span class="nb-math-in">y_l</span> the one they did
+            not; the loss falls as the reward gap
+            <span class="nb-math-in">r_\theta(x,y_w) - r_\theta(x,y_l)</span>
+            grows in the direction they chose.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Eq. 1, §3.5">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Two details in that expectation carry weight. Each prompt is shown with
+          <span class="nb-math-in">K</span> sampled completions, between four and
+          nine, and every one of the
+          <span class="nb-math-in">\binom{K}{2}</span> pairs a ranking induces
+          becomes a training comparison. The paper packs all pairs from one
+          prompt into a single batch element, so a prompt with many comparisons
+          cannot dominate the gradient.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.5">1</a></sup
+          >
+          The reward model also never sees an absolute score. It learns only from
+          differences, exactly what a preference dataset contains, and exactly the
+          property the direct-optimization result will exploit.
+        </p>
+      </section>
+
+      <section data-nb-section="rl-objective" id="rl-objective">
+        <h2>What the reinforcement-learning stage maximizes</h2>
+        <p>
+          With a reward model in hand, the third stage optimizes the policy
+          <span class="nb-math-in">\pi^{\mathrm{RL}}_\phi</span> to score well
+          under it, using PPO, the clipped-surrogate policy-gradient method of
+          Schulman et al. that bounds how far a single update can move the
+          policy.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Eqs. 6-7">4</a></sup
+          >
+          Unconstrained, that objective has an obvious failure mode: the policy
+          drifts toward whatever text the reward model happens to rate highest,
+          including text unlike anything the reward model was trained to judge.
+          So the paper charges the policy for moving away from the SFT model with
+          a KL penalty. That leash is inherited too. Ziegler et al. first used a
+          KL penalty to the original policy to fine-tune a pretrained language
+          model, GPT-2, from human preferences.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="§2, Eq. 2">5</a></sup
+          >
+          The objective InstructGPT maximizes, the one the rest of the argument
+          keeps returning to, is below.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Eq. 2, §3.5">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \operatorname{objective}(\phi) =
+            \mathbb{E}_{(x,y)\sim D_{\pi^{\mathrm{RL}}_\phi}}\!\left[\,
+            \htmlClass{nb-mc1}{r_\theta(x,y)} \;-\; \htmlClass{nb-mc3}{\beta}\,
+            \htmlClass{nb-mc2}{\log\frac{\pi^{\mathrm{RL}}_\phi(y\mid
+            x)}{\pi^{\mathrm{SFT}}(y\mid x)}} \right] \;+\;
+            \htmlClass{nb-mc5}{\gamma}\,
+            \htmlClass{nb-mc4}{\mathbb{E}_{x\sim
+            D_{\mathrm{pretrain}}}\!\left[\log \pi^{\mathrm{RL}}_\phi(x)\right]}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">r_\theta(x,y)</span
+              ><span
+                >the reward model's scalar score for the completion; the term PPO
+                pushes up.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2"
+                >\log\frac{\pi^{\mathrm{RL}}_\phi}{\pi^{\mathrm{SFT}}}</span
+              ><span
+                >the per-token log-ratio to the frozen SFT policy; its
+                expectation under the policy is the KL divergence between
+                them.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\beta</span
+              ><span
+                >the KL-penalty coefficient, the length of the leash: how far the
+                policy may move from SFT before the penalty outweighs any reward
+                gain.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4"
+                >\mathbb{E}\!\left[\log \pi^{\mathrm{RL}}_\phi(x)\right]</span
+              ><span
+                >the original pretraining log-likelihood, mixed back in so the
+                policy does not forget general language ability.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc5">\gamma</span
+              ><span
+                >the pretraining-mix coefficient; zero for plain PPO, positive
+                for the PPO-ptx variant.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The RL objective (Eq. 2): expected reward, minus a
+            <span class="nb-math-in">\beta</span>-weighted KL penalty to the SFT
+            policy, plus a <span class="nb-math-in">\gamma</span>-weighted
+            pretraining term.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Eq. 2, §3.5">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Read the middle term first. In expectation the log-ratio
+          <span class="nb-math-in"
+            >\log\bigl(\pi^{\mathrm{RL}}_\phi/\pi^{\mathrm{SFT}}\bigr)</span
+          >
+          is the KL divergence
+          <span class="nb-math-in"
+            >\mathbb{D}_{\mathrm{KL}}\!\left[\pi^{\mathrm{RL}}_\phi \,\|\,
+            \pi^{\mathrm{SFT}}\right]</span
+          >, so <span class="nb-math-in">\beta</span> sets how tightly the policy
+          is tied to the model it started from. Loosen it and the policy is free
+          to over-optimize the reward model; tighten it and the policy never
+          improves on SFT. That single coefficient is where the durability of
+          the whole scheme is decided.
+        </p>
+        <p>
+          The last term is not housekeeping either. During RLHF fine-tuning the
+          policy regresses on public benchmarks such as SQuAD, DROP, HellaSwag,
+          and WMT French-to-English translation, a cost the paper calls an
+          <em>alignment tax</em>. Setting
+          <span class="nb-math-in">\gamma &gt; 0</span> mixes the pretraining
+          gradient back in and recovers most of that regression, which is the
+          difference between the plain PPO and PPO-ptx variants and the reason
+          the headline model is PPO-ptx.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§4.2">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="small-beats-large" id="small-beats-large">
+        <h2>Why a 1.3B model outranks a 175B one</h2>
+        <p>
+          The result the paper is known for is a preference. In human evaluations on
+          OpenAI's own API prompt distribution, outputs from the 1.3B InstructGPT
+          model (the PPO-ptx variant) are preferred to outputs from the 175B
+          GPT-3, a model with roughly a hundred times as many
+          parameters.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Abstract, §4.1">1</a></sup
+          >
+          OpenAI's public release states the finding in the same terms and adds
+          that the aligned models make things up less often and are somewhat less
+          toxic.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-note="OpenAI's research-release restatement of the preference result."
+              >6</a
+            ></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="instructgpt/asset-2.png"
+            alt="A line chart of win rate against the 175B SFT model versus model size, at 1.3B, 6B, and 175B. A dashed reference line marks 0.5. All five curves rise with model size. PPO-ptx and PPO are highest and nearly overlap, both crossing above 0.5. SFT runs through the middle, reaching about 0.5 at 175B. GPT with a prompt is lower. Plain GPT is lowest. Error bars mark 95 percent confidence intervals. The 1.3B PPO and PPO-ptx points sit above the 175B plain and prompted GPT points."
+          />
+          <figcaption>
+            Fig. 2 · Win rate of each model and variant against the 175B SFT
+            model, by model size. The reference here is the SFT model, not
+            GPT-3: the 1.3B PPO and PPO-ptx points already sit above the 175B raw
+            and prompted GPT curves, which is the headline expressed as a
+            curve.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 1"
+                data-nb-url="https://arxiv.org/abs/2203.02155"
+                data-nb-note="The paper's Figure 1; win rate is measured against the 175B SFT model, per the figure's own caption."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The reference point is not a single thing, and the paper's own figure
+          says so. Figure 2 plots win rate against the 175B <em>SFT</em> model,
+          not against GPT-3, and on that axis the 1.3B PPO and PPO-ptx points
+          already clear the 175B raw and prompted GPT curves. The abstract's
+          "preferred to the 175B GPT-3" is a different comparison, and it depends
+          sharply on how the GPT-3 baseline is prompted.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Two of the paper's win-rate numbers, and the 175B baseline each one
+            uses.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§4.1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">175B InstructGPT preferred to&hellip;</th>
+              <th>Win rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">plain (un-prompted) 175B GPT-3</td>
+              <td>85 &plusmn; 3%</td>
+            </tr>
+            <tr>
+              <td class="txt">few-shot-prompted 175B GPT-3</td>
+              <td>71 &plusmn; 4%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Against a plain GPT-3 the 175B InstructGPT wins 85 &plusmn; 3% of the
+          time; against the same model given a few-shot prompt, only 71 &plusmn;
+          4%.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§4.1">1</a></sup
+          >
+          The "small model beats large model" framing is starkest against the
+          un-prompted baseline, and a well-prompted GPT-3 closes much of the
+          distance. None of this is a capability result. The metric is human
+          preference on a prompt distribution skewed toward open-ended
+          generation, brainstorming, and chat. It is judged by about forty
+          contractors who agree with one another on which completion is better
+          only 72.6 &plusmn; 1.5% of the time, and 77.3 &plusmn; 1.3% for held-out
+          labelers.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.5, §4.1">1</a></sup
+          >
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">What the win rate is aligned to</span>
+          <blockquote>
+            This procedure aligns the behavior of GPT-3 to the stated
+            preferences of a specific group of people (mostly our labelers and
+            researchers), rather than any broader notion of "human
+            values."<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§5.2">1</a></sup
+            >
+            <span class="nb-note-who">Ouyang et al., §5.2</span>
+          </blockquote>
+        </div>
+        <p>
+          One more confound sits inside the metric itself. Preference labeling
+          carries a verbosity bias: judges can prefer longer answers of
+          comparable quality, and automated judges show the effect more strongly
+          than humans.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Abstract">7</a></sup
+          >
+          InstructGPT completions tend to be longer and more formatted than raw
+          GPT-3 continuations, so some fraction of the win rate may reward style
+          rather than task quality. This bounds what the number means; it is not
+          a measured claim that length drives InstructGPT's win.
+        </p>
+      </section>
+
+      <section data-nb-section="overoptimization" id="overoptimization">
+        <h2>The reward model is a proxy, and proxies can be gamed</h2>
+        <p>
+          The <span class="nb-math-in">\beta</span>-KL term reads like ordinary
+          regularization. Gao, Schulman, and Hilton show the result rests on it.
+          In a synthetic setup a large 6B "gold" reward model stands in for human
+          labels; a smaller proxy reward model is trained on the gold model's
+          labels and then optimized against, either by best-of-<span
+            class="nb-math-in"
+            >n</span
+          >
+          sampling or by PPO. Push the policy further from its starting point,
+          measured by
+          <span class="nb-math-in"
+            >d = \sqrt{\mathbb{D}_{\mathrm{KL}}(\pi \,\|\, \pi_{\mathrm{init}})}</span
+          >, and the proxy score keeps climbing. The true gold score does not: it
+          rises, peaks, and then falls.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="Abstract, Fig. 1">8</a></sup
+          >
+          The failure was self-reported before it was quantified. Ziegler et al.
+          had already flagged that their summarization models "may be exploiting
+          the fact that labelers rely on simple heuristics," so the proxy problem
+          was visible in the immediate predecessor and only later given a
+          curve.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Abstract">5</a></sup
+          >
+        </p>
+        <p>
+          The two regimes even have closed forms:
+          <span class="nb-math-in"
+            >R_{\mathrm{bon}}(d) = d\,(\alpha_{\mathrm{bon}} -
+            \beta_{\mathrm{bon}}\, d)</span
+          >
+          for best-of-<span class="nb-math-in">n</span> and
+          <span class="nb-math-in"
+            >R_{\mathrm{RL}}(d) = d\,(\alpha_{\mathrm{RL}} - \beta_{\mathrm{RL}}
+            \log d)</span
+          >
+          for RL. Here <span class="nb-math-in">R</span> is the gold score, and
+          the fitted coefficients vary smoothly with proxy-model size and
+          preference-data size.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="Functional forms">8</a></sup
+          >
+          Both curves have a maximum in <span class="nb-math-in">d</span>. That
+          maximum is Goodhart's law made quantitative: past it, more reward means
+          less of what the reward was meant to stand for. It is precisely what
+          the KL penalty in the RL objective guards against, since
+          <span class="nb-math-in">\beta</span> caps how far the policy may
+          travel before the proxy stops being trustworthy, and it is why early
+          stopping is not optional.
+        </p>
+        <p>
+          What the experiment controlled for bounds what it settles. The gold
+          model is itself a model, not a human, so the curves measure how badly a
+          policy over-optimizes a proxy relative to a stronger model. They do not
+          measure how far real human preference can be pushed before it stops
+          tracking what people want. The failure mode is real and its shape is
+          characterized; its magnitude on human labels is not what this synthetic
+          study observed.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="§Setup">8</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="closed-form" id="closed-form">
+        <h2>The same optimum without the reinforcement-learning loop</h2>
+        <p>
+          The RL objective needs two machines the KL-regularized target does not
+          obviously require: a trained reward model and a sampling loop. Rafailov
+          and colleagues show that neither is necessary to reach the same
+          optimum. Begin from the objective the RL stage maximizes with the
+          pretraining term dropped, Eq. 2 with
+          <span class="nb-math-in">\gamma = 0</span>.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="Eq. 3, §4">9</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \max_{\pi_\theta}\; \mathbb{E}_{x\sim D,\, y\sim
+            \pi_\theta}\!\left[r_\phi(x,y)\right] \;-\; \beta\,
+            \mathbb{D}_{\mathrm{KL}}\!\left[\pi_\theta(y\mid x)\,\big\|\,
+            \pi_{\mathrm{ref}}(y\mid x)\right]
+          </div>
+          <figcaption>
+            The KL-regularized RLHF objective, identical in form to Eq. 2 without
+            the pretraining term;
+            <span class="nb-math-in">\pi_{\mathrm{ref}}</span> plays the role
+            <span class="nb-math-in">\pi^{\mathrm{SFT}}</span> did.<sup
+              class="nb-cite"
+              ><a href="#s9" data-nb-locator="Eq. 3, §4">9</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Its maximizer is not something PPO has to search for. For a
+          KL-regularized reward objective the optimal policy has a closed
+          form.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="Eq. 4, §4">9</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \pi_r(y\mid x) = \frac{1}{Z(x)}\, \pi_{\mathrm{ref}}(y\mid x)\,
+            \exp\!\left(\tfrac{1}{\beta}\, r(x,y)\right)
+          </div>
+          <figcaption>
+            The optimal policy reweights the reference by the exponentiated
+            reward, normalized by
+            <span class="nb-math-in">Z(x) = \sum_{y} \pi_{\mathrm{ref}}(y\mid
+            x)\exp\!\left(\tfrac{1}{\beta} r(x,y)\right)</span
+            >, a sum over all completions.<sup class="nb-cite"
+              ><a href="#s9" data-nb-locator="Eq. 4, §4">9</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The partition function <span class="nb-math-in">Z(x)</span> is
+          intractable, but the derivation never computes it. Instead it inverts
+          the closed form to write the reward in terms of the policy that
+          optimizes it.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="Eq. 5, §4">9</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            r(x,y) = \beta\, \log\frac{\pi_r(y\mid x)}{\pi_{\mathrm{ref}}(y\mid
+            x)} + \beta\, \log Z(x)
+          </div>
+          <figcaption>
+            Reward as a
+            <span class="nb-math-in">\beta</span>-scaled log-ratio between the
+            optimal policy and the reference, plus a term in
+            <span class="nb-math-in">\log Z(x)</span> that depends on the prompt
+            alone.<sup class="nb-cite"
+              ><a href="#s9" data-nb-locator="Eq. 5, §4">9</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Now substitute this expression into the Bradley-Terry likelihood from
+          the reward-model stage. Because that likelihood depends only on the
+          <em>difference</em> of two rewards on the same prompt, the
+          <span class="nb-math-in">\beta \log Z(x)</span> term is identical on
+          both sides and cancels. What is left is a loss over preference pairs
+          with no reward model and no sampling from the policy.<sup
+            class="nb-cite"
+            ><a href="#s9" data-nb-locator="Eq. 7, §4">9</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \mathcal{L}_{\mathrm{DPO}}(\pi_\theta;\pi_{\mathrm{ref}}) =
+            -\,\mathbb{E}_{(x,y_w,y_l)\sim D}\!\left[\log \sigma\!\left(\beta
+            \log\frac{\pi_\theta(y_w\mid x)}{\pi_{\mathrm{ref}}(y_w\mid x)} -
+            \beta \log\frac{\pi_\theta(y_l\mid x)}{\pi_{\mathrm{ref}}(y_l\mid
+            x)}\right)\right]
+          </div>
+          <figcaption>
+            The DPO loss: a logistic loss on the difference of
+            <span class="nb-math-in">\beta</span>-scaled log-ratios for the
+            chosen and rejected completions, trained directly on preference
+            pairs.<sup class="nb-cite"
+              ><a href="#s9" data-nb-locator="Eq. 7, §4">9</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The reward model has not vanished. It has become implicit. The
+          quantity
+          <span class="nb-math-in"
+            >\hat{r}_\theta(x,y) = \beta \log\bigl(\pi_\theta(y\mid x) /
+            \pi_{\mathrm{ref}}(y\mid x)\bigr)</span
+          >
+          is a reward read straight off the policy. That is the sense in which,
+          as the paper's title puts it, the language model is secretly a reward
+          model.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="§4">9</a></sup
+          >
+          What DPO removes is the explicit reward model and the RL loop that made
+          InstructGPT's third stage expensive and unstable. What it keeps is the
+          exact objective, the KL leash included.
+        </p>
+        <p>
+          The scope of DPO's evidence is what the durability read turns on.
+          Deriving the same optimum is a proof; matching InstructGPT's pipeline
+          is a measurement, and DPO's measurements are on sentiment control,
+          summarization, and single-turn dialogue, not full-distribution
+          instruction-following at 175B scale.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="§6">9</a></sup
+          >
+          So the after-record supports "the RL loop is optional" directionally,
+          on the strength of the math and off-task experiments, rather than as a
+          head-to-head win at InstructGPT's own task and size.
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>What the claim was, and what still stands on it</h2>
+        <p>
+          Read as a reviewer, the paper measured one thing well and a second
+          thing not at all. What it measured: human preference, on OpenAI's own
+          prompt distribution, by about forty labelers who agreed with each other
+          roughly three times in four, aligned to those labelers' stated
+          preferences. Within that scope the central result is solid, and it
+          survives the paper's own splits by prompt source and labeler
+          pool.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§4.1, Fig. 3">1</a></sup
+          >
+          What it did not measure is capability, correctness, or any broad notion
+          of human values, and the paper says as much itself.
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                The pipeline works: a preference-trained 1.3B policy is ranked
+                above the 175B base, and the win persists across the design's own
+                prompt-source and labeler splits.
+              </li>
+              <li>
+                The durable object is the objective, maximize a learned reward
+                under a KL leash to a reference policy, which later work reaches
+                by a different route entirely.
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                The metric is preference on a chat-skewed distribution with a
+                known verbosity confound, and the alignment target is explicitly
+                a specific group of labelers, not humanity.
+              </li>
+              <li>
+                More reward is not more aligned. The KL leash and early stopping
+                are what the result rests on, because the reward model is a proxy
+                that over-optimizes.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            InstructGPT did not introduce this machinery, and reading it as the
+            origin of RLHF misplaces the credit. The preference-to-reward idea is
+            Christiano et al.,<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            the KL leash on a pretrained language policy is Ziegler et
+            al.,<sup class="nb-cite"><a href="#s5">5</a></sup>
+            and the full pipeline is Stiennon et al.,<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            a year earlier and by an overlapping team. What InstructGPT
+            contributed is assembly and scale: it carried that pipeline from a
+            narrow task to the open-ended API instruction distribution at 175B,
+            added the PPO-ptx pretraining mix, and swept model size. The durable
+            object is still the objective those predecessors built, maximize a
+            learned reward under a KL leash to a reference policy. Over-optimization
+            shows why the KL term is not optional, and DPO shows the same optimum
+            has a closed form that needs neither an explicit reward model nor an
+            RL loop. The claim about the objective is the one that generalizes;
+            the claim that a small model beat a large one stands only with its
+            baseline named. What would change the assessment
+            is narrow: a demonstration that the closed-form and RL routes diverge
+            at instruction-following scale, or that human preference itself
+            over-optimizes the way a proxy model does.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s8">8</a></sup
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2203.02155"
+              >arXiv · Long Ouyang, Jeff Wu, Xu Jiang, et al., "Training language
+              models to follow instructions with human feedback" (2022)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2009.01325"
+              >arXiv · Nisan Stiennon et al., "Learning to summarize from human
+              feedback" (NeurIPS 2020)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1706.03741"
+              >arXiv · Paul Christiano et al., "Deep Reinforcement Learning from
+              Human Preferences" (2017)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1707.06347"
+              >arXiv · John Schulman et al., "Proximal Policy Optimization
+              Algorithms" (2017)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1909.08593"
+              >arXiv · Daniel M. Ziegler et al., "Fine-Tuning Language Models from
+              Human Preferences" (2019)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/instruction-following/"
+              >OpenAI · "Aligning language models to follow instructions"
+              (research release, 2022)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2310.10076"
+              >arXiv · Saito, Wachi, Wataoka, Akimoto, "Verbosity Bias in
+              Preference Labeling by Large Language Models" (2023)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2210.10760"
+              >arXiv · Leo Gao, John Schulman, Jacob Hilton, "Scaling Laws for
+              Reward Model Overoptimization" (2022)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2305.18290"
+              >arXiv · Rafael Rafailov et al., "Direct Preference Optimization:
+              Your Language Model is Secretly a Reward Model" (2023)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
