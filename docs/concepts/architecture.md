@@ -2,133 +2,72 @@
 
 ![The Nightly Build production flow](../../assets/architecture.svg)
 
-The diagram shows the normal scheduled path from an editorial specification to
-a published paper. The important boundary is the Article PR: agents may choose
-and produce work, but only the deterministic engine and CI decide whether that
-work is safe to publish.
+The diagram begins after the engine has decided what work is due and ends when
+GitHub Pages serves the result. It shows the central split in the system:
+agents make editorial judgments, while repository-owned code controls the
+publication boundary.
 
-## The press defines intent
+## Before the diagram
 
-The paper owner describes the publication under `press/` on `main`:
+The owner defines the press on `main`; published articles live on `library`.
+At the start of a scheduled run, `nb duty` compares those two states and
+returns the exact authorized work. The orchestrator may make editorial choices
+within that result, but it cannot expand it.
 
-- `site.yaml` defines paper-wide identity, appearance, and delivery
-- `editorial.md` defines the shared editorial direction
-- each `series/` entry defines a recurring section, its cadence, article mode,
-  source policy, prompt, and publication policy
-- production policy selects the model profile and reasoning effort available
-  to each article-making role
+That deterministic entrypoint keeps cadence and rerun safety out of model
+judgment. [Schedule publication](../guides/operate/schedule.md) documents the
+runtime, and [Ownership and branches](ownership-and-branches.md) documents the
+state split.
 
-This is configuration, not publication state. Scheduled work always starts
-from the current `main` branch, while published articles, assets, and
-production records live on `library`. `nb duty` compares the press with the
-published articles in a library checkout and returns the work that is due. A
-`manual` series never becomes due on its own.
+## The orchestrator coordinates; roles decide
 
-## The orchestrator owns the run
+The orchestrator plans the edition together, then creates one isolated
+workspace per article. Isolation keeps sources, instructions, and drafts from
+leaking between articles and lets independent work proceed in parallel. It is
+an execution detail, not a different publication path: a runtime without child
+agents preserves the same role sequence and records.
 
-The scheduled agent follows the repository's scheduled-publication prompt,
-resolves the work list, and then loads the orchestrator skill in the same
-context. It does not launch an orchestrator subagent. The orchestrator turns
-each authorized item into a precise commission, creates an isolated article
-workspace, and manages that article until it either produces a valid PR or
-reports a real blocker. A manual article enters at the same boundary after the
-user assistant configures it.
+The orchestrator chooses the commission; the engine assembles its governing
+context from the current repository revision. Roles consume those named files
+directly instead of relying on an orchestrator's paraphrase.
 
-When the runtime supports isolated child agents, separate articles can proceed
-in parallel. A runtime without that capability can execute the same commissions
-sequentially. Isolation prevents one article's sources, drafts, or instructions
-from leaking into another article's context. It does not change the published
-result or the CI contract.
+Within an article, each role owns one kind of judgment. The return arrows in
+the diagram are ownership boundaries: voice questions return to the writing
+coach, evidence gaps to the researcher, and prose or structure changes to the
+writer. The orchestrator routes those requests instead of silently resolving
+them in a shared context.
 
-## One article run has four editorial roles
+The writing coach is the one role a run may skip. A series that pins a standing
+voice guide has already made the judgment the coach exists to make, so the
+engine supplies that guide and production starts at research. Skipping it is a
+cost decision the press owner makes, never a waived gate: the article carries
+the same coach record either way, and the writer and editor read it as they
+read any other.
 
-The large box in the diagram expands one isolated article run. The
-orchestrator prepares the exact input for each role, and each role records its
-exact output:
+Every invocation saves its exact input and output. Later repairs append to that
+record rather than replacing it, so the submitted article carries the history
+that produced it.
 
-1. The **writing coach** studies strong writing relevant to the commission and
-   produces a practical voice guide.
-2. The **researcher** finds and reads sources, verifies usable claims, and
-   produces the evidence record.
-3. The **writer** drafts from the commission, voice guide, evidence, and chosen
-   template. The writer also runs the deterministic article proof and fixes
-   failures.
-4. The **editor** reads as skeptic, line editor, and reader. It can request
-   prose changes, more evidence, or better source support before approval.
+## The engine makes judgment enforceable
 
-The arrows returning to earlier roles are deliberate. A question about voice
-returns to the writing coach, an unsupported claim returns to research, and an
-editorial revision returns to the writer. The orchestrator carries those
-requests with exact context instead of asking one general-purpose agent to keep
-the whole production process in memory.
+The CLI beside the article flow is not another editorial role. It owns
+repeatable operations: assembling context, validating work, creating permitted
+assets, previewing the real page, and preparing the exact pull-request shape.
+Agents decide what to say; the engine checks whether the result satisfies the
+press and publication contracts.
 
-The role artifacts make a new article auditable: they preserve the commission,
-briefs, evidence, voice guidance, draft handoff, and editorial review that
-produced the submitted article. They are evidence of the run, not executable
-content.
+Local checks shorten the repair loop. They do not grant publication authority.
 
-## The CLI supplies deterministic operations
+## The Article PR is the boundary
 
-Agents use the repository-owned `nb` command for operations that should not
-depend on model judgment. The right side of the diagram calls out four common
-ones:
+After editor approval, `nb prepare-pr` turns one workspace into one proposed
+publication commit. CI evaluates that untrusted article with the trusted engine
+from `main` and without scheduler secrets. A failure returns to the owning role;
+a valid new article merges and triggers a static Pages build.
 
-- searching published history for narrowly requested prior coverage
-- checking article structure, metadata, sources, prose, and PR shape
-- rendering charts and capturing permitted article assets
-- previewing the article with its real template and site styles
+Manual articles enter at the orchestrator, skipping only the schedule decision.
+Revisions use the same validation boundary but require human review.
 
-The same proof code runs locally and in CI. Local success is therefore useful
-evidence before delivery, but it never replaces the server-side gate.
-
-## Preparing an Article PR fixes the delivery shape
-
-After editorial approval, `nb prepare-pr` starts from the current remote
-`library` branch, copies the article bundle into a generated branch, runs proof
-against the exact commit, and creates or describes an Article PR. A normal new
-article PR contains one HTML article, its local assets, and its complete role
-record.
-
-Generated branches and `.nb-work/` are disposable working state. The PR
-commit is the proposed publication. Merging that commit is the only way an
-article becomes part of the paper.
-
-## CI is the trust boundary
-
-Article HTML and assets are untrusted input. The Article PR workflow uses the
-trusted engine and press configuration from `main`, read-only repository
-permissions, and no scheduler secrets. It verifies the narrow diff shape,
-article metadata, source and prose contracts, artifact history, rendered site,
-and article behavior in a browser.
-
-If CI fails, the failure returns to the orchestrator for a targeted repair and
-another proof. If it passes, GitHub automatically merges every new article, as
-it does an exact workflow-synchronization PR. Revisions and owner curation
-always require human review.
-
-See [Publishing and security](publishing-and-security.md) for the complete
-permission and threat model.
-
-## Publication is a static build
-
-Merging the Article PR changes `library`. The protected publication workflow
-then rebuilds the paper from that branch: article pages, local assets, indexes,
-search data, feeds, and `catalog.json`. GitHub Pages serves the result without
-an application server or publication database.
-
-The public directory can discover papers through their published catalog, but
-the fork remains the source of truth for its press and archive. See
-[Ownership and branches](ownership-and-branches.md) for the exact division of
-state.
-
-## Manual articles and revisions use the same gate
-
-A manually commissioned article skips only the cadence decision. Once its
-series configuration admits it, the orchestrator and Article PR path are the
-same as for scheduled work.
-
-A revision may be as small as a typo correction or as large as a new
-LLM-assisted treatment of the article and its figures. The owner chooses the
-process. The submitted PR changes one article's HTML and/or matching local
-assets, records why the revision was needed, and passes the normal proof and
-browser checks before a person can merge it.
+[Publishing and security](publishing-and-security.md) defines the complete
+trust model. [Ownership and branches](ownership-and-branches.md) explains where
+the press, engine, production records, and generated site live.

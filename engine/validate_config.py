@@ -56,6 +56,7 @@ SERIES_KEYS = {
     "template",
     "templates",
     "prompt",
+    "voice_guide",
     "strict",
     "min_sources",
     "sources_by_kind",
@@ -735,6 +736,13 @@ def check_series(repo, registry, *, errors):
             errors.append(f"{where}: 'prompt' must be a path string")
         elif prompt and not os.path.isfile(os.path.join(root, sid, prompt)):
             errors.append(f"{where}: prompt file '{prompt}' not found")
+        # A pinned voice guide stands in for the writing coach, so a broken path
+        # would silently cost the series its craft standard rather than fail.
+        voice_guide = cfg.get("voice_guide")
+        if voice_guide is not None and not isinstance(voice_guide, str):
+            errors.append(f"{where}: 'voice_guide' must be a path string")
+        elif voice_guide and not os.path.isfile(os.path.join(root, sid, voice_guide)):
+            errors.append(f"{where}: voice guide file '{voice_guide}' not found")
         tags = cfg.get("tags")
         if tags is not None and not isinstance(tags, dict):
             errors.append(f"{where}: 'tags' must be a mapping of tag to fragment path")

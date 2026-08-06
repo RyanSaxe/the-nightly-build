@@ -24,6 +24,15 @@ template choice. Simulate a first week. Look for topic collisions, repetitive
 article geometry, impossible evidence requirements, and a reading load the
 user will not sustain.
 
+Propose a production policy alongside the lineup instead of letting the default
+stand unexamined. Say which roles earn an expensive model in each section and
+why, and which sections should pin a voice guide rather than run the writing
+coach every night. The reasoning is per section: research dominates wherever
+claims are contested and change quickly, drafting dominates wherever the piece
+lives on its argument or its voice, and a section can be settled enough in one
+of those and not the others. Show the user what a section costs in role work
+before they approve a cadence that multiplies it.
+
 Do not turn approval into a vague "looks good?" Ask the user to decide the few
 open choices that materially change the paper. Revise the concept until its
 parts cohere.

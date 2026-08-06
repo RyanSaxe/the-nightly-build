@@ -6,6 +6,10 @@ mode: sequence
 section: "Foundations"
 template: article
 prompt: prompt.md
+# A pinned voice guide: a course should sound the same lesson to lesson, so the
+# craft standard is settled once here instead of rediscovered nightly. The
+# writing coach does not run for a series that pins one.
+voice_guide: voice-guide.md
 strict: false
 bands:
   words: [1800, 4500] # a lesson needs room to build an idea, show code, and check it

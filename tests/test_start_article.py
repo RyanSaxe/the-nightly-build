@@ -12,6 +12,7 @@ import pathlib
 import pytest
 import yaml
 
+from nb.artifacts import validate_artifacts
 from nb.start_article import StartArticleError, initialize
 
 
@@ -263,3 +264,79 @@ def test_existing_workspace_is_never_overwritten(
         )
 
     assert marker.read_text() == "mine\n"
+
+
+def pin_voice_guide(repo: pathlib.Path, series_id: str, guide: str) -> pathlib.Path:
+    series = repo / "press/series" / series_id / "series.yaml"
+    series.write_text(series.read_text() + "\nvoice_guide: voice-guide.md\n")
+    path = series.parent / "voice-guide.md"
+    path.write_text(guide)
+    return path
+
+
+def test_pinned_voice_guide_stands_in_for_the_coach(
+    clone_testrepo,
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = pathlib.Path(clone_testrepo("press", "templates", "spec"))
+    guide = "# Voice guide\n\nWrite plainly.\n"
+    pin_voice_guide(repo, "semiconductors", guide)
+    workspace = tmp_path / "article"
+
+    initialize(
+        repo=repo,
+        workspace=workspace,
+        series_id="semiconductors",
+        slug="micron",
+        template_id="article",
+    )
+
+    invocation = workspace / "agent-artifacts/semiconductors/micron/writing-coach/01"
+    assert (invocation / "voice-guide.md").read_text() == guide
+    brief = (invocation / "brief.md").read_text()
+    assert "press/series/semiconductors/voice-guide.md" in brief
+    assert "no writing coach was invoked" in brief
+
+    errors = validate_artifacts(workspace, series="semiconductors", slug="micron")
+    assert not [error for error in errors if "writing-coach" in error]
+
+
+def test_a_series_without_a_pinned_guide_still_expects_the_coach(
+    clone_testrepo,
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = pathlib.Path(clone_testrepo("press", "templates", "spec"))
+    workspace = tmp_path / "article"
+
+    initialize(
+        repo=repo,
+        workspace=workspace,
+        series_id="semiconductors",
+        slug="micron",
+        template_id="article",
+    )
+
+    artifacts = workspace / "agent-artifacts/semiconductors/micron"
+    assert (artifacts / "editorial-direction.md").is_file()
+    assert not (artifacts / "writing-coach").exists()
+
+
+def test_a_missing_pinned_guide_leaves_no_partial_article(
+    clone_testrepo,
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = pathlib.Path(clone_testrepo("press", "templates", "spec"))
+    series = repo / "press/series/semiconductors/series.yaml"
+    series.write_text(series.read_text() + "\nvoice_guide: voice-guide.md\n")
+    workspace = tmp_path / "article"
+
+    with pytest.raises(StartArticleError, match="missing pinned voice guide"):
+        initialize(
+            repo=repo,
+            workspace=workspace,
+            series_id="semiconductors",
+            slug="micron",
+            template_id="article",
+        )
+
+    assert not workspace.exists()

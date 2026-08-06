@@ -55,9 +55,9 @@ bar:  what any single use must accomplish to stay in the article
 A license is good only when the editor can judge one sentence against it and
 defend the verdict. An empty license keeps the house default.
 
-Then add `Recently used, do not reuse:` and the structural or verbal habits
-the brief says this article should avoid. Prior articles are a negative
-constraint, never voice exemplars.
+Habits the article should avoid reach the writer in its own brief. A guide
+states the craft standard and nothing about the last article, so a guide can
+outlive the article it was written for.
 
 Then record each exemplar:
 
