@@ -12,9 +12,15 @@ in one burst at the start of production. Do not stage a warmup article and do
 not hold one article's roles for another's progress. Wall-clock is the slowest
 single article's chain, so any late start lands on the critical path.
 
-Within one article, brief `nb-writer` only after both outputs exist. Brief
-`nb-editor` only after the writer proves the article. Use these semantic role
-identities and artifacts:
+A series that sets `voice_guide` in its `series.yaml` has already settled its
+craft standard. `nb start-article` writes that guide into the article's
+`writing-coach/01` pair, so launch only `nb-researcher` for those articles and
+brief the writer against the guide already on disk. Launching the coach anyway
+spends a role invocation to produce a standard the press has stated.
+
+Within one article, brief `nb-writer` only after the voice guide and evidence
+both exist. Brief `nb-editor` only after the writer proves the article. Use
+these semantic role identities and artifacts:
 
 | Role ID         | Input brief       | Output                |
 | --------------- | ----------------- | --------------------- |
@@ -33,10 +39,13 @@ contiguous directory (`02`, `03`, and so on) and never overwrites an earlier
 brief or output. `commission.md` and the generated `editorial-direction.md`
 remain at the artifact root.
 
-Every role receives `editorial-direction.md` with its brief. The editor also
-receives the exact writer brief so instruction leakage remains visible. A
-`review-brief.md` carries the named inputs, your recent-pattern notes, and the
-round's focus. Nothing more. Every launch begins with its named inputs and
+Every role receives `editorial-direction.md` with its brief. The writer's brief
+carries the recent openers, conclusions, and outline shapes the commission
+recorded as habits not to inherit. The voice guide states the craft standard
+and never names the last article, so the habits to avoid travel with the
+article rather than with the guide. The editor also receives the exact writer
+brief so instruction leakage remains visible. A `review-brief.md` carries the
+named inputs, your recent-pattern notes, and the round's focus. Nothing more. Every launch begins with its named inputs and
 permits focused tool use. When a role asks for more context, expand its
 inputs or route the question to the owner rather than inviting repository
 exploration.
@@ -69,7 +78,10 @@ complete the work.
 
 ## Route repairs without waiving gates
 
-Missing voice guidance returns to the coach. Missing evidence returns to the
+Missing voice guidance returns to the coach, including for a series whose guide
+is pinned: the coach's repair lands in the next numbered invocation and governs
+this article only. A pinned guide belongs to the paper owner, so record what it
+could not support instead of editing it. Missing evidence returns to the
 researcher. Prose, structure, markup, assets, and proof return through the
 writer. Give every repair a new numbered brief and output, then require a fresh
 writer proof and editor read.

@@ -173,6 +173,32 @@ the prompt name the rubric furniture (`templates/FURNITURE.md`). A series
 with no `rubric:` pins nothing, but any rubric rows an article renders are
 still integrity-checked.
 
+## Pinning a voice guide
+
+By default the writing coach studies exemplars for every article and writes
+that article's voice guide. A series whose sound is already settled can state
+the standard once instead:
+
+```yaml
+voice_guide: voice-guide.md # a path under press/series/<id>/
+```
+
+The coach does not run for a series that pins a guide. `nb start-article`
+copies the pinned file into the article's `writing-coach/01/voice-guide.md`
+with a brief recording where it came from, so the production record still
+names the standard that governed the article. `nb validate` fails when the
+path names a missing file, because a silently absent guide would cost the
+series its craft standard.
+
+The writing coach is the only optional role, and it is the largest usage
+reduction available to a press. See
+[Appearance and voice](../guides/customize/appearance-and-voice.md) for how to
+write one and [Production](production.md) for what it saves.
+
+A pinned guide is durable and says nothing about any single article. The
+habits an article should avoid inheriting from recent work reach the writer
+through its brief instead, so pinning never weakens the repetition guard.
+
 ## Manual commissions
 
 Every manually triggered article still belongs to a configured series and,
