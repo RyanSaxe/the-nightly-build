@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three-quarters of a discounted-cash-flow value comes from after the forecast ends · Investing</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "investing",
+        "slug": "discounted-cash-flow",
+        "template": "lesson",
+        "title": "Three-quarters of a discounted-cash-flow value comes from after the forecast ends",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-07",
+        "tags": ["valuation", "dcf", "terminal-value"],
+        "sources": 6,
+        "words": 2149,
+        "reading_minutes": 9,
+        "dek": "That terminal chunk is also the shakiest input, so nudging the growth rate a single point swings the whole valuation fifteen percent.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Investing</div>
+        <h1 class="nb-title">Three-quarters of a discounted-cash-flow value comes from after the forecast ends</h1>
+        <p class="nb-dekline">
+          That terminal chunk is also the shakiest input, so nudging the growth
+          rate a single point swings the whole valuation fifteen percent.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-08-07</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Every price paid for a share is, whether the buyer says so or not, a
+          bet on the cash the business will produce and the return the buyer
+          wants for waiting. A discounted cash flow makes that bet explicit. This
+          lesson assembles one from parts the course built: the free
+          cash flow a firm throws off, the cost of capital that discounts it, and
+          the present-value arithmetic that collapses future cash into one
+          number. By the end you will be able to value a
+          whole business as the present value of its cash. You will split that
+          value into the years you can forecast and the terminal value you
+          cannot, and see how much of the answer rests on one assumption. The aim
+          is not to trust the number. It is to know which guess the number is
+          made of.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../investing/free-cash-flow.html"
+              >Apple's profit rose while its free cash flow fell</a
+            >: the owner cash a discounted cash flow discounts, and how it is
+            built.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../investing/cost-of-capital.html"
+              >A chipmaker's cost of capital runs more than double a utility's</a
+            >: the rate the future cash is discounted at.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../investing/present-value.html"
+              >A dollar next year is worth 95 cents today</a
+            >: how a stream of future cash collapses into one value today.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A whole business, priced as one stream of cash</h2>
+        <p>
+          The earlier lessons built the parts one at a time. Free cash flow to
+          the firm is the cash a business produces for all its investors after it
+          pays to keep running. The cost of capital is the return those investors
+          could earn elsewhere on money of the same risk. A discounted cash flow
+          does one thing with those two parts. It treats a company as a claim on
+          the cash it will produce. Then it prices that claim the way the
+          present-value lesson priced any future stream: each year's cash divided
+          by the return you gave up while you waited, then summed.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          One fact makes the sum honest work rather than a formula. A business
+          does not stop after five years, and no one can forecast its cash
+          forever. So a discounted cash flow splits the future in two: an
+          explicit forecast for a handful of years, and a single terminal value
+          that stands in for every year after.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            V \;=\; \sum_{t=1}^{n} \frac{\htmlClass{nb-mc1}{FCFF_t}}{(1 +
+            \htmlClass{nb-mc2}{r})^{t}} \;+\; \frac{\htmlClass{nb-mc3}{TV_n}}{(1 +
+            \htmlClass{nb-mc2}{r})^{n}}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">FCFF_t</span
+              ><span
+                >free cash flow to the firm in year t, the owner cash from the
+                free-cash-flow lesson.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">r</span
+              ><span
+                >the cost of capital, the blended hurdle from the
+                cost-of-capital lesson.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">TV_n</span
+              ><span
+                >the terminal value: every year past the forecast horizon n,
+                folded into one number.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            Enterprise value, the worth of the whole operating business, is the
+            present value of an explicit forecast plus the present value of a
+            single terminal value, both discounted at the cost of capital.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          To see where the value comes from, take a deliberately simple firm,
+          invented for this lesson and not a real company. It produces $100
+          million of free cash flow to the firm next year. That cash grows 8% a
+          year through year five, its cost of capital is 9%, and after year five
+          it settles into 2.5% growth forever. Every figure below is arithmetic
+          on those illustrative inputs.
+        </p>
+      </section>
+
+      <section data-nb-section="past-the-forecast" id="past-the-forecast">
+        <h2>Most of the price is a bet on the years you never forecast</h2>
+        <p>
+          Discount the five explicit years at 9% and they are worth $450 million
+          today. The terminal value uses the perpetuity form the present-value
+          lesson closed on: next year's cash divided by the gap between the
+          discount rate and the growth rate.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            TV_n \;=\; \frac{FCFF_{n+1}}{r - g} \;=\; \frac{FCFF_n\,(1 + g)}{r -
+            g}
+          </div>
+          <figcaption>
+            The stable-growth terminal value: the last forecast year's cash,
+            grown one more year, then treated as a perpetuity growing at
+            <span class="nb-math-in">g</span> forever.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          Year five's cash of $136.05 million grows 2.5% to $139.45 million in
+          year six. Over the gap between 9% and 2.5%, that year-six cash becomes
+          a terminal value of $2,145 million at year five. Discounted back five
+          years, it is worth $1,394 million today.
+        </p>
+
+        <table class="nb-table">
+          <caption>
+            The illustrative firm, valued in four lines (r = 9%, g = 2.5%, a
+            five-year explicit forecast). Source: this lesson's own
+            computation.
+          </caption>
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>$M</th>
+              <th class="txt">What it is</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Explicit</span></td>
+              <td>450</td>
+              <td class="txt">
+                The five forecast years of cash, discounted to today.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Terminal</span></td>
+              <td>2 145</td>
+              <td class="txt">
+                Year six's cash capped as a perpetuity, stated at year five.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">PV terminal</span></td>
+              <td>1 394</td>
+              <td class="txt">That terminal value discounted back five years.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Enterprise value</span></td>
+              <td>1 845</td>
+              <td class="txt">The whole operating business: 450 + 1 394.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Terminal share</span></td>
+              <td>75.6%</td>
+              <td class="txt">1 394 of the 1 845 is the terminal value.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          Three-quarters of the answer is a number for the years after the
+          forecast ends.
+        </p>
+        <p>
+          That share is not a quirk of these inputs. Michael Mauboussin and Dan
+          Callahan, valuing going concerns at Morgan Stanley, put the continuing
+          value at 70 to 80 percent of corporate value in a typical discounted
+          cash flow.<sup class="nb-cite"><a href="#s3">3</a></sup> Damodaran's
+          own published valuation of Tube Investments, a real two-stage model,
+          puts about two-thirds of enterprise value in the terminal term.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+        </p>
+        <p>
+          There are two ways to set that terminal value, and the choice moves it
+          more than any rounding in the forecast. The perpetuity form above grows
+          the last year's cash forever at a stable rate. The other common form
+          multiplies a year-five earnings figure by a ratio drawn from what
+          similar companies trade for today. Give the illustrative firm $200
+          million of year-five operating earnings and an 8-times peer multiple.
+          Its terminal value is then $1,600 million against the perpetuity's
+          $2,145 million, a quarter of the terminal value gone on the choice of
+          method alone. Damodaran calls the peer-multiple version a "Trojan Horse
+          DCF." It smuggles today's market pricing into a model that
+          claims to value the firm from its own cash.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          Analysts reach for it anyway. Mauboussin reports the earnings-based
+          exit multiple is the common way to set continuing value in
+          practice.<sup class="nb-cite"><a href="#s3">3</a></sup> The two forms
+          answer different questions, and only the perpetuity keeps the model's
+          promise to price the firm on its own cash rather than on the crowd's
+          mood.
+        </p>
+      </section>
+
+      <section data-nb-section="move-one-number" id="move-one-number">
+        <h2>Move one number and read the new answer</h2>
+        <p>
+          The valuation has one honest weak point, and it is the same terminal
+          value that holds most of the weight. Two inputs set it: the discount
+          rate r and the stable growth rate g. Change either by a single point
+          and enterprise value moves.
+        </p>
+        <p>
+          Hold g at 2.5% and lift the discount rate from 9% to 10%: enterprise
+          value falls from $1,845 million to $1,593 million, down 13.7%. Put r
+          back at 9% and lift stable growth from 2.5% to 3.5%: enterprise value
+          rises to $2,114 million, up 14.6%. One point, on one of two inputs,
+          moves the answer about a seventh in either direction.
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="discounted-cash-flow/chart-1.png"
+            alt="Line chart of enterprise value in millions of dollars against the stable growth rate g, from 1.5 to 3.5 percent, with three lines for discount rates of 8, 9, and 10 percent. All three lines slope upward and steepen as g rises. At g = 2.5 percent the 8 percent line reads about 2,189 million, the 9 percent line about 1,845 million (the marked base case), and the 10 percent line about 1,593 million. The lines fan wider apart at higher growth."
+          />
+          <figcaption>
+            Fig. 1 · Enterprise value of the illustrative firm against the
+            stable growth rate, one line per discount rate. The dot marks the
+            base case
+            (r = 9%, g = 2.5%). The explicit forecast is held fixed, so the whole
+            swing is the terminal value. Growth is kept well below every discount
+            rate.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-note="Figures are this lesson's own computation on the illustrative firm, using the enterprise-value identity and stable-growth terminal value from this source."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          The lines fan out because the terminal value rests on the difference
+          between r and g, and that difference is small. At r = 9% and g = 2.5%
+          the gap is 6.5 points. Widen g toward r and the denominator shrinks
+          toward zero, so the value climbs toward infinity. Damodaran states the
+          limit as arithmetic, not economics: as g approaches r the terminal
+          value runs to infinity, and if g exceeds r it turns negative.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          That is why the growth rate needs a ceiling. He caps it at the
+          risk-free rate, noting that from 1954 to 2015 the ten-year Treasury
+          averaged 5.93% against nominal economic growth of 6.67%.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+        </p>
+        <p>
+          Within that ceiling the choice of g is judgment, and it is where a
+          discounted cash flow's argument is really conducted. One camp of
+          valuation purists holds that a mature firm earns no excess return and
+          should therefore grow at zero. Damodaran answers that excess returns
+          outlast high growth, so a small positive rate is defensible.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          The dispute is not academic. Across the illustrative firm's grid,
+          moving g from 1.5% to 3.5% swings enterprise value from $1,647 million
+          to $2,114 million. Through all of it the terminal value's share of the
+          answer stays between about 70 and 82 percent. The number doing most of
+          the work is the number no one can look up.
+        </p>
+      </section>
+
+      <section data-nb-section="firm-to-share" id="firm-to-share">
+        <h2>From enterprise value to a single share</h2>
+        <p>
+          Enterprise value is the worth of the whole operating business, because
+          free cash flow to the firm is the cash left for every investor and the
+          cost of capital blends what all of them require. A shareholder owns
+          only what is left after the lenders. To cross from enterprise value to
+          equity value, subtract net debt, the company's debt minus the cash it
+          already holds.<sup class="nb-cite"><a href="#s2">2</a></sup> The
+          illustrative firm carries $300 million of net debt. Its equity is
+          $1,845 million minus $300 million, or $1,545 million. Across 100
+          million shares, that is $15.45 a share.
+        </p>
+        <p>
+          Damodaran runs the same bridge on a real firm, written the long way.
+          Discounting DaimlerChrysler's cash flows gave operating assets of
+          112,847 million D-marks, his name for its enterprise value. He adds the
+          firm's 18,068 million of cash and subtracts its 64,488 million of gross
+          debt, leaving equity of 66,427 million, or 72.7 D-marks a share.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Adding cash and subtracting gross debt is subtracting net debt: gross
+          debt of 64,488 less cash of 18,068 is the net debt that separates
+          enterprise value from equity. The step is subtraction either way. The
+          work is all upstream, in the cash flows and the terminal value the
+          subtraction inherits.
+        </p>
+      </section>
+
+      <section data-nb-section="tool-or-hand" id="tool-or-hand">
+        <h2>Is the tool broken, or the hand?</h2>
+        <p>
+          A model whose answer swings a seventh on a one-point assumption invites
+          a verdict, and the authorities split on where to aim it. Mauboussin
+          argues the fault is in the hand: many discounted cash flows are done
+          poorly, so the shortcomings speak "not about the approach but rather to
+          how it is applied."<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Pablo Fernández aims at the tool, calling much of the standard
+          apparatus unnecessary complication whose most common error is a
+          mis-computed discount rate.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          Damodaran concedes the opening both describe: analysts often use the
+          stable growth rate to bend a valuation toward the answer they already
+          wanted.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          The arithmetic itself is not in dispute. Fernández, the harshest of the
+          three, grants that valuing a company this way is at root the same
+          procedure used to value a government bond.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          What all three accept is that the fragility is real and lives in the
+          inputs, not the formula.
+        </p>
+
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The weakness of a discounted cash flow is also its honesty. It cannot
+            hand you what a business is worth, but it forces every assumption
+            into the open and shows exactly which one is carrying the answer. A
+            one-line multiple buries the same guesses. This model at least makes
+            you write them down.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A discounted cash flow values a business as the present value of the
+          cash it will produce, discounted at its cost of capital. Most of that
+          value, in the illustrative firm three-quarters of it, is the terminal
+          value, the one number standing in for every year past the forecast. And
+          that number is the shakiest: a single point of growth or discount rate
+          moves the whole valuation by about a seventh. The two facts are one.
+          The part of the answer you can least observe is also the largest and
+          the most sensitive. So a discounted cash flow is not a machine that
+          prints what a company is worth. It is a way to make your assumptions
+          explicit and watch what each one does. Most of all it exposes the
+          growth rate you can never look up and can only argue for.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/country/TerminalValue.pdf"
+              >Aswath Damodaran, "Terminal Value: The Tail That Wags the Dog?"</a
+            >: the fuller case on the terminal-value trap and why growth needs a
+            ceiling.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a
+              href="https://www.morganstanley.com/im/en-us/individual-investor/insights/consilient-observer/everything-is-a-dcf-model.html"
+              >Michael Mauboussin and Dan Callahan, "Everything Is a DCF Model"</a
+            >: the argument that every valuation, multiples included, is a
+            discounted cash flow in disguise.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/papers/termvalue.pdf"
+              data-nb-locator="pp. 1, 3-5"
+              >Aswath Damodaran (NYU Stern) · Closure in Valuation: Estimating
+              Terminal Value</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.cfainstitute.org/insights/professional-learning/refresher-readings/2026/free-cash-flow-valuation"
+              >CFA Institute · Free Cash Flow Valuation</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.morganstanley.com/im/en-us/individual-investor/insights/consilient-observer/everything-is-a-dcf-model.html"
+              data-nb-locator="p. 3"
+              >Michael J. Mauboussin & Dan Callahan, Morgan Stanley Counterpoint
+              Global · Everything Is a DCF Model</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/eqnotes/fcff.pdf"
+              data-nb-locator="p. 5; Tube Investments valuation tree"
+              >Aswath Damodaran (NYU Stern) · The Free Cashflow to Firm Model</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/country/TerminalValue.pdf"
+              data-nb-locator="slides 8, 11-15, 24"
+              >Aswath Damodaran (NYU Stern) · Terminal Value: The Tail That Wags
+              the Dog?</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.iese.edu/media/research/pdfs/WP-1062-E.pdf"
+              data-nb-locator="Abstract; Section 16"
+              >Pablo Fernández (IESE Business School), WP-1062-E · Valuing
+              Companies by Cash Flow Discounting</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
