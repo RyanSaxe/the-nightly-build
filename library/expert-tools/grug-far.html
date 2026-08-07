@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>grug-far opens a project-wide search as an editable buffer and writes your edits back across files · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "grug-far",
+        "template": "article",
+        "title": "grug-far opens a project-wide search as an editable buffer and writes your edits back across files",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-07",
+        "tags": ["neovim", "ripgrep", "refactoring", "developer-tools"],
+        "sources": 10,
+        "words": 1292,
+        "reading_minutes": 6,
+        "dek": "Delete a match from the results buffer and it drops out of the write; edit a match and Sync rewrites that line in the file it came from.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">grug-far opens a project-wide search as an editable buffer and writes your edits back across files</h1>
+        <p class="nb-dekline">
+          Delete a match from the results buffer and it drops out of the write; edit a match and Sync rewrites that line in the file it came from.
+        </p>
+        <div class="nb-byline">
+          <span>6 min read</span><span>2026-08-07</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The rename you cannot read before it lands</h2>
+        <p>
+          Renaming <code>userService</code> to <code>userClient</code> across a
+          repository is a chore every editor solves badly. A <code>:s</code>
+          substitution rewrites one buffer. <code>:cdo</code> and
+          <code>:cfdo</code> drive that substitution over a quickfix list, but
+          you approve the list of locations before you see the substituted
+          text. A quickfix replace or a shell <code>rg | sed</code>
+          pipe is fire-and-forget: the write reaches disk before you have read a
+          single changed line. grug-far.nvim, by Stephan Badragan, answers with
+          one move. The matches open in a single Neovim buffer, and that buffer
+          is editable.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Search runs on ripgrep. What comes back is editable text, and a Sync
+          command writes your changes back across every file at once.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The plugin's own requirements make the dependency plain: ripgrep is
+          the search backend itself and is required, at version 14 or above,
+          15 recommended.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="editing-the-matches" id="editing-the-matches">
+        <h2>Editing the matches themselves</h2>
+        <p>
+          The plainest way to see what that buys is to search and replace
+          nothing. Open the split with <code>:GrugFar</code> and type a bare
+          pattern into the Search field, say <code>TODO</code>. Every
+          <code>TODO</code> in the project renders as one line per match,
+          grouped under the file it came from. Now the part the other tools have
+          no answer for: those result lines are editable. Fix the wording on the
+          three you mean to keep, delete the lines for the matches you want to
+          skip, and press <code>&lt;localleader&gt;s</code>.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+        </p>
+
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">the results buffer, edited by hand</span
+            ><span>NVIM</span>
+          </div>
+          <pre><code class="language-bash">:GrugFar
+  Search:   TODO
+
+  auth.lua:14    -- TODO validate the token before this point
+  auth.lua:52    -- TODO rate-limit repeated failures
+  db.lua:9       -- TODO retry once on a dropped socket
+  db.lua:41      -- TODO(legacy) leave this one alone   &lt;- delete this line to skip it
+
+&lt;localleader&gt;s      " Sync All: write the edited lines back, file by file</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · Sync All writes exactly the lines standing in the buffer
+            back to their files; deleting a result line removes that match from
+            the write.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+
+        <p>
+          That keystroke is Sync All, and the README states the model in one
+          sentence: it &ldquo;does a line by line sync based on what's in the
+          results area.&rdquo;<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Deleting a result line is not a special command. The line is simply no
+          longer in the results area, so Sync does not write it. A project-wide
+          edit you assemble by hand and read in full before any byte reaches
+          disk is what the quickfix path does not offer.
+        </p>
+      </section>
+
+      <section data-nb-section="what-replace-runs" id="what-replace-runs">
+        <h2>Why Replace runs ripgrep, not sed</h2>
+        <p>
+          The default engine is ripgrep itself.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Some older find-and-replace plugins shelled out to sed; grug-far does
+          not. Its ripgrep engine replaces by running ripgrep, and the source
+          carries no sed anywhere.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          For a capture-group rename, put a group in Search and reference it in
+          Replace: search <code>(\w+)Service</code>, replace
+          <code>${1}Client</code>, then press
+          <code>&lt;localleader&gt;r</code>. Underneath, the engine runs
+          <code>rg --replace='${1}Client' --passthrough</code> on each matched
+          file.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The capture syntax is ripgrep's, which is the Rust regex crate's:
+          <code>$1</code> or <code>${1}</code> for the first group, a named
+          <code>$word</code> for <code>(?P&lt;word&gt;\w+)</code>, and
+          <code>$0</code> for the whole match. It is never sed's
+          <code>\1</code>.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          <code>userService</code> becomes <code>userClient</code> and
+          <code>authService</code> becomes <code>authClient</code>, everywhere
+          at once.
+        </p>
+        <p>
+          Replace and Sync All usually land the same bytes, and the difference
+          matters only at one point. Replace runs the <code>rg</code> command
+          and, in the README's words, &ldquo;does not depend at all on what's in
+          the results area,&rdquo; while Sync reads the buffer.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          If you never touch the result lines, the two produce equivalent
+          outcomes. The editable buffer earns its place the moment a blanket
+          substitution is wrong: that is where you correct it by hand, delete
+          the false positives, and sync only what you approved.
+        </p>
+      </section>
+
+      <section data-nb-section="swapping-in-ast-grep" id="swapping-in-ast-grep">
+        <h2>Swapping in ast-grep drops the sync buffer</h2>
+        <p>
+          The same surface drives a second engine. Press
+          <code>&lt;localleader&gt;e</code> to swap to ast-grep, one of the
+          three engines the default configuration enables alongside a rules
+          variant, and the Search field becomes an ast-grep pattern.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          The structural rewrite ast-grep is built for, turning
+          <code>$A &amp;&amp; $A()</code> into
+          <code>$A?.()</code>, runs here as
+          <code>ast-grep run --pattern='$A &amp;&amp; $A()' --rewrite='$A?.()'
+          --update-all</code>, previewed as a diff in the editor before you
+          apply it.<sup class="nb-cite"><a href="#s5">5</a></sup
+          ><sup class="nb-cite"><a href="#s6">6</a></sup> The line to draw is
+          plain: ast-grep is the standalone matcher and rewriter, and grug-far
+          is the interactive surface that can drive it. The signature move does
+          not come with it. Sync is a ripgrep-engine feature; the ast-grep
+          engine ships no sync path at all, so on it you edit the Replace field
+          and run Replace, never the result lines.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          ><sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="cost-and-trust" id="cost-and-trust">
+        <h2>What it costs, and whether to trust it</h2>
+        <p>
+          The bill is short. grug-far needs Neovim 0.11.0 or newer, with tag
+          1.6.3 pinned for anyone still on 0.10, and the ripgrep dependency
+          already named.<sup class="nb-cite"><a href="#s1">1</a></sup> ast-grep
+          is a second, optional install, wanted only if you use its engine, 0.36
+          or above recommended.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Two limits bind the model. A search stops after
+          <code>maxSearchMatches</code>, 2000 by default, on the reasoning that
+          millions of matches are most likely pointless and can freeze the
+          buffer; a rename that must touch more sites than that needs a
+          narrower pattern or a raised cap.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          And sync, the feature the whole case rests on, is the narrowest
+          surface of all: ripgrep engine only, and disabled even there under
+          <code>--multiline</code> and <code>--multiline-dot-all</code>, where
+          you fall back to Replace.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                Project-wide matches open as one editable buffer you read in
+                full before any write lands.
+              </li>
+              <li>
+                The default engine is ripgrep's own <code>--replace</code>, with
+                Rust-regex capture groups, not a sed shell-out.
+              </li>
+              <li>
+                A second engine drives ast-grep's structural rewrites from the
+                same buffer, previewed as a diff.
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                The edit-and-sync move is ripgrep-only, and off under multiline
+                search.
+              </li>
+              <li>
+                Search caps at 2000 matches by default, so the largest renames
+                need tuning.
+              </li>
+              <li>
+                ripgrep is a hard dependency; structural rewrites add ast-grep
+                as a second one.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <p>
+          Maintenance is active and checkable. The latest tag is 1.6.76, dated
+          2026-07-28, ten days before this was written, and the tag stream runs
+          weekly to fortnightly across 2026.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          The Releases tab reads empty, which is not abandonment: the version
+          record lives in the tags, not in GitHub releases. The commit log
+          agrees, with the most recent commit landing the same day and outside
+          contributors' pull requests merged by the maintainer.<sup
+            class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+          The open backlog is two issues, both filed 2026-08-04, against a
+          single maintainer and roughly two thousand stars.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          ><sup class="nb-cite"><a href="#s10">10</a></sup> A low open count
+          beside active commits is consistent with responsive triage, though the
+          record shows the counts, not the response times.
+        </p>
+
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Reach for grug-far when a rename spans the project and you want to
+            read the whole change before it lands, on patterns a regular
+            expression can match. Its one real distinction, the editable and
+            syncable results buffer, is ripgrep-only, so a codebase whose
+            renames are inherently structural spends its time on the ast-grep
+            engine, where grug-far is a diff-previewing front end and little
+            more.<sup class="nb-cite"><a href="#s6">6</a></sup> Development is
+            steady but single-handed; a maintainer count of one is the standing
+            risk to weigh, and a stalled tag stream would be the signal to
+            revisit it.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Requirements; Sync vs Replace; Commands"
+              href="https://github.com/MagicDuck/grug-far.nvim/blob/main/README.md"
+              >MagicDuck/grug-far.nvim · README</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="defaultOptions: engine, engines, keymaps, maxSearchMatches"
+              href="https://github.com/MagicDuck/grug-far.nvim/blob/main/lua/grug-far/opts.lua"
+              >MagicDuck/grug-far.nvim · lua/grug-far/opts.lua</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/MagicDuck/grug-far.nvim/blob/main/lua/grug-far/engine/ripgrep/replace.lua"
+              >MagicDuck/grug-far.nvim · engine/ripgrep/replace.lua</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Replacements"
+              href="https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md"
+              >BurntSushi/ripgrep · GUIDE.md</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/MagicDuck/grug-far.nvim/blob/main/lua/grug-far/engine/astgrep/getArgs.lua"
+              >MagicDuck/grug-far.nvim · engine/astgrep/getArgs.lua</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="replace.lua extraArgs = --update-all; no sync.lua in engine dir"
+              href="https://github.com/MagicDuck/grug-far.nvim/blob/main/lua/grug-far/engine/astgrep/replace.lua"
+              >MagicDuck/grug-far.nvim · engine/astgrep/replace.lua</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/MagicDuck/grug-far.nvim/tags"
+              >MagicDuck/grug-far.nvim · Tags</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/MagicDuck/grug-far.nvim/commits/main"
+              >MagicDuck/grug-far.nvim · Commits</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/MagicDuck/grug-far.nvim/issues"
+              >MagicDuck/grug-far.nvim · Issues</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/MagicDuck"
+              >GitHub · MagicDuck (Stephan Badragan)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
