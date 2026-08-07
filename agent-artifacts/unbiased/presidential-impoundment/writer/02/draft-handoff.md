@@ -1,0 +1,6 @@
+# Draft handoff: unbiased/presidential-impoundment (02, revision)
+
+- **Price misattribution (required):** Removed the footnote-22 Protect Democracy line entirely (no longer present, attributed to Price or otherwise). Replaced with a paraphrase in the article's voice for the statutory-not-constitutional reading, plus one verified Price main-text quotation, "did forcefully assert a constitutional impoundment prerogative," for the Nixon exception (evidence option 1); "and lost" rests on facts already carried by s1/s6, not on Price's footnote.
+- **Headline overstatement (required):** "clawed back" → "moved to claw back" in the visible h1 and the identical nb-meta title (and the `<title>` tag); the funds were enjoined, never retrieved. Dek unchanged and still matches (B-META-MATCH passes).
+- **Preserved:** the editor's one direct cut ("Strip the doctrine to its frame.") and the correctly-stated, IRA-mandatory-appropriation holding. No new claims; source set unchanged at 14 (8 primary / 6 secondary), all gates met.
+- **Proof:** `./nb check ... --series unbiased --library /home/user/library-checkout` (links included) → **BLOCK: 0, WARN: 0 — PUBLISHABLE.** `nb stamp`: words 1805, reading 8 min, sources 14.
