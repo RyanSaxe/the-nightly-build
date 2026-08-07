@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dropping bidirectionality broke BERT where dropping its sentence task did not · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "bert",
+        "template": "paper",
+        "title": "Dropping bidirectionality broke BERT where dropping its sentence task did not",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-07",
+        "tags": ["research"],
+        "sources": 8,
+        "words": 2598,
+        "reading_minutes": 11,
+        "dek": "The recipe became the field's default encoder, and the re-examination that followed kept its bidirectional masking while discarding the next-sentence loss BERT shipped beside it.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Dropping bidirectionality broke BERT where dropping its sentence task did not</h1>
+        <p class="nb-dekline">
+          The recipe became the field's default encoder, and the re-examination that followed kept its bidirectional masking while discarding the next-sentence loss BERT shipped beside it.
+        </p>
+        <div class="nb-byline">
+          <span>11 min read</span><span>2026-08-07</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</p>
+          <p class="nb-paper-meta">Jacob Devlin, Ming-Wei Chang, Kenton Lee &amp; Kristina Toutanova · NAACL-HLT 2019 (arXiv:1810.04805) · 2019</p>
+          <a class="nb-paper-link" href="https://aclanthology.org/N19-1423/"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We introduce a new language representation model called BERT, which
+            stands for Bidirectional Encoder Representations from Transformers.
+            Unlike recent language representation models (Peters et al., 2018a;
+            Radford et al., 2018), BERT is designed to pre-train deep
+            bidirectional representations from unlabeled text by jointly
+            conditioning on both left and right context in all layers. As a
+            result, the pre-trained BERT model can be fine-tuned with just one
+            additional output layer to create state-of-the-art models for a wide
+            range of tasks, such as question answering and language inference,
+            without substantial task-specific architecture modifications. BERT
+            is conceptually simple and empirically powerful. It obtains new
+            state-of-the-art results on eleven natural language processing
+            tasks, including pushing the GLUE score to 80.5% (7.7% point
+            absolute improvement), MultiNLI accuracy to 86.7% (4.6% absolute
+            improvement), SQuAD v1.1 question answering Test F1 to 93.2 (1.5
+            point absolute improvement) and SQuAD v2.0 Test F1 to 83.1 (5.1
+            point absolute improvement).<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Abstract, p. 1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Two ways to reuse a language model, and a third the paper proposed</h2>
+        <p>
+          By late 2018 the recipe of pre-train once, fine-tune everywhere
+          already worked, and two versions of it led the field. OpenAI's GPT
+          pre-trained a Transformer decoder as a standard language model, each
+          token predicted from the tokens to its left, then fine-tuned the whole
+          network per task.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="§3.1, Eq. 1">2</a></sup
+          >
+          ELMo took the other road: it trained a forward and a backward LSTM
+          language model, concatenated their internal states into contextual
+          word vectors, and fed those frozen features into a task-specific model
+          it trained from scratch.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          Each gave something up. GPT's token never sees its right context.
+          ELMo's two directions are trained apart and joined only at the end,
+          so no layer ever conditions on both sides at once.
+        </p>
+        <p>
+          BERT's bet was that one deep Transformer encoder could condition on
+          left and right context jointly in every layer, and that the same
+          pre-trained weights, fine-tuned with a single added output layer,
+          would carry to a wide range of tasks.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Abstract; §3">1</a></sup
+          >
+          The bet came bundled with two training objectives and a data scale,
+          and the years after publication spent their effort separating which
+          part of the bundle did the work. The answers did not all favor the
+          paper's own account.
+        </p>
+      </section>
+
+      <section data-nb-section="masking-objective" id="masking-objective">
+        <h2>Why the encoder has to be blindfolded to read both ways</h2>
+        <p>
+          Start with the objective BERT is defined against. GPT maximizes the
+          left-to-right likelihood
+          <span class="nb-math-in">\mathcal{L}_{\text{LTR}} = \sum_{i} \log P(u_i \mid u_{i-k}, \dots, u_{i-1}; \Theta)</span>,
+          where every token is scored from its predecessors alone.<sup
+            class="nb-cite"
+            ><a href="#s2" data-nb-locator="§3.1, Eq. 1">2</a></sup
+          >
+          That factorization forbids the thing BERT wants. You cannot simply run
+          the same model in both directions inside a deep stack. With right
+          context available, a token at a lower layer leaks upward, and by the
+          top layer each position can see itself. Predicting it becomes copying,
+          not learning. BERT's answer is to hide the targets. Mask about 15% of
+          the tokens and predict only those, from everything left unmasked on
+          both sides.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \mathcal{L}_{\text{MLM}} = -\!\!\sum_{\htmlClass{nb-mc3}{i \in \mathcal{M}}}\!\! \log P\bigl(\htmlClass{nb-mc1}{x_i} \mid \htmlClass{nb-mc2}{x_{\setminus \mathcal{M}}};\, \Theta\bigr)
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">x_i</span
+              ><span>A masked token, the label the encoder must reconstruct.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">x_{\setminus \mathcal{M}}</span
+              ><span>The whole sequence with the masked positions hidden, the joint left-and-right context the prediction reads.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">i \in \mathcal{M}</span
+              ><span>The sum runs over the masked set only, roughly one token in six.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The masked-language objective: cross-entropy on the masked tokens,
+            each read from context on both sides.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="§3.1, Task #1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Two features of that sum decide everything that follows. The
+          conditioning set
+          <span class="nb-math-in">x_{\setminus \mathcal{M}}</span> spans both
+          sides of position <span class="nb-math-in">i</span>, the joint context
+          the left-to-right likelihood above cannot express, which is the whole
+          of what bidirectional means here. And the sum ranges over the masked
+          set alone: with 15% of tokens masked, about 85% of positions produce
+          no term in the loss and teach the encoder nothing on that example. The
+          first feature is the source of BERT's gains. The second is the opening
+          a later objective was built to exploit.
+        </p>
+        <p>
+          Masking creates one problem of its own. The
+          <code>[MASK]</code> symbol appears constantly during pre-training and
+          never during fine-tuning, so a model that keys its predictions to
+          seeing <code>[MASK]</code> would train for an input it will not meet
+          again. BERT's fix is to weigh the alternatives at the token level. Of
+          the tokens chosen for prediction, 80% are replaced with
+          <code>[MASK]</code>, 10% with a random token, and 10% are left
+          unchanged. A flagged position is therefore not reliably corrupted, so
+          the encoder has to keep a real distribution over the identity of every
+          token it reads, not only the ones wearing the mask.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§3.1, Task #1" data-nb-note="&ldquo;we do not always replace &lsquo;masked&rsquo; words with the actual [MASK] token.&rdquo;">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="transfer" id="transfer">
+        <h2>One set of weights, eleven tasks</h2>
+        <p>
+          The durable claim is the transfer result. The same pre-trained
+          encoder, fine-tuned with one added layer, set the state of the art on
+          eleven tasks at once. On the GLUE leaderboard, a suite of nine English
+          understanding tasks scored as one equal-weight average,<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          BERT-LARGE reached 80.5 against GPT's 72.8, a jump of 7.7 points on
+          the test server.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 1; Abstract">1</a></sup
+          >
+          That leaderboard figure is a different aggregation from the per-task
+          average the paper prints in the same table, which excludes one small
+          task and reads higher. The table below is that printed average. It is
+          a test-set number, and it must never be lined up against the
+          development-set scores the later ablations report.
+        </p>
+        <table class="nb-table">
+          <caption>
+            GLUE test-set results, the printed eight-task average (WNLI
+            excluded). This is a different aggregation from the 80.5 leaderboard
+            score, which includes WNLI on the test server.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">System</th>
+              <th>GLUE avg.</th>
+              <th>MNLI-m</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">Prior state of the art</td>
+              <td>74.0</td>
+              <td>80.6</td>
+            </tr>
+            <tr>
+              <td class="txt">OpenAI GPT</td>
+              <td>75.1</td>
+              <td>82.1</td>
+            </tr>
+            <tr>
+              <td class="txt">BERT-BASE</td>
+              <td>79.6</td>
+              <td>84.6</td>
+            </tr>
+            <tr>
+              <td class="txt">BERT-LARGE</td>
+              <td>82.1</td>
+              <td>86.7</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          A leaderboard margin invites a suspicious reading: perhaps the encoder
+          architecture, or a benchmark quirk, and not the pre-trained
+          representation, is doing the work. BERT's feature-based test answers
+          it inside a single model. Freeze the encoder, take no gradient into
+          it, and feed its hidden layers as fixed features to a task model for
+          named-entity recognition. Concatenating the last four layers reaches
+          96.1 development F1 on CoNLL-2003, against 96.4 for full
+          fine-tuning.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Table 7, §5.3">1</a></sup
+          >
+          A gap of three tenths of a point between frozen and fine-tuned use is
+          the ELMo comparison run without ELMo's shallow join. The
+          representation itself carries the transferable signal, and the
+          fine-tuning head is a convenience, not the source of the result.
+        </p>
+      </section>
+
+      <section data-nb-section="which-part-carried-it" id="which-part-carried-it">
+        <h2>The ablation that named the essential ingredient</h2>
+        <p>
+          BERT's own Section 5.1 puts the two training objectives on trial, and
+          the verdict is already visible in the paper's Table 5. Take the
+          full model and remove only the next-sentence loss, keeping the
+          segment-pair input it was trained on. Almost nothing moves on the
+          development set: MNLI-m slips 84.4 to 83.9, MRPC 86.7 to 86.5, SST-2
+          92.7 to 92.6. The one real cost is QNLI, 88.4 to 84.9. Now take the
+          further step of replacing the masked-language model with a
+          left-to-right one, the change that turns BERT back into a GPT-shaped
+          model. The tasks that hinge on relating two spans fall through the
+          floor.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="bert/chart-1.png"
+            alt="Grouped bars of development scores for BERT-BASE, a No-NSP variant, and a left-to-right No-NSP variant across MNLI-m, QNLI, MRPC, SST-2, and SQuAD F1. The No-NSP bars sit just below BERT-BASE everywhere. The left-to-right bars collapse on MRPC, from about 86 to 77, and on SQuAD, from about 88 to 78, while staying close on MNLI-m, QNLI, and SST-2."
+          />
+          <figcaption>
+            Fig. 1 · BERT's Section 5.1 ablation, development set. Removing the
+            next-sentence loss barely moves the scores; switching from masked to
+            left-to-right conditioning collapses MRPC and SQuAD, the tasks that
+            need both-sided context.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 5, §5.1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Read the chart as a test between two accounts of bidirectionality. One
+          holds that reading both directions is a modest accuracy tweak on top
+          of a language model. The other holds that it is the thing the recipe
+          rests on. The single change from masked to left-to-right conditioning
+          costs nine points on MRPC and ten on SQuAD F1, while dropping the
+          next-sentence loss costs a few tenths on most tasks. The second
+          account wins, and the same figure plants a second finding the authors
+          state more cautiously than their numbers warrant: the No-NSP row shows
+          the auxiliary objective already paying almost nothing for its place.
+        </p>
+        <p>
+          The paper's own conclusion is that the next-sentence task helps, and
+          on its evidence that is fair: with segment-pair inputs, removing the
+          loss did cost a little, most of it on QNLI. The claim to watch is not
+          that the loss did nothing in BERT's setup. It is whether the small
+          gain survives a comparison BERT never ran.
+        </p>
+      </section>
+
+      <section data-nb-section="second-claim-fails" id="second-claim-fails">
+        <h2>What the next-sentence task was actually measuring</h2>
+        <p>
+          RoBERTa ran that comparison. It is a careful replication whose
+          headline conclusion is that BERT was badly undertrained, and along the
+          way it isolates the next-sentence loss on matched data in its Table 2.
+          The result is easy to state carelessly and worth stating exactly,
+          because the two no-loss configurations change two things, not one.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="bert/chart-2.png"
+            alt="Grouped bars of development scores for four input configurations across SQuAD 2.0 F1, MNLI-m, SST-2, and RACE. Segment-Pair plus NSP and Sentence-Pair plus NSP keep the next-sentence loss; Full-Sentences and Doc-Sentences drop it. On every task Sentence-Pair plus NSP is lowest and Doc-Sentences is highest or tied, with Full-Sentences close behind."
+          />
+          <figcaption>
+            Fig. 2 · RoBERTa's controlled input-format test, development set. The
+            two configurations without the next-sentence loss (Full-Sentences,
+            Doc-Sentences) match or beat the two with it; the short-pair input
+            with the loss is the worst everywhere.<sup class="nb-cite"
+              ><a href="#s5" data-nb-locator="Table 2, §4.2" data-nb-note="&ldquo;removing the NSP loss matches or slightly improves downstream task performance.&rdquo;">5</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Here is the confound.
+          BERT's No-NSP ablation kept the segment-pair input, two concatenated
+          spans, and removed only the loss. RoBERTa's gain appears only once it
+          also abandons segment pairing for a single contiguous span, the
+          Full-Sentences and Doc-Sentences rows. The worst row in the figure is
+          Sentence-Pair with the loss kept, built from short sentence pairs. So
+          the defensible statement is narrow: the next-sentence loss is
+          unnecessary once the input format is fixed, not that the loss does
+          nothing in BERT's own segment-pair configuration. RoBERTa's flagship
+          model changes at least five things together, from ten times the data
+          to larger batches, so only this matched-data table, and not the
+          headline score, carries the claim about the loss.
+        </p>
+        <p>
+          ALBERT supplies the reason the loss was weak. Its negatives are pairs
+          drawn from different documents, so they differ in topic as well as in
+          order, and topic is the easier signal, the one the masked-language
+          objective already supplies. A head trained on the next-sentence task
+          scores 52.0% on a pure sentence-order probe, indistinguishable from
+          the coin flip, while a head trained on order alone reaches
+          86.5%.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Table 5, §4.6" data-nb-note="&ldquo;NSP conflates topic prediction and coherence prediction in a single task.&rdquo;">6</a></sup
+          >
+          RoBERTa and ALBERT agree the loss as BERT specified it was weak; they
+          part on the remedy. RoBERTa deletes the inter-sentence objective
+          outright. ALBERT keeps one but rebuilds it as order prediction, and
+          reports gains on multi-sentence tasks. The record supports the
+          negative claim they share more firmly than either positive remedy.
+        </p>
+      </section>
+
+      <section data-nb-section="undertrained" id="undertrained">
+        <h2>Undertrained, not out-designed</h2>
+        <p>
+          RoBERTa's larger finding reframes a dispute BERT had left open. XLNet
+          had argued that a new objective, permutation language modeling that
+          sees both sides without a <code>[MASK]</code> token, was why it beat
+          BERT on twenty tasks, locating the gain in architecture.<sup
+            class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          RoBERTa holds the architecture fixed and moves only the training. At
+          the same model size, feeding more data and then simply running more
+          steps lifts SQuAD 2.0 development F1 from 87.3 to 89.4, a curve that is
+          still climbing when the paper stops it at 500,000 steps.<sup
+            class="nb-cite"
+            ><a href="#s5" data-nb-locator="Table 4, §4.4">5</a></sup
+          >
+          The single-task comparison then lands the point.
+        </p>
+        <table class="nb-table">
+          <caption>
+            GLUE development scores, single-task fine-tuning: a well-trained BERT
+            recipe against BERT-LARGE and against XLNet's new objective. All
+            development-set numbers.<sup class="nb-cite"
+              ><a href="#s5" data-nb-locator="Table 5, §5">5</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Task</th>
+              <th>BERT-LARGE</th>
+              <th>XLNet</th>
+              <th>RoBERTa</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">MNLI</span></td>
+              <td>86.6</td>
+              <td>89.8</td>
+              <td>90.2</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">RTE</span></td>
+              <td>70.4</td>
+              <td>83.8</td>
+              <td>86.6</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">CoLA</span></td>
+              <td>60.6</td>
+              <td>63.6</td>
+              <td>68.0</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">SST-2</span></td>
+              <td>93.2</td>
+              <td>95.6</td>
+              <td>96.4</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The competing account predicts XLNet's objective should hold a lead
+          that a better-trained BERT cannot close. It does not hold. Trained on
+          160 gigabytes of text against BERT's 16, with the same encoder,
+          RoBERTa beats BERT-LARGE on every task. The widest gaps fall on the
+          data-starved ones, RTE by sixteen points and CoLA by seven, and it
+          edges past XLNet as well. Most of the reported improvement over BERT
+          relocates from architecture to training scale. BERT's published
+          margins understate its own recipe, because the recipe was stopped
+          early.
+        </p>
+      </section>
+
+      <section data-nb-section="cost-of-masking" id="cost-of-masking">
+        <h2>The bill for supervising one token in six</h2>
+        <p>
+          Return to the sum that defined the objective. Because it ranges over
+          the masked set alone, a training example teaches the encoder about
+          roughly 15% of its positions and wastes the rest. ELECTRA makes that
+          waste its design target. It keeps a small generator to propose
+          replacements, then trains the encoder as a discriminator that labels
+          every input token as original or replaced, so the loss covers the
+          whole sequence rather than the masked sixth.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="Introduction" data-nb-note="&ldquo;the model learns from all input tokens instead of just the small masked-out subset.&rdquo;">8</a></sup
+          >
+          The claim to test is that learning from all tokens buys the same
+          quality for less compute.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="bert/chart-3.png"
+            alt="GLUE development score against pre-training compute in FLOPs on a log scale. An ELECTRA frontier line rises from ELECTRA-Small at about 80 to ELECTRA-400K and ELECTRA-1.75M near 89.5. BERT-Small sits far below at 75 at the same compute as ELECTRA-Small. RoBERTa-500K at 88.9 and XLNet-LARGE at 89.1 sit near ELECTRA's top scores but about four to five times further right in compute."
+          />
+          <figcaption>
+            Fig. 3 · GLUE development score against pre-training FLOPs, log axis.
+            Replaced-token detection reaches the masked-model scores well to
+            their left in compute: ELECTRA-400K matches RoBERTa-500K and XLNet at
+            under a quarter of their FLOPs.<sup class="nb-cite"
+              ><a href="#s8" data-nb-locator="Fig. 1; Tables 1–2" data-nb-note="&ldquo;less than 1/4 of the compute to train ELECTRA-400K as it did to train RoBERTa and XLNet.&rdquo;">8</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          At equal compute the gap is plain: ELECTRA-Small scores 79.9 on GLUE
+          development where a same-budget BERT-Small manages 75.1. At the top of
+          the curve ELECTRA-400K reaches 89.0, level with a fully trained
+          RoBERTa at 88.9 and XLNet at 89.1, using under a quarter of their
+          pre-training FLOPs. The honest bound on this is that it is an
+          efficiency result, not an accuracy ceiling. A masked-language model
+          run long enough reaches the same GLUE score; it just pays several
+          times the compute to get there. The inefficiency BERT's objective
+          carries is real, and it is the size of a compute multiple, not a wall.
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>What survived and what did not</h2>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                Deep bidirectional masked-language pre-training with light
+                fine-tuning transferred across eleven tasks and beat both the
+                left-to-right (GPT) and frozen feature-based (ELMo) recipes.
+              </li>
+              <li>
+                The pre-trained representation carries the signal: frozen
+                features reach within three tenths of a point of full
+                fine-tuning on NER.
+              </li>
+              <li>
+                Bidirectionality is the choice the recipe depends on. Removing it
+                costs nine to ten points on the tasks that relate two spans.
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                The next-sentence claim did not survive a matched-data test. The
+                defensible reading is only that the loss is unnecessary once the
+                input format is fixed.
+              </li>
+              <li>
+                BERT was undertrained, so its published margins understate the
+                recipe and overstate the role of its architecture.
+              </li>
+              <li>
+                Masking supervises about one token in six, an efficiency cost a
+                successor cut to under a quarter of the compute.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The bidirectional masked-language encoder plus fine-tuning transfer
+            was the field-defining contribution, and it holds. The
+            next-sentence objective BERT shipped beside it did not: a controlled
+            test retired the loss, and a coherence probe showed it was largely
+            reading topic the masked objective already knew.<sup class="nb-cite"
+              ><a href="#s6" data-nb-locator="Table 5, §4.6">6</a></sup
+            >
+            Masking's sparse supervision was a real limit, bounded at a compute
+            multiple rather than an accuracy gap.<sup class="nb-cite"
+              ><a href="#s8" data-nb-locator="Tables 1–2">8</a></sup
+            >
+            Two findings would move the assessment: a matched-data study that
+            restored a benefit for an inter-sentence loss, or evidence that
+            replaced-token detection's compute edge closes at the largest
+            scales.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aclanthology.org/N19-1423/"
+              >ACL Anthology · Devlin, Chang, Lee &amp; Toutanova, "BERT:
+              Pre-training of Deep Bidirectional Transformers for Language
+              Understanding" (NAACL 2019)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf"
+              >OpenAI · Radford, Narasimhan, Salimans &amp; Sutskever,
+              "Improving Language Understanding by Generative Pre-Training"
+              (2018)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1802.05365"
+              >arXiv · Peters et al., "Deep contextualized word representations"
+              (NAACL 2018)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1804.07461"
+              >arXiv · Wang, Singh, Michael, Hill, Levy &amp; Bowman, "GLUE: A
+              Multi-Task Benchmark and Analysis Platform for Natural Language
+              Understanding" (ICLR 2019)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1907.11692"
+              >arXiv · Liu et al., "RoBERTa: A Robustly Optimized BERT
+              Pretraining Approach" (2019)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1909.11942"
+              >arXiv · Lan, Chen, Goodman, Gimpel, Sharma &amp; Soricut, "ALBERT:
+              A Lite BERT for Self-supervised Learning of Language
+              Representations" (ICLR 2020)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1906.08237"
+              >arXiv · Yang, Dai, Yang, Carbonell, Salakhutdinov &amp; Le,
+              "XLNet: Generalized Autoregressive Pretraining for Language
+              Understanding" (NeurIPS 2019)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2003.10555"
+              >arXiv · Clark, Luong, Le &amp; Manning, "ELECTRA: Pre-training
+              Text Encoders as Discriminators Rather Than Generators" (ICLR
+              2020)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
