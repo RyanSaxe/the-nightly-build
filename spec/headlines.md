@@ -60,7 +60,7 @@ executive" decorates without informing. One lean sentence, a stance and not
 a topic, and no detail that competes with the thesis for the reader's first
 impression.
 
-`spec/editorial.md` bans the hedged-contrast reflex in body prose, and the
+`spec/slop.md` bans the negative-parallelism reflex in body prose, and the
 dek gets no exemption. Three dek molds carry it: the semicolon reversal ("X
 did A; Y refuses B"), the suspended question ("...and the real question
 is whether"), and the comma triad, three clauses joined by commas and closed

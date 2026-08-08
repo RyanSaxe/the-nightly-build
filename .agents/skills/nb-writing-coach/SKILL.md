@@ -35,8 +35,8 @@ Use web access for this research. Never imitate a named writer's persona or
 phrasing. Extract transferable craft, not a costume. The committed guide is a
 public artifact, so describe what the exemplar does rather than reproducing its
 prose. The cadence quotation is the one exception, kept to the few sentences
-the rhythm needs and attributed to the author above it. Its timing transfers.
-Its wording stays the author's.
+the rhythm needs and attributed to the author above it. Use it to hear the
+timing. Never reuse its wording.
 
 ## Write the voice guide
 
