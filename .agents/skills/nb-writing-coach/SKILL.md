@@ -55,12 +55,12 @@ move: what the studied exemplar does with it, and when it deploys the form
 bar:  what any single use must accomplish to stay in the article
 ```
 
-Name a form by the work it takes, not by the sentence it makes. "The reported
-negative result" sends the writer to find one. "The compressed verdict" asks
-only for a sentence, so the writer supplies that sentence whether or not the
-material earns it, and fills it with whatever is at hand. A license is good
-only when the editor can judge one sentence against it and defend the verdict.
-An empty license keeps the house default.
+Grant a license only when the writer needs to have found something before they
+can use it. "The reported negative result" requires an experiment that failed.
+"The compressed verdict" requires nothing, because a writer can always add one
+more sentence, so they will add it in a section that has nothing to conclude. A
+license is good only when the editor can judge one sentence against it and
+defend the verdict. An empty license keeps the house default.
 
 Habits the article should avoid reach the writer in its own brief. A guide
 states the craft standard and nothing about the last article, so a guide can

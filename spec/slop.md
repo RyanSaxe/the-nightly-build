@@ -5,8 +5,8 @@ failure, because a reader who recognizes it stops trusting the reporting under
 it. The editor cuts it on every article, against this file.
 
 Cutting slop does not mean making the prose dry. A playful piece, a joke, a
-fragment, a short quotable line: none of these are slop, and a paper that
-strips them out to stay safe has broken itself a second way.
+fragment, a short quotable line: none of these are slop, and removing them to
+stay safe is its own failure.
 
 ## The test
 
@@ -24,14 +24,13 @@ Write a replacement only when something real was waiting to be said.
 
 ## What it looks like
 
-These failures recur. They do not bound the standard, and a sentence matching
+These failures recur. They are not a complete list, and a sentence matching
 none of them still goes if it fails the test above.
 
-- **Performed insight.** A sentence with the shape of a conclusion and none of
-  the work: an abstract subject, a linking verb, an assessment the article has
-  not evidenced ("The gap is real, and it is narrow", "That point is itself
-  part of the problem"). The tell is an idea for a subject and nothing in the
-  sentence a reader could check.
+- **Empty conclusions.** A sentence that sounds like a finding and states
+  nothing the article established: an idea for a subject, a linking verb, and
+  an assessment ("The gap is real, and it is narrow", "That point is itself
+  part of the problem"). A reader can check none of it.
 - **Negative parallelism.** "X is not Y, it is Z" and its cousins ("not just X
   but Y", "X rather than Y"). This is the paper's most common tell by a wide
   margin. It stays only where the misconception it corrects is real and named,

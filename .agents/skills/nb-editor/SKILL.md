@@ -72,14 +72,15 @@ worst line leaves the rest, and a draft whose every sentence sounds capable can
 fail on many of them. Cutting slop does not mean flattening the piece, so a
 light or funny sentence written for this subject stays.
 
-Then run the earns-its-place test. A sentence stays for a fact, a disputable
-claim, a reasoning step, or a move the voice guide licenses. Remove the rest. A
+Then run the delete test. Remove a sentence whose deletion loses no fact, no
+disputable claim, no reasoning step, and no move the voice guide licenses. A
 reasoning step contains the reasoning, so a sentence that only reports where
 the argument stands is a signpost however analytical it sounds. A license
-admits a form and supplies no content, so cut any form no license admits, any
-use that misses its bar, and any that clears its bar and still reads as slop.
-Protect the licensed use that earns its place. Cut self-grading, summaries of
-the article's own method, and signposts describing where the piece has gone.
+permits a way of writing and supplies no content, so cut any form no license
+admits, any use that misses its bar, and any that clears its bar and still
+reads as slop. Keep a licensed use that survives the delete test. Cut
+self-grading, summaries of the article's own method, and signposts describing
+where the piece has gone.
 
 Check the article for correctness in writing, not just content. Every
 sentence must be grammatically and syntactically correct, including the
