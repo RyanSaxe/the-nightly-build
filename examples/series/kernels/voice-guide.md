@@ -12,8 +12,8 @@ sounds like a person who has actually run the thing, and it shows in small
 places: Boehm calling his own result "pretty bad", He interrupting his own
 diagram to say the arrangement is stupid, Upadhyay saying "if you like numbers,
 let's talk about numbers" before producing them, Rush warning that an error is
-probably because you did something fancy. None of that is decoration around the
-technical content. It is what makes the technical content believable.
+probably because you did something fancy. Those moments are why the technical
+content around them reads as trustworthy.
 
 Prefer the concrete noun to the category. A warp, a bank conflict, and a store
 to global memory happen at an address, so write them that way. When a number
@@ -38,8 +38,7 @@ I used in my earlier post on CPU matmul."
 He gives his opinion of the number before the evidence for it, and the evidence
 lands in the next sentence. "Pretty bad" is how an engineer actually talks about
 their own result, and it sits inside a sentence that is exact about the
-hardware. Casual about the verdict and precise about the machine in the same
-breath is what makes this read as a person at a desk.
+hardware.
 
 "I like to think of the three dimensions x,y,z of threadId as being
 "column-major", due to the first dimension x being the one that's continuous in
@@ -53,10 +52,10 @@ things they then state flatly.
 "It didn't increase performance, presumably because L2 hit rate is already
 fairly high at 80%, so I ended up removing the swizzling code. The commit is
 here if anyone is interested."
-An optimization that failed, the cause he suspects, and a shrug. "If anyone is
-interested" is the kind of aside that survives only because nobody edited it
-out. Keeping the failed attempt tells the reader what the search actually
-looked like.
+He reports an optimization that failed, gives the cause he suspects, and moves
+on. "If anyone is interested" is the kind of aside that survives only because
+nobody edited it out. Keeping the failed attempt tells the reader what the
+search actually looked like.
 ```
 
 ## Horace He, "Making Deep Learning go Brrrr From First Principles"
@@ -70,23 +69,22 @@ keep the data at the factory, perform all of our compute, and then send it
 back!"
 He interrupts his own explanation to react to it. The reader has just been shown
 a diagram and is thinking exactly this, and he says it first, in the words
-someone would use out loud. The exclamation marks are doing real work here: the
-insight arrives as a reaction rather than as a result.
+someone would use out loud. The exclamation marks carry it. The same words set
+flat would read as analysis.
 
 "On the other hand, if you're spending all of your time performing big chonky
 matmuls (i.e. a compute-bound regime), then rewriting your model logic into C++
 to reduce overhead won't help."
 "Big chonky" sits inside a sentence that is otherwise exact, next to a
-parenthetical giving the formal term. He never picks between sounding like a
-person and being correct, and the precision around the joke is what lets the
-joke pass.
+parenthetical giving the formal term. He does not choose between sounding like
+a person and being correct.
 
 "So, if you want to keep your GPUs going brrrr, let's discuss the three
 components your system might be spending time on - compute, memory bandwidth,
 and overhead."
 The piece is named after a noise, and here the noise does the transition work
-that a section heading would usually do. It tells the reader the writer is
-enjoying this, which buys patience for the three components that follow.
+that a section heading would usually do. It tells the reader he is enjoying
+this, so they arrive at the three components willing to follow them.
 ```
 
 ## Abhinav Upadhyay, "What Every Developer Should Know About GPU Computing"
@@ -114,8 +112,8 @@ reader tracks one comparison rather than two.
 execution resources, including registers, shared memory, thread block slots, and
 thread slots."
 He asks the question the reader has just formed and answers it immediately.
-Putting it in the reader's voice, with "we", makes the constraint feel
-discovered rather than announced.
+Putting it in the reader's voice, with "we", makes the constraint arrive as
+something they worked out.
 ```
 
 ## Sasha Rush, "GPU Puzzles"
@@ -127,10 +125,9 @@ Source: https://github.com/srush/GPU-Puzzles
 attempt to teach beginner GPU programming in a completely interactive fashion.
 Instead of providing text with concepts, it throws you right into coding and
 building GPU kernels."
-He states the pedagogical bet plainly and takes responsibility for it. "An
-attempt" is an unusual word to use about your own teaching material, and it sets
-up a reader who is willing to be thrown in because the writer has been honest
-about what he is doing.
+He says plainly what he is trying and owns it. "An attempt" is an unusual word
+to use about your own teaching material, and a reader who is told that much is
+willing to be thrown in.
 
 "This code looks like Python but it is really CUDA! You cannot use standard
 python tools like list comprehension"
@@ -140,7 +137,7 @@ fail and stops it on the spot, instead of filing it in a general note about how
 the two languages differ.
 
 "If you get an error it is probably because you did something fancy :)."
-The smiley is doing a lot of work. He tells the reader their error is expected
-and slightly their own fault, and he is warm about it, so the puzzles read as an
-invitation instead of a test.
+He tells the reader their error is expected and slightly their own fault, and
+the smiley keeps it warm, so the puzzles read as an invitation instead of a
+test.
 ```

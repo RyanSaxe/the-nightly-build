@@ -79,10 +79,10 @@ signpost however analytical it sounds. Cut self-grading, summaries of the
 article's own method, and signposts describing where the piece has gone.
 
 The voice guide says how this article should sound. Hold the piece to it in
-both directions: a sentence flatter than the guide asks for is as much a
-failure as one reaching past it. Structure, argument order, and headline craft
-are yours to judge. How the prose sounds is the guide's call, not your
-taste.
+both directions. A sentence that lands flatter than the guide asks for needs
+fixing as much as one that overreaches. Structure, argument order, and headline
+craft are yours to judge. How the prose sounds is the guide's call, so do not
+substitute your own taste.
 
 Check the article for correctness in writing, not just content. Every
 sentence must be grammatically and syntactically correct, including the

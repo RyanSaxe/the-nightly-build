@@ -34,8 +34,8 @@ orchestrator.
    summary is not the piece. As you read, copy out the passages you would show
    someone to explain why this writer is good.
 
-Never imitate a named writer's persona. The writer you brief is not becoming
-this person, they are seeing what a person on the page looks like.
+Never imitate a named writer's persona. The writer you brief needs to see what
+a person on the page looks like. Copying one writer's manner is not the goal.
 
 ## Show the passages
 
@@ -54,13 +54,15 @@ Source: <URL>
 ```
 
 Quote enough of the piece to hear it, usually a few sentences. A clause on its
-own carries nothing. Take each passage from a different part of the piece; the
-same sentences quoted twice teach once. Two or three passages per exemplar is
-the range. One quirk is not a voice, and a fourth is usually the coach padding.
+own does not show the rhythm. Take each passage from a different part of the
+piece, since quoting the same sentences again shows nothing new. Two or three
+passages per exemplar is the range. One passage is not enough to show a voice,
+and a fourth is usually padding.
 
 Keep the domain's own words inside the quotations. A passage that says
 swizzling, or warpspace, or hysteresis reads like someone who works on the
-subject, and flattening it into general English removes the thing being shown.
+subject, and flattening it into general English removes what the passage was
+chosen for.
 
 The note runs two or three sentences and does two things: says what is good
 about the writing, and points at where a particular person is visible in it.
@@ -82,7 +84,7 @@ In a few paragraphs of plain prose, tell the writer how to make this article
 sound good: the register it holds, how it treats its reader, and what the
 passages above have in common that is worth carrying into this subject. Point
 back to the exemplars by name. This is the only part of the guide that speaks
-to the writer directly, which is what keeps the exemplar sections illustrative.
+to the writer directly. The exemplar sections stay illustrations.
 
 Give the summary no schema and no list of permitted moves, because a list of
 moves gets treated as a set of sentences to produce. Say how to write, never

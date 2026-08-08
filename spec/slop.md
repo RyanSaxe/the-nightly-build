@@ -18,9 +18,9 @@ If it could, cut it.
 A sentence that could only exist in this article is not slop, however light or
 funny.
 
-Delete. Do not repair. A rewritten slop sentence is usually a better-sounding
-slop sentence, because the fault is that the writer had nothing to say there.
-Write a replacement only when something real was waiting to be said.
+Delete. Do not repair. Rewriting usually produces a slop sentence that sounds
+better, because the fault is that the writer had nothing to say there. Write a
+replacement only when something real was waiting to be said.
 
 ## What it looks like
 
@@ -41,7 +41,7 @@ none of them still goes if it fails the test above.
   Note, Consider, Imagine.
 - **Puffery.** Ordinary facts described as significant, pivotal, transformative,
   a testament, a turning point, or part of a broader movement. State what
-  happened and let its size show.
+  happened and give the figures that show how big it was.
 - **Reaching for the generic.** The median phrasing where a specific one exists:
   the drug's name, not "a treatment"; 40 nanometers, not "tiny". Say what you
   mean and commit where the evidence lets you.

@@ -13,8 +13,8 @@ research-grade writing. It has two parts.
   `press/editorial.md` and the series prompts. This standard sets the quality of those
   choices, never the choices themselves.
 
-What this file bans are failures of writing, not particular ways of writing.
-How a paper sounds is its own to set in `press/editorial.md`.
+This file bans failures of writing. How a paper sounds is its own to set in
+`press/editorial.md`.
 
 The standard does not legislate trivia: no paper-wide rule on the Oxford comma. Be
 consistent within a piece.
@@ -80,15 +80,16 @@ sentences, it is no longer explaining them.
 
 ## Prose
 
-The house register is a serious paper rather than a feed, and it is a default
-rather than a limit. `spec/slop.md` is the standard for prose that reads as
+The house register is a serious paper, not a feed. It is a default, and a press
+may move it. `spec/slop.md` is the standard for prose that reads as
 machine-written. It binds every article at every register, and nothing a press
 sets below loosens it.
+
 Register and formality belong to `press/editorial.md`, which a paper writes for
 itself, and to the article's voice guide, which sets how one piece should
 sound. A paper that wants to be funny, loose, or direct with its reader says so
 there, and every article inherits it. No form is forbidden for being
-expressive. What is cut is writing that fails `spec/slop.md`, at whatever
+expressive. What gets cut is writing that fails `spec/slop.md`, at whatever
 register the paper has chosen.
 
 If following a rule here would produce a sentence you would not say aloud,

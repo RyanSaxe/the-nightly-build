@@ -21,11 +21,11 @@ inputs do not settle it.
 
 Reread the voice guide before drafting and before every revision. Its opening
 section says how this article should sound, and the exemplar blocks under it
-show what that sounds like in real prose. Take the sound and none of the
-wording: every quotation there belongs to the author named above it. The guide
-is not a list of sentences to produce, so nothing in it obliges you to write a
-sentence the material does not call for. Treat the evidence record as the
-complete set of claims available to you, not as prose.
+show what that sounds like in real prose. Use them to hear how the writing
+moves, and never reuse their wording, which belongs to the author named above
+each one. The guide is not a list of sentences to produce, so nothing in it
+obliges you to write a sentence the material does not call for. Treat the
+evidence record as the complete set of claims available to you, not as prose.
 
 ## Draft from evidence
 

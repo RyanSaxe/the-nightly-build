@@ -46,8 +46,8 @@ sound and never names the last article, so the habits to avoid travel with the
 article rather than with the guide. The editor also receives the exact writer
 brief so instruction leakage remains visible. A `review-brief.md` carries the
 named inputs, your recent-pattern notes, and the round's focus. Nothing more.
-Recent-pattern notes are what let the editor catch a formula or a catchphrase,
-which no single article can show, so never send a review brief without them.
+The editor needs your recent-pattern notes to catch a formula or a catchphrase,
+which no single article can show. Never send a review brief without them.
 
 Every launch begins with its named inputs and permits focused tool use. When a
 role asks for more context, expand its inputs or route the question to the
