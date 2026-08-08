@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Two rotated vectors remember only the distance between them · Build From Scratch</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "build-from-scratch",
+        "slug": "rotary-position-embeddings",
+        "template": "article",
+        "title": "Two rotated vectors remember only the distance between them",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-08",
+        "tags": ["transformers", "position-encoding", "rope", "long-context"],
+        "sources": 10,
+        "words": 1894,
+        "reading_minutes": 8,
+        "dek": "Rotary position embeddings turn a token's index into a rotation angle, the mechanism behind most open-weight models' sense of where each token sits and behind the single-constant edits that stretch a model past its training length.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Build From Scratch</div>
+        <h1 class="nb-title">Two rotated vectors remember only the distance between them</h1>
+        <p class="nb-dekline">
+          Rotary position embeddings turn a token's index into a rotation angle, the mechanism behind most open-weight models' sense of where each token sits and behind the single-constant edits that stretch a model past its training length.
+        </p>
+        <div class="nb-byline">
+          <span>8 min read</span><span>2026-08-08</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Attention has no idea where a token sits</h2>
+        <p>
+          Strip the position encoding out of a transformer and the attention
+          score between two tokens is a dot product of their content vectors and
+          nothing else. Permute the input and the set of scores comes back
+          unchanged: self-attention is position-agnostic, so order has to be
+          injected by hand.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 1, intro">1</a></sup>
+          Two families did that job before rotary embeddings, and a reader should
+          know them by name. The original transformer added fixed sinusoids of
+          geometrically spaced wavelengths to each input embedding, and it also
+          tried a learned vector per absolute index; the two scored nearly the
+          same.<sup class="nb-cite"><a href="#s2" data-nb-locator="Section 3.5">2</a></sup>
+          Both hand the model an <em>absolute</em> address and leave it to
+          discover that position 5 attending to position 2 is the same relation
+          as 105 attending to 102.
+        </p>
+        <p>
+          Rotary Position Embedding (RoPE) makes that relation exact by
+          construction.<sup class="nb-cite"><a href="#s1">1</a></sup> It rotates
+          each token's query and key by an angle set by the token's index, and
+          the rotation is arranged so the attention score between two tokens
+          depends only on the gap between their positions. The claim is small
+          enough to check in a dozen lines of array math. One fixed
+          pair of vectors carries the whole argument: a query
+          <span class="nb-math-in">\mathbf{q} = (0.5,\,-1.0,\,2.0,\,0.3)</span>
+          and a key <span class="nb-math-in">\mathbf{k} = (1.0,\,0.4,\,-0.7,\,1.5)</span>,
+          four numbers each. Their plain dot product is
+          <span class="nb-math-in">-0.85</span>, wherever the tokens land.
+        </p>
+      </section>
+
+      <section data-nb-section="rotation-and-frequencies" id="rotation-and-frequencies">
+        <h2>A rotation whose angle is the position</h2>
+        <p>
+          We want a map that carries a vector and a position to a rotated vector,
+          such that two of them dotted together forget their absolute positions
+          and keep only the offset. The smallest object that can rotate and still
+          undo itself under a difference is the 2-D rotation, so RoPE splits a
+          <span class="nb-math-in">d</span>-dimensional vector into
+          <span class="nb-math-in">d/2</span> coordinate pairs and turns pair
+          <span class="nb-math-in">i</span> at a token in position
+          <span class="nb-math-in">m</span> by the angle
+          <span class="nb-math-in">m\,\theta_i</span>.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \begin{pmatrix} x'_{2i-1} \\ x'_{2i} \end{pmatrix} =
+            \begin{pmatrix} \cos m\theta_i &amp; -\sin m\theta_i \\ \sin m\theta_i &amp; \cos m\theta_i \end{pmatrix}
+            \begin{pmatrix} x_{2i-1} \\ x_{2i} \end{pmatrix}
+          </div>
+        </figure>
+        <p>
+          The angle grows linearly in the position, and each pair turns at its
+          own rate <span class="nb-math-in">\theta_i</span>. Those rates are a
+          fixed geometric schedule, not learned:
+          <span class="nb-math-in">\theta_i = 10000^{-2(i-1)/d}</span> for
+          <span class="nb-math-in">i \in [1, \dots, d/2]</span>, with the base
+          constant <span class="nb-math-in">10000</span> carried over from the
+          sinusoidal scheme.<sup class="nb-cite"><a href="#s1" data-nb-locator="Eq. 13, Eq. 15">1</a></sup>
+          The first pair rotates a full radian per step; the last barely moves,
+          completing one turn only over tens of thousands of tokens. For the
+          worked example, take the smallest head that still has two rates:
+          <span class="nb-math-in">d = 4</span> gives
+          <span class="nb-math-in">\theta_1 = 1</span> and
+          <span class="nb-math-in">\theta_2 = 0.01</span>, one fast hand and one
+          slow one on the same clock.
+        </p>
+      </section>
+
+      <section data-nb-section="phase-cancels" id="phase-cancels">
+        <h2>Where the absolute phase drops out</h2>
+        <p>
+          A rotation matrix has one property the whole scheme rests on: its
+          transpose is its inverse, so composing a rotation by
+          <span class="nb-math-in">-m</span> with a rotation by
+          <span class="nb-math-in">n</span> leaves a single rotation by
+          <span class="nb-math-in">n-m</span>. Push the query's rotation through
+          the dot product onto the key and that is exactly what falls out.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \langle\, \htmlClass{nb-mc1}{R_{m}}\,\mathbf{q},\ \htmlClass{nb-mc2}{R_{n}}\,\mathbf{k} \,\rangle
+            = \mathbf{q}^{\top}\, \htmlClass{nb-mc1}{R_{m}^{\top}}\htmlClass{nb-mc2}{R_{n}} \,\mathbf{k}
+            = \mathbf{q}^{\top}\, \htmlClass{nb-mc3}{R_{n-m}} \,\mathbf{k}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">R_{m}</span
+              ><span>the query's rotation, set by its absolute position <span class="nb-math-in">m</span>.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">R_{n}</span
+              ><span>the key's rotation, set by its absolute position <span class="nb-math-in">n</span>.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">R_{n-m}</span
+              ><span>what the two collapse to: one rotation by the gap between them.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The design constraint RoPE is built to satisfy: the query-key score
+            is a function of the offset <span class="nb-math-in">n-m</span> alone,
+            with both absolute positions gone.<sup class="nb-cite"><a href="#s1" data-nb-locator="Eq. 11">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Nothing about <span class="nb-math-in">m</span> or
+          <span class="nb-math-in">n</span> survives on the right except their
+          difference. The two prior families could only hope a model would learn
+          this equivalence from data; here it holds identically, before any
+          training, for every query and key.
+        </p>
+      </section>
+
+      <section data-nb-section="the-run" id="the-run">
+        <h2>Same gap, same logit</h2>
+        <p>
+          The construction is short enough to write as pure array math and read
+          the offset property straight off its output. The rotation is applied
+          pair by pair; the score is the dot product of a rotated query with a
+          rotated key.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">rope.py · the toy in full</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">import numpy as np
+
+def rope_freqs(d, base=10000.0):
+    i = np.arange(d // 2)                     # 0 .. d/2 - 1
+    return base ** (-2.0 * i / d)             # one theta per 2-D pair
+
+def rope(x, pos, base=10000.0):
+    ang = pos * rope_freqs(x.shape[-1], base)
+    cos, sin = np.cos(ang), np.sin(ang)
+    even, odd = x[..., 0::2], x[..., 1::2]    # the two coords of each pair
+    out = np.empty_like(x)
+    out[..., 0::2] = even * cos - odd * sin   # rotate every pair by pos*theta
+    out[..., 1::2] = even * sin + odd * cos
+    return out
+
+q = np.array([0.5, -1.0, 2.0, 0.3])           # one fixed query, d = 4
+k = np.array([1.0,  0.4, -0.7, 1.5])          # one fixed key
+
+logit = lambda m, n: float(rope(q, m) @ rope(k, n))</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · The full toy: a frequency schedule, a pairwise rotation, and
+            the rotated attention score for one fixed query and key.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Evaluated at three token pairs three positions apart, the score is the
+          same value to every digit numpy prints, and it changes the moment the
+          gap changes.
+        </p>
+        <table class="nb-table">
+          <caption>
+            The rotated score <span class="nb-math-in">\mathbf{q}^{\top} R_{n-m} \mathbf{k}</span>
+            for the one fixed pair, <span class="nb-math-in">d=4</span>, base
+            <span class="nb-math-in">10000</span>. The unrotated dot product is
+            <span class="nb-math-in">-0.85</span> at every position; the rotated
+            score is fixed by the gap <span class="nb-math-in">n-m</span> and by
+            nothing else.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>positions m, n</th>
+              <th>gap n − m</th>
+              <th>rotated logit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="nb-table-token">2, 5</span></td><td>3</td><td>−1.314201</td></tr>
+            <tr><td><span class="nb-table-token">7, 10</span></td><td>3</td><td>−1.314201</td></tr>
+            <tr><td><span class="nb-table-token">100, 103</span></td><td>3</td><td>−1.314201</td></tr>
+            <tr><td><span class="nb-table-token">3, 7</span></td><td>4</td><td>−0.234807</td></tr>
+            <tr><td><span class="nb-table-token">9, 13</span></td><td>4</td><td>−0.234807</td></tr>
+            <tr><td><span class="nb-table-token">0, 2</span></td><td>2</td><td>−2.146777</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Sweeping the shared shift across the first two hundred positions, the
+          gap-3 score stays a single value, deviating by at most
+          <span class="nb-math-in">1.1 \times 10^{-15}</span> across the sweep:
+          floating-point noise, not position dependence. The same two vectors,
+          the same content, and the transformer reads them as near, then far,
+          purely by where they sit relative to each other.
+        </p>
+      </section>
+
+      <section data-nb-section="toy-to-shipped" id="toy-to-shipped">
+        <h2>From four dimensions to a shipped attention head</h2>
+        <p>
+          A real model runs this on every head. Mistral-7B carries hidden size
+          4096 across 32 heads, so each head holds 128 dimensions, 64 rotated
+          pairs, and it turns them at exactly the toy's base:
+          <code>rope_theta</code> is <span class="nb-math-in">10000.0</span> in
+          the shipped config.<sup class="nb-cite"><a href="#s3">3</a></sup> The
+          rotation is applied only to queries and keys, never to values, and only
+          inside the attention score, which is why the piece could ignore the
+          rest of the transformer and still show the whole effect.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          Two production details the toy glosses are worth naming, because both
+          are traps. First, the pairing. The toy pairs adjacent coordinates,
+          <span class="nb-math-in">(2i,\,2i{+}1)</span>, which is Meta's original
+          Llama convention: it reshapes each vector into consecutive pairs and
+          rotates them as complex numbers.<sup class="nb-cite"><a href="#s4" data-nb-locator="apply_rotary_emb">4</a></sup>
+          HuggingFace's Llama instead splits the vector in half and pairs
+          coordinate <span class="nb-math-in">i</span> with coordinate
+          <span class="nb-math-in">i + d/2</span>, through the
+          <code>rotate_half</code> function every model in that ecosystem
+          uses.<sup class="nb-cite"><a href="#s5" data-nb-locator="rotate_half, apply_rotary_pos_emb">5</a></sup>
+          The two orderings are numerically different rotations of the same
+          vector; a checkpoint exported for one is made to match the other by
+          permuting the rows of the query and key projection weights at
+          conversion. A toy built one way is not drop-in against weights saved
+          for the other.
+        </p>
+        <p>
+          Second, the base is a tuning knob, not a constant. Llama-2-7B leaves it
+          at the <span class="nb-math-in">10000</span> default and trains on a
+          4096-token window.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          Llama-3-8B, same head geometry, ships
+          <code>rope_theta</code> at <span class="nb-math-in">500000.0</span>,
+          fifty times larger.<sup class="nb-cite"><a href="#s7">7</a></sup> A
+          larger base slows every pair. It stretches the slowest wavelength from
+          roughly fifty-four thousand positions to over two and a half million,
+          so no pair completes a full turn inside the trained context. Nearby
+          offsets stay easy to tell apart. That single number is the seam the
+          context-extension work pries open.
+        </p>
+      </section>
+
+      <section data-nb-section="the-honest-limit" id="the-honest-limit">
+        <h2>What relative position does not buy</h2>
+        <p>
+          RoPE also weakens the score as tokens move apart, but the run shows the
+          decay is available, not imposed. Scale the toy to a real 128-wide head
+          and set query equal to key, the aligned case RoFormer bounds by Abel
+          summation. Dotting that vector at position 0 against itself at a growing
+          distance, the score falls to roughly a fifth of its starting magnitude
+          across 512 positions.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 3.4.3, Eq. 37">1</a></sup>
+          Average the same score over two thousand random query-key pairs and it
+          barely moves. The frequency schedule offers a distance-decaying bound
+          that a model can lean on; it does not force distant content to matter
+          less.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="rotary-position-embeddings/chart-1.png"
+            alt="Two curves against relative distance from 0 to 512. The aligned query-equals-key curve falls from 1.0 at distance 0 to about 0.22 at 512, oscillating as it descends. The random query-key mean stays flat near 1.0 across the whole range."
+          />
+          <figcaption>
+            Fig. 2 · Logit magnitude versus relative distance, head dimension 128,
+            base 10000, each curve normalized to distance 0. The aligned envelope
+            decays and oscillates; the random-pair mean is flat. From the
+            committed <code>chart-1.py</code>.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The oscillation matters as much as the fall. Decay is a rough envelope,
+          not a clean monotone curve, because the low-frequency pairs are still
+          mid-turn at these distances. This is also why the RoFormer abstract's
+          "flexibility of sequence length" must not be read as long-context
+          reach. Exact relative position is not the same property as useful
+          extrapolation, and the two come apart in measurement. Trained at length
+          512, a rotary model keeps improving for only about 200 tokens beyond
+          its window before perplexity climbs. That beats sinusoidal's 20 to 50
+          and still falls far short of free extrapolation.<sup class="nb-cite"><a href="#s8" data-nb-locator="Section 2.2">8</a></sup>
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">The limit</span>
+          <p>
+            RoPE gives relative position exactly and for free. It does not give
+            long context for free: a model trained at length
+            <span class="nb-math-in">L</span> still degrades well before large
+            multiples of <span class="nb-math-in">L</span> unless something
+            changes the frequencies.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          </p>
+        </div>
+        <p>
+          What changes them is, in the end, that one base constant. The YaRN
+          paper formalizes the fix as a single change to the base, tied to the
+          length ratio <span class="nb-math-in">s = L'/L</span>.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          The move first circulated in mid-2023 as NTK-aware scaling, reported to
+          extend LLaMA past its training window with no fine-tuning at all.<sup class="nb-cite"><a href="#s10">10</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            b' = b \cdot s^{\,|D|/(|D|-2)}
+          </div>
+          <figcaption>
+            The whole change: recompute every <code>rope_freqs</code> from a
+            larger base <span class="nb-math-in">b'</span>, stretching low
+            frequencies more than high ones.<sup class="nb-cite"><a href="#s9" data-nb-locator="Eq. 16">9</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          YaRN pairs that base change with a per-frequency schedule and a small
+          temperature on the logits. It reports carrying Llama-2 from 4096 tokens
+          to 128k by fine-tuning on roughly a tenth of a percent of the original
+          pretraining tokens.<sup class="nb-cite"><a href="#s9" data-nb-locator="Section 3, Section 4">9</a></sup>
+          Why a larger base helps is argued more than settled. YaRN motivates it
+          through neural-tangent-kernel theory, as recovering high-frequency
+          detail that uniform position rescaling would crush. That is a framing
+          for a result whose success is measured, not derived from first
+          principles. The change itself is a single constant. The account of why
+          it works is still being written, a fair place to leave a scheme that is,
+          at bottom, one rotation applied honestly.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2104.09864"
+              >arXiv · Su et al., "RoFormer: Enhanced Transformer with Rotary Position Embedding" (2021)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1706.03762"
+              >arXiv · Vaswani et al., "Attention Is All You Need" (2017)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://huggingface.co/mistralai/Mistral-7B-v0.1/blob/main/config.json"
+              >Hugging Face · Mistral-7B-v0.1 config.json</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/meta-llama/llama/blob/main/llama/model.py"
+              >GitHub · Meta, reference Llama implementation (model.py)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py"
+              >GitHub · Hugging Face Transformers, Llama modeling code</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://huggingface.co/NousResearch/Llama-2-7b-hf/blob/main/config.json"
+              >Hugging Face · Llama-2-7B config.json (NousResearch mirror)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://huggingface.co/NousResearch/Meta-Llama-3-8B/blob/main/config.json"
+              >Hugging Face · Meta-Llama-3-8B config.json (NousResearch mirror)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2108.12409"
+              >arXiv · Press, Smith, Lewis, "Train Short, Test Long" (ALiBi, 2021)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2309.00071"
+              >arXiv · Peng et al., "YaRN: Efficient Context Window Extension" (2023)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/"
+              >r/LocalLLaMA · bloc97, "NTK-Aware Scaled RoPE" (2023)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
