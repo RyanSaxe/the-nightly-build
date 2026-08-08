@@ -52,18 +52,24 @@ each exemplar with passages quoted from it, then opens with a few paragraphs on
 how the section should sound, written last so it describes the writers actually
 read. A working example lives in `examples/series/kernels/voice-guide.md`.
 
-Each exemplar gets four entries, and each entry is a passage quoted from the
-piece followed by a plain account of what the writer did in it: `sentences`,
-`words`, `judgment`, and `unmistakable`. Always quote. Rhythm put into
-adjectives comes out the same for every writer, and "short declaratives varied
-with longer sentences" reaches the writer as an order to produce short
-declaratives. The `unmistakable` entry matters most, because it names the
-passage no other writer would have produced, which is the quality the guide
-exists to transfer.
+Each exemplar gets two or three passages taken from different parts of the
+piece, each followed by two or three sentences on why it is worth reading and
+where the person is visible in it. Quote enough to hear the writing. Keep the
+subject's own vocabulary inside the quotations, because a passage flattened
+into general English stops showing what it was picked for. A note explains a
+passage and never instructs: the moment a guide says to put the verdict first,
+it has begun commissioning sentences.
 
 Do not give the guide a list of permitted moves. A list of moves gets read as a
 set of sentences to produce, and the writer will produce them whether or not
 the material calls for one.
+
+Check every quotation against the source before you commit the guide. This
+applies to a guide you write by hand exactly as it applies to one the coach
+produces, and it is the one error nothing downstream can catch: a fabricated
+quotation reads perfectly, ships in a public file, and puts words in a named
+writer's mouth. A quotation you cannot find in the piece is cut rather than
+approximated.
 
 A pinned guide never mentions a particular article. Revisit it when the
 section's voice genuinely moves, and expect a fresh coach reading to beat a
