@@ -79,41 +79,9 @@ than sentences has stopped explaining.
 
 ## Prose
 
-The register is a serious paper, not a feed. Some habits are always cut. They are the
-tells of slop.
-
-- **Fluff.** Filler openings ("In today's fast-paced world"), empty connectives,
-  throat-clearing ("As you might know"), and openers that lecture: Note, Consider,
-  Imagine. If a sentence carries no information, it goes.
-- **Slop.** The median AI read: smooth, hedged, reaching for the generic phrasing. Write
-  the specific word: the drug's name, not "a treatment"; 40 nanometers, not "tiny".
-  Commit where the evidence lets you. Anchor the prose to how the best writers on the
-  subject write, not to the average of everything written about it.
-- **Run-ons.** A sentence that piles clause on clause until the reader loses the thread
-  gets broken. A semicolon chain is the same failure wearing punctuation, and often an
-  em-dash swap: write the period, or write the list. Let the verbs carry the weight.
-- **Unearned punchlines.** Cut the sentence that announces stakes the argument has not
-  built ("that's the whole point", "here's the kicker", "the catch is"). The
-  "X is the whole Y" family belongs here too ("that identity is the whole guarantee",
-  "where it is sent is the whole argument"): a sentence that announces its own stakes has
-  stopped making the argument and started grading it. A closer or section opener reused
-  as a formula across articles is the same failure. So is a house catchphrase. A punch
-  sentence the argument has built and a license admits is craft, not a punchline.
-- **Hedged contrast.** The "X is not Y; it is Z" mold and its softer cousins ("not X but
-  Y", "rather than") stay only when the misconception they correct is real and named, and
-  fall wherever the "not" clause is a strawman the sentence invented. One or two earned
-  contrasts per piece is the ceiling.
-- **Self-reference.** The piece never narrates itself or its newsroom ("this dossier",
-  "what follows") and never gestures at a hypothetical reader ("a reader will
-  notice", "where a reader's scrutiny belongs"). Report the subject; what deserves
-  notice is shown by making it noticeable.
-- **Banned terms.** `spec/banned-terms.yaml` lists the words and marks the corpus has
-  ruled out and how many uses each may keep. A press extends or adjusts the list in
-  `press/banned-terms.yaml`, and the proof counts every article against the merged list.
-  When a count runs over, rewrite rather than substitute: a synonym carries the same
-  vagueness, and repunctuating an em-dash keeps the fluff the dash was carrying. Delete
-  first, then rewrite what remains. Keep an em-dash for a real aside or a sharp
-  break, not as a reflex.
+The register is a serious paper, not a feed. `spec/slop.md` defines the sentence
+that carries nothing and states the test that removes it. It binds every article,
+and no choice below loosens it.
 
 That is the default register. An expressive form beyond it (e.g., direct
 address, fragments, open humor, etc.) is licensed, never free.
