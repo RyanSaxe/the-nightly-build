@@ -59,3 +59,11 @@ none of them still goes if it fails the test above.
 
 Punctuation tells belong to the punctuation section of `spec/editorial.md`, and
 the counted lexical tells to `spec/banned-terms.yaml`. Both bind here too.
+
+## Who this binds
+
+Every role, and every file a role writes. The editor is the one who cuts slop
+out of a draft, but a commission, a brief, an evidence record, a voice guide,
+or an editorial review written in slop does more damage than one bad article:
+the writer reads those files and learns the register they are written in. Hold
+your own artifact to this standard before you hand it on.

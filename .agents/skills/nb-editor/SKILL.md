@@ -189,7 +189,8 @@ Each remaining item with its owner: researcher | writer | orchestrator.
 approve | revise, with the reason in a sentence.
 ```
 
-Write in your own words, never the draft's. Later editor invocations write a
+Write in your own words, never the draft's, and hold the review to
+`spec/slop.md` as you held the article. Later editor invocations write a
 new numbered artifact and never append to or overwrite an earlier review.
 
 Report the editorial-review path and final decision. When more work is needed,

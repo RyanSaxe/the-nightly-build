@@ -106,6 +106,10 @@ Every source read far enough to reject, one line each:
 URL: the reason it was rejected
 ```
 
+The record itself meets `spec/slop.md`. A writer drafts in the register they
+are handed, so an evidence record written in slop teaches the article to sound
+that way.
+
 The evidence record has two readers: a writer drafting from it and an editor
 trying to break the result. Make each claim traceable enough for either reader
 to reopen the source cold.

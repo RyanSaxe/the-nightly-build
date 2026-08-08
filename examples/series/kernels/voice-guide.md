@@ -7,24 +7,32 @@ deep learning and new to the GPU, so they can carry a hard idea and will not
 forgive a paragraph that restates the previous one. Explain the machine. Never
 explain the reader's inexperience.
 
-The four writers below have one thing in common worth taking. Each of them
-sounds like a person who has actually run the thing, and it shows in small
-places: Boehm calling his own result "pretty bad", He interrupting his own
-diagram to say the arrangement is stupid, Upadhyay saying "if you like numbers,
-let's talk about numbers" before producing them, Rush warning that an error is
-probably because you did something fancy. Those moments are why the technical
-content around them reads as trustworthy.
+Say what you think of a number in the same breath as the number. Boehm calls a
+result "pretty bad" and has justified it by the end of the next sentence. A
+lesson can do the same: give the reading, then the comparison that makes it a
+reading, and do not save the assessment for a conclusion.
+
+Build one picture and keep returning to it. He runs a factory and a warehouse
+across his whole piece, naming a real quantity inside each part of it, so the
+bandwidth costs that arrive much later land somewhere the reader already has.
+Choose that picture before drafting and check it survives the hardest section.
+An analogy introduced once and abandoned is worse than none.
+
+Report what did not work. Boehm spends a sentence on an optimization he removed
+and names the cause he suspects. This matters more in a lesson than in a
+worklog, because a reader who sees only the choices that worked cannot tell
+which of them were forced.
+
+Put the warning where the reader will actually fail. Rush says the code looks
+like Python but is really CUDA at the moment before someone reaches for a list
+comprehension, not in a preface about how the languages differ. Find the place
+this lesson's reader will use an old habit, and interrupt them there.
 
 Prefer the concrete noun to the category. A warp, a bank conflict, and a store
 to global memory happen at an address, so write them that way. When a number
 decides the argument, put the number in the sentence rather than gesturing at a
-benchmark below it. State what the hardware does before stating what the code
-should do.
-
-The subject's own vocabulary belongs in the prose, not translated out of it.
-Swizzling, occupancy, and warpspace are how the work is discussed by the people
-who do it, and a lesson that avoids them to stay accessible ends up sounding
-like it was written from a distance.
+benchmark below it. Keep the technical vocabulary in the prose. A lesson that
+avoids it to stay accessible ends up sounding written from a distance.
 
 ## Simon Boehm, "How to Optimize a CUDA Matmul Kernel for cuBLAS-like Performance: a Worklog"
 
@@ -50,12 +58,10 @@ usage. A writer who says where a framing came from is easier to trust on the
 things they then state flatly.
 
 "It didn't increase performance, presumably because L2 hit rate is already
-fairly high at 80%, so I ended up removing the swizzling code. The commit is
-here if anyone is interested."
-He reports an optimization that failed, gives the cause he suspects, and moves
-on. "If anyone is interested" is the kind of aside that survives only because
-nobody edited it out. Keeping the failed attempt tells the reader what the
-search actually looked like.
+fairly high at 80%, so I ended up removing the swizzling code."
+He spends a sentence on an optimization he threw away, and gives the cause he
+suspects without claiming to have proved it. A reader who sees only the changes
+that worked cannot tell which of them were forced.
 ```
 
 ## Horace He, "Making Deep Learning go Brrrr From First Principles"
@@ -79,12 +85,12 @@ to reduce overhead won't help."
 parenthetical giving the formal term. He does not choose between sounding like
 a person and being correct.
 
-"So, if you want to keep your GPUs going brrrr, let's discuss the three
-components your system might be spending time on - compute, memory bandwidth,
-and overhead."
-The piece is named after a noise, and here the noise does the transition work
-that a section heading would usually do. It tells the reader he is enjoying
-this, so they arrive at the three components willing to follow them.
+"One way to think about compute is as a factory. We send instructions to our
+factory (overhead), send it materials (memory-bandwidth), all to keep our
+factory running efficiently (compute)."
+He builds one picture and names each real quantity inside it, so the analogy is
+load-bearing from the first sentence. He returns to the factory when bandwidth
+costs arrive much later, and by then the reader has somewhere to put them.
 ```
 
 ## Abhinav Upadhyay, "What Every Developer Should Know About GPU Computing"
