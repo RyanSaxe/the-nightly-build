@@ -52,11 +52,14 @@ each exemplar with passages quoted from it, then opens with a few paragraphs on
 how the section should sound, written last so it describes the writers actually
 read. A working example lives in `examples/series/kernels/voice-guide.md`.
 
-Quote each exemplar instead of describing it. Rhythm put into adjectives comes
-out the same for every writer, and "short declaratives varied with longer
-sentences" reaches the writer as an order to produce short declaratives. The
-axis that matters most asks what in the quoted passage only a particular person
-would have written, because that is the quality the guide exists to transfer.
+Each exemplar gets four entries, and each entry is a passage quoted from the
+piece followed by a plain account of what the writer did in it: `sentences`,
+`words`, `judgment`, and `unmistakable`. Always quote. Rhythm put into
+adjectives comes out the same for every writer, and "short declaratives varied
+with longer sentences" reaches the writer as an order to produce short
+declaratives. The `unmistakable` entry matters most, because it names the
+passage no other writer would have produced, which is the quality the guide
+exists to transfer.
 
 Do not give the guide a list of permitted moves. A list of moves gets read as a
 set of sentences to produce, and the writer will produce them whether or not

@@ -41,31 +41,58 @@ writing. Never reuse their wording.
 
 ## Record each exemplar
 
-Write one block per exemplar. Every axis is about how the prose sounds and
-lands. Quote the piece on every axis that can carry a quotation, because a
-described voice becomes the same voice for every writer alive: rhythm put into
-adjectives always comes out as "short declaratives varied with longer
-sentences", which reaches the writer as an order to produce short declaratives.
+Write one block per exemplar. Each entry is a passage quoted from the piece and
+then a plain account of what the writer did in it. Four entries cover a voice:
+how the sentences move, which words fill them, how far the writer will go, and
+the thing nobody else would have written.
+
+Always quote. A voice put into adjectives becomes the same voice for every
+writer alive, because rhythm described always comes out as "short declaratives
+varied with longer sentences", which reaches the writer as an order to produce
+short declaratives.
 
 ```text
 ## <Author>, "<Piece>"
 Source: <URL>
-- sound: two or three consecutive sentences quoted from the piece, then what
-  their rhythm does to a reader
-- words: the words this writer reaches for, and the ones they plainly refuse,
-  quoted
-- stance: how far they commit, and how they say that they do not know
-- attention: what this writer notices that a competent reporter would pass over
-- reader: how they treat the reader, quoted from a moment that shows it
-- the human part: what in these quotations only a particular person would have
-  written, and what it does for the piece
+
+sentences
+"<two or three consecutive sentences>"
+<how they are built and in what order, and what a reader gets from that>
+
+words
+"<a phrase or sentence carrying the writer's vocabulary>"
+<the kind of word this writer reaches for, and the kind they refuse>
+
+judgment
+"<a sentence where the writer states a verdict outright, or says plainly that
+they do not know>"
+<how far this writer will go on the evidence they have>
+
+unmistakable
+"<the passage no other writer would have produced>"
+<what makes it theirs, and what the piece gains by having it>
 ```
 
-The last axis is the one that matters most. Machines write competent prose all
-day. Name the thing a machine would not have produced: a judgment risked, an
-ordinary word chosen where a grander one was available, a detail noticed
-because the writer actually cared about it, an aside that costs the writer
-something. If you cannot find it in a piece, you have the wrong exemplar.
+The last entry is the one that matters. Look only at the page in front of you
+and find the moment a particular person is visible: a verdict most writers
+would have hedged, a plain word where a grander one was available, a failure
+reported instead of quietly dropped, a detail kept because the writer found it
+interesting. Do not reason about writing in general to answer it. If the piece
+has no such moment, you have the wrong exemplar and should find another.
+
+Three rules for the prose under each quotation.
+
+Use no metaphor. Say what the writer did. "The next sentence pays for it" and
+"the judgment never floats" both describe nothing a reader can check, and the
+plain version is available: he gives the verdict first and the number that
+supports it second.
+
+Make it specific to its quotation. Read your sentence back with a different
+passage above it, and if it still fits, it says nothing about this writer.
+Rewrite it until it only fits this one.
+
+Keep it to two or three sentences, and end on something the writer can carry
+into a draft instead of an assessment of the exemplar.
 
 ## Then write the summary
 
