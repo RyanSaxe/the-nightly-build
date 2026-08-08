@@ -1655,13 +1655,16 @@ figure.nb-chart noscript {
     gap: 0 18px;
   }
 
-  .nb-brief-tag {
-    margin-top: 4px;
+  /* The tag owns the gutter and everything else owns the text column. Naming
+     only the prose left any furniture the item carries unassigned, and grid
+     auto-placement dropped it into the 110px gutter. */
+  .nb-brief-item > * {
+    grid-column: 2;
   }
 
-  .nb-brief-item h3,
-  .nb-brief-item p {
-    grid-column: 2;
+  .nb-brief-item > .nb-brief-tag {
+    grid-column: 1;
+    margin-top: 4px;
   }
 }
 
