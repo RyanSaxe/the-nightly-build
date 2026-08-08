@@ -21,6 +21,8 @@ inputs do not settle it.
 
 Reread the voice guide before drafting and before every revision. Treat the
 evidence record as the complete set of claims available to you, not as prose.
+The guide's cadence quotations show timing and belong to the writers they name.
+Take the rhythm from them and none of the wording.
 
 ## Draft from evidence
 

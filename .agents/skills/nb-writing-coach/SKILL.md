@@ -29,11 +29,16 @@ it from the orchestrator.
 3. Read each as a writer studies a writer. Capture cadence, argument, evidence,
    stance, notice, diction, relationship with the reader, and the important
    move those axes miss. If two notes differ only in adjectives, read again.
+   Copy out the two or three consecutive sentences that carry the exemplar's
+   rhythm while you read, because cadence is recorded as that passage.
 
 Use web access for this research. Never imitate a named writer's persona or
 phrasing. Extract transferable craft, not a costume. The committed guide is a
-public artifact, so describe what the exemplar does rather than copying its
-prose.
+public artifact, so describe what the exemplar does rather than reproducing its
+prose. The cadence quotation is the one exception: keep it to the few sentences
+the rhythm needs, attribute it to the author recorded above it, and never quote
+a passage for what it says about the subject. What transfers from it is timing.
+Its wording is another writer's and stays theirs.
 
 ## Write the voice guide
 
@@ -61,11 +66,18 @@ outlive the article it was written for.
 
 Then record each exemplar:
 
+Record cadence as a quotation, never as a description. Rhythm described in
+adjectives collapses to the same note for every writer worth studying, and
+"short declaratives varied with longer sentences" reaches the writer as an
+instruction to produce short declaratives whether or not the material warrants
+them. Quote the passage and state what its rhythm does to a reader.
+
 ```text
 ## <Author>, "<Piece>"
 Source: <URL>
 Craft:
-- cadence: ...
+- cadence: two or three consecutive sentences quoted from the piece, then what
+  their rhythm does to a reader
 - argument: ...
 - evidence: ...
 - stance: ...
