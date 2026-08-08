@@ -79,9 +79,9 @@ than sentences has stopped explaining.
 
 ## Prose
 
-The register is a serious paper, not a feed. `spec/slop.md` defines the sentence
-that carries nothing and states the test that removes it. It binds every article,
-and no choice below loosens it.
+The register is a serious paper, not a feed. `spec/slop.md` is the standard for
+prose that reads as machine-written. It binds every article, and nothing a press
+sets below loosens it.
 
 That is the default register. An expressive form beyond it (e.g., direct
 address, fragments, open humor, etc.) is licensed, never free.

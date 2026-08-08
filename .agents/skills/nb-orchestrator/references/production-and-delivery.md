@@ -40,12 +40,14 @@ brief or output. `commission.md` and the generated `editorial-direction.md`
 remain at the artifact root.
 
 Every role receives `editorial-direction.md` with its brief. The writer's brief
-carries the recent subjects, angles, and outline shapes the commission recorded
-as habits not to inherit. Voice repetition is the coach's job, so name the
-series' recent voice guides in the coach's brief and let it read the published
-record for divergence. The editor also receives the exact writer brief so
-instruction leakage remains visible. A `review-brief.md` carries the named
-inputs, your recent-pattern notes, and the round's focus. Nothing more.
+carries the recent openers, conclusions, and outline shapes the commission
+recorded as habits not to inherit. The voice guide states the craft standard
+and never names the last article, so the habits to avoid travel with the
+article rather than with the guide. The editor also receives the exact writer
+brief so instruction leakage remains visible. A `review-brief.md` carries the
+named inputs, your recent-pattern notes, and the round's focus. Nothing more.
+Recent-pattern notes are what let the editor catch a formula or a catchphrase,
+which no single article can show, so never send a review brief without them.
 
 Every launch begins with its named inputs and permits focused tool use. When a
 role asks for more context, expand its inputs or route the question to the

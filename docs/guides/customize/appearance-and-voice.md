@@ -53,14 +53,11 @@ relationship with the reader, the forms an article may use and the bar each
 use must clear, and the craft notes drawn from each exemplar. Working examples
 live in `examples/series/kernels/voice-guide.md`.
 
-Two rules keep a pinned guide from producing the writing it was meant to
-prevent. Name each licensed form by the work it takes rather than by the shape
-of the sentence it produces: "the reported negative result" sends the writer to
-find one, while "the compressed verdict" only asks for a sentence, and the
-writer will supply that sentence whether or not the material earns it. Record
-cadence as a short quotation from the exemplar rather than a description of its
-rhythm, because every good writer described in adjectives comes out sounding
-like short sentences varied with long ones.
+Name each licensed form by the work it takes, not by the sentence it makes:
+"the reported negative result" sends the writer to find one, while "the
+compressed verdict" only asks for a sentence. Quote each exemplar's cadence
+instead of describing it, because rhythm in adjectives comes out the same for
+every writer.
 
 A pinned guide never mentions a particular article. Revisit it when the
 section's voice genuinely moves, and expect a fresh coach reading to beat a

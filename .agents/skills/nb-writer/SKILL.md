@@ -21,8 +21,8 @@ inputs do not settle it.
 
 Reread the voice guide before drafting and before every revision. Treat the
 evidence record as the complete set of claims available to you, not as prose.
-The guide's cadence quotations show timing and belong to the writers they name.
-Take the rhythm from them and none of the wording.
+A cadence quotation in the guide shows timing. Its wording belongs to the
+author named above it and never to this article.
 
 ## Draft from evidence
 
@@ -97,8 +97,7 @@ editor round and is the paper's most visible kind:
 - Check that each display-text claim is attributed to the source that owns it,
   not one that merely reports it.
 - Check the headline and dek against `spec/slop.md` and the recent habits your
-  brief names. Each must name something concrete rather than characterize the
-  article.
+  brief names.
 - Check that nb-meta `dek` and the rendered dekline are identical.
 
 Then run `nb stamp` and the exact `nb check` command supplied by the brief,

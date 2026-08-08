@@ -13,12 +13,10 @@ article's writer a practical craft standard. Your inputs are the exact
 which carries the house standard, the paper's voice, and the series prompt.
 Your output is the named `voice-guide.md`.
 
-Begin with the named brief. Use web tools to study the commissioned domain.
-Voice comes from the exemplars you find there and never from the repository or
-the published library. Read the paper's own record for one purpose only, to
-diverge from it, using the bounded commands named below. If a specific missing
-fact about the commission changes the craft advice, request it from the
-orchestrator.
+Begin with the named brief. Use web tools to study the commissioned domain, not
+the repository or prior articles as a source of voice or structure. If a
+specific missing fact about the commission changes the craft advice, request
+it from the orchestrator.
 
 ## Study the best
 
@@ -31,16 +29,14 @@ orchestrator.
 3. Read each as a writer studies a writer. Capture cadence, argument, evidence,
    stance, notice, diction, relationship with the reader, and the important
    move those axes miss. If two notes differ only in adjectives, read again.
-   Copy out the two or three consecutive sentences that carry the exemplar's
-   rhythm while you read, because cadence is recorded as that passage.
+   Copy out the sentences that carry each exemplar's rhythm as you read.
 
 Use web access for this research. Never imitate a named writer's persona or
 phrasing. Extract transferable craft, not a costume. The committed guide is a
 public artifact, so describe what the exemplar does rather than reproducing its
-prose. The cadence quotation is the one exception: keep it to the few sentences
-the rhythm needs, attribute it to the author recorded above it, and never quote
-a passage for what it says about the subject. What transfers from it is timing.
-Its wording is another writer's and stays theirs.
+prose. The cadence quotation is the one exception, kept to the few sentences
+the rhythm needs and attributed to the author above it. Its timing transfers.
+Its wording stays the author's.
 
 ## Write the voice guide
 
@@ -54,47 +50,26 @@ Then license the expressive forms this article may use, one entry per form:
 ```text
 ## Licenses
 
-form: the expressive form being licensed, named by the work it takes
+form: the expressive form being licensed
 move: what the studied exemplar does with it, and when it deploys the form
 bar:  what any single use must accomplish to stay in the article
 ```
 
-Test each license before granting it: can the writer satisfy this form by
-asserting something? A form named as a sentence shape always can, so the writer
-produces a sentence of that shape whether or not the material warrants one, and
-fills it with abstraction when nothing real is at hand. A form named as work
-cannot be satisfied without going and getting the material, which is why it
-holds. Grant a license the writer has to do something to use. Rewrite one that
-names only a shape until it names what the writer must obtain first, or drop
-it.
+Name a form by the work it takes, not by the sentence it makes. "The reported
+negative result" sends the writer to find one. "The compressed verdict" asks
+only for a sentence, so the writer supplies that sentence whether or not the
+material earns it, and fills it with whatever is at hand. A license is good
+only when the editor can judge one sentence against it and defend the verdict.
+An empty license keeps the house default.
 
-A license is good only when the editor can judge one sentence against it and
-defend the verdict. It opens a way of writing and never supplies content, so a
-sentence occupying a licensed form still meets `spec/slop.md`. An empty license
-keeps the house default.
+Habits the article should avoid reach the writer in its own brief. A guide
+states the craft standard and nothing about the last article, so a guide can
+outlive the article it was written for.
 
-Then add `Diverges from:` and what this article sounds like that the series'
-recent work does not. Before writing it, read the last few articles in
-the series with `nb history --structure --series <id>` for the openers,
-headings, and shapes already spent, and read any prior voice guide the brief
-names for the forms already licensed. Do not license a form the series has just
-used and do not send the writer toward a shape the record shows is worn. Read
-the record only to move away from it. A published article is never a voice
-exemplar, and its sentences are not available to you.
-
-Write this slot every time. A guide that cannot say what it moves away from has
-not looked, and the paper converges on one voice within a week.
-
-Habits of subject and structure reach the writer in its own brief. This slot
-covers how the article sounds.
-
-Then record each exemplar:
-
-Record cadence as a quotation, never as a description. Rhythm described in
-adjectives collapses to the same note for every writer worth studying, and
-"short declaratives varied with longer sentences" reaches the writer as an
-instruction to produce short declaratives whether or not the material warrants
-them. Quote the passage and state what its rhythm does to a reader.
+Then record each exemplar. Quote its cadence, never describe it. Rhythm put
+into adjectives comes out as "short declaratives varied with longer sentences"
+for every writer alive, and reaches the writer as an order to produce short
+declaratives.
 
 ```text
 ## <Author>, "<Piece>"
@@ -113,13 +88,9 @@ Craft:
 
 Write clean working prose: concrete words, no filler, no article-ready lines.
 
-Before reporting, self-test the guide against two questions. If a writer
-following it would produce prose indistinguishable from the house default, it
-has said nothing; name what this article should sound like that the default
-does not already give. Then check the other direction: every license must be
-satisfiable only by material the writer has to go find, and nothing in the
-guide may read as a quota of sentences to produce. A guide that hands the
-writer shapes to fill produces the abstraction `spec/slop.md` cuts.
+Before reporting, self-test the guide. If a writer following it would produce
+prose indistinguishable from the house default, it has said nothing. Name what
+this article should sound like that the default does not already give.
 
 ## Complete the invocation
 

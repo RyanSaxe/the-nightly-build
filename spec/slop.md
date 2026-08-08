@@ -1,95 +1,62 @@
 # Slop
 
-Slop is a sentence the reader spends attention on and gets nothing back from.
-It is the paper's most common failure and the hardest to catch, because it
-reads as competent prose and often as the strongest line in its paragraph. This
-file defines what qualifies and states the test that removes it. Every role
-reads it in `editorial-direction.md`. The editor runs the test on every
-sentence of every draft.
+Slop is writing that reads as machine-written. It is the paper's most damaging
+failure, because a reader who recognizes it stops trusting the reporting under
+it. The editor cuts it on every article, against this file.
 
-## What qualifies
-
-A sentence earns its place by giving the reader something it did not already
-hold. Call that the sentence's referent: whatever the reader can carry to the
-next paragraph (e.g., a name, a number, a source, a mechanism, a step the
-argument then uses, a distinction the piece goes on to spend, etc.). The list
-is open, and a sentence carrying a referent of a kind not named here still
-stays. A sentence carrying none is slop, whatever it sounds like.
-
-Two shapes account for most of it. The first restates the preceding sentence at
-a higher level of abstraction, so the reader crosses it and arrives where they
-started. The second asserts an evaluation the article has not evidenced, most
-often about the subject's importance, difficulty, or size.
-
-Both appear most at the places a draft runs thin: the opening of a section, the
-sentence after a quotation, and the last line before a subhead. Those are the
-positions that feel like they need a sentence, so one gets written whether or
-not the material supplies it.
+Cutting slop does not mean making the prose dry. A playful piece, a joke, a
+fragment, a short quotable line: none of these are slop, and a paper that
+strips them out to stay safe has broken itself a second way.
 
 ## The test
 
-Ask one question of every sentence: what does this give a reader that the
-sentence before it did not?
+A slop sentence would survive being moved to another article. Nothing in it is
+tied to this subject. Ask that of any sentence that sounds like the best line
+in its paragraph: could this appear unchanged in a piece about something else?
+If it could, cut it.
 
-If the answer is a rephrasing, a summary of the article's own argument, or an
-assessment of a claim already on the page, the sentence goes. If the answer
-names something the reader can carry forward, it stays.
+A sentence that could only exist in this article is not slop, however light or
+funny.
 
-Three rules govern how the test is applied.
+Delete. Do not repair. A rewritten slop sentence is usually a better-sounding
+slop sentence, because the fault is that the writer had nothing to say there.
+Write a replacement only when something real was waiting to be said.
 
-Cut rather than rewrite. A rewritten slop sentence is usually a better-sounding
-slop sentence, because the fault is the missing referent and rewriting does not
-supply one. Delete first. Write a replacement only when a real referent was
-waiting to be stated.
+## What it looks like
 
-A license never exempts a sentence. `press/editorial.md` and the article's voice
-guide open expressive forms, and a form is permission to write a sentence a
-certain way. It supplies no content and does not lower this bar. Cut a licensed
-sentence with no referent on the same terms as an unlicensed one.
+These failures recur. They do not bound the standard, and a sentence matching
+none of them still goes if it fails the test above.
 
-Sounding good is not a reason to keep a sentence, and neither is where it sits.
-Hold the closing line of a section to the same test as any other. A section
-that has run out of things to say ends one sentence earlier.
-
-## Failures that recur
-
-These are the ones that show up most often, not the boundary of the standard. A
-sentence that passes every entry below and still fails the test above is still
-cut.
-
-- **Fluff.** Filler openings ("In today's fast-paced world"), empty connectives,
-  throat-clearing ("As you might know"), and openers that lecture: Note,
-  Consider, Imagine. If a sentence carries no information, it goes.
-- **The median AI read.** Smooth, hedged, reaching for the generic phrasing.
-  Write the specific word: the drug's name, not "a treatment"; 40 nanometers,
-  not "tiny". Commit where the evidence lets you. Anchor the prose to how the
-  best writers on the subject write, not to the average of everything written
-  about it.
-- **Run-ons.** A sentence that piles clause on clause until the reader loses the
-  thread gets broken. A semicolon chain is the same failure wearing punctuation,
-  and often an em-dash swap: write the period, or write the list. Let the verbs
-  carry the weight.
-- **Unearned punchlines.** Cut any sentence engineered to sound quotable while
-  carrying little. Announcing stakes the argument has not built is one form of
-  it ("that's the whole point", "here's the kicker", "the catch is"), and the
-  "X is the whole Y" family is another ("that identity is the whole guarantee",
-  "where it is sent is the whole argument"): a sentence that announces its own
-  stakes has stopped making the argument and started grading it. A closer or
-  section opener reused as a formula across articles is the same failure. So is
-  a house catchphrase. A punch sentence stays when it carries a referent the
-  argument then uses, and quotability is never what earns it.
-- **Hedged contrast.** The "X is not Y; it is Z" mold and its softer cousins
-  ("not X but Y", "rather than") stay only when the misconception they correct
-  is real and named, and fall wherever the "not" clause is a strawman the
-  sentence invented. One or two earned contrasts per piece is the ceiling.
+- **Performed insight.** A sentence with the shape of a conclusion and none of
+  the work: an abstract subject, a linking verb, an assessment the article has
+  not evidenced ("The gap is real, and it is narrow", "That point is itself
+  part of the problem"). The tell is an idea for a subject and nothing in the
+  sentence a reader could check.
+- **Negative parallelism.** "X is not Y, it is Z" and its cousins ("not just X
+  but Y", "X rather than Y"). This is the paper's most common tell by a wide
+  margin. It stays only where the misconception it corrects is real and named,
+  and falls wherever the "not" clause is a strawman the sentence invented. Two
+  earned contrasts in a piece is already a lot.
+- **Fluff.** Filler openings ("In today's fast-paced world"), empty
+  connectives, throat-clearing ("As you might know"), and openers that lecture:
+  Note, Consider, Imagine.
+- **Puffery.** Ordinary facts described as significant, pivotal, transformative,
+  a testament, a turning point, or part of a broader movement. State what
+  happened and let its size show.
+- **Reaching for the generic.** The median phrasing where a specific one exists:
+  the drug's name, not "a treatment"; 40 nanometers, not "tiny". Say what you
+  mean and commit where the evidence lets you.
+- **Decorative analysis.** Trailing clauses that supply unattributed opinion in
+  the grammar of a finding: "highlighting", "underscoring", "reflecting",
+  "cementing". Also the elaborate copula, where "is" becomes "serves as",
+  "stands as", "functions as", "represents".
+- **Vague attribution.** "Experts argue", "observers note", "many believe". Name
+  who, or cut the claim.
 - **Self-reference.** The piece never narrates itself or its newsroom ("this
-  dossier", "what follows") and never gestures at a hypothetical reader ("a
-  reader will notice", "where a reader's scrutiny belongs"). Report the subject;
-  what deserves notice is shown by making it noticeable.
-- **Banned terms.** `spec/banned-terms.yaml` lists the words and marks the
-  corpus has ruled out and how many uses each may keep. A press extends or
-  adjusts the list in `press/banned-terms.yaml`, and the proof counts every
-  article against the merged list. When a count runs over, rewrite rather than
-  substitute: a synonym carries the same vagueness, and repunctuating an em-dash
-  keeps the fluff the dash was carrying. Delete first, then rewrite what
-  remains. Keep an em-dash for a real aside or a sharp break, not as a reflex.
+  dossier", "what follows") and never gestures at a hypothetical reader.
+- **Formula.** A closer, section opener, dek, or heading built to the same
+  pattern as the last article's. A house catchphrase is the same failure. One
+  article cannot show this, so the editor compares against the recent record.
+
+Punctuation tells belong to the punctuation section of `spec/editorial.md`, and
+the counted lexical tells to `spec/banned-terms.yaml`. Both bind here too.
