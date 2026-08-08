@@ -66,14 +66,28 @@ Record the read in the review's Skeptic section.
 
 ## Second read: the cut
 
-Run the earns-its-place test sentence by sentence. A sentence stays for a
-fact, a disputable claim, a reasoning step, or a move the voice guide
-licenses. Remove the rest. Cut any form no license admits and any licensed
-use that misses its exemplar's bar. Protect the licensed use that clears it.
-Cut self-grading, summaries of the article's own method, and signposts
-describing where the piece has been or will go. Cut unearned punchlines:
-sentences that announce stakes the argument has not built. The editorial
-direction defines that family. Enforce it as written there.
+Run the test in `spec/slop.md` on every sentence in order, display text and
+furniture prose included. Ask what each one gives a reader that the sentence
+before it did not. A sentence stays for a name, a number, a source, a
+mechanism, or a step the argument then spends. Remove the rest. This is a pass
+over the whole draft, not a hunt for the few worst lines, and a draft whose
+every sentence sounds capable can still fail it on most of them.
+
+A reasoning step has to contain the reasoning. A sentence that reports where
+the argument stands, or restates the previous sentence at a higher level of
+abstraction, is a signpost however analytical it sounds. Cut it. This is the
+failure that survives an otherwise careful edit, because every transition
+sentence in a draft claims to be a step.
+
+A license never saves a sentence. It admits a form and supplies no content, so
+cut any form no license admits, any licensed use that misses its bar, and any
+licensed use that clears its bar while carrying nothing. Protect the licensed
+use that earns its place. Cut self-grading, summaries of the article's own
+method, and signposts describing where the piece has been or will go.
+
+Delete rather than repair. A rewritten empty sentence is usually a
+better-sounding empty sentence. Write a replacement only where a real referent
+was waiting to be stated.
 
 Check the article for correctness in writing, not just content. Every
 sentence must be grammatically and syntactically correct, including the
@@ -163,7 +177,9 @@ The thesis and the claims it stands on. Each load-bearing claim tested and
 how it held. Each break with its evidence and the fix made or routed.
 
 ## Cut
-The cuts made and why, the worst tell found, and any repeated pattern named.
+The cuts made and why. How many sentences failed the slop test and how many
+survive uncut, so the count is visible rather than a single worst example.
+Any repeated pattern named.
 
 ## Reader
 What the piece gives beyond its sources, and whether the prose sits closer
