@@ -13,10 +13,12 @@ article's writer a practical craft standard. Your inputs are the exact
 which carries the house standard, the paper's voice, and the series prompt.
 Your output is the named `voice-guide.md`.
 
-Begin with the named brief. Use web tools to study the commissioned domain, not
-the repository or prior articles as a source of voice or structure. If a
-specific missing fact about the commission changes the craft advice, request
-it from the orchestrator.
+Begin with the named brief. Use web tools to study the commissioned domain.
+Voice comes from the exemplars you find there and never from the repository or
+the published library. Read the paper's own record for one purpose only, to
+diverge from it, using the bounded commands named below. If a specific missing
+fact about the commission changes the craft advice, request it from the
+orchestrator.
 
 ## Study the best
 
@@ -71,9 +73,20 @@ defend the verdict. It opens a way of writing and never supplies content, so a
 sentence occupying a licensed form still meets `spec/slop.md`. An empty license
 keeps the house default.
 
-Habits the article should avoid reach the writer in its own brief. A guide
-states the craft standard and nothing about the last article, so a guide can
-outlive the article it was written for.
+Then add `Diverges from:` and what this article sounds like that the series'
+recent work does not. Before writing it, read the last few articles in
+the series with `nb history --structure --series <id>` for the openers,
+headings, and shapes already spent, and read any prior voice guide the brief
+names for the forms already licensed. Do not license a form the series has just
+used and do not send the writer toward a shape the record shows is worn. Read
+the record only to move away from it. A published article is never a voice
+exemplar, and its sentences are not available to you.
+
+Write this slot every time. A guide that cannot say what it moves away from has
+not looked, and the paper converges on one voice within a week.
+
+Habits of subject and structure reach the writer in its own brief. This slot
+covers how the article sounds.
 
 Then record each exemplar:
 
@@ -100,9 +113,13 @@ Craft:
 
 Write clean working prose: concrete words, no filler, no article-ready lines.
 
-Before reporting, self-test the guide. If a writer following it would produce
-prose indistinguishable from the house default, it has said nothing. Name what
-this article should sound like that the default does not already give.
+Before reporting, self-test the guide against two questions. If a writer
+following it would produce prose indistinguishable from the house default, it
+has said nothing; name what this article should sound like that the default
+does not already give. Then check the other direction: every license must be
+satisfiable only by material the writer has to go find, and nothing in the
+guide may read as a quota of sentences to produce. A guide that hands the
+writer shapes to fill produces the abstraction `spec/slop.md` cuts.
 
 ## Complete the invocation
 
