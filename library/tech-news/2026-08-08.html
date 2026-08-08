@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-08</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-08",
+        "template": "brief",
+        "title": "One untrusted GitHub issue broke three coding agents at the harness, not the model",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-08",
+        "tags": ["ai-security", "coding-agents", "semiconductors", "storage"],
+        "sources": 9,
+        "words": 890,
+        "reading_minutes": 4,
+        "dek": "At Black Hat, Novee's Elad Meged traced the flaw to the agent harness that wraps each model, reaching remote code execution and credential theft from a single unprivileged issue on the vendors' own default repositories.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">One untrusted GitHub issue broke three coding agents at the harness, not the model</h1>
+        <p class="nb-dekline">At Black Hat, Novee's Elad Meged traced the flaw to the agent harness that wraps each model, reaching remote code execution and credential theft from a single unprivileged issue on the vendors' own default repositories.</p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-08-08</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI Security</span>
+          <h3>
+            <a href="https://novee.security/blog/black-hat-2026-critical-flaws-in-anthropic-google-and-openais-coding-agents-enable-rce-and-supply-chain-attacks/"
+              >One untrusted GitHub issue broke three coding agents at the harness, not the model</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            The boundary that decides whether an agentic coding tool is safe
+            sits in the harness that assembles the model's context and runs its
+            output, not in the model's weights. Novee's Elad Meged demonstrated
+            it at Black Hat USA on August 5. On the default-configured
+            repositories of Anthropic, Google, and OpenAI, a single GitHub issue
+            filed with no repository privileges reached remote code execution
+            and credential theft.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            A second account puts the root cause in hidden trust assumptions
+            built into the agent harnesses and common to all three, which is why
+            one flaw class recurred across independent
+            vendors.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </p>
+          <table class="nb-table">
+            <caption>
+              The three disclosed flaws, their identifiers, and the releases
+              that fix them.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            </caption>
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th class="txt">What the flaw does</th>
+                <th>CVE / score</th>
+                <th>Fixed in</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="nb-table-token">Gemini CLI</span></td>
+                <td class="txt">
+                  OS command injection: a crafted <code>.gemini/.env</code> runs
+                  on the CI host before the sandbox starts.
+                </td>
+                <td>CVE-2026-12537 · CVSS 10.0</td>
+                <td>0.39.1</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">Claude Code</span></td>
+                <td class="txt">
+                  API-key exfiltration through Hugging Face's public download
+                  counter, one character at a time.
+                </td>
+                <td>CVE-2026-54316 · NVD 9.1, Anthropic 6.0</td>
+                <td>2.1.163</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">Codex</span></td>
+                <td class="txt">
+                  Two passes share one checkout; the first writes an
+                  <code>AGENTS.md</code> the second loads as instructions.
+                </td>
+                <td>none assigned</td>
+                <td>workflow change</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            The two scorers disagree on the Claude Code bug. NVD rates
+            CVE-2026-54316 at CVSS v3.1 9.1, while Anthropic rates it CVSS v4 6.0.
+            The fix landed in release 2.1.163. The bug affected every release from
+            0.2.54 to that fix. Only OpenAI's Codex drew no identifier, closed instead
+            by separating the two passes so they no longer share a
+            checkout.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Semiconductors</span>
+          <h3>
+            <a href="https://gov.texas.gov/news/post/governor-abbott-announces-spacex-expansion-in-grimes-county"
+              >SpaceX's $16.8 billion Terafab has no binding commitment behind it</a
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </h3>
+          <p>
+            The $16.8 billion attached to SpaceX's Terafab commits no one to
+            building the plant. Texas put its name to the project in Grimes
+            County on August 6, a facility meant to combine logic, memory, and
+            advanced packaging under one roof. The state cited a capital
+            investment above $16.8 billion, 3,000 jobs, and a $30 million Texas
+            Enterprise Fund grant to
+            SpaceX.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            Tesla and SpaceX announced the joint project the same day on X, where
+            the figure softens. The $16.8 billion is a first-phase number, down
+            from the $25 billion cited in March. SpaceX's own May IPO filing
+            called Terafab a "general framework" carrying no binding commitment
+            from either party.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            Intel is named as the intended manufacturer, at an undisclosed scale,
+            and Governor Abbott's official release names neither Tesla nor
+            Intel.<sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI Silicon</span>
+          <h3>
+            <a href="https://newsroom.amd.com/news/amd-acquires-taalas-ai-inference/"
+              >AMD acquires Taalas to cast model weights into silicon</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            Casting a model's weights and dataflow directly into transistors,
+            instead of streaming them from high-bandwidth memory at run time, is
+            the bet AMD just paid for. On August 6 AMD signed a definitive
+            agreement to acquire Taalas, a Toronto startup founded in 2023 that
+            builds what it calls model-specific integrated circuits. AMD said it
+            would fold the technology into a roadmap spanning Instinct GPUs, EPYC
+            CPUs, and ROCm, on undisclosed
+            terms.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            The performance case is entirely Taalas's own. It says its HC1 test
+            chip, built on TSMC's 6nm process, served Meta's Llama 3.1 8B at
+            close to 17,000 tokens per second. In February it put that rate at 73
+            times an Nvidia H200's, at one-tenth the
+            power.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            AMD's release offers no benchmark of its own, and no independent
+            measurement of the HC1 exists. The roughly $219 million Taalas has
+            raised bought a single-model test chip, not a shipping
+            product.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Storage</span>
+          <h3>
+            <a href="https://www.kioxia.com/en-jp/about/news/2026/20260804-2.html"
+              >Kioxia and SanDisk demonstrate the densest 3D NAND to date</a
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </h3>
+          <p>
+            The densest 3D NAND yet demonstrated wins its density by stacking
+            more layers and bonding the logic beneath the array, not by shrinking
+            the memory cell. Kioxia and SanDisk showed a 332-layer,
+            10th-generation QLC part at the Future of Memory and Storage
+            conference on August 4. They rate it above 37 gigabits per square
+            millimeter, up to 60 percent denser than their 8th generation, over a
+            4.8 Gb/s interface.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            Independent hardware press confirmed the 332 active layers and the
+            interface speed, up to 4,800 MT/s, and framed the part as a
+            demonstration.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            The companies' own language points only toward commercialization, so
+            the density is real and the product is not yet
+            shipping.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://novee.security/blog/black-hat-2026-critical-flaws-in-anthropic-google-and-openais-coding-agents-enable-rce-and-supply-chain-attacks/"
+              >Novee · Black Hat 2026: Critical flaws in Anthropic, Google, and OpenAI's coding agents enable RCE and supply-chain attacks</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.esecurityplanet.com/threats/black-hat-2026-critical-flaws-found-in-anthropic-google-and-openai-coding-agents/"
+              >eSecurity Planet · Black Hat 2026: Critical flaws found in Anthropic, Google, and OpenAI coding agents</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thehackernews.com/2026/08/claude-code-and-gemini-cli-flaws-let.html"
+              >The Hacker News · Claude Code and Gemini CLI flaws let attackers run code and steal secrets</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://gov.texas.gov/news/post/governor-abbott-announces-spacex-expansion-in-grimes-county"
+              >Office of the Texas Governor · Governor Abbott announces SpaceX expansion in Grimes County</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://electrek.co/2026/08/06/tesla-spacex-terafab-grimes-county-16-8-billion/"
+              >Electrek · Tesla and SpaceX detail "Terafab", a $16.8 billion first-phase chip complex in Grimes County</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://newsroom.amd.com/news/amd-acquires-taalas-ai-inference/"
+              >AMD · AMD acquires Taalas to advance specialized AI inference silicon</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://siliconangle.com/2026/08/06/amd-acquires-taalas-hardwire-ai-models-silicon/"
+              >SiliconANGLE · AMD acquires Taalas to hardwire AI models into silicon</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.kioxia.com/en-jp/about/news/2026/20260804-2.html"
+              >Kioxia · Kioxia and SanDisk unveil 10th-generation 332-layer QLC 3D NAND</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.tomshardware.com/pc-components/ssds/kioxia-and-sandisk-demonstrate-the-worlds-highest-density-3d-nand-flash-332-active-layers-and-up-to-4-800-mt-s-interface"
+              >Tom's Hardware · Kioxia and SanDisk demonstrate the world's highest-density 3D NAND, 332 active layers</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
