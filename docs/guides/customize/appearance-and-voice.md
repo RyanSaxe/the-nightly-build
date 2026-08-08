@@ -53,11 +53,12 @@ relationship with the reader, the forms an article may use and the bar each
 use must clear, and the craft notes drawn from each exemplar. Working examples
 live in `examples/series/kernels/voice-guide.md`.
 
-Name each licensed form by the work it takes, not by the sentence it makes:
-"the reported negative result" sends the writer to find one, while "the
-compressed verdict" only asks for a sentence. Quote each exemplar's cadence
-instead of describing it, because rhythm in adjectives comes out the same for
-every writer.
+License only forms the writer needs real material to use. "The reported
+negative result" takes an experiment that failed, so a writer without one
+cannot use it. "The compressed verdict" takes nothing, because anyone can write
+one more sentence, and it gets written in sections with nothing to conclude.
+Quote each exemplar's cadence instead of describing it, because rhythm put into
+adjectives comes out the same for every writer.
 
 A pinned guide never mentions a particular article. Revisit it when the
 section's voice genuinely moves, and expect a fresh coach reading to beat a

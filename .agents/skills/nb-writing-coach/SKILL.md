@@ -55,11 +55,14 @@ move: what the studied exemplar does with it, and when it deploys the form
 bar:  what any single use must accomplish to stay in the article
 ```
 
-Grant a license only when the writer needs to have found something before they
-can use it. "The reported negative result" requires an experiment that failed.
-"The compressed verdict" requires nothing, because a writer can always add one
-more sentence, so they will add it in a section that has nothing to conclude. A
-license is good only when the editor can judge one sentence against it and
+Before licensing a form, ask what the writer must already have in hand to use
+it. "The reported negative result" takes an experiment that failed, so a writer
+without one cannot use the form at all. "The compressed verdict" takes nothing,
+because a writer can always write one more sentence. A form of the second kind
+gets used in sections that have nothing to conclude, and that is where empty
+sentences come from. License forms of the first kind.
+
+A license is good only when the editor can judge one sentence against it and
 defend the verdict. An empty license keeps the house default.
 
 Habits the article should avoid reach the writer in its own brief. A guide
