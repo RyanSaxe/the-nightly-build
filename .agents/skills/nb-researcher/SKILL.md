@@ -21,8 +21,8 @@ the orchestrator rather than reconstructing it yourself.
 ## Research procedure
 
 1. Read every required document and every declared `consult` source before
-   searching elsewhere. Read specific pages in full. An exclusive source policy
-   makes the declared set the whole menu.
+   searching elsewhere. Read specific pages in full. Under an exclusive source policy
+   the declared set is all you may cite.
 2. When coverage cites a report, hearing, filing, or paper, open the underlying
    source and read the cited passage. Read beyond summaries into appendices and
    transcripts.

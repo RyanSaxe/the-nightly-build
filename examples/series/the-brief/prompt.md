@@ -18,5 +18,5 @@ Emphases:
   stake in that document reading the same thing. A write-up that only restates
   the announcement is the announcement again.
 - The tweet already made the rounds. Add what it left out: the number,
-  the caveat, the thing that makes it real or makes it noise.
+  the caveat, the detail that decides whether it matters.
 - Reference earlier briefs when a story develops ("we noted last week...").

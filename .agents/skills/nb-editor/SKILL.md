@@ -98,11 +98,11 @@ editorial direction, including its repairs for reflex punctuation. Cut from
 middles, never the ending.
 
 Read paragraph endings in sequence. Compare opener, closer, headings, dek,
-furniture, and rhetorical shapes with the orchestrator's recent-pattern notes.
-A repeated shape is a formula. Break it without copying any prior structure.
-An ending gone soft often finished a paragraph earlier. Hold the voice
-guide's register, and delete voiced sentences with no cargo instead of
-flattening them.
+furniture, and sentence patterns with the orchestrator's recent-pattern notes.
+An opener, closer, or heading built like a prior article's is a formula. Break
+it without copying any prior structure. An ending gone soft often finished a
+paragraph earlier. Hold the voice guide's register, and delete voiced sentences
+with nothing in them instead of flattening them.
 
 Apply the same test to furniture. A verdict block, callout, or other component
 does not survive because the paper used it before, but deliberate emphasis is a
@@ -143,7 +143,7 @@ Never edit assets or markup yourself.
 
 Make cuts and small prose fixes directly in the article. Cutting has no size
 limit. New prose does: past a word or clause, writing belongs to the writer,
-because an editor who rewrites regresses the voice toward its own median.
+because an editor who rewrites replaces the writer's voice with their own.
 Missing material, wrong framing, major structure, sourcing, assets, markup, and
 proof belong to the responsible role.
 
