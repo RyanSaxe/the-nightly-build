@@ -96,8 +96,9 @@ editor round and is the paper's most visible kind:
   subheads against the evidence record.
 - Check that each display-text claim is attributed to the source that owns it,
   not one that merely reports it.
-- Check the headline and dek against the banned molds in the editorial
-  direction and the recent habits your brief names.
+- Check the headline and dek against `spec/slop.md` and the recent habits your
+  brief names. Each must name something concrete rather than characterize the
+  article.
 - Check that nb-meta `dek` and the rendered dekline are identical.
 
 Then run `nb stamp` and the exact `nb check` command supplied by the brief,

@@ -83,11 +83,8 @@ A license never saves a sentence. It admits a form and supplies no content, so
 cut any form no license admits, any licensed use that misses its bar, and any
 licensed use that clears its bar while carrying nothing. Protect the licensed
 use that earns its place. Cut self-grading, summaries of the article's own
-method, and signposts describing where the piece has been or will go.
-
-Delete rather than repair. A rewritten empty sentence is usually a
-better-sounding empty sentence. Write a replacement only where a real referent
-was waiting to be stated.
+method, and signposts describing where the piece has been or will go. Repair by
+deletion, on the terms `spec/slop.md` sets.
 
 Check the article for correctness in writing, not just content. Every
 sentence must be grammatically and syntactically correct, including the

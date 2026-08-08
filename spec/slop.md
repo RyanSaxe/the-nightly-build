@@ -1,27 +1,30 @@
 # Slop
 
-Slop is the sentence that costs the reader attention and returns nothing. It is
-the paper's most common failure and the hardest to see, because a slop sentence
-reads as competent prose and often as the best line in the paragraph. This file
-defines what qualifies and states the test that removes it. Every role reads it
-in `editorial-direction.md`; the editor runs the test on every sentence of every
-draft.
+Slop is a sentence the reader spends attention on and gets nothing back from.
+It is the paper's most common failure and the hardest to catch, because it
+reads as competent prose and often as the strongest line in its paragraph. This
+file defines what qualifies and states the test that removes it. Every role
+reads it in `editorial-direction.md`. The editor runs the test on every
+sentence of every draft.
 
 ## What qualifies
 
 A sentence earns its place by giving the reader something it did not already
-hold: a name, a number, a source, a mechanism, a step the argument then uses, a
-distinction the piece goes on to spend. Call that the sentence's referent. A
-sentence with no referent is slop, whatever it sounds like.
+hold. Call that the sentence's referent: whatever the reader can carry to the
+next paragraph (e.g., a name, a number, a source, a mechanism, a step the
+argument then uses, a distinction the piece goes on to spend, etc.). The list
+is open, and a sentence carrying a referent of a kind not named here still
+stays. A sentence carrying none is slop, whatever it sounds like.
 
 Two shapes account for most of it. The first restates the preceding sentence at
 a higher level of abstraction, so the reader crosses it and arrives where they
 started. The second asserts an evaluation the article has not evidenced, most
 often about the subject's importance, difficulty, or size.
 
-Both are easiest to write at the places a draft feels thinnest: the opening of a
-section, the sentence after a quotation, and the last line before a subhead. A
-writer with nothing to add there writes something that sounds like an addition.
+Both appear most at the places a draft runs thin: the opening of a section, the
+sentence after a quotation, and the last line before a subhead. Those are the
+positions that feel like they need a sentence, so one gets written whether or
+not the material supplies it.
 
 ## The test
 
@@ -41,11 +44,11 @@ waiting to be stated.
 
 A license never exempts a sentence. `press/editorial.md` and the article's voice
 guide open expressive forms, and a form is permission to write a sentence a
-certain way. It is not content, and it does not lower this bar. A licensed form
-occupied by a sentence with no referent is slop that arrived with paperwork.
+certain way. It supplies no content and does not lower this bar. Cut a licensed
+sentence with no referent on the same terms as an unlicensed one.
 
-Sounding good is not a reason to keep a sentence. Neither is position. The
-closing line of a section is held to the same test as any other, and a section
+Sounding good is not a reason to keep a sentence, and neither is where it sits.
+Hold the closing line of a section to the same test as any other. A section
 that has run out of things to say ends one sentence earlier.
 
 ## Failures that recur
