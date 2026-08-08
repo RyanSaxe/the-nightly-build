@@ -737,7 +737,7 @@ def check_series(repo, registry, *, errors):
         elif prompt and not os.path.isfile(os.path.join(root, sid, prompt)):
             errors.append(f"{where}: prompt file '{prompt}' not found")
         # A pinned voice guide stands in for the writing coach, so a broken path
-        # would silently cost the series its craft standard rather than fail.
+        # would silently cost the series the voice it had settled on rather than fail.
         voice_guide = cfg.get("voice_guide")
         if voice_guide is not None and not isinstance(voice_guide, str):
             errors.append(f"{where}: 'voice_guide' must be a path string")
