@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attention learned to align long before it was asked to explain · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "neural-machine-translation-attention",
+        "template": "paper",
+        "title": "Attention learned to align long before it was asked to explain",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-08",
+        "tags": ["machine-learning", "attention", "translation"],
+        "sources": 8,
+        "words": 2296,
+        "reading_minutes": 10,
+        "dek": "The 2015 model that introduced attention rebuilt its read of the source at every output word, and the alignment maps it drew look linguistic without settling what the weights explain.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Attention learned to align long before it was asked to explain</h1>
+        <p class="nb-dekline">
+          The 2015 model that introduced attention rebuilt its read of the source at every output word, and the alignment maps it drew look linguistic without settling what the weights explain.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-08-08</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Neural Machine Translation by Jointly Learning to Align and Translate</p>
+          <p class="nb-paper-meta">Dzmitry Bahdanau, Kyunghyun Cho, Yoshua Bengio · arXiv:1409.0473 · ICLR 2015</p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1409.0473"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            Neural machine translation is a recently proposed approach to machine
+            translation. Unlike the traditional statistical machine translation,
+            the neural machine translation aims at building a single neural
+            network that can be jointly tuned to maximize the translation
+            performance. The models proposed recently for neural machine
+            translation often belong to a family of encoder-decoders and
+            consists of an encoder that encodes a source sentence into a
+            fixed-length vector from which a decoder generates a translation. In
+            this paper, we conjecture that the use of a fixed-length vector is a
+            bottleneck in improving the performance of this basic encoder-decoder
+            architecture, and propose to extend this by allowing a model to
+            automatically (soft-)search for parts of a source sentence that are
+            relevant to predicting a target word, without having to form these
+            parts as a hard segment explicitly. With this new approach, we
+            achieve a translation performance comparable to the existing
+            state-of-the-art phrase-based system on the task of English-to-French
+            translation. Furthermore, qualitative analysis reveals that the
+            (soft-)alignments found by the model agree well with our
+            intuition.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One vector for the whole sentence</h2>
+        <p>
+          The encoder-decoder that preceded this paper translates in two moves: an
+          encoder reads the source sentence into a single fixed-length vector, and
+          a decoder generates the target from that vector alone. That predecessor
+          is concrete: in the RNN Encoder-Decoder of Cho and colleagues, one
+          summary vector <span class="nb-math-in">c</span> of the whole source
+          conditions every step of the decoder.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Sec. 2.1-2.2"
+              data-nb-url="https://arxiv.org/abs/1406.1078"
+              >2</a
+            ></sup
+          >
+          Bahdanau, Cho, and
+          Bengio named the cost of that design. One vector of fixed size has to
+          carry everything the decoder will ever need about the source, so the
+          longer the sentence, the more it has to drop to fit.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Their fix keeps the encoder and changes what the decoder reads. In place
+          of one summary for the whole sentence, the decoder computes a fresh read
+          of the source at every output word, weighted toward the parts that bear
+          on that word. The paper calls the read a soft alignment and learns it
+          end to end.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-read" id="the-read">
+        <h2>What the decoder reads at each step</h2>
+        <p>
+          At output step
+          <span class="nb-math-in">i</span> the decoder emits the target word
+          <span class="nb-math-in">y_i</span> from three things: the previous
+          output <span class="nb-math-in">y_{i-1}</span>, its own recurrent state
+          <span class="nb-math-in">s_i</span>, and a context vector
+          <span class="nb-math-in">c_i</span> built for this step.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Only <span class="nb-math-in">c_i</span> is new to the design, and it is
+          a weighted average of the encoder's per-word annotations
+          <span class="nb-math-in">h_1, \dots, h_{T_x}</span>.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            c_i = \sum_{j=1}^{T_x} \alpha_{ij}\, h_j
+          </div>
+        </figure>
+        <p>
+          The weights <span class="nb-math-in">\alpha_{ij}</span> form a
+          distribution over source positions: one number per source word,
+          non-negative and summing to one, produced by a softmax over alignment
+          scores <span class="nb-math-in">e_{ij}</span>.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \alpha_{ij} = \frac{\exp(e_{ij})}{\sum_{k=1}^{T_x} \exp(e_{ik})}
+          </div>
+        </figure>
+        <p>
+          The read is soft, then. The decoder does not choose one source word to
+          copy from. It spreads a single unit of attention across all of them and
+          concentrates it wherever the score runs high. Each annotation
+          <span class="nb-math-in">h_j</span> is the concatenation of a forward and
+          a backward pass over the source, so it summarizes the whole sentence with
+          a focus on the words around position
+          <span class="nb-math-in">j</span>, not just the prefix that precedes
+          it.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-score" id="the-score">
+        <h2>The network that scores the alignment</h2>
+        <p>
+          The scores <span class="nb-math-in">e_{ij}</span> are where the model
+          decides what to read, and the paper's choice for them is deliberately
+          small. The alignment model is a single-hidden-layer feedforward network,
+          scoring how well the source around position
+          <span class="nb-math-in">j</span> fits the next output given what the
+          decoder has produced so far.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Appendix A.1.2"
+              data-nb-url="https://arxiv.org/pdf/1409.0473"
+              >1</a
+            ></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            e_{ij} = \htmlClass{nb-mc1}{v_a^{\top}}\, \htmlClass{nb-mc4}{\tanh}\!\left(
+            \htmlClass{nb-mc2}{W_a\, s_{i-1}} + \htmlClass{nb-mc3}{U_a\, h_j} \right)
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">v_a^{\top}</span
+              ><span>a learned vector that reads the hidden layer down to a single scalar score.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\tanh</span
+              ><span>the one hidden layer; the whole score is this small feedforward net.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">W_a\, s_{i-1}</span
+              ><span>the decoder's previous state, projected: what the model has produced so far.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">U_a\, h_j</span
+              ><span>the source annotation, projected; it does not depend on <span class="nb-math-in">i</span>.</span>
+            </li>
+          </ul>
+        </figure>
+        <p>
+          Two properties of this line carry the paper. First,
+          <span class="nb-math-in">U_a\, h_j</span> does not depend on the output
+          step <span class="nb-math-in">i</span>, so it is computed once per source
+          sentence and reused for every target word, which holds the added cost
+          near linear.<sup class="nb-cite"><a href="#s1">1</a></sup> Second, the
+          path from score to weighted read is differentiable end to end, so the
+          gradient of the translation loss reaches the alignment itself. There is
+          no discrete alignment variable to marginalize and no separate alignment
+          model to fit first. The same backward pass that trains the translation
+          trains what to align.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="long-sentences" id="long-sentences">
+        <h2>The long-sentence test</h2>
+        <p>
+          The design makes a sharp prediction. If the fixed vector hurts by forcing
+          compression, then relieving the compression should help most exactly
+          where compression bites hardest: on long sentences. The same group had
+          already measured the fall firsthand. Cho, Bahdanau, and colleagues
+          reported that a fixed-length encoder-decoder translates short sentences
+          with known words well but degrades rapidly as sentence length and the
+          number of unknown words grow.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/1409.1259"
+              >3</a
+            ></sup
+          >
+          Figure 1 answers that curve directly.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="neural-machine-translation-attention/asset-1.png"
+            alt="Line chart of BLEU score against source sentence length with four curves; the two RNNsearch curves stay near 26 to 27 BLEU across all lengths while the two RNNenc curves fall sharply after about twenty words."
+          />
+          <figcaption>
+            Fig. 1 · BLEU falls with sentence length for the fixed-vector baseline
+            (RNNenc) and holds flat for the attention model (RNNsearch), on the
+            full WMT'14 English-French test set.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 2 · p. 5"
+                data-nb-url="https://arxiv.org/pdf/1409.0473"
+                data-nb-note="Paper caption: 'The BLEU scores of the generated translations on the test set with respect to the lengths of the sentences. The results are on the full test set which includes sentences having unknown words to the models.'"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Read it as data. The curves are BLEU on the full test set plotted against
+          source length; RNNenc is the same encoder-decoder with the single fixed
+          vector, and RNNsearch is the attention model. RNNenc climbs to roughly
+          20 BLEU on short sentences and then falls as sentences lengthen.
+          RNNsearch stays flat, and RNNsearch-50 shows no decay even past fifty
+          words.<sup class="nb-cite"><a href="#s1">1</a></sup> Table 1 puts the
+          numbers under the curves.
+        </p>
+        <table class="nb-table">
+          <caption>
+            BLEU on the WMT'14 English-French test set. "All" is the full set;
+            "No UNK" restricts to sentences whose words the model all knows. The
+            suffix is the maximum training length; RNNsearch-50* trained until the
+            development set stopped improving.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Table 1">1</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>BLEU (All)</th>
+              <th>BLEU (No UNK)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">RNNenc-30</span></td>
+              <td>13.93</td>
+              <td>24.19</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">RNNsearch-30</span></td>
+              <td>21.50</td>
+              <td>31.44</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">RNNenc-50</span></td>
+              <td>17.82</td>
+              <td>26.71</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">RNNsearch-50</span></td>
+              <td>26.75</td>
+              <td>34.16</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">RNNsearch-50*</span></td>
+              <td>28.45</td>
+              <td>36.15</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Moses</span></td>
+              <td>33.30</td>
+              <td>35.63</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The gap is not marginal. Trained on sentences up to thirty words, the
+          attention model scores 21.50 BLEU against the baseline's 13.93, and it
+          beats even the baseline trained on fifty-word sentences, which reaches
+          17.82.<sup class="nb-cite"><a href="#s1">1</a></sup> Trained longer,
+          RNNsearch-50 reaches 28.45 on the full set and 36.15 once unknown-word
+          sentences are dropped, edging the phrase-based Moses baseline at 35.63 on
+          that restricted set. Moses had help the neural models did not: a separate
+          418-million-word monolingual corpus for its language model, a difference
+          the paper flags rather than hides.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          One bound on the reading. The fall Figure 1 measures belongs to this
+          fixed-vector architecture, not to every model that compresses a source
+          into one vector. Sutskever, Vinyals, and Le reported the opposite for
+          their deep reversed-input LSTM, which "did not have difficulty on long
+          sentences", crediting a reversed source order that created short-term
+          dependencies easier to optimize.<sup class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="Sec. 1"
+              data-nb-url="https://arxiv.org/abs/1409.3215"
+              >4</a
+            ></sup
+          >
+          The two claims do not collide, since they describe different
+          architectures, and their BLEU scores sit in different vocabulary and
+          decoding setups that no controlled comparison joins. What Bahdanau's
+          model does is more basic than winning a length curve against one
+          baseline. It removes the fixed vector, so the compression penalty cannot
+          arise whichever encoder-decoder one starts from.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="alignment-maps" id="alignment-maps">
+        <h2>Reading the alignment maps</h2>
+        <p>
+          Because each weight <span class="nb-math-in">\alpha_{ij}</span> runs from
+          a generated target word to a source word, a translation's alignments
+          stack into a matrix: one row per French word produced, one column per
+          English source word. Figure 2 shows four, in grayscale from black at zero
+          to white at one.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="neural-machine-translation-attention/asset-2.png"
+            alt="Four grayscale alignment matrices; bright cells run mainly along each diagonal, with an off-diagonal block in panel (a) where the French adjective and noun swap order against the English source."
+          />
+          <figcaption>
+            Fig. 2 · Four alignments found by RNNsearch-50; source English on the
+            x-axis, generated French on the y-axis, each cell a source-to-target
+            alignment weight. Panel (a) aligns "zone economique europeenne" to
+            "European Economic Area", crossing to [Area] for [zone] and then
+            stepping back.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 3 · p. 6"
+                data-nb-url="https://arxiv.org/pdf/1409.0473"
+                data-nb-note="Paper caption: 'Four sample alignments found by RNNsearch-50. ... Each pixel shows the weight alpha_ij of the annotation of the j-th source word for the i-th target word (see Eq. (6)), in grayscale (0: black, 1: white). (a) an arbitrary sentence. (b-d) three randomly selected samples among the sentences without any unknown words and of length between 10 and 20 words from the test set.'"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Most of the weight sits near the diagonal: French word
+          <span class="nb-math-in">i</span> attends to English word
+          <span class="nb-math-in">i</span>, the near-monotonic order the two
+          languages mostly share. The interest is where the weight leaves the
+          diagonal. In panel (a) the English "European Economic Area" becomes the
+          French "zone economique europeenne", reversing adjective and noun. The
+          model tracks the reversal: generating "zone" it looks past "European" and
+          "Economic" to align with "Area", then steps back to collect the two
+          adjectives in French order.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          That is what the paper means by a soft alignment with a linguistic
+          reading, and it is the evidence behind the abstract's claim that the
+          alignments "agree well with our intuition".<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Read the strength of that claim exactly: the alignments look like a
+          competent translator's, which is a statement about plausibility, not a
+          proof that the weights are why each word was produced.
+        </p>
+      </section>
+
+      <section data-nb-section="after-record" id="after-record">
+        <h2>What attention became, and what it left open</h2>
+        <p>
+          The read was refined almost at once. Within a year Luong, Pham, and
+          Manning proposed a simpler and faster family of variants. A global form
+          attends over all source positions, while a local form narrows to a small
+          window per target word. They replaced Bahdanau's additive score with three
+          cheaper functions: a dot product, a bilinear form, and a concat form
+          matching his shape. Input feeding returns the previous attentional vector
+          to the next decoder step, so the model stays aware of what it has already
+          aligned.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="Sec. 3.1-3.3"
+              data-nb-url="https://arxiv.org/abs/1508.04025"
+              >5</a
+            ></sup
+          >
+          Their design also shortened the path Bahdanau ran through a separate
+          forward and backward annotation, scoring the top-layer hidden states
+          directly, and on English-German it reached the best published result of
+          its moment.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          The read outlived the recurrent net it was built for. Vaswani and
+          colleagues kept the content-based attention and discarded the rest,
+          proposing an architecture "based solely on attention" that dispenses
+          "with recurrence and convolutions entirely".<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          The soft alignment of 2015 became the whole computational primitive of
+          the Transformer that replaced the encoder-decoder studied here.
+        </p>
+        <div class="nb-pull">
+          <p>
+            Attention entered translation as a way to read the source, and only
+            later was asked to justify the output.
+          </p>
+        </div>
+        <p>
+          That success reframed the question. If attention weights are what a model
+          "looks at", are they an account of what it did? Jain and Wallace tested
+          the idea on later attention classifiers and answered no. Across
+          classification and question-answering tasks built on BiLSTM encoders,
+          learned attention weights were frequently uncorrelated with gradient and
+          leave-one-out estimates of which inputs mattered, and one could
+          construct very different attention distributions that produced the same
+          prediction. They conclude that standard attention does not give a
+          faithful account of what drove the output.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+        </p>
+        <p>
+          Wiegreffe and Pinter answered not so fast. Whether attention "is
+          explanation", they argue, "depends on one's definition of explanation"
+          and has to be tested against every element of the model, not one
+          component in isolation.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          Their sharper objection is about the adversary. An alternative attention
+          distribution found per example, free to differ from one input to the
+          next, is a weaker refutation than a single trained model whose
+          alternative attention holds consistently across the dataset. Under that
+          stricter test the adversaries are harder to find and do poorly on a
+          simple diagnostic, so the negative result does not by itself show that
+          attention is useless for explanation.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">Scope</span>
+          <p>
+            Neither 2019 paper tested Bahdanau's translation model. Both study
+            later BiLSTM classifiers and question-answering, not the 2015
+            encoder-decoder or its Figure 2. Carrying their dispute onto these
+            alignment maps is an inference this piece draws, not a claim either
+            paper makes about this paper. What transfers is the question, not a
+            verdict. Bahdanau's own reading of the alignments was already the
+            modest one: that they agree with intuition. The later work is a
+            reason to hold that plausibility claim apart from the stronger
+            explanation it invites.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>A reviewer's verdict</h2>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                Soft alignment removes the fixed-vector penalty: BLEU holds on long
+                sentences where the baseline decays.
+              </li>
+              <li>
+                The alignment is trained end to end, with no latent or separately
+                fitted alignment step.
+              </li>
+              <li>
+                The learned alignments carry a plausible linguistic reading,
+                including real reorderings.
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                One language pair and one corpus: WMT'14 English-French, evaluated
+                by BLEU.
+              </li>
+              <li>
+                One architecture, the RNN encoder-decoder, since superseded by the
+                Transformer.
+              </li>
+              <li>
+                The maps show plausibility, not that the weights explain the
+                output; the explanation critiques ran on other models.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            On its own terms the paper holds up. It showed that a content-based
+            soft alignment, learned end to end, removes the long-sentence penalty
+            of the single fixed vector and reaches phrase-based quality on
+            English-French.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+            boundary is the interpretation laid over it. The alignment maps show
+            the weights align plausibly; they do not show the weights explain the
+            output, and the after-record is reason to keep those two readings
+            apart rather than a ruling on which fits this model.<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            ><sup class="nb-cite"><a href="#s8">8</a></sup> The result is secure;
+            the explanation it invites is still open.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1409.0473"
+              >arXiv · Bahdanau, Cho, Bengio, "Neural Machine Translation by
+              Jointly Learning to Align and Translate" (ICLR 2015)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/1406.1078"
+              >arXiv · Cho et al., "Learning Phrase Representations using RNN
+              Encoder-Decoder for Statistical Machine Translation" (EMNLP
+              2014)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/1409.1259"
+              >arXiv · Cho, van Merrienboer, Bahdanau, Bengio, "On the Properties
+              of Neural Machine Translation: Encoder-Decoder Approaches"
+              (SSST-8, 2014)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/1409.3215"
+              >arXiv · Sutskever, Vinyals, Le, "Sequence to Sequence Learning with
+              Neural Networks" (NeurIPS 2014)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/1508.04025"
+              >arXiv · Luong, Pham, Manning, "Effective Approaches to
+              Attention-based Neural Machine Translation" (EMNLP 2015)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/1706.03762"
+              >arXiv · Vaswani et al., "Attention Is All You Need" (NeurIPS
+              2017)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/1902.10186"
+              >arXiv · Jain & Wallace, "Attention is not Explanation" (NAACL
+              2019)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/1908.04626"
+              >arXiv · Wiegreffe & Pinter, "Attention is not not Explanation"
+              (EMNLP 2019)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
