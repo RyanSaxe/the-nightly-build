@@ -66,14 +66,15 @@ cut.
   thread gets broken. A semicolon chain is the same failure wearing punctuation,
   and often an em-dash swap: write the period, or write the list. Let the verbs
   carry the weight.
-- **Unearned punchlines.** Cut the sentence that announces stakes the argument
-  has not built ("that's the whole point", "here's the kicker", "the catch is").
-  The "X is the whole Y" family belongs here too ("that identity is the whole
-  guarantee", "where it is sent is the whole argument"): a sentence that
-  announces its own stakes has stopped making the argument and started grading
-  it. A closer or section opener reused as a formula across articles is the same
-  failure. So is a house catchphrase. A punch sentence the argument has built
-  and a license admits is craft, not a punchline.
+- **Unearned punchlines.** Cut any sentence engineered to sound quotable while
+  carrying little. Announcing stakes the argument has not built is one form of
+  it ("that's the whole point", "here's the kicker", "the catch is"), and the
+  "X is the whole Y" family is another ("that identity is the whole guarantee",
+  "where it is sent is the whole argument"): a sentence that announces its own
+  stakes has stopped making the argument and started grading it. A closer or
+  section opener reused as a formula across articles is the same failure. So is
+  a house catchphrase. A punch sentence stays when it carries a referent the
+  argument then uses, and quotability is never what earns it.
 - **Hedged contrast.** The "X is not Y; it is Z" mold and its softer cousins
   ("not X but Y", "rather than") stay only when the misconception they correct
   is real and named, and fall wherever the "not" clause is a strawman the
