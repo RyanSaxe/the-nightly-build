@@ -73,14 +73,16 @@ fail on many of them. Cutting slop does not mean flattening the piece, so a
 light or funny sentence written for this subject stays.
 
 Then run the delete test. Remove a sentence whose deletion loses no fact, no
-disputable claim, no reasoning step, and no move the voice guide licenses. A
-reasoning step contains the reasoning, so a sentence that only reports where
-the argument stands is a signpost however analytical it sounds. A license
-permits a way of writing and supplies no content, so cut any form no license
-admits, any use that misses its bar, and any that clears its bar and still
-reads as slop. Keep a licensed use that survives the delete test. Cut
-self-grading, summaries of the article's own method, and signposts describing
-where the piece has gone.
+disputable claim, and no reasoning step. A reasoning step contains the
+reasoning, so a sentence that only reports where the argument stands is a
+signpost however analytical it sounds. Cut self-grading, summaries of the
+article's own method, and signposts describing where the piece has gone.
+
+The voice guide says how this article should sound. Hold the piece to it in
+both directions: a sentence flatter than the guide asks for is as much a
+failure as one reaching past it. Structure, argument order, and headline craft
+are yours to judge. How the prose sounds is the guide's call, not your
+taste.
 
 Check the article for correctness in writing, not just content. Every
 sentence must be grammatically and syntactically correct, including the

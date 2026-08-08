@@ -44,21 +44,23 @@ running for that section. See
 [Series reference](../../reference/series.md#pinning-a-voice-guide) for the
 key and [Production](../../reference/production.md) for what it saves.
 
-Write the guide the way the coach would, because the writer and the editor
-both read it as one. Ask your assistant to study strong writers in the
-section's territory and produce the guide from that reading rather than
-drafting it cold: the value is in the exemplars and in licensing specific
-expressive forms, not in adjectives about tone. A guide states register, the
-relationship with the reader, the forms an article may use and the bar each
-use must clear, and the craft notes drawn from each exemplar. Working examples
-live in `examples/series/kernels/voice-guide.md`.
+Write the guide the way the coach would, because the writer and the editor both
+read it as one. Ask your assistant to study strong writers in the section's
+territory and produce the guide from that reading rather than drafting it cold.
+The value is in the exemplars, not in adjectives about tone. A guide records
+each exemplar with passages quoted from it, then opens with a few paragraphs on
+how the section should sound, written last so it describes the writers actually
+read. A working example lives in `examples/series/kernels/voice-guide.md`.
 
-License only forms the writer needs real material to use. "The reported
-negative result" takes an experiment that failed, so a writer without one
-cannot use it. "The compressed verdict" takes nothing, because anyone can write
-one more sentence, and it gets written in sections with nothing to conclude.
-Quote each exemplar's cadence instead of describing it, because rhythm put into
-adjectives comes out the same for every writer.
+Quote each exemplar instead of describing it. Rhythm put into adjectives comes
+out the same for every writer, and "short declaratives varied with longer
+sentences" reaches the writer as an order to produce short declaratives. The
+axis that matters most asks what in the quoted passage only a particular person
+would have written, because that is the quality the guide exists to transfer.
+
+Do not give the guide a list of permitted moves. A list of moves gets read as a
+set of sentences to produce, and the writer will produce them whether or not
+the material calls for one.
 
 A pinned guide never mentions a particular article. Revisit it when the
 section's voice genuinely moves, and expect a fresh coach reading to beat a

@@ -14,7 +14,7 @@ research-grade writing. It has two parts.
   choices, never the choices themselves.
 
 What this file bans are failures of writing, not particular ways of writing.
-A press or a voice guide can open a form the default keeps closed.
+How a paper sounds is its own to set in `press/editorial.md`.
 
 The standard does not legislate trivia: no paper-wide rule on the Oxford comma. Be
 consistent within a piece.
@@ -80,15 +80,16 @@ sentences, it is no longer explaining them.
 
 ## Prose
 
-The register is a serious paper, not a feed. `spec/slop.md` is the standard for
-prose that reads as machine-written. It binds every article, and nothing a press
+The house register is a serious paper rather than a feed, and it is a default
+rather than a limit. `spec/slop.md` is the standard for prose that reads as
+machine-written. It binds every article at every register, and nothing a press
 sets below loosens it.
-
-That is the default register. An expressive form beyond it (e.g., direct
-address, fragments, open humor, etc.) is licensed, never free.
-`press/editorial.md` or the article's voice guide grants the license by naming
-the form, the exemplar move being transferred, and the bar any single use must
-meet. An unlicensed form is cut. A licensed use still meets every test above.
+Register and formality belong to `press/editorial.md`, which a paper writes for
+itself, and to the article's voice guide, which sets how one piece should
+sound. A paper that wants to be funny, loose, or direct with its reader says so
+there, and every article inherits it. No form is forbidden for being
+expressive. What is cut is writing that fails `spec/slop.md`, at whatever
+register the paper has chosen.
 
 If following a rule here would produce a sentence you would not say aloud,
 break the rule.
