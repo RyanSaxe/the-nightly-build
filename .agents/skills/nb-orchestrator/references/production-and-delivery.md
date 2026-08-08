@@ -46,6 +46,7 @@ sound and never names the last article, so the habits to avoid travel with the
 article rather than with the guide. The editor also receives the exact writer
 brief so instruction leakage remains visible. A `review-brief.md` carries the
 named inputs, your recent-pattern notes, and the round's focus. Nothing more.
+Every brief you write, `review-brief.md` included, meets `spec/slop.md`.
 The editor needs your recent-pattern notes to catch a formula or a catchphrase,
 which no single article can show. Never send a review brief without them.
 

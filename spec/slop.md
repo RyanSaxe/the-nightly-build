@@ -1,8 +1,8 @@
 # Slop
 
-Slop is writing that reads as machine-written. It is the paper's most damaging
-failure, because a reader who recognizes it stops trusting the reporting under
-it. The editor cuts it on every article, against this file.
+Slop is writing that reads as machine-written. A reader who recognizes it stops
+trusting the article's reporting, which is why it costs the paper more than a
+dull sentence does. The editor cuts it on every article, against this file.
 
 Cutting slop does not mean making the prose dry. A playful piece, a joke, a
 fragment, a short quotable line: none of these are slop, and removing them to
@@ -36,6 +36,12 @@ none of them still goes if it fails the test above.
   margin. It stays only where the misconception it corrects is real and named,
   and falls wherever the "not" clause is a strawman the sentence invented. Two
   earned contrasts in a piece is already a lot.
+- **Unearned punchlines.** Any sentence engineered to sound quotable while
+  carrying little. Announcing stakes the argument has not built is one form
+  ("that's the whole point", "here's the kicker", "the catch is"), and the
+  "X is the whole Y" family is another ("that identity is the whole guarantee").
+  A sentence that announces its own stakes has stopped making the argument and
+  started grading it. Quotability never earns a line.
 - **Fluff.** Filler openings ("In today's fast-paced world"), empty
   connectives, throat-clearing ("As you might know"), and openers that lecture:
   Note, Consider, Imagine.
@@ -58,7 +64,11 @@ none of them still goes if it fails the test above.
   article cannot show this, so the editor compares against the recent record.
 
 Punctuation tells belong to the punctuation section of `spec/editorial.md`, and
-the counted lexical tells to `spec/banned-terms.yaml`. Both bind here too.
+the counted lexical tells to `spec/banned-terms.yaml`, which a press extends in
+`press/banned-terms.yaml` and the proof counts against the merged list. Both
+bind here too. When a count runs over, rewrite rather than substitute: a synonym
+carries the same vagueness, and repunctuating an em-dash keeps the fluff the
+dash was carrying. Delete first, then rewrite what remains.
 
 ## Who this binds
 

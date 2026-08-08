@@ -49,27 +49,25 @@ read it as one. Ask your assistant to study strong writers in the section's
 territory and produce the guide from that reading rather than drafting it cold.
 The value is in the exemplars, not in adjectives about tone. A guide records
 each exemplar with passages quoted from it, then opens with a few paragraphs on
-how the section should sound, written last so it describes the writers actually
-read. A working example lives in `examples/series/kernels/voice-guide.md`.
+how the section should sound under a `## How this series should sound`
+heading, written last so it can point at the passages actually chosen. A
+working example lives in `examples/series/kernels/voice-guide.md`.
 
 Each exemplar gets two or three passages taken from different parts of the
 piece, each followed by two or three sentences on why it is worth reading and
 where the person is visible in it. Quote enough to hear the writing. Keep the
 subject's own vocabulary inside the quotations, because a passage flattened
-into general English stops showing what it was picked for. A note explains a
-passage and never instructs: the moment a guide says to put the verdict first,
-it has begun commissioning sentences.
+into general English stops showing what it was picked for. A note describes the
+passage and does not tell the writer to write one like it.
 
 Do not give the guide a list of permitted moves. A list of moves gets read as a
 set of sentences to produce, and the writer will produce them whether or not
 the material calls for one.
 
-Check every quotation against the source before you commit the guide. This
-applies to a guide you write by hand exactly as it applies to one the coach
-produces, and it is the one error nothing downstream can catch: a fabricated
-quotation reads perfectly, ships in a public file, and puts words in a named
-writer's mouth. A quotation you cannot find in the piece is cut rather than
-approximated.
+Check every quotation against the raw source before you commit the guide, on
+the terms `.agents/skills/nb-writing-coach/SKILL.md` sets out. This applies to a
+guide you write by hand exactly as it applies to one the coach produces, and no
+later role checks it.
 
 A pinned guide never mentions a particular article. Revisit it when the
 section's voice genuinely moves, and expect a fresh coach reading to beat a

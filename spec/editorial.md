@@ -5,8 +5,8 @@ This is the editorial standard every article meets, whatever its template.
 The standard is prescriptive on purpose. Its job is to make the default professional:
 research-grade writing. It has two parts.
 
-- **Standards a paper cannot loosen.** The quality bar below: sourced claims, teach don't
-  summarize, earned analysis, and prose free of fluff, slop, and run-ons.
+- **Standards a paper cannot loosen.** Sourced claims, teach don't summarize,
+  earned analysis, and the prose failures `spec/slop.md` rules out.
 - **Defaults a paper may override.** Everything that is taste rather than quality:
   register, formality, the assumed reader and that reader's background, how far to
   press a judgment, and any other choice of that kind. These belong to

@@ -1,7 +1,8 @@
 # Headlines, deks, and section headings
 
 This file defines the standard for the three surfaces a reader meets first.
-The prose rules of `spec/editorial.md` apply here word for word. One test
+The prose rules of `spec/editorial.md` and `spec/slop.md` apply here word for
+word. One test
 governs all three: the line commits to something the piece establishes. Every
 tell named below fails that test.
 

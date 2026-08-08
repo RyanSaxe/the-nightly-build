@@ -67,22 +67,28 @@ Record the read in the review's Skeptic section.
 ## Second read: the cut
 
 Make a dedicated pass for slop against `spec/slop.md`, over every sentence
-including display text and furniture prose. Sweep all of it. Hunting for the
-worst line leaves the rest, and a draft whose every sentence sounds capable can
-fail on many of them. Cutting slop does not mean flattening the piece, so a
-light or funny sentence written for this subject stays.
+including display text and furniture prose. Check every sentence, not the few
+that stand out; a draft can fail on many at once. Cutting slop does not mean
+flattening the piece, so a light or funny sentence written for this subject
+stays.
 
 Then run the delete test. Remove a sentence whose deletion loses no fact, no
-disputable claim, and no reasoning step. A reasoning step contains the
-reasoning, so a sentence that only reports where the argument stands is a
-signpost however analytical it sounds. Cut self-grading, summaries of the
-article's own method, and signposts describing where the piece has gone.
+disputable claim, and no reasoning step. A sentence that reports where the
+argument stands without doing any of the reasoning is a signpost however
+analytical it sounds. Cut self-grading, summaries of the article's own method,
+and signposts describing where the piece has gone.
 
-The voice guide says how this article should sound. Hold the piece to it in
-both directions. A sentence that lands flatter than the guide asks for needs
-fixing as much as one that overreaches. Structure, argument order, and headline
-craft are yours to judge. How the prose sounds is the guide's call, so do not
-substitute your own taste.
+The voice guide says how this article should sound. Cutting is yours, and so is
+structure, argument order, and headline craft. Register is not: where the draft
+reads flatter than the guide directs, say so in the review and request the
+writer, rather than writing the voice in yourself or trimming until the
+question goes away.
+
+The guide also carries passages quoted from named writers, and the writer read
+them just before drafting. Compare any distinctive phrasing in the draft against
+those quotations. A borrowed clause is not caught by the slop test, because a
+phrase from a good writer reads as specific to the subject. Cut what echoes and
+request replacement prose.
 
 Check the article for correctness in writing, not just content. Every
 sentence must be grammatically and syntactically correct, including the

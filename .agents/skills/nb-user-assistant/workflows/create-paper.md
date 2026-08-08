@@ -50,9 +50,8 @@ other config inside prompts.
 
 Ask how each series should sound, not only what it covers. Record register
 intent where production can act on it: `editorial.md` for the whole paper, or a
-register line in the series prompt for one section. A paper that wants to be
-funny, loose, or direct with its reader says so there, and every article
-inherits it. When two series share a border, write
+register line in the series prompt for one section. `spec/editorial.md` states
+how far a press may move the house register. When two series share a border, write
 the settled boundary into both prompts so the next scheduled run inherits the
 resolution instead of the ambiguity.
 

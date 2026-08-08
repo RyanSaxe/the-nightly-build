@@ -5,8 +5,8 @@ package, spec files, editorial-role skills, template identities, furniture
 catalog, and prompts a press writes for its series. Their prose trains the
 writer's prose. A layer that rambles produces articles that ramble, and a
 layer that lists produces articles that treat the list as everything allowed.
-A layer that reaches for a memorable phrase teaches the writer to reach for
-one, so keep slogans out of every prompt surface, including this one.
+Slogans in a prompt teach the writer to write slogans. Keep them out of every
+prompt surface.
 This file is the standard every prompt surface is written against. The user
 assistant applies it to every prompt it writes or edits, and engine
 contributors apply it to the shipped layers.

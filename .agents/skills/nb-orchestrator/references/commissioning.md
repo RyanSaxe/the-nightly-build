@@ -9,7 +9,7 @@ is already the authorized work set.
 
 Read the layers that apply to the selected article in this order:
 
-1. `spec/editorial.md` and `spec/headlines.md`
+1. `spec/editorial.md`, `spec/slop.md`, and `spec/headlines.md`
 2. `press/editorial.md`, when present
 3. the selected template's manifest, skeleton, identity, and furniture
 4. the series prompt, declared tag fragments in order, and selected item
@@ -23,7 +23,10 @@ Start history work with targeted `nb history` queries. Use
 furniture, and `--show` or a raw article only when a concrete commissioning
 question requires the prose itself. Record relevant prior coverage and recent
 openers, conclusions, and outline shapes as habits not to inherit
-automatically. Never record template-required furniture or fixed labels as
+automatically. Read the prose of the last few pieces too, not only their
+structure, and record any phrasing that has started recurring. A catchphrase is
+a phrase, so structure notes cannot show one, and the editor cannot catch what
+the notes do not carry. Never record template-required furniture or fixed labels as
 habits to avoid: the proof requires them, and only optional choices repeat.
 Publication history informs context. It is never a template.
 

@@ -22,10 +22,17 @@ inputs do not settle it.
 Reread the voice guide before drafting and before every revision. Its opening
 section says how this article should sound, and the exemplar blocks under it
 show what that sounds like in real prose. Use them to hear how the writing
-moves, and never reuse their wording, which belongs to the author named above
-each one. The guide is not a list of sentences to produce, so nothing in it
-obliges you to write a sentence the material does not call for. Treat the
-evidence record as the complete set of claims available to you, not as prose.
+moves. Reuse the subject's terms of art exactly, as the standard requires, but
+never carry over a phrasing that belongs to the quoted writer: their wording
+stays theirs, and the editor checks the draft against those passages. The guide
+is not a list of sentences to produce, so nothing in it obliges you to write a
+sentence the material does not call for.
+
+Your prose meets `spec/slop.md`, which the editorial direction carries. Do not
+leave it for the editor to remove.
+
+Treat the evidence record as the complete set of claims available to you, not as
+prose.
 
 ## Draft from evidence
 
@@ -99,8 +106,9 @@ editor round and is the paper's most visible kind:
   subheads against the evidence record.
 - Check that each display-text claim is attributed to the source that owns it,
   not one that merely reports it.
-- Check the headline and dek against `spec/slop.md` and the recent habits your
-  brief names.
+- Check the headline and dek against `spec/headlines.md`, which carries the
+  banned dek and heading molds, then against `spec/slop.md` and the recent
+  habits your brief names.
 - Check that nb-meta `dek` and the rendered dekline are identical.
 
 Then run `nb stamp` and the exact `nb check` command supplied by the brief,
