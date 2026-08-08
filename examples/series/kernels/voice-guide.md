@@ -69,8 +69,12 @@ bar:  the exercise must be answerable from the lesson alone, and no later
 ```text
 Source: https://siboehm.com/articles/22/CUDA-MMM
 Craft:
-- cadence: a blunt verdict on a result, then a long sentence explaining the
-  access pattern that produced it; single-sentence paragraphs carry the turns
+- cadence: "Pretty bad, considering that the A6000 is advertised as being able
+  to achieve almost 30 TFLOPs. Just for comparison, 300 GFLOPs is also roughly
+  the performance achieved by the optimized BLAS library on the 2015 Haswell
+  CPU that I used in my earlier post on CPU matmul." The verdict lands in a
+  fragment and the next sentence pays for it with a comparison the reader can
+  check, so the judgment arrives before the evidence and never floats
 - argument: each kernel repeats one shape, motivation to visualization to code
   to measurement to analysis, so complexity rises without the frame moving
 - evidence: timings on named hardware sit inside the sentence making the
@@ -92,8 +96,13 @@ Craft:
 ```text
 Source: https://horace.io/brrr_intro.html
 Craft:
-- cadence: a short hook sentence sets the stakes, then a longer sentence does
-  the explaining; the pattern repeats at the top of each section
+- cadence: "For example, if you're spending all of your time doing memory
+  transfers (i.e. you are in an memory-bandwidth bound regime), then increasing
+  the FLOPS of your GPU won't help. On the other hand, if you're spending all
+  of your time performing big chonky matmuls (i.e. a compute-bound regime),
+  then rewriting your model logic into C++ to reduce overhead won't help." Two
+  sentences of identical build, each ending on the same flat refusal, so the
+  reader hears the symmetry of the two regimes before it is named
 - argument: diagnosis before treatment. The piece refuses to recommend
   anything until the reader can say which of three regimes they are in
 - evidence: published bandwidth and throughput figures are converted into an
@@ -115,8 +124,13 @@ Craft:
 ```text
 Source: https://blog.codingconfessions.com/p/gpu-computing
 Craft:
-- cadence: balanced clauses for architectural comparison, then a short
-  sentence to release the tension before the next concept
+- cadence: "CPUs dedicate a significant amount of chip area towards features
+  which will reduce instruction latency, such as large caches, less ALUs and
+  more control units. In contrast, GPUs use a large number of ALUs to maximize
+  their computation power and throughput. They use a very small amount of the
+  chip area for caches and control units, the things which reduce the latency
+  for CPUs." Two long balanced clauses set the contrast and a shorter third
+  sentence closes it by reusing the exact terms, never a synonym
 - argument: known territory first. CPU behavior anchors every GPU claim, and
   sections close by naming the concept the next one needs
 - evidence: throughput figures are placed beside a CPU's so the magnitude is
@@ -137,7 +151,9 @@ Craft:
 ```text
 Source: https://github.com/srush/GPU-Puzzles
 Craft:
-- cadence: one imperative sentence per task, no preamble
+- cadence: "Implement a kernel that adds 10 to each position of vector `a` and
+  stores it in vector `out`. You have 1 thread per position." The task, then
+  the single constraint that makes it solvable, and nothing else
 - argument: the problem is the explanation. Concepts are never taught before
   the reader has failed at needing them
 - evidence: a runnable cell and a visual debugger; correctness is shown rather
