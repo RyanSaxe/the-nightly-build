@@ -52,13 +52,24 @@ Then license the expressive forms this article may use, one entry per form:
 ```text
 ## Licenses
 
-form: the expressive form being licensed
+form: the expressive form being licensed, named by the work it takes
 move: what the studied exemplar does with it, and when it deploys the form
 bar:  what any single use must accomplish to stay in the article
 ```
 
+Test each license before granting it: can the writer satisfy this form by
+asserting something? A form named as a sentence shape always can, so the writer
+produces a sentence of that shape whether or not the material warrants one, and
+fills it with abstraction when nothing real is at hand. A form named as work
+cannot be satisfied without going and getting the material, which is why it
+holds. Grant a license the writer has to do something to use. Rewrite one that
+names only a shape until it names what the writer must obtain first, or drop
+it.
+
 A license is good only when the editor can judge one sentence against it and
-defend the verdict. An empty license keeps the house default.
+defend the verdict. It opens a way of writing and never supplies content, so a
+sentence occupying a licensed form still meets `spec/slop.md`. An empty license
+keeps the house default.
 
 Habits the article should avoid reach the writer in its own brief. A guide
 states the craft standard and nothing about the last article, so a guide can
