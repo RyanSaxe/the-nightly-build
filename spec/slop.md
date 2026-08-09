@@ -4,19 +4,33 @@ Slop is writing that reads as machine-written. A reader who recognizes it stops
 trusting the article's reporting, which is why it costs the paper more than a
 dull sentence does. The editor cuts it on every article, against this file.
 
-Cutting slop does not mean making the prose dry. A playful piece, a joke, a
-fragment, a short quotable line: none of these are slop, and removing them to
-stay safe is its own failure.
+Cutting slop does not mean making the prose dry. A joke, a fragment, or a
+short quotable line is not slop, and removing them to stay safe is its own
+failure.
 
 ## The test
 
-A slop sentence would survive being moved to another article. Nothing in it is
-tied to this subject. Ask that of any sentence that sounds like the best line
-in its paragraph: could this appear unchanged in a piece about something else?
-If it could, cut it.
+Take out the sentence's subject-specific nouns and put a placeholder in each
+one. Read what is left. If it is still a natural sentence, the writer built a
+frame and dropped this subject into it, and the frame is the slop.
 
-A sentence that could only exist in this article is not slop, however light or
-funny.
+"That portability is why spandrel earns a place in a working vocabulary" holds
+up as "that X is why Y earns a place in a working vocabulary", so it goes.
+"Gould answered them in 1997, and he began by conceding the building" is
+nonsense without its nouns, because it reports something that happened, so it
+stays. Run the test on any sentence that sounds like the best line in its
+paragraph, and trust it: a joke about the subject survives it.
+
+## Where it sits
+
+Slop collects at edges: the first and last sentence of a paragraph, of a
+section, and of the article. Those positions feel like they need a sentence, so
+a writer with nothing left to add writes one. Test every edge even when the
+middles read clean, and expect the article's last sentence to be its worst.
+
+An opening sentence also inherits its referents from nowhere. One that names
+"the child" or "the decision" before the article has introduced either is
+addressing whoever wrote the brief, not a reader who arrived cold.
 
 Delete. Do not repair. Rewriting usually produces a slop sentence that sounds
 better, because the fault is that the writer had nothing to say there. Write a
