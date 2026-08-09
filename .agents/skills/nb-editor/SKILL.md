@@ -67,19 +67,22 @@ Record the read in the review's Skeptic section.
 
 ## Second read: the cut
 
-Make a dedicated pass for slop against `spec/slop.md`, over every sentence
-including display text and furniture prose. Check every sentence, not the few
-that stand out; a draft can fail on many at once.
+Make a dedicated pass for slop against `spec/slop.md`. Every sentence is in
+scope: body prose, headline, dek, subheads, captions, and the prose inside every
+furniture component. A component's own sentences fail as often as the body's,
+and nothing else reads them.
 
-Then walk the edges alone. Read the first and last sentence of every
-paragraph, section, and the article itself, out of order and away from the
-prose around them. Read in sequence, a weak edge sentence passes as part of the
-paragraph instead of standing on its own.
+Then walk the edges a second time, on their own. Read the first and last
+sentence of every paragraph, every section, the article, and each furniture
+component, out of order and away from the prose around them. Read in sequence,
+a weak edge sentence passes as part of the paragraph instead of standing on its
+own. Edges are where slop concentrates, not where it is confined, so this pass
+adds to the sentence-by-sentence one and never replaces it.
 
 Then read the article as someone who arrived from a link with no briefing.
-Every definite noun phrase must have been introduced in the article. An opening
-that says "the child" resolves for you, because you hold the commission that
-named it, and resolves for nobody else.
+Every definite noun phrase must have been introduced in the article itself. A
+phrase whose referent sits only in the commission or the brief resolves for
+you, because you hold those files, and dangles for the reader.
 
 Then run the delete test. Remove a sentence whose deletion loses no fact, no
 disputable claim, and no reasoning step. A sentence that reports where the
