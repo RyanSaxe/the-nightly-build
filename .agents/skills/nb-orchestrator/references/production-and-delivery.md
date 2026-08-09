@@ -88,9 +88,12 @@ Missing voice guidance returns to the coach, including for a series whose guide
 is pinned: the coach's repair lands in the next numbered invocation and governs
 this article only. A pinned guide belongs to the paper owner, so record what it
 could not support instead of editing it. Missing evidence returns to the
-researcher. Prose, structure, markup, assets, and proof return through the
-writer. Give every repair a new numbered brief and output, then require a fresh
-writer proof and editor read.
+researcher. The writer takes back what the editor cannot settle from the
+evidence record: reporting a claim needs, a broken load-bearing claim, source
+assets, chart provenance, and the proof. The editor edits prose, structure, and
+documented furniture itself, so a round trip for those is a sign the writing
+failed rather than a step to schedule. Give every repair a new numbered brief
+and output, then require a fresh writer proof and editor read.
 
 A single-owner repair needs no authored brief. Relaunch the role with a stub
 that names the review or request to apply, and write real content only when
