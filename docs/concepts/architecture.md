@@ -9,7 +9,7 @@ publication boundary.
 
 ## Before the diagram
 
-The owner defines the press on `main`. Published articles live on `library`.
+The owner defines the press on `main`; published articles live on `library`.
 At the start of a scheduled run, `nb duty` compares those two states and
 returns the exact authorized work. The orchestrator may make editorial choices
 within that result, but it cannot expand it.
@@ -27,7 +27,7 @@ leaking between articles and lets independent work proceed in parallel. It is
 an execution detail, not a different publication path: a runtime without child
 agents preserves the same role sequence and records.
 
-The orchestrator chooses the commission. The engine assembles its governing
+The orchestrator chooses the commission; the engine assembles its governing
 context from the current repository revision. Roles consume those named files
 directly instead of relying on an orchestrator's paraphrase.
 
@@ -55,7 +55,7 @@ that produced it.
 The CLI beside the article flow is not another editorial role. It owns
 repeatable operations: assembling context, validating work, creating permitted
 assets, previewing the real page, and preparing the exact pull-request shape.
-Agents decide what to say. The engine checks whether the result satisfies the
+Agents decide what to say; the engine checks whether the result satisfies the
 press and publication contracts.
 
 Local checks shorten the repair loop. They do not grant publication authority.

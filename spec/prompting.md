@@ -27,7 +27,7 @@ refuses to do.
 
 Open concrete. The first sentence states the prompt's job or the rule's
 consequence, never a framing abstraction. "A performance number arrives with
-its baseline" instructs. "The conceptual equipment for reading AI" decorates.
+its baseline" instructs; "the conceptual equipment for reading AI" decorates.
 
 Write flat declaratives that carry consequences. Vary the rhythm. A prompt whose sentences all land the same beat
 teaches the writer that beat. Name a rule or a test after what it does ("the
