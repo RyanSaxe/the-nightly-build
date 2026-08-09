@@ -8,9 +8,9 @@ tell named below fails that test.
 
 ## The headline
 
-Subject, verb, and the surprise in the first words. A reader scanning the
-front page grants a headline three or four words, so the concrete news goes
-in them, ahead of every qualifier.
+Subject, verb, and the surprise in the first words. Put the concrete news in the
+opening words, ahead of every qualifier, because a scanning reader may not
+reach the rest.
 
 - **State the finding, with its actors named.** "Steve Ballmer was an
   underrated CEO" (Dan Luu) and "Ghostty Is Now Non-Profit" (Mitchell
@@ -27,7 +27,7 @@ in them, ahead of every qualifier.
   learn?" (Julia Evans) is honest because the post commits to an answer.
   Betteridge's law names the other kind: a headline ending in a question mark
   so the writer never has to stand behind a claim.
-- **The colon subtitle is the loudest machine tell.** "X: How Y Changed Z" and
+- **The colon subtitle is a machine tell.** "X: How Y Changed Z" and
   "Company: The Adjective Noun and the Adjective Noun" are templates any topic
   drops into. A colon survives only when both halves inform, as in "git
   branches: intuition & reality" (Evans). When the right half is atmosphere,
@@ -74,8 +74,8 @@ the recent library's deks before settling on one.
 
 Each heading is a step of the argument, written in the piece's own nouns. A
 reader skimming only the headings should be able to reconstruct what the
-piece argues and in what order. When the piece would read the same with its
-headings deleted, they were scaffolding, and scaffolding slots ("Background",
+piece argues and in what order. When a heading would fit any article on any
+subject, it is scaffolding, and scaffolding slots ("Background",
 "Implications", "The Road Ahead", "Key Takeaways") are the machine tell. The
 `data-nb-section` label mirrors its heading, short and concrete. Fixed
 headings a template mandates ("Sources") are furniture and exempt. Every heading the writer names is held to this standard.

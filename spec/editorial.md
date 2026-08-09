@@ -27,7 +27,7 @@ consistent within a piece.
 ## Teach, don't summarize
 
 The reader finishes knowing how to think about the topic. Each
-section spends what the last one taught. A section the reader could have read first is in
+section spends what the last one taught. A section that spends nothing an earlier one taught is in
 the wrong place. Cut any sentence that adds nothing new. Define each term of art the
 declared reader does not hold in the sentence where it first appears. Assume the rest.
 Ground abstract claims in a worked example.
@@ -63,14 +63,14 @@ meets the same bar as any analysis: cited, reasoned, shown.
 
 ## Numbers
 
-Concrete figures beat vague magnitudes. Ranges with sources beat false precision. Give
-every number a comparison the reader already knows. Say plainly what is unknown.
+Concrete figures beat vague magnitudes. Ranges with sources beat false precision. Anchor a figure the reader
+cannot scale on their own to a comparison they already hold. Say plainly what is unknown.
 
 ## Clarity
 
 An article is understood on the first read or it has failed. Abstraction is the usual
-reason it fails: every abstract noun asks the reader to carry something unstated, and a
-weak argument is easy to hide inside one. Prefer the concrete. Reach for an abstraction only when
+reason it fails: an abstract noun the article has not built up asks the reader to
+carry something unstated, and a weak argument is easy to hide inside one. Prefer the concrete. Reach for an abstraction only when
 the abstraction itself is the subject, and build it up like any other term.
 
 Name a thing one way and keep that name. Once a term is set, reuse it exactly. A synonym

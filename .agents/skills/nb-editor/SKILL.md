@@ -44,8 +44,8 @@ Verify display text descriptor by descriptor, not only as a claim: the
 headline, the dek, and every subhead. A true claim can carry a false label.
 Check every named person's title, role, and affiliation against the owning
 primary. Check every place, date, and quantity in display text the same way.
-A reader who reads nothing else keeps the display text, so a wrong label there
-is the costliest and most visible error the paper can print.
+A wrong label in display text reaches every reader, including the ones who
+read nothing else.
 
 Audit every `data-nb-kind`. A primary owns the claim. A secondary reports on
 it from outside the authoring party, and a different website is not

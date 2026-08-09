@@ -71,7 +71,7 @@ Quote enough of the piece to hear it, usually a few sentences. A clause on its
 own does not show the rhythm. Take each passage from a different part of the
 piece, since quoting the same sentences again shows nothing new. Two or three
 passages per exemplar is the range. One passage is not enough to show a voice,
-and a fourth is usually padding.
+and a fourth adds nothing.
 
 Quote the passage as it was written. Simplifying its technical vocabulary to
 make it easier to read changes the thing you are showing, because the exact
@@ -135,7 +135,7 @@ against a different series.
 
 ## Verify every quotation before reporting
 
-A fabricated quotation is the worst thing this role can produce. It puts words
+A fabricated quotation puts words
 in a named writer's mouth and ships them in a public file, and no later role
 checks it, because a plausible quotation is the one nobody thinks to check.
 
@@ -165,9 +165,8 @@ memory, however true the point it illustrates. Cut one and the exemplar may
 drop below two passages; go back to the piece for another rather than keeping a
 quotation you could not confirm.
 
-Do not choose passages for how easy they are to verify. Short, plain, unpunctuated
-sentences check quickly and show the least. Pick the passage that shows the
-writing, then do the work of confirming it.
+Do not choose passages for how easy they are to verify. Pick the passage that
+shows the writing, then do the work of confirming it.
 
 ## Complete the invocation
 

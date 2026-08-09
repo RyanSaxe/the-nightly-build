@@ -37,7 +37,7 @@ prose.
 ## Draft from evidence
 
 Before drafting, identify the facts and concepts without which the piece cannot
-work. Most belong near the opening. If the evidence cannot supply one, return
+work, and place each where the reader first needs it. If the evidence cannot supply one, return
 a precise researcher request instead of writing around the hole. Do the same
 when a concrete sentence or structural decision exposes an ambiguity in the
 voice guide.
@@ -83,7 +83,8 @@ Follow these universal rules:
 
 ## Do original work
 
-Name the piece's one act of original work in a sentence. It must identify what
+Name in one sentence what the article does to the evidence that the evidence
+does not do itself. It must identify what
 the article does to the evidence that the evidence does not do itself, and the
 work must be visible in the article. If you cannot write that sentence, the
 article is not done.
@@ -100,7 +101,7 @@ changed and inspect the rendered result.
 
 Before handing off, self-test the draft: confirm the original-work sentence
 still holds, then make the display-text pass. An error here costs a full
-editor round and is the paper's most visible kind:
+editor round and reaches readers who never open the body:
 
 - Check every date, number, name, title, and place in the headline, dek, and
   subheads against the evidence record.

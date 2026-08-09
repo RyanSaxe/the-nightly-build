@@ -3,7 +3,7 @@
 An article's chart is a PNG the writer renders at production time from a
 committed plotly script. The script is the chart's provenance: it carries the
 data (inline literals, or a sibling `.csv`/`.json` it reads) and publishes
-with the article, so a reader can always see the numbers behind the pixels.
+with the article, so the data behind a chart is published with it.
 
 Install the repository-managed chart toolchain once:
 

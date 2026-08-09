@@ -39,9 +39,9 @@ the orchestrator rather than reconstructing it yourself.
 5. Classify every source as primary or secondary and state why. A primary owns
    the claim. A secondary reports on it from outside the authoring party. The
    test is authorship and stake, not document type or domain.
-6. Search for what breaks the commission's angle. Contradictory evidence is the
-   record's most valuable line. Meet source counts with sources that change the
-   interpretation, never padding.
+6. Search for what breaks the commission's angle. Record contradictory evidence
+   in full; the editor uses it to test the angle. Meet source counts with
+   sources that change the interpretation, never padding.
 
 ## Write the evidence record
 
@@ -65,8 +65,8 @@ A repetition supports that a claim was made, not that it is true.
 
 When the record names a person or body, give it the exact title, role, and
 affiliation the primary states. A headline inherits whatever label the record
-carries, so an imprecise one becomes the paper's most visible error: a regional
-bank president recorded as a "governor" reaches the reader as fact.
+carries, so an imprecise one reaches the reader as fact in the largest type on
+the page: a regional bank president recorded as a "governor".
 
 ### Contradictions
 

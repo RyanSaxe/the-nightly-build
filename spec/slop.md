@@ -31,14 +31,15 @@ does not flatten a piece.
 Slop collects at edges: the first and last sentence of a paragraph, of a
 section, and of the article. Those positions feel like they need a sentence, so
 a writer with nothing left to add writes one. Test every edge even when the
-middles read clean, and expect the article's last sentence to be its worst.
+middles read clean, and test the article's last sentence most carefully: it is
+the position with the least left to say.
 
 An opening sentence has no earlier sentence to introduce its nouns. A definite noun
 phrase whose referent appears only in the briefing reads as complete to
 everyone who wrote the brief, and as a dangling reference to the reader who
 arrived from a link.
 
-Delete. Do not repair. Rewriting usually produces a slop sentence that sounds
+Delete. Do not repair. Rewriting produces a slop sentence that sounds
 better, because the fault is that the writer had nothing to say there. Write a
 replacement only when something real was waiting to be said.
 
@@ -52,10 +53,10 @@ none of them still goes if it fails the test above.
   an assessment. "That limit is itself part of the design" and "the difficulty here should not
   be understated" name nothing a reader could check.
 - **Negative parallelism.** "X is not Y, it is Z" and its cousins ("not just X
-  but Y", "X rather than Y"). This is the paper's most common tell by a wide
-  margin. It stays only where the misconception it corrects is real and named,
-  and falls wherever the "not" clause is a strawman the sentence invented. Two
-  earned contrasts in a piece is already a lot.
+  but Y", "X rather than Y"). This is a frequent tell, worth checking on
+  every draft. It stays only where the misconception it corrects is real and named,
+  and falls wherever the "not" clause is a strawman the sentence invented. An
+  earned contrast is rare, so check each against a misconception the piece names.
 - **Unearned punchlines.** Any sentence engineered to sound quotable while
   carrying little. Announcing stakes the argument has not built is one form
   ("that's the whole point", "here's the kicker", "the catch is"), and the
@@ -101,6 +102,6 @@ to say something.
 
 Every role, and every file a role writes. The editor is the one who cuts slop
 out of a draft, but a commission, a brief, an evidence record, a voice guide,
-or an editorial review written in slop does more damage than one bad article:
-the writer reads those files and learns the register they are written in. Hold
+or an editorial review written in slop reaches every article that reads it,
+because the writer learns the register those files are written in. Hold
 your own artifact to this standard before you hand it on.
