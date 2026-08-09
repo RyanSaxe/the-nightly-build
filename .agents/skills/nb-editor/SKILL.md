@@ -193,7 +193,8 @@ support.
 
 A flat sentence, a soft ending, a section in the wrong order, or a component
 doing no work are yours to fix. Route one only when the fix needs reporting you
-do not have.
+do not have, or when so much of the piece is like it that a redraft is the
+honest answer.
 
 Log every change you make in the review.
 
