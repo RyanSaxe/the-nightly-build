@@ -25,7 +25,7 @@ Refresh a separate checkout of `library`, then run:
 nb duty --library <library-checkout>
 ```
 
-When it exits 2, it has refused the tree and printed the reason on stderr.
+When it exits 2, it has rejected the library checkout and printed the reason on stderr.
 Repair exactly that and rerun the command. A missing press is an error.
 `examples/` is documentation, never live configuration. If no work is due,
 finish without opening a PR.

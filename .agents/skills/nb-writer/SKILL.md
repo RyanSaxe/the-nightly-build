@@ -21,8 +21,7 @@ inputs do not settle it.
 
 Reread the voice guide before drafting and before every revision. Its opening
 section says how this article should sound, and the exemplar blocks under it
-show what that sounds like in real prose. Use them to hear how the writing
-moves. Reuse the subject's terms of art exactly, as the standard requires, but
+show what that sounds like in real prose. Read them for rhythm and register. Reuse the subject's terms of art exactly, as the standard requires, but
 never carry over a phrasing that belongs to the quoted writer: their wording
 stays theirs, and the editor checks the draft against those passages. The guide
 is not a list of sentences to produce, so nothing in it obliges you to write a
@@ -55,7 +54,7 @@ placeholder and sample. Fill each required section once, and create only
 subject-specific flexible sections. Outline the reasoning before naming
 sections so an old article's shape does not become this article's template.
 
-Follow these universal rules:
+Follow these rules:
 
 - Number sources in first-citation order. Carry the evidence record's source
   kind into `data-nb-kind="primary"` or `data-nb-kind="secondary"`. Source
@@ -123,7 +122,7 @@ claim set. Rerun the complete proof.
 Write `draft-handoff.md` with exactly what no other file carries: the
 original-work sentence, the proof result with any warnings intentionally left,
 and any open evidence or voice question. On a revision, add one line per
-editorial request resolved. The article and its diff speak for themselves, so
+editorial request resolved. The article and its diff carry that already, so
 do not inventory paths or furniture.
 
 After `BLOCK: 0`, report the draft-handoff path and any warning intentionally

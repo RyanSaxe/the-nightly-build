@@ -37,7 +37,7 @@ nb chart library/<series>/<slug>/chart-1.py
 The tool registers the paper's `nb` plotly template as the default before the
 script runs, so a bare figure comes out already in the house style:
 fixed light chart paper (a PNG cannot follow the reader's theme, so it
-behaves like a photograph on the figure card), series colors from the press
+renders identically in both themes), series colors from the press
 theme's `--chart-1..6` tokens in order, and a line-dash and marker cycle so
 series never differ by color alone. The full plotly API is available when a
 chart needs more than the default look; keep axes labeled, note a non-linear

@@ -35,6 +35,6 @@ counterexample. Predict subject choice, article contribution, source strategy,
 structure, and likely failure. Revise the prompt when the output depends on an
 unstated assumption or repeats the same geometry across cases.
 
-Do not call a prompt exemplary because it is detailed. It is exemplary when a
-strong model has enough specific judgment to make good choices without being
-boxed into yesterday's answer.
+A detailed prompt is not thereby a good one. A prompt works when a strong model
+has enough specific judgment to make good choices without repeating the last
+article's.

@@ -1,6 +1,6 @@
 # Design the paper
 
-Choose the narrowest design surface:
+Choose the smallest thing that can change:
 
 - For masthead, tokens, typography, theme, or paper-wide voice, read
   `docs/guides/customize/appearance-and-voice.md`.

@@ -1,6 +1,6 @@
 # Headlines, deks, and section headings
 
-This file defines the standard for the three surfaces a reader meets first.
+This file defines the standard for the three lines a reader meets first.
 The prose rules of `spec/editorial.md` and `spec/slop.md` apply here word for
 word. One test
 governs all three: the line commits to something the piece establishes. Every
@@ -19,7 +19,7 @@ reach the rest.
   what it delivers.
 - **Let a fresh verb carry it, in the present tense for events.** The classic
   headline pair: "Students applaud later start times" reports the event from
-  the side that felt it. "Officials approve schedule change" files a form.
+  the side that felt it. "Officials approve schedule change" reports the same event as paperwork.
 - **Numbers earn their spot when they are the story.** "Building a World Map
   with only 500 bytes" (Simon Willison): the figure is the surprise, so it
   sits in the headline.
@@ -38,8 +38,8 @@ reach the rest.
   the dek or the body.
 - **Anchor wit in the story's own nouns, with a plain dek beside it.** The
   Economist headlined a meat-producer merger "A steak in the market" and
-  could afford to, because the standfirst under it stated the argument
-  plainly. Wordplay on an abstraction does not land, and no pun
+  could afford to, because the dek under it stated the argument
+  plainly. Wordplay only works on the story's own nouns, and no pun
   substitutes for the dek.
 
 All of the above, at once: a piece that found two chip CEOs reading the
@@ -58,8 +58,7 @@ corporate tale of what happens when a top executive at a $6 billion
 public company can't stop tweeting" works because the dollar figure and the
 verb do the identifying. "The fascinating tale of a San Francisco-based
 executive" decorates without informing. One lean sentence, a stance and not
-a topic, and no detail that competes with the thesis for the reader's first
-impression.
+a topic, and no detail that pulls attention from the thesis.
 
 `spec/slop.md` bans the negative-parallelism reflex in body prose, and the
 dek gets no exemption. Three dek molds carry it: the semicolon reversal ("X

@@ -78,8 +78,8 @@ make it easier to read changes the thing you are showing, because the exact
 words a practitioner uses are part of why the writing sounds like one.
 
 Pick passages this article can use. A writer's most characteristic move is not
-always one that belongs in the genre you are briefing, and a personal blog can
-close an aside with a shrug at its own readers where a lesson cannot. Choose
+always one that belongs in the genre you are briefing. A personal blog can end
+an aside with a joke at its readers' expense. An explanatory piece cannot. Choose
 the passages whose quality carries over to the piece being written, and leave
 the ones that only work in the exemplar's own format.
 

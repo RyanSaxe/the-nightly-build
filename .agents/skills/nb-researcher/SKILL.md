@@ -33,7 +33,7 @@ the orchestrator rather than reconstructing it yourself.
 4. Confirm every recorded URL. A 403, paywall, or fetch restriction is gated,
    not dead. Try an appropriate browser request before giving up. Record the
    address where the source lives, never the transport it was fetched through.
-   A fetch endpoint can return the text and still strand the person who clicks
+   A fetch endpoint can return the text and still fail the reader who clicks
    it. Resolve it to the document's own page, unless the endpoint itself is
    the artifact the article examines, recorded deliberately with the reason.
 5. Classify every source as primary or secondary and state why. A primary owns

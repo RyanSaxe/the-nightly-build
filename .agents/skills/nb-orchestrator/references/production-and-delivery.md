@@ -9,8 +9,8 @@ bounded editorial decisions.
 Launch every commissioned article at once. When isolated children are
 available, fire each article's `nb-writing-coach` and `nb-researcher` together
 in one burst at the start of production. Do not stage a warmup article and do
-not hold one article's roles for another's progress. Wall-clock is the slowest
-single article's chain, so any late start lands on the critical path.
+not hold one article's roles for another's progress. The edition finishes when its
+slowest article finishes, so start every article at once.
 
 A series that sets `voice_guide` in its `series.yaml` has already settled how
 it sounds. `nb start-article` writes that guide into the article's
@@ -79,7 +79,7 @@ while the original invocation is still active. Do not assume silence means
 progress: a role can fail or stall without any notification. Check on any
 invocation that has been silent for more than 10 minutes.
 
-Lastly, interrupt, reassign, or take over only when the owning role cannot
+Interrupt, reassign, or take over only when the owning role cannot
 complete the work.
 
 ## Route repairs without waiving gates
