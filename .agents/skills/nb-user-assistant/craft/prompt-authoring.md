@@ -16,8 +16,10 @@ selected by tag, so the copies cannot drift.
 Write editorial judgment with consequences. Define territory by the principle
 that admits and excludes work. Define evidence by what a claim must survive.
 Define voice by showing it: passages quoted from writers who already sound the
-way the work should sound, each with a note on why it is worth reading. Names
-and adjectives about tone do not carry a voice.
+way the work should sound, each with a note on why it is worth reading. That is
+what a voice guide is for. A paper-wide file in `press/editorial.md` sets a
+register instead, and may name a publication as a reference point, but adjectives
+about tone on their own carry nothing.
 
 ## Critique before shipping
 

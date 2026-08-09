@@ -25,7 +25,7 @@ argument inside them.
       </p>
     </div>
     <p class="nb-side-champion">
-      <span class="nb-side-outlet">NAMED PERSON OR INSTITUTION</span> — WHY THIS
+      <span class="nb-side-outlet">NAMED PERSON OR INSTITUTION</span>. WHY THIS
       HOLDER HAS STANDING ON THE QUESTION.<sup class="nb-cite"
         ><a href="#s2">2</a></sup
       >
