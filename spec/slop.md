@@ -79,7 +79,9 @@ none of them still goes if it fails the test above.
 - **Vague attribution.** "Experts argue", "observers note", "many believe". Name
   who, or cut the claim.
 - **Self-reference.** The piece never narrates itself or its newsroom ("this
-  dossier", "what follows") and never gestures at a hypothetical reader.
+  dossier", "what follows") and never gestures at a hypothetical reader. A
+  template component whose job is to address the reader is the exception, and
+  the exception stops at that component.
 - **Formula.** A closer, section opener, dek, or heading built to the same
   pattern as the last article's. A house catchphrase is the same failure. One
   article cannot show this, so the editor compares against the recent record.

@@ -30,17 +30,11 @@ one test before keeping it: does the reader have, from this lesson or from
 a Background link, every piece this paragraph uses? If not, teach the
 missing piece first, link where it was taught, or cut the paragraph.
 
-Use plain words. A technical term enters only when the lesson cannot
-proceed without it, and it is defined in plain words in the same sentence
-or the one just before. Once a term is defined, reuse it exactly; never
-switch to a synonym for variety. Keep sentences short and single-purpose.
-If a sentence could be misread, rewrite it instead of trusting the next
-sentence to rescue it. Prefer concrete statements. Every abstraction asks
-the reader to hold something unstated in their head, and each one makes
-the lesson harder to follow. Use an abstraction only when the abstraction
-itself is what is being taught, and set it up like any other term. Shorten
-by cutting material, never by packing ideas closer together. If a paragraph
-holds more ideas than it has sentences, it is no longer teaching them.
+The clarity rules in `spec/editorial.md` govern the prose, and a lesson
+leans on them harder than any other template because its reader is new to
+the subject. One rule is stricter here: a technical term enters only when
+the lesson cannot proceed without it, and it is defined in plain words in
+the same sentence or the one just before.
 
 The two bookends are written together, after the body, and they are read
 together. Why this matters gives the reader a real reason to read the
@@ -49,6 +43,11 @@ and what they will understand by the end. The takeaway is what they keep:
 what the lesson found, said plainly enough to carry away and repeat. Both
 speak directly to the reader, in the same plain voice as the body, at
 whatever length clarity needs.
+
+`spec/slop.md` keeps self-reference out of article prose, and these two
+cards are its one exception: addressing the reader is what a bookend is
+for. The exception stops at the card. The body names neither the reader
+nor the lesson.
 
 Write the bookends with the care of a teacher who knows exactly what was
 just taught and who is reading. Every sentence should belong to this
