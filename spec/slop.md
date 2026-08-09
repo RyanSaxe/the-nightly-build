@@ -33,7 +33,7 @@ section, and of the article. Those positions feel like they need a sentence, so
 a writer with nothing left to add writes one. Test every edge even when the
 middles read clean, and expect the article's last sentence to be its worst.
 
-An opening sentence also inherits its referents from nowhere. A definite noun
+An opening sentence has no earlier sentence to introduce its nouns. A definite noun
 phrase whose referent appears only in the briefing reads as complete to
 everyone who wrote the brief, and as a dangling reference to the reader who
 arrived from a link.
@@ -49,8 +49,8 @@ none of them still goes if it fails the test above.
 
 - **Empty conclusions.** A sentence that sounds like a finding and states
   nothing the article established: an idea for a subject, a linking verb, and
-  an assessment. "The tradeoff is genuine, and it is small" and "that limit is
-  itself part of the design" name nothing a reader could check.
+  an assessment. "That limit is itself part of the design" and "the difficulty here should not
+  be understated" name nothing a reader could check.
 - **Negative parallelism.** "X is not Y, it is Z" and its cousins ("not just X
   but Y", "X rather than Y"). This is the paper's most common tell by a wide
   margin. It stays only where the misconception it corrects is real and named,
@@ -91,6 +91,11 @@ the counted lexical tells to `spec/banned-terms.yaml`, which a press extends in
 bind here too. When a count runs over, rewrite rather than substitute: a synonym
 carries the same vagueness, and repunctuating an em-dash keeps the fluff the
 dash was carrying. Delete first, then rewrite what remains.
+
+A template identity or a press editorial file may permit one of these forms
+where its own work needs it, on the terms `spec/editorial.md` sets. The failure
+underneath is not permitted anywhere: a sentence in a permitted form still has
+to say something.
 
 ## Who this binds
 

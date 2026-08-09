@@ -30,11 +30,10 @@ one test before keeping it: does the reader have, from this lesson or from
 a Background link, every piece this paragraph uses? If not, teach the
 missing piece first, link where it was taught, or cut the paragraph.
 
-The clarity rules in `spec/editorial.md` govern the prose, and a lesson
-leans on them harder than any other template because its reader is new to
-the subject. One rule is stricter here: a technical term enters only when
-the lesson cannot proceed without it, and it is defined in plain words in
-the same sentence or the one just before.
+The clarity rules in `spec/editorial.md` govern the prose. One rule is
+stricter here: a technical term enters only when the lesson cannot proceed
+without it, and it is defined in plain words in the same sentence or the one
+just before.
 
 The two bookends are written together, after the body, and they are read
 together. Why this matters gives the reader a real reason to read the
@@ -44,14 +43,10 @@ what the lesson found, said plainly enough to carry away and repeat. Both
 speak directly to the reader, in the same plain voice as the body, at
 whatever length clarity needs.
 
-`spec/slop.md` keeps self-reference out of article prose. These two cards
-address the reader directly, which is what a bookend is for, and that is
-the license this template takes. It covers the two cards and nothing else,
-so the body does not address the reader or narrate its own progress.
-
-Naming an earlier lesson in the body is a different thing and stays open.
-Link one the way you would cite any source, when the reader needs what it
-taught. What the body does not do is talk about itself.
+`spec/slop.md` keeps self-reference out of article prose. These two cards are
+permitted both of the things it rules out: they address the reader, and they
+say what the lesson covers and what the reader will know by the end. That
+permission covers the two cards and nothing else. The body does neither.
 
 Write the bookends with the care of a teacher who knows exactly what was
 just taught and who is reading. Every sentence should belong to this

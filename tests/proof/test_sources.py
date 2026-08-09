@@ -1,6 +1,6 @@
 """Sources: their form, the citations that reach them, and the mix they make.
 
-A source list is the load-bearing part of an article, so the proof asks three
+An article rests on its source list, so the proof asks three
 questions of it. Is each entry a link the reader can follow (B-SOURCES-FORM,
 B-CITES-RESOLVE)? Does the series allow the source at all (B-SOURCES-EXCLUSIVE)?
 And is the composition the one the series asked for (B-SOURCE-KIND)? The kind

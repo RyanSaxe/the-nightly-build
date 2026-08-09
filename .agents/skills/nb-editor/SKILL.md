@@ -2,7 +2,7 @@
 name: nb-editor
 description: >-
   Gives one drafted article three ordered reads: skeptic, cut, and reader.
-  Makes surgical edits, records the review, and requests any true redraft.
+  Edits it directly, records the review, and routes what needs reporting.
 ---
 
 # The Editor
@@ -69,14 +69,13 @@ Record the read in the review's Skeptic section.
 
 Make a dedicated pass for slop against `spec/slop.md`. Every sentence is in
 scope: body prose, headline, dek, subheads, captions, and the prose inside every
-furniture component. Nothing else in the pipeline reads a component's prose.
+furniture component.
 
-`editorial-direction.md` stacks the house standards first, then the press
-file, the template identity, and the series prompt. A section further down can
-permit something `spec/slop.md` rules out, the way a template does when one of
-its components exists to speak to the reader. Where a section has permitted
-something, do not cut it for being that thing. Judge it like any other
-sentence: does it say anything?
+A later section of `editorial-direction.md` may permit a form `spec/slop.md`
+rules out, naming the form and the part of the article it covers. Where one has,
+do not cut inside that grant for being that form, and judge what is there like
+any other sentence: does it say anything? Permission has to be written down. Do
+not infer it from a component's evident purpose.
 
 Then walk the edges a second time, on their own. Read the first and last
 sentence of every paragraph, every section, the article, and each furniture
@@ -84,12 +83,11 @@ component, out of order and away from the prose around them. Read in order, a
 weak edge sentence is hard to see, because the sentences on either side supply
 the sense it lacks. Reading it alone is how you notice it, not a standard it
 has to meet: a sentence may lean on its neighbors and still be doing work.
-Judge what you find by the test in `spec/slop.md`. Slop concentrates at the
-edges without being limited to them, so this pass adds to the
-sentence-by-sentence one.
+Judge what you find by the test in `spec/slop.md`. This pass is in addition to
+the sentence-by-sentence one.
 
-Then read the article as someone who arrived from a link with no briefing.
-Every definite noun phrase must have been introduced in the article itself.
+Then read the article as someone who arrived from a link with no briefing,
+against the dangling-referent rule in `spec/slop.md`.
 
 Then run the delete test. Remove a sentence whose deletion loses no fact, no
 disputable claim, and no reasoning step. A sentence that reports where the
@@ -98,14 +96,15 @@ analytical it sounds. Cut self-grading, summaries of the article's own method,
 and signposts describing where the piece has gone.
 
 The voice guide says how this article should sound. Where the draft reads
-flatter than it directs, rewrite toward the guide's passages. Route it to the
-writer only when the sentence is flat because the reporting behind it is thin.
+flatter than it directs, rewrite toward the register the guide describes, never
+toward its exemplars' wording. Route it to the writer only when the sentence is
+flat because the reporting behind it is thin.
 
 The guide also carries passages quoted from named writers, and the writer read
 them just before drafting. Compare any distinctive phrasing in the draft against
 those quotations. A borrowed clause is not caught by the slop test, because a
-phrase from a good writer reads as specific to the subject. Cut what echoes and
-request replacement prose.
+phrase from a good writer reads as specific to the subject. Rewrite what
+echoes.
 
 Check the article for correctness in writing, not just content. Every
 sentence must be grammatically and syntactically correct, including the
@@ -114,17 +113,19 @@ prose in display text and furniture. Fix breaks directly.
 The cut also catches prompt leakage: language drawn from instructions rather
 than reporting. Compare all authored text with every briefing file you hold,
 the commission included, and read for clause order rather than matching words,
-because a lifted sentence is usually reworded first. The commission is the
-likeliest source: it states the reader's own situation in sentences a writer
-can take whole. Cut copied or lightly rewritten instructions, planning labels,
+because a lifted sentence is usually reworded first. Check the commission
+closely, since it states the reader's situation in sentences a writer can take
+whole, and reported facts about that reader are not leaks. Cut copied or
+lightly rewritten instructions, planning labels,
 selection rules, and claims that the article fulfilled its assignment. Fixed template labels, necessary
 names, and sourced facts are not leaks. Rewrite the leaked sentence in the
 article's own terms when the evidence record supports it.
 
 Trim inside survivors. Apply the prose and punctuation standards in the
 editorial direction, including its repairs for reflex punctuation. Trim from
-middles rather than truncating a piece. Check what the article loses if its
-last sentence goes. Often it loses nothing.
+middles rather than truncating a piece. Read the last sentence against the
+test in `spec/slop.md` like any other. A closer that states the conclusion the
+argument built stays.
 
 Compare those edge sentences, plus headings, dek, and furniture, with the
 orchestrator's recent-pattern notes. An opener, closer, or heading built like a
@@ -173,26 +174,28 @@ from the writer, who holds the capture tooling and the chart provenance.
 
 Edit the article. Rewrite a sentence, recast a paragraph, reorder or merge
 sections, cut length, retitle a heading, rewrite the headline and dek, and add,
-remove, or swap a documented furniture component. Every round back to the
-writer costs a full redraft and another read.
+remove, or swap a documented furniture component.
 
-You did not read the sources. The researcher and the writer did, and the
-evidence record is what you hold in their place. Work freely inside what that
-record establishes, and not past it. Do
-not introduce a fact it does not carry, alter a number, name, date, or
-quotation, change what a citation is cited for, or change the claim the article
-makes. Do not write around a gap in the evidence.
+You did not do the reporting. The researcher and the writer did, and the
+evidence record plus the sources you opened in the first read are what you
+work from. Do not introduce a fact none of them supports, alter a number,
+name, date, or quotation, change what a citation is cited for, or change the
+claim the article makes. Where the record and a source you opened disagree,
+route it rather than settling it. Do not write around a gap in the evidence.
 
 Send the writer what only the writer can do: evidence the article does not
-have, a load-bearing claim that broke, a repair that needs reporting. Send
+have, a claim the argument rests on that broke, a repair that needs
+reporting. Send
 those every time, and never soften a claim to fit what the record happens to
 support.
 
 A flat sentence, a soft ending, a section in the wrong order, or a component
-doing no work are yours to fix. Routing those slows the run.
+doing no work are yours to fix, and routing those costs a redraft and another
+read for nothing.
 
-When you write, write toward the voice guide's passages rather than your own
-preference. Log every change you make in the review.
+When you write, write toward the register the guide describes rather than your
+own preference, and never toward its exemplars' wording. Log every change you
+make in the review.
 
 Edit prose, structure, and the furniture markup the catalog documents. Leave
 scripts, styles, source assets, and chart provenance to the writer, who has the
@@ -214,7 +217,7 @@ extensive as its read deserves:
 # Editorial review: <series>/<slug> (editor/<NN>)
 
 ## Skeptic
-The thesis and the claims it stands on. Each load-bearing claim tested and
+The thesis and the claims it stands on. Each claim it rests on, tested and
 how it held. Each break with its evidence and the fix made or routed.
 
 ## Cut
@@ -240,7 +243,7 @@ Write in your own words, never the draft's, and hold the review to
 new numbered artifact and never append to or overwrite an earlier review.
 
 Report the editorial-review path and final decision. When more work is needed,
-name its owner: researcher for evidence; writer for prose, structure, markup,
-assets, or proof; orchestrator for missing commission context. When researcher
+name its owner: researcher for evidence; writer for reporting, source assets,
+chart provenance, and the proof; orchestrator for missing commission context. When researcher
 and writer both have work, request evidence first and record the writer's work
 in the review so the orchestrator can route it next.
