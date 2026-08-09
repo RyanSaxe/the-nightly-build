@@ -80,10 +80,13 @@ sentence: does it say anything?
 
 Then walk the edges a second time, on their own. Read the first and last
 sentence of every paragraph, every section, the article, and each furniture
-component, out of order and away from the prose around them. In sequence, a
-weak edge sentence passes as part of the paragraph instead of standing on its
-own. Slop concentrates at the edges without being limited to them, so this pass
-adds to the sentence-by-sentence one.
+component, out of order and away from the prose around them. Read in order, a
+weak edge sentence is hard to see, because the sentences on either side supply
+the sense it lacks. Reading it alone is how you notice it, not a standard it
+has to meet: a sentence may lean on its neighbors and still be doing work.
+Judge what you find by the test in `spec/slop.md`. Slop concentrates at the
+edges without being limited to them, so this pass adds to the
+sentence-by-sentence one.
 
 Then read the article as someone who arrived from a link with no briefing.
 Every definite noun phrase must have been introduced in the article itself.
