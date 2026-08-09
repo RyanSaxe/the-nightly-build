@@ -4,19 +4,40 @@ Slop is writing that reads as machine-written. A reader who recognizes it stops
 trusting the article's reporting, which is why it costs the paper more than a
 dull sentence does. The editor cuts it on every article, against this file.
 
-Cutting slop does not mean making the prose dry. A playful piece, a joke, a
-fragment, a short quotable line: none of these are slop, and removing them to
-stay safe is its own failure.
+Cutting slop does not mean making the prose dry. A joke, a fragment, or a
+short quotable line is not slop, and removing them to stay safe is its own
+failure.
 
 ## The test
 
-A slop sentence would survive being moved to another article. Nothing in it is
-tied to this subject. Ask that of any sentence that sounds like the best line
-in its paragraph: could this appear unchanged in a piece about something else?
-If it could, cut it.
+Replace every subject-specific noun in the sentence with a placeholder, then
+read what is left.
 
-A sentence that could only exist in this article is not slop, however light or
-funny.
+A sentence that reported something collapses into a husk, because its nouns
+were carrying it. A frame stays legible, because its shape was carrying it, and
+that shape is a mold the writer filled rather than a thing they found. Cut the
+second kind.
+
+"The tension here is real, and it is structural" reduces to "the X here is real,
+and it is Y", which is a sentence anyone could write about anything. "The board
+met twice in March and adjourned without a vote" reduces to nothing that says
+anything.
+
+Run the test on any sentence that sounds like the best line in its paragraph. A
+joke survives it when the joke depends on the nouns, which is why this test
+does not flatten a piece.
+
+## Where it sits
+
+Slop collects at edges: the first and last sentence of a paragraph, of a
+section, and of the article. Those positions feel like they need a sentence, so
+a writer with nothing left to add writes one. Test every edge even when the
+middles read clean, and expect the article's last sentence to be its worst.
+
+An opening sentence also inherits its referents from nowhere. A definite noun
+phrase whose referent appears only in the briefing reads as complete to
+everyone who wrote the brief, and as a dangling reference to the reader who
+arrived from a link.
 
 Delete. Do not repair. Rewriting usually produces a slop sentence that sounds
 better, because the fault is that the writer had nothing to say there. Write a
@@ -29,8 +50,8 @@ none of them still goes if it fails the test above.
 
 - **Empty conclusions.** A sentence that sounds like a finding and states
   nothing the article established: an idea for a subject, a linking verb, and
-  an assessment ("The gap is real, and it is narrow", "That point is itself
-  part of the problem"). A reader can check none of it.
+  an assessment. "The tradeoff is genuine, and it is small" and "that limit is
+  itself part of the design" name nothing a reader could check.
 - **Negative parallelism.** "X is not Y, it is Z" and its cousins ("not just X
   but Y", "X rather than Y"). This is the paper's most common tell by a wide
   margin. It stays only where the misconception it corrects is real and named,
