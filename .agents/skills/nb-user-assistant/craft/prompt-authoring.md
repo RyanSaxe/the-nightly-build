@@ -19,10 +19,6 @@ Define voice by showing it: passages quoted from writers who already sound the
 way the work should sound, each with a note on why it is worth reading. Names
 and adjectives about tone do not carry a voice.
 
-Use requirements lists only for closed contracts. Territory prose stays open
-ground. Never write sample article sentences. Any line the writer could paste
-into publication is a defect.
-
 ## Critique before shipping
 
 Run five reads:

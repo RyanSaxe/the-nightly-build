@@ -13,10 +13,9 @@ failure.
 Replace every subject-specific noun in the sentence with a placeholder, then
 read what is left.
 
-A sentence that reported something collapses into a husk, because its nouns
-were carrying it. A frame stays legible, because its shape was carrying it, and
-that shape is a mold the writer filled rather than a thing they found. Cut the
-second kind.
+If the sentence was reporting something, what is left makes no sense, because
+the nouns carried it. If it still makes sense, the writer filled in a familiar
+pattern and the subject was interchangeable. Cut the second kind.
 
 "The tension here is real, and it is structural" reduces to "the X here is real,
 and it is Y", which is a sentence anyone could write about anything. "The board
@@ -34,7 +33,7 @@ section, and of the article. Those positions feel like they need a sentence, so
 a writer with nothing left to add writes one. Test every edge even when the
 middles read clean, and expect the article's last sentence to be its worst.
 
-An opening sentence also inherits its referents from nowhere. A definite noun
+An opening sentence has no earlier sentence to introduce its nouns. A definite noun
 phrase whose referent appears only in the briefing reads as complete to
 everyone who wrote the brief, and as a dangling reference to the reader who
 arrived from a link.
@@ -50,8 +49,8 @@ none of them still goes if it fails the test above.
 
 - **Empty conclusions.** A sentence that sounds like a finding and states
   nothing the article established: an idea for a subject, a linking verb, and
-  an assessment. "The tradeoff is genuine, and it is small" and "that limit is
-  itself part of the design" name nothing a reader could check.
+  an assessment. "That limit is itself part of the design" and "the difficulty here should not
+  be understated" name nothing a reader could check.
 - **Negative parallelism.** "X is not Y, it is Z" and its cousins ("not just X
   but Y", "X rather than Y"). This is the paper's most common tell by a wide
   margin. It stays only where the misconception it corrects is real and named,
@@ -70,7 +69,7 @@ none of them still goes if it fails the test above.
   a testament, a turning point, or part of a broader movement. State what
   happened and give the figures that show how big it was.
 - **Reaching for the generic.** The median phrasing where a specific one exists:
-  the drug's name, not "a treatment"; 40 nanometers, not "tiny". Say what you
+  the drug's name, not "a treatment". 40 nanometers, not "tiny". Say what you
   mean and commit where the evidence lets you.
 - **Decorative analysis.** Trailing clauses that supply unattributed opinion in
   the grammar of a finding: "highlighting", "underscoring", "reflecting",
@@ -80,6 +79,8 @@ none of them still goes if it fails the test above.
   who, or cut the claim.
 - **Self-reference.** The piece never narrates itself or its newsroom ("this
   dossier", "what follows") and never gestures at a hypothetical reader.
+  Citing or linking another article the paper published is reporting, not
+  self-reference.
 - **Formula.** A closer, section opener, dek, or heading built to the same
   pattern as the last article's. A house catchphrase is the same failure. One
   article cannot show this, so the editor compares against the recent record.
@@ -90,6 +91,11 @@ the counted lexical tells to `spec/banned-terms.yaml`, which a press extends in
 bind here too. When a count runs over, rewrite rather than substitute: a synonym
 carries the same vagueness, and repunctuating an em-dash keeps the fluff the
 dash was carrying. Delete first, then rewrite what remains.
+
+A template identity or a press editorial file may permit one of these forms
+where its own work needs it, on the terms `spec/editorial.md` sets. The failure
+underneath is not permitted anywhere: a sentence in a permitted form still has
+to say something.
 
 ## Who this binds
 

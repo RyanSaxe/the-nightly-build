@@ -6,7 +6,12 @@ The standard is prescriptive on purpose. Its job is to make the default professi
 research-grade writing. It has two parts.
 
 - **Standards a paper cannot loosen.** Sourced claims, teach don't summarize,
-  earned analysis, and the prose failures `spec/slop.md` rules out.
+  earned analysis, and the prose failures `spec/slop.md` rules out. A template
+  or a press may allow one of those prose failures where its own work needs it.
+  `spec/slop.md` bans self-reference, for instance, and the lesson template
+  allows its two bookend cards to address the reader. Say which failure is
+  allowed and where. Nothing loosens sourced claims, teaching, or earned
+  analysis.
 - **Defaults a paper may override.** Everything that is taste rather than quality:
   register, formality, the assumed reader and that reader's background, how far to
   press a judgment, and any other choice of that kind. These belong to
@@ -82,8 +87,7 @@ sentences, it is no longer explaining them.
 
 The house register is a serious paper, not a feed. It is a default, and a press
 may move it. `spec/slop.md` is the standard for prose that reads as
-machine-written. It binds every article at every register, and nothing a press
-sets below loosens it.
+machine-written. It binds every article at every register.
 
 Register and formality belong to `press/editorial.md`, which a paper writes for
 itself, and to the article's voice guide, which sets how one piece should
@@ -130,8 +134,9 @@ moral. Let the teaching and the citations equip the reader to go further.
 
 Use inline `<code>` only when the reader must preserve a string's exact spelling: something
 they could type, paste, execute, match, or distinguish character-for-character. It is not
-technical emphasis. Ordinary terms, product names, model names, and prose do not take it;
-neither does every repeat of a literal once the sentence has established it. When several
+technical emphasis. Ordinary terms, product names, model names, and prose do not
+take it. Neither does every repeat of a literal once the sentence has
+established it. When several
 tokens need comparison, give them a table or a code listing instead of turning a paragraph
 into labels.
 
