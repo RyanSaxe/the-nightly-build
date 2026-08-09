@@ -7,9 +7,12 @@ writer's prose. A layer that rambles produces articles that ramble, and a
 layer that lists produces articles that treat the list as everything allowed.
 Slogans in a prompt teach the writer to write slogans. Keep them out of every
 prompt surface.
-This file is the standard every prompt surface is written against. The user
-assistant applies it to every prompt it writes or edits, and engine
-contributors apply it to the shipped layers.
+
+This file is the standard every prompt surface is written against, and
+`spec/slop.md` binds prompt prose exactly as it binds an article. A prompt is
+reread on every run, so slop written into one reaches every article it governs.
+The user assistant applies both to every prompt it writes or edits, and engine
+contributors apply them to the shipped layers.
 
 ## What a prompt carries
 
