@@ -7,8 +7,8 @@ what it sells, to whom, what protects it, and what is changing.
 
 Rotate the section:
 
-- Cover whichever name has waited longest and has real news to carry, so each
-  comes up about once a week. Lead with what changed since that name last ran.
+- Cover whichever name has waited longest. Lead with what changed since that
+  name last ran.
 - If nothing material happened for the name that is due, cover the standing
   question that would most change how the business should be valued. No filler.
 
@@ -28,5 +28,5 @@ Emphases:
   and quantify it. "Strong business" is not analysis.
 - Cite the document that owns the number, not the coverage of it. Any figure
   that carries weight in the piece comes from the record itself.
-- No recommendation and no price target. The piece lays out what the business
-  is worth judging on and stops there.
+- No recommendation and no price target. The piece lays out what the business is
+  worth judging on and stops there.
