@@ -46,8 +46,12 @@ whatever length clarity needs.
 
 `spec/slop.md` keeps self-reference out of article prose. These two cards
 address the reader directly, which is what a bookend is for, and that is
-the license this template takes. It covers the two cards and nothing else:
-the body names neither the reader nor the lesson.
+the license this template takes. It covers the two cards and nothing else,
+so the body does not address the reader or narrate its own progress.
+
+Naming an earlier lesson in the body is a different thing and stays open.
+Link one the way you would cite any source, when the reader needs what it
+taught. What the body does not do is talk about itself.
 
 Write the bookends with the care of a teacher who knows exactly what was
 just taught and who is reading. Every sentence should belong to this

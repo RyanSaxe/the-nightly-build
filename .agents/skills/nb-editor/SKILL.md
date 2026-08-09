@@ -69,24 +69,24 @@ Record the read in the review's Skeptic section.
 
 Make a dedicated pass for slop against `spec/slop.md`. Every sentence is in
 scope: body prose, headline, dek, subheads, captions, and the prose inside every
-furniture component. A component's own sentences fail as often as the body's,
-and nothing else reads them.
+furniture component. Nothing else in the pipeline reads a component's prose.
 
-When a later layer of the editorial direction opens a form `spec/slop.md`
-rules out, do not cut against that layer inside the boundary it names. Judge
-those sentences on whether they carry anything, the same as the rest.
+`editorial-direction.md` stacks the house standards first, then the press
+file, the template identity, and the series prompt. A section further down can
+permit something `spec/slop.md` rules out, the way a template does when one of
+its components exists to speak to the reader. Where a section has permitted
+something, do not cut it for being that thing. Judge it like any other
+sentence: does it say anything?
 
 Then walk the edges a second time, on their own. Read the first and last
 sentence of every paragraph, every section, the article, and each furniture
-component, out of order and away from the prose around them. Read in sequence,
-a weak edge sentence passes as part of the paragraph instead of standing on its
-own. Edges are where slop concentrates, not where it is confined, so this pass
-adds to the sentence-by-sentence one and never replaces it.
+component, out of order and away from the prose around them. In sequence, a
+weak edge sentence passes as part of the paragraph instead of standing on its
+own. Slop concentrates at the edges without being limited to them, so this pass
+adds to the sentence-by-sentence one.
 
 Then read the article as someone who arrived from a link with no briefing.
-Every definite noun phrase must have been introduced in the article itself. A
-phrase whose referent sits only in the commission or the brief resolves for
-you, because you hold those files, and dangles for the reader.
+Every definite noun phrase must have been introduced in the article itself.
 
 Then run the delete test. Remove a sentence whose deletion loses no fact, no
 disputable claim, and no reasoning step. A sentence that reports where the
@@ -121,7 +121,7 @@ article's own terms when the evidence record supports it.
 Trim inside survivors. Apply the prose and punctuation standards in the
 editorial direction, including its repairs for reflex punctuation. Trim from
 middles rather than truncating a piece. Check what the article loses if its
-last sentence goes; often it loses nothing.
+last sentence goes. Often it loses nothing.
 
 Compare those edge sentences, plus headings, dek, and furniture, with the
 orchestrator's recent-pattern notes. An opener, closer, or heading built like a
@@ -180,11 +180,13 @@ not introduce a fact it does not carry, alter a number, name, date, or
 quotation, change what a citation is cited for, or change the claim the article
 makes. Do not write around a gap in the evidence.
 
-Sending work back to the writer is a sign the writing failed. It is not a
-routine step. Send it when the article needs evidence it does not have, when a
-load-bearing claim broke, or when the repair needs reporting you cannot do. A
-flat sentence, a soft ending, a section in the wrong order, or a component
-doing no work are yours.
+Send the writer what only the writer can do: evidence the article does not
+have, a load-bearing claim that broke, a repair that needs reporting. Send
+those every time, and never soften a claim to fit what the record happens to
+support.
+
+A flat sentence, a soft ending, a section in the wrong order, or a component
+doing no work are yours to fix. Routing those slows the run.
 
 When you write, write toward the voice guide's passages rather than your own
 preference. Log every change you make in the review.

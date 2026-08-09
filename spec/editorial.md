@@ -7,8 +7,9 @@ research-grade writing. It has two parts.
 
 - **Standards a paper cannot loosen.** Sourced claims, teach don't summarize,
   earned analysis, and the prose failures `spec/slop.md` rules out. A template
-  or a press may open a form that file bans, and has to say where the license
-  applies. It does not make a sentence with nothing in it publishable.
+  or a press may permit one of those forms where its own work needs it, saying
+  which form and in what part of the article. The sentence written in it still
+  has to say something.
 - **Defaults a paper may override.** Everything that is taste rather than quality:
   register, formality, the assumed reader and that reader's background, how far to
   press a judgment, and any other choice of that kind. These belong to

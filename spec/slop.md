@@ -13,9 +13,9 @@ failure.
 Replace every subject-specific noun in the sentence with a placeholder, then
 read what is left.
 
-If the sentence was reporting something, what is left falls apart, because the
-nouns were doing the work. If it still reads as a sentence, the shape was doing
-the work, and the shape is a mold. Cut the second kind.
+If the sentence was reporting something, what is left makes no sense, because
+the nouns carried it. If it still makes sense, the writer filled in a familiar
+pattern and the subject was interchangeable. Cut the second kind.
 
 "The tension here is real, and it is structural" reduces to "the X here is real,
 and it is Y", which is a sentence anyone could write about anything. "The board
@@ -79,6 +79,8 @@ none of them still goes if it fails the test above.
   who, or cut the claim.
 - **Self-reference.** The piece never narrates itself or its newsroom ("this
   dossier", "what follows") and never gestures at a hypothetical reader.
+  Citing or linking another article the paper published is reporting, not
+  self-reference.
 - **Formula.** A closer, section opener, dek, or heading built to the same
   pattern as the last article's. A house catchphrase is the same failure. One
   article cannot show this, so the editor compares against the recent record.
