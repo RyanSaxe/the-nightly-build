@@ -44,10 +44,10 @@ what the lesson found, said plainly enough to carry away and repeat. Both
 speak directly to the reader, in the same plain voice as the body, at
 whatever length clarity needs.
 
-`spec/slop.md` keeps self-reference out of article prose, and these two
-cards are its one exception: addressing the reader is what a bookend is
-for. The exception stops at the card. The body names neither the reader
-nor the lesson.
+`spec/slop.md` keeps self-reference out of article prose. These two cards
+address the reader directly, which is what a bookend is for, and that is
+the license this template takes. It covers the two cards and nothing else:
+the body names neither the reader nor the lesson.
 
 Write the bookends with the care of a teacher who knows exactly what was
 just taught and who is reading. Every sentence should belong to this

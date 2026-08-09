@@ -79,9 +79,7 @@ none of them still goes if it fails the test above.
 - **Vague attribution.** "Experts argue", "observers note", "many believe". Name
   who, or cut the claim.
 - **Self-reference.** The piece never narrates itself or its newsroom ("this
-  dossier", "what follows") and never gestures at a hypothetical reader. A
-  template component whose job is to address the reader is the exception, and
-  the exception stops at that component.
+  dossier", "what follows") and never gestures at a hypothetical reader.
 - **Formula.** A closer, section opener, dek, or heading built to the same
   pattern as the last article's. A house catchphrase is the same failure. One
   article cannot show this, so the editor compares against the recent record.
@@ -92,6 +90,19 @@ the counted lexical tells to `spec/banned-terms.yaml`, which a press extends in
 bind here too. When a count runs over, rewrite rather than substitute: a synonym
 carries the same vagueness, and repunctuating an em-dash keeps the fluff the
 dash was carrying. Delete first, then rewrite what remains.
+
+## When a later layer disagrees
+
+A template identity, a press editorial file, or a series prompt may need
+something this file rules out. That is allowed, and it is how a paper stays its
+own. The later layer states what it wants and where it applies, and inside that
+boundary it governs; a template whose component exists to address the reader
+licenses that address, in that component.
+
+What no layer licenses away is the failure underneath. A sentence with nothing
+in it is still cut at any register, in any component, on any paper. An
+exception opens a form. It never excuses an empty sentence written in that
+form.
 
 ## Who this binds
 

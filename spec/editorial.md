@@ -82,8 +82,9 @@ sentences, it is no longer explaining them.
 
 The house register is a serious paper, not a feed. It is a default, and a press
 may move it. `spec/slop.md` is the standard for prose that reads as
-machine-written. It binds every article at every register, and nothing a press
-sets below loosens it.
+machine-written. It binds every article at every register. A press or a
+template may open a form that file rules out, on the terms it sets, and no
+layer excuses the failure underneath.
 
 Register and formality belong to `press/editorial.md`, which a paper writes for
 itself, and to the article's voice guide, which sets how one piece should

@@ -72,6 +72,10 @@ scope: body prose, headline, dek, subheads, captions, and the prose inside every
 furniture component. A component's own sentences fail as often as the body's,
 and nothing else reads them.
 
+Where a later layer of the editorial direction opens a form `spec/slop.md`
+rules out, that layer governs inside the boundary it names, and you do not cut
+against it. The form is open; the sentence still has to carry something.
+
 Then walk the edges a second time, on their own. Read the first and last
 sentence of every paragraph, every section, the article, and each furniture
 component, out of order and away from the prose around them. Read in sequence,
