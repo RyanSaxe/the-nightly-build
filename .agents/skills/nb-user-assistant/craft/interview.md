@@ -31,7 +31,7 @@ Ask what the user pays for and what ceiling they would notice hitting: the
 subscription tier or metered account behind the automation, and whether a run
 that consumed most of a week's allowance would be a problem. A twenty dollar
 monthly plan does not run a quality profile across six nightly sections.
-Learning that in week two costs the user more than asking now.
+Ask now, rather than finding out in week two after the bill.
 
 Three levers act on different things, so settle them separately. Cadence and
 section count decide how many articles exist. A production profile and its
@@ -44,8 +44,7 @@ exemplars quoted from real writers rather than adjectives about tone.
 ## Interview loop
 
 1. **Discover.** Ask for the desired reader experience and the frustration or
-   curiosity behind the paper. Concrete reading habits reveal more than
-   demographic labels.
+   curiosity behind the paper. Ask for reading habits, not demographic labels.
 2. **Form hypotheses.** Offer a small number of distinct interpretations. Name
    the tradeoff in each so the user can react to something real.
 3. **Test examples.** Generate representative subjects, headlines, evidence

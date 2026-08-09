@@ -42,6 +42,6 @@ commission is complete.
 - Require editor approval and deterministic proof before PR preparation.
 - Never push or merge directly to `library` or `main`.
 
-Messages coordinate the work; files record it. Use the role package and
+Coordinate through messages. Record through files. Use the role package and
 checkout-owned `nb` command as their current owners rather than copying their
 instructions into briefs.

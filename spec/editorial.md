@@ -27,7 +27,7 @@ consistent within a piece.
 ## Teach, don't summarize
 
 The reader finishes knowing how to think about the topic. Each
-section spends what the last one taught. A section that spends nothing an earlier one taught is in
+section builds on what the last one taught. A section that spends nothing an earlier one taught is in
 the wrong place. Cut any sentence that adds nothing new. Define each term of art the
 declared reader does not hold in the sentence where it first appears. Assume the rest.
 Ground abstract claims in a worked example.
@@ -63,7 +63,8 @@ meets the same bar as any analysis: cited, reasoned, shown.
 
 ## Numbers
 
-Concrete figures beat vague magnitudes. Ranges with sources beat false precision. Anchor a figure the reader
+Give the figure, not the magnitude, and a sourced range rather than a precision
+the source does not support. Anchor a figure the reader
 cannot scale on their own to a comparison they already hold. Say plainly what is unknown.
 
 ## Clarity
@@ -102,7 +103,7 @@ to this.
 
 ## Punctuation
 
-Punctuation sets the pace of a thought, and each mark has one job. Reach for the
+Reach for the
 plainest mark that does the job. When two marks would both work, the plainer one
 is right, and when in doubt the period is the default.
 

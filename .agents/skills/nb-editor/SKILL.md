@@ -28,9 +28,9 @@ If you cannot, that is the first finding. Treat headline and dek as claims, and
 every section subhead and kicker as one too. A dek that grades the article's
 selection or method instead of making a claim about the world requires revision.
 
-Try to break each claim. Push hardest on the one you most want to keep. Open
-the evidence as a map and reopen cited sources as an opponent. Hunt for the
-sentence that retires a claim, not the sentence that permits it. A piece can
+Try to break each claim. Push hardest on the one you most want to keep. Read
+the evidence for what it covers, and reread each cited source looking for what
+breaks the claim rather than what permits it. A piece can
 pass citation by citation while its premise is false.
 
 Confirm that passages support claims, then read their full sentences and

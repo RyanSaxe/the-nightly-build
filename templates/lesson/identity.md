@@ -17,8 +17,7 @@ Background instead of re-teaching it, and it should leave ground a later
 lesson can build on.
 
 Decide what the lesson teaches before drafting, and keep the list short:
-two or three ideas taught completely are worth more than six covered in
-passing. Each idea gets three things: a plain statement of what it is, a
+teach a short list completely rather than a long one in passing. Each idea gets three things: a plain statement of what it is, a
 worked example with real numbers or a real case, and the reason it matters
 here. Finish one idea before starting the next. When the material does not
 fit, cut an idea entirely. It can be its own lesson later. Never keep an
@@ -61,7 +60,7 @@ moved to a different lesson, rewrite it around this lesson's particulars.
 
 Neither bookend summarizes the body. The takeaway teaches nothing new and
 uses no term the body did not set. Neither claims importance in general
-terms: when the stakes are real, they have particulars.
+terms. Name the particular thing at stake.
 
 The Background band lists optional reading, from this library or beyond,
 each row a link and one line on what it covers. The Go deeper band lists

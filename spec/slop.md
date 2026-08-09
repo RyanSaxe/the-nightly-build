@@ -5,8 +5,7 @@ trusting the article's reporting, which is why it costs the paper more than a
 dull sentence does. The editor cuts it on every article, against this file.
 
 Cutting slop does not mean making the prose dry. A joke, a fragment, or a
-short quotable line is not slop, and removing them to stay safe is its own
-failure.
+short quotable line is not slop. Do not cut them to stay safe.
 
 ## The test
 
@@ -61,8 +60,7 @@ none of them still goes if it fails the test above.
   carrying little. Announcing stakes the argument has not built is one form
   ("that's the whole point", "here's the kicker", "the catch is"), and the
   "X is the whole Y" family is another ("that identity is the whole guarantee").
-  A sentence that announces its own stakes has stopped making the argument and
-  started grading it. Quotability never earns a line.
+  Such a sentence grades the argument instead of continuing it.
 - **Fluff.** Filler openings ("In today's fast-paced world"), empty
   connectives, throat-clearing ("As you might know"), and openers that lecture:
   Note, Consider, Imagine.
@@ -94,9 +92,8 @@ carries the same vagueness, and repunctuating an em-dash keeps the fluff the
 dash was carrying. Delete first, then rewrite what remains.
 
 A template identity or a press editorial file may permit one of these forms
-where its own work needs it, on the terms `spec/editorial.md` sets. The failure
-underneath is not permitted anywhere: a sentence in a permitted form still has
-to say something.
+where its own work needs it, on the terms `spec/editorial.md` sets. A sentence
+written in a permitted form still has to say something.
 
 ## Who this binds
 

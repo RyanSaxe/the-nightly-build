@@ -17,8 +17,7 @@ Write the brief before markup:
 - behavior without JavaScript or when an optional library fails
 
 Use representative real content, including the longest plausible label and
-the sparsest valid case. A component designed around lorem ipsum has not been
-designed.
+the sparsest valid case.
 
 ## Implement and inspect
 

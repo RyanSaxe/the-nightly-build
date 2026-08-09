@@ -9,7 +9,7 @@ authors, venue, link) and the abstract verbatim, so the original's own words
 are on record before any commentary.
 
 Rebuild the argument in your own words, your own examples, and the order that
-teaches best; the original's order rarely is. Define each concept at the
+teaches best. Do not assume the original's order does. Define each concept at the
 moment the argument first spends it. Anchor the moments the argument turns on
 in the citations themselves, with an honest `data-nb-locator` and
 `data-nb-note` on the cite, and quote the original's exact sentence in a

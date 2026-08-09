@@ -10,5 +10,5 @@ Pick a current question like an editor:
 - Prefer questions where credentialed people disagree in public, so each side
   has a named holder to quote at full strength.
 - Argue each side from the sources its own believers cite, never from its
-  opponents' summary of it. A side you would not sign is a side you did not
-  research.
+  opponents' summary of it. If you would not sign the side as written, you have
+  not read its own sources yet.
