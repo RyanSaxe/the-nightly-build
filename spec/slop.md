@@ -92,9 +92,11 @@ bind here too. When a count runs over, rewrite rather than substitute: a synonym
 carries the same vagueness, and repunctuating an em-dash keeps the fluff the
 dash was carrying. Delete first, then rewrite what remains.
 
-A template identity or a press editorial file may permit one of these forms
-where its own work needs it, on the terms `spec/editorial.md` sets. A sentence
-written in a permitted form still has to say something.
+A template or a press may allow one of these failures where its own work needs
+it. The lesson template allows its two bookend cards to address the reader,
+which the self-reference entry above otherwise rules out. `spec/editorial.md`
+sets the terms. A sentence written in an allowed form still has to say
+something.
 
 ## Who this binds
 

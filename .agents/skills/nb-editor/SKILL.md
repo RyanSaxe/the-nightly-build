@@ -120,8 +120,9 @@ closely, since it states the reader's situation in sentences a writer can take
 whole, and reported facts about that reader are not leaks. Cut copied or
 lightly rewritten instructions, planning labels,
 selection rules, and claims that the article fulfilled its assignment. Fixed template labels, necessary
-names, and sourced facts are not leaks. Rewrite the leaked sentence in the
-article's own terms when the evidence record supports it.
+names, and sourced facts are not leaks. Cut the leaked sentence when the
+brief's framing was all it carried, and rewrite it in the article's own terms
+when the evidence record supports the point underneath.
 
 Trim inside survivors. Apply the prose and punctuation standards in the
 editorial direction, including its repairs for reflex punctuation. Trim from
