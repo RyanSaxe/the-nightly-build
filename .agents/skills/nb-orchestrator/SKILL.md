@@ -12,9 +12,9 @@ description: >-
 Commission the authorized work, give each editorial role the context it needs,
 and carry every article through publication. Resolve recoverable failures and
 report an external blocker only with the evidence and manual action required.
-It is your job to guarantee publication unless otherwise impossible. Do not
-accept blockers unless there is truly no way to complete the work within your
-allowed contract.
+Publish every authorized article. Exhaust the repairs you own before reporting
+a blocker. Editor approval and a passing proof are the gate, never the obstacle
+to work around.
 
 ## Load production in phases
 

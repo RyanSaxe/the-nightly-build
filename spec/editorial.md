@@ -96,8 +96,9 @@ there, and every article inherits it. No form is forbidden for being
 expressive. What gets cut is writing that fails `spec/slop.md`, at whatever
 register the paper has chosen.
 
-If following a rule here would produce a sentence you would not say aloud,
-break the rule.
+If a rule in this Prose section would produce a sentence you would not say
+aloud, break that rule. Sourcing, teaching, and earned analysis are not subject
+to this.
 
 ## Punctuation
 

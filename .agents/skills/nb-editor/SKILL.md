@@ -82,10 +82,10 @@ Then walk the edges a second time, on their own. Read the first and last
 sentence of every paragraph, every section, the article, and each furniture
 component, out of order and away from the prose around them. Read in order, a
 weak edge sentence is hard to see, because the sentences on either side supply
-the sense it lacks. Reading it alone is how you notice it, not a standard it
-has to meet: a sentence may lean on its neighbors and still be doing work.
-Judge what you find by the test in `spec/slop.md`. This pass is in addition to
-the sentence-by-sentence one.
+the sense it lacks. Read it alone to see it, then judge it in place by the test
+in `spec/slop.md`: a sentence leaning on its neighbors still stays when it
+carries a fact or a reasoning step. This pass is in addition to the
+sentence-by-sentence one.
 
 Then read the article as someone who arrived from a link with no briefing,
 against the dangling-referent rule in `spec/slop.md`.
@@ -192,8 +192,8 @@ those every time, and never soften a claim to fit what the record happens to
 support.
 
 A flat sentence, a soft ending, a section in the wrong order, or a component
-doing no work are yours to fix, and routing those costs a redraft and another
-read for nothing.
+doing no work are yours to fix. Route one only when the fix needs reporting you
+do not have.
 
 When you write, write toward the register the guide describes rather than your
 own preference, and never toward its exemplars' wording. Log every change you
