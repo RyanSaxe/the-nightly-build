@@ -3,9 +3,8 @@
 Appraise, one article each, the techniques that make modern LLM inference
 affordable: what problem each solves, how it works, and what it costs you.
 Each appraisal answers whether to run the technique, never how to study it.
-Label these articles `Appraisal`.
 
-Each appraisal fixes its spine: the plain-abstract furniture (nb-abstract)
+Each appraisal runs in a fixed order: an "In plain language" note (nb-note)
 stating the idea in one jargon-free paragraph, then the mechanism with the
 real numbers, then the holds-up grid (nb-holdsup) weighing what it buys
 against what it costs, then a "Verdict" note (nb-note nb-note-strong)

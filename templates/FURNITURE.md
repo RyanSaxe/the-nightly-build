@@ -20,7 +20,8 @@ folder) and instruct sections to use it in prompt.md.
 
 The catalogue is small on purpose: a few primitives the writer adapts beat a
 component per idea. Retired components (callout, epigraph, aside, cast,
-objectives box, check box, bridge, plain abstract, verdict, grade row, the
+objectives box, check box, bridge, plain abstract, the standalone verdict
+component whose label now lives on a note, grade row, the
 paper template's anchored excerpt) stay styled so the published shelf keeps
 rendering; new articles express those moves through the note below, and a
 claim's judgment lives on the claim card itself.

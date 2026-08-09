@@ -19,7 +19,7 @@ harness model for every role.
   `rs-docket` furniture.
 - `positions/`: an open section rotating a fixed watchlist, one company per
   night, business first.
-- `kernels/`: a sequence course in the lesson genre, with `nb-code` listings
+- `kernels/`: a sequence course on the `article` template, with `nb-code` listings
   and the `hardware`/`benchmarks` tags.
 - `inference-stack/`: a collection of appraisals with per-item tags, live
   `consult` sources, and `required_docs` shown as a commented option.

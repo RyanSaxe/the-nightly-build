@@ -1,7 +1,7 @@
 # The Divide
 
 Take one genuinely contested question in technology, AI, or the policy around
-them, and argue every side at its strongest.
+them, and argue both sides at their strongest.
 
 Pick a current question like an editor:
 
