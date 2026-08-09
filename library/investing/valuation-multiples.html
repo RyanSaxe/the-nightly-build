@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Every valuation multiple hides a discounted cash flow · Investing Course</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "investing",
+        "slug": "valuation-multiples",
+        "template": "lesson",
+        "title": "Every valuation multiple hides a discounted cash flow",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-09",
+        "tags": ["valuation", "multiples", "relative-valuation"],
+        "sources": 6,
+        "words": 2105,
+        "reading_minutes": 9,
+        "dek": "Coca-Cola earns 41 cents on every equity dollar to Verizon's 16, the kind of gap that justifies one business trading at twice the multiple of the other.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Investing Course</div>
+        <h1 class="nb-title">Every valuation multiple hides a discounted cash flow</h1>
+        <p class="nb-dekline">
+          Coca-Cola earns 41 cents on every equity dollar to Verizon's 16, the
+          kind of gap that justifies one business trading at twice the multiple
+          of the other.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-08-09</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A multiple is the number markets actually quote. When someone says a
+          stock trades at 20 times earnings, or that one company is cheaper than
+          another, they are talking in multiples, not in the discounted cash
+          flows this course spent the last four lessons building. You have
+          learned to value a business from the ground up. This lesson connects
+          that work to the shorthand everyone else uses, and answers the
+          question that shorthand invites: when Verizon trades at about a third of
+          NVIDIA's price on the same trailing earnings, is Verizon cheap? By the
+          end you will be
+          able to say what a multiple is, derive one from the same inputs a
+          discounted cash flow model uses, and read a low multiple for what it
+          is worth.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../investing/discounted-cash-flow.html">Three-quarters of a discounted-cash-flow value comes from after the forecast ends</a>:
+            the model a multiple compresses, and where its value comes from.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../investing/cost-of-capital.html">A chipmaker's cost of capital runs more than double a utility's</a>:
+            the discount rate that appears in a multiple as risk.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../investing/free-cash-flow.html">Apple's profit rose while its free cash flow fell</a>:
+            the cash a valuation model actually discounts.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A price divided by a fundamental</h2>
+        <p>
+          Relative valuation prices an asset by what the market pays for
+          comparable assets.<sup class="nb-cite"><a href="#s1">1</a></sup> Prices
+          cannot be compared directly. A $224 share and an $87 share tell you
+          nothing about which business is dearer, because a share is an arbitrary
+          slice of a company. So you divide the price by some fundamental the
+          business produces, earnings or book value or revenue, and compare the
+          ratios instead. That ratio is a multiple.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The most common one is the price-to-earnings ratio, or P/E: the market
+          price of a share divided by the earnings per share behind
+          it.<sup class="nb-cite"><a href="#s2">2</a></sup> Take NVIDIA. For its
+          fiscal year ended January 25, 2026, it reported diluted earnings of
+          $4.90 a share.<sup class="nb-cite"><a href="#s3">3</a></sup> At its
+          close of $223.96 on August 7, 2026, that is a price of 45.7 times those
+          earnings, call it 46.<sup class="nb-cite"><a href="#s4">4</a></sup> The
+          same market data service also lists NVIDIA at 34 times its trailing
+          twelve months of earnings and 22 times the earnings analysts expect
+          next year.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">46×</span
+            ><span class="nb-stat-l">on last full fiscal year</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">34×</span
+            ><span class="nb-stat-l">on trailing twelve months</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">22×</span
+            ><span class="nb-stat-l">on next year's expected earnings</span>
+          </div>
+        </div>
+        <p>
+          One price, three multiples, and they disagree by a factor of
+          two.<sup class="nb-cite"><a href="#s4">4</a></sup> Nothing changed about
+          the company between them. Only the denominator moved, from the year
+          that ended in January, to the most recent twelve months, to the year
+          ahead, and NVIDIA's earnings are climbing fast enough that the choice
+          nearly doubles the number. All three are honestly called NVIDIA's P/E.
+          This is the first discipline of multiples: name the denominator every
+          time, because a multiple without one is ambiguous.
+        </p>
+        <p>
+          There is a second discipline. The numerator and the denominator must
+          belong to the same owners.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          A share price is the value of equity, and earnings per share belong to
+          equity holders, so the P/E is an equity multiple, consistent on both
+          sides. To value the whole business rather than just its equity, you use
+          enterprise value over EBITDA. Enterprise value is the market value of
+          equity plus debt minus cash. EBITDA is earnings before interest, taxes,
+          depreciation, and amortization, the profit available to everyone who
+          financed the firm.<sup class="nb-cite"><a href="#s2">2</a></sup> Both
+          belong to all the capital, debt and equity together. Divide a value that
+          belongs to shareholders by earnings that belong to the whole firm and
+          the ratio means nothing at all.
+        </p>
+      </section>
+
+      <section data-nb-section="justified-multiple" id="justified-multiple">
+        <h2>The multiple a business deserves</h2>
+        <p>
+          The market already quotes a multiple, so why derive one from a model?
+          Because the quoted number is an answer with its reasoning stripped off.
+          Deriving a multiple shows what it would have to be if the business is
+          worth the cash it will hand its owners, and that is what lets you say
+          whether the quoted number makes sense. The derivation is short, and it
+          uses only what the earlier lessons already built.
+        </p>
+        <p>
+          Start where the discounted cash flow lesson ended. A stable business
+          whose payouts grow at a rate <span class="nb-math-in">g</span> forever
+          is worth, in equity terms, next year's payout divided by the cost of
+          equity <span class="nb-math-in">r</span> minus that growth. The payout
+          is the earnings times the share of them paid out, the payout ratio.
+          Divide both sides by next year's earnings and the price becomes a
+          forward P/E.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \text{Forward P/E} = \frac{\text{Payout ratio}}{r - g}
+          </div>
+          <figcaption>
+            The forward P/E of a stable-growth business, straight from the
+            dividend discount model.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          One more substitution ties the payout ratio to how the business runs. A
+          company grows by keeping some earnings and reinvesting them, and the
+          growth it can sustain is the share it keeps times the return it earns on
+          equity, its ROE. So the growth rate fixes the payout: whatever a
+          business does not need to retain to fund its growth, it can pay out,
+          which is <span class="nb-math-in">1 - g/\mathrm{ROE}</span>.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Put that in place of the payout ratio and the multiple stands on three
+          fundamentals alone.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \text{Forward P/E} = \frac{1 - \htmlClass{nb-mc1}{g}/\htmlClass{nb-mc2}{\mathrm{ROE}}}{\htmlClass{nb-mc3}{r} - \htmlClass{nb-mc1}{g}}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">g</span
+              ><span>expected growth rate of earnings.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\mathrm{ROE}</span
+              ><span>return on equity, the profit earned on each dollar shareholders have in the business.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">r</span
+              ><span>cost of equity, the return shareholders require for the risk, from the cost-of-capital lesson.</span>
+            </li>
+          </ul>
+          <figcaption>
+            A stable business's justified forward P/E, built from growth, return
+            on equity, and risk.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Read the formula and the whole logic of pricing falls out of it. The
+          multiple rises with growth. It rises with return on equity, because a
+          business that earns more on each retained dollar can pay out more and
+          still grow. And it falls as risk rises, because a larger
+          <span class="nb-math-in">r</span> in the denominator shrinks the whole
+          fraction.<sup class="nb-cite"><a href="#s2">2</a></sup> Growth, returns,
+          and risk are exactly the inputs a discounted cash flow model turns.
+          They have not disappeared into the multiple. They are folded inside
+          it.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">Justified multiple</span>
+          <p>
+            The multiple a business deserves given its growth, its return on
+            capital, and its risk. It is what the formula produces. It is not the
+            same thing as the multiple the market happens to be quoting.
+          </p>
+        </div>
+        <p>
+          Enterprise value over EBITDA has the same shape, with the cost of
+          capital in place of the cost of equity and the reinvestment a firm
+          needs subtracted in the numerator.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The lesson is the same either way. A multiple is a discounted cash flow
+          compressed into a single number.
+        </p>
+      </section>
+
+      <section data-nb-section="three-companies" id="three-companies">
+        <h2>Three companies, three multiples</h2>
+        <p>
+          Take three businesses whose growth alone spreads them far apart. NVIDIA grew revenue
+          65% in its last fiscal year. The Coca-Cola Company grew about 2%, and
+          Verizon about 2.5%.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Earnings multiples and the fundamentals behind them, at the August 7,
+            2026 close. Multiples are shown on both the last full fiscal year and
+            the trailing twelve months; return on equity is each company's net
+            income over its shareholders' equity from its latest annual
+            filing.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>P/E, last full year</th>
+              <th>P/E, trailing</th>
+              <th>Revenue growth</th>
+              <th>Return on equity</th>
+              <th>Operating margin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">NVIDIA</span></td>
+              <td>45.7</td>
+              <td>34.3</td>
+              <td>+65%</td>
+              <td>76%</td>
+              <td>60%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Coca-Cola</span></td>
+              <td>28.6</td>
+              <td>26.2</td>
+              <td>+2%</td>
+              <td>41%</td>
+              <td>29%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Verizon</span></td>
+              <td>11.6</td>
+              <td>12.3</td>
+              <td>+2.5%</td>
+              <td>16%</td>
+              <td>21%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Start with Coca-Cola, because it is the case the formula explains most
+          cleanly. It grew revenue under 2% as reported, about 5% organically,
+          and yet it holds a trailing multiple near 26.<sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup>
+          A reader trained only to think low growth means a low multiple should
+          find that strange. The formula does not. Coca-Cola earned $13.1 billion
+          on $32.2 billion of equity in 2025, a return on equity near
+          41%.<sup class="nb-cite"><a href="#s5">5</a></sup> Suppose its earnings
+          grow 4% over the long run and its shareholders require 7%, a low rate
+          for a business this steady. The justified forward P/E is then
+          <span class="nb-math-in">(1 - 0.04/0.41)/(0.07 - 0.04)</span>, which
+          works out near 30, in the neighborhood of what the market
+          quotes.<sup class="nb-cite"><a href="#s2">2</a></sup> The growth rate and
+          the cost of equity there are my own estimates, not figures any filing
+          owns, and a point either way moves the answer. What holds regardless is
+          the mechanism. A business that earns 41 cents on the equity dollar
+          barely needs to retain anything to fund 4% growth. So it returns almost
+          all of its earnings to owners, and each earnings dollar is worth a great
+          deal.
+        </p>
+        <p>
+          NVIDIA does not fit the same plug, and it should not. The formula
+          describes a business in stable growth, and a company that grew 65% in a
+          year is nowhere near stable.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          You would value it in two stages, a stretch of high growth and then a
+          settled tail, which is why its full derivation is longer.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The two-stage story is already visible in the table. NVIDIA trades at 34
+          times its trailing earnings but only 22 times next year's.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          The market is pricing earnings it expects to be much larger a year out.
+          The high multiple is the growth, seen through whichever denominator you
+          pick.
+        </p>
+      </section>
+
+      <section data-nb-section="cheap-is-not-cheap" id="cheap-is-not-cheap">
+        <h2>When a low multiple is not cheap</h2>
+        <p>
+          Verizon is the company on the table that looks like a bargain. It trades
+          near 12 times earnings, less than half of Coca-Cola's multiple and a
+          third of NVIDIA's on trailing earnings.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          Cheap compared to what? Run it through the formula. Verizon earned about
+          16% on its equity in 2025.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          Suppose 2.5% long-run growth and a cost of equity of 8.5%, higher than
+          Coca-Cola's because Verizon carries far more debt and more exposure to
+          interest rates. The justified forward P/E is
+          <span class="nb-math-in">(1 - 0.025/0.16)/(0.085 - 0.025)</span>, which
+          is about 14, close to what the market pays.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          A lower return on equity and a higher discount rate pull the deserved
+          multiple down to roughly where the observed one sits.
+        </p>
+        <p>
+          The fundamentals are harder than slow, too. Verizon's earnings per
+          share fell in 2025, to $4.06 from $4.15, and net income attributable to
+          the company slipped to $17.2 billion from $17.5
+          billion.<sup class="nb-cite"><a href="#s6">6</a></sup> It carries about
+          $158 billion of debt and spent $17 billion on capital in the year to
+          hold its position.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          The formula gives the multiple a business
+          deserves. It does not prove the market's quoted multiple equals that
+          number. Relative valuation prices a business off its comparables, so it
+          inherits whatever mistake is priced into those comparables; if a whole
+          sector is dear, every multiple in it looks reasonable against the
+          others.<sup class="nb-cite"><a href="#s1">1</a></sup> The safe claim is
+          the narrow one. Different fundamentals justify
+          different multiples. A low multiple is a hypothesis about a company's
+          growth, returns, and risk, waiting to be tested against those numbers.
+          It is not a verdict that the stock is cheap. To compare two multiples
+          honestly is to compare the two discounted cash flows hidden inside
+          them.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A multiple is a price divided by a fundamental, and the discipline
+          starts with naming that fundamental. NVIDIA is 46 times its last full
+          year, 34 times trailing, and 22 times next year, all of them honestly
+          its P/E. Underneath the shorthand sits the model you already know. The
+          justified P/E is one minus growth over return on equity, all divided by
+          risk minus growth, which means growth, returns on capital, and risk are
+          the only things a multiple prices. That is why Coca-Cola keeps a rich
+          multiple on slow growth, on the strength of a 41% return on equity, and
+          why Verizon stays low at 16% with falling earnings and heavy debt. So a
+          low multiple is not automatically cheap and a high one is not
+          automatically dear. Each is a claim about the business underneath it.
+          Read the fundamentals, and you are reading the discounted cash flow the
+          multiple was hiding all along.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://aswathdamodaran.blogspot.com/">Aswath Damodaran, Musings on Markets</a>:
+            the valuation authority behind this lesson, working real companies in
+            public.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://pages.stern.nyu.edu/~adamodar/">Damodaran Online</a>:
+            his current data on multiples by industry, and the full lecture notes
+            the derivation comes from.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/country/relval.pdf"
+              data-nb-locator="Standardizing Value, slide 4; Propositions 1-2, slides 6-7; PE and Fundamentals, slide 15; Is low PE cheap, slide 23"
+              >Aswath Damodaran, NYU Stern · Relative Valuation (lecture notes)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pages.stern.nyu.edu/~adamodar/pdfiles/val3ed/c18.pdf"
+              data-nb-locator="PE definition, p. 468; DCF perspective on PE, pp. 471-472; determinants, p. 472; EV/EBITDA, pp. 502-504"
+              >Aswath Damodaran · Investment Valuation, 3rd ed., Ch. 18 "Earnings Multiples"</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-fourth-quarter-and-fiscal-2026"
+              data-nb-locator="Full-year FY2026 results; condensed statements of operations and balance sheet"
+              >NVIDIA Corporation · Financial Results for Q4 and Fiscal 2026</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://stockanalysis.com/stocks/nvda/"
+              data-nb-note="Closing prices and ready-made trailing and forward P/E for NVDA, KO, and VZ on Aug 7, 2026; the market owns the price, this source reports it"
+              >stockanalysis.com · NVDA, KO, VZ quotes and ratios (Aug 7, 2026 close)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/21344/000162828026006642/a2025q4earningsreleaseex-9.htm"
+              data-nb-locator="Full-year 2025 condensed consolidated statements of income and balance sheets"
+              >The Coca-Cola Company (KO) · Form 8-K Exhibit 99.1, FY2025 results</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.verizon.com/about/sites/default/files/2026-02/vz_4q25_foi_013026r.pdf"
+              data-nb-locator="Full-year 2025 income statement (p. 3), balance sheet (p. 4), cash flows (p. 6)"
+              >Verizon Communications Inc. · Financial and Operating Information, Dec 31, 2025</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
