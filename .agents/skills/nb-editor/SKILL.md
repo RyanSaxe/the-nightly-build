@@ -72,9 +72,9 @@ scope: body prose, headline, dek, subheads, captions, and the prose inside every
 furniture component. A component's own sentences fail as often as the body's,
 and nothing else reads them.
 
-Where a later layer of the editorial direction opens a form `spec/slop.md`
-rules out, that layer governs inside the boundary it names, and you do not cut
-against it. The form is open; the sentence still has to carry something.
+When a later layer of the editorial direction opens a form `spec/slop.md`
+rules out, do not cut against that layer inside the boundary it names. Judge
+those sentences on whether they carry anything, the same as the rest.
 
 Then walk the edges a second time, on their own. Read the first and last
 sentence of every paragraph, every section, the article, and each furniture
@@ -170,26 +170,24 @@ from the writer, who holds the capture tooling and the chart provenance.
 
 Edit the article. Rewrite a sentence, recast a paragraph, reorder or merge
 sections, cut length, retitle a heading, rewrite the headline and dek, and add,
-remove, or swap a documented furniture component. A desk that cannot change
-what it prints is not editing, and every round back to the writer costs a full
-redraft and another read.
+remove, or swap a documented furniture component. Every round back to the
+writer costs a full redraft and another read.
 
-One fact bounds all of it: you did not read the sources. The researcher and the
-writer did, and the evidence record is what you hold in their place. Work
-freely inside what that record already establishes and never past its edge. Do
+You did not read the sources. The researcher and the writer did, and the
+evidence record is what you hold in their place. Work freely inside what that
+record establishes, and not past it. Do
 not introduce a fact it does not carry, alter a number, name, date, or
 quotation, change what a citation is cited for, or change the claim the article
 makes. Do not write around a gap in the evidence.
 
-Sending work back to the writer means the writing failed, not that the process
-advanced. Send it when the article needs evidence it does not have, when a
+Sending work back to the writer is a sign the writing failed. It is not a
+routine step. Send it when the article needs evidence it does not have, when a
 load-bearing claim broke, or when the repair needs reporting you cannot do. A
 flat sentence, a soft ending, a section in the wrong order, or a component
 doing no work are yours.
 
-When you write, write toward the voice guide's passages and not toward your own
-preference, because your median is the thing the guide exists to displace. Log
-every change you make in the review so the record shows your hand.
+When you write, write toward the voice guide's passages rather than your own
+preference. Log every change you make in the review.
 
 Edit prose, structure, and the furniture markup the catalog documents. Leave
 scripts, styles, source assets, and chart provenance to the writer, who has the

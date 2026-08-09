@@ -6,7 +6,9 @@ The standard is prescriptive on purpose. Its job is to make the default professi
 research-grade writing. It has two parts.
 
 - **Standards a paper cannot loosen.** Sourced claims, teach don't summarize,
-  earned analysis, and the prose failures `spec/slop.md` rules out.
+  earned analysis, and the prose failures `spec/slop.md` rules out. A template
+  or a press may open a form that file bans, and has to say where the license
+  applies. It does not make a sentence with nothing in it publishable.
 - **Defaults a paper may override.** Everything that is taste rather than quality:
   register, formality, the assumed reader and that reader's background, how far to
   press a judgment, and any other choice of that kind. These belong to
@@ -82,9 +84,7 @@ sentences, it is no longer explaining them.
 
 The house register is a serious paper, not a feed. It is a default, and a press
 may move it. `spec/slop.md` is the standard for prose that reads as
-machine-written. It binds every article at every register. A press or a
-template may open a form that file rules out, on the terms it sets, and no
-layer excuses the failure underneath.
+machine-written. It binds every article at every register.
 
 Register and formality belong to `press/editorial.md`, which a paper writes for
 itself, and to the article's voice guide, which sets how one piece should

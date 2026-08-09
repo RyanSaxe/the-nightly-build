@@ -13,10 +13,9 @@ failure.
 Replace every subject-specific noun in the sentence with a placeholder, then
 read what is left.
 
-A sentence that reported something collapses into a husk, because its nouns
-were carrying it. A frame stays legible, because its shape was carrying it, and
-that shape is a mold the writer filled rather than a thing they found. Cut the
-second kind.
+If the sentence was reporting something, what is left falls apart, because the
+nouns were doing the work. If it still reads as a sentence, the shape was doing
+the work, and the shape is a mold. Cut the second kind.
 
 "The tension here is real, and it is structural" reduces to "the X here is real,
 and it is Y", which is a sentence anyone could write about anything. "The board
@@ -90,19 +89,6 @@ the counted lexical tells to `spec/banned-terms.yaml`, which a press extends in
 bind here too. When a count runs over, rewrite rather than substitute: a synonym
 carries the same vagueness, and repunctuating an em-dash keeps the fluff the
 dash was carrying. Delete first, then rewrite what remains.
-
-## When a later layer disagrees
-
-A template identity, a press editorial file, or a series prompt may need
-something this file rules out. That is allowed, and it is how a paper stays its
-own. The later layer states what it wants and where it applies, and inside that
-boundary it governs; a template whose component exists to address the reader
-licenses that address, in that component.
-
-What no layer licenses away is the failure underneath. A sentence with nothing
-in it is still cut at any register, in any component, on any paper. An
-exception opens a form. It never excuses an empty sentence written in that
-form.
 
 ## Who this binds
 
