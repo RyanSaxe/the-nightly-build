@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Two fixes turned a diverging network into a 49-game Atari player · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "deep-q-network",
+        "template": "paper",
+        "title": "Two fixes turned a diverging network into a 49-game Atari player",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-09",
+        "tags": ["machine-learning", "reinforcement-learning", "reproducibility"],
+        "sources": 8,
+        "words": 2907,
+        "reading_minutes": 13,
+        "dek": "Mnih and colleagues stabilized deep Q-learning with experience replay and a frozen target network, and the reproducibility work that followed left the honest 29-of-49 result standing while exposing how much the aggregate “human-level” label was hiding.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Two fixes turned a diverging network into a 49-game Atari player</h1>
+        <p class="nb-dekline">
+          Mnih and colleagues stabilized deep Q-learning with experience replay and a frozen target network, and the reproducibility work that followed left the honest 29-of-49 result standing while exposing how much the aggregate &ldquo;human-level&rdquo; label was hiding.
+        </p>
+        <div class="nb-byline">
+          <span>13 min read</span><span>2026-08-09</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Human-level control through deep reinforcement learning</p>
+          <p class="nb-paper-meta">Mnih, Kavukcuoglu, Silver, et al. · Nature 518, 529&ndash;533 · 2015</p>
+          <a class="nb-paper-link" href="https://www.nature.com/articles/nature14236"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            The theory of reinforcement learning provides a normative account, deeply rooted in psychological and neuroscientific perspectives on animal behaviour, of how agents may optimize their control of an environment. To use reinforcement learning successfully in situations approaching real-world complexity, however, agents are confronted with a difficult task: they must derive efficient representations of the environment from high-dimensional sensory inputs, and use these to generalize past experience to new situations. Remarkably, humans and other animals seem to solve this problem through a harmonious combination of reinforcement learning and hierarchical sensory processing systems, the former evidenced by a wealth of neural data revealing notable parallels between the phasic signals emitted by dopaminergic neurons and temporal difference reinforcement learning algorithms. While reinforcement learning agents have achieved some successes in a variety of domains, their applicability has previously been limited to domains in which useful features can be handcrafted, or to domains with fully observed, low-dimensional state spaces. Here we use recent advances in training deep neural networks to develop a novel artificial agent, termed a deep Q-network, that can learn successful policies directly from high-dimensional sensory inputs using end-to-end reinforcement learning. We tested this agent on the challenging domain of classic Atari 2600 games. We demonstrate that the deep Q-network agent, receiving only the pixels and the game score as inputs, was able to surpass the performance of all previous algorithms and achieve a level comparable to that of a professional human games tester across a set of 49 games, using the same algorithm, network architecture and hyperparameters. This work bridges the divide between high-dimensional sensory inputs and actions, resulting in the first artificial agent that is capable of learning to excel at a diverse array of challenging tasks.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Why the obvious network diverged</h2>
+        <p>
+          Q-learning tells an agent what a move is worth. For a state
+          <span class="nb-math-in">s</span> and an action
+          <span class="nb-math-in">a</span>, the action-value
+          <span class="nb-math-in">Q^{\pi}(s,a)</span> is the expected discounted
+          return from taking <span class="nb-math-in">a</span> in
+          <span class="nb-math-in">s</span> and following the policy
+          <span class="nb-math-in">\pi</span> thereafter, and the optimal
+          <span class="nb-math-in">Q^{*}</span> is the best any policy can do.
+          With a small, discrete state space you can store one number per
+          state-action pair and the theory converges. An Atari screen is not a
+          small state space. It is 210 by 160 pixels at every frame, so the
+          table has to become a function, and the natural choice is a
+          convolutional network reading the raw image.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          The moment the table becomes a neural network, the guarantees fall
+          away. Mnih and colleagues state the problem in one flat sentence:
+          reinforcement learning is &ldquo;known to be unstable or even to
+          diverge when a nonlinear function approximator such as a neural
+          network is used to represent the action-value&rdquo; function.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="p. 529"
+              data-nb-note="The instability the two devices are built to answer."
+              >1</a
+            ></sup
+          >
+          Two features of the setup drive the divergence. Consecutive frames are
+          almost identical, so the gradient updates are heavily correlated and
+          the network chases whatever it saw last. And the same weights that
+          produce a prediction also produce the target that prediction is
+          trained toward, so an update to the network moves its own goalposts.
+          The paper's contribution is not a new objective. It is two devices,
+          experience replay and a separate target network, that make the
+          standard objective trainable.
+        </p>
+      </section>
+
+      <section data-nb-section="objective" id="objective">
+        <h2>The error the network descends</h2>
+        <p>
+          The optimal action-value obeys the Bellman optimality equation: the
+          value of a state-action pair is the immediate reward plus the
+          discounted value of acting optimally from the next state.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            Q^{*}(s,a) = \mathbb{E}_{s'}\!\left[\, r + \gamma \max_{a'} Q^{*}(s',a') \;\middle|\; s,a \,\right]
+          </div>
+        </figure>
+        <p>
+          Q-learning turns that identity into an update. It does not know
+          <span class="nb-math-in">Q^{*}</span>, so it bootstraps: it treats its
+          own current estimate of the best next action as a stand-in for the
+          truth and nudges the prediction toward it. The quantity it nudges is
+          the temporal-difference error, the gap between what the network
+          predicted for the action it took and the reward-plus-discounted-value
+          it observed one step later.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \delta = r + \gamma \max_{a'} Q(s',a';\theta^{-}) - Q(s,a;\theta)
+          </div>
+        </figure>
+        <p>
+          The network is trained to make
+          <span class="nb-math-in">\delta</span> small on the transitions it has
+          lived through, by descending the squared error below.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L(\theta) = \mathbb{E}_{\htmlClass{nb-mc5}{(s,a,r,s')\sim U(D)}}\!\left[\left(\htmlClass{nb-mc2}{r} + \htmlClass{nb-mc3}{\gamma}\,\htmlClass{nb-mc4}{\max_{a'} Q(s',a';\theta^{-})} - \htmlClass{nb-mc1}{Q(s,a;\theta)}\right)^{2}\right]
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">Q(s,a;\theta)</span
+              ><span>The online network's value for the action actually taken. This is the only term being trained; <span class="nb-math-in">\theta</span> are the live weights.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">r</span
+              ><span>The reward, clipped to <span class="nb-math-in">[-1,1]</span> so a game scoring in the thousands does not dominate one scoring in single digits.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\gamma</span
+              ><span>The discount, set to 0.99, weighting future reward against present reward.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\max_{a'} Q(s',a';\theta^{-})</span
+              ><span>The bootstrapped target: the best action value in the next state, read from the frozen weights <span class="nb-math-in">\theta^{-}</span>, not the live ones.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc5">(s,a,r,s')\sim U(D)</span
+              ><span>A transition sampled uniformly at random from the replay memory <span class="nb-math-in">D</span>, not the transition just experienced.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The deep Q-network loss at each step. The
+            <span class="nb-math-in">\max</span> makes it off-policy: the target
+            follows the greedy action regardless of what the agent actually did
+            next, which is what lets replayed experience train it.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="p. 529, Methods">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The two colored choices at the right of the loss are the whole
+          argument. The target is read from <span class="nb-math-in">\theta^{-}</span>,
+          a frozen copy of the weights, and the transition is drawn from a stored
+          memory rather than the live stream. Everything else is ordinary
+          regression. In practice the error itself is clipped to
+          <span class="nb-math-in">[-1,1]</span>, which turns the squared loss
+          into a Huber loss and keeps a single surprising transition from
+          producing a destabilizing gradient.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Methods, Training algorithm">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="stability-devices" id="stability-devices">
+        <h2>How replay and a frozen target buy stability</h2>
+        <p>
+          Experience replay attacks the correlation. Every transition the agent
+          sees is written into a memory of the last million frames, and each
+          gradient step samples a minibatch of 32 uniformly from that memory.
+          A single frame can be reused in many updates, and consecutive frames
+          rarely land in the same batch, so the network trains on a smoothed,
+          shuffled distribution instead of the tightly correlated sequence it
+          is living through.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Methods, Training details">1</a></sup
+          >
+        </p>
+        <p>
+          The target network attacks the moving-goalpost problem. The frozen
+          weights <span class="nb-math-in">\theta^{-}</span> are a snapshot of the
+          online weights, cloned into a second network every
+          <span class="nb-math-in">C</span> steps and held fixed in between. Every
+          target in the loss is computed from that snapshot, so an update to the
+          live network cannot immediately drag its own targets along with it. The
+          paper's own summary is that this delay makes &ldquo;divergence or
+          oscillations much more unlikely.&rdquo;<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="p. 529">1</a></sup
+          >
+          The 2013 workshop version that first learned Atari from pixels already
+          had replay, but it had no separately maintained target network; it held
+          the previous iteration's weights fixed only within an iteration. The
+          Nature paper's additions over that precursor are exactly the ones that
+          bought stability at scale: the periodically cloned target network,
+          reward and error clipping, a larger network, and the jump from seven
+          games to 49.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sections 4&ndash;5">2</a></sup
+          >
+        </p>
+        <p>
+          How much does each device buy? The paper answers with an ablation that
+          trains the agent under all four on-off combinations of the two devices.
+          The effect is not marginal. On Breakout, the full agent scores 316.8;
+          strip out the target network and it falls to 240.7; strip out replay
+          and it collapses to 10.2; remove both and it manages 3.2, roughly a
+          hundredth of the full score.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Average episode score on five games under every on-off combination of
+            experience replay and a separate target network, from shorter
+            ten-million-frame training runs.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Extended Data Table 3"
+                data-nb-note="The quantitative ablation isolating each stability device."
+                >1</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Game</th>
+              <th>Replay + target</th>
+              <th>Replay only</th>
+              <th>Target only</th>
+              <th>Neither</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Breakout</span></td>
+              <td>316.8</td>
+              <td>240.7</td>
+              <td>10.2</td>
+              <td>3.2</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Enduro</span></td>
+              <td>1 006.3</td>
+              <td>831.4</td>
+              <td>141.9</td>
+              <td>29.1</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">River Raid</span></td>
+              <td>7 446.6</td>
+              <td>4 102.8</td>
+              <td>2 867.7</td>
+              <td>1 453.0</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Seaquest</span></td>
+              <td>2 894.4</td>
+              <td>822.6</td>
+              <td>1 003.0</td>
+              <td>275.8</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Space Invaders</span></td>
+              <td>1 088.9</td>
+              <td>826.3</td>
+              <td>373.2</td>
+              <td>302.0</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The grid was run for ten million frames rather than the fifty million
+          of the headline results, so the absolute numbers are not the ones
+          Figure 3 reports; the point is the direction across columns, and it is
+          unambiguous. The two devices are not tuning knobs. Without them the
+          same network and the same loss barely learn Breakout at all.
+        </p>
+      </section>
+
+      <section data-nb-section="results" id="results">
+        <h2>What 49 games actually showed</h2>
+        <p>
+          The single agent was trained separately on each of 49 Atari games,
+          with one architecture and one hyperparameter set held fixed across all
+          of them, receiving only the pixels and the score. It beat the best
+          prior reinforcement-learning methods, which relied on hand-designed
+          features, on 43 of the 49 games.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="p. 530">1</a></sup
+          >
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">49</span
+            ><span class="nb-stat-l">games, one network each</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">43 of 49</span
+            ><span class="nb-stat-l">beat the best prior RL methods</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">29</span
+            ><span class="nb-stat-l">games at &ge;75% of the human tester</span>
+          </div>
+        </div>
+        <p>
+          The word doing the most work in the abstract is &ldquo;comparable.&rdquo;
+          The paper makes it precise. Each game's score is normalized so that a
+          random player sits at 0% and a professional human games tester, given
+          about two hours of practice, sits at 100%. The paper's operational bar
+          for human-level is 75% of that human score, and the agent clears it on
+          29 of the 49 games.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="pp. 530&ndash;531">1</a></sup
+          >
+          That normalization scheme, and the benchmark itself, come from the
+          Arcade Learning Environment, whose authors proposed reporting scores
+          this way and stocked the platform with dozens of games precisely so no
+          single title could define success.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Normalization; framework">3</a></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="deep-q-network/asset-1.png"
+            alt="Horizontal bar chart of DQN's human-normalized score on all 49 Atari games, sorted from Video Pinball at 2,539% down to Montezuma's Revenge at 0%, with a horizontal line dividing games at or above human level from those below and the best linear learner overlaid in grey."
+          />
+          <figcaption>
+            Fig. 1 &middot; Each game as a percentage of the professional human
+            tester, with the best linear learner overlaid; the line divides games
+            at or above the human level from those below it. The scores run from
+            Video Pinball at 2,539% to Montezuma's Revenge at 0%.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 3, p. 531"
+                data-nb-url="https://www.nature.com/articles/nature14236"
+                data-nb-note="The per-game spread the aggregate human-level phrase collapses."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Figure 3 is the honest version of the headline, because it refuses to
+          average. Read top to bottom, it is a single sorted column of all 49
+          games, and the spread is enormous. Video Pinball lands at 2,539% of the
+          human score and Breakout at 1,327%. Below the human-level line the
+          agent falls to Montezuma's Revenge at essentially 0%. In that game the
+          rewards are so sparse, and so far from the actions that earn them, that
+          bootstrapping from pixels has nothing to climb. &ldquo;Human-level
+          control&rdquo; is a claim about where the top of this column sits. It is
+          not a claim about the bottom, and the figure never lets you forget the
+          bottom is there.
+        </p>
+      </section>
+
+      <section data-nb-section="representation" id="representation">
+        <h2>Inside the last hidden layer</h2>
+        <p>
+          Scores show that the agent acts well. They do not show what it learned
+          to see. For that the paper reaches into the 512-unit last hidden layer,
+          the representation the output values are read from, and projects it to
+          two dimensions with t-SNE while the agent plays Space Invaders. Each
+          point is one game state; its color is the value the network assigns that
+          state, from dark blue for low to dark red for high.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Fig. 4, p. 531">1</a></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="deep-q-network/asset-2.png"
+            alt="Two-dimensional t-SNE map of the last hidden layer on Space Invaders, thousands of points colored from blue for low predicted value to red for high, with Atari screenshots pinned to selected clusters around the edge."
+          />
+          <figcaption>
+            Fig. 2 &middot; A t-SNE map of the last hidden layer on Space
+            Invaders, colored by the network's predicted state value V.
+            Perceptually different screens that carry similar value are placed
+            near one another; screens that look alike but differ in value are
+            pushed apart.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 4, p. 531"
+                data-nb-url="https://www.nature.com/articles/nature14236"
+                data-nb-note="Evidence that the learned representation organizes states by value, not by pixels."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The map settles a question the scores cannot. A network could in
+          principle score well while representing states by surface appearance,
+          memorizing which pixel patterns paid off. This one does not. A
+          near-full screen and a completely full screen look quite different in
+          pixels, yet the network places them together and paints them the same
+          value, because both stand one clearing away from a reward. Screens that
+          resemble each other but sit at different points in a round are pushed
+          apart. The representation is organized by expected value, which is what
+          the loss was asking it to encode, and the embedding is the paper's
+          direct evidence that the asking worked.
+        </p>
+      </section>
+
+      <section data-nb-section="after-record" id="after-record">
+        <h2>Where the later studies land</h2>
+        <p>
+          The two halves of the claim came apart under different
+          pressures. The operational claim, 29 of 49 games at or above 75% of a
+          human, faced one direct objection: Atari is deterministic, so perhaps
+          the agent memorized a winning sequence of button presses rather than
+          learning to play. Machado and colleagues built the test for that. They
+          inject stochasticity the agent cannot memorize around, repeating its
+          previous action with probability 0.25 on each step. A pure memorizing
+          planner then collapses, while learning agents such as DQN barely move. The sticky-actions result lands on the
+          deterministic benchmark and on planners that exploit it; for DQN it is
+          closer to a vindication than a rebuttal.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Section 5.2">4</a></sup
+          >
+        </p>
+        <p>
+          The weaker protocol was flagged before DQN existed. The Arcade Learning
+          Environment's own authors warned that it is &ldquo;poor experimental
+          practice to both train and evaluate an algorithm on the same data
+          set,&rdquo; and recommended tuning on a handful of games and testing on
+          unseen ones. DQN did not adopt that split; it trained and reported on the
+          same 49 games, tuning on five of them.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Methodology">3</a></sup
+          >
+          The aggregate summary is the part that has aged worst. Agarwal and
+          colleagues show that the mean and median human-normalized scores the
+          field reports, DQN's lineage included, are unreliable when computed from
+          a handful of runs. The median &ldquo;only depends on the performance
+          ordering across tasks and not on the magnitude,&rdquo; so zero scores on
+          nearly half the games need not move it. Their remedy is the interquartile
+          mean with bootstrap confidence intervals. The critique is aimed at the
+          metric practice. Its deep case study is the sample-efficient Atari 100k
+          regime and later algorithms, not a re-run of the original agent. But the
+          phrasing its argument undermines is exactly the aggregate
+          &ldquo;human-level across 49 games.&rdquo;<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Sections 3&ndash;5">5</a></sup
+          >
+        </p>
+        <p>
+          Two further studies bracket the result without touching its headline.
+          Henderson and colleagues document how far deep-RL scores swing with the
+          random seed, the network size, and even the choice of public codebase.
+          But they measure continuous-control policy-gradient methods on MuJoCo,
+          not Atari and not DQN. Their bearing here is an analogy about fragility,
+          not a re-test.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Figures 5&ndash;6">6</a></sup
+          >
+          Van Hasselt and colleagues do test DQN's exact algorithm. The single
+          <span class="nb-math-in">\max</span> in the target uses one network to
+          both pick and score the next action, which &ldquo;makes it more likely
+          to select overestimated values,&rdquo; a bias they observe in all 49
+          games. Their fix decouples the two roles in one line and keeps DQN's
+          replay and target network intact.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Overoptimism results">7</a></sup
+          >
+          The one device the paper itself called replaceable was replay's uniform
+          sampling. Prioritized experience replay samples in proportion to the
+          temporal-difference error instead. It is the improvement Mnih and
+          colleagues had anticipated when they noted a better strategy &ldquo;might
+          emphasize transitions from which we can learn the most.&rdquo;<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="Section 3.2">8</a></sup
+          >
+        </p>
+        <table class="nb-table">
+          <caption>
+            What each after-record study re-examined, and which of DQN's claims it
+            actually bears on.
+          </caption>
+          <thead>
+            <tr>
+              <th>Study</th>
+              <th class="txt">What it re-examined</th>
+              <th class="txt">Which DQN claim it touches</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Machado</span><sup class="nb-cite"><a href="#s4">4</a></sup></td>
+              <td class="txt">Atari determinism, via sticky actions.</td>
+              <td class="txt">The 29-of-49 result. Supports it: a memorizer collapses, DQN holds.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Bellemare</span><sup class="nb-cite"><a href="#s3">3</a></sup></td>
+              <td class="txt">Training and testing on the same games.</td>
+              <td class="txt">The evaluation protocol, flagged before DQN existed.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Agarwal</span><sup class="nb-cite"><a href="#s5">5</a></sup></td>
+              <td class="txt">Aggregate scores from few runs.</td>
+              <td class="txt">The aggregate &ldquo;human-level&rdquo; summary. Recasts it as fragile.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Henderson</span><sup class="nb-cite"><a href="#s6">6</a></sup></td>
+              <td class="txt">Seed and codebase sensitivity on MuJoCo.</td>
+              <td class="txt">Deep-RL reliability in general, by analogy only.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">van Hasselt</span><sup class="nb-cite"><a href="#s7">7</a></sup></td>
+              <td class="txt">The max operator in the target.</td>
+              <td class="txt">The value estimates, overestimated in all 49. Refines the algorithm.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Schaul</span><sup class="nb-cite"><a href="#s8">8</a></sup></td>
+              <td class="txt">Uniform sampling from replay.</td>
+              <td class="txt">The one device the paper called replaceable. Improves it.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>What the after-record left of &ldquo;human-level&rdquo;</h2>
+        <p>
+          Sort the studies by the claim they touch and the result stops being
+          paradoxical. DQN carried two claims that the abstract runs together. One
+          is operational and narrow: from raw pixels and one hyperparameter set, a
+          single network reached at least 75% of a professional human on 29 of 49
+          games. The other is the aggregate slogan, human-level control across the
+          set. The narrow claim survived every direct test, including the
+          stochasticity that breaks a memorizer. The slogan is the casualty.
+          Figure 3 was already telling on it before any follow-up arrived: a mean
+          taken across a column running from 2,539% to 0% describes a spread, not a
+          level the agent reached everywhere.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The central result holds. A single architecture, learning from
+            pixels and score, reaching 75% of a human on 29 of 49 games, survives
+            added stochasticity and stands unchallenged. The two stability devices
+            became the foundation the whole lineage builds on, refined by double
+            Q-learning and prioritized replay rather than replaced.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            What does not survive is the aggregate &ldquo;human-level across 49
+            games&rdquo; as a single number: it averages a spread from 2,539% to 0%,
+            and later work showed such aggregates are unreliable from a handful of
+            runs. The assessment would change if a modern re-run under sticky actions
+            and multi-seed reporting moved the 29-of-49 count itself, which no study
+            in this record has done.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/nature14236"
+              >Nature · Mnih et al., &ldquo;Human-level control through deep reinforcement learning&rdquo; (2015)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1312.5602"
+              >arXiv · Mnih et al., &ldquo;Playing Atari with Deep Reinforcement Learning&rdquo; (2013)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://jair.org/index.php/jair/article/view/10819"
+              >JAIR · Bellemare et al., &ldquo;The Arcade Learning Environment: An Evaluation Platform for General Agents&rdquo; (2013)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1709.06009"
+              >arXiv · Machado et al., &ldquo;Revisiting the Arcade Learning Environment&rdquo; (2018)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2108.13264"
+              >arXiv · Agarwal et al., &ldquo;Deep Reinforcement Learning at the Edge of the Statistical Precipice&rdquo; (2021)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1709.06560"
+              >arXiv · Henderson et al., &ldquo;Deep Reinforcement Learning that Matters&rdquo; (2018)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1509.06461"
+              >arXiv · van Hasselt, Guez &amp; Silver, &ldquo;Deep Reinforcement Learning with Double Q-learning&rdquo; (2016)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1511.05952"
+              >arXiv · Schaul et al., &ldquo;Prioritized Experience Replay&rdquo; (2016)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
