@@ -27,7 +27,7 @@ refuses to do.
 
 Open concrete. The first sentence states the prompt's job or the rule's
 consequence, never a framing abstraction. "A performance number arrives with
-its baseline" instructs; "the conceptual equipment for reading AI" decorates.
+its baseline" instructs. "The conceptual equipment for reading AI" decorates.
 
 Write flat declaratives that carry consequences. Vary the rhythm. A prompt whose sentences all land the same beat
 teaches the writer that beat. Name a rule or a test after what it does ("the
@@ -62,8 +62,8 @@ directory component (`./setup.md`, never `setup.md`) so same-named files stay
 unambiguous.
 
 Never name the reader in a series prompt. The audience lives in
-`press/editorial.md`; prompt rules are stated about the article, the series,
-or the subject.
+`press/editorial.md`. Prompt rules are stated about the article, the series, or
+the subject.
 
 Keep planning labels in working files. Published prose should say what happened,
 what the evidence shows, or what is disputed, not repeat the label used to

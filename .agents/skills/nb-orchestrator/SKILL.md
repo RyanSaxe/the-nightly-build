@@ -32,7 +32,7 @@ commission is complete.
 ## Hold the invariants
 
 - Process only the authorized work supplied to this run. Scheduled work is the
-  exact `nb duty` result; manual work is the article configured by the user
+  exact `nb duty` result. Manual work is the article configured by the user
   assistant.
 - Give every article an isolated workspace and one Article PR.
 - Run independent articles in parallel when the runtime allows. Never

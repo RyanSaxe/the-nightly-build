@@ -108,7 +108,7 @@ something the exemplars cannot. Someone who reads the summary should know how to
 write this piece.
 
 Give as many directions as the piece has room to execute. A short column can act
-on two or three; a long analytical piece can carry more. Padding to fill a
+on two or three. A long analytical piece can carry more. Padding to fill a
 section produces directions the writer then feels obliged to satisfy.
 
 State every direction as something the material may call for, never as a
@@ -162,8 +162,8 @@ way:
 
 A quotation that fails this is cut, never approximated and never repaired from
 memory, however true the point it illustrates. Cut one and the exemplar may
-drop below two passages; go back to the piece for another rather than keeping a
-quotation you could not confirm.
+drop below two passages. Go back to the piece for another rather than keeping
+a quotation you could not confirm.
 
 Do not choose passages for how easy they are to verify. Pick the passage that
 shows the writing, then do the work of confirming it.

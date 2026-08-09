@@ -40,10 +40,10 @@ fixed light chart paper (a PNG cannot follow the reader's theme, so it
 renders identically in both themes), series colors from the press
 theme's `--chart-1..6` tokens in order, and a line-dash and marker cycle so
 series never differ by color alone. The full plotly API is available when a
-chart needs more than the default look; keep axes labeled, note a non-linear
+chart needs more than the default look. Keep axes labeled, note a non-linear
 scale, and keep decoration out of the drawing.
 
 The output lands beside the script as `chart-N.png`, sized inside the
 proof's figure limits (2400px maximum edge, 2 MiB). Inspect the PNG and the
-rendered article before opening the PR; the editor compares the script's
+rendered article before opening the PR. The editor compares the script's
 data against the evidence record and reads the image like any other figure.

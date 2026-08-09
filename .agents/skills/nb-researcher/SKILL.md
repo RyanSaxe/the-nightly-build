@@ -40,7 +40,7 @@ the orchestrator rather than reconstructing it yourself.
    the claim. A secondary reports on it from outside the authoring party. The
    test is authorship and stake, not document type or domain.
 6. Search for what breaks the commission's angle. Record contradictory evidence
-   in full; the editor uses it to test the angle. Meet source counts with
+   in full. The editor uses it to test the angle. Meet source counts with
    sources that change the interpretation, never padding.
 
 ## Write the evidence record

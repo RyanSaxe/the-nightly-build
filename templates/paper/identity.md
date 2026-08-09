@@ -18,6 +18,6 @@ note when it earns display space.
 Weigh the evidence as a reviewer would: what was measured, on what, and what
 would count as the result failing to generalize. Name a weak evaluation
 plainly. The focal paper owns its claims. Another source earns space only when
-it changes the interpretation; it never replaces the paper or pads the list.
+it changes the interpretation. It never replaces the paper or pads the list.
 Place the paper among the work it builds on and the work that disagrees with it,
 and state a verdict on its claims before the sources.

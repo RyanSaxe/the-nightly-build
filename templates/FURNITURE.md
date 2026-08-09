@@ -23,7 +23,7 @@ component per idea. Retired components (callout, epigraph, aside, cast,
 objectives box, check box, bridge, plain abstract, the standalone verdict
 component whose label now lives on a note, grade row, the
 paper template's anchored excerpt) stay styled so the published shelf keeps
-rendering; new articles express those moves through the note below, and a
+rendering. New articles express those moves through the note below, and a
 claim's judgment lives on the claim card itself.
 
 In the samples below, ALL-CAPS runs are placeholders: replace every one in
@@ -35,7 +35,7 @@ sample data: replace it.
 The families, and how to choose within them. Evidence: a couple of
 heterogeneous headline numbers are a stat strip, rows of one shape three or
 more deep are a table, and anything the reader must see is a figure, drawn
-from data or captured from a source; a derivation the argument leans on is
+from data or captured from a source. A derivation the argument leans on is
 an equation, and source code is a listing when the article's claim depends on
 what the code does.
 Voice: a labeled passage of any kind is
@@ -66,9 +66,10 @@ be cited in nearby prose.
 
 Compact worked rows: steps of a computation, a record, a mapping, a
 comparison, a ranking. Numeric cells are mono and never wrap (space digit
-groups so the table fits a phone); add class `txt` on a cell that should
+groups so the table fits a phone). Add class `txt` on a cell that should
 read as prose. Prose columns retain a readable width on a phone while the row
-scrolls. First-column tokens may wear `nb-table-token` chips; multiword chips
+scrolls. First-column tokens may wear `nb-table-token` chips, and multiword
+chips
 wrap between words on narrow screens. The caption states what the rows show and
 carries the citation. Author the bare table exactly as below: the runtime
 dresses every one in the data-block card, rows scrolling inside it on a phone
@@ -137,7 +138,7 @@ alternative text, and restate what matters in caption and prose.
 ## Equation
 
 Math the argument leans on, typeset from LaTeX. The element's text is the
-TeX source and the runtime typesets it; a reader without JS sees the TeX
+TeX source and the runtime typesets it. A reader without JS sees the TeX
 itself, so keep it clean. Three tiers, chosen by how much the equation
 needs to say. Inline math sits in prose in an `nb-math-in` span. A bare
 display equation (no caption) sits open on the page for a step the
@@ -146,7 +147,7 @@ equation and the figure becomes a data-block card: a caption when the
 equation needs its own cited line, and for the one equation an article is
 really about, the annotated form: wrap each term the reader must track
 in `\htmlClass{nb-mc1}{…}` through `nb-mc5` and name every colored term
-in the legend (the term cell repeats the TeX; the colors hold in both
+in the legend (the term cell repeats the TeX, and the colors hold in both
 schemes). At most one annotated equation per article. Punctuation,
 spacing commands, and sizing are the writer's: what renders must read as
 one sentence with the prose around it.
@@ -204,8 +205,9 @@ one sentence with the prose around it.
 
 A listing the reader should actually read: code whose behavior is evidence,
 never decoration. The header names the source (a path, or a short context) and
-the language; the `language-…` class drives the highlighter (python and
-javascript ship with the engine; a press pins more via `site.yaml` assets).
+the language. The `language-…` class drives the highlighter (python and
+javascript ship with the engine, and a press pins more via `site.yaml`
+assets).
 Escape the code as HTML. The caption states what the listing shows and
 carries the citation.
 
@@ -230,7 +232,7 @@ prose, a list, or a quotation. The label is not an enum. Name the move this
 passage makes. A definition wears its term. A plain-language rendering
 of a work's claim wears "In plain language". The weight-of-evidence landing
 wears "Verdict" and the `nb-note-strong` modifier (at most one per article).
-A sequenced series' pointer onward wears "Next article"; a teaching piece's
+A sequenced series' pointer onward wears "Next article". A teaching piece's
 goals wear "In this article". Reuse a label the paper's shelf already uses
 before coining a new one, and never stack two notes where one carries both
 thoughts.
@@ -271,7 +273,7 @@ One sentence from the article itself, promoted for emphasis. Use at most one.
 ## Numbered steps
 
 A process, one stage per step. The connecting rule implies
-order. Do not use it for unordered lists; a ranking is a table.
+order. Do not use it for unordered lists. A ranking is a table.
 
 ```html
 <ol class="nb-steps">
@@ -352,7 +354,8 @@ Strengths against caveats, side by side. Its summary row is a "Verdict" note
 
 Scored criteria for a review: each row a criterion, an integer score 0–5,
 and one cited line the score stands on. A series may pin criteria every
-review must score (`rubric:` in series.yaml, docs/reference/series.md § Rubrics); add
+review must score (`rubric:` in series.yaml, docs/reference/series.md § Rubrics).
+Add
 rows the subject demands. The rendered score text must agree with
 `data-score`, and the meter colors itself from the score.
 
