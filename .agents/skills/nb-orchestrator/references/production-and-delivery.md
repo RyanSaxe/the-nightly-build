@@ -48,7 +48,6 @@ brief and `commission.md`, because a leak is invisible against a file the
 editor does not hold and the commission is where the reader's own situation is
 written down. A `review-brief.md` carries the
 named inputs, your recent-pattern notes, and the round's focus. Nothing more.
-Every brief you write, `review-brief.md` included, meets `spec/slop.md`.
 The editor needs your recent-pattern notes to catch a formula or a catchphrase,
 which no single article can show. Never send a review brief without them.
 

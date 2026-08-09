@@ -47,10 +47,10 @@ primary. Check every place, date, and quantity in display text the same way.
 A wrong label in display text reaches every reader, including the ones who
 read nothing else.
 
-Audit every `data-nb-kind`. A primary owns the claim. A secondary reports on
-it from outside the authoring party, and a different website is not
-necessarily an independent author. A wrong label is a sourcing failure,
-especially when it hides a missing independent source.
+Audit every `data-nb-kind` against the primary and secondary test in
+`.agents/skills/nb-researcher/SKILL.md`. A different website is not necessarily
+an independent author. A wrong label is a sourcing failure, especially when it
+hides a missing independent source.
 
 Open every citation's `href` as the article prints it. The link must land on
 the source itself. An endpoint that returns the text still fails whoever
@@ -88,7 +88,7 @@ carries a fact or a reasoning step. This pass is in addition to the
 sentence-by-sentence one.
 
 Then read the article as someone who arrived from a link with no briefing,
-against the dangling-referent rule in `spec/slop.md`.
+against the dangling-referent rule under "Where it sits" in `spec/slop.md`.
 
 Then run the delete test. Remove a sentence whose deletion loses no fact, no
 disputable claim, and no reasoning step. A sentence that reports where the
@@ -195,14 +195,12 @@ A flat sentence, a soft ending, a section in the wrong order, or a component
 doing no work are yours to fix. Route one only when the fix needs reporting you
 do not have.
 
-When you write, write toward the register the guide describes rather than your
-own preference, and never toward its exemplars' wording. Log every change you
-make in the review.
+Log every change you make in the review.
 
 Edit prose, structure, and the furniture markup the catalog documents. Leave
 scripts, styles, source assets, and chart provenance to the writer, who has the
-tooling and the sources for them. After direct edits, run `nb stamp` so the
-declared counts stay honest. The writer runs the proof.
+tooling and the sources for them. The writer runs the proof, and the
+orchestrator stamps the article after your edits before it prepares the PR.
 
 Keep requesting changes while publication-blocking work remains. Do not
 prolong the loop for optional polish, repeat resolved objections, or introduce

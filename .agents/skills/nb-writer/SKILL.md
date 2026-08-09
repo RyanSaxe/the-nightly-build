@@ -27,8 +27,8 @@ stays theirs, and the editor checks the draft against those passages. The guide
 is not a list of sentences to produce, so nothing in it obliges you to write a
 sentence the material does not call for.
 
-Your prose meets `spec/slop.md`, which the editorial direction carries. Do not
-leave it for the editor to remove.
+Your prose meets `spec/slop.md`, for the reason that file gives. Do not leave
+it for the editor to remove.
 
 Treat the evidence record as the complete set of claims available to you, not as
 prose.

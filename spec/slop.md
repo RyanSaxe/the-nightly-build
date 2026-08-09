@@ -33,7 +33,8 @@ a writer with nothing left to add writes one. Test every edge even when the
 middles read clean, and test the article's last sentence most carefully: it is
 the position with the least left to say.
 
-An opening sentence has no earlier sentence to introduce its nouns. A definite noun
+An opening sentence has no earlier sentence to introduce its nouns. The
+dangling-referent rule: a definite noun
 phrase whose referent appears only in the briefing reads as complete to
 everyone who wrote the brief, and as a dangling reference to the reader who
 arrived from a link.

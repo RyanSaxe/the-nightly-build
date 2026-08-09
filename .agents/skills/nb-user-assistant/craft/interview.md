@@ -38,8 +38,7 @@ section count decide how many articles exist. A production profile and its
 per-stage tiers decide what each role costs. A pinned voice guide removes the
 writing coach for a section whose sound has settled, the only lever that drops
 a role invocation instead of making one cheaper. Write a pinned guide against
-the standard in `.agents/skills/nb-writing-coach/SKILL.md`, so it carries real
-exemplars quoted from real writers rather than adjectives about tone.
+the standard in `.agents/skills/nb-writing-coach/SKILL.md`.
 
 ## Interview loop
 

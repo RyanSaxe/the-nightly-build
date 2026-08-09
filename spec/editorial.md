@@ -117,7 +117,8 @@ is right, and when in doubt the period is the default.
 - **Semicolon.** Rare. Two independent clauses so tightly bound that a period
   would over-separate them. Do not chain them, do not use one to patch a comma
   splice, and do not use one to extend a run-on.
-- **Em-dash.** A real interruption or a sharp aside, at most once in a stretch.
+- **Em-dash.** A real interruption or a sharp aside. `spec/banned-terms.yaml`
+  sets the count.
   It is not a general connective and not a substitute for a semicolon. When you delete one,
   the fix is usually the period the thought wanted, not another mark in its place.
 - **Parentheses.** A true aside the sentence survives without. If the sentence
