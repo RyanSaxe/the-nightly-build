@@ -71,11 +71,12 @@ Make a dedicated pass for slop against `spec/slop.md`. Every sentence is in
 scope: body prose, headline, dek, subheads, captions, and the prose inside every
 furniture component.
 
-A later section of `editorial-direction.md` may permit a form `spec/slop.md`
-rules out, naming the form and the part of the article it covers. Where one has,
-do not cut inside that grant for being that form, and judge what is there like
-any other sentence: does it say anything? Permission has to be written down. Do
-not infer it from a component's evident purpose.
+A template identity or press file may allow a prose failure `spec/slop.md`
+bans, and it says which one and where. The lesson template allows its two
+bookend cards to address the reader, for instance. Leave those sentences alone
+for addressing the reader, and judge them like any other: do they say anything?
+The allowance has to be written down. Do not read it off a component's evident
+purpose.
 
 Then walk the edges a second time, on their own. Read the first and last
 sentence of every paragraph, every section, the article, and each furniture
@@ -103,8 +104,9 @@ flat because the reporting behind it is thin.
 The guide also carries passages quoted from named writers, and the writer read
 them just before drafting. Compare any distinctive phrasing in the draft against
 those quotations. A borrowed clause is not caught by the slop test, because a
-phrase from a good writer reads as specific to the subject. Rewrite what
-echoes.
+phrase from a good writer reads as specific to the subject. Cut the sentence
+when the borrowed phrasing was all it had, and rewrite it when the point
+underneath is the article's own.
 
 Check the article for correctness in writing, not just content. Every
 sentence must be grammatically and syntactically correct, including the
@@ -184,8 +186,8 @@ claim the article makes. Where the record and a source you opened disagree,
 route it rather than settling it. Do not write around a gap in the evidence.
 
 Send the writer what only the writer can do: evidence the article does not
-have, a claim the argument rests on that broke, a repair that needs
-reporting. Send
+have, a claim the argument rests on that broke, a repair that needs reporting,
+and a redraft where the piece needs rewriting past what editing reaches. Send
 those every time, and never soften a claim to fit what the record happens to
 support.
 
@@ -243,7 +245,8 @@ Write in your own words, never the draft's, and hold the review to
 new numbered artifact and never append to or overwrite an earlier review.
 
 Report the editorial-review path and final decision. When more work is needed,
-name its owner: researcher for evidence; writer for reporting, source assets,
-chart provenance, and the proof; orchestrator for missing commission context. When researcher
+name its owner: researcher for evidence; writer for reporting, a redraft,
+source assets, chart provenance, and the proof; orchestrator for missing
+commission context. When researcher
 and writer both have work, request evidence first and record the writer's work
 in the review so the orchestrator can route it next.

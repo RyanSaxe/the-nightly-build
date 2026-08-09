@@ -43,10 +43,10 @@ what the lesson found, said plainly enough to carry away and repeat. Both
 speak directly to the reader, in the same plain voice as the body, at
 whatever length clarity needs.
 
-`spec/slop.md` keeps self-reference out of article prose. These two cards are
-permitted both of the things it rules out: they address the reader, and they
-say what the lesson covers and what the reader will know by the end. That
-permission covers the two cards and nothing else. The body does neither.
+These two cards are the one place a lesson refers to itself. They address the
+reader, and they say what the lesson covers and what the reader will know by
+the end. Nowhere else does: the body speaks to no one and never mentions the
+lesson.
 
 Write the bookends with the care of a teacher who knows exactly what was
 just taught and who is reading. Every sentence should belong to this
