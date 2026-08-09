@@ -9,8 +9,8 @@ bounded editorial decisions.
 Launch every commissioned article at once. When isolated children are
 available, fire each article's `nb-writing-coach` and `nb-researcher` together
 in one burst at the start of production. Do not stage a warmup article and do
-not hold one article's roles for another's progress. Wall-clock is the slowest
-single article's chain, so any late start lands on the critical path.
+not hold one article's roles for another's progress. The edition finishes when its
+slowest article finishes, so start every article at once.
 
 A series that sets `voice_guide` in its `series.yaml` has already settled how
 it sounds. `nb start-article` writes that guide into the article's
@@ -48,7 +48,6 @@ brief and `commission.md`, because a leak is invisible against a file the
 editor does not hold and the commission is where the reader's own situation is
 written down. A `review-brief.md` carries the
 named inputs, your recent-pattern notes, and the round's focus. Nothing more.
-Every brief you write, `review-brief.md` included, meets `spec/slop.md`.
 The editor needs your recent-pattern notes to catch a formula or a catchphrase,
 which no single article can show. Never send a review brief without them.
 
@@ -79,7 +78,7 @@ while the original invocation is still active. Do not assume silence means
 progress: a role can fail or stall without any notification. Check on any
 invocation that has been silent for more than 10 minutes.
 
-Lastly, interrupt, reassign, or take over only when the owning role cannot
+Interrupt, reassign, or take over only when the owning role cannot
 complete the work.
 
 ## Route repairs without waiving gates
@@ -89,8 +88,8 @@ is pinned: the coach's repair lands in the next numbered invocation and governs
 this article only. A pinned guide belongs to the paper owner, so record what it
 could not support instead of editing it. Missing evidence returns to the
 researcher. The writer takes back what the editor cannot settle from the
-evidence record: reporting a claim needs, a broken claim the argument rests
-on, source
+evidence record: reporting a claim needs, a broken claim the argument rests on,
+a redraft where the piece needs rewriting past what editing reaches, source
 assets, chart provenance, and the proof. The editor edits prose, structure, and
 documented furniture itself, so expect those to be fixed in place rather than
 routed. Give every repair a new numbered brief

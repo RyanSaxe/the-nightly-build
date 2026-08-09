@@ -12,8 +12,7 @@ Lanes (label each item with its lane):
 
 Emphases:
 
-- Four to six items. A short honest brief beats a padded one. Never invent an
-  item to reach the count.
+- Four to six items. A short honest brief beats a padded one.
 - Link each headline to the document that owns its claim, and to someone with no
   stake in that document reading the same thing. A write-up that only restates
   the announcement has added nothing.

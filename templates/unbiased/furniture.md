@@ -25,7 +25,7 @@ argument inside them.
       </p>
     </div>
     <p class="nb-side-champion">
-      <span class="nb-side-outlet">NAMED PERSON OR INSTITUTION</span> — WHY THIS
+      <span class="nb-side-outlet">NAMED PERSON OR INSTITUTION</span>. WHY THIS
       HOLDER HAS STANDING ON THE QUESTION.<sup class="nb-cite"
         ><a href="#s2">2</a></sup
       >
@@ -45,5 +45,5 @@ The slots are the position's recognizable **name** (`nb-side-camp`), its
 concise **thesis** (`nb-side-thesis`), the open **argument**
 (`nb-side-argument`), and a credible named **holder** with a cited statement
 and a brief indication of standing (`nb-side-champion`). The manifest makes
-all four mandatory in both positions. One accent is mirrored across the split;
-it is never a color assigned to either position.
+all four mandatory in both positions. One accent is mirrored across the split.
+It is never a color assigned to either position.

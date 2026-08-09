@@ -7,8 +7,8 @@ what it sells, to whom, what protects it, and what is changing.
 
 Rotate the section:
 
-- Cover whichever name has waited longest and has real news to carry, so each
-  comes up about once a week. Lead with what changed since that name last ran.
+- Cover whichever name has waited longest. Lead with what changed since that
+  name last ran.
 - If nothing material happened for the name that is due, cover the standing
   question that would most change how the business should be valued. No filler.
 

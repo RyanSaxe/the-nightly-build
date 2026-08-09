@@ -28,9 +28,9 @@ If you cannot, that is the first finding. Treat headline and dek as claims, and
 every section subhead and kicker as one too. A dek that grades the article's
 selection or method instead of making a claim about the world requires revision.
 
-Try to break each claim. Push hardest on the one you most want to keep. Open
-the evidence as a map and reopen cited sources as an opponent. Hunt for the
-sentence that retires a claim, not the sentence that permits it. A piece can
+Try to break each claim. Push hardest on the one you most want to keep. Read
+the evidence for what it covers, and reread each cited source looking for what
+breaks the claim rather than what permits it. A piece can
 pass citation by citation while its premise is false.
 
 Confirm that passages support claims, then read their full sentences and
@@ -44,13 +44,13 @@ Verify display text descriptor by descriptor, not only as a claim: the
 headline, the dek, and every subhead. A true claim can carry a false label.
 Check every named person's title, role, and affiliation against the owning
 primary. Check every place, date, and quantity in display text the same way.
-A reader who reads nothing else keeps the display text, so a wrong label there
-is the costliest and most visible error the paper can print.
+A wrong label in display text reaches every reader, including the ones who
+read nothing else.
 
-Audit every `data-nb-kind`. A primary owns the claim. A secondary reports on
-it from outside the authoring party, and a different website is not
-necessarily an independent author. A wrong label is a sourcing failure,
-especially when it hides a missing independent source.
+Audit every `data-nb-kind` against the primary and secondary test in
+`.agents/skills/nb-researcher/SKILL.md`. A different website is not necessarily
+an independent author. A wrong label is a sourcing failure, especially when it
+hides a missing independent source.
 
 Open every citation's `href` as the article prints it. The link must land on
 the source itself. An endpoint that returns the text still fails whoever
@@ -82,13 +82,13 @@ Then walk the edges a second time, on their own. Read the first and last
 sentence of every paragraph, every section, the article, and each furniture
 component, out of order and away from the prose around them. Read in order, a
 weak edge sentence is hard to see, because the sentences on either side supply
-the sense it lacks. Reading it alone is how you notice it, not a standard it
-has to meet: a sentence may lean on its neighbors and still be doing work.
-Judge what you find by the test in `spec/slop.md`. This pass is in addition to
-the sentence-by-sentence one.
+the sense it lacks. Read it alone to see it, then judge it in place by the test
+in `spec/slop.md`: a sentence leaning on its neighbors still stays when it
+carries a fact or a reasoning step. This pass is in addition to the
+sentence-by-sentence one.
 
 Then read the article as someone who arrived from a link with no briefing,
-against the dangling-referent rule in `spec/slop.md`.
+against the dangling-referent rule under "Where it sits" in `spec/slop.md`.
 
 Then run the delete test. Remove a sentence whose deletion loses no fact, no
 disputable claim, and no reasoning step. A sentence that reports where the
@@ -120,8 +120,9 @@ closely, since it states the reader's situation in sentences a writer can take
 whole, and reported facts about that reader are not leaks. Cut copied or
 lightly rewritten instructions, planning labels,
 selection rules, and claims that the article fulfilled its assignment. Fixed template labels, necessary
-names, and sourced facts are not leaks. Rewrite the leaked sentence in the
-article's own terms when the evidence record supports it.
+names, and sourced facts are not leaks. Cut the leaked sentence when the
+brief's framing was all it carried, and rewrite it in the article's own terms
+when the evidence record supports the point underneath.
 
 Trim inside survivors. Apply the prose and punctuation standards in the
 editorial direction, including its repairs for reflex punctuation. Trim from
@@ -192,17 +193,16 @@ those every time, and never soften a claim to fit what the record happens to
 support.
 
 A flat sentence, a soft ending, a section in the wrong order, or a component
-doing no work are yours to fix, and routing those costs a redraft and another
-read for nothing.
+doing no work are yours to fix. Route one only when the fix needs reporting you
+do not have, or when so much of the piece is like it that a redraft is the
+honest answer.
 
-When you write, write toward the register the guide describes rather than your
-own preference, and never toward its exemplars' wording. Log every change you
-make in the review.
+Log every change you make in the review.
 
 Edit prose, structure, and the furniture markup the catalog documents. Leave
 scripts, styles, source assets, and chart provenance to the writer, who has the
-tooling and the sources for them. After direct edits, run `nb stamp` so the
-declared counts stay honest. The writer runs the proof.
+tooling and the sources for them. The writer runs the proof, and the
+orchestrator stamps the article after your edits before it prepares the PR.
 
 Keep requesting changes while publication-blocking work remains. Do not
 prolong the loop for optional polish, repeat resolved objections, or introduce

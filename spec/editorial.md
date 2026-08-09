@@ -27,7 +27,7 @@ consistent within a piece.
 ## Teach, don't summarize
 
 The reader finishes knowing how to think about the topic. Each
-section spends what the last one taught. A section the reader could have read first is in
+section builds on what the last one taught. A section that spends nothing an earlier one taught is in
 the wrong place. Cut any sentence that adds nothing new. Define each term of art the
 declared reader does not hold in the sentence where it first appears. Assume the rest.
 Ground abstract claims in a worked example.
@@ -63,14 +63,15 @@ meets the same bar as any analysis: cited, reasoned, shown.
 
 ## Numbers
 
-Concrete figures beat vague magnitudes. Ranges with sources beat false precision. Give
-every number a comparison the reader already knows. Say plainly what is unknown.
+Give the figure, not the magnitude, and a sourced range rather than a precision
+the source does not support. Anchor a figure the reader
+cannot scale on their own to a comparison they already hold. Say plainly what is unknown.
 
 ## Clarity
 
 An article is understood on the first read or it has failed. Abstraction is the usual
-reason it fails: every abstract noun asks the reader to carry something unstated, and a
-weak argument is easy to hide inside one. Prefer the concrete. Reach for an abstraction only when
+reason it fails: an abstract noun the article has not built up asks the reader to
+carry something unstated, and a weak argument is easy to hide inside one. Prefer the concrete. Reach for an abstraction only when
 the abstraction itself is the subject, and build it up like any other term.
 
 Name a thing one way and keep that name. Once a term is set, reuse it exactly. A synonym
@@ -96,12 +97,13 @@ there, and every article inherits it. No form is forbidden for being
 expressive. What gets cut is writing that fails `spec/slop.md`, at whatever
 register the paper has chosen.
 
-If following a rule here would produce a sentence you would not say aloud,
-break the rule.
+If a rule in this Prose section would produce a sentence you would not say
+aloud, break that rule. Sourcing, teaching, and earned analysis are not subject
+to this.
 
 ## Punctuation
 
-Punctuation sets the pace of a thought, and each mark has one job. Reach for the
+Reach for the
 plainest mark that does the job. When two marks would both work, the plainer one
 is right, and when in doubt the period is the default.
 
@@ -115,9 +117,10 @@ is right, and when in doubt the period is the default.
 - **Semicolon.** Rare. Two independent clauses so tightly bound that a period
   would over-separate them. Do not chain them, do not use one to patch a comma
   splice, and do not use one to extend a run-on.
-- **Em-dash.** A real interruption or a sharp aside, at most once in a stretch.
-  It is not a general connective and not a substitute for a semicolon. When you delete one,
-  the fix is usually the period the thought wanted, not another mark in its place.
+- **Em-dash.** A real interruption or a sharp aside, and never a general
+  connective or a stand-in for a semicolon. When you delete one, the fix is
+  usually the period the thought wanted rather than another mark in its place.
+  `spec/banned-terms.yaml` sets the count.
 - **Parentheses.** A true aside the sentence survives without. If the sentence
   needs what is inside them, it is not an aside, so fold it back in.
 

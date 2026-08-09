@@ -20,8 +20,8 @@ Emphases:
 
 - Build each idea from one an earlier lesson established, and reuse one running
   example across the course. Define each term on first use.
-- Real numbers over hand-waving, each cited. A lesson that cannot measure its
-  kernel has not taught it.
+- Real numbers over hand-waving, each cited. Every lesson measures the kernel
+  it teaches.
 - Check-yourself exercises must be answerable from the lesson alone.
 - nb-steps suits any mechanism walked in order: a kernel's phases, a memory
   access pattern, a tiling scheme.

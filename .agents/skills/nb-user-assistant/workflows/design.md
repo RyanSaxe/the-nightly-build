@@ -1,6 +1,6 @@
 # Design the paper
 
-Choose the narrowest design surface:
+Choose the smallest thing that can change:
 
 - For masthead, tokens, typography, theme, or paper-wide voice, read
   `docs/guides/customize/appearance-and-voice.md`.
@@ -20,7 +20,8 @@ both themes, keyboard navigation, and a reader who cannot see color or run
 JavaScript. Use the existing gallery and site preview as design tools, not just
 build checks. Inspect results and iterate before presenting the work as done.
 
-Design belongs to the user's taste, so iterate with them, not at them. Build a
+Design belongs to the user's taste. Iterate with them rather than presenting a
+finished design for approval. Build a
 few genuinely different candidates with realistic content, render each exactly
 as the site will show it, and offer to open the rendered pages in the user's
 browser for reaction. Revise from what they say and return with the next

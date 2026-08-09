@@ -71,15 +71,15 @@ Quote enough of the piece to hear it, usually a few sentences. A clause on its
 own does not show the rhythm. Take each passage from a different part of the
 piece, since quoting the same sentences again shows nothing new. Two or three
 passages per exemplar is the range. One passage is not enough to show a voice,
-and a fourth is usually padding.
+and a fourth adds nothing.
 
 Quote the passage as it was written. Simplifying its technical vocabulary to
 make it easier to read changes the thing you are showing, because the exact
 words a practitioner uses are part of why the writing sounds like one.
 
 Pick passages this article can use. A writer's most characteristic move is not
-always one that belongs in the genre you are briefing, and a personal blog can
-close an aside with a shrug at its own readers where a lesson cannot. Choose
+always one that belongs in the genre you are briefing. A personal blog can end
+an aside with a joke at its readers' expense. An explanatory piece cannot. Choose
 the passages whose quality carries over to the piece being written, and leave
 the ones that only work in the exemplar's own format.
 
@@ -108,7 +108,7 @@ something the exemplars cannot. Someone who reads the summary should know how to
 write this piece.
 
 Give as many directions as the piece has room to execute. A short column can act
-on two or three; a long analytical piece can carry more. Padding to fill a
+on two or three. A long analytical piece can carry more. Padding to fill a
 section produces directions the writer then feels obliged to satisfy.
 
 State every direction as something the material may call for, never as a
@@ -135,7 +135,7 @@ against a different series.
 
 ## Verify every quotation before reporting
 
-A fabricated quotation is the worst thing this role can produce. It puts words
+A fabricated quotation puts words
 in a named writer's mouth and ships them in a public file, and no later role
 checks it, because a plausible quotation is the one nobody thinks to check.
 
@@ -162,12 +162,11 @@ way:
 
 A quotation that fails this is cut, never approximated and never repaired from
 memory, however true the point it illustrates. Cut one and the exemplar may
-drop below two passages; go back to the piece for another rather than keeping a
-quotation you could not confirm.
+drop below two passages. Go back to the piece for another rather than keeping
+a quotation you could not confirm.
 
-Do not choose passages for how easy they are to verify. Short, plain, unpunctuated
-sentences check quickly and show the least. Pick the passage that shows the
-writing, then do the work of confirming it.
+Do not choose passages for how easy they are to verify. Pick the passage that
+shows the writing, then do the work of confirming it.
 
 ## Complete the invocation
 

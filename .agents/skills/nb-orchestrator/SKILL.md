@@ -12,9 +12,9 @@ description: >-
 Commission the authorized work, give each editorial role the context it needs,
 and carry every article through publication. Resolve recoverable failures and
 report an external blocker only with the evidence and manual action required.
-It is your job to guarantee publication unless otherwise impossible. Do not
-accept blockers unless there is truly no way to complete the work within your
-allowed contract.
+Publish every authorized article. Exhaust the repairs you own before reporting
+a blocker. Editor approval and a passing proof are the gate, never the obstacle
+to work around.
 
 ## Load production in phases
 
@@ -32,7 +32,7 @@ commission is complete.
 ## Hold the invariants
 
 - Process only the authorized work supplied to this run. Scheduled work is the
-  exact `nb duty` result; manual work is the article configured by the user
+  exact `nb duty` result. Manual work is the article configured by the user
   assistant.
 - Give every article an isolated workspace and one Article PR.
 - Run independent articles in parallel when the runtime allows. Never
@@ -42,6 +42,6 @@ commission is complete.
 - Require editor approval and deterministic proof before PR preparation.
 - Never push or merge directly to `library` or `main`.
 
-Messages coordinate the work; files record it. Use the role package and
+Coordinate through messages. Record through files. Use the role package and
 checkout-owned `nb` command as their current owners rather than copying their
 instructions into briefs.

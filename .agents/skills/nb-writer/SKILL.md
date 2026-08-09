@@ -21,15 +21,14 @@ inputs do not settle it.
 
 Reread the voice guide before drafting and before every revision. Its opening
 section says how this article should sound, and the exemplar blocks under it
-show what that sounds like in real prose. Use them to hear how the writing
-moves. Reuse the subject's terms of art exactly, as the standard requires, but
+show what that sounds like in real prose. Read them for rhythm and register. Reuse the subject's terms of art exactly, as the standard requires, but
 never carry over a phrasing that belongs to the quoted writer: their wording
 stays theirs, and the editor checks the draft against those passages. The guide
 is not a list of sentences to produce, so nothing in it obliges you to write a
 sentence the material does not call for.
 
-Your prose meets `spec/slop.md`, which the editorial direction carries. Do not
-leave it for the editor to remove.
+Your prose meets `spec/slop.md`, for the reason that file gives. Do not leave
+it for the editor to remove.
 
 Treat the evidence record as the complete set of claims available to you, not as
 prose.
@@ -37,7 +36,7 @@ prose.
 ## Draft from evidence
 
 Before drafting, identify the facts and concepts without which the piece cannot
-work. Most belong near the opening. If the evidence cannot supply one, return
+work, and place each where the reader first needs it. If the evidence cannot supply one, return
 a precise researcher request instead of writing around the hole. Do the same
 when a concrete sentence or structural decision exposes an ambiguity in the
 voice guide.
@@ -55,7 +54,7 @@ placeholder and sample. Fill each required section once, and create only
 subject-specific flexible sections. Outline the reasoning before naming
 sections so an old article's shape does not become this article's template.
 
-Follow these universal rules:
+Follow these rules:
 
 - Number sources in first-citation order. Carry the evidence record's source
   kind into `data-nb-kind="primary"` or `data-nb-kind="secondary"`. Source
@@ -83,7 +82,8 @@ Follow these universal rules:
 
 ## Do original work
 
-Name the piece's one act of original work in a sentence. It must identify what
+Name in one sentence what the article does to the evidence that the evidence
+does not do itself. It must identify what
 the article does to the evidence that the evidence does not do itself, and the
 work must be visible in the article. If you cannot write that sentence, the
 article is not done.
@@ -100,7 +100,7 @@ changed and inspect the rendered result.
 
 Before handing off, self-test the draft: confirm the original-work sentence
 still holds, then make the display-text pass. An error here costs a full
-editor round and is the paper's most visible kind:
+editor round and reaches readers who never open the body:
 
 - Check every date, number, name, title, and place in the headline, dek, and
   subheads against the evidence record.
@@ -122,7 +122,7 @@ claim set. Rerun the complete proof.
 Write `draft-handoff.md` with exactly what no other file carries: the
 original-work sentence, the proof result with any warnings intentionally left,
 and any open evidence or voice question. On a revision, add one line per
-editorial request resolved. The article and its diff speak for themselves, so
+editorial request resolved. The article and its diff carry that already, so
 do not inventory paths or furniture.
 
 After `BLOCK: 0`, report the draft-handoff path and any warning intentionally

@@ -54,4 +54,4 @@ anything the normal proof permits, but its path, series, and slug remain
 aligned. Revisions never auto-merge.
 
 Present the changed meaning, evidence, and visual result, so the user can
-decide whether to merge. Do not invent a workflow ceremony around it.
+decide whether to merge. Do not add steps this workflow does not require.

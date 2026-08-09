@@ -5,8 +5,7 @@ trusting the article's reporting, which is why it costs the paper more than a
 dull sentence does. The editor cuts it on every article, against this file.
 
 Cutting slop does not mean making the prose dry. A joke, a fragment, or a
-short quotable line is not slop, and removing them to stay safe is its own
-failure.
+short quotable line is not slop. Do not cut them to stay safe.
 
 ## The test
 
@@ -31,14 +30,16 @@ does not flatten a piece.
 Slop collects at edges: the first and last sentence of a paragraph, of a
 section, and of the article. Those positions feel like they need a sentence, so
 a writer with nothing left to add writes one. Test every edge even when the
-middles read clean, and expect the article's last sentence to be its worst.
+middles read clean, and test the article's last sentence most carefully: it is
+the position with the least left to say.
 
-An opening sentence has no earlier sentence to introduce its nouns. A definite noun
+An opening sentence has no earlier sentence to introduce its nouns. The
+dangling-referent rule: a definite noun
 phrase whose referent appears only in the briefing reads as complete to
 everyone who wrote the brief, and as a dangling reference to the reader who
 arrived from a link.
 
-Delete. Do not repair. Rewriting usually produces a slop sentence that sounds
+Delete. Do not repair. Rewriting produces a slop sentence that sounds
 better, because the fault is that the writer had nothing to say there. Write a
 replacement only when something real was waiting to be said.
 
@@ -52,16 +53,15 @@ none of them still goes if it fails the test above.
   an assessment. "That limit is itself part of the design" and "the difficulty here should not
   be understated" name nothing a reader could check.
 - **Negative parallelism.** "X is not Y, it is Z" and its cousins ("not just X
-  but Y", "X rather than Y"). This is the paper's most common tell by a wide
-  margin. It stays only where the misconception it corrects is real and named,
-  and falls wherever the "not" clause is a strawman the sentence invented. Two
-  earned contrasts in a piece is already a lot.
+  but Y", "X rather than Y"). This is a frequent tell, worth checking on
+  every draft. It stays only where the misconception it corrects is real and named,
+  and falls wherever the "not" clause is a strawman the sentence invented. An
+  earned contrast is rare, so check each against a misconception the piece names.
 - **Unearned punchlines.** Any sentence engineered to sound quotable while
   carrying little. Announcing stakes the argument has not built is one form
   ("that's the whole point", "here's the kicker", "the catch is"), and the
   "X is the whole Y" family is another ("that identity is the whole guarantee").
-  A sentence that announces its own stakes has stopped making the argument and
-  started grading it. Quotability never earns a line.
+  Such a sentence grades the argument instead of continuing it.
 - **Fluff.** Filler openings ("In today's fast-paced world"), empty
   connectives, throat-clearing ("As you might know"), and openers that lecture:
   Note, Consider, Imagine.
@@ -92,15 +92,16 @@ bind here too. When a count runs over, rewrite rather than substitute: a synonym
 carries the same vagueness, and repunctuating an em-dash keeps the fluff the
 dash was carrying. Delete first, then rewrite what remains.
 
-A template identity or a press editorial file may permit one of these forms
-where its own work needs it, on the terms `spec/editorial.md` sets. The failure
-underneath is not permitted anywhere: a sentence in a permitted form still has
-to say something.
+A template or a press may allow one of these failures where its own work needs
+it. The lesson template allows its two bookend cards to address the reader,
+which the self-reference entry above otherwise rules out. `spec/editorial.md`
+sets the terms. A sentence written in an allowed form still has to say
+something.
 
 ## Who this binds
 
 Every role, and every file a role writes. The editor is the one who cuts slop
 out of a draft, but a commission, a brief, an evidence record, a voice guide,
-or an editorial review written in slop does more damage than one bad article:
-the writer reads those files and learns the register they are written in. Hold
+or an editorial review written in slop reaches every article that reads it,
+because the writer learns the register those files are written in. Hold
 your own artifact to this standard before you hand it on.
