@@ -134,8 +134,9 @@ moral. Let the teaching and the citations equip the reader to go further.
 
 Use inline `<code>` only when the reader must preserve a string's exact spelling: something
 they could type, paste, execute, match, or distinguish character-for-character. It is not
-technical emphasis. Ordinary terms, product names, model names, and prose do not take it;
-neither does every repeat of a literal once the sentence has established it. When several
+technical emphasis. Ordinary terms, product names, model names, and prose do not
+take it. Neither does every repeat of a literal once the sentence has
+established it. When several
 tokens need comparison, give them a table or a code listing instead of turning a paragraph
 into labels.
 

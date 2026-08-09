@@ -1,7 +1,7 @@
 # lesson
 
-A lesson teaches one subject to a reader who is new to it. The reader is
-smart and reads widely; what they lack is this subject. Explain everything
+A lesson teaches one subject to a reader who is new to it. The reader is smart
+and reads widely. What they lack is this subject. Explain everything
 the field takes for granted, however elementary it feels to an insider,
 and never pad or talk down.
 

@@ -245,8 +245,8 @@ Write in your own words, never the draft's, and hold the review to
 new numbered artifact and never append to or overwrite an earlier review.
 
 Report the editorial-review path and final decision. When more work is needed,
-name its owner: researcher for evidence; writer for reporting, a redraft,
-source assets, chart provenance, and the proof; orchestrator for missing
-commission context. When researcher
-and writer both have work, request evidence first and record the writer's work
-in the review so the orchestrator can route it next.
+name its owner. Evidence goes to the researcher. Reporting, a redraft, source
+assets, chart provenance, and the proof go to the writer. Missing commission
+context goes to the orchestrator. When researcher and writer both have work,
+request evidence first and record the writer's work in the review so the
+orchestrator can route it next.

@@ -69,7 +69,7 @@ none of them still goes if it fails the test above.
   a testament, a turning point, or part of a broader movement. State what
   happened and give the figures that show how big it was.
 - **Reaching for the generic.** The median phrasing where a specific one exists:
-  the drug's name, not "a treatment"; 40 nanometers, not "tiny". Say what you
+  the drug's name, not "a treatment". 40 nanometers, not "tiny". Say what you
   mean and commit where the evidence lets you.
 - **Decorative analysis.** Trailing clauses that supply unattributed opinion in
   the grammar of a finding: "highlighting", "underscoring", "reflecting",
