@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-09</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-09",
+        "template": "brief",
+        "title": "Superconductivity in graphene holds past the field that should end it",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-09",
+        "tags": ["superconductivity", "mathematics", "ai", "social-science", "ai-security"],
+        "sources": 8,
+        "words": 916,
+        "reading_minutes": 4,
+        "dek": "MIT physicist Long Ju and collaborators measured three superconducting states in pentalayer graphene that survive an in-plane field of up to about 8.5 tesla, tens of times the strength that usually breaks a superconductor.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Superconductivity in graphene holds past the field that should end it</h1>
+        <p class="nb-dekline">MIT physicist Long Ju and collaborators measured three superconducting states in pentalayer graphene that survive an in-plane field of up to about 8.5 tesla, tens of times the strength that usually breaks a superconductor.</p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-08-09</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Condensed Matter</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41586-026-10815-x"
+              >A magnetic field enhances and induces superconducting states in pentalayer graphene</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            A magnetic field normally destroys a superconductor by pulling apart
+            its spin-paired electrons, and the field strength at which that happens
+            is the Pauli limit. A <em>Nature</em> paper in the August 6 print issue
+            reports three superconducting states in pentalayer rhombohedral graphene
+            that outlast that limit. They survive an in-plane field of up to about
+            8.5 tesla, tens of times the Pauli bound for their transition
+            temperature.<sup class="nb-cite"><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </p>
+          <p>
+            Two of the three states do more than survive the field: it creates
+            them. They appear only once the field is applied.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            Under a perpendicular field the transition temperature climbs from about
+            55 to about 90 millikelvin, still far too cold for any use outside a
+            dilution refrigerator.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            The measurements sit in the clean limit, where disorder is low enough
+            that the behavior reflects the material and not its defects. The result
+            reached the web in early July; the collaboration runs through MIT, the
+            University of Basel, Florida State, the University of Florida, and
+            Japan's National Institute for Materials Science.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Artificial Intelligence</span>
+          <h3>
+            <a href="https://openai.com/index/ten-advances-in-mathematics/"
+              >OpenAI's ten Astra proofs are Lean-checkable and still unrefereed</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            When this paper covered OpenAI's ten machine-checked proofs on August 4,
+            no one outside the company had read them. The first outside read has now
+            arrived, and it is informal. Thomas Bloom, the University of Manchester
+            mathematician who curates erdosproblems.com, called the results
+            &ldquo;big news&rdquo; while noting the system was built by
+            mathematicians and trained on human mathematics.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            That is a working mathematician's reaction, not a referee's: none of the
+            ten results has been through peer review.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            What can be checked today is the Lean. OpenAI published the proofs as
+            Lean 4 certificate files in a repository, <code>openai/ten-proofs</code>,
+            that anyone running Lean 4 can verify line by line.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            Lean shows each stated theorem follows from its axioms; it does not show
+            that referees have accepted the problems as solved.
+          </p>
+          <p>
+            The underlying claim, from OpenAI's August 1 announcement, is that an
+            internal, unreleased version of a model it calls Astra generated
+            solutions to ten problems in mathematics and theoretical computer
+            science, each unsolved for at least a decade.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            OpenAI's own phrasing was careful &mdash; the results &ldquo;resolve or
+            make substantial progress on&rdquo; the problems &mdash; and it credits
+            Astra with the mathematical arguments while taking responsibility for
+            formalizing them in Lean.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            One result, the existence of a non-sofic group, would close a question
+            open since Gromov introduced soficity in 1999.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            The Decoder put the run's compute at about $2,000 at OpenAI's Sol API
+            rates.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Computational Social Science</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41586-026-10742-x"
+              >GPT-4 forecasts social-science experiment results about as well as human panels</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            A <em>Nature</em> paper posted online July 8 tested whether a language
+            model can predict what a social-science experiment will
+            find.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            Ashokkumar, Hewitt, Ghezae, and Willer prompted GPT-4 to simulate
+            representative American samples for a large archive of survey
+            experiments. Its predicted treatment effects correlated strongly with
+            the measured ones, at accuracy comparable to pooled human
+            forecasters.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            The correlation held even on studies published after the model's
+            training cutoff.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          </p>
+          <div class="nb-stat-strip">
+            <div class="nb-stat">
+              <span class="nb-stat-n">70</span><span class="nb-stat-l">preregistered survey experiments</span>
+            </div>
+            <div class="nb-stat">
+              <span class="nb-stat-n">469</span><span class="nb-stat-l">treatment effects predicted</span>
+            </div>
+            <div class="nb-stat">
+              <span class="nb-stat-n">119,330</span><span class="nb-stat-l">participants in the archive</span>
+            </div>
+          </div>
+          <p>
+            The model was not evenly calibrated: it systematically overstated how
+            large the effects would be.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            A second archive of 15 megastudies and 606 effects gave lower
+            correlations in the same range.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            That upward bias matters for planning: a study sized from an inflated
+            forecast will be underpowered for the effect it actually finds.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Security</span>
+          <h3>
+            <a href="https://www.cisa.gov/news-events/alerts/2026/08/04/cisa-adds-three-known-exploited-vulnerabilities-catalog"
+              >CISA flags an actively exploited Langflow flaw that hands over an app's model keys</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            On August 4 CISA added CVE-2026-9198, an unauthenticated
+            remote-code-execution flaw in Langflow rated CVSS 9.8, to its Known
+            Exploited Vulnerabilities catalog, with a federal remediation deadline
+            of August 7.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            Langflow is a widely used builder for LLM agent workflows. The reach is
+            the concern: a Langflow instance usually holds the model and connector
+            credentials for everything it orchestrates.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+          </p>
+          <p>
+            The exploit is a two-step chain. A request to
+            <code>/api/v1/auto_login</code> mints a superuser token for any caller
+            that can reach the server, and <code>/api/v1/validate/code</code> then
+            runs attacker-supplied Python through <code>exec()</code>.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            IBM, which maintains Langflow, disclosed and patched the flaw in version
+            1.10.1 in July; versions 1.0.0 through 1.10.0 are affected. By the time
+            CISA catalogued it, exploitation was already live. One tracker logged
+            about 650 attempts against the flaw since July 6, from 244 addresses
+            across 41 countries.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41586-026-10815-x"
+              >Nature · Family of magnetic field-boosted superconductors in rhombohedral graphene</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.graphene-info.com/researchers-find-rhombohedral-graphene-can-host-multiple-magnetic-field-boosted"
+              >Graphene-Info · Researchers find rhombohedral graphene can host multiple magnetic-field-boosted superconducting states</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/ten-advances-in-mathematics/"
+              >OpenAI · Ten advances in mathematics and theoretical computer science</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://the-decoder.com/openai-announces-its-next-major-model-astra-by-dropping-ten-previously-unsolved-math-solutions/"
+              >The Decoder · OpenAI announces its next major model, Astra, by dropping ten previously unsolved math solutions</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41586-026-10742-x"
+              >Nature · Ashokkumar et al., Large language models can predict the results of social science experiments</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://pubmed.ncbi.nlm.nih.gov/42420458/"
+              >PubMed (NLM) · Large language models can predict the results of social science experiments (citation and abstract)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.cisa.gov/news-events/alerts/2026/08/04/cisa-adds-three-known-exploited-vulnerabilities-catalog"
+              >CISA · CISA adds three known exploited vulnerabilities to catalog (August 4, 2026)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thehackernews.com/2026/08/cisa-flags-langflow-rce-tomcat-and-n.html"
+              >The Hacker News · CISA flags Langflow RCE, Tomcat, and N-central flaws under active exploitation</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
