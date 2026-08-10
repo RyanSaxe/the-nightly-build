@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atuin makes your shell history answer questions bash can't · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "atuin",
+        "template": "article",
+        "title": "Atuin makes your shell history answer questions bash can't",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-10",
+        "tags": ["command-line", "shell-history", "atuin"],
+        "sources": 13,
+        "words": 1509,
+        "reading_minutes": 7,
+        "dek": "Every command lands in a local SQLite file with its directory, exit code, and duration, and the encryption that syncs it covers less than the word suggests.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">Atuin makes your shell history answer questions bash can't</h1>
+        <p class="nb-dekline">
+          Every command lands in a local SQLite file with its directory, exit
+          code, and duration, and the encryption that syncs it covers less than
+          the word suggests.
+        </p>
+        <div class="nb-byline">
+          <span>7 min read</span><span>2026-08-10</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Bash history is a list of strings</h2>
+        <p>
+          Bash writes each command you run to <code>.bash_history</code>, one
+          line per command, and that line is all it keeps. The file holds the
+          text you typed and nothing about the run: not the directory you were
+          in, not whether the command succeeded, not how long it took. Atuin
+          replaces that file with a SQLite database and records the surrounding
+          context beside every command.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The command text is still there. So are the working directory, the
+          exit code, the duration, the session, and the hostname, each a column
+          the schema names.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          With Atuin, that history stops being a flat log and becomes a table
+          you can query.
+        </p>
+      </section>
+
+      <section data-nb-section="failed-here" id="failed-here">
+        <h2>Asking Atuin which commands failed here</h2>
+        <p>
+          A build broke in this directory last week and you want the command
+          that failed. In bash your history is text, so
+          the most you can do is grep for a fragment you remember and read past
+          every success to find the failure. The exit code was never written
+          down, so the plain question, which commands failed, is one the file
+          cannot answer at all.
+        </p>
+        <p>
+          Atuin wrote the exit code and the directory into their own columns, so
+          the same question is a filter.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+        </p>
+
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">shell session</span><span>SHELL</span>
+          </div>
+          <pre><code class="language-bash"># bash: history is plain text, with no exit code and no directory
+history | grep make
+
+# atuin: the same commands, now filtered by how and where they ran
+atuin search --exclude-exit 0 --cwd .</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · The bash query can only match text; the Atuin query filters
+            on context bash never recorded.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          Read the second command the way you would trace any tool: by what each
+          part does. <code>--exclude-exit 0</code> drops every command that
+          exited cleanly. <code>--cwd .</code> restricts the search to the
+          directory you are standing in. What remains is the commands that
+          failed here, newest first.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          The directory and the exit code did the work, and neither is in
+          <code>.bash_history</code>, which is why the same request against bash
+          returns a pile of text you still have to read by hand.
+        </p>
+        <p>
+          The filter reaches only what the shell hook captured. A command you
+          ran before installing Atuin, or in a shell where the hook is not
+          loaded, is not in the table, and the search will not invent it. The
+          database answers for what it saw and says nothing about the rest.
+          Atuin records more than the two fields this query uses, including the
+          shell, a timestamp, and, more recently, an
+          author field that marks whether a human or an AI agent ran the
+          command.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="hook-cost" id="hook-cost">
+        <h2>The hook runs on every command</h2>
+        <p>
+          Recording that context has a price, and the price is paid on every
+          prompt. To capture a command, Atuin installs a shell hook: a preexec
+          step runs before the command and records its text, time, and
+          directory, and a precmd step runs after it and records the exit code
+          and duration.<sup class="nb-cite"><a href="#s5">5</a></sup> That hook
+          fires every time you press enter. It is written in Rust and does
+          little, but it is real work on the path you hit most, and it is the
+          cost you cannot opt out of while still using the tool. The database is
+          the other standing cost. It grows with your history, and it sits on
+          disk unencrypted.
+        </p>
+        <p>
+          Atuin also ships a background daemon, and it is easy to assume that is
+          part of the deal. It is not. The daemon is opt-in: its
+          <code>enabled</code> setting defaults to false and it does not
+          autostart.<sup class="nb-cite"><a href="#s6">6</a></sup> Sync, when
+          you turn it on, runs in the shell process on a default cadence of five
+          minutes, not through a resident service.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          So the footprint you are actually adopting is the hook and the SQLite
+          file, and nothing that keeps running when your shell is closed.
+        </p>
+        <p>
+          One default costs more than compute. Atuin rebinds both
+          <code>Ctrl-R</code> and the up arrow to a full-screen search
+          interface.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          <code>Ctrl-R</code> for search is what you would expect. Rebinding the
+          up arrow is the surprise: the key you have pressed for years to recall
+          the previous line now opens a search UI instead. Atuin ships
+          <code>--disable-up-arrow</code> to put the old behavior back, and a
+          tool that includes an escape hatch for its own default is telling you
+          the default divides its users.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="maintenance" id="maintenance">
+        <h2>A release every week or two, since 2021</h2>
+        <p>
+          A tool that sits on every prompt is only worth adopting if it will
+          still be maintained next year. Atuin has shipped stable releases
+          roughly every one to two weeks, with 18.19.0 on 3 August 2026 the
+          latest at the time of writing and a beta line already open past
+          it.<sup class="nb-cite"><a href="#s8">8</a></sup> It is MIT-licensed,
+          written in Rust, and has been developed since 2021, first by Ellie
+          Huxtable and now under the atuinsh organization.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+          For software you wire into your shell startup, an active cadence and a
+          license that lets you fork if that ever stops are the two facts that
+          decide the question, and both hold.
+        </p>
+      </section>
+
+      <section data-nb-section="encryption-boundary" id="encryption-boundary">
+        <h2>What "end-to-end encrypted" actually covers</h2>
+        <p>
+          Sync is optional, and off until you register an account. When you do
+          turn it on, the README says your history is fully end-to-end
+          encrypted, and the maintainer writes that she could not read your data
+          even if she wanted to.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          That is true of your command text. Two facts from the source qualify
+          the promise, and both cut the same way.
+        </p>
+        <p>
+          The first is on your own machine. The client stores its database
+          unencrypted and encrypts only before sending to the server. The
+          history.rs comment says so in as many words.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Anything that can read your home directory can read your entire
+          command history, and that history is richer than
+          <code>.bash_history</code> ever was. A digital-forensics write-up
+          takes exactly this database as its subject, independent confirmation
+          that the exposure is real.<sup class="nb-cite"
+            ><a href="#s10">10</a></sup
+          >
+        </p>
+        <p>
+          The second is on the wire. Encryption protects the payload, not the
+          envelope. Each synced record carries its id, a per-host index, the
+          host id, a tag, a version, and a timestamp in the clear, because the
+          server uses those to order records and drop duplicates.<sup
+            class="nb-cite"
+            ><a href="#s11">11</a></sup
+          >
+          The server cannot read your commands. It can see how many you run, on
+          which host, and when.
+        </p>
+
+        <table class="nb-table">
+          <caption>
+            What sync's encryption covers, and what each layer still
+            exposes.<sup class="nb-cite"><a href="#s4">4</a></sup
+            ><sup class="nb-cite"><a href="#s11">11</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>State</th>
+              <th class="txt">What is exposed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Local database</span></td>
+              <td>plaintext</td>
+              <td class="txt">
+                Your full command history to anything that can read your home
+                directory.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Sync payload</span></td>
+              <td>encrypted</td>
+              <td class="txt">
+                Nothing. The command text is unreadable to the server.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Sync envelope</span></td>
+              <td>plaintext</td>
+              <td class="txt">
+                Host id, per-host record counts, and timestamps: how much you
+                run and when.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          The encryption is sound where it does apply. Each record gets its own
+          random 32-byte key, and that key is wrapped under a master key
+          generated on your machine and never sent over the wire.<sup
+            class="nb-cite"
+            ><a href="#s12">12</a></sup
+          >
+          And if the metadata a hosted server sees is what bothers you, point the
+          sync address at a server you run, and the trust question moves
+          in-house.<sup class="nb-cite"
+            ><a href="#s13">13</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>When the swap pays off</h2>
+        <p>
+          The decision comes down to whether you ask questions of your history.
+          If you want to know which commands failed, or what you ran in a given
+          directory, Atuin answers in a filter where bash cannot answer at all.
+          The hook and the database are a fair price for that. If you only ever
+          tap the up arrow for the last few commands, the trade is worse. You
+          install a hook, carry a growing plaintext database, and relearn a key
+          you have used for years, all for a search UI you did not need.
+        </p>
+        <p>
+          On sync, the honest reading of the source is narrower than the
+          marketing word. Your command text stays private in
+          transit and at the server, whether you use the hosted server or your
+          own. What the encryption does not do is protect the copy on your own
+          disk. Run sync if the search across machines is worth it to you, run
+          it self-hosted if the envelope metadata is not, and either way treat
+          the local database, not the sync server, as the file worth
+          protecting.<sup class="nb-cite"><a href="#s4">4</a></sup
+          ><sup class="nb-cite"><a href="#s11">11</a></sup>
+        </p>
+
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            For an engineer who queries their shell history, Atuin earns the
+            shell hook and the SQLite file. The encryption keeps your commands
+            private when they sync but leaves the local database in plaintext,
+            so the thing to guard is the copy on your own machine.<sup
+              class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/atuinsh/atuin/blob/main/README.md"
+              >atuinsh/atuin · README</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/atuinsh/atuin/blob/main/crates/atuin-client/migrations/20210422143411_create_history.sql"
+              >atuinsh/atuin · create_history.sql migration</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://docs.atuin.sh/18.18/reference/search/"
+              >Atuin Docs · atuin search reference</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/atuinsh/atuin/blob/main/crates/atuin-client/src/history.rs"
+              >atuinsh/atuin · history.rs</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://docs.atuin.sh/18.18/guide/shell-integration/"
+              >Atuin Docs · Shell integration</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/atuinsh/atuin/blob/main/crates/atuin-client/src/settings.rs"
+              >atuinsh/atuin · settings.rs</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://docs.atuin.sh/18.18/configuration/key-binding/"
+              >Atuin Docs · Key binding</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/atuinsh/atuin/releases"
+              >atuinsh/atuin · Releases</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/atuinsh/atuin/blob/main/LICENSE"
+              >atuinsh/atuin · LICENSE</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://isc.sans.edu/diary/33226"
+              >SANS ISC · Linux Shell Forensic: Let's Dive Into Atuin! (Xavier
+              Mertens)</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/atuinsh/atuin/blob/main/crates/atuin-domain/src/record.rs"
+              >atuinsh/atuin · record.rs</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/atuinsh/atuin/blob/main/crates/atuin-common/src/encryption/paseto_v4.rs"
+              >atuinsh/atuin · paseto_v4.rs</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://docs.atuin.sh/18.18/guide/sync/"
+              >Atuin Docs · Sync guide</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
