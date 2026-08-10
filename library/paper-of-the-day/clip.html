@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CLIP's robustness came from its data · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "clip",
+        "template": "paper",
+        "title": "CLIP's robustness came from its data, a cause the paper floated and left open",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-10",
+        "tags": ["computer-vision", "robustness", "contrastive-learning", "clip"],
+        "sources": 8,
+        "words": 3204,
+        "reading_minutes": 14,
+        "dek": "A caption-matching model matched a supervised ResNet-50 on ImageNet with none of its labels and held up under natural distribution shift, a robustness later work traced to the training data the paper had only floated.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          CLIP's robustness came from its data, a cause the paper floated and
+          left open
+        </h1>
+        <p class="nb-dekline">
+          A caption-matching model matched a supervised ResNet-50 on ImageNet
+          with none of its labels and held up under natural distribution shift,
+          a robustness later work traced to the training data the paper had only
+          floated.
+        </p>
+        <div class="nb-byline">
+          <span>14 min read</span><span>2026-08-10</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            Learning Transferable Visual Models From Natural Language Supervision
+          </p>
+          <p class="nb-paper-meta">
+            Radford, Kim, Hallacy, Ramesh, Goh, Agarwal, Sastry, Askell,
+            Mishkin, Clark, Krueger, Sutskever · arXiv:2103.00020 · 2021
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2103.00020"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            State-of-the-art computer vision systems are trained to predict a
+            fixed set of predetermined object categories. This restricted form
+            of supervision limits their generality and usability since
+            additional labeled data is needed to specify any other visual
+            concept. Learning directly from raw text about images is a promising
+            alternative which leverages a much broader source of supervision. We
+            demonstrate that the simple pre-training task of predicting which
+            caption goes with which image is an efficient and scalable way to
+            learn SOTA image representations from scratch on a dataset of 400
+            million (image, text) pairs collected from the internet. After
+            pre-training, natural language is used to reference learned visual
+            concepts (or describe new ones) enabling zero-shot transfer of the
+            model to downstream tasks. We study the performance of this approach
+            by benchmarking on over 30 different existing computer vision
+            datasets, spanning tasks such as OCR, action recognition in videos,
+            geo-localization, and many types of fine-grained object
+            classification. The model transfers non-trivially to most tasks and
+            is often competitive with a fully supervised baseline without the
+            need for any dataset specific training. For instance, we match the
+            accuracy of the original ResNet-50 on ImageNet zero-shot without
+            needing to use any of the 1.28 million training examples it was
+            trained on. We release our code and pre-trained model weights at
+            https://github.com/OpenAI/CLIP.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Vision models could only name their training labels</h2>
+        <p>
+          A standard image classifier learns a fixed row of output units, one
+          per category it was trained on. To recognize a category it never saw
+          in training, you collect labeled examples of that category and train
+          again. The vocabulary is baked into the weights, and widening it costs
+          another labeling pass. CLIP's claim is that the vocabulary does not
+          have to live in the weights at all. Train an image encoder and a text
+          encoder together on raw (image, caption) pairs, and at test time you
+          can name a new category by writing it down: the text encoder turns the
+          words into the classifier.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Two results come out of that setup, and they are worth keeping apart.
+          The famous one is parity: CLIP matches a supervised ResNet-50 on
+          ImageNet having seen none of ImageNet's labels. The more testable one
+          sits beside it. CLIP's zero-shot classifier stays accurate under
+          natural distribution shift, the regime where an ImageNet-trained
+          network's accuracy falls away, and it closes most of the gap those
+          models leave open.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          first is a demonstration. The second raises a question about cause, and
+          the record since 2021 can now answer it.
+        </p>
+      </section>
+
+      <section data-nb-section="objective" id="objective">
+        <h2>One similarity matrix, read in two directions</h2>
+        <p>
+          The training task is a matching problem over a batch. Sample a batch
+          of
+          <span class="nb-math-in">N</span> aligned (image, caption) pairs. The
+          image encoder maps each image to a feature vector, and the text
+          encoder maps each caption to a feature vector. A learned linear
+          projection sends both into one shared space, and each projected vector
+          is L2-normalized to unit length. Call the resulting unit vectors
+          <span class="nb-math-in">I^{e}_{i}</span> for images and
+          <span class="nb-math-in">T^{e}_{j}</span> for texts.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          Because the vectors are unit length, their dot product is the cosine
+          similarity between an image and a caption. Scale that similarity by a
+          learned temperature and it becomes a logit:
+          <span class="nb-math-in"
+            >s_{ij} = \exp(t)\,\langle I^{e}_{i},\, T^{e}_{j}\rangle</span
+          >. Stacking every pair gives an
+          <span class="nb-math-in">N \times N</span> grid of logits. In a batch
+          of <span class="nb-math-in">N</span> pairs there are exactly
+          <span class="nb-math-in">N</span> correct image-caption matches, the
+          diagonal, and <span class="nb-math-in">N^{2}-N</span> incorrect
+          pairings everywhere else.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          The training signal is: push each image's score for its own caption
+          above its scores for the other <span class="nb-math-in">N-1</span>
+          captions, and symmetrically for each caption over the images. That is
+          just a classification problem read off the grid, once down the columns
+          and once across the rows.
+        </p>
+        <p>
+          Read that way the objective is two ordinary cross-entropies sharing
+          one grid. Each row is a softmax over texts for a fixed image; each
+          column is a softmax over images for a fixed text; the correct class in
+          both is the diagonal index. Average the two and you have CLIP's loss.
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \mathcal{L} = -\,\htmlClass{nb-mc4}{\frac{1}{2N}} \sum_{i=1}^{N}
+            \left[\; \log \frac{ \htmlClass{nb-mc1}{e^{\,s_{ii}}} }{
+            \htmlClass{nb-mc2}{\sum_{j} e^{\,s_{ij}}} } \;+\; \log \frac{
+            \htmlClass{nb-mc1}{e^{\,s_{ii}}} }{ \htmlClass{nb-mc3}{\sum_{j}
+            e^{\,s_{ji}}} } \;\right]
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">e^{\,s_{ii}}</span
+              ><span
+                >The matched pair on the diagonal, the one correct answer for
+                both row and column <span class="nb-math-in">i</span>.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\sum_{j} e^{\,s_{ij}}</span
+              ><span
+                >Normalizer over every caption for image
+                <span class="nb-math-in">i</span>: the image-to-text softmax
+                across a row.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\sum_{j} e^{\,s_{ji}}</span
+              ><span
+                >Normalizer over every image for caption
+                <span class="nb-math-in">i</span>: the text-to-image softmax
+                down a column.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\frac{1}{2N}</span
+              ><span
+                >Averages the two directions over the batch, so neither modality
+                is the privileged query.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The symmetric cross-entropy CLIP optimizes over the scaled
+            cosine-similarity grid, transcribed from the paper's Figure 3
+            pseudocode. It is the N-pair and InfoNCE contrastive loss, applied
+            once per modality and averaged.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Sec. 2.3, Fig. 3 (pseudocode)"
+                data-nb-note="'We optimize a symmetric cross entropy loss over these similarity scores.' The figure gives the exact projection, L2-normalize, scaled-cosine-logit, symmetric-cross-entropy computation."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          The temperature carries more than it looks. Written as
+          <span class="nb-math-in">\exp(t)</span> with
+          <span class="nb-math-in">t</span> a directly learned scalar, it sets
+          how sharply the softmax separates the matched pair from its
+          competitors. The paper initializes it near the equivalent of
+          <span class="nb-math-in">0.07</span> and clips the scaling at a maximum
+          of 100, because letting the network drive the logits arbitrarily high
+          destabilizes training.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          The batch is the other quiet design choice. With a batch size of
+          <span class="nb-math-in">N = 32{,}768</span>, each image is
+          discriminated against tens of thousands of competing captions at once,
+          so a single step is a hard classification rather than a single
+          positive-negative comparison.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          Nothing in the loss is new in isolation. Cosine similarity, a softmax,
+          cross-entropy, a temperature: the assembly is what does the work.
+          Panel (1) of the paper's own summary figure draws exactly this grid,
+          with the diagonal shaded as the positives, and the same similarity
+          operation reappears in the two panels that follow.
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="clip/asset-1.png"
+            alt="Three-panel schematic. Panel 1: images and captions each pass through an encoder, forming an N-by-N grid of dot products with the diagonal shaded as the correct matches. Panel 2: a list of class names is inserted into the template 'A photo of a {object}.' and passed through the text encoder to produce weight vectors T1 through TN. Panel 3: one image is encoded and scored against every class-text vector, and the highest scoring class, 'A photo of a dog', is chosen."
+          />
+          <figcaption>
+            Fig. 1 · CLIP's summary of its own method. The contrastive grid in
+            panel (1) is the training loss above; panels (2) and (3) reuse the
+            same scaled cosine similarity at inference, scoring one image against
+            class names turned into vectors.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 1, p. 3 (Summary of our approach)"
+                data-nb-note="Shows contrastive pre-training and, in panels 2-3, the construction of a zero-shot classifier from label text."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="zero-shot-classifier" id="zero-shot-classifier">
+        <h2>The text encoder writes the classifier</h2>
+        <p>
+          A trained CLIP has no output layer for ImageNet's thousand classes,
+          because it was never told about them. It builds one at inference from
+          the class names. Take each class name, wrap it in a prompt (the
+          default is <code>A photo of a {label}.</code>), and pass the prompt
+          through the text encoder. The resulting unit vector is that class's
+          weight vector. Do this for all one thousand ImageNet classes and you
+          have assembled a linear classifier whose weights were written by the
+          text encoder rather than learned by gradient descent on labeled
+          images.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Classifying an image is then the same scaled cosine similarity as
+          training, now scored against the class vectors and normalized over
+          classes:
+        </p>
+
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            p(y = c \mid x) = \frac{ e^{\,s(x,\,c)} }{ \sum_{k} e^{\,s(x,\,k)} },
+            \qquad s(x,\,c) = \exp(t)\,\bigl\langle I^{e},\; W_{c}
+            \bigr\rangle
+          </div>
+          <figcaption>
+            The zero-shot prediction: score the image embedding
+            <span class="nb-math-in">I^{e}</span> against each class vector
+            <span class="nb-math-in">W_{c}</span> (the encoded prompt for class
+            <span class="nb-math-in">c</span>) with the training-time scaled
+            cosine, then softmax over classes.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Sec. 3.1.2"
+                data-nb-note="The paper frames this as a multinomial logistic regression classifier with L2-normalized inputs, L2-normalized weights, no bias, and temperature scaling; the text encoder acts as a hypernetwork generating the linear classifier's weights."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          The paper's own framing is the cleanest way to hold this. The
+          classifier is a multinomial logistic regression with L2-normalized
+          inputs, L2-normalized weights, no bias, and temperature scaling. The
+          text encoder is the hypernetwork that writes those weights from the
+          class descriptions.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Nothing about the image side changed. The category vocabulary moved
+          out of the weights and into a string you can edit.
+        </p>
+        <p>
+          Because the vocabulary is now text, how you phrase it matters. A bare
+          class name is a worse query than a short caption, since the encoder
+          was trained on captions, not nouns. The single default prompt buys
+          about <span class="nb-math-in">1.3\%</span> on ImageNet over feeding
+          the bare label. Ensembling 80 different prompts and averaging their
+          class vectors adds about another
+          <span class="nb-math-in">3.5\%</span>. Across 36 datasets the two
+          together are worth roughly 5 points on average, a gain the paper
+          compares to spending four times the compute on the encoder.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Sec. 3.1.4, Fig. 4"
+              data-nb-note="Prompt engineering (+1.3% single prompt on ImageNet) and ensembling (+3.5% over the single default); ~5 points averaged across 36 datasets, comparable to 4x compute on the contextless baseline."
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          With that assembly, the best CLIP model reaches
+          <span class="nb-math-in">76.2\%</span> zero-shot top-1 on ImageNet,
+          level with the original supervised ResNet-50 and far above the 11.5%
+          that the earlier Visual N-Grams zero-shot attempt managed on the same
+          benchmark.<sup class="nb-cite"><a href="#s1">1</a></sup> The parity is
+          the demonstration: a caption-matching objective, with no ImageNet
+          labels, produces a classifier as accurate as one trained on 1.28
+          million of them.
+        </p>
+
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">76.2%</span
+            ><span class="nb-stat-l">zero-shot ImageNet top-1</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">0</span
+            ><span class="nb-stat-l">ImageNet labels used in training</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">400M</span
+            ><span class="nb-stat-l">web (image, text) pairs</span>
+          </div>
+        </div>
+        <p>
+          CLIP shipped its trained weights and the loss as runnable code, so the
+          objective above describes an artifact anyone can load and inspect.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="robustness" id="robustness">
+        <h2>Robust where supervised models fall off</h2>
+        <p>
+          The second result needs a definition first. Take an ImageNet model and
+          test it on a dataset built to depict the same classes under a natural
+          shift: ImageNetV2's fresh collection, ImageNet-R's art and renditions,
+          ObjectNet's cluttered rotations, ImageNet Sketch's line drawings,
+          ImageNet-A's hard natural images. Accuracy drops. A ResNet-101 that
+          reaches 76.2% on the ImageNet validation set makes roughly five times
+          as many mistakes on these shifts as it does in
+          distribution.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Some of that drop is expected: a weaker model is worse everywhere, in
+          distribution and out. The question is whether a model is worse under
+          shift than its in-distribution accuracy already predicts. Taori and
+          colleagues named this split. <em>Effective robustness</em> is accuracy
+          under shift above what a model's in-distribution accuracy would lead
+          you to expect; <em>relative robustness</em> is any out-of-distribution
+          gain at all. Across 204 ImageNet models in 213 test conditions they
+          found that robustness to synthetic perturbations did not transfer to
+          natural shift, and that almost no training technique bought effective
+          robustness. The one lever that moved it was training on larger and
+          more diverse data.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          CLIP adopts that framework and reports the result on its testbed: the
+          zero-shot classifier reduces the effective-robustness gap that
+          standard ImageNet models leave open by up to 75%, averaged over seven
+          natural-shift datasets.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="clip/asset-2.png"
+            alt="Left: a scatter plot of average accuracy on 7 natural distribution-shift datasets against ImageNet accuracy. A dashed y=x line marks ideal robustness. Standard ImageNet models cluster along a lower band well below the line; zero-shot CLIP models sit on a higher band much closer to it. Right: per-class accuracy for the 'banana' class across five shift datasets, comparing ResNet-101 with zero-shot CLIP, showing large CLIP gains such as +51.2% on ImageNet-R and +74.4% on ImageNet-A."
+          />
+          <figcaption>
+            Fig. 2 · Left panel: zero-shot CLIP (upper band) sits far above the
+            standard-ImageNet trend (lower band) relative to the y=x
+            ideal-robustness line; the vertical distance between the bands is the
+            effective-robustness gap CLIP closes. Right panel: the single
+            "banana" class, shown by the authors as an illustration only; its
+            large per-class deltas are not the averaged headline result.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 13, p. 15"
+                data-nb-note="Left panel carries the effective-robustness claim (OOD vs ImageNet accuracy against y=x). Right 'banana' panel is a single-class visualization; do not read its +74.4%/+51.2% deltas as the averaged result."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          This is the point at which the paper's reading is easy to overstate,
+          so it is worth quoting what the paper actually said. Section 3.3 opens
+          with the intuition that a zero-shot model should not be able to exploit
+          the spurious correlations a supervised model picks up, since it never
+          trained on the shifted distribution. But when the authors ask what
+          causes the robustness, they decline to credit the objective or the
+          zero-shot protocol.
+        </p>
+
+        <div class="nb-note">
+          <span class="nb-note-label">The paper's own hedge</span>
+          <blockquote>
+            While these results show that zero-shot models can be much more
+            robust, they do not necessarily mean that supervised learning on
+            ImageNet causes a robustness gap. Other details of CLIP, such as its
+            large and diverse pre-training dataset or use of natural language
+            supervision could also result in much more robust models regardless
+            of whether they are zero-shot or fine-tuned.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            <span class="nb-note-who">Radford et al., Section 3.3</span>
+          </blockquote>
+        </div>
+
+        <p>
+          The paper then ran an experiment that cut against its own intuition.
+          Fitting an L2-regularized logistic regression on CLIP's frozen
+          features to ImageNet's training set raised ImageNet accuracy by 9.2
+          points, to 85.4%. It did not improve average accuracy under shift.
+          Per dataset it lost ground: 4.7 points on ImageNet-R, 3.8 on
+          ObjectNet, 2.8 on ImageNet Sketch, 1.9 on ImageNet-A.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Sec. 3.3, Fig. 14"
+              data-nb-note="Adapting CLIP to ImageNet by logistic regression: +9.2 ImageNet (to 85.4%), average shift accuracy slightly down; per-dataset -4.7 ImageNet-R, -3.8 ObjectNet, -2.8 ImageNet Sketch, -1.9 ImageNet-A. Only ImageNetV2 improved meaningfully."
+              >1</a
+            ></sup
+          >
+          If the zero-shot evaluation were what conferred the robustness, keeping
+          the same features and only swapping the zero-shot head for a fitted one
+          should not selectively erode the shifted datasets while improving the
+          in-distribution one. It did exactly that.
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="clip/asset-3.png"
+            alt="Horizontal bar chart titled 'Adapt to ImageNet'. Fitting a classifier to ImageNet raises ImageNet by +9.2 and ImageNetV2 by +5.8, but lowers ImageNet-R by 4.7, ObjectNet by 3.8, ImageNet Sketch by 2.8, and ImageNet-A by 1.9, relative to the zero-shot classifier."
+          />
+          <figcaption>
+            Fig. 3 · Adapting CLIP to ImageNet with a fitted classifier improves
+            the in-distribution scores and the near-identical ImageNetV2, yet
+            costs accuracy on every genuinely shifted set. The paper's own
+            evidence that the zero-shot head is not what the robustness
+            depends on.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 14, p. 15"
+                data-nb-note="Per-dataset signed change from the zero-shot classifier when CLIP is adapted to ImageNet by logistic regression; supports the contradiction that zero-shot evaluation is not the source of the robustness."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          So the paper left the question honestly open. It demonstrated a robust
+          zero-shot classifier, named its large and diverse pre-training data as
+          one candidate explanation among several, and wrote that it did not
+          have confident answers about the cause.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          Everything after 2021 is an answer to that open question, not a
+          correction of a claim the paper made.
+        </p>
+      </section>
+
+      <section data-nb-section="isolating-the-cause" id="isolating-the-cause">
+        <h2>Vary the data, and the robustness follows</h2>
+        <p>
+          Isolating a cause takes a controlled comparison, and the confound in
+          CLIP is that four things change at once against a supervised baseline:
+          the training set size, the training distribution, the natural-language
+          supervision, and the contrastive loss. Fang and colleagues broke them
+          apart. They listed five candidate causes: training set size, training
+          distribution, language supervision at training time, language
+          supervision at test time, and the contrastive loss. Then they varied
+          each while holding the rest fixed.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+        </p>
+        <p>
+          Two moves carry the result. To vary supervision on fixed data they
+          built ImageNet-Captions, ImageNet's own images paired with their
+          original Flickr captions, and trained CLIP on it: the caption-matching
+          objective on ImageNet's distribution does not produce a robust model.
+          To vary data on fixed supervision they trained standard supervised
+          classifiers on CLIP's web data: those gain robustness. Language
+          supervision and the contrastive loss drop out, then, and neither
+          confers robustness on its own. The diverse training distribution is
+          the main cause, and the other four factors contribute little to
+          none.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+        </p>
+
+        <div class="nb-pull">
+          <p>
+            Train CLIP's objective on ImageNet's images and the robustness does
+            not appear; train a plain classifier on CLIP's data and it does.
+          </p>
+        </div>
+
+        <p>
+          That answer confirms the candidate CLIP had floated and rules out the
+          reading its intuition leaned toward. It also lands where an earlier
+          survey had pointed: Taori and colleagues had already found, before CLIP
+          was published, that more diverse training data was the one lever that
+          reliably moved effective robustness.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          CLIP was the striking instance of that lever; the follow-on isolated
+          the lever from the objective wrapped around it.
+        </p>
+        <p>
+          Two refinements keep the finding from being flattened into a slogan.
+          The first is that "more data" is the wrong summary. Nguyen and
+          colleagues built a testbed of six public sources and found that CLIP's
+          robustness varies substantially with which source it trains on.
+          Naively mixing sources does not help; it often dilutes the robustness
+          of the best single source instead of adding to it.<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          The right statement is that the composition of the training
+          distribution determines robustness, not its sheer size or a raw count
+          of images. The second is scale as a separate axis. Training CLIP-style
+          models on up to two billion LAION pairs yields clean power-law scaling
+          on zero-shot tasks. Yet the OpenAI-data and LAION-data models scale
+          with different exponents, despite identical architectures and similar
+          recipes.<sup class="nb-cite"><a href="#s6">6</a></sup> Same math,
+          different data, different behavior, on an open reproduction that does
+          not depend on OpenAI's private set.
+        </p>
+        <p>
+          One caution about the weight to put on this. The controlled
+          experiments that isolate the data, from the effective-robustness
+          framework through the five-cause ablation and the source-composition
+          testbed, come largely from one research group and its
+          collaborators.<sup class="nb-cite"><a href="#s3">3</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup
+          ><sup class="nb-cite"><a href="#s5">5</a></sup> The work is
+          peer-reviewed and its comparisons are controlled, and no source I found
+          disputes it, but it has not yet been reproduced by an unrelated lab.
+          The finding is well supported; it is not yet a multi-lab consensus, and
+          it should be held as the former.
+        </p>
+      </section>
+
+      <section data-nb-section="rereading-3-3" id="rereading-3-3">
+        <h2>Reading Section 3.3 with the follow-on in hand</h2>
+        <p>
+          The credit for CLIP's robustness belongs to the pre-training
+          distribution, and that credit is not free. The property Fang credits,
+          broad and uncurated web diversity, is the same property that lets
+          harmful content through. Birhane and colleagues audited LAION-400M, a
+          dataset built by parsing Common Crawl image-alt-text pairs and
+          filtered with CLIP itself, and documented explicit sexual, misogynist,
+          and racist content that the automated filtering did not remove.<sup
+            class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          CLIP's own bias probe points the same way from inside the paper. Run
+          zero-shot on face images against a label set augmented with non-human
+          categories, and Black faces are sorted into a non-human category at
+          14.4%, above every other group. The misclassification swings sharply
+          when a single label such as "child" is added or removed from the
+          candidate set.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Both the robustness and the harm trace to uncurated web-scale data.
+        </p>
+        <p>
+          The reliability story is narrower than the headline invites, too. A
+          later audit of 83 CLIP models against 127 ImageNet classifiers found
+          that the training source shapes safety-relevant properties strongly,
+          which is the data-drives-behavior finding again, but also that CLIP's
+          often-cited calibration advantage does not consistently hold.<sup
+            class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+          "CLIP is simply more reliable" is not what the record supports. "CLIP's
+          behavior, good and bad, tracks its training source" is.
+        </p>
+        <p>
+          What survives all of this is the demonstration the paper actually made,
+          and it is a strong one. A caption-matching objective, with the zero-shot
+          construction built from label text, yields a classifier that matches a
+          supervised baseline on ImageNet and stays accurate under natural shift.
+          The reconstruction of the objective shows why the parity is
+          unsurprising in hindsight: it is ordinary cross-entropy over a
+          similarity grid, at a batch size and data scale that make the
+          discrimination hard. The one claim to retire is the intuitive one the
+          paper voiced and hedged, that the zero-shot evaluation or the language
+          supervision is what buys the robustness. Its own adaptation experiment
+          argued against it, and the controlled follow-on settled it: the cause
+          is the data.
+        </p>
+
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            CLIP's two headline results stand: zero-shot parity with a supervised
+            ResNet-50, and a real effective-robustness gain over standard
+            ImageNet models.<sup class="nb-cite"><a href="#s1">1</a></sup> The
+            robustness comes from the pre-training distribution, not the language
+            objective or the zero-shot protocol, which confirms the candidate the
+            paper named in Section 3.3 and rules out the reading its intuition
+            preferred.<sup class="nb-cite"><a href="#s4">4</a></sup> Two things
+            would change the assessment: an independent lab failing to reproduce
+            the data-varies-robustness result on new sources, or a controlled
+            study showing the contrastive objective adds robustness once the data
+            is held fixed. Until then, the safe reading is that CLIP proved you
+            can classify from label text, and its data, not its captions, is what
+            made that classifier hold up.<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2103.00020"
+              >arXiv · Radford et al., Learning Transferable Visual Models From
+              Natural Language Supervision (CLIP)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/openai/CLIP"
+              >OpenAI · CLIP code and pre-trained weights</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2007.00644"
+              >arXiv · Taori et al., Measuring Robustness to Natural
+              Distribution Shifts in Image Classification</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2205.01397"
+              >arXiv · Fang et al., Data Determines Distributional Robustness in
+              Contrastive Language Image Pre-training (CLIP)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2208.05516"
+              >arXiv · Nguyen et al., Quality Not Quantity: On the Interaction
+              between Dataset Design and Robustness of CLIP</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2212.07143"
+              >arXiv · Cherti et al., Reproducible Scaling Laws for Contrastive
+              Language-Image Learning (OpenCLIP)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2110.01963"
+              >arXiv · Birhane et al., Multimodal Datasets: Misogyny,
+              Pornography, and Malignant Stereotypes</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/2402.07410"
+              >arXiv · Tu et al., A Closer Look at the Robustness of Contrastive
+              Language-Image Pre-Training (CLIP)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
