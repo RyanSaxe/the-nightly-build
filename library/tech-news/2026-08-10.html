@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-10</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-10",
+        "template": "brief",
+        "title": "An internal OpenAI model reports ten advances in math and theoretical computer science",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-10",
+        "tags": [],
+        "sources": 11,
+        "words": 794,
+        "reading_minutes": 3,
+        "dek": "The Lean 4 certificates confirm the formalized theorems compile, but whether each matches its informal claim is what no mathematician has publicly worked through.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">An internal OpenAI model reports ten advances in math and theoretical computer science</h1>
+        <p class="nb-dekline">The Lean 4 certificates confirm the formalized theorems compile, but whether each matches its informal claim is what no mathematician has publicly worked through.</p>
+        <div class="nb-byline">
+          <span>3 min read</span><span>2026-08-10</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI research</span>
+          <h3>
+            <a href="https://cdn.openai.com/pdf/ten-proofs-oai.pdf"
+              >OpenAI posts a 253-page manuscript and Lean certificates for ten new results</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            OpenAI released a 253-page manuscript, "Ten Advances in Mathematics
+            and Theoretical Computer Science," attributing every result to "an
+            internal OpenAI model" and framing the ten as advances rather than
+            solved problems.<sup class="nb-cite"><a href="#s1">1</a></sup> Two
+            resolve named questions: an explicit non-sofic group is constructed,
+            answering whether every countable group is sofic, and Connes's
+            rigidity conjecture is disproved. Others tighten an existing figure,
+            such as the exact asymptotic strength of the Cohn-Elkies bound for
+            high-dimensional sphere packing.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            Machine-checkable Lean 4 certificates accompany the work on GitHub,
+            and compiling the repository confirms that the formalized theorems
+            hold.<sup class="nb-cite"><a href="#s2">2</a></sup> That guarantee
+            stops at the formal statement. Whether each Lean statement faithfully
+            encodes the informal claim it stands for is a separate question, and
+            no named mathematician is on record as having worked through those
+            informal arguments. Full peer review is still to come.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">EU regulation</span>
+          <h3>
+            <a href="https://digital-strategy.ec.europa.eu/en/library/guidelines-transparency-obligations-providers-and-deployers-ai-systems"
+              >The EU AI Act's Article 50 transparency rules take effect without a finished marking standard</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            The European Commission's Article 50 transparency obligations became
+            applicable on 2 August 2026, thirteen days after the Commission issued
+            the guidelines interpreting them.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            Providers of interactive systems must tell users they are dealing
+            with an AI, deployers must label deepfakes, and generative systems
+            must mark their outputs in a machine-readable format detectable as
+            AI-generated.<sup class="nb-cite"><a href="#s3">3</a></sup> That
+            marking duty is legally live while its technical standard is not
+            finished: the Commission offers a voluntary Code of Practice as the
+            interim path, and generative systems already on the market have
+            until 2 December 2026.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            Non-compliance can reach EUR 15 million or 3% of worldwide annual
+            turnover, whichever is higher.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">US regulation</span>
+          <h3>
+            <a href="https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?bill_id=202520260AB853"
+              >California's narrower transparency law switches on the same day</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            California's AI Transparency Act became operative the same day, a
+            date AB 853 moved from the original 1 January 2026.<sup class="nb-cite"><a href="#s5">5</a></sup> It reaches a
+            narrower set of companies than Article 50 but adds one duty the
+            European rule omits: a free, public AI-detection tool.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          </p>
+          <table class="nb-table">
+            <caption>
+              The two transparency regimes that became live on 2 August 2026, by
+              who they bind and what they require.<sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup>
+            </caption>
+            <thead>
+              <tr>
+                <th class="txt">Regime</th>
+                <th class="txt">Who it binds</th>
+                <th class="txt">Core duty</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="txt">EU AI Act, Article 50</td>
+                <td class="txt">all providers and deployers of in-scope systems</td>
+                <td class="txt">disclose AI chatbots, label deepfakes, mark generative outputs as machine-readable and AI-detectable</td>
+                <td>2 Aug 2026</td>
+              </tr>
+              <tr>
+                <td class="txt">California AI Transparency Act</td>
+                <td class="txt">generative providers over 1 000 000 monthly users, accessible in California</td>
+                <td class="txt">run a free detection tool; apply visible and embedded content disclosures</td>
+                <td>2 Aug 2026</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Semiconductors</span>
+          <h3>
+            <a href="https://gov.texas.gov/news/post/governor-abbott-announces-spacex-expansion-in-grimes-county"
+              >Tesla and SpaceX commit $16.8 billion to a Texas chip fab called Terafab</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            Tesla and SpaceX committed $16.8 billion to a first-phase
+            semiconductor fab in Grimes County, Texas, that SpaceX calls
+            Terafab, with the state adding a $30 million Texas Enterprise Fund
+            grant toward 3,000 jobs.<sup class="nb-cite"><a href="#s7">7</a></sup>
+            SpaceX describes a vertically integrated plant handling logic,
+            memory, advanced packaging, and testing under one roof, its chips
+            bound for Tesla's Optimus robots and Cybercabs and for SpaceX's
+            space-based data centers.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The figure is a first-phase commitment with civil work only
+            starting, not a fab that runs, and later expansion phases would push
+            the total investment much higher.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Memory</span>
+          <h3>
+            <a href="https://news.skhynix.com/en/hbf-at-fms-2026/"
+              >SK hynix and Sandisk publish the first High Bandwidth Flash standard</a
+            ><sup class="nb-cite"><a href="#s10">10</a></sup>
+          </h3>
+          <p>
+            SK hynix and Sandisk published the first standard specification for
+            High Bandwidth Flash, a NAND-based memory tier meant to sit between
+            HBM and the SSD.<sup class="nb-cite"><a href="#s10">10</a></sup> The
+            spec sets capacities up to 512GB a stack across three grades from
+            0.4 to 3.0 TB/s, with UCIe as the interconnect. It shipped through
+            the Open Compute Project about six months after the consortium of SK
+            hynix, Sandisk, Google, and Tenstorrent formed.<sup class="nb-cite"><a href="#s10">10</a></sup>
+            It targets the memory-capacity ceiling that HBM's bandwidth cannot
+            lift on its own.<sup class="nb-cite"><a href="#s11">11</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://cdn.openai.com/pdf/ten-proofs-oai.pdf"
+              >OpenAI · Ten Advances in Mathematics and Theoretical Computer Science (manuscript)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://simonwillison.net/2026/Aug/1/ten-advances-in-mathematics/"
+              >Simon Willison · Ten advances in mathematics</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://digital-strategy.ec.europa.eu/en/library/guidelines-transparency-obligations-providers-and-deployers-ai-systems"
+              >European Commission · Guidelines on transparency obligations under Article 50</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.cooley.com/news/insight/2026/2026-08-03-eu-ai-act-transparency-obligations-take-effect-2-august-2026"
+              >Cooley LLP · EU AI Act transparency obligations take effect 2 August 2026</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?bill_id=202520260AB853"
+              >California Legislature · AB 853 (California AI Transparency Act, enrolled text)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://calmatters.digitaldemocracy.org/bills/ca_202520260ab853"
+              >CalMatters Digital Democracy · AB 853 bill tracker</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://gov.texas.gov/news/post/governor-abbott-announces-spacex-expansion-in-grimes-county"
+              >Office of the Texas Governor · SpaceX expansion in Grimes County</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2026/08/06/tesla-and-spacex-will-invest-16-8b-to-start-building-terafab-chip-factory-in-texas/"
+              >TechCrunch · Tesla and SpaceX will invest $16.8B to start building Terafab</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://electrek.co/2026/08/06/tesla-spacex-terafab-grimes-county-16-8-billion/"
+              >Electrek · Tesla and SpaceX Terafab in Grimes County</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://news.skhynix.com/en/hbf-at-fms-2026/"
+              >SK hynix Newsroom · First HBF standard specifications with Sandisk at FMS 2026</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.hpcwire.com/off-the-wire/sk-hynix-unveils-1st-hbf-standard-specifications-with-sandisk-at-fms-2026/"
+              >HPCwire · SK hynix unveils 1st HBF standard specifications with Sandisk</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
