@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Growth creates value only when it out-earns the cost of capital · Investing Course</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "investing",
+        "slug": "the-value-of-growth",
+        "template": "lesson",
+        "title": "Growth creates value only when it out-earns the cost of capital",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-10",
+        "tags": ["valuation", "growth", "roic"],
+        "sources": 6,
+        "words": 1685,
+        "reading_minutes": 7,
+        "dek": "At the same 5 percent growth, the company earning 15 percent on reinvested capital is worth four times the one earning 6 percent.",
+        "harness": "claude-code-routine",
+        "model": "Opus 4.8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Investing Course</div>
+        <h1 class="nb-title">Growth creates value only when it out-earns the cost of capital</h1>
+        <p class="nb-dekline">
+          At the same 5 percent growth, the company earning 15 percent on reinvested capital is worth four times the one earning 6 percent.
+        </p>
+        <div class="nb-byline">
+          <span>7 min read</span><span>2026-08-10</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Every company that reinvests its profit is making a bet that the money
+          it puts back in will earn more than it costs. Markets reward companies
+          that grow fast and mark down those that grow slowly, yet the growth
+          rate on its own says nothing about whether the reinvestment behind it
+          is a good bet. This lesson shows when growth adds value and when it
+          takes value away, using one formula and two companies you can check on
+          a calculator. By the end you will be able to look at a growing company
+          and ask the single question that settles whether its growth is worth
+          anything. Does the capital it reinvests earn more than that capital
+          costs?
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../investing/return-on-capital.html">Costco turns each invested dollar into 37 cents of profit</a>:
+            what return on capital measures, and why it is the return the reinvestment must beat.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../investing/cost-of-capital.html">A chipmaker's cost of capital runs more than double a utility's</a>:
+            the return investors require, which sets the hurdle this lesson turns on.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../investing/present-value.html">A dollar next year is worth 95 cents today</a>:
+            how a stream of future cash collapses into one value today, the arithmetic under the formula below.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Growth has a price</h2>
+        <p>
+          A company cannot grow its operating profit by wishing for it. To sell
+          more next year it has to build, hire, or buy more, and all of that
+          takes capital the company puts back into the business instead of
+          handing to its owners. The size of the growth is fixed by two numbers:
+          the share of profit the company reinvests, and the return that
+          reinvested capital earns. Growth in operating profit equals the
+          reinvestment rate times the return on capital.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            g = \text{Reinvestment rate} \times \text{Return on capital}
+          </div>
+        </figure>
+        <p>
+          Written this way, growth is never free. A higher growth rate demands
+          either a larger slice of profit reinvested or a higher return on what
+          is reinvested, and the reinvested profit is money the owners do not
+          receive. That is why the familiar advice, that growth is good and more
+          growth is better, is at most half a rule. Damodaran files it under
+          myths for a precise reason: because growth has to be paid for, a
+          company can pay more for it than the growth is worth.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Whether the purchase adds value or subtracts it turns on one
+          comparison: the return the new capital earns set against what that
+          capital costs.
+        </p>
+      </section>
+
+      <section data-nb-section="return-sets-value" id="return-sets-value">
+        <h2>The return on that capital sets the value</h2>
+        <p>
+          The comparison has a formula behind it. For a business whose profit
+          grows at a steady rate forever, its value today can be written from
+          just four numbers, each named under the equation below.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            V = \htmlClass{nb-mc1}{\mathrm{NOPLAT}_{1}} \cdot \dfrac{1 - \dfrac{\htmlClass{nb-mc2}{g}}{\htmlClass{nb-mc3}{\mathrm{RONIC}}}}{\htmlClass{nb-mc4}{\mathrm{WACC}} - \htmlClass{nb-mc2}{g}}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\mathrm{NOPLAT}_{1}</span
+              ><span>next year's operating profit after tax, before any growth is paid for.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">g</span
+              ><span>the yearly growth rate of that operating profit.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\mathrm{RONIC}</span
+              ><span>the return on newly invested capital: what each reinvested dollar earns.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\mathrm{WACC}</span
+              ><span>the cost of capital, the return investors could earn elsewhere at the same risk.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The value of a business whose profit grows at a constant rate, from four inputs. Whether more growth raises or lowers that value depends on the return on new capital against the cost of capital.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Watch what happens at one particular value of the return on new
+          capital: set it equal to the cost of capital. The numerator becomes
+          one minus g over the cost of capital. Dividing that by the cost of
+          capital minus g leaves next year's profit over the cost of capital.
+          The growth rate has cancelled out. The company is worth exactly what it
+          would be worth with no growth at all, because a business that reinvests
+          nothing is also worth its profit divided by its cost of capital. When
+          the new capital earns precisely what it costs, growth moves the value
+          not at all.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          That is the pivot. Above it, when the return on new capital clears the
+          cost of capital, more growth raises the value. Below it, when the
+          return falls short of the cost of capital, more growth lowers the
+          value. A company can be growing and posting real profits and still be
+          destroying value the whole time, if the return it earns on capital
+          sits below what that capital costs.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="values-diverge" id="values-diverge">
+        <h2>At one growth rate, the values pull apart</h2>
+        <p>
+          Hold everything fixed except the return on new capital. Two companies
+          each expect 100 dollars of operating profit after tax next year. Each
+          reinvests enough to grow that profit 5 percent a year, and each faces a
+          9 percent cost of capital. The one difference is what their reinvestment
+          earns: the first company earns 15 percent on it, the second earns 6
+          percent.
+        </p>
+        <p>
+          Put the first company's numbers into the formula. One minus 0.05 over
+          0.15 is about 0.667. Divide that by 0.09 minus 0.05, which is 0.04, then
+          multiply by the 100 dollars of profit. The value comes to about 1,667
+          dollars. Now strip the growth out. With no growth there is no new
+          capital, so the return on new capital never enters. Each company is then
+          worth its profit over its cost of capital: 100 divided by 0.09, or about
+          1,111 dollars. The first company's growth lifted its value from 1,111 to
+          1,667, adding roughly 556 dollars.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          The second company grows at the very same 5 percent, and it is worth
+          about 417 dollars: well under the 1,111 it would fetch standing still.
+          Its growth did not add value. It destroyed almost 700 dollars of it. The
+          two businesses grow at an identical rate and start from an identical
+          profit, and the one earning 15 percent on its reinvestment is worth
+          close to four times the one earning 6 percent.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Two companies with the same next-year profit ($100), the same 5% growth, and the same 9% cost of capital, valued with the growth and again with none.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Return on new capital</th>
+              <th>Value with no growth</th>
+              <th>Value at 5% growth</th>
+              <th>What growth did</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Firm A</span></td>
+              <td>15%</td>
+              <td>$1 111</td>
+              <td>$1 667</td>
+              <td>+$556</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Firm B</span></td>
+              <td>6%</td>
+              <td>$1 111</td>
+              <td>$417</td>
+              <td>−$694</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section data-nb-section="returns-fade" id="returns-fade">
+        <h2>Returns do not stay above the cost of capital</h2>
+        <p>
+          The clean split between value created and value destroyed lives inside a
+          set of assumptions worth naming. The
+          formula assumes one growth rate held to perpetuity and a steady return
+          on new capital, with growth below the cost of capital so the value stays
+          finite. The return it tests is the return on the next dollar reinvested,
+          the marginal dollar, not the average return on all the capital the
+          company already holds.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">The rule's scope</span>
+          <p>
+            Growth changes from adding value to subtracting it as the return on
+            newly reinvested capital crosses the cost of capital, within a
+            constant-growth valuation. It is a claim about the marginal
+            reinvested dollar, not a verdict on a firm's average historical return
+            and not a promise that any return holds forever.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </p>
+        </div>
+        <p>
+          Real returns do not hold forever. High returns on capital are more
+          durable than high growth, but competition still pulls them down toward
+          the cost of capital as rivals arrive. A company already earning below
+          its cost of capital usually cannot fund much growth in the first place.
+          Capital is hard to raise for a business that does not clear its cost.
+          Among low-return United States firms in 1995, nearly a third were
+          acquired or had gone bankrupt within ten years.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          Where a company should push therefore depends on where its return
+          already sits. When the return on capital is high, growth tends to add
+          value and is worth chasing; when the return is low, raising the return
+          creates more value than growth does.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          The evidence backs the ordering. Over a decade, companies that raised
+          their return on capital earned 5 to 8 percentage points more in annual
+          return to shareholders than companies that did not. Beating the
+          market on growth was worth only 1 to 4.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          For a company earning below its cost of capital, growth piled on before
+          the return is fixed only deepens the hole.
+        </p>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Growth is neither free nor automatically good. A company buys growth by
+          reinvesting capital, and that purchase adds value only when the new
+          capital earns more than it costs. Two companies growing at the same rate
+          can be worth wildly different amounts. The one earning 15 percent on its
+          reinvestment was worth close to four times the one earning 6 percent,
+          and the second was worth less growing than it would have been standing
+          still. The clean rule holds on the next dollar reinvested and inside a
+          steady-growth model; in the real world returns fade as competitors
+          arrive, and a company earning below its cost of capital often cannot
+          fund growth at all. So when you meet a fast-growing company, the
+          question is never how fast it grows. It is whether the capital behind
+          that growth earns more than that capital costs.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://aswathdamodaran.blogspot.com/2016/11/myth-53-growth-is-good-more-growth-is.html">Aswath Damodaran, "Myth 5.3: Growth is good, more growth is better!"</a>:
+            the full argument with his own sensitivity table showing value fall, hold, and rise as the return crosses the cost of capital.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://www.mckinsey.com/~/media/McKinsey/Business%20Functions/Strategy%20and%20Corporate%20Finance/Our%20Insights/How%20to%20choose%20between%20growth%20and%20ROIC/How%20to%20choose%20between%20growth%20and%20ROIC.pdf">Bin Jiang and Timothy Koller, "How to choose between growth and ROIC"</a>:
+            the empirical study behind the fade, tracking United States firms from 1995 to 2005.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Fundamental growth in operating income; excess-return discussion"
+              href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/valquestions/growth.htm"
+              >NYU Stern (Aswath Damodaran) · The Fundamental Determinants of Growth</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Body argument and terminal-value sensitivity table"
+              href="https://aswathdamodaran.blogspot.com/2016/11/myth-53-growth-is-good-more-growth-is.html"
+              >Musings on Markets (Aswath Damodaran) · Myth 5.3: Growth is good, more growth is better!</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Appendix A, key value driver formula and its economic-profit derivation"
+              href="https://www.oreilly.com/library/view/valuation-measuring-and/9780470889930/null_9780470889930_oeb_ap1_r1.html"
+              >Koller, Goedhart & Wessels (McKinsey / Wiley) · Valuation, 5th ed., Appendix A</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.mckinsey.com/featured-insights/mckinsey-explainers/how-are-companies-valued"
+              >McKinsey · How are companies valued?</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="p. 3, low-ROIC finding and the WACC threshold; Exhibits 1–3"
+              href="https://www.mckinsey.com/~/media/McKinsey/Business%20Functions/Strategy%20and%20Corporate%20Finance/Our%20Insights/How%20to%20choose%20between%20growth%20and%20ROIC/How%20to%20choose%20between%20growth%20and%20ROIC.pdf"
+              >McKinsey Quarterly (Jiang & Koller) · How to choose between growth and ROIC</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="ROIC-vs-growth value-creation matrix"
+              href="https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/balancing-roic-and-growth-to-build-value"
+              >McKinsey on Finance (Cao & Jiang) · Balancing ROIC and growth to build value</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
