@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A controlled ablation traced most of PPO's edge to the code around its clip · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "proximal-policy-optimization",
+        "template": "paper",
+        "title": "A controlled ablation traced most of PPO's edge to the code around its clip",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-11",
+        "tags": ["reinforcement-learning", "policy-gradient", "ppo", "ablation-studies", "deep-rl"],
+        "sources": 8,
+        "words": 3051,
+        "reading_minutes": 13,
+        "dek": "The clipped objective that defines PPO is still the field's default, but a 2020 ablation holding the implementation fixed located most of its reward margin over TRPO in nine unglamorous training tricks.",
+        "harness": "Claude Code",
+        "model": "Claude Opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">A controlled ablation traced most of PPO's edge to the code around its clip</h1>
+        <p class="nb-dekline">
+          The clipped objective that defines PPO is still the field's default, but a 2020 ablation holding the implementation fixed located most of its reward margin over TRPO in nine unglamorous training tricks.
+        </p>
+        <div class="nb-byline">
+          <span>13 min read</span><span>2026-08-11</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Proximal Policy Optimization Algorithms</p>
+          <p class="nb-paper-meta">John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov · OpenAI · arXiv:1707.06347 · 2017</p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1707.06347"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We propose a new family of policy gradient methods for reinforcement learning, which alternate between sampling data through interaction with the environment, and optimizing a &ldquo;surrogate&rdquo; objective function using stochastic gradient ascent. Whereas standard policy gradient methods perform one gradient update per data sample, we propose a novel objective function that enables multiple epochs of minibatch updates. The new methods, which we call proximal policy optimization (PPO), have some of the benefits of trust region policy optimization (TRPO), but they are much simpler to implement, more general, and have better sample complexity (empirically). Our experiments test PPO on a collection of benchmark tasks, including simulated robotic locomotion and Atari game playing, and we show that PPO outperforms other online policy gradient methods, and overall strikes a favorable balance between sample complexity, simplicity, and wall-time.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One careless update can destroy a policy</h2>
+        <p>
+          A policy gradient tells an agent which direction in parameter space
+          makes good actions more likely. It does not tell the agent how far to
+          walk in that direction. Take one step too large on a batch of noisy
+          returns and the policy that produced those returns is gone. What
+          replaces it collects worse data, which yields a worse gradient, and the
+          run never recovers. Trust region policy optimization answered this by
+          bounding each update explicitly. It maximizes the same surrogate a
+          plain policy gradient uses, subject to a hard cap on how far the new
+          policy may drift from the old one in Kullback&ndash;Leibler divergence.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The bound works, and it is expensive. It requires a constrained
+          optimization solved with conjugate gradients and a line search, and it
+          does not sit comfortably with architectures that share parameters
+          between the policy and value networks or add noise through
+          dropout.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          PPO keeps TRPO's goal, a bounded step, and drops its machinery. The
+          proposal is a surrogate objective you can hand to ordinary stochastic
+          gradient ascent and run for several epochs over the same batch, no
+          constraint solver in the loop.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          It worked well enough that it became the standard on-policy baseline:
+          every major reinforcement-learning library ships a PPO implementation
+          as its reference on-policy method, and reproducing published numbers
+          across them is itself the subject of book-length documentation.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          That dominance is not in question here. What is in question is which
+          part of PPO earned it. Deep reinforcement-learning results are famously
+          hard to attribute. They are sensitive to codebase, random seed, and
+          unreported detail, enough that crediting any one part of the design is a
+          claim to be tested rather than assumed.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          The paper credits its clipped objective. A later group held the
+          surrounding code fixed and measured what the clip was actually doing.
+        </p>
+      </section>
+
+      <section data-nb-section="probability-ratio" id="probability-ratio">
+        <h2>The step becomes a probability ratio</h2>
+        <p>
+          Start with how PPO measures a step. For a state and action drawn under
+          the old policy, the ratio
+          <span class="nb-math-in">r_t(\theta) = \dfrac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}</span>
+          says how much more or less likely the current policy makes that action
+          than the policy that collected the data. At the start of an update,
+          before any parameters have moved,
+          <span class="nb-math-in">r_t(\theta_{\text{old}}) = 1</span>. Weighting
+          each action's advantage by this ratio gives the surrogate that both
+          TRPO and PPO start from, the conservative-policy-iteration
+          objective:<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L^{CPI}(\theta) = \hat{\mathbb{E}}_t\!\left[ r_t(\theta)\,\hat{A}_t \right]
+          </div>
+        </figure>
+        <p>
+          Here <span class="nb-math-in">\hat{A}_t</span> is an estimate of how
+          much better action <span class="nb-math-in">a_t</span> was than the
+          policy's average behavior in state
+          <span class="nb-math-in">s_t</span>. Maximizing this alone is the
+          trap from the last section written as a formula. Where an advantage is
+          positive the objective rises without limit as
+          <span class="nb-math-in">r_t</span> grows. Gradient ascent will push
+          the action's probability as high as it can, far past the region where
+          the advantage estimate was ever measured. TRPO stops this from
+          outside, with the constraint
+          <span class="nb-math-in">\max_\theta\ \hat{\mathbb{E}}_t\!\left[ r_t(\theta)\hat{A}_t \right]\ \text{ s.t. }\ \overline{\mathrm{KL}}(\theta_{\text{old}}, \theta) \le \delta</span>.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          PPO's move is to fold the limit into the objective itself, so nothing
+          outside the gradient step has to enforce it.
+        </p>
+      </section>
+
+      <section data-nb-section="clipped-objective" id="clipped-objective">
+        <h2>Clipping turns the ratio into a lower bound</h2>
+        <p>
+          The clipped surrogate takes two copies of each term, one with the raw
+          ratio and one with the ratio clamped to a narrow band around 1, and
+          keeps whichever is smaller:<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L^{CLIP}(\theta) = \hat{\mathbb{E}}_t\!\left[ \htmlClass{nb-mc3}{\min}\!\big( \htmlClass{nb-mc1}{r_t(\theta)\,\hat{A}_t},\ \htmlClass{nb-mc2}{\operatorname{clip}\!\big(r_t(\theta),\, 1-\epsilon,\, 1+\epsilon\big)\,\hat{A}_t} \big) \right]
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">r_t(\theta)\,\hat{A}_t</span
+              ><span>The unclipped surrogate, the advantage weighted by the full ratio.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\operatorname{clip}(r_t, 1{-}\epsilon, 1{+}\epsilon)\,\hat{A}_t</span
+              ><span>The same term with the ratio held inside <span class="nb-math-in">[1-\epsilon,\, 1+\epsilon]</span>, so a policy that drifts further gets no extra credit.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\min</span
+              ><span>Keeps the smaller of the two, which makes the objective a lower bound on the unclipped one.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The clipped surrogate objective, with the clipping range
+            <span class="nb-math-in">\epsilon</span> set to 0.2 by default.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The <span class="nb-math-in">\min</span> is what makes the objective
+          pessimistic. It only lets the clip bite in the direction that would
+          have improved the surrogate. The update is credited for moving a
+          probability the right way only up to the edge of the band, and past
+          that edge it stops gaining. In the harmful direction the raw term is
+          the smaller one and survives the <span class="nb-math-in">\min</span>,
+          so a bad move keeps its full penalty. The paper states the property
+          exactly: the clipped ratios form
+          &ldquo;a pessimistic estimate (i.e., lower bound) of the performance of
+          the policy.&rdquo;<sup class="nb-cite"><a href="#s1" data-nb-locator="Sec. 3, Eq. 7 · p. 3" data-nb-note="epsilon = 0.2; the min of clipped and unclipped makes L^CLIP a lower bound on L^CPI.">1</a></sup>
+          The two panels of the paper's own figure show the asymmetry directly.
+        </p>
+        <figure class="nb-figure">
+          <img src="proximal-policy-optimization/asset-1.png" alt="Two plots of a single-timestep clipped surrogate against the probability ratio r. Left, positive advantage: the objective rises with r until 1 plus epsilon and then flattens. Right, negative advantage: the objective is flat until 1 minus epsilon and then falls, with a red dot marking the start at r equals 1." />
+          <figcaption>
+            Fig. 1 &middot; One timestep of the clipped surrogate against the ratio
+            <span class="nb-math-in">r</span>. With a positive advantage (left)
+            the objective stops rising once <span class="nb-math-in">r</span>
+            passes <span class="nb-math-in">1+\epsilon</span>; with a negative
+            advantage (right) it keeps falling as
+            <span class="nb-math-in">r</span> moves the wrong way. The red dot is
+            the starting point at <span class="nb-math-in">r = 1</span>.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Figure 1 · p. 3"
+                data-nb-url="https://arxiv.org/pdf/1707.06347"
+                data-nb-note="The paper's clipping illustration: the flat region past the band is where the update stops earning credit."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <div class="nb-note">
+          <span class="nb-note-label">Worked example</span>
+          <p>
+            Take one timestep with a positive advantage and
+            <span class="nb-math-in">\epsilon = 0.2</span>, so the band is
+            <span class="nb-math-in">[0.8, 1.2]</span>. Suppose the update makes
+            the action 1.3 times as likely as before, so
+            <span class="nb-math-in">r_t = 1.3</span>. The unclipped term is
+            <span class="nb-math-in">1.3\,\hat{A}_t</span>; the clipped term is
+            <span class="nb-math-in">1.2\,\hat{A}_t</span>; the
+            <span class="nb-math-in">\min</span> keeps
+            <span class="nb-math-in">1.2\,\hat{A}_t</span>. The objective records
+            no gain for the move from 1.2 to 1.3, so its gradient there is zero
+            and that timestep stops pulling the probability higher. Had the ratio
+            landed at 1.1, inside the band, both terms equal
+            <span class="nb-math-in">1.1\,\hat{A}_t</span> and the step is
+            credited in full.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section data-nb-section="combined-loss" id="combined-loss">
+        <h2>The objective the optimizer actually runs</h2>
+        <p>
+          The clipped surrogate is the policy term, not the whole loss. PPO
+          shares a network between the policy and a value function, so the
+          quantity optimized adds a value-fitting term and an entropy bonus to
+          the surrogate:<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L^{CLIP+VF+S}_t(\theta) = \hat{\mathbb{E}}_t\!\left[ L^{CLIP}_t(\theta) - c_1\, L^{VF}_t(\theta) + c_2\, S[\pi_\theta](s_t) \right]
+          </div>
+          <figcaption>
+            The combined objective: the clipped policy term, a squared-error
+            value loss <span class="nb-math-in">L^{VF}_t = (V_\theta(s_t) - V^{\text{targ}}_t)^2</span>
+            scaled by <span class="nb-math-in">c_1</span>, and an entropy bonus
+            <span class="nb-math-in">S</span> scaled by
+            <span class="nb-math-in">c_2</span> to keep the policy from
+            collapsing early.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The advantages <span class="nb-math-in">\hat{A}_t</span> come from
+          generalized advantage estimation, which reads each step's
+          temporal-difference residual
+          <span class="nb-math-in">\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)</span>
+          and sums them along the trajectory with a geometric decay:<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \hat{A}_t = \delta_t + (\gamma\lambda)\,\delta_{t+1} + \cdots + (\gamma\lambda)^{T-t+1}\,\delta_{T-1}
+          </div>
+          <figcaption>
+            The truncated advantage estimator PPO uses over a length-<span class="nb-math-in">T</span>
+            segment. The knob <span class="nb-math-in">\lambda</span> trades bias
+            against variance: at <span class="nb-math-in">\lambda = 0</span> the
+            estimate is the one-step residual, at
+            <span class="nb-math-in">\lambda = 1</span> it is the empirical
+            return minus the value baseline.<sup class="nb-cite"><a href="#s5" data-nb-locator="Eq. 16 · p. 5" data-nb-note="PPO's Eq. 11 is the truncated form of the GAE(gamma, lambda) estimator defined here.">5</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The distinguishing move is what happens with this loss. A plain policy
+          gradient takes one step per batch and throws the batch away, because
+          after one step the data is off-policy. The clip is what lets PPO reuse
+          a batch: because the surrogate stops rewarding drift past the band, the
+          same collected transitions can drive many gradient steps before the
+          policy has moved too far for them to be trusted.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          The loop is short.
+        </p>
+        <ol class="nb-steps">
+          <li>
+            <h3>Collect</h3>
+            <p>
+              Run the current policy
+              <span class="nb-math-in">\pi_{\theta_{\text{old}}}</span> for a
+              fixed horizon across parallel actors and store the transitions.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </p>
+          </li>
+          <li>
+            <h3>Estimate</h3>
+            <p>
+              Compute every <span class="nb-math-in">\hat{A}_t</span> from the
+              value network with truncated GAE.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </p>
+          </li>
+          <li>
+            <h3>Optimize</h3>
+            <p>
+              Run several epochs of minibatch stochastic gradient ascent on the
+              combined objective. On the continuous-control benchmark that is a
+              horizon of 2048, ten epochs, minibatches of 64, Adam at
+              <span class="nb-math-in">3\times10^{-4}</span>,
+              <span class="nb-math-in">\gamma = 0.99</span>, and
+              <span class="nb-math-in">\lambda = 0.95</span>.<sup class="nb-cite"><a href="#s1" data-nb-locator="Table 3 · p. 10" data-nb-note="MuJoCo hyperparameters: horizon 2048, 10 epochs, minibatch 64, Adam 3e-4.">1</a></sup>
+            </p>
+          </li>
+          <li>
+            <h3>Refresh</h3>
+            <p>
+              Set <span class="nb-math-in">\theta_{\text{old}} \leftarrow \theta</span>
+              and repeat.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section data-nb-section="paper-ablation" id="paper-ablation">
+        <h2>The paper's own test picks the clip</h2>
+        <p>
+          Does the clip earn its place in that loop? The paper does not assume
+          so; it runs the comparison. Before settling on clipping, the authors
+          built an adaptive alternative that keeps the raw surrogate and
+          subtracts a KL penalty, raising or lowering the penalty coefficient
+          <span class="nb-math-in">\beta</span> after each update to track a
+          target divergence:<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            L^{KLPEN}(\theta) = \hat{\mathbb{E}}_t\!\left[ r_t(\theta)\,\hat{A}_t - \beta\,\mathrm{KL}\!\left[\pi_{\theta_{\text{old}}}(\cdot \mid s_t),\, \pi_\theta(\cdot \mid s_t)\right] \right]
+          </div>
+          <figcaption>
+            The KL-penalty variant: the same surrogate with a soft divergence
+            penalty in place of the hard clip.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          On seven continuous-control tasks, averaged over 21 runs and scored so
+          that 0 is a random policy and 1 is the best surrogate on each task,
+          clipping at <span class="nb-math-in">\epsilon = 0.2</span> comes out on
+          top. The KL variants trail it, and the raw surrogate with no limit at
+          all scores below random, which is the runaway-update failure showing up
+          as a number.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            PPO's surrogate ablation: average normalized score across 7 MuJoCo
+            tasks over 1M timesteps, 21 runs averaged, 0 = random and 1 = best per
+            task.<sup class="nb-cite"><a href="#s1" data-nb-locator="Table 1 · p. 6" data-nb-note="beta initialized at 1; clipping eps=0.2 is the best surrogate at 0.82.">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Surrogate</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">No clip, no penalty</span></td>
+              <td>-0.39</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Clip &epsilon; = 0.1</span></td>
+              <td>0.76</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Clip &epsilon; = 0.2</span></td>
+              <td>0.82</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Clip &epsilon; = 0.3</span></td>
+              <td>0.70</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Adaptive KL 0.003</span></td>
+              <td>0.68</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Adaptive KL 0.01</span></td>
+              <td>0.74</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Fixed KL &beta; = 1</span></td>
+              <td>0.71</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Read on its own terms, this is a genuine result for the clip. On
+          the paper's task set, with the paper's implementation, clipping is the
+          best of the surrogates it tried, and it is simpler than the KL scheme
+          it beat. The clip does something, and the paper measured it doing it.
+          The question the reexamination asks is not whether that measurement is
+          real. It is what the measurement is worth once the implementation
+          around the surrogate is no longer allowed to vary with it.
+        </p>
+      </section>
+
+      <section data-nb-section="code-level-optimizations" id="code-level-optimizations">
+        <h2>What survives when the code is held equal</h2>
+        <p>
+          Engstrom and colleagues took the widely used PPO implementation apart
+          and found that it carries nine optimizations the paper barely mentions
+          or omits: value-function clipping, reward scaling, orthogonal
+          initialization with layer scaling, Adam learning-rate annealing, reward
+          clipping, observation normalization, observation clipping, tanh
+          activations, and global gradient clipping.<sup class="nb-cite"><a href="#s6" data-nb-locator="Sec. 3 · p. 3" data-nb-note="Nine code-level optimizations present in the standard PPO codebase but absent from or barely described in the paper.">6</a></sup>
+          None of them is the clipped objective. To see how much they carry, the
+          group ran a controlled ablation on three locomotion tasks, separating
+          the effect of switching the core algorithm from the effect of adding
+          the optimizations.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Engstrom's step-versus-optimization ablation: final reward on three
+            MuJoCo tasks. AAI is the reward change from switching the core step
+            (PPO against TRPO); ACLI is the change from adding the code-level
+            optimizations. On all three tasks the optimizations move reward more
+            than the step choice does.<sup class="nb-cite"><a href="#s6" data-nb-locator="Table 2 · p. 7" data-nb-note="Point estimates; source reports 95% bootstrap CIs over >=80 agents. ACLI > AAI on all three tasks.">6</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Configuration</th>
+              <th>Walker2d</th>
+              <th>Hopper</th>
+              <th>Humanoid</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">PPO</span></td>
+              <td>3292</td>
+              <td>2513</td>
+              <td>806</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">PPO-Minimal</span></td>
+              <td>2735</td>
+              <td>2142</td>
+              <td>674</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">TRPO</span></td>
+              <td>2791</td>
+              <td>2043</td>
+              <td>586</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">TRPO+</span></td>
+              <td>3050</td>
+              <td>2466</td>
+              <td>1030</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">AAI (step effect)</span></td>
+              <td>242</td>
+              <td>99</td>
+              <td>224</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">ACLI (code effect)</span></td>
+              <td>557</td>
+              <td>421</td>
+              <td>444</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The bottom two rows carry the finding. On every task the reward moved
+          more when the optimizations were added than when the core step was
+          swapped: 557 against 242 on Walker2d, 421 against 99 on Hopper, 444
+          against 224 on Humanoid. Stripping PPO down to its clipped surrogate
+          without the optimizations, PPO-Minimal, drops it below the full method
+          and in line with plain TRPO. Adding the optimizations to TRPO lifts it
+          past full PPO on the hardest task. On Hopper the optimizations
+          alone are worth a 17 percent reward gain to PPO and 21 percent to
+          TRPO.<sup class="nb-cite"><a href="#s6" data-nb-locator="Sec. 5 · p. 7">6</a></sup>
+          The paper states the consequence plainly: the code-level optimizations
+          are &ldquo;more important in terms of final reward achieved than the
+          choice of general training algorithm.&rdquo;<sup class="nb-cite"><a href="#s6" data-nb-locator="p. 2" data-nb-note="Directly against the prior view that the clipping method drives PPO's gains.">6</a></sup>
+        </p>
+        <p>
+          Then they removed the clip itself and kept everything else. PPO-NoClip
+          beats PPO-Minimal on all three tasks, 2867 against 2735 on Walker2d,
+          2371 against 2142 on Hopper, 831 against 674 on Humanoid, and on
+          Humanoid it edges the full method as well, 831 against 806.<sup class="nb-cite"><a href="#s6" data-nb-locator="Table 3 · p. 8">6</a></sup>
+          Grant the reading it supports: with the optimizations in place, a run
+          that never clips matches one that does. The authors grant the limit in
+          the other direction in the same breath. PPO-NoClip &ldquo;can only
+          express a subset&rdquo; of what PPO can, since the clipping severity
+          <span class="nb-math-in">\epsilon</span> is a free parameter PPO still
+          has and PPO-NoClip has given up.<sup class="nb-cite"><a href="#s6" data-nb-locator="Footnote 6 · p. 8" data-nb-note="Containment caveat: PPO strictly contains PPO-NoClip, so 'clipping unnecessary' means a tuned no-clip run matches PPO here, not that clipping can never help.">6</a></sup>
+          The honest statement is the narrow one. A tuned run without clipping
+          matches PPO on these tasks. That is not the same as clipping never
+          helping.
+        </p>
+        <div class="nb-pull"><p>The advantage over TRPO happened. The paper's account of why is what the ablations complicate, not the fact of the advantage.</p></div>
+      </section>
+
+      <section data-nb-section="ratio-vs-kl" id="ratio-vs-kl">
+        <h2>The clip lets the ratio out</h2>
+        <p>
+          The clip has one job stated in its own construction: keep the
+          probability ratio inside
+          <span class="nb-math-in">[1-\epsilon, 1+\epsilon]</span>, the trust
+          region TRPO enforced with a constraint. Engstrom measured whether it
+          does. Over a Humanoid training run they tracked the maximum ratio and
+          the mean KL divergence at every step.
+        </p>
+        <figure class="nb-figure">
+          <img src="proximal-policy-optimization/asset-2.png" alt="Three panels over training iterations for Humanoid-v2, with curves for TRPO, PPO, and PPO-Minimal. Left, mean reward, all rising together. Middle, maximum probability ratio, climbing to between 5 and 17 well above a dashed 1 plus epsilon line near the bottom. Right, mean KL, all curves staying between 0.02 and 0.06." />
+          <figcaption>
+            Fig. 2 &middot; Mean reward, maximum probability ratio, and mean KL
+            over training on Humanoid-v2. The maximum ratio (center) climbs far
+            above the dashed
+            <span class="nb-math-in">1+\epsilon</span> line the clip is meant to
+            hold, while the mean KL (right) stays under TRPO's 0.07 bound for
+            every method.<sup class="nb-cite"
+              ><a
+                href="#s6"
+                data-nb-locator="Figure 2 · p. 6"
+                data-nb-url="https://arxiv.org/pdf/2005.12729"
+                data-nb-note="The clip does not hold the ratio trust region (center); mean KL stays bounded (right). The precise finding is about the ratio, not the KL."
+                >6</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The maximum ratio routinely runs past
+          <span class="nb-math-in">1+\epsilon</span>, so the clip does not hold
+          the ratio-based trust region it was designed to enforce.<sup class="nb-cite"><a href="#s6" data-nb-locator="Figure 2 · p. 6">6</a></sup>
+          The distinction that keeps this claim honest sits in the third panel.
+          PPO's mean KL stays below TRPO's 0.07 bound throughout the same run.
+          The clip fails to bound the quantity it directly clips, the ratio, and
+          the policy still does not wander far in KL. All three methods fail to
+          hold a ratio-based region; TRPO holds a mean-KL one nearly by
+          construction.<sup class="nb-cite"><a href="#s6" data-nb-locator="Figure 2 · p. 6" data-nb-note="Both PPO and PPO-M constrain KL well relative to the TRPO bound of 0.07.">6</a></sup>
+          &ldquo;PPO leaves its trust region&rdquo; is true of the ratio and
+          false of the KL, and the two are not interchangeable.
+        </p>
+        <p>
+          The companion analysis takes the gap between design and behavior
+          deeper into the algorithm. In the roughly 2,000 state-action-pair
+          regime standard implementations sample, the estimated gradient
+          correlates poorly with the &ldquo;true&rdquo; gradient computed from
+          ten million pairs, sometimes at zero or negative correlation. That
+          correlation degrades as the tasks get harder and training proceeds.<sup class="nb-cite"><a href="#s7" data-nb-locator="Sec. 2.1, Fig. 1-2 · p. 2-3">7</a></sup>
+          The value network is no better understood. It solves its supervised
+          regression well, yet the value it learns is off by about 50 percent
+          against the true value function, reducing gradient variance far less
+          than a true baseline would.<sup class="nb-cite"><a href="#s7" data-nb-locator="Fig. 3 · p. 4" data-nb-note="Learned value off by ~50% vs the true value function despite low GAE-loss regression error.">7</a></sup>
+          The methods work while the quantities the theory reasons about behave
+          nothing like the theory expects.
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>A cheap way to get trust-region behavior</h2>
+        <p>
+          Being wrong about why a working method works is a different error from
+          being wrong about whether it works, and only the first is on the table.
+          A third study, larger than either camp's, holds both halves at once.
+          Andrychowicz and colleagues trained more than 250,000 agents across
+          more than 50 configurable choices on five MuJoCo tasks. The PPO policy
+          loss came out best on four of the five environments and best on the two
+          hardest, Humanoid and Ant.<sup class="nb-cite"><a href="#s8" data-nb-locator="Sec. 3.1, Fig. 1 · p. 4">8</a></sup>
+          Their reading of why is the one that reconciles the record. The value
+          comes from the trust-region behavior all the losses they tried share,
+          and clipping is a good, simple way to get it rather than the only way.
+          They recommend the PPO loss with a clipping threshold near 0.25. Their
+          single most surprising finding was that the policy initialization
+          scheme, near-zero initial action distributions, strongly drives
+          performance, which is the same unglamorous kind of choice Engstrom's
+          initialization result had already flagged.<sup class="nb-cite"><a href="#s8" data-nb-locator="Sec. 3.2, Fig. 2 · p. 5" data-nb-note="Most surprising finding: policy initialization scheme; corroborates Engstrom's initialization result.">8</a></sup>
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>PPO is the field's default on-policy method, reproduced as the reference across every major library.<sup class="nb-cite"><a href="#s3">3</a></sup></li>
+              <li>Clipping at 0.2 is the best surrogate in the paper's own controlled comparison, and simpler than the KL scheme it beat.<sup class="nb-cite"><a href="#s1">1</a></sup></li>
+              <li>A large independent study recommends the PPO loss and finds it best on the hardest tasks.<sup class="nb-cite"><a href="#s8">8</a></sup></li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>Code-level optimizations, not the clip, account for most of PPO's reward margin over TRPO.<sup class="nb-cite"><a href="#s6">6</a></sup></li>
+              <li>The clip does not hold the ratio trust region it was built to enforce, though mean KL stays bounded.<sup class="nb-cite"><a href="#s6">6</a></sup></li>
+              <li>With the optimizations in place, a tuned run that never clips matches PPO on these tasks.<sup class="nb-cite"><a href="#s6">6</a></sup></li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            PPO advertised the clipped objective as the mechanism that keeps each
+            update inside a trust region, and on the paper's own task set the clip
+            is the best surrogate it tested. The controlled reexaminations leave
+            that intact and relocate the credit. The reward margin over TRPO
+            tracks the surrounding code more than the step, the clip does not hold
+            the ratio region it names, and the trust-region behavior that helps is
+            shared across losses rather than owned by clipping. What would move
+            the assessment is a controlled study showing the clip outperforming a
+            tuned no-clip run once the implementation is held equal, on tasks
+            beyond the MuJoCo suite these results rest on.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1707.06347"
+              >Schulman, Wolski, Dhariwal, Radford &amp; Klimov &middot; Proximal Policy Optimization Algorithms</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1502.05477"
+              >Schulman, Levine, Moritz, Jordan &amp; Abbeel &middot; Trust Region Policy Optimization</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/"
+              >Huang, Dossa, Raffin, Kanervisto &amp; Wang &middot; The 37 Implementation Details of Proximal Policy Optimization</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://arxiv.org/abs/1709.06560"
+              >Henderson, Islam, Bachman, Pineau, Precup &amp; Meger &middot; Deep Reinforcement Learning that Matters</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1506.02438"
+              >Schulman, Moritz, Levine, Jordan &amp; Abbeel &middot; High-Dimensional Continuous Control Using Generalized Advantage Estimation</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2005.12729"
+              >Engstrom, Ilyas, Santurkar, Tsipras, Janoos, Rudolph &amp; Madry &middot; Implementation Matters in Deep Policy Gradients: A Case Study on PPO and TRPO</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1811.02553"
+              >Ilyas, Engstrom, Santurkar, Tsipras, Janoos, Rudolph &amp; Madry &middot; A Closer Look at Deep Policy Gradients</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2006.05990"
+              >Andrychowicz et al. &middot; What Matters In On-Policy Reinforcement Learning? A Large-Scale Empirical Study</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
