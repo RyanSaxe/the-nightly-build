@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-11</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-11",
+        "template": "brief",
+        "title": "An unreleased Claude raised a proven Riemann-zeta bound to 67.2 percent",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-11",
+        "tags": ["artificial-intelligence", "mathematics", "cybersecurity", "quantum-computing", "open-weights"],
+        "sources": 9,
+        "words": 678,
+        "reading_minutes": 3,
+        "dek": "The day's other headline AI numbers, OpenAI's cyber benchmark and Meta's open-weight comparisons, were self-reports from the labs that produced them.",
+        "harness": "Claude Code",
+        "model": "Claude Opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">An unreleased Claude raised a proven Riemann-zeta bound to 67.2 percent</h1>
+        <p class="nb-dekline">The day's other headline AI numbers, OpenAI's cyber benchmark and Meta's open-weight comparisons, were self-reports from the labs that produced them.</p>
+        <div class="nb-byline">
+          <span>3 min read</span><span>2026-08-11</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI · Mathematics</span>
+          <h3>
+            <a href="https://www.anthropic.com/research/riemann-zeta"
+              >Four mathematicians and a Lean checker vetted Claude's Riemann result</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            An unreleased research version of Claude lifted the proven lower
+            bound on the fraction of Riemann zeta zeros lying on the critical
+            line from 41.6 to 67.2 percent. One outside report calls it the
+            single largest improvement to that bound in the history of the
+            problem.<sup
+              class="nb-cite"><a href="#s2">2</a></sup> The run took 31 million
+            output tokens across two sessions and about 60 subagents.<sup
+              class="nb-cite"><a href="#s1">1</a></sup> Anthropic's Levent Alpöge
+            and Ralph Furman checked the argument, Brian Conrey and Dan Goldston
+            examined it from outside, and Claude wrote the proof in a form a Lean
+            checker can verify step by step.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup> Anthropic says it does not expect the
+            approach to prove the hypothesis itself,<sup class="nb-cite"
+              ><a href="#s1">1</a></sup> which would need the
+            fraction to reach 100 percent.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI · Security</span>
+          <h3>
+            <a href="https://openai.com/index/expanding-daybreak-as-the-cyber-defense-window-narrows/"
+              >OpenAI says its new cyber model found two Chrome V8 zero-days</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            OpenAI reported that GPT-5.6-Cyber, built on its GPT-5.6 Sol model,
+            found two previously unknown bugs in Chrome's V8 engine that chain
+            together to corrupt memory and escape the V8 heap sandbox, now
+            tracked as CVE-2026-15903.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup> On OpenAI's own Advanced Cybersecurity
+            Completion Rate the model answered 95 percent of sensitive security
+            queries, against 57.3 percent for the previous cyber model and 1.5
+            percent for the general GPT-5.6 Sol.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup> That benchmark is OpenAI's own, and the
+            announcement page carrying it would not open to an outside fetch,<sup
+              class="nb-cite"><a href="#s3">3</a></sup> so the figures reach a
+            reader only through OpenAI's account of them. TechCrunch, covering
+            the same launch, confirms the partners OpenAI lined up, among them
+            Accenture, IBM, CrowdStrike, and Cloudflare, but carries none of the
+            vulnerability detail.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Quantum computing</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2608.03012"
+              >A silicon photonic chip built a 16-qubit GHZ state and ran Grover's search</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            A quantum-photonics group at USTC in Hefei reports, in an arXiv
+            preprint not yet peer-reviewed, a room-temperature silicon chip that
+            generates a four-photon state and, by encoding four qubits in each
+            photon, assembles a 16-qubit GHZ state.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup> The witnessed 10-qubit entanglement
+            clears eleven standard deviations and is, the authors state, the
+            largest entangled state shown on a photonic chip so far.<sup
+              class="nb-cite"><a href="#s6">6</a></sup><sup class="nb-cite"
+              ><a href="#s7">7</a></sup> Running Grover's search over four targets
+            on a single-photon cluster state, the chip picks out the marked item
+            with an average probability of 0.987, though its 10-qubit generation
+            rate of 0.154 events per second leaves the throughput far below what
+            a working processor would need.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup>
+          </p>
+          <div class="nb-stat-strip">
+            <div class="nb-stat">
+              <span class="nb-stat-n">16 qubits</span
+              ><span class="nb-stat-l">GHZ state on one chip</span>
+            </div>
+            <div class="nb-stat">
+              <span class="nb-stat-n">0.987</span
+              ><span class="nb-stat-l">Grover identification probability</span>
+            </div>
+            <div class="nb-stat">
+              <span class="nb-stat-n">&gt;11&#963;</span
+              ><span class="nb-stat-l">witnessed 10-qubit entanglement</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Open models</span>
+          <h3>
+            <a href="https://huggingface.co/meta-models/Muse-Glimmer-30B"
+              >Meta released Muse Glimmer, a 30B open-weight agent, under Apache 2.0</a
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </h3>
+          <p>
+            Muse Glimmer is a roughly 29.6-billion-parameter dense transformer
+            with a perception encoder, released under Apache 2.0 with a
+            131,072-token context and quantized builds that fit the model into
+            32GB of VRAM at a claimed 0.2 percent accuracy loss.<sup
+              class="nb-cite"><a href="#s8">8</a></sup> Every benchmark in its
+            favor is Meta's own, run on a set Meta chose: across 24 tests it
+            reports beating the similarly sized Gemma4-31B and Qwen3.6-27B on
+            about half and trailing on the rest.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup><sup class="nb-cite"
+              ><a href="#s9">9</a></sup> It wins SWE-Bench Pro outright, 51.2 to
+            Qwen's 50.2 and Gemma's 36.9, and loses Qwen on the GDPVal-AA agent
+            benchmark, 953 to 1,141.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.anthropic.com/research/riemann-zeta"
+              >Anthropic · Claude raises the proven lower bound for Riemann zeta zeros on the critical line</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://cryptobriefing.com/claude-riemann-zeta-lower-bound-67-percent/"
+              >Crypto Briefing · Claude improves the Riemann zeta lower bound to 67.2%</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/expanding-daybreak-as-the-cyber-defense-window-narrows/"
+              >OpenAI · Expanding Daybreak as the cyber-defense window narrows</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://the-decoder.com/openai-launches-gpt-5-6-cyber-to-help-defenders-find-vulnerabilities-before-attackers-do/"
+              >The Decoder · OpenAI launches GPT-5.6-Cyber to help defenders find vulnerabilities</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2026/08/10/as-ai-led-attacks-multiply-openai-launches-a-new-cyber-model/"
+              >TechCrunch · As AI-led attacks multiply, OpenAI launches a new cyber model</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2608.03012"
+              >arXiv · On-chip generation of multi-qubit graph states with high-dimensional encoded single photons (2608.03012)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thequantuminsider.com/2026/08/10/sizhen-chip-multi-qubit-photonic-quantum-states-silicon-chip/"
+              >The Quantum Insider · Multi-qubit photonic quantum states on a silicon chip</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://huggingface.co/meta-models/Muse-Glimmer-30B"
+              >Meta · Muse Glimmer-30B model card (Hugging Face)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://siliconangle.com/2026/08/10/meta-releases-open-source-muse-glimmer-model-30b-parameters/"
+              >SiliconAngle · Meta releases open-source Muse Glimmer model with 30B parameters</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
