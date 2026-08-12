@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mixture-of-Experts · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "mixture-of-experts",
+        "template": "paper",
+        "title": "Frontier models kept 2017's sparse gate and rebuilt its load balancing",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-12",
+        "tags": ["mixture-of-experts", "conditional-computation", "sparsity", "language-models", "routing"],
+        "sources": 10,
+        "words": 3044,
+        "reading_minutes": 13,
+        "dek": "Shazeer and colleagues built a 4.3-billion-parameter model that beat the best published result on a one-billion-word benchmark at six percent of its compute, using a noisy gate and two balancing losses to keep 4,096 experts busy.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Frontier models kept 2017's sparse gate and rebuilt its load balancing</h1>
+        <p class="nb-dekline">
+          Shazeer and colleagues built a 4.3-billion-parameter model that beat the best published result on a one-billion-word benchmark at six percent of its compute, using a noisy gate and two balancing losses to keep 4,096 experts busy.
+        </p>
+        <div class="nb-byline">
+          <span>13 min read</span><span>2026-08-12</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer</p>
+          <p class="nb-paper-meta">Shazeer, Mirhoseini, Maziarz, Davis, Le, Hinton &amp; Dean · arXiv:1701.06538 · ICLR 2017</p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1701.06538"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            The capacity of a neural network to absorb information is limited by its number of parameters. Conditional computation, where parts of the network are active on a per-example basis, has been proposed in theory as a way of dramatically increasing model capacity without a proportional increase in computation. In practice, however, there are significant algorithmic and performance challenges. In this work, we address these challenges and finally realize the promise of conditional computation, achieving greater than 1000x improvements in model capacity with only minor losses in computational efficiency on modern GPU clusters. We introduce a Sparsely-Gated Mixture-of-Experts layer (MoE), consisting of up to thousands of feed-forward sub-networks. A trainable gating network determines a sparse combination of these experts to use for each example. We apply the MoE to the tasks of language modeling and machine translation, where model capacity is critical for absorbing the vast quantities of knowledge available in the training corpora. We present model architectures in which a MoE with up to 137 billion parameters is applied convolutionally between stacked LSTM layers. On large language modeling and machine translation benchmarks, these models achieve significantly better results than state-of-the-art at lower computational cost.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The bill conditional computation promised to cut</h2>
+        <p>
+          A dense network pays for every parameter on every example. Doubling the
+          parameter count to hold more of a training corpus roughly doubles the
+          arithmetic each token costs, in training and again at inference. That
+          coupling is the wall the paper is built against: capacity and per-example
+          compute rise together, so a bigger model is a slower one.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          Conditional computation is the idea of breaking the coupling by running
+          only part of the network per example. It had been proposed years earlier,
+          and it had not delivered. The abstract is blunt about why: there were
+          <q>significant algorithmic and performance challenges</q> in practice, not
+          in theory.<sup class="nb-cite"><a href="#s1">1</a></sup> The paper's answer
+          is a single layer. A trainable gating network reads each input, picks a
+          handful out of thousands of small feed-forward experts, runs only those,
+          and adds their outputs back together. The rest of the experts, for that
+          input, do no work.
+        </p>
+      </section>
+
+      <section data-nb-section="the-layer" id="the-layer">
+        <h2>A layer that mostly stays switched off</h2>
+        <p>
+          The layer holds <span class="nb-math-in">n</span> experts, each its own
+          small feed-forward network with its own parameters, and one gating network
+          <span class="nb-math-in">G</span>. On input <span class="nb-math-in">x</span>
+          the gate emits a vector <span class="nb-math-in">G(x)</span> of
+          <span class="nb-math-in">n</span> weights, and the layer returns the
+          weighted sum of the experts it points to.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 2">2</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            y = \sum_{i=1}^{n} G(x)_i \, E_i(x)
+          </div>
+          <figcaption>
+            The output is each expert's output <span class="nb-math-in">E_i(x)</span>
+            scaled by its gate weight <span class="nb-math-in">G(x)_i</span> and summed.
+            Whenever <span class="nb-math-in">G(x)_i = 0</span>, expert
+            <span class="nb-math-in">i</span> can be skipped entirely, so the sum runs
+            over only the few experts the gate selected.<sup class="nb-cite"><a href="#s2" data-nb-locator="Sec. 2, Eq. 1">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Separate expert networks and a gate that learns which expert handles which
+          cases is an old design, introduced by Jacobs, Jordan, Nowlan and Hinton in
+          1991, and Hinton is an author here too.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Neural Computation 3(1):79–87" data-nb-note="Adaptive Mixtures of Local Experts: expert networks plus a gating network trained so experts specialize on subsets of cases.">3</a></sup
+          >
+          What 2017 adds is the word sparse. In the original the gate spread soft
+          weight across all experts, so all of them ran. Here the gate is forced to
+          zero out all but a few weights, which is why the parameter count can grow
+          without the arithmetic growing with it. The saving is real
+          only if a zero weight means the expert is genuinely never run, so the gate
+          has to produce exact zeros, not small numbers.
+        </p>
+        <figure class="nb-figure">
+          <img src="mixture-of-experts/asset-1.png" alt="Schematic of a mixture-of-experts layer between two recurrent layers. A gating network reads the input and selects two of n experts (Expert 2 and Expert n-1, shaded); their outputs are scaled by gate weights and summed, while the unselected experts stay inactive." />
+          <figcaption>
+            Fig. 1 · The gating network selects two of <span class="nb-math-in">n</span>
+            experts for this input; only the selected experts run, and their outputs
+            are scaled by the gate weights and summed. The layer sits between stacked
+            recurrent layers and is applied at every timestep.<sup class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Fig. 1 · p. 2"
+                data-nb-url="https://ar5iv.labs.arxiv.org/html/1701.06538"
+                data-nb-note="MoE layer embedded within a recurrent language model, gating network selecting two experts."
+                >2</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="the-gate" id="the-gate">
+        <h2>Why the gate adds noise before it ranks</h2>
+        <p>
+          The simplest trainable gate is a softmax over a learned linear projection
+          of the input. It is differentiable and it spreads weight across every
+          expert, which is exactly the density the layer cannot afford.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 2.1, Eq. 2">2</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            G_\sigma(x) = \mathrm{Softmax}(x \cdot W_g)
+          </div>
+        </figure>
+        <p>
+          Sparsity comes from keeping only the <span class="nb-math-in">k</span>
+          largest entries before the softmax and sending the rest to negative
+          infinity, so their softmax weight is exactly zero. That is the
+          <span class="nb-math-in">\mathrm{KeepTopK}</span> step, and with it the
+          gate over <span class="nb-math-in">n</span> experts fires only
+          <span class="nb-math-in">k</span> of them, with <span class="nb-math-in">k</span>
+          as small as two.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 2.1, Eqs. 3–5">2</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            G(x) = \mathrm{Softmax}\bigl(\mathrm{KeepTopK}(H(x),\, k)\bigr), \qquad
+            \mathrm{KeepTopK}(v, k)_i = \begin{cases} v_i & \text{if } v_i \text{ is in the top } k \\ -\infty & \text{otherwise} \end{cases}
+          </div>
+        </figure>
+        <p>
+          Left there, the top-<span class="nb-math-in">k</span> cut has a problem the
+          paper has to fix before the gate can be trained: it is a hard ranking. If
+          the same few experts start out slightly ahead, they get chosen, they get
+          gradients, they improve, and they stay ahead. Nothing pushes a good but
+          currently unranked expert into the top <span class="nb-math-in">k</span>.
+          The noise term is what breaks that lock. Before ranking, the gate adds
+          Gaussian noise to each expert's score, scaled per expert by a second
+          learned projection passed through softplus. This is the equation the whole
+          gate turns on.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            H(x)_i = \htmlClass{nb-mc1}{(x \cdot W_g)_i} + \htmlClass{nb-mc2}{\mathrm{StandardNormal}()} \cdot \htmlClass{nb-mc3}{\mathrm{Softplus}\bigl((x \cdot W_{noise})_i\bigr)}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">(x \cdot W_g)_i</span
+              ><span>the clean score for expert <span class="nb-math-in">i</span>, the same projection the plain softmax gate ranks.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\mathrm{StandardNormal}()</span
+              ><span>a fresh standard-normal draw per expert per example, so the ranking wobbles from one pass to the next.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\mathrm{Softplus}((x \cdot W_{noise})_i)</span
+              ><span>a learned, input-dependent amount of that wobble, letting the network decide how contestable each expert's rank is.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The noisy score ranked by <span class="nb-math-in">\mathrm{KeepTopK}</span>.
+            The noise gives a nearly-ranked expert a real chance of being chosen on
+            some passes, which is what lets an underused expert start receiving
+            gradients.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="Sec. 2.1, Eq. 4" data-nb-note="Verbatim: H(x)_i = (x . W_g)_i + StandardNormal() . Softplus((x . W_noise)_i).">2</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Because the amount of noise is itself learned, the gate can quiet the
+          wobble for an expert it is sure about and raise it for one it wants to keep
+          in contention. The noise does a second job, the one the load loss depends
+          on: it makes the count of examples reaching an expert a smooth,
+          differentiable quantity the network can be trained to balance.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 2.1, Appendix A">2</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="two-losses" id="two-losses">
+        <h2>Balance means two different things at once</h2>
+        <p>
+          Left to the main objective alone, the gate collapses. A few experts win
+          early, take most of the traffic, and the rest wither. The paper stops this
+          with balancing losses added to the training objective, and it runs two of
+          them because there are two distinct things that can go out of balance.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 4, Appendix A">2</a></sup
+          >
+        </p>
+        <p>
+          The first is importance: the total soft weight the gate assigns to each
+          expert across a batch. Summing <span class="nb-math-in">G(x)</span> over the
+          batch gives a per-expert importance, and penalizing the squared coefficient
+          of variation of those totals pushes the gate to spread its weight evenly.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 4, Eqs. 6–7">2</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \mathrm{Importance}(X) = \sum_{x \in X} G(x), \qquad
+            L_{\mathrm{importance}}(X) = w_{\mathrm{importance}} \cdot \mathrm{CV}\bigl(\mathrm{Importance}(X)\bigr)^2
+          </div>
+          <figcaption>
+            Equal summed gate weight per expert, enforced through the coefficient of
+            variation <span class="nb-math-in">\mathrm{CV}</span> of the per-expert
+            totals.<sup class="nb-cite"><a href="#s2" data-nb-locator="Sec. 4, Eqs. 6–7">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Equal importance is not the same as equal work. Two experts can carry the
+          same total gate weight while one is chosen by many examples at low weight
+          and the other by a few at high weight. On the hardware, what costs money is
+          how many examples land on each expert, and importance leaves that free. So
+          the second loss balances load: the count of examples routed to each expert.
+          That count is an integer, and an integer has no useful gradient, which is
+          where the noise from the previous section pays off. The paper replaces the
+          hard count with the probability each example would have reached the expert
+          under a fresh noise draw, a smooth quantity it can sum and penalize.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Appendix A, Eqs. 9–11">2</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            P(x, i) = \Phi\!\left( \frac{(x \cdot W_g)_i - \mathrm{kth\_excluding}(H(x),\, k,\, i)}{\mathrm{Softplus}\bigl((x \cdot W_{noise})_i\bigr)} \right)
+          </div>
+          <div class="nb-math-eq">
+            \mathrm{Load}(X)_i = \sum_{x \in X} P(x, i), \qquad
+            L_{\mathrm{load}}(X) = w_{\mathrm{load}} \cdot \mathrm{CV}\bigl(\mathrm{Load}(X)\bigr)^2
+          </div>
+          <figcaption>
+            <span class="nb-math-in">P(x,i)</span> is the probability expert
+            <span class="nb-math-in">i</span> stays in the top
+            <span class="nb-math-in">k</span> once fresh noise is drawn. Summed over
+            the batch it gives a load that is a differentiable stand-in for the
+            example count.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="Appendix A, Eqs. 9–11">2</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The smooth count is the paper's way around a problem Bengio, Léonard and
+          Courville had catalogued in 2013: getting a gradient through a hard,
+          on-or-off gating unit. Their survey studied estimators such as the
+          straight-through gradient for exactly this situation.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Abstract" data-nb-note="Estimating or Propagating Gradients Through Stochastic Neurons for Conditional Computation: estimators for gradients through non-differentiable gating units.">4</a></sup
+          >
+          The 2017 layer sidesteps the hard estimator by defining a soft probability
+          it can differentiate directly.
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">Why two losses, not one</span>
+          <p>
+            Importance equalizes the gate weight each expert receives; load
+            equalizes the number of examples each expert actually runs. A single
+            term aimed at either one leaves the other free to skew, and the skew that
+            costs compute is the example count.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="Sec. 4, Appendix A">2</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section data-nb-section="batch-cost" id="batch-cost">
+        <h2>The batch problem sparse routing creates</h2>
+        <p>
+          Sparsity does not make the compute vanish. It moves the cost, and one place
+          it lands is batch size. Modern accelerators are efficient only on large
+          batches, and routing splits the batch across experts. If
+          <span class="nb-math-in">k</span> of <span class="nb-math-in">n</span>
+          experts fire on a batch of <span class="nb-math-in">b</span> examples, each
+          expert sees about <span class="nb-math-in">kb/n</span> of them. With
+          thousands of experts, that per-expert batch collapses toward nothing, and
+          each expert runs on a tiny slice at ruinous efficiency.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 3.1">2</a></sup
+          >
+        </p>
+        <p>
+          The paper's fix is to make the batch each expert sees larger than the batch
+          any one device holds. Mixing data and model parallelism across
+          <span class="nb-math-in">d</span> devices, and keeping one shared copy of
+          each expert that every device sends its routed examples to, raises the
+          per-expert batch to about <span class="nb-math-in">kbd/n</span>. Applying the
+          layer convolutionally across the timesteps of the recurrent stack enlarges
+          it again, since every timestep contributes examples.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 3.1">2</a></sup
+          >
+          The other cost is communication: every routed example crosses the network
+          to its expert's device and back, and the paper keeps that affordable by
+          holding the expected traffic per device fixed as it adds experts.
+        </p>
+        <p>
+          It is not the route the field later took. The
+          later large-scale systems cap each expert at a fixed capacity and drop the
+          examples that overflow rather than grow every expert's batch. The Switch
+          Transformer caps each expert with a capacity factor and drops the tokens that
+          overflow it, typically under one percent.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Sec. 2.2">5</a></sup
+          >
+          GShard sets a per-expert capacity too and routes each token to at most two
+          experts, dispatching the second only with probability proportional to its
+          gate weight.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Sec. 2.2">6</a></sup
+          >
+          Same throughput problem, different answer.
+        </p>
+      </section>
+
+      <section data-nb-section="capacity" id="capacity">
+        <h2>Capacity at six percent of the compute</h2>
+        <p>
+          The claim to test is that this buys capacity almost for free. The cleanest
+          reading is the controlled comparison on the one-billion-word language
+          benchmark, where per-example compute is held fixed and only capacity moves.
+          The paper reports that its fastest sparse model beats the best previously
+          published result while using about six percent of that baseline's
+          computation, controlling for training epochs.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 5.1" data-nb-note="Verbatim: Even the fastest of these models beats the best published result (when controlling for the number of training epochs), despite requiring only 6% of the computation.">2</a></sup
+          >
+          Held instead at the baseline's compute, the sparse model does far more with
+          it.
+        </p>
+        <figure class="nb-figure">
+          <img src="mixture-of-experts/asset-2.png" alt="Two log-scale plots on the one-billion-word benchmark. Left: test perplexity against model parameters excluding embedding and softmax, with baseline, flat MoE and hierarchical MoE points; perplexity falls from about 45 to 34 as parameters rise from 10^7 to over 10^9. Right: test perplexity against computational budget in ops per timestep; the MoE curve sits well below the LSTM curve at every compute level." />
+          <figcaption>
+            Fig. 2 · Left: at a fixed per-example compute budget, adding parameters
+            (more experts) lowers perplexity. Right: across compute budgets, the
+            sparse models reach a given perplexity at far less compute than the LSTM
+            baselines. Both axes are log-scaled.<sup class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Fig. 2 · p. 6"
+                data-nb-url="https://ar5iv.labs.arxiv.org/html/1701.06538"
+                data-nb-note="Left: perplexity vs parameters at fixed compute. Right: perplexity vs computational budget (ops/timestep)."
+                >2</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The left plot is the capacity claim in one picture: with per-example
+          compute pinned, each added expert lowers perplexity, and the curve keeps
+          falling out to billions of parameters. The right plot reads it the other
+          way, showing that the sparse models reach any given perplexity far down and
+          to the left of where the dense baselines reach it. Three rows from that curve
+          fix the comparison.
+        </p>
+        <table class="nb-table">
+          <caption>
+            One-billion-word benchmark, 10 training epochs. The sparse models carry
+            about 4.3 billion parameters excluding embedding and softmax against the
+            baseline's 151 million, and the low-compute model already beats the
+            baseline at roughly six percent of its per-step compute.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="Table 1" data-nb-note="Parameters exclude embedding and softmax; appendix totals including embeddings run near 5–6B for the same models.">2</a></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Model</th>
+              <th>Ops / timestep</th>
+              <th>Test perplexity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">Best previously published</td>
+              <td>151 M</td>
+              <td>34.7</td>
+            </tr>
+            <tr>
+              <td class="txt"><span class="nb-table-token">MoE</span> low compute</td>
+              <td>8.9 M</td>
+              <td>34.1</td>
+            </tr>
+            <tr>
+              <td class="txt"><span class="nb-table-token">MoE</span> high compute</td>
+              <td>142.7 M</td>
+              <td>28.0</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          At about a sixteenth of the baseline's per-step compute the sparse model
+          already edges ahead, 34.1 against 34.7. Given roughly the baseline's compute
+          budget, it reaches 28.0. That is the concrete version of the capacity claim,
+          and it is a good deal smaller than the abstract's headline. The
+          <q>greater than 1000x</q> in the abstract is a ceiling on capacity relative
+          to a dense network of comparable per-example compute, not a single measured
+          row.<sup class="nb-cite"><a href="#s1">1</a></sup> The 1B-word models above hold
+          about 4.3 billion parameters against the baseline's 151 million, roughly a
+          thirtyfold gap. The parameter count only reaches the thousandfold scale in a
+          separate model built on a hundred-billion-word corpus, with 131,072 experts
+          and 137 billion parameters, at 28.9 to 29.2 perplexity.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 5.2, Appendix C">2</a></sup
+          >
+        </p>
+        <p>
+          The gains are not confined to language modeling. On WMT'14 English-to-French
+          translation, a sparse model with 2,048 experts scored 40.56 BLEU against a
+          strong GNMT baseline's 39.22, a gain of 1.34, with lower perplexity as
+          well.<sup class="nb-cite"><a href="#s2" data-nb-locator="Table 2">2</a></sup>
+          A single multilingual model beat the monolingual baselines on 8 of 12
+          language pairs.<sup class="nb-cite"><a href="#s2" data-nb-locator="Sec. 5.3">2</a></sup>
+        </p>
+        <div class="nb-pull"><p>Sparsity does not make the compute vanish; it moves the cost to batch size and communication, where the layer has to earn it back.</p></div>
+      </section>
+
+      <section data-nb-section="follow-on" id="follow-on">
+        <h2>Which parts of the 2017 design the field kept</h2>
+        <p>
+          The sparse top-<span class="nb-math-in">k</span> gate is now standard in
+          large models. The paper stated a premise that later work directly contradicted:
+          that routing to more than one expert was needed to give the router
+          non-trivial gradients. The Switch Transformer routes each token to a single
+          expert, reports that this preserves quality and lowers routing and
+          communication cost, and scales to 1.571 trillion parameters with a four-fold
+          pre-training speedup over a tuned dense baseline.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Sec. 2.1, 5.6" data-nb-note="Switch attributes to Shazeer et al. 2017 the claim that routing to k>1 was necessary for non-trivial router gradients, and reports overturning it: we instead use a simplified strategy where we route to only a single expert.">5</a></sup
+          >
+          The two-loss balancing did not survive either. Switch collapses importance
+          and load into one differentiable term, and GShard uses a single auxiliary
+          loss of the same family.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Sec. 2.2, Eq. 4">5</a></sup
+          ><sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Sec. 2.2, Algorithm 1" data-nb-note="l_aux = (1/E) sum_e (c_e/S) . m_e, a differentiable stand-in for the token count.">6</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \text{Switch:} \quad \mathrm{loss} = \alpha \cdot N \cdot \sum_{i=1}^{N} f_i \cdot P_i
+            \qquad\qquad
+            \text{GShard:} \quad \ell_{\mathrm{aux}} = \frac{1}{E} \sum_{e=1}^{E} \frac{c_e}{S} \cdot m_e
+          </div>
+          <figcaption>
+            The successor losses, each one term in place of the 2017 pair. Switch's
+            <span class="nb-math-in">f_i</span> is the fraction of tokens dispatched to
+            expert <span class="nb-math-in">i</span> and <span class="nb-math-in">P_i</span>
+            the router probability mass on it, weighted by
+            <span class="nb-math-in">\alpha = 10^{-2}</span>. GShard's
+            <span class="nb-math-in">c_e/S</span> and <span class="nb-math-in">m_e</span>
+            are the same token fraction and mean gate value. Each multiplies a hard
+            routing count by a soft gate quantity, so the term stays
+            differentiable.<sup class="nb-cite"
+              ><a href="#s5" data-nb-locator="Sec. 2.2">5</a></sup
+            ><sup class="nb-cite"
+              ><a href="#s6" data-nb-locator="Algorithm 1">6</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Later work questions whether a balancing loss belongs in the objective at
+          all. Expert-choice routing inverts the direction: instead of each token
+          picking its top experts, each expert picks its top tokens, so every expert
+          fills a fixed bucket and load is even by construction, with no auxiliary
+          loss. It reports more than a two-fold improvement in training convergence at
+          equal compute against both top-1 and top-2 routing.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Abstract" data-nb-note="Verbatim: Instead of letting tokens select the top-k experts, we have experts selecting the top-k tokens. And: improves training convergence time by more than 2x.">7</a></sup
+          >
+          DeepSeek's loss-free balancing keeps token-choice routing but drops the loss
+          for a per-expert bias added to the routing scores before the top-k cut and
+          nudged up or down by each expert's recent load. Its authors argue the
+          balancing loss is not merely unnecessary but harmful, injecting
+          <q>non-negligible interference gradients</q> that impair the model.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="Abstract" data-nb-note="Verbatim: a large auxiliary loss will introduce non-negligible interference gradients into training and thus impair the model performance.">8</a></sup
+          >
+          That strategy is in production: DeepSeek-V3, 671 billion parameters with 37
+          billion active per token, states in its abstract that it uses an
+          auxiliary-loss-free balancing strategy at scale.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="Abstract" data-nb-note="671B total / 37B activated per token; pioneers an auxiliary-loss-free strategy for load balancing. Read to the abstract only.">9</a></sup
+          >
+        </p>
+        <p>
+          The 2017 losses do keep a foothold where routing stayed token-choice.
+          DeepSeekMoE, which segments experts more finely and reserves a few
+          always-active shared experts, still trains with expert-level and
+          device-level auxiliary balancing losses of the collapsed kind.<sup class="nb-cite"
+            ><a href="#s10" data-nb-locator="Abstract, architecture" data-nb-note="Fine-grained expert segmentation and shared-expert isolation; retains expert-level and device-level auxiliary balancing losses.">10</a></sup
+          >
+          The record does not resolve into one verdict on balancing, and it should not
+          be forced to. Switch and GShard kept a loss and shrank it to one term;
+          expert-choice removed the need for it by construction; loss-free balancing
+          removed it and calls it a liability.
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>Sparse top-<span class="nb-math-in">k</span> routing through a trainable gate is standard in frontier models, from Switch's trillion-parameter scale to DeepSeek-V3's 671 billion.<sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup></li>
+              <li>Capacity is close to free under fixed per-example compute, shown in the controlled six-percent-compute row on the 1B-word benchmark.<sup class="nb-cite"><a href="#s2" data-nb-locator="Sec. 5.1, Table 1">2</a></sup></li>
+              <li>Balancing the load is a real requirement every successor design still has to meet in some form.<sup class="nb-cite"><a href="#s7">7</a></sup></li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>The premise that <span class="nb-math-in">k &gt; 1</span> is needed for router gradients was overturned by top-1 routing.<sup class="nb-cite"><a href="#s5" data-nb-locator="Sec. 2.1">5</a></sup></li>
+              <li>The two-loss balancing did not survive; successors use one loss, none, or a bias controller instead.<sup class="nb-cite"><a href="#s8">8</a></sup></li>
+              <li>The 2017 batch fix, mixing parallelism and convolving over timesteps, was replaced by fixed expert capacity and token dropping.<sup class="nb-cite"><a href="#s6" data-nb-locator="Sec. 2.2">6</a></sup></li>
+              <li>The abstract's <q>1000x</q> is a capacity ceiling, not a measured result; the controlled gains on the 1B-word benchmark are about thirtyfold.<sup class="nb-cite"><a href="#s1">1</a></sup></li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The paper was right about the idea and wrong about much of the machinery.
+            Conditional computation through a sparse, trainable gate does buy capacity
+            at close to fixed per-example compute, and that idea carried straight
+            through to today's largest models. Almost none of the specific
+            engineering did. Top-1 routing replaced the <span class="nb-math-in">k &gt; 1</span>
+            requirement.<sup class="nb-cite"><a href="#s5" data-nb-locator="Sec. 2.1">5</a></sup>
+            One balancing loss, or a bias controller, replaced the two
+            coefficient-of-variation losses.<sup class="nb-cite"
+              ><a href="#s5" data-nb-locator="Sec. 2.2">5</a></sup
+            ><sup class="nb-cite"><a href="#s8" data-nb-locator="Abstract">8</a></sup>
+            Fixed capacity with token dropping replaced the
+            parallelism-and-convolution batch fix.<sup class="nb-cite"
+              ><a href="#s6" data-nb-locator="Sec. 2.2">6</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1701.06538"
+              >Shazeer, Mirhoseini, Maziarz, Davis, Le, Hinton &amp; Dean &middot; Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://ar5iv.labs.arxiv.org/html/1701.06538"
+              >Shazeer, Mirhoseini, Maziarz, Davis, Le, Hinton &amp; Dean &middot; Outrageously Large Neural Networks (full text: gating math, appendices, figures)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://direct.mit.edu/neco/article/3/1/79/5560/Adaptive-Mixtures-of-Local-Experts"
+              >Jacobs, Jordan, Nowlan &amp; Hinton &middot; Adaptive Mixtures of Local Experts</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1308.3432"
+              >Bengio, Léonard &amp; Courville &middot; Estimating or Propagating Gradients Through Stochastic Neurons for Conditional Computation</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2101.03961"
+              >Fedus, Zoph &amp; Shazeer &middot; Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2006.16668"
+              >Lepikhin, Lee, Xu, Chen, Firat, Huang, Krikun, Shazeer &amp; Chen &middot; GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2202.09368"
+              >Zhou, Lei, Liu, Du, Huang, Zhao, Dai, Chen, Le &amp; Laudon &middot; Mixture-of-Experts with Expert Choice Routing</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2408.15664"
+              >Wang, Gao, Zhao, Sun &amp; Dai &middot; Auxiliary-Loss-Free Load Balancing Strategy for Mixture-of-Experts</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2412.19437"
+              >DeepSeek-AI &middot; DeepSeek-V3 Technical Report</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2401.06066"
+              >Dai et al. &middot; DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
