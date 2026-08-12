@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Outlines masks every invalid token as a model decodes, so the output fits your schema by construction · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "outlines",
+        "template": "article",
+        "title": "Outlines masks every invalid token as a model decodes, so the output fits your schema by construction",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-12",
+        "tags": ["structured-generation", "llm", "constrained-decoding", "python"],
+        "sources": 13,
+        "words": 2005,
+        "reading_minutes": 9,
+        "dek": "The guarantee holds on a local model, where the library controls the logits, and thins to the provider's own feature the moment you point it at a hosted API.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">Outlines masks every invalid token as a model decodes, so the output fits your schema by construction</h1>
+        <p class="nb-dekline">
+          The guarantee holds on a local model, where the library controls the logits, and thins to the provider's own feature the moment you point it at a hosted API.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-08-12</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Generate JSON, then hope it parses</h2>
+        <p>
+          The common way to pull structured data out of a language model is to
+          ask for JSON in the prompt, read back a string, and call
+          <code>json.loads</code> on it. When the string comes back malformed,
+          and it does, the program catches the exception and asks again. Outlines
+          deletes the second step. It constrains the model's decoding so the
+          returned string already matches a schema you hand it: a JSON schema, a
+          regular expression, a fixed set of choices, or a context-free grammar.
+          The documentation states the property as "always valid JSON."<sup
+            class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The guarantee is genuine because it is
+          produced inside the decoding loop rather than checked once the tokens
+          are out. The design that produces it was written down from first
+          principles in a 2023 paper by the library's original
+          authors.<sup class="nb-cite"><a href="#s2">2</a></sup> The
+          by-construction promise belongs to the local path,
+          where Outlines controls the logits. Point the same call at a hosted API
+          and something else happens. And it is no longer the cheapest way to get
+          a valid schema out of a model, a fact newer engines are happy to
+          report.
+        </p>
+      </section>
+
+      <section data-nb-section="constrained-call" id="constrained-call">
+        <h2>Constrain the call to a schema and the parse guard disappears</h2>
+        <p>
+          The path Outlines replaces looks like this. You prompt, you parse, and
+          you wrap the parse in a guard because nothing stopped the model from
+          emitting a trailing comma or a half-quoted key.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">the path Outlines replaces</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">import json
+
+raw = client.chat(prompt)          # ordinary generation: nothing constrains the tokens
+try:
+    data = json.loads(raw)         # may raise JSONDecodeError
+except json.JSONDecodeError:
+    raw = client.chat(prompt)      # ask again, and hope this one parses
+    data = json.loads(raw)</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · Retry-and-parse: generation is unconstrained, so a broken
+            string is caught and re-requested.
+          </figcaption>
+        </figure>
+        <p>
+          On a local model Outlines makes that guard unreachable. You wrap the
+          model once, pass the schema as the second argument to the call, and the
+          returned string is one the schema accepts.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">constrained generation with Outlines</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">import outlines
+from pydantic import BaseModel
+from typing import Literal
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+class Customer(BaseModel):
+    name: str
+    urgency: Literal["high", "medium", "low"]
+    issue: str
+
+model_name = "HuggingFaceTB/SmolLM2-135M-Instruct"
+hf_model = AutoModelForCausalLM.from_pretrained(model_name)
+hf_tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = outlines.from_transformers(hf_model, hf_tokenizer)
+
+reply = model("Alice needs help with login issues ASAP", Customer)
+Customer.model_validate_json(reply)   # never raises: the tokens could not break the schema</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · A Pydantic model passed as the output type. The result is a
+            JSON string that validates against it.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          <code>model_validate_json</code> never raises on <code>reply</code>,
+          because a token that would break the schema was never sampled. The
+          output type can be a Pydantic model, a raw JSON schema, a
+          <code>Regex</code> such as <code>Regex(r"[0-9]{3}")</code>, a
+          <code>Choice</code>, or a full grammar, each passed the same way as the
+          second argument to the call.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-index" id="the-index">
+        <h2>The index turns a full-vocabulary scan into one lookup</h2>
+        <p>
+          At each step the model produces a logit for every token in its
+          vocabulary. To keep the output valid, you zero the logits of every
+          token that could not continue a valid string and sample from what is
+          left.<sup class="nb-cite"><a href="#s2">2</a></sup> The only hard part
+          is knowing which tokens those are.
+        </p>
+        <p>
+          Compile the schema to a finite-state machine. The machine's current
+          state fixes which characters may come next, and therefore which tokens
+          may. Figure 3 shows this for the regular expression
+          <code>([0-9]*)?\.?[0-9]*</code>, which matches a floating-point number.
+          In state 0 the token <code>A</code> is masked out while a digit or a
+          dot is allowed. Sampling <code>.2</code> advances the machine, and the
+          set of allowed tokens shrinks with it.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="outlines/asset-1.png"
+            alt="A four-state finite-state machine for a floating-point regex, with a row of five candidate tokens beneath it. In the top panel the token A is masked black; after sampling the branches labeled Sample .2 and Sample 1, the automaton advances and a different set of tokens is masked."
+          />
+          <figcaption>
+            Fig. 3 · FSM masking for the regex
+            <code>([0-9]*)?\.?[0-9]*</code>: the current state decides which
+            tokens are masked, and the mask changes as tokens are sampled.<sup
+              class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Fig. 1 · Sec. 3"
+                data-nb-url="https://arxiv.org/pdf/2307.09702"
+                data-nb-note="The state-drives-mask picture the article's masking argument rests on."
+                >2</a
+              ></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Building the mask the direct way means asking, for every token in the
+          vocabulary, whether it is allowed in the current state. That is a scan
+          of the whole vocabulary at every decoding step: a fixed
+          <span class="nb-math-in">O(N)</span> cost per generated token, with
+          <span class="nb-math-in">N</span> the vocabulary size.<sup
+            class="nb-cite"><a href="#s2">2</a></sup> For GPT-2's
+          <span class="nb-math-in">N = 50{,}257</span> that is fifty thousand
+          membership tests for each token the model emits.
+        </p>
+        <p>
+          The paper's contribution is to pay that cost once. Before decoding
+          starts, precompute a map
+          <span class="nb-math-in">\sigma : Q \to \mathcal{P}(V)</span> from each
+          FSM state to the set of tokens valid in it. Every decoding step then
+          becomes a hash-map lookup, <span class="nb-math-in">O(1)</span> on
+          average, in place of the scan.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 1, Sec. 3">2</a></sup> Building
+          the map is the awkward part: a single vocabulary string can match an
+          arbitrary interior piece of the pattern, so the construction starts a
+          match in every viable FSM state, not only the start state.<sup
+            class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The index is not free, and where it costs is memory. Its size tracks
+          the number of FSM states. For a slightly augmented Python grammar with
+          un-reduced automata the paper measures a naively built index at around
+          50 MB, offered as a loose upper bound rather than a typical
+          schema.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 5">2</a></sup> A context-free
+          grammar needs more: the index becomes a trie keyed on the parser's
+          stack values.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 4.1">2</a></sup> Any claim about
+          how the masking runs is now a claim about a second package: the FSM
+          compilation and the index were moved out of the Python library into a
+          Rust core, <code>outlines-core</code>, "for performance and
+          portability."<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="backend" id="backend">
+        <h2>On a hosted API, the FSM never runs</h2>
+        <p>
+          Everything above needs Outlines to hold the logits in its hand. That is
+          true on local and open-weight backends, Transformers, llama.cpp, vLLM
+          and the rest, where <code>outlines-core</code> builds the mask and
+          applies it inside the decoding loop.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup><sup class="nb-cite"
+            ><a href="#s5">5</a></sup> On a hosted API such as OpenAI, Anthropic,
+          or Gemini the library cannot reach the logits at all, so it defers to
+          the provider's own structured-output feature and the FSM masking never
+          runs.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Two sentences in the documentation sit in apparent tension, and both
+          are true. Outlines promises valid output "directly from any LLM," and
+          the same documentation notes that structured output "is not available
+          for all models."<sup class="nb-cite"><a href="#s1">1</a></sup><sup
+            class="nb-cite"><a href="#s4">4</a></sup> They describe different code
+          paths under one API. The uniform call is a real convenience. The
+          guarantee behind it is not uniform.
+        </p>
+        <p>
+          There is a quieter version of the same split inside the serving stacks.
+          XGrammar ships as the default structured-generation backend in both
+          vLLM and SGLang.<sup class="nb-cite"><a href="#s6">6</a></sup> A user
+          who runs "Outlines on vLLM" and one who flips on "vLLM structured
+          output" can end up exercising two different engines that offer the same
+          structural guarantee at different costs.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="speed-and-accuracy" id="speed-and-accuracy">
+        <h2>Outlines is no longer the fastest, and its accuracy cost is contested</h2>
+        <p>
+          The paper's speed claim rests on a single-run comparison against
+          Guidance in 2023, which the authors themselves hedge, "Barring any
+          configuration oversights that might be creating a large run-time
+          discrepancy."<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 3.2">2</a></sup> Two later
+          engines now report beating it. XGrammar reports up to 3.5x faster logit
+          masking on JSON schema and more than 10x on grammars, against baselines
+          that include Outlines.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          llguidance computes its masks on the fly, with "essentially no startup
+          cost" and roughly 50 microseconds of single-core CPU per token on a
+          128k-token tokenizer. It names the precomputed index as the reason to
+          avoid one: startup time, memory, and a ceiling on constraint
+          complexity.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            How three constraint engines build the token mask, by each project's
+            own account. The speed figures are vendor benchmarks, not independent
+            measurements.<sup class="nb-cite"><a href="#s7">7</a></sup><sup
+              class="nb-cite"><a href="#s8">8</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Engine</th>
+              <th class="txt">How the mask is built</th>
+              <th class="txt">Startup cost</th>
+              <th class="txt">Reported speed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Outlines</span></td>
+              <td class="txt">A precomputed index from FSM states to valid tokens.</td>
+              <td class="txt">Index build; about 50 MB for a Python grammar.</td>
+              <td class="txt">Valid output, no longer the fastest today.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">XGrammar</span></td>
+              <td class="txt">A stack-based parser with some masks precomputed.</td>
+              <td class="txt">Partial precompute.</td>
+              <td class="txt">Up to 3.5x faster masking, by its own harness.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">llguidance</span></td>
+              <td class="txt">Computed per token, on the fly.</td>
+              <td class="txt">Essentially none.</td>
+              <td class="txt">About 50 microseconds per token, by its own harness.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          So the honest line is narrower than the paper's "significantly
+          outperforms existing solutions." The index guarantees valid output. It
+          is not the cheapest way to guarantee it in 2026, and against
+          retry-and-parse, the path most pipelines still run, that comparison is
+          the wrong one to fixate on anyway.
+        </p>
+        <p>
+          A separate question is whether constraining the decoding hurts the
+          model's reasoning. "Let Me Speak Freely?" reports large drops:
+          GPT-3.5-turbo's GSM8K accuracy falling from about 76% in natural
+          language to about 49% under JSON-mode.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup> The study's strictest arm is JSON-mode, a
+          provider flag, not the FSM constraint engine Outlines runs. dottxt's
+          rebuttal makes exactly that objection. It argues
+          the strict arm used JSON-mode prompting with no schema and no
+          constraint engine, ran mismatched prompts across conditions, and leaned
+          on a language model as its answer parser. On matched re-runs it shows
+          structured generation flat to slightly better, GSM8K 0.77 to
+          0.78.<sup class="nb-cite"><a href="#s10">10</a></sup> Both sides have a
+          stake, and each rests on a small sample. The structural guarantee is
+          not what is in dispute. The reasoning cost is, and it is open.
+        </p>
+      </section>
+
+      <section data-nb-section="where-it-fits" id="where-it-fits">
+        <h2>Reach for it when you own the model and the schema</h2>
+        <p>
+          The guarantee earns its cost wherever a later step will crash on
+          malformed output and you run the model that produces it: pulling fields
+          into a schema, generating tool-call arguments, holding an agent to an
+          output contract, or forcing an evaluation harness to emit a gradable
+          form.<sup class="nb-cite"><a href="#s1">1</a></sup> Point the same call
+          at a hosted API and it still works, but the guarantee you collect is
+          the provider's, not the finite-state machine's.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The maintenance signal splits cleanly between the two packages. The
+          wrapper is busy: 84 releases on PyPI, the latest 1.3.3 six days before
+          this writing, several a month through 2026.<sup class="nb-cite"
+            ><a href="#s11">11</a></sup> The Rust core that actually holds the
+          masking moves at a different pace: 17 releases in all, the latest
+          0.2.14 in January 2026, a few a year.<sup class="nb-cite"
+            ><a href="#s12">12</a></sup> The repository is Apache-2.0, maintained
+          by .txt, and its page shows roughly 15.6k stars with about 94 open
+          issues and 45 open pull requests on the day of writing.<sup
+            class="nb-cite"><a href="#s13">13</a></sup> One naming note for
+          anyone tracing the design back to its source: the 2023 paper was
+          written at Normal Computing, and the library is now
+          dottxt-ai's.<sup class="nb-cite"><a href="#s2">2</a></sup><sup
+            class="nb-cite"><a href="#s13">13</a></sup>
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                Valid output by construction on any backend where Outlines owns
+                the logits.<sup class="nb-cite"><a href="#s1">1</a></sup>
+              </li>
+              <li>
+                The design is written down from first principles, and its code
+                is readable in <code>outlines-core</code>.<sup class="nb-cite"
+                  ><a href="#s2">2</a></sup><sup class="nb-cite"
+                  ><a href="#s5">5</a></sup>
+              </li>
+              <li>
+                The wrapper ships steadily: 84 releases, the latest six days
+                before this writing.<sup class="nb-cite"
+                  ><a href="#s11">11</a></sup>
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                The guarantee thins to the provider's own feature on a hosted
+                API.<sup class="nb-cite"><a href="#s1">1</a></sup>
+              </li>
+              <li>
+                It is no longer the fastest engine, and vLLM or SGLang may run
+                XGrammar under you instead.<sup class="nb-cite"
+                  ><a href="#s7">7</a></sup><sup class="nb-cite"
+                  ><a href="#s6">6</a></sup>
+              </li>
+              <li>
+                The core that owns the masking releases only a few times a
+                year.<sup class="nb-cite"><a href="#s12">12</a></sup>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Depend on Outlines for valid structure when you run the model
+            yourself. That guarantee is real and cheap to reason about. Treat its
+            speed as adequate rather than leading, confirm whether your serving
+            stack is running Outlines or XGrammar underneath, and keep the
+            reasoning-accuracy question open until you have measured it on your
+            own task. An independent benchmark, or the Rust core's release feed
+            going quiet, would move the assessment.<sup class="nb-cite"
+              ><a href="#s12">12</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://dottxt-ai.github.io/outlines/latest/"
+              >dottxt · Outlines documentation</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2307.09702"
+              >Willard &amp; Louf · Efficient Guided Generation for Large Language Models</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://dottxt-ai.github.io/outlines/1.0.2/guide/getting_started/"
+              >dottxt · Outlines getting started</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://dottxt-ai.github.io/outlines/latest/features/core/output_types/"
+              >dottxt · Outlines output types</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/dottxt-ai/outlines-core"
+              >dottxt-ai · outlines-core (GitHub)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/mlc-ai/xgrammar"
+              >mlc-ai · XGrammar (GitHub)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blog.mlc.ai/2024/11/22/achieving-efficient-flexible-portable-structured-generation-with-xgrammar"
+              >MLC · Efficient, Flexible, Portable Structured Generation with XGrammar</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/guidance-ai/llguidance"
+              >guidance-ai · llguidance (GitHub)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2408.02442"
+              >Tam et al. · Let Me Speak Freely? A Study on the Impact of Format Restrictions</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blog.dottxt.ai/say-what-you-mean.html"
+              >Will Kurt, dottxt · Say What You Mean: A Response to "Let Me Speak Freely"</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/outlines/"
+              >PyPI · outlines (release history)</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/outlines-core/"
+              >PyPI · outlines-core (release history)</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/dottxt-ai/outlines"
+              >dottxt-ai · outlines (GitHub)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
