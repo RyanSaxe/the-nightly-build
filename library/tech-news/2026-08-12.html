@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-12</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-12",
+        "template": "brief",
+        "title": "Model releases stay quiet while the week's advances come from the lab and the sky",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-12",
+        "tags": ["science", "machine-learning", "ai", "astronomy"],
+        "sources": 7,
+        "words": 595,
+        "reading_minutes": 3,
+        "dek": "An eclipse-chasing campaign anchors the day, alongside Dyna-1's read on protein motion from missing NMR peaks and Anthropic's new mark on Claude's text output.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Model releases stay quiet while the week's advances come from the lab and the sky</h1>
+        <p class="nb-dekline">An eclipse-chasing campaign anchors the day, alongside Dyna-1's read on protein motion from missing NMR peaks and Anthropic's new mark on Claude's text output.</p>
+        <div class="nb-byline">
+          <span>3 min read</span><span>2026-08-12</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Heliophysics</span>
+          <h3>
+            <a href="https://science.nasa.gov/science-research/heliophysics/nasa-science-soars-during-august-total-solar-eclipse/"
+              >Scientists fly jets and balloons into the 12 August total eclipse to read the corona</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            On 12 August, NASA-funded teams met a total solar eclipse in the air
+            and the stratosphere. The WB-57 jet flew a four-camera multispectral
+            imager at 50,000 feet, capturing at least 20 corona images per
+            second. That stretched totality to nearly three minutes, against the
+            2 minutes 18 seconds an observer got on the ground.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Balloon teams launched about 80 payloads from Iceland and six
+            carrying 360-degree cameras from Spain, running from 18 hours before
+            totality to 8 hours after. Their targets were the corona-heating
+            problem, prominence formation, and the link from the corona to the
+            solar wind.<sup class="nb-cite"><a href="#s1">1</a></sup> European
+            groups observed alongside them: an AFP report names France's CEA,
+            ESA's Solar Orbiter, and the Proba-3 formation-flying mission.<sup
+              class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            This is an observing campaign, not a same-day result. The findings
+            arrive once the data is reduced.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Structural biology</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41586-026-10989-4"
+              >Dyna-1 reads protein motion from the NMR peaks that go missing</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Wayment-Steele and colleagues train Dyna-1 on a single assumption.
+            The residues left unassigned in NMR chemical-shift data are the ones
+            broadened out by microsecond-to-millisecond exchange, so absence in
+            the spectrum is itself the label for motion. The training signal
+            comes from roughly 10,000 proteins in the Biological Magnetic
+            Resonance Data Bank, and the best model reads from an intermediate
+            layer of the ESM protein language model.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            The authors curated a test set they call RelaxDB, 133
+            proteins with relaxation data. On it, they report that Dyna-1 also
+            predicts exchange measured by independent NMR experiments, including
+            the motions that drive enzyme catalysis and ligand binding.<sup
+              class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            Independent write-ups from CBIRT and Kiin Bio describe the same
+            result, though both predate the Nature paper: the work circulated as
+            a preprint from early 2025.<sup class="nb-cite"><a href="#s4">4</a></sup
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI provenance</span>
+          <h3>
+            <a href="https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content"
+              >Anthropic starts marking Claude's text output, without saying how</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            Anthropic updated its support documentation on 11 August: Claude now
+            weaves an imperceptible watermark into the text it generates. The
+            company says the mark survives copy-paste and may persist through
+            some editing. Generated image files, in SVG, PNG, and JPG, carry
+            signed C2PA provenance metadata, and models launched on or after 2
+            August mark their output at launch, with older models being
+            retrofitted.<sup class="nb-cite"><a href="#s6">6</a></sup> Anthropic
+            is careful about what a hit means: a detected mark shows only that
+            content may have been processed by Claude, since the model may merely
+            have edited existing material.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+            What the company does not disclose is how the text watermark is
+            built, or how much editing removes it. TechCrunch, reporting the
+            change against the EU AI Act's transparency rules, notes that
+            Anthropic had not answered its questions on removability by
+            publication.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://science.nasa.gov/science-research/heliophysics/nasa-science-soars-during-august-total-solar-eclipse/"
+              >NASA Science · NASA science soars during the August total solar eclipse</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://phys.org/news/2026-08-total-eclipse-scientists-chance-probe.html"
+              >phys.org (AFP) · Total eclipse gives scientists a chance to probe the corona</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41586-026-10989-4"
+              >Nature · Prediction of protein millisecond dynamics from missing NMR assignments (Dyna-1), published 10 August 2026</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://cbirt.net/dyna-1-unraveling-protein-dynamics-with-deep-learning-and-nmr-data/"
+              >CBIRT · Dyna-1: unraveling protein dynamics with deep learning and NMR data (preprint-era, 5 April 2025)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://newsletter.kiin.bio/p/dyna-1-learning-protein-dynamics"
+              >Kiin Bio Weekly · Dyna-1: learning protein dynamics (preprint-era, 6 November 2025)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content"
+              >Anthropic Support · How Claude marks AI-generated content (updated 11 August 2026)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2026/08/11/anthropic-says-it-will-watermark-text-generated-by-its-ai-models/"
+              >TechCrunch · Anthropic says it will watermark text generated by its AI models</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
