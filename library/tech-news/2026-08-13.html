@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-13</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-13",
+        "template": "brief",
+        "title": "A Security builds a zero-click Zoom exploit chain with fewer than 20 AI prompts",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-13",
+        "tags": ["security", "ai", "open-weight-models", "ai-infrastructure", "biotechnology"],
+        "sources": 9,
+        "words": 894,
+        "reading_minutes": 4,
+        "dek": "Zoom has already patched the three linked CVEs, closing out a disclosure that began with a private report to the company in June.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">A Security builds a zero-click Zoom exploit chain with fewer than 20 AI prompts</h1>
+        <p class="nb-dekline">Zoom has already patched the three linked CVEs, closing out a disclosure that began with a private report to the company in June.</p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-08-13</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Security</span>
+          <h3>
+            <a href="https://a.security/blog/asecurity-zoomsday"
+              >A Security chains three Zoom bugs into one zero-click exploit,
+              built in under 20 AI prompts</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            A Security says it turned a private vulnerability report into a
+            working, zero-click remote-code-execution chain against Zoom's
+            annotation feature in under 24 hours, using publicly available AI
+            models and fewer than 20 prompts.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            The underlying flaw is present on every Zoom client: Windows,
+            Mac, iPhone, Android, and Linux. The working exploit chain
+            itself, A Security says, was confirmed on four of those five:
+            Windows, macOS, iOS, and Android, with the fullest live
+            demonstration on macOS.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            The chain links three CVEs, 2026-53413 through -53415, and
+            TechRepublic, reviewing the disclosure independently, confirms
+            that timeline, the same four-platform confirmed set, and that
+            Zoom has already shipped patches across the affected
+            products.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            TechRepublic frames it as a capability story before a
+            product-security one: AI is cutting the time and expertise a
+            working exploit chain needs, generally, not only what one team
+            did with this particular chain.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Open-weight models</span>
+          <h3>
+            <a
+              href="https://research.meta.ai/blog/introducing-muse-glimmer-open-agentic-model"
+              >Meta distills its closed Muse Spark model into a 30B open one
+              that runs on a single GPU</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Meta Superintelligence Labs released Muse Glimmer on August 10: a
+            30-billion-parameter, Apache 2.0-licensed model distilled from
+            Meta's larger, closed Muse Spark model.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            It runs on consumer hardware, a 24-32GB memory footprint at
+            roughly 4-bit quantization, tested on a MacBook M4-Max, an
+            M5-Max, and a single RTX-5090.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            Meta's own DFlash speculative-decoding technique speeds inference
+            3.1x on the RTX-5090, 1.8x on the M5-Max, and 1.5x on the
+            M4-Max.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            The model itself handles agentic tool use, multi-step reasoning,
+            and both text and image input, in more than 100 languages.<sup
+              class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            Meta says Glimmer beats Gemma4-31B and Qwen3.6-27B on its own
+            agentic, coding, and safety benchmarks, a comparison no outside
+            source in this record has independently rerun.<sup
+              class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            TechCrunch reads the release as a map of Meta's own boundary.
+            Glimmer, in the outlet's words, is "an early indication of where
+            Meta may draw the line between the AI it wants people to own
+            themselves and the more powerful intelligence that remains under
+            the company's control."<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI infrastructure</span>
+          <h3>
+            <a
+              href="https://newsroom.ibm.com/2026-08-11-IBM-and-Together-AI-Sign-Multi-Year-Agreement-to-Scale-Open-Source-AI-Inference-with-NVIDIA-AI-Infrastructure-on-IBM-Cloud"
+              >IBM and Together AI sign $240 million deal for a Blackwell
+              cluster Together AI expects to sell out months before it comes
+              online</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            IBM will build Together AI a dedicated Nvidia HGX B300 inference
+            cluster on IBM Cloud, a $240 million multi-year deal using
+            Spectrum-X networking and targeting Q1 2027 availability.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            Reuters, carried by BNN Bloomberg, puts the initial US
+            deployment at roughly 2,000 Blackwell B300 chips.<sup
+              class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+            Together AI's chief revenue officer, Kai Mak, is blunt about
+            demand: "We think this will be sold out at least two to three
+            months ahead of time."<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+            Together AI already serves roughly 400 trillion tokens a month
+            across open models including DeepSeek, MiniMax, and Kimi.<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            The Next Web reads the deal as IBM competing on cost per token
+            rather than raw scale against AWS, Microsoft, and Google.<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            It points to Nebius's separate $643 million acquisition of an
+            inference-optimization team as the same signal from a different
+            angle: "shaving cost per token is where the margins now live."<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Metabolic therapy</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41586-026-10909-6"
+              >An engineered gut probiotic switches on a diabetes drug only
+              when blood sugar is high</a
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </h3>
+          <p>
+            Guan and colleagues, publishing in Nature, engineered a probiotic
+            that colonizes the gut temporarily and carries a synthetic gene
+            circuit built on the glucose-responsive regulator HexR: it
+            expresses the GLP-1 diabetes drug only once blood glucose crosses
+            a threshold, then stops.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            That closes a gap in prior engineered-cell diabetes therapies,
+            which needed either a surgical cell implant or an external signal
+            to control dosing; this platform needs neither, and is dosed
+            orally.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The paper reports glycemic control, improved lipid profiles, and
+            fewer diabetic complications in the liver, kidneys, and colon,
+            tested in two diabetic mouse models and, escalating toward
+            humans, in non-human primates with type 2 diabetes.<sup
+              class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            China Science Daily, reporting independently of Nature and
+            outside the authors' institution, confirms the same findings and
+            adds that the paper spent roughly three years in review at
+            Nature after an October 2023 submission, a slow, contested path
+            to print rather than a rushed one.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            One figure the paper's abstract leaves out: the exact magnitude
+            of the glucose or HbA1c reduction, which sits in its paywalled
+            full text.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://a.security/blog/asecurity-zoomsday"
+              >A Security · Zoomsday: an AI-built, zero-click Zoom exploit
+              chain</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.techrepublic.com/article/news-zoom-zero-click-rce-zoomsday-ai-exploit/"
+              >TechRepublic · Zoom zero-click RCE: the AI-built "Zoomsday"
+              exploit chain</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://research.meta.ai/blog/introducing-muse-glimmer-open-agentic-model"
+              >Meta Superintelligence Labs · Introducing Muse Glimmer, an open
+              agentic model</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2026/08/10/metas-new-glimmer-ai-model-offers-a-hint-at-zuckerbergs-personal-intelligence-vision/"
+              >TechCrunch · Meta's new Glimmer AI model offers a hint at
+              Zuckerberg's personal intelligence vision</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://newsroom.ibm.com/2026-08-11-IBM-and-Together-AI-Sign-Multi-Year-Agreement-to-Scale-Open-Source-AI-Inference-with-NVIDIA-AI-Infrastructure-on-IBM-Cloud"
+              >IBM Newsroom · IBM and Together AI sign multi-year agreement to
+              scale open-source AI inference with Nvidia AI infrastructure on
+              IBM Cloud</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.bnnbloomberg.ca/business/2026/08/11/ibm-together-ai-ink-240-million-deal-for-nvidia-powered-ai-inference-cluster/"
+              >BNN Bloomberg (Reuters) · IBM, Together AI ink $240 million
+              deal for Nvidia-powered AI inference cluster</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thenextweb.com/news/ibm-together-ai-240m-nvidia-inference-cluster"
+              >The Next Web · IBM and Together AI's $240M Nvidia inference
+              cluster</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41586-026-10909-6"
+              >Nature · Guan et al., a programmable, orally deliverable
+              glucose-responsive probiotic for metabolic therapy</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://news.sciencenet.cn/htmlnews/2026/8/569743.shtm"
+              >China Science Daily (ScienceNet) · A glucose-sensing
+              engineered probiotic for diabetes, a decade in the making</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
