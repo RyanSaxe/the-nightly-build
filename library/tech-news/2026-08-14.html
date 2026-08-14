@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-14</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-14",
+        "template": "brief",
+        "title": "Auto mode becomes Claude Code's default, catching 800 dangerous commands human reviewers missed",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-14",
+        "tags": ["ai-safety", "coding-agents", "ai-infrastructure", "ai-security", "materials-science"],
+        "sources": 12,
+        "words": 1348,
+        "reading_minutes": 6,
+        "dek": "The switch takes effect 14 August for Pro, Max, and Team plans, and rests on a study Anthropic designed, ran, and graded itself, in which human reviewers caught just 6 of the dangerous commands auto mode missed.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Auto mode becomes Claude Code's default, catching 800 dangerous commands human reviewers missed</h1>
+        <p class="nb-dekline">The switch takes effect 14 August for Pro, Max, and Team plans, and rests on a study Anthropic designed, ran, and graded itself, in which human reviewers caught just 6 of the dangerous commands auto mode missed.</p>
+        <div class="nb-byline">
+          <span>6 min read</span><span>2026-08-14</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI safety</span>
+          <h3>
+            <a href="https://claude.com/blog/auto-mode-default-in-claude-code"
+              >Auto mode becomes Claude Code's default, catching 800 dangerous
+              commands human reviewers missed</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Starting 14 August, new Claude Code sessions on Pro, Max, and
+            Team plans run in auto mode by default.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            A classifier now decides whether to run each tool call, stopping
+            only what Anthropic calls "irreversible, destructive, or aimed
+            outside your environment."<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Every earlier session instead waited on a human's approval for
+            each call.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            In a study Anthropic designed and ran itself, 1,053 paid
+            professional testers each had one permission prompt covertly
+            swapped for a dangerous command.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Testers caught it 13.6% of the time (143 of 1,053), and auto
+            mode caught it 89% of the time (937 of 1,053).<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Where the two disagreed, auto mode blocked 800 commands a tester
+            had approved, against 6 commands testers blocked that auto mode
+            had allowed.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            Anthropic attributes part of the gap to fatigue.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            It says testers' catch rate fell from about 17% early in a
+            session to about 5% after 50 or more prior prompts, while the
+            classifier's rate held flat.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Adversarial hardening with the UK's Apollo Research cut the
+            classifier's own miss rate on a held-out attack set from 12% to
+            7%.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            TechCrunch, an outside newsroom, reported the same rollout date
+            and study figures.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Coding agents</span>
+          <h3>
+            <a href="https://z.ai/blog/glm-5.3"
+              >GLM-5.3's Terminal-Bench score rises sixfold to 28.3 from
+              post-training alone, Z.ai says</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Z.ai released GLM-5.3 on 14 August, built on the same base model
+            as GLM-5.2, with every reported gain coming from
+            post-training.<sup class="nb-cite"><a href="#s3">3</a></sup>
+            Terminal-Bench 3.0 rose from 4.6 to 28.3 and DeepSWE v1.1 from
+            46.2 to 66.9, both scored under evaluation rules Z.ai designed
+            itself.<sup
+              class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            The company also reports a cyber-capability jump it says
+            surprised its own researchers, describing GLM-5.3 as reasoning
+            "across multiple stages of exploitation, forming coherent plans
+            for complete exploitation chains" rather than spotting isolated
+            flaws.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </p>
+          <table class="nb-table">
+            <caption>
+              Z.ai's self-reported cyber-benchmark scores for GLM-5.3, run
+              inside its own evaluation harness.<sup class="nb-cite"
+                ><a href="#s3">3</a></sup
+              >
+            </caption>
+            <thead>
+              <tr>
+                <th class="txt">Model</th>
+                <th>CyberGym</th>
+                <th>ExploitBench</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="nb-table-token">GLM-5.3</span></td>
+                <td>84.5%</td>
+                <td>54.4%</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">GPT-5.6 Sol</span></td>
+                <td>83.6%</td>
+                <td>76.5%</td>
+              </tr>
+              <tr>
+                <td><span class="nb-table-token">Mythos 5</span></td>
+                <td>83.8%</td>
+                <td>78.0%</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Working with security teams in China since GLM-5.2, Z.ai says the
+            model has found 2,436 vulnerabilities across 269 open-source
+            projects after expert review, one dating to 1981.<sup
+              class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            Only 53 are disclosed publicly so far, with the rest under
+            embargo while open weights stay unreleased for what the company
+            calls "safety evaluation and hardening."<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+            Unite.AI independently confirmed the release date and the
+            weights delay, without re-running any of Z.ai's benchmark
+            claims.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Inference infrastructure</span>
+          <h3>
+            <a href="https://openai.com/index/previewing-ultrafast/"
+              >OpenAI says its Ultrafast tier runs GPT-5.6 Sol up to 14 times
+              faster without shrinking the model</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            OpenAI began a limited preview of Ultrafast on 13 August, an API
+            tier it says runs GPT-5.6 Sol at up to 14 times the speed of
+            standard processing and up to 750 output tokens per second,
+            built on a hardware partnership with Cerebras.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            OpenAI frames the release as breaking a standing constraint:
+            "until now, getting real-time speed typically meant choosing a
+            smaller or more specialized model."<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            It points to incident response, financial research and
+            security, live customer support, commerce, and research loops
+            that previously ran as overnight batch jobs as the workloads
+            Ultrafast opens up.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            Access is limited for now to "a select group of customers,"
+            expanding "as capacity grows."<sup class="nb-cite"
+              ><a href="#s5">5</a></sup
+            >
+            TechCrunch corroborated the speed figures and the Cerebras
+            partnership the same day.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Model release</span>
+          <h3>
+            <a
+              href="https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-3-7-flash/"
+              >Gemini 3.7 Flash trails GPT-5.6 Terra and Claude Sonnet 5 on
+              Google's own benchmark table</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            Google released Gemini 3.7 Flash on 13 August, three weeks after
+            Gemini 3.6 Flash, calling it "our most intelligent workhorse
+            model yet for coding and agents."<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            VentureBeat calls its own read of Google's benchmark table
+            mixed.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            Gemini 3.7 Flash scores 85.8% on Terminal-Bench 2.1 against
+            GPT-5.6 Terra's 87.4%, and it trails Terra on Terminal-Bench 3.0
+            and OSWorld-2.0.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            Claude Sonnet 5 beats it on Agent's Last Exam desktop tasks,
+            33.3% to 26.3%.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            On Artificial Analysis's Intelligence Index, Gemini 3.7 Flash
+            scores 56, up from 3.6 Flash's 52 but well below Claude Opus 5's
+            63.<sup class="nb-cite"><a href="#s8">8</a></sup>
+            The launch pairs the model with a temporary price cut, to $0.75
+            per million input tokens and $3.75 per million output tokens,
+            half the standard rate, through the end of 2026, before it rises
+            to $1.50 and $7.50 on 1 January 2027.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            SemiAnalysis, cited by VentureBeat, argues Google is
+            prioritizing cloud-infrastructure revenue over keeping its own
+            models at the frontier, pointing to a delayed Gemini 3.5 Pro
+            that Google has not confirmed or denied.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI security research</span>
+          <h3>
+            <a href="https://arxiv.org/abs/2608.09867"
+              >Panfilov and colleagues steal a model's hidden reasoning by
+              replaying its encrypted trace into a weaker sibling</a
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </h3>
+          <p>
+            A team led by Panfilov found that Anthropic, OpenAI, and Google
+            all return a model's chain-of-thought reasoning to API clients
+            as encrypted opaque blocks.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            Those blocks, the team found, are interchangeable across
+            sessions, users, and even different models in the same
+            provider's lineup.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            Replaying an encrypted trace from a strong model into a weaker,
+            less-guarded sibling from the same provider forces the weaker
+            model to decode and output the trace in plaintext, without
+            attacking the strong model directly, and the authors
+            demonstrated the technique against all three providers.<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            Decoding 315,320 reasoning blocks scraped from public code
+            repositories, the paper's abstract reports recovering 367
+            personally identifiable information artifacts and 182
+            credentials.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            The Hacker News, citing the same study, gives a different count
+            for genuine, non-benchmark user sessions alone: 704 privacy
+            artifacts, including 126 credentials made up of 62 API keys, 33
+            passwords, 24 access tokens, and 7 private keys.<sup
+              class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+            The two counts do not reconcile in what either outlet
+            published.<sup class="nb-cite"><a href="#s9">9</a></sup
+            ><sup class="nb-cite"><a href="#s10">10</a></sup>
+            The authors disclosed the flaw responsibly before publication,
+            and the providers have since shipped mitigations.<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            The Hacker News reports that the paper's own reproducibility
+            statement says the main extraction attack no longer works as of
+            August 2026.<sup class="nb-cite"><a href="#s10">10</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Materials science</span>
+          <h3>
+            <a href="https://www.science.org/doi/10.1126/sciadv.aee4959"
+              >IonNet flags nearly 63,000 candidate battery-electrolyte
+              materials from a 5-million-compound search</a
+            ><sup class="nb-cite"><a href="#s11">11</a></sup>
+          </h3>
+          <p>
+            A Cornell-led team published IonNet, a transfer-learning model,
+            in early August.<sup class="nb-cite"><a href="#s11">11</a></sup>
+            Screening roughly 4,500 stable candidate compounds, it flagged
+            87 as fast-ion conductors: materials whose ionic conductivity
+            exceeds 1.0×10⁻⁴ siemens per centimeter at room temperature, the
+            property that makes a solid usable as a battery electrolyte.<sup
+              class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+            Expanding the search to nearly 5 million element-substituted
+            compositions, IonNet flagged 62,935 further candidates.<sup
+              class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+            A separate screen of 154,718 Materials Project compounds,
+            filtered for stability and electronic-conductivity criteria to
+            4,583 candidates, turned up 102 more.<sup class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+            Each IonNet prediction takes seconds against the 23,000 to
+            52,000 CPU-hours a single physics-based simulation would need,
+            roughly an eight-order-of-magnitude speedup, and of the 20 top
+            predictions the team checked against that slower simulation, 13
+            held up as fast-ion conductors.<sup class="nb-cite"
+              ><a href="#s11">11</a></sup
+            >
+            Interesting Engineering independently confirmed all four
+            headline figures on 10 August, placing the paper's publication
+            in the week before this edition rather than on it.<sup
+              class="nb-cite"
+              ><a href="#s12">12</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://claude.com/blog/auto-mode-default-in-claude-code"
+              >Anthropic · Auto mode becomes the default in Claude Code</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2026/08/09/anthropic-is-turning-claude-codes-auto-mode-on-by-default/"
+              >TechCrunch · Anthropic is turning Claude Code's auto mode on
+              by default</a
+            >
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" href="https://z.ai/blog/glm-5.3"
+              >Z.ai · "Today we are releasing GLM-5.3"</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.unite.ai/z-ai-launches-glm-5-3-with-frontier-coding-and-a-cyber-capability-that-outgrew-its-training/"
+              >Unite.AI · Z.ai launches GLM-5.3 with frontier coding and a
+              cyber capability that outgrew its training</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/previewing-ultrafast/"
+              >OpenAI · Previewing Ultrafast</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2026/08/13/openai-introduces-ultrafast-a-new-mode-that-makes-gpt-5-6-sol-work-at-14x-the-speed/"
+              >TechCrunch · OpenAI introduces Ultrafast, a new mode that
+              makes GPT-5.6 Sol work at 14x the speed</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-3-7-flash/"
+              >Google · Introducing Gemini 3.7 Flash</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://venturebeat.com/technology/googles-gemini-3-7-flash-targets-coding-and-agents-with-a-50-introductory-price-cut"
+              >VentureBeat · Google's Gemini 3.7 Flash targets coding and
+              agents with a 50% introductory price cut</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2608.09867"
+              >arXiv · Panfilov et al., "Stealing Reasoning Traces from
+              Proprietary LLM APIs"</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thehackernews.com/2026/08/openai-anthropic-google-api-flaw-let.html"
+              >The Hacker News · OpenAI, Anthropic, Google API Flaw Let
+              Weaker AI Models Decode Stronger Models' Reasoning</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.science.org/doi/10.1126/sciadv.aee4959"
+              >Science Advances · Decoding the chemical space of fast-ion
+              conductors via a descriptor-guided transfer learning
+              framework</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://interestingengineering.com/energy/cornell-63000-materials-solid-state-batteries"
+              >Interesting Engineering · Cornell's IonNet flags 63,000
+              candidate solid-state battery materials</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
