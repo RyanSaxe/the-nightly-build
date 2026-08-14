@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jujutsu undoes a botched rebase back to the exact original commit IDs · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "jujutsu",
+        "template": "article",
+        "title": "Jujutsu undoes a botched rebase back to the exact original commit IDs",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-14",
+        "tags": ["jujutsu", "version-control", "git", "cli"],
+        "sources": 22,
+        "words": 2628,
+        "reading_minutes": 11,
+        "dek": "Every jj command commits the working copy and writes itself into one continuous operation log, and jj undo works by stepping back through that log to the exact prior state.",
+        "harness": "Claude Code (Agent SDK)",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">Jujutsu undoes a botched rebase back to the exact original commit IDs</h1>
+        <p class="nb-dekline">
+          Every jj command commits the working copy and writes itself into one continuous operation log, and jj undo works by stepping back through that log to the exact prior state.
+        </p>
+        <div class="nb-byline">
+          <span>11 min read</span><span>2026-08-14</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Every edit in Jujutsu is already a commit</h2>
+        <p>
+          In Jujutsu, an edit to a tracked file is already inside a commit before you ask it to be. There is no <code>git add</code>, no staged area holding changes apart from history, and no moment when a change exists only on disk and not yet in the record. Almost every command starts by folding whatever changed in the working directory into the commit currently checked out, then does whatever it was asked to do, then checks the result back out again.<sup class="nb-cite"><a href="#s1">1</a></sup> jj labels that checked-out commit <code>@</code> in its own log output, and that same loop — fold in the changes, act, check out — runs before nearly everything the tool does.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Every command that changes the repository also writes what it did into a second record, the operation log. One operation per command, each one holding where every bookmark and every workspace's working copy pointed at that moment, linked back to the operation before it.<sup class="nb-cite"><a href="#s2">2</a></sup> A live jj 0.44.0 install now proves it, not the documentation's own examples: a rebase typed into the wrong destination, and undone.
+        </p>
+      </section>
+
+      <section data-nb-section="at-commit-and-op-log" id="at-commit-and-op-log">
+        <h2>The @ commit and what the operation log keeps</h2>
+        <p>
+          jj's log prints two IDs per commit, and the difference between them is the reason a later undo can be exact. The first, the change ID, stays fixed for as long as that piece of work exists, however many times it gets rewritten. The second, the commit ID, is a hash over the commit's actual content and position in history, and it changes every time either one does.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup> A rebase, an amend, a squash: each rewrites the commit, so each produces a new commit ID for a change whose ID never moved.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          There is no staging area separating a written change from a committed one. What Git does with <code>git add -p</code> and <code>git commit</code>, jj does with <code>jj split</code>. What Git does with <code>git add -p</code> and <code>git commit --amend</code>, jj does with <code>jj squash</code>, aimed at whichever earlier commit the edit actually belongs to. Rewrite an ancestor this way and every descendant commit is rebased onto the new version automatically, each getting a new commit ID while keeping the change ID and content it already had.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          Every one of those rewrites is recorded as an operation: the repository's full state at that moment, bookmark and workspace positions included, linked to the operation it came from.<sup class="nb-cite"><a href="#s2">2</a></sup> <code>jj undo</code> steps back through that chain one operation at a time. <code>jj op restore</code> skips straight to any operation still in the log, however many steps back it sits.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="undone-exactly" id="undone-exactly">
+        <h2>A botched rebase, undone exactly</h2>
+        <p>
+          The setup: three commits on a fresh, colocated jj 0.44.0 repository, one adding a config module, one adding an auth module that imports from it, one adding the entrypoint. Intending to rebase the auth-and-main stack onto a new base, <code>root()</code> gets typed instead of the real destination, detaching that whole stack from the config commit it depends on. <code>jj rebase -s uomvmzxo -d root()</code> runs cleanly, no error, no prompt: jj does exactly what it was told. The log shows the damage immediately, two disconnected lines where there was one, and <code>config.py</code> is gone from the working directory.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">jj 0.44.0, colocated repo</span><span>SHELL</span>
+          </div>
+          <pre><code class="language-bash">$ jj log
+@  pynpyzxp 01a1182e
+│  add main entrypoint
+○  uomvmzxo c323dd04
+│  add auth module
+○  zkuqvpzv 4a46c9d1
+│  add config module
+◆  zzzzzzzz root() 00000000
+
+$ jj rebase -s uomvmzxo -d root()
+Rebased 2 commits to destination.
+Working copy  (@) now at: pynpyzxp cdc6bf8c add main entrypoint
+Parent commit (@-)      : uomvmzxo a7677b0a add auth module
+Added 0 files, modified 0 files, removed 1 files
+
+$ jj log
+@  pynpyzxp cdc6bf8c
+│  add main entrypoint
+○  uomvmzxo a7677b0a
+│  add auth module
+│ ○  zkuqvpzv 4a46c9d1
+├─╯  add config module
+◆  zzzzzzzz root() 00000000
+
+$ ls proj
+auth.py  main.py
+
+$ jj undo
+Undid operation: 88b3604a313c (2026-08-14 06:59:40) rebase commit c323dd040fbbae5c93736a3cc95ec5bbcad3ed5d and descendants
+Restored to operation: e7af953a3da7 (2026-08-14 06:59:05) squash commits into caebfb3e0a4fdd641a3c87371696c4b81fac2894
+Working copy  (@) now at: pynpyzxp 01a1182e add main entrypoint
+Parent commit (@-)      : uomvmzxo c323dd04 add auth module
+
+$ jj log
+@  pynpyzxp 01a1182e
+│  add main entrypoint
+○  uomvmzxo c323dd04
+│  add auth module
+○  zkuqvpzv 4a46c9d1
+│  add config module
+◆  zzzzzzzz root() 00000000</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · The graph splits the instant the wrong destination lands, and reunifies, with the same commit IDs, the instant <code>jj undo</code> runs.<sup class="nb-cite"><a href="#s2" data-nb-locator="Loading an old version of the repo">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The commit IDs <code>jj undo</code> restores, <code>01a1182e</code>, <code>c323dd04</code>, <code>4a46c9d1</code>, are the exact ones that existed before the mistake, not new commits with matching content. One command reversed a two-commit rebase across the whole subtree, because undoing it did not mean reconstructing history. It meant pointing back at an operation that was already sitting in the log.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          A single <code>jj undo</code> like the one above reverses one operation, which jj has always been able to do. Reaching back through more than one is the part that is newer than it looks. Before jj 0.33.0, released 2025-09-03, <code>jj undo</code> only ever reversed the single most recent operation, and calling it again undid that undo instead of stepping further back.<sup class="nb-cite"><a href="#s6" data-nb-locator="0.33.0 - 2025-09-03">6</a></sup> That was real enough to draw complaints from people trying to walk back more than one mistake.<sup class="nb-cite"><a href="#s7">7</a></sup> jj 0.33.0 made <code>jj undo</code> sequential, so repeated calls now step back through the operation log one entry at a time.<sup class="nb-cite"><a href="#s6">6</a></sup> That multi-step reach is a maintained, dated feature, not a constant the tool has always had.
+        </p>
+      </section>
+
+      <section data-nb-section="old-instincts" id="old-instincts">
+        <h2>Where the old rebase instincts still work</h2>
+        <p>
+          Some of what a Git-fluent rebase instinct already knows still applies here. A rebase is still "move this set of commits onto a new parent." The graph is still a DAG of commits with parents and children. And rewriting an ancestor still cascades onto every descendant automatically, the same behavior that let one wrong <code>-d root()</code> argument detach two commits from their parent in a single step rather than a chain of separate rebases.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          Two pieces of Git muscle memory do not transfer. The first is reaching for a branch to mean "where I am right now." jj has bookmarks instead, and a bookmark does not move on its own when a new commit lands on top of it. Moving it and pushing it are two separate commands, <code>jj bookmark move</code> (or <code>set</code>) and then <code>jj git push</code>, where Git does both in one.<sup class="nb-cite"><a href="#s8">8</a></sup> The push itself checks more than Git's default does: it fails, rather than silently overwriting, if the remote bookmark has moved somewhere the local push did not expect. That is the equivalent of <code>git push --force-with-lease</code> running by default instead of by flag.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <p>
+          The second break is what a conflict does to the command that created it. In Git, a rebase that lands two conflicting changes on the same line stops: the operation halts, the working tree fills with markers, and nothing else happens until <code>git rebase --continue</code> says the conflict is resolved. In jj, the command that creates a conflict finishes anyway. The conflict becomes a property of the resulting commit, labeled <code>(conflict)</code> in the log, and markers only appear when that commit is actually checked out or diffed.<sup class="nb-cite"><a href="#s9">9</a></sup> Resolve the file and let the next command see it, and the label clears on its own. There is no <code>--continue</code> to remember, because there was never a halted operation waiting for one.<sup class="nb-cite"><a href="#s9">9</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="four-costs" id="four-costs">
+        <h2>Four costs the project doesn't hide</h2>
+        <p>
+          None of the above is free, and the project's own documentation says so plainly rather than leaving a practitioner to find out.
+        </p>
+        <p>
+          The Git backend is not fully lock-free. jj's storage is deliberately safe for concurrent and even network-synced use, rsync, NFS, Dropbox, because its view and operation objects are content-addressed and never mutated in place. The one documented exception is the Git backend's change-ID index: "with the Git backend, repository corruption is possible because the backend is not entirely lock-free," the project's own concurrency documentation states.<sup class="nb-cite"><a href="#s10" data-nb-locator="Storage">10</a></sup> It names a specific, still-open bug where a repository synced by something other than native git or jj commands can end up with commits wrongly reported missing or hidden.<sup class="nb-cite"><a href="#s11">11</a></sup> The recovery is one documented command, <code>jj debug reindex</code>. The bug itself remains open.<sup class="nb-cite"><a href="#s10">10</a></sup><sup class="nb-cite"><a href="#s11">11</a></sup>
+        </p>
+        <p>
+          First-class conflicts have a documented edge case where the convenience costs real information. When two sides of a merge make the identical change, jj's "same-change rule" auto-resolves the conflict rather than surfacing it. The project's own technical documentation names the trade-off plainly, calling the automatic resolution "lossy in terms of conflict algebra."<sup class="nb-cite"><a href="#s12" data-nb-locator="Same-change rule">12</a></sup> Rebase a commit onto one with the same change, then rebase it back, and the documentation says outright that the result "will lose changes."<sup class="nb-cite"><a href="#s12">12</a></sup> A tracked, reproducible bug shows the loss on a real criss-cross merge, not only a hypothetical one.<sup class="nb-cite"><a href="#s13">13</a></sup>
+        </p>
+        <p>
+          Git hooks do not run under jj. The feature-support table is direct about it: "Hooks: No."<sup class="nb-cite"><a href="#s14" data-nb-locator="Supported features">14</a></sup> One independent practitioner review hit this directly: a FreeBSD codebase whose workflow depended on a <code>prepare-commit-msg</code> hook forced a fallback to plain Git, because jj had nothing there to invoke.<sup class="nb-cite"><a href="#s15">15</a></sup> The same review found no equivalent to <code>git commit --fixup</code>. Folding a working-copy edit into an earlier commit in a patch stack means writing a <code>fixup!</code>-prefixed description by hand, retyping the target commit's message rather than pointing at its hash.<sup class="nb-cite"><a href="#s15">15</a></sup> jj's own partial answer, <code>jj absorb</code>, moves working-copy hunks into whichever ancestor last touched that line automatically. The project documents its limit in the same breath: it "doesn't solve all cases," and will not move a change if multiple commits in the stack touched that same line.<sup class="nb-cite"><a href="#s16">16</a></sup>
+        </p>
+        <p>
+          The two-command bookmark push adds up in practice, not just on paper. The same practitioner review calls it "a small friction, but it adds up."<sup class="nb-cite"><a href="#s15">15</a></sup> Colocation, running a real <code>.git</code> and <code>.jj</code> side by side so ordinary Git commands keep working, carries its own list of documented downsides: slower commands in repositories with many refs, and "bugs when interleaving mutating jj and git commands."<sup class="nb-cite"><a href="#s14" data-nb-locator="Colocated Jujutsu/Git workspaces">14</a></sup> A second, independent account hit a version of that same seam directly. A colocated repository combined with a jj workspace behaved as a pure jj repo to a tool, Claude Code, that expected a real Git working tree. That sent the author back to Git worktrees for that specific integration instead.<sup class="nb-cite"><a href="#s17">17</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="who-backs-it" id="who-backs-it">
+        <h2>The project's own paperwork disagrees about who backs it</h2>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">~1 / 4 weeks</span><span class="nb-stat-l">RELEASE CADENCE, 14 MONTHS</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">3 of 9</span><span class="nb-stat-l">MAINTAINERS, ONE PAYER</span>
+          </div>
+        </div>
+        <p>
+          Jujutsu ships often enough to trust the release notes as a live record, not a historical one. Fifteen tagged releases landed between v0.30.0 on 2025-06-04 and v0.44.0 on 2026-08-05, about one every four weeks, with no gap longer than five.<sup class="nb-cite"><a href="#s6">6</a></sup> Governance is just as formal. There are nine named maintainers, a documented process for adding or removing one, and a rule written specifically to prevent one employer from controlling the project: no single company may pay more than a third of the maintainers.<sup class="nb-cite"><a href="#s18" data-nb-locator="Single-Company Influence">18</a></sup> Cross-referencing the project's own maintainer roster against its own paid-contributors disclosure puts three of those nine, Martin von Zweigbergk, Ilya Grigoriev, and Austin Seipp, on the payroll of one company, East River Source Control. That is exactly the cap the governance document allows, not comfortably under it.<sup class="nb-cite"><a href="#s19" data-nb-locator="East River Source Control">19</a></sup>
+        </p>
+        <p>
+          Who employs those three people, and the project's founder among them, is where the record stops agreeing with itself. The README's own "Mandatory Google Disclaimer" section states, in Martin von Zweigbergk's voice, that Jujutsu "has evolved into my full-time project at Google, with several other Googlers (now) assisting development in various capacities."<sup class="nb-cite"><a href="#s20" data-nb-locator="Mandatory Google Disclaimer">20</a></sup> The paid-contributors disclosure, maintained by the project for the express purpose of naming who pays whom, lists that same person as compensated by East River Source Control, a separate company, alongside two other current maintainers, not by Google.<sup class="nb-cite"><a href="#s19">19</a></sup> East River Source Control is a real, operating company. Its own site describes it as building "high-quality tooling to help you manage your most important asset: your code," and links out to Jujutsu's documentation. It does not itself say how the company is funded or state a formal relationship to the project.<sup class="nb-cite"><a href="#s21">21</a></sup> Neither document carries a visible date, and nothing reconciles a founder whose own README calls this his full-time job at Google with a disclosure that pays him through a different company instead. Both statements are current in the same source tree, and neither should be taken as settled on its own.
+        </p>
+        <p>
+          The roadmap carries a second version of the same tension. It excuses the absence of target dates anywhere on the roadmap by saying "most people contributing to Jujutsu do so in their spare time."<sup class="nb-cite"><a href="#s22">22</a></sup> A governance rule caps one paying employer's influence. A disclosure list names more than forty people paid by three different companies. The two only make sense together if a real share of the work is professional, not spare-time, contribution. Both descriptions come from the project itself, and both are current. Neither is softened here into "Google's tool" or "a funded startup's tool": the record does not support either claim cleanly, so both stand, unreconciled, as what the project's own documents say.
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>A release about every four weeks for fourteen straight months, with no gap over five.<sup class="nb-cite"><a href="#s6">6</a></sup></li>
+              <li>An operation log that turned a botched two-commit rebase back into byte-identical commit IDs with one command.<sup class="nb-cite"><a href="#s2">2</a></sup></li>
+              <li>Every cost named above, index corruption, lossy conflicts, missing hooks, is documented by the project against itself, not surfaced by outside critics.<sup class="nb-cite"><a href="#s10">10</a></sup><sup class="nb-cite"><a href="#s12">12</a></sup><sup class="nb-cite"><a href="#s14">14</a></sup></li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>The Git backend's corruption bug and the same-change rule's data loss are both still open, not fixed.<sup class="nb-cite"><a href="#s11">11</a></sup><sup class="nb-cite"><a href="#s13">13</a></sup></li>
+              <li>Who is actually paying for the maintainers' time is not the same story in the README and in the paid-contributors list.<sup class="nb-cite"><a href="#s20">20</a></sup><sup class="nb-cite"><a href="#s19">19</a></sup></li>
+              <li>A pre-1.0 tool by the project's own admission: workflows and on-disk formats can still change in backward-incompatible ways.<sup class="nb-cite"><a href="#s20" data-nb-locator="Status">20</a></sup></li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The operation log's safety net held up under a direct test: the byte-identical restore above came from a live command sequence, not from the documentation's own examples.<sup class="nb-cite"><a href="#s2">2</a></sup> Each of the four costs above is tracked in the project's own open issue log, not left for a user to discover firsthand.<sup class="nb-cite"><a href="#s11">11</a></sup><sup class="nb-cite"><a href="#s13">13</a></sup> Who is actually paying for that work is the one question this record cannot close. The README calls it Google's project.<sup class="nb-cite"><a href="#s20">20</a></sup> The paid-contributors list pays three of its own maintainers, the founder among them, through a different company.<sup class="nb-cite"><a href="#s19">19</a></sup> Trust the first two findings on the evidence above. Leave the third open until a source says more than either document does today.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/working-copy/">Jujutsu Docs · Working copy</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/operation-log/">Jujutsu Docs · Operation log</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/glossary/">Jujutsu Docs · Glossary</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/tutorial/">Jujutsu Docs · Tutorial</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/git-comparison/">Jujutsu Docs · Git comparison</a>
+          </li>
+          <li id="s6">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/changelog/">Jujutsu · CHANGELOG.md</a>
+          </li>
+          <li id="s7">
+            <a data-nb-source data-nb-kind="secondary" href="https://news.ycombinator.com/item?id=45675737">Hacker News · Comment by mkeeter</a>
+          </li>
+          <li id="s8">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/bookmarks/">Jujutsu Docs · Bookmarks</a>
+          </li>
+          <li id="s9">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/conflicts/">Jujutsu Docs · Conflicts</a>
+          </li>
+          <li id="s10">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/technical/concurrency/">Jujutsu Docs · Technical: Concurrency</a>
+          </li>
+          <li id="s11">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/jj-vcs/jj/issues/2193">GitHub · jj-vcs/jj Issue #2193</a>
+          </li>
+          <li id="s12">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/technical/conflicts/">Jujutsu Docs · Technical: Conflicts</a>
+          </li>
+          <li id="s13">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/jj-vcs/jj/issues/6369">GitHub · jj-vcs/jj Issue #6369</a>
+          </li>
+          <li id="s14">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/git-compatibility/">Jujutsu Docs · Git compatibility</a>
+          </li>
+          <li id="s15">
+            <a data-nb-source data-nb-kind="secondary" href="https://minsoo.io/p/my-experience-with-jujutsu-a-pragmatic-review">Minsoo Choo · My experience with Jujutsu: a pragmatic review</a>
+          </li>
+          <li id="s16">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/git-experts/">Jujutsu Docs · Git experts</a>
+          </li>
+          <li id="s17">
+            <a data-nb-source data-nb-kind="secondary" href="https://www.arun.blog/jujutsu-vcs/">Arun · Jujutsu VCS</a>
+          </li>
+          <li id="s18">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/jj-vcs/jj/blob/main/GOVERNANCE.md">GitHub · jj-vcs/jj GOVERNANCE.md</a>
+          </li>
+          <li id="s19">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/jj-vcs/jj/blob/main/docs/paid_contributors.md">GitHub · jj-vcs/jj paid_contributors.md</a>
+          </li>
+          <li id="s20">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/jj-vcs/jj/blob/main/README.md">GitHub · jj-vcs/jj README.md</a>
+          </li>
+          <li id="s21">
+            <a data-nb-source data-nb-kind="secondary" href="https://ersc.io/">East River Source Control · ersc.io</a>
+          </li>
+          <li id="s22">
+            <a data-nb-source data-nb-kind="primary" href="https://docs.jj-vcs.dev/latest/roadmap/">Jujutsu Docs · Roadmap</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
