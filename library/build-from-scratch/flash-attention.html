@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A running max and a running sum replace attention's score matrix · Build From Scratch</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "build-from-scratch",
+        "slug": "flash-attention",
+        "template": "article",
+        "title": "A running max and a running sum replace attention's score matrix",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-15",
+        "tags": ["attention", "softmax", "flash-attention", "numerical-stability"],
+        "sources": 9,
+        "words": 2920,
+        "reading_minutes": 13,
+        "dek": "A from-scratch NumPy version of FlashAttention's online-softmax core reproduces exact attention to float32 precision, without ever holding the full score matrix that costs the naive version 256 mebibytes by sequence length 8192.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Build From Scratch</div>
+        <h1 class="nb-title">A running max and a running sum replace attention's score matrix</h1>
+        <p class="nb-dekline">
+          A from-scratch NumPy version of FlashAttention's online-softmax core
+          reproduces exact attention to float32 precision, without ever
+          holding the full score matrix that costs the naive version 256
+          mebibytes by sequence length 8192.
+        </p>
+        <div class="nb-byline">
+          <span>13 min read</span><span>2026-08-15</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Exact attention does not need its own score matrix to exist</h2>
+        <p>
+          Attention over a sequence of length N ordinarily computes a score
+          matrix with one entry for every query paired with every key: N²
+          numbers, held in memory before a single softmax weight comes
+          out.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 3.2">1</a></sup
+          ><sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="function description, reference-implementation code block"
+              >2</a
+            ></sup
+          >
+          FlashAttention's actual contribution is not the softmax itself. It
+          is a GPU kernel that never writes that matrix to the GPU's slow
+          memory (HBM) at all. Instead it fuses the score, the softmax, and
+          the weighted sum of values into tiles that stay in fast on-chip
+          memory (SRAM) for as long as a tile is needed.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Section 3.1, Section 3.2, Theorem 2"
+              >3</a
+            ></sup
+          ><sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Table 3.1, Section 3.6, Section 3.7"
+              >4</a
+            ></sup
+          >
+        </p>
+        <p>
+          Underneath that kernel sits a smaller idea that has nothing to do
+          with GPUs: a running maximum and a running sum, updated one block of
+          keys at a time, that produce exactly the same output the full
+          matrix would. This piece builds that idea on its own, in NumPy, with
+          no kernel and no GPU. It checks the result against the textbook
+          computation until the two agree to the limits of the arithmetic
+          doing the checking. The naive version below builds the N² matrix
+          directly: every score, then the softmax of the whole row, then the
+          multiply by V. The streaming version tiles the keys and values into
+          blocks instead, and keeps three running numbers per query: a
+          maximum <code>m</code>, a normalizing sum <code>l</code>, and an
+          output accumulator <code>o</code>. Every time a new block raises the
+          running max, the accumulator already built from earlier blocks gets
+          rescaled before the new block folds in. That single correction is
+          what makes the streaming output exact.
+        </p>
+      </section>
+
+      <section data-nb-section="full-matrix-baseline" id="full-matrix-baseline">
+        <h2>Every query scored against every key, held at once</h2>
+        <p>
+          The textbook computation for one attention head is three steps.
+          Scores: S = QKᵀ, an N-by-N matrix, one row per query and one column
+          per key. Weights: softmax each row of S. Output: multiply the
+          weight matrix by V. Implemented directly, S has to exist in memory
+          in full before the softmax can touch a single row of it. That is
+          exactly the baseline FlashAttention's own paper states as Algorithm
+          0: compute S and write it out, read it back to compute the softmax
+          P, write P out, then read P and V to compute the output.<sup
+            class="nb-cite"
+            ><a href="#s3" data-nb-locator="Section 2.2, Algorithm 0">3</a></sup
+          >
+          That description counts what a GPU kernel reads and writes to its
+          slow memory, not what a Python array occupies in RAM. The two are
+          related, not identical: the naive implementation below is
+          memory-footprint-quadratic in ordinary RAM, the everyday consequence
+          of the same three-step shape, not a restatement of the paper's own
+          HBM-traffic claim.
+        </p>
+        <p>
+          Exponentiating S directly is not safe. On real hardware, an exponent
+          that is only moderately large overflows the range a float can hold.
+          A numerically sound softmax first subtracts each row's own maximum
+          before exponentiating: <code>exp(s - max(s))</code> never exceeds 1,
+          however large s gets, and the subtracted max cancels out once the
+          ratio is taken.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Section 4.1, Equation 4.1">5</a></sup
+          >
+          Milakov and Gimelshein motivate exactly this fix,
+          three passes over the row in their original form: one to find the
+          max, one to sum the shifted exponentials, one to divide.<sup
+            class="nb-cite"
+            ><a href="#s6" data-nb-locator="Section 2, Algorithm 2">6</a></sup
+          >
+          <code>naive_attention</code> below folds the second and third passes
+          together, but it still needs the whole row, and the whole matrix,
+          before it can start:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">attention_core.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def naive_attention(Q, K, V):
+    """S = QK^T in full, safe softmax, then S @ V.
+    Returns (O, peak_bytes), where peak_bytes is the score
+    matrix's own size."""
+    S = Q @ K.T                    # (N, N): the whole matrix, at once
+    peak_bytes = S.nbytes
+    m = S.max(axis=1, keepdims=True)
+    P = np.exp(S - m)
+    O = (P / P.sum(axis=1, keepdims=True)) @ V
+    return O, peak_bytes</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · The naive attention baseline: the full N×N score matrix,
+            computed and held in memory before the softmax or the multiply by
+            V can start.<sup class="nb-cite"
+              ><a href="#s3" data-nb-locator="Section 2.2, Algorithm 0">3</a></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section
+        data-nb-section="online-softmax-recurrence"
+        id="online-softmax-recurrence"
+      >
+        <h2>One running max and one running sum carry the whole row</h2>
+        <p>
+          Before tiling anything, it helps to see the recurrence at its
+          smallest: one number folded into a running softmax at a time, no
+          blocks, no matrices, no keys or queries yet. For a stream of numbers
+          x₁, x₂, …, x_V, keep two running values: <code>m</code>, the largest
+          x seen so far, and <code>d</code>, a running denominator built from
+          every x seen so far, each term expressed relative to the current m.
+          They are just two numbers, updated
+          together, one element at a time, and this pair is what
+          Milakov and Gimelshein call the online normalizer.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Section 3, Algorithm 3">6</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \htmlClass{nb-mc1}{m_j} = \max\!\left(\htmlClass{nb-mc2}{m_{j-1}},\
+            \htmlClass{nb-mc3}{x_j}\right), \qquad d_j = d_{j-1}\,
+            \htmlClass{nb-mc4}{e^{\,m_{j-1}-m_j}} +
+            \htmlClass{nb-mc5}{e^{\,x_j-m_j}}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">m_j</span
+              ><span
+                >the running max after folding in this element: the largest
+                score seen so far.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">m_{j-1}</span
+              ><span>the running max carried in from every element before this one.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">x_j</span
+              ><span>the new element being folded in.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">e^{m_{j-1}-m_j}</span
+              ><span
+                >the rescale factor on everything already accumulated under
+                the old max: exactly 1 when the max didn't move, and less than
+                1 when it did.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc5">e^{x_j-m_j}</span
+              ><span
+                >this element's own contribution, computed under the same,
+                current max as every earlier term.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The single-pass online softmax recurrence: running max and
+            running denominator, updated together as each element arrives,
+            provably equal to the two-pass max-then-sum computation for every
+            j.<sup class="nb-cite"
+              ><a href="#s6" data-nb-locator="Algorithm 3, lines 4-5, Theorem 1"
+                >6</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          d ends up holding exactly what a two-pass safe softmax would
+          compute: the sum of the shifted exponentials, under the max over the
+          whole vector. Milakov and Gimelshein prove this by induction
+          directly from the update rule above. After folding in the last
+          element, m equals the max over every element seen, and d equals the
+          safe-softmax denominator. Both arrive without a first pass over the
+          data to find that max: the max is discovered incrementally, and the
+          rescale term repairs whatever was already accumulated under a stale
+          one.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Theorem 1">6</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="tiling-over-blocks" id="tiling-over-blocks">
+        <h2>The same recurrence, one block of keys at a time</h2>
+        <p>
+          Tiling the recurrence over blocks changes what x_j means without
+          changing what the recurrence does with it. Instead of one scalar
+          arriving at a time, a whole block of keys arrives: its own local
+          scores, its own local max. The merge step is the identical
+          maximum-and-rescale operation the scalar recurrence used, except
+          every accumulator now also carries an output vector
+          <code>o</code>, rescaled by the same factor whenever a block raises
+          the max, so it stays aligned with the same denominator
+          <code>l</code> as it grows. FlashAttention's Algorithm 1 states this
+          block update directly, and its Theorem 1 proves the result equals
+          softmax(QKᵀ)V exactly.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Section 3.1, Algorithm 1 lines 9-13, Theorem 1"
+              >3</a
+            ></sup
+          >
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">attention_core.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">def streaming_attention(Q, K, V, block_size):
+    """Tiles K, V into blocks. Per query: running max m,
+    running denominator l, running output accumulator o.
+    Never materializes the full N x N score matrix.
+    Returns (O, peak_bytes): peak_bytes is the largest total
+    footprint of one block's score buffer plus (m, l, o)."""
+    N, d = Q.shape
+    Nk = K.shape[0]
+    dtype = Q.dtype
+    m = np.full((N, 1), -np.inf, dtype=dtype)
+    l = np.zeros((N, 1), dtype=dtype)
+    o = np.zeros((N, d), dtype=dtype)
+    peak_bytes = 0
+    for start in range(0, Nk, block_size):
+        end = min(start + block_size, Nk)
+        Kb, Vb = K[start:end], V[start:end]
+        Sb = Q @ Kb.T               # (N, block_size): one block only
+        peak_bytes = max(peak_bytes, Sb.nbytes + m.nbytes + l.nbytes + o.nbytes)
+        m_new = np.maximum(m, Sb.max(axis=1, keepdims=True))
+        Pb = np.exp(Sb - m_new)
+        l = l * np.exp(m - m_new) + Pb.sum(axis=1, keepdims=True)
+        o = o * np.exp(m - m_new) + Pb @ Vb
+        m = m_new
+    return o / l, peak_bytes</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · The block-tiled online-softmax update: one K/V block at a
+            time, the running max, denominator, and output accumulator
+            rescaled together whenever a new block raises the max.<sup
+              class="nb-cite"
+              ><a
+                href="#s3"
+                data-nb-locator="Algorithm 1, lines 9-13"
+                >3</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Trace it on one query against six keys, tiled two at a time, so
+          every number below is checkable against the code above. The six raw
+          scores come out to −1.5058, −0.6387, −0.8939, 1.5231, 0.0306, and
+          1.1040.
+        </p>
+        <p>
+          Block 0 folds in the first two scores, −1.5058 and −0.6387. Their
+          local max, −0.6387, is higher than m's starting value of −∞, so m
+          becomes −0.6387. l starts at 0 and becomes 1.4202, the shifted-exp
+          sum of both terms under that new max.
+        </p>
+        <p>
+          Block 1 folds in −0.8939 and 1.5231. The block's own max, 1.5231, is
+          higher than the running m of −0.6387, so m jumps to 1.5231.
+          Everything accumulated under the old max now needs correcting: the
+          rescale factor is e^(−0.6387−1.5231) ≈ 0.1151, applied to l before
+          block 1's own two terms are added. l goes from 1.4202 to 1.2527,
+          smaller than it was even after two more terms were folded in. Most
+          of block 0's contribution just got shrunk to match the new, larger
+          max. The output accumulator o gets the identical 0.1151 rescale on
+          every one of its four coordinates, before block 1's weighted values
+          are added in.
+        </p>
+        <p>
+          Block 2 folds in the last two scores, 0.0306 and 1.1040, neither
+          above the running max of 1.5231. This time the rescale factor is
+          e^(1.5231−1.5231) = 1: nothing shrinks, and l simply grows to
+          2.1351.
+        </p>
+        <p>
+          Dividing the final o by the final l reproduces
+          [−0.0576, 0.4765, −0.2532, −0.3786], the same four numbers
+          <code>naive_attention</code> returns for the same query, to four
+          decimal places. The one moment that matters in this whole trace is
+          block 1's rescale. A later block raising the max forces every
+          earlier block's partial contribution to shrink by the same factor.
+          That is the entire reason a streaming implementation can start
+          before it has seen the last key and still land on the exact answer.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="implementations-agree"
+        id="implementations-agree"
+      >
+        <h2>Two implementations, one output, to the precision each dtype allows</h2>
+        <p>
+          Both functions above return an output array; the question is
+          whether they return the same one. Running both across five sizes,
+          from four keys up to 1024, float64, block size 32, and comparing
+          element-by-element:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">python</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">&gt;&gt;&gt; for N in (4, 16, 64, 256, 1024):
+...     Q = rng.standard_normal((N, 64))
+...     K = rng.standard_normal((N, 64))
+...     V = rng.standard_normal((N, 64))
+...     O_naive, _ = naive_attention(Q, K, V)
+...     O_stream, _ = streaming_attention(Q, K, V, block_size=32)
+...     print(N, np.max(np.abs(O_naive - O_stream)))
+...
+4 4.440892098500626e-16
+16 8.881784197001252e-16
+64 3.1086244689504383e-15
+256 5.329070518200751e-15
+1024 6.217248937900877e-15</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 3 · Maximum absolute difference between the naive and
+            streaming outputs, five sequence lengths, float64. Every
+            difference sits within a small multiple of float64's own rounding
+            unit (about 2.2×10⁻¹⁶); none is exactly zero.
+          </figcaption>
+        </figure>
+        <p>
+          None of these differences is exactly zero, and none should be.
+          Milakov and Gimelshein's Theorem 1 and FlashAttention's Theorem 1
+          both prove the recurrence returns the same value as the two-pass
+          computation as a statement about real numbers.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Theorem 1">6</a></sup
+          ><sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Section 3.1, Theorem 1">3</a></sup
+          >
+          Floating-point addition is not associative: summing the same terms
+          in a different order, which tiling necessarily does, can move the
+          last few bits of the result. What Fig. 3 shows is that this
+          movement stays within rounding error, not that the two
+          implementations compute bit-identical arrays. That is what "exact"
+          means in this literature: agreement to the precision the arithmetic
+          itself allows, which is why the equality check in the code above is
+          <code>np.allclose</code> with a tolerance, never
+          <code>==</code>.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="memory-that-does-not-grow"
+        id="memory-that-does-not-grow"
+      >
+        <h2>The 256 mebibytes the streaming version never allocates</h2>
+        <p>
+          Both functions above also return a second number: the size, in
+          bytes, of the largest buffer each one built along the way. For the
+          naive version that is simply S itself, N² entries. For the streaming
+          version it is the largest single moment in the loop: one block's
+          local score buffer, N rows by block_size columns, plus the three
+          running accumulators m, l, and o. None of the three grow with the
+          number of blocks already processed.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Peak buffer size, naive vs. streaming, float32, head dimension 64,
+            streaming block size 64. Five of the eight sizes this piece's own
+            code measured.
+          </caption>
+          <thead>
+            <tr>
+              <th>N</th>
+              <th>naive score matrix</th>
+              <th>streaming peak buffer</th>
+              <th class="txt">ratio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">64</span></td>
+              <td>16 384 B</td>
+              <td>33 280 B</td>
+              <td class="txt">0.5×</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">256</span></td>
+              <td>262 144 B</td>
+              <td>133 120 B</td>
+              <td class="txt">2.0×</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">1024</span></td>
+              <td>4 194 304 B</td>
+              <td>532 480 B</td>
+              <td class="txt">7.9×</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">4096</span></td>
+              <td>67 108 864 B</td>
+              <td>2 129 920 B</td>
+              <td class="txt">31.5×</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">8192</span></td>
+              <td>268 435 456 B</td>
+              <td>4 259 840 B</td>
+              <td class="txt">63.0×</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Below N≈130 the streaming buffer is actually the larger of the two:
+          at N=64 the three running accumulators cost more than the entire
+          16 KiB score matrix they are meant to avoid. The saving is
+          asymptotic.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="flash-attention/chart-1.png"
+            alt="Two lines on log-log axes, peak buffer bytes against sequence length N from 64 to 8192. The naive line, starting lower, crosses above the streaming line around N=130 and pulls away with slope 2 to reach roughly 256 megabytes at N=8192, while the streaming line keeps a shallower, roughly linear slope and reaches about 4 megabytes at the same N."
+          />
+          <figcaption>
+            Fig. 4 · Peak buffer bytes against sequence length N, both axes
+            logarithmic, float32, head dimension 64, block size 64. The naive
+            buffer is exactly N² × 4 bytes; the streaming buffer is
+            (N × block_size + 2N + Nd) × 4 bytes. They cross near N≈130 and
+            reach a 63× gap by N=8192, the shape Theorem 1's O(N) additional
+            memory bound predicts.<sup class="nb-cite"
+              ><a href="#s3" data-nb-locator="Theorem 1">3</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          FlashAttention's own Theorem 1 states this asymptotic shape
+          abstractly: O(N) additional memory beyond the inputs and output
+          themselves. Like the code here, that bound never reaches for the
+          full N² matrix at any point in the computation.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Theorem 1">3</a></sup
+          >
+          It is not the same measurement as the bytes above, though.
+          Theorem 1's "additional" explicitly excludes the O(Nd) already spent
+          on Q, K, V, and O. Rabe and Staats' own O(1) and O(log n) figures,
+          for the same idea applied one query at a time, exclude something
+          different: the cost of writing each query's output at all. Their
+          actual TPU implementation has to pay that cost, and lands at a
+          measured O(√n) once it does.<sup
+            class="nb-cite"
+            ><a href="#s7" data-nb-locator="Abstract, Section 2, Section 4"
+              >7</a
+            ></sup
+          >
+          Neither paper's asymptotic figure is the byte count a working NumPy
+          array reports above. Citing one as a stand-in for the other would
+          overstate what either establishes.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="score-that-breaks-the-shortcut"
+        id="score-that-breaks-the-shortcut"
+      >
+        <h2>A score of 113 breaks the softmax that skips the max</h2>
+        <p>
+          Every implementation above subtracts a max before exponentiating,
+          whether it discovers that max in one pass over the full row or
+          incrementally over blocks. Skipping that step fails outright once a
+          score gets large enough, and large enough is closer than it looks:
+          Rabe and Staats measured the exact edge, a score of 89 or higher
+          overflows <code>exp()</code> to infinity outright in float32.<sup
+            class="nb-cite"
+            ><a href="#s7" data-nb-locator="Section 3">7</a></sup
+          >
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">python</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">&gt;&gt;&gt; Q = rng.standard_normal((8, 16)).astype(np.float32) * 4.2
+&gt;&gt;&gt; K = rng.standard_normal((8, 16)).astype(np.float32) * 4.2
+&gt;&gt;&gt; V = rng.standard_normal((8, 16)).astype(np.float32)
+&gt;&gt;&gt; S = Q @ K.T
+&gt;&gt;&gt; S.min(), S.max(), (S &gt;= 89).sum()
+(-176.2, 113.0, 3)
+&gt;&gt;&gt; O_unsafe = naive_unsafe_attention(Q, K, V)   # no max subtraction
+&gt;&gt;&gt; np.isnan(O_unsafe).any(axis=1).sum()          # rows gone to NaN
+3
+&gt;&gt;&gt; O_safe, _ = naive_attention(Q, K, V)
+&gt;&gt;&gt; O_stream, _ = streaming_attention(Q, K, V, block_size=4)
+&gt;&gt;&gt; np.isnan(O_safe).any(), np.isnan(O_stream).any()
+(False, False)
+&gt;&gt;&gt; np.max(np.abs(O_safe - O_stream))
+2.384e-07</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 5 · Three of sixty-four raw scores exceed float32's overflow
+            line; the softmax that skips the max returns NaN on exactly those
+            three queries, while the safe-naive and streaming versions both
+            stay finite and agree to float32's own rounding unit.
+          </figcaption>
+        </figure>
+        <p>
+          Three of the sixty-four scores in this batch cross that line. The
+          naive-but-unshifted softmax fails on exactly the queries that
+          produced them: three of the eight output rows come back as NaN,
+          propagated from a division by an infinite denominator. The safe
+          naive version and the streaming version both stay finite, because
+          both compute a max before they exponentiate anything. The streaming
+          version's advantage is that it never needs to see the whole row to
+          know that max. It discovers and corrects for the max as blocks
+          arrive, rather than in a separate first pass. Their outputs still
+          agree, this time to about 2×10⁻⁷, in line with float32's own
+          rounding unit rather than float64's.
+        </p>
+        <p>
+          None of this is a claim about speed. FlashAttention's own measured
+          numbers are wall-clock: 15 percent faster end-to-end training on
+          BERT-large against the MLPerf 1.1 record, roughly 3× on GPT-2, 2.4×
+          on the long-range arena benchmark.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Abstract">3</a></sup
+          >
+          Those numbers come from a fused CUDA kernel that moves Q, K, and V
+          into SRAM once per tile and never writes the score matrix out to
+          HBM at all.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="README.md">8</a></sup
+          ><sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Table 3.1, Section 3.6, Section 3.7"
+              >4</a
+            ></sup
+          >
+          They also come from a backward pass that recomputes the
+          attention matrix from the saved (m, l) statistics instead of
+          storing it.<sup
+            class="nb-cite"
+            ><a href="#s3" data-nb-locator="Section 3.1">3</a></sup
+          >
+          FlashAttention-2, released a year later, does not touch this math at
+          all. It changes how work is partitioned across GPU thread blocks and
+          warps, closing v1's gap to matmul efficiency from 25–40 percent of
+          theoretical peak FLOPs/s up to 50–73 percent.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="Abstract">9</a></sup
+          >
+          A NumPy array in this piece's own process lives in one flat pool of
+          RAM, with no SRAM/HBM hierarchy for any kernel to be careful about.
+          Nothing above can produce a wall-clock number that means what either
+          paper's numbers mean.
+        </p>
+        <p>
+          The naive and streaming implementations here return the same
+          output, to float32's own rounding unit, from a buffer that stops
+          doubling every time N doubles. That agreement is what the recurrence
+          promises, and the closest thing to FlashAttention's exactness
+          theorem this piece can produce without a GPU. The 15 percent, the
+          3×, and the 2.4× belong to the kernel. A NumPy loop cannot produce
+          them.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1706.03762"
+              >arXiv · Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+              Kaiser, Polosukhin, "Attention Is All You Need"</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html"
+              >PyTorch docs ·
+              torch.nn.functional.scaled_dot_product_attention</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2205.14135"
+              >arXiv · Dao, Fu, Ermon, Rudra, Ré, "FlashAttention: Fast and
+              Memory-Efficient Exact Attention with IO-Awareness"</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1804.06826"
+              >arXiv · Jia, Maggioni, Staiger, Scarpazza, "Dissecting the
+              NVIDIA Volta GPU Architecture via Microbenchmarking"</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.deeplearningbook.org/contents/numerical.html"
+              >Deep Learning · Goodfellow, Bengio, Courville, "Numerical
+              Computation" (Chapter 4)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1805.02867"
+              >arXiv · Milakov, Gimelshein, "Online normalizer calculation for
+              softmax"</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2112.05682"
+              >arXiv · Rabe, Staats, "Self-attention Does Not Need O(n²)
+              Memory"</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/Dao-AILab/flash-attention"
+              >GitHub · Dao-AILab, "flash-attention"</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2307.08691"
+              >arXiv · Dao, "FlashAttention-2: Faster Attention with Better
+              Parallelism and Work Partitioning"</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
