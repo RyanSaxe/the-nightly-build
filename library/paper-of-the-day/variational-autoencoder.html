@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The reparameterization trick pulled randomness out of the gradient's path · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "variational-autoencoder",
+        "template": "paper",
+        "title": "The reparameterization trick pulled randomness out of the gradient's path",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-15",
+        "tags": [],
+        "sources": 8,
+        "words": 2931,
+        "reading_minutes": 13,
+        "dek": "Kingma and Welling's 2014 paper rewrote the encoder's random sample as a deterministic function of independent noise, making the evidence lower bound differentiable enough to train encoder and decoder together with ordinary stochastic gradient descent.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">
+          The reparameterization trick pulled randomness out of the
+          gradient's path
+        </h1>
+        <p class="nb-dekline">
+          Kingma and Welling's 2014 paper rewrote the encoder's random sample
+          as a deterministic function of independent noise, making the
+          evidence lower bound differentiable enough to train encoder and
+          decoder together with ordinary stochastic gradient descent.
+        </p>
+        <div class="nb-byline">
+          <span>13 min read</span><span>2026-08-15</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Auto-Encoding Variational Bayes</p>
+          <p class="nb-paper-meta">
+            Diederik P. Kingma, Max Welling · ICLR 2014 · arXiv:1312.6114
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1312.6114"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            How can we perform efficient inference and learning in directed
+            probabilistic models, in the presence of continuous latent
+            variables with intractable posterior distributions, and large
+            datasets? We introduce a stochastic variational inference and
+            learning algorithm that scales to large datasets and, under some
+            mild differentiability conditions, even works in the intractable
+            case. Our contributions are two-fold. First, we show that a
+            reparameterization of the variational lower bound yields a lower
+            bound estimator that can be straightforwardly optimized using
+            standard stochastic gradient methods. Second, we show that for
+            i.i.d. datasets with continuous latent variables per datapoint,
+            posterior inference can be made especially efficient by fitting
+            an approximate inference model (also called a recognition model)
+            to the intractable posterior using the proposed lower bound
+            estimator. Theoretical advantages are reflected in experimental
+            results.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="p. 1, Abstract">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A generative model whose own likelihood has no closed form</h2>
+        <p>
+          Start with the model the paper wants to train. A latent code
+          <span class="nb-math-in">z</span> is drawn from a simple prior
+          <span class="nb-math-in">p_\theta(z)</span>, typically a standard
+          Gaussian, and a neural network decoder turns that code into a
+          distribution over data, <span class="nb-math-in">p_\theta(x\mid
+          z)</span>. Fitting <span class="nb-math-in">\theta</span> means
+          maximizing the marginal likelihood the model assigns to the real
+          data, which means integrating the latent code back out:
+          <span class="nb-math-in">p_\theta(x) = \int p_\theta(z)\,p_\theta(x\mid
+          z)\,dz</span>. For a decoder built from a nonlinear multilayer
+          network, that integral has no closed form, and
+          <span class="nb-math-in">z</span> ranges over a continuous space, so
+          there is no sum to fall back on either.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          The standard way around an intractable marginal likelihood is to
+          maximize a lower bound instead, built from the true posterior
+          <span class="nb-math-in">p_\theta(z\mid x)</span>: what the latent
+          code probably was, given the datapoint it produced. But Bayes' rule
+          writes that posterior as a ratio with the same unsolvable integral
+          sitting in its denominator, so it is exactly as intractable as the
+          likelihood it was supposed to fix. The paper's actual departure is
+          to stop trying to compute that posterior at all, and instead train
+          a second network to approximate it. It then rewrites the resulting
+          objective so both networks train together by ordinary
+          backpropagation, through a single substitution in how one
+          distribution gets sampled.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="posterior-network" id="posterior-network">
+        <h2>A second network learns to approximate a posterior it cannot compute</h2>
+        <p>
+          Call the second network <span class="nb-math-in">q_\phi(z\mid
+          x)</span>, which the paper names a recognition model. One
+          set of weights <span class="nb-math-in">\phi</span> is shared
+          across every datapoint, rather than a separate variational
+          parameter fit from scratch for each one, which is what makes the
+          resulting inference procedure fast enough to run on a full dataset
+          instead of one example at a time.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          For any choice of <span class="nb-math-in">\phi</span>, the true
+          log-likelihood decomposes exactly:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \log p_\theta(x^{(i)}) = D_{\mathrm{KL}}\bigl(q_\phi(z\mid
+            x^{(i)})\,\Vert\,p_\theta(z\mid x^{(i)})\bigr) +
+            \mathcal{L}(\theta,\phi;x^{(i)})
+          </div>
+        </figure>
+        <p>
+          A KL divergence is never negative, so
+          <span class="nb-math-in">\mathcal{L}</span> can never exceed the
+          true log-likelihood: it is a lower bound, which is why the field
+          calls it the evidence lower bound, ELBO for short.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Eq. (1), §2.2, p. 3">1</a></sup
+          >
+          Because the two terms on
+          the right always sum to the same fixed quantity,
+          <span class="nb-math-in">\log p_\theta(x^{(i)})</span>, pushing
+          <span class="nb-math-in">\mathcal{L}</span> up by adjusting
+          <span class="nb-math-in">\phi</span> can only come out of the KL
+          term. Maximizing the bound and closing the gap to the true,
+          uncomputable posterior are the same act of optimization. Expanded,
+          <span class="nb-math-in">\mathcal{L}</span> splits into a
+          reconstruction term and a second KL divergence, this one against
+          the prior rather than the true posterior, and this is the form the
+          paper actually optimizes:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \htmlClass{nb-mc1}{\mathcal{L}(\theta,\phi;x^{(i)})} =
+            -\htmlClass{nb-mc2}{D_{\mathrm{KL}}\bigl(q_\phi(z\mid
+            x^{(i)})\,\Vert\,p_\theta(z)\bigr)} +
+            \htmlClass{nb-mc3}{\mathbb{E}_{q_\phi(z\mid
+            x^{(i)})}}\Bigl[\log \htmlClass{nb-mc4}{p_\theta(x^{(i)}\mid
+            z)}\Bigr]
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1"
+                >\mathcal{L}(\theta,\phi;x^{(i)})</span
+              ><span
+                >the bound itself: never larger than the true log-likelihood
+                it stands in for.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2"
+                >D_{\mathrm{KL}}(q_\phi\Vert p_\theta(z))</span
+              ><span
+                >the cost of the recognition model's guess drifting from the
+                prior, subtracted so drift is penalized.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3"
+                >\mathbb{E}_{q_\phi(z\mid x^{(i)})}</span
+              ><span
+                >an average over the recognition model's own samples of
+                <span class="nb-math-in">z</span>, not the true
+                posterior.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">p_\theta(x^{(i)}\mid z)</span
+              ><span
+                >the decoder's probability of the real datapoint given the
+                sampled code: the reconstruction term.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The evidence lower bound in the form the paper trains against.
+            Read plainly, it is a trade. The KL term keeps the recognition
+            model's guess anchored to the prior it will have to sample from
+            at generation time. The expectation rewards it for landing on
+            codes the decoder can actually reconstruct from.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="Eq. (3), §2.2, p. 3">1</a></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="gradient-problem" id="gradient-problem">
+        <h2>You cannot backpropagate through a random sample</h2>
+        <p>
+          The bound above looks like something Monte Carlo can estimate on
+          its own: draw <span class="nb-math-in">z \sim q_\phi(z\mid
+          x^{(i)})</span>, plug it into both terms, average over a handful of
+          draws. Training needs more than an estimate of the bound, though;
+          it needs the gradient of that estimate with respect to
+          <span class="nb-math-in">\phi</span>, and
+          <span class="nb-math-in">\phi</span> does not sit outside the
+          sampling step. It defines the distribution the sample comes from.
+          Differentiating an expectation whose own distribution depends on
+          the parameter you are differentiating against is not the case
+          ordinary backpropagation was built to handle: there is no
+          differentiable path through the random draw for a gradient to
+          follow.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="§2.2, p. 11, paragraph following Eq. (10)"
+              >2</a
+            ></sup
+          >
+        </p>
+        <p>
+          One way around this borrows the score-function estimator familiar
+          from reinforcement learning, sometimes called REINFORCE. It
+          rewrites the gradient of the expectation as an expectation of the
+          sample's value times the gradient of its own log-density. In
+          symbols:
+          <span class="nb-math-in">\nabla_\phi \mathbb{E}_{q_\phi(z)}[f(z)] =
+          \mathbb{E}_{q_\phi(z)}[f(z)\,\nabla_\phi \log q_\phi(z)]</span>.
+          That new expectation is still something a handful of samples can
+          estimate. The paper considers exactly this estimator for the
+          reconstruction term
+          and sets it aside, reporting that it carries very high variance and
+          citing Paisley, Blei, and Jordan's 2012 result on the same
+          problem<sup
+            class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="§4 'Searching with control variates,' p. 3, opening paragraph"
+              >3</a
+            ></sup
+          > rather than deriving the variance itself.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§2.2, p. 3, remark following Eq. (3)"
+              >1</a
+            ></sup
+          >
+          That is a real gap if the goal is to see the variance argument
+          worked out step by step rather than take it on the strength of a
+          citation.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="reparameterization-trick"
+        id="reparameterization-trick"
+      >
+        <h2>Moving the randomness outside the encoder restores the gradient</h2>
+        <p>
+          The fix does not touch the score-function identity at all. It
+          changes what gets sampled.
+          <span class="nb-math-in">q_\phi(z\mid x)</span> is a distribution
+          <span class="nb-math-in">\phi</span> shapes, so sampling
+          <span class="nb-math-in">z</span> directly from it keeps
+          <span class="nb-math-in">\phi</span> inside the random step. The
+          fix samples something else first: an auxiliary noise variable
+          <span class="nb-math-in">\epsilon</span>, drawn from a fixed
+          distribution <span class="nb-math-in">p(\epsilon)</span> that
+          <span class="nb-math-in">\phi</span> has no say over.
+          <span class="nb-math-in">z</span> is then a deterministic,
+          differentiable function of that noise and the input:
+          <span class="nb-math-in">z = g_\phi(\epsilon, x)</span>, <span
+            class="nb-math-in"
+            >\epsilon \sim p(\epsilon)</span
+          >.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Eq. (4), §2.3, p. 3">1</a></sup
+          >
+          All of the randomness now lives in
+          <span class="nb-math-in">\epsilon</span>, entirely outside the part
+          of the computation that depends on
+          <span class="nb-math-in">\phi</span>. An ordinary reverse-mode pass
+          reaches <span class="nb-math-in">\phi</span> through
+          <span class="nb-math-in">g_\phi</span> the same way it reaches any
+          other differentiable layer, because nothing about that step is
+          random from the gradient's point of view. The change of variables
+          also turns the expectation over
+          <span class="nb-math-in">q_\phi(z\mid x)</span> into an expectation
+          over the fixed <span class="nb-math-in">p(\epsilon)</span>. A plain
+          Monte Carlo average over <span class="nb-math-in">L</span> draws
+          now estimates that expectation without disturbing the gradient:
+        </p>
+        <p>
+          <span class="nb-math-in"
+            >\widetilde{\mathcal{L}}^{A}(\theta,\phi;x^{(i)}) =
+            \frac{1}{L}\sum_{l=1}^{L}\Bigl[\log p_\theta(x^{(i)},
+            z^{(i,l)}) - \log q_\phi(z^{(i,l)}\mid
+            x^{(i)})\Bigr]</span
+          >, with <span class="nb-math-in">z^{(i,l)} = g_\phi(\epsilon^{(i,l)},
+          x^{(i)})</span>.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Eq. (6), §2.3, p. 3">1</a></sup
+          >
+        </p>
+        <p>
+          Danilo Rezende, Shakir Mohamed, and Daan Wierstra reached the
+          identical substitution independently, at almost the same moment,
+          under the name stochastic backpropagation.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Each paper's related-work section names the other rather than
+          claiming priority. Kingma and Welling write that Rezende and
+          colleagues "also make the connection between auto-encoders,
+          directed probabilistic models and stochastic variational inference
+          using the reparameterization trick we describe in this paper.
+          Their work was developed independently of ours and provides an
+          additional perspective on AEVB."<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§4, p. 8">1</a></sup
+          >
+          Rezende and colleagues return the description almost word for
+          word: "Our approaches were developed simultaneously and provide
+          complementary perspectives on the use and derivation of stochastic
+          backpropagation rules."<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Related Work">4</a></sup
+          >
+          Two labs reaching the same substitution at the same time, from
+          different starting points, is itself evidence the fix was not a
+          matter of taste.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="concrete-gaussian-vae"
+        id="concrete-gaussian-vae"
+      >
+        <h2>The trick, worked through the model the paper actually trains</h2>
+        <p>
+          The general recipe leaves <span class="nb-math-in">g_\phi</span>
+          unspecified. The paper's own recognition model outputs a diagonal
+          Gaussian, <span class="nb-math-in">q_\phi(z\mid x^{(i)}) =
+          \mathcal{N}(z;\,\mu^{(i)},\,\mathrm{diag}((\sigma^{(i)})^2))</span>,
+          with the encoder network producing
+          <span class="nb-math-in">\mu^{(i)}</span> and
+          <span class="nb-math-in">\sigma^{(i)}</span> directly from
+          <span class="nb-math-in">x^{(i)}</span>.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Eq. (9), §3, p. 5">1</a></sup
+          >
+          For a Gaussian, the reparameterizing function
+          <span class="nb-math-in">g_\phi</span> has a one-line form: shift a
+          standard normal draw by the mean and scale it by the standard
+          deviation.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            z^{(i,l)} = \mu^{(i)} + \sigma^{(i)} \odot \epsilon^{(l)}, \qquad
+            \epsilon^{(l)} \sim \mathcal{N}(0, I)
+          </div>
+          <figcaption>
+            The reparameterized sample for the paper's diagonal-Gaussian
+            encoder, with <span class="nb-math-in">\odot</span> the paper's
+            own notation for an elementwise product. Every operation on the
+            right is differentiable in <span class="nb-math-in">\mu^{(i)}</span>
+            and <span class="nb-math-in">\sigma^{(i)}</span>; only
+            <span class="nb-math-in">\epsilon^{(l)}</span> is random, and it
+            does not depend on <span class="nb-math-in">\phi</span>.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="unnumbered sampling line, §3, p. 5, between Eq. (9) and Eq. (10)"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The difference that makes is visible in code, not just in the
+          derivative. A framework that samples a Gaussian object directly has
+          no path back to that object's own parameters. One that samples
+          fixed noise and builds <span class="nb-math-in">z</span> from it by
+          ordinary arithmetic does, because <span class="nb-math-in"
+            >\mu</span
+          >
+          and <span class="nb-math-in">\sigma</span> never leave the graph
+          autograd differentiates.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file"
+              >reparameterized_sample.py · the substitution, not the
+              framework</span
+            ><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python"># naive: samples a distribution object; mu and sigma
+# have no path to a gradient once the draw happens
+z = Normal(mu, sigma).sample()
+loss = decoder(z).nll(x)
+loss.backward()          # grad wrt mu, sigma: undefined
+
+# reparameterized: only eps is a sample; mu and sigma
+# stay inside the arithmetic autograd differentiates
+eps = Normal(0, 1).sample()
+z = mu + sigma * eps
+loss = decoder(z).nll(x)
+loss.backward()          # grad wrt mu, sigma: flows through z</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · Same distribution, two ways of drawing from it. Only the
+            second leaves a gradient for the encoder to learn from.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="unnumbered sampling line, §3, p. 5, between Eq. (9) and Eq. (10)"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          One more choice separates the paper's two estimators. The generic
+          form above Monte Carlo estimates the whole bound, KL term
+          included. A second version keeps the reconstruction term as a
+          Monte Carlo average but substitutes the closed-form Gaussian KL
+          divergence, derived exactly in the paper's appendix, for the other
+          half.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Eq. (7), §2.3, p. 4; derivation in Appendix B, p. 10–11">1</a></sup
+          >
+          The paper states that this second estimator "typically has less
+          variance than the generic estimator," again as a claim rather than
+          a derivation, the same honest gap as the score-function comparison
+          earlier.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="§2.3, p. 4, remark following Eq. (7)">1</a></sup
+          >
+          It is the version the paper actually reports results with.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="what-the-experiments-show"
+        id="what-the-experiments-show"
+      >
+        <h2>What 500 hidden units on MNIST does and doesn't establish</h2>
+        <p>
+          The reported experiments run on two small datasets, MNIST and the
+          Frey Face set. Encoder and decoder networks use 500 hidden units
+          for MNIST and 200 for the smaller Frey Face set, with a minibatch
+          of 100 datapoints and a single reparameterized sample per
+          datapoint. The paper found one sample enough once the minibatch was
+          large enough to average the noise back out.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Algorithm 1 and §5">1</a></sup
+          >
+          The headline metric, an estimate of the true marginal likelihood
+          rather than the lower bound the model actually trains on, is
+          reported only for a much smaller configuration: 100 hidden units
+          and 3 latent dimensions. The paper is direct about why it stops
+          there: "for higher dimensional latent space the estimates became
+          unreliable."<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§5, 'Marginal likelihood' paragraph"
+              >1</a
+            ></sup
+          >
+          The estimator behind that number, a separate Markov-chain method
+          detailed in the paper's Appendix D, is not the training objective;
+          it only works in a low-dimensional regime the paper's own larger
+          models do not use.
+        </p>
+        <p>
+          What a two-dimensional latent space organizes without supervision
+          is visible directly in the paper's own figure. Linearly spaced
+          coordinates on the unit square are transformed through the inverse
+          Gaussian CDF into values of <span class="nb-math-in">z</span>, and
+          each point is decoded through the trained model.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="variational-autoencoder/asset-1.png"
+            alt="A grid of decoded MNIST digits arranged by a two-dimensional latent coordinate, linearly spaced on the unit square and mapped through the inverse Gaussian CDF. Digit classes visibly separate into contiguous regions of the grid, from sixes and zeros in the upper rows through twos, threes, fives, eights, and finally ones and sevens along the lower rows, with smooth pose and stroke-width changes within each region."
+          />
+          <figcaption>
+            Fig. 2 · What a two-dimensional latent space organizes on MNIST,
+            with no digit labels used during training: linearly spaced
+            coordinates on the unit square, mapped through the inverse
+            Gaussian CDF into <span class="nb-math-in">z</span>, each decoded
+            by the trained generative model.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 4(b), Appendix A, p. 10"
+                data-nb-url="https://arxiv.org/abs/1312.6114"
+                data-nb-note="The learned 2D manifold: what the reparameterized encoder in the previous section organizes once trained, and the paper's own evidence that a 2D code separates digit classes without ever seeing a label."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The paper reads its own regularization as unambiguously benign.
+          Figure 2's caption states: "Interestingly enough, more latent
+          variables does not result in more overfitting, which is explained
+          by the regularizing effect of the lower bound."<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Fig. 2 caption, §5, p. 6–7"
+              >1</a
+            ></sup
+          >
+          That reading holds for the decoder the paper actually used, a
+          comparatively weak, factorized-pixel model. It stops holding once
+          the decoder gets stronger. Bowman and colleagues trained the same
+          reparameterized Gaussian VAE with an autoregressive LSTM decoder
+          over sentences, and found the opposite of a benign regularizer.
+          They report it directly. "Straightforward implementations of our
+          vae fail to learn this behavior: except in vanishingly rare cases,
+          most training runs with most hyperparameters yield models that
+          consistently set q(z|x) equal to the prior p(z), bringing the kl
+          divergence term of the cost function to zero. When the model does
+          this, it is essentially behaving as an rnnlm."<sup
+            class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="§3.1 'Optimization challenges'"
+              >5</a
+            ></sup
+          >
+          On their standard Penn Treebank setting, the collapsed model's own
+          numbers make the failure concrete: a reconstruction cost of 99
+          against a KL cost of only 2, meaning almost none of the latent
+          code's capacity was actually used.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="§4 'Results', Table 2">5</a></sup
+          >
+          Bowman and colleagues trace the difference to decoder strength.
+          Their own paper says why. "Previous work on vaes for image
+          modeling (Kingma and Welling, 2015) used a much weaker independent
+          pixel decoder model p(x|z), forcing the model to use the global
+          latent variable to achieve good likelihoods."<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          The same term the focal paper credits with a benign result is, with
+          a decoder expressive enough to ignore the latent code, the
+          documented cause of posterior collapse. Both readings describe the
+          same KL term; they differ only in what the decoder is powerful
+          enough to do without it.
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>A lower bound loose enough that later work kept tightening it</h2>
+        <p>
+          A second complication targets the bound's tightness rather than its
+          regularizing behavior. Burda, Grosse, and Salakhutdinov open by
+          naming the objective this paper derives as a limitation in its own
+          right: "the VAE objective can lead to overly simplified
+          representations which fail to use the network's entire modeling
+          capacity."<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          Their importance-weighted bound generalizes the single-sample
+          reconstruction term into an average of
+          <span class="nb-math-in">k</span> importance weights taken inside
+          the log. In symbols:
+          <span class="nb-math-in"
+            >L_k(x) = \mathbb{E}_{z_1,\dots,z_k\sim
+            q(z|x)}\!\left[\log \frac{1}{k}\sum_{i=1}^{k} \frac{p(x,z_i)}{q(z_i\mid
+            x)}\right]</span
+          >. It recovers the focal paper's bound exactly at
+          <span class="nb-math-in">k=1</span>, and it provably tightens,
+          never loosens, as <span class="nb-math-in">k</span> grows.<sup
+            class="nb-cite"
+            ><a href="#s6" data-nb-locator="Eq. 8 and Theorem 1, §3, p. 3"
+              >6</a
+            ></sup
+          >
+          That does not contradict the focal paper's math; the ELBO is still
+          a valid lower bound at every <span class="nb-math-in">k</span>. It
+          does mean the single-sample bound this paper reports results with
+          is provably the loosest member of a family every later paper had
+          the option to tighten, simply by averaging more samples inside the
+          logarithm instead of outside it.
+        </p>
+        <p>
+          A third line of follow-on work turns the balance between the
+          reconstruction and KL terms into an adjustable coefficient.
+          Beta-VAE multiplies the KL term by a factor greater than one,
+          trading reconstruction accuracy for a more factorized,
+          individually interpretable latent code.<sup class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-note="Cited to the paper's DBLP index entry rather than its OpenReview page: every automated route into OpenReview's own hosting returned a bot-verification challenge rather than the paper's text, so only the bibliographic record, not the mechanism's own derivation, was directly read."
+              >7</a
+            ></sup
+          >
+          The reconstruction-minus-KL decomposition is then one setting of
+          that coefficient, and raising it presses the encoder toward
+          disentanglement at the cost of fit.
+        </p>
+        <p>
+          The same bound outlasts this paper's own architecture. Denoising
+          diffusion probabilistic models, published six years later, train by
+          optimizing what Ho, Jain, and Abbeel call, in their own words, "the
+          usual variational bound on negative log likelihood."<sup
+            class="nb-cite"
+            ><a href="#s8" data-nb-locator="Eq. (3), §2 'Background,' p. 2"
+              >8</a
+            ></sup
+          >
+          Their own rewrite of that bound splits it into a sum of
+          KL-divergence terms plus a reconstruction term, the same
+          reconstruction-minus-KL shape as this paper's Eq. (3), stretched
+          from one latent step to a chain of <span class="nb-math-in">T</span>
+          timesteps.<sup
+            class="nb-cite"
+            ><a href="#s8" data-nb-locator="Eq. (5)–(7), §2, p. 3">8</a></sup
+          >
+          The variance concern recurs with it. Ho and colleagues note that
+          comparing Gaussians in closed form lets diffusion training skip
+          "high variance Monte Carlo estimates," the same problem Paisley,
+          Blei, and Jordan diagnosed for this paper's naive gradient
+          estimator.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="remark following Eq. (5), §2, p. 3"
+              >8</a
+            ></sup
+          >
+          Diffusion training reappears from the same objective this paper
+          derives, stretched to a deeper chain of latents.
+        </p>
+        <p>
+          Weighed as a reviewer would weigh it, the paper's durable
+          contribution is narrower than its title and more general than its
+          numbers. The marginal-likelihood results are real but reported only
+          in a regime, 100 hidden units and 3 latent dimensions, the paper
+          itself calls unreliable outside of. The claim that the bound simply
+          regularizes without cost holds for the specific weak decoder tested
+          and stops holding, by direct replication, once the decoder is
+          strong enough to ignore the latent code entirely. And the bound
+          itself is demonstrably not as tight as it could be: it is the
+          <span class="nb-math-in">k=1</span> floor of a family every later
+          paper had room to improve on. None of that touches the part of the
+          paper that turned out to matter most. The reparameterization
+          substitution, sampling fixed noise and building the latent code
+          from it by arithmetic rather than sampling the code directly, is
+          exactly what let one gradient step train an encoder and a decoder
+          together, and every deep latent-variable model that trains an
+          encoder this way still makes that same substitution.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1312.6114"
+              >arXiv · Diederik P. Kingma, Max Welling, "Auto-Encoding
+              Variational Bayes" (ICLR 2014)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1606.05908"
+              >arXiv · Carl Doersch, "Tutorial on Variational Autoencoders"</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1206.6430"
+              >arXiv · John Paisley, David M. Blei, Michael I. Jordan,
+              "Variational Bayesian Inference with Stochastic Search"
+              (ICML 2012)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1401.4082"
+              >arXiv · Danilo Jimenez Rezende, Shakir Mohamed, Daan Wierstra,
+              "Stochastic Backpropagation and Approximate Inference in Deep
+              Generative Models"</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1511.06349"
+              >arXiv · Samuel R. Bowman, Luke Vilnis, Oriol Vinyals, Andrew
+              M. Dai, Rafal Jozefowicz, Samy Bengio, "Generating Sentences
+              from a Continuous Space" (CoNLL 2016)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1509.00519"
+              >arXiv · Yuri Burda, Roger Grosse, Ruslan Salakhutdinov,
+              "Importance Weighted Autoencoders" (ICLR 2016)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://dblp.org/rec/conf/iclr/HigginsMPBGBML17.html"
+              >DBLP · Irina Higgins, Loic Matthey, Arka Pal, Christopher P.
+              Burgess, Xavier Glorot, Matthew Botvinick, Shakir Mohamed,
+              Alexander Lerchner, "beta-VAE: Learning Basic Visual Concepts
+              with a Constrained Variational Framework" (ICLR 2017)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2006.11239"
+              >arXiv · Jonathan Ho, Ajay Jain, Pieter Abbeel, "Denoising
+              Diffusion Probabilistic Models" (NeurIPS 2020)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
