@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-15</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-15",
+        "template": "brief",
+        "title": "DeepSeek ships V4 Pro to general availability with zero independently verified benchmark scores",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-15",
+        "tags": ["open-models", "enterprise-ai", "model-benchmarks", "climate-science"],
+        "sources": 10,
+        "words": 915,
+        "reading_minutes": 4,
+        "dek": "The build's version string surfaced first in DeepSeek's own price list, with no separate release announcement.",
+        "harness": "Claude Code (Agent SDK)",
+        "model": "claude-sonnet-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">DeepSeek ships V4 Pro to general availability with zero independently verified benchmark scores</h1>
+        <p class="nb-dekline">The build's version string surfaced first in DeepSeek's own price list, with no separate release announcement.</p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-08-15</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Open models</span>
+          <h3>
+            <a href="https://api-docs.deepseek.com/news/news260813/"
+              >DeepSeek ships V4 Pro to general availability with zero
+              independently verified benchmark scores</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            DeepSeek moved V4-Pro-0813 from preview to general availability
+            on its app, web console, and API in a roughly 32-hour window
+            around August 12 and 13.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s2">2</a></sup>
+            The model card lists 1.6 trillion total parameters with 49
+            billion active per token in its mixture-of-experts routing, a
+            1,000,000-token context window, and MIT-licensed open weights.<sup
+              class="nb-cite"
+              ><a href="#s3">3</a></sup
+            >
+          </p>
+          <table class="nb-table">
+            <caption>
+              DeepSeek's own scores for the V4-Pro-0813 build. No independent
+              evaluator has reproduced any of them.<sup class="nb-cite"
+                ><a href="#s2">2</a></sup
+              >
+            </caption>
+            <thead>
+              <tr>
+                <th>Benchmark</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SWE-bench Verified</td>
+                <td>80.6%</td>
+              </tr>
+              <tr>
+                <td>Terminal-Bench 2.0</td>
+                <td>67.9%</td>
+              </tr>
+              <tr>
+                <td>GPQA Diamond</td>
+                <td>90.1%</td>
+              </tr>
+              <tr>
+                <td>MMLU-Pro</td>
+                <td>87.5%</td>
+              </tr>
+              <tr>
+                <td>LiveCodeBench</td>
+                <td>93.5%</td>
+              </tr>
+              <tr>
+                <td>Codeforces rating</td>
+                <td>3,206</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            DeepSeek's own changelog documents the GA transition only as a
+            dated entry.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            The most detailed independent read of the release found that the
+            version string surfaced first in DeepSeek's price list, with no
+            separate announcement, and that accounts still calling the model
+            by its unversioned alias were upgraded automatically, without a
+            version pin.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            Of the benchmark table's numbers, it states plainly: "At the
+            time of writing, no independent reproduction of any
+            GA-specific figure exists — normal for a release this fresh,
+            and still the single most important caveat on the
+            table."<sup class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Section 03 (Benchmarks), subsection Label every number"
+                >2</a
+              ></sup
+            >
+            Pricing changes on August 16: peak-hour output rises from a flat
+            $0.87 per million tokens to $3.96, with off-peak rates held to
+            half that.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Enterprise AI</span>
+          <h3>
+            <a
+              href="https://newsroom.ibm.com/2026-08-13-ibm-partners-with-openai-to-accelerate-secure-ai-deployment-for-enterprises-across-core-operations"
+              >IBM joins OpenAI's Elite partner tier without disclosing deal
+              terms</a
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </h3>
+          <p>
+            IBM and OpenAI announced a partnership on August 13 that embeds
+            GPT-5.6 and OpenAI's Codex and ChatGPT Work products inside IBM
+            Consulting Advantage.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            The deal is backed by a dedicated "OpenAI Practice" IBM
+            describes as staffed by "thousands of consultants and
+            engineers" holding OpenAI Partner Network certifications, and it
+            makes IBM a member of OpenAI's "Elite" partner tier.<sup
+              class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            Initial focus falls on legacy-system modernization, software
+            development, and cybersecurity through OpenAI's Daybreak Cyber
+            Partner Program alongside IBM's own Autonomous Security
+            offering, aimed first at financial-services, government,
+            telecom, and retail clients.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            Neither company's release states a dollar figure, a consultant
+            headcount, or a contract length, and TechCrunch's independent
+            read of the announcement found none disclosed to any outlet.<sup
+              class="nb-cite"
+              ><a href="#s4">4</a></sup
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+            The deal lands weeks after IBM cut its own revenue forecast on
+            weaker-than-expected quarterly results, and follows comparable
+            enterprise partnerships OpenAI has struck with Infosys and Tata
+            Consultancy Services.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Model release</span>
+          <h3>
+            <a
+              href="https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-3-7-flash/"
+              >Gemini 3.7 Flash trails three rivals on an independent
+              benchmark Google's own testing skipped</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            Gemini 3.7 Flash, which Google released August 13 at half its
+            eventual price through the end of the year, now has an
+            independent measurement that runs outside Google's own launch
+            benchmarks.<sup class="nb-cite"><a href="#s6">6</a></sup>
+            On Artificial Analysis's GDPVal-AA v2 leaderboard, the model
+            scores 1,525, a 103-point gain over Gemini 3.6 Flash.<sup
+              class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            That still trails three named rivals on the same scale: Meta's
+            Muse Spark 1.2 at 1,628, Anthropic's Claude Sonnet 5 at 1,598,
+            and OpenAI's GPT-5.6 Terra at 1,578.<sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            Google's launch benchmarks and Artificial Analysis's leaderboards
+            don't share a single test, so the two scores measure different
+            things rather than confirming or disputing each other.<sup
+              class="nb-cite"
+              ><a href="#s6">6</a></sup
+            ><sup class="nb-cite"><a href="#s7">7</a></sup
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+            On Artificial Analysis's separate Intelligence Index, a
+            nine-evaluation composite, the model scores 56, ranking 17th of
+            the 188 models the organization has tested and landing above the
+            34-point median for its price tier.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Climate science</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41558-026-02730-w"
+              >Atlantic overturning circulation's collapse threshold swings
+              from 2°C to 5.5°C depending on warming speed</a
+            ><sup class="nb-cite"><a href="#s9">9</a></sup>
+          </h3>
+          <p>
+            The Atlantic Meridional Overturning Circulation (AMOC), the
+            current system that carries heat northward through the
+            Atlantic, has been described as having one collapse threshold.
+            That estimate is +4.0°C of global warming, with an uncertainty
+            range of 1.4°C to 8°C.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            A Nature Climate Change paper published August 13 by Utrecht
+            University's René M. van Westen, Reyk Börner, and Henk A.
+            Dijkstra ties that threshold to warming speed instead of
+            warming's eventual peak.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            In a climate-model simulation, a slow CO2 ramp of 0.5 parts per
+            million a year keeps the circulation stable to +5.5°C of
+            warming. An otherwise identical fast ramp collapses it at
+            +2.0°C instead.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            Slow forcing lets the ocean's surface and interior properties
+            adjust together, aided by more evaporation and less sea ice,
+            offsetting the feedbacks that would otherwise destabilize the
+            current.<sup class="nb-cite"><a href="#s9">9</a></sup>
+            "Our results show there is not necessarily a fixed temperature
+            beyond which the AMOC inevitably collapses," van Westen said.
+            "The stability of the circulation depends on how fast the
+            climate is changing."<sup class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+            Utrecht University's own summary puts the critical warming rate
+            at about 0.3°C per decade, a pace it says current emissions
+            trends are already approaching — though the figure does not
+            appear in the paper's own public abstract.<sup class="nb-cite"
+              ><a href="#s10">10</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://api-docs.deepseek.com/news/news260813/"
+              >DeepSeek · API changelog: DeepSeek-V4-Pro-0813 general
+              availability</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.digitalapplied.com/blog/deepseek-v4-pro-ga-official-release-2026"
+              >Digital Applied · DeepSeek V4 Pro GA: the official release</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.unite.ai/deepseek-ships-v4-pro-as-its-flagship-model-leaves-preview/"
+              >Unite.AI · DeepSeek ships V4 Pro as its flagship model leaves
+              preview</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://newsroom.ibm.com/2026-08-13-ibm-partners-with-openai-to-accelerate-secure-ai-deployment-for-enterprises-across-core-operations"
+              >IBM · IBM partners with OpenAI to accelerate secure AI
+              deployment for enterprises across core operations</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2026/08/13/ibm-partners-with-openai-to-bolster-enterprise-ai-push/"
+              >TechCrunch · IBM partners with OpenAI to bolster enterprise
+              AI push</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-3-7-flash/"
+              >Google · Introducing Gemini 3.7 Flash</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://artificialanalysis.ai/evaluations/gdpval-aa"
+              >Artificial Analysis · GDPVal-AA v2 leaderboard</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://artificialanalysis.ai/models/gemini-3-7-flash"
+              >Artificial Analysis · Gemini 3.7 Flash model page</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41558-026-02730-w"
+              >Nature Climate Change · van Westen, Börner &amp; Dijkstra,
+              failure to track a stable AMOC state under rapid climate
+              change</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://phys.org/news/2026-08-rapid-atlantic-circulation-2c-slower.html"
+              >Phys.org · Utrecht University release on AMOC tipping-rate
+              paper</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
