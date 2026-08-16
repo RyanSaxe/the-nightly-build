@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-16</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-16",
+        "template": "brief",
+        "title": "Qwen fits a 27B multimodal model on a single GPU",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-16",
+        "tags": [],
+        "sources": 9,
+        "words": 815,
+        "reading_minutes": 4,
+        "dek": "It interleaves linear and full attention to hold a million-token context cheaply, and its benchmark scores are Alibaba's own, unverified so far.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Qwen fits a 27B multimodal model on a single GPU</h1>
+        <p class="nb-dekline">It interleaves linear and full attention to hold a million-token context cheaply, and its benchmark scores are Alibaba's own, unverified so far.</p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-08-16</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Open models</span>
+          <h3>
+            <a href="https://huggingface.co/Qwen/Qwen3.8-27B"
+              >Qwen's 27B vision-language model runs on a single GPU</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            Alibaba released Qwen3.8-27B under the Apache 2.0 license, a
+            27-billion-parameter dense model that reads text, images, and video.
+            Independent trackers put the release on 14 August.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            Three of every four transformer blocks use Gated DeltaNet linear
+            attention, with full Gated Attention only in the fourth, so the
+            memory cost stays flat where a standard stack grows with sequence
+            length. That is what lets the model hold 262,144 tokens natively and
+            stretch to about a million.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            At 8-bit precision its 27 billion parameters take about a byte each,
+            so the weights come to roughly 27 GB<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >&mdash;an estimate, not a measured figure. That is still small
+            enough to keep the model on the consumer hardware independent
+            trackers say it runs on,<sup class="nb-cite"><a href="#s2">2</a></sup>
+            not a cluster.
+          </p>
+          <div class="nb-stat-strip">
+            <div class="nb-stat">
+              <span class="nb-stat-n">27B</span
+              ><span class="nb-stat-l">dense parameters</span>
+            </div>
+            <div class="nb-stat">
+              <span class="nb-stat-n">262K &rarr; 1M</span
+              ><span class="nb-stat-l">context, tokens</span>
+            </div>
+            <div class="nb-stat">
+              <span class="nb-stat-n">3 : 1</span
+              ><span class="nb-stat-l">linear-to-full blocks</span>
+            </div>
+          </div>
+          <p>
+            Qwen's own evaluation table reports high agentic and coding scores,
+            61.7 on SWE-bench Pro and 84.3 on OSWorld-Verified.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Those are the lab's figures. No independent evaluator had posted
+            verified results by 16 August. The change is in what it takes to run
+            a model this capable and this multimodal: one GPU, not a cluster.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">AI provenance</span>
+          <h3>
+            <a href="https://www.anthropic.com/news/claude-text-watermark"
+              >Anthropic will watermark all of Claude's text output</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Anthropic said it will embed an imperceptible statistical watermark
+            in every piece of text Claude generates, using a version of Google
+            DeepMind's SynthID-Text approach, and attach signed C2PA content
+            credentials to the files it produces. The text mark biases word
+            selection from a secret key and the preceding words, so no single
+            passage looks altered while the pattern is recoverable across enough
+            tokens. The driver is regulatory. The EU Code of Practice on
+            Transparency of AI-Generated Content, signed in July 2026 under the
+            EU AI Act, forces it, with a phased rollout for models launched
+            before 2 August 2026.<sup class="nb-cite"><a href="#s4">4</a></sup>
+            Anthropic is explicit about the limit: the watermark shows only that
+            Claude was &ldquo;likely involved,&rdquo; and it &ldquo;cannot
+            distinguish &lsquo;Claude wrote this&rsquo; from &lsquo;Claude
+            heavily edited this.&rsquo;&rdquo; Provenance now rides inside the
+            text across a vendor's entire surface, with no opt-out, where before
+            it depended on a label a user could delete.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Coding models</span>
+          <h3>
+            <a href="https://x.com/Zai_org/status/2088132965922476159"
+              >GLM-5.3 gets its coding leap from post-training alone</a
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </h3>
+          <p>
+            Z.ai, formerly Zhipu AI, released GLM-5.3 and says the only change
+            from GLM-5.2 was more post-training. &ldquo;Scaling post-training is
+            all we did for GLM-5.3,&rdquo; the lab wrote.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+            The base is the same 743-billion-parameter model, with reinforcement
+            learning on top and a roughly 50% coding gain over the prior version
+            by Z.ai's count. The positioning is unusual for a frontier model,
+            &ldquo;Built to Code. Ready for Cyber Defense.&rdquo; Z.ai reports
+            strong security-task scores it frames as dual-use, 84.5% on CyberGym
+            and 54.4% on ExploitBench.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            These too are the lab's own numbers. Nathan Lambert's read is that
+            Z.ai's release figures usually hold, but that is analyst judgment,
+            and the open weights are staged about two weeks out pending a safety
+            review.<sup class="nb-cite"><a href="#s6">6</a></sup> A large coding
+            jump came from post-training alone, without retraining the base.
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Cell therapy</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41586-026-10906-9"
+              >First in vivo CRISPR screen in human T cells finds two tumor
+              brakes</a
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </h3>
+          <p>
+            A Gladstone and UCSF team ran what they describe as the first in vivo
+            genome-wide CRISPR screen in human T cells, published in Nature on 12
+            August. Screening nearly 20,000 genes inside live tumors, they
+            identified the P2RY8&ndash;G&alpha;13 signaling axis and the gene
+            GNAS as negative regulators of T-cell infiltration and
+            function.<sup class="nb-cite"><a href="#s8">8</a></sup> Knocking out
+            both improved CAR-T control across several solid-tumor models. In a
+            lung-cancer model, two-thirds of mice given the doubly edited cells
+            were tumor-free, versus none on controls. The team replicated the
+            effect with T cells from ovarian and melanoma patients, and saw no
+            long-term side effects over six months.<sup class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+            The result is preclinical, in mouse models and patient-derived cells,
+            not a human clinical outcome. Solid tumors have resisted the CAR-T
+            therapy that clears blood cancers. This work points to two specific
+            genes whose removal lifts that resistance, and to an in vivo screen
+            others can now reuse.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://huggingface.co/Qwen/Qwen3.8-27B"
+              >Qwen (Hugging Face) · Qwen3.8-27B model card</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://local-ai-zone.github.io/blog/ai-updates-august-2026.html"
+              >Local AI Zone · AI Developments, August 13-16, 2026</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.anthropic.com/news/claude-text-watermark"
+              >Anthropic · Watermarking text and files from Claude</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.forbes.com/sites/anishasircar/2026/08/13/claude-will-now-leave-a-watermark-on-everything-it-writes-what-does-that-mean/"
+              >Forbes · Claude will now leave a watermark on everything it
+              writes</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://x.com/Zai_org/status/2088132965922476159"
+              >Z.ai · GLM-5.3 launch announcement</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.interconnects.ai/p/glm-53-how-chinese-labs-keep-stride"
+              >Interconnects (Nathan Lambert) · GLM-5.3 and how Chinese labs keep
+              stride</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41586-026-10906-9"
+              >Nature · In vivo genome-wide CRISPR screens of human T cells in
+              solid tumours</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://gladstone.org/news/new-crispr-screening-platform-boosts-power-immunotherapy-against-solid-tumors"
+              >Gladstone Institutes · New CRISPR screening platform boosts
+              immunotherapy against solid tumors</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://medicalxpress.com/news/2026-08-vivo-crispr-screen-gene-car.html"
+              >MedicalXpress · In vivo CRISPR screen boosts CAR-T against solid
+              tumors</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
