@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Goodfellow's linear explanation got the attack right and the cause wrong · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "adversarial-examples",
+        "template": "paper",
+        "title": "Goodfellow's linear explanation got the attack right and the cause wrong",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-16",
+        "tags": [],
+        "sources": 9,
+        "words": 2394,
+        "reading_minutes": 10,
+        "dek": "Explaining and Harnessing Adversarial Examples handed the field its one-step attack and its first practical defense, then watched the vulnerability it blamed on linear models get traced to the training data itself.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Goodfellow's linear explanation got the attack right and the cause wrong</h1>
+        <p class="nb-dekline">
+          Explaining and Harnessing Adversarial Examples handed the field its one-step attack and its first practical defense, then watched the vulnerability it blamed on linear models get traced to the training data itself.
+        </p>
+        <div class="nb-byline">
+          <span>10 min read</span><span>2026-08-16</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Explaining and Harnessing Adversarial Examples</p>
+          <p class="nb-paper-meta">Ian J. Goodfellow, Jonathon Shlens &amp; Christian Szegedy · ICLR 2015 · arXiv:1412.6572</p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/1412.6572"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            Several machine learning models, including neural networks, consistently misclassify adversarial examples—inputs formed by applying small but intentionally worst-case perturbations to examples from the dataset, such that the perturbed input results in the model outputting an incorrect answer with high confidence. Early attempts at explaining this phenomenon focused on nonlinearity and overfitting. We argue instead that the primary cause of neural networks' vulnerability to adversarial perturbation is their linear nature. This explanation is supported by new quantitative results while giving the first explanation of the most intriguing fact about them: their generalization across architectures and training sets. Moreover, this view yields a simple and fast method of generating adversarial examples. Using this approach to provide examples for adversarial training, we reduce the test set error of a maxout network on the MNIST dataset.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A label flipped by a change too small to see</h2>
+        <p>
+          A year before this paper, Szegedy and colleagues found that
+          state-of-the-art neural networks misclassify inputs a hair away from
+          examples they get right. The same doctored image fools networks of
+          different depth trained on different slices of the
+          data.<sup class="nb-cite"><a href="#s2">2</a></sup> The perturbation
+          is too small for a person to notice, and the wrong answer arrives with
+          high confidence. Why this happens was open, and the going guesses
+          reached for something exotic in deep networks.
+        </p>
+        <p>
+          Goodfellow, Shlens, and Szegedy answer in one line: the culprit is the
+          ordinary linear behavior of these models in high dimensions, and no
+          exotic property is needed to produce the effect.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          From that single claim the paper derives a fast attack, proposes a
+          training defense, and explains the fact its predecessors could not,
+          why the examples carry from one model to another.
+        </p>
+      </section>
+
+      <section data-nb-section="prior-view" id="prior-view">
+        <h2>What Szegedy actually hypothesized</h2>
+        <p>
+          The paper opens by placing itself against earlier work, which it says
+          "focused on nonlinearity and overfitting."<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Sec. 1, Sec. 3"
+              >1</a
+            ></sup
+          >
+          But Szegedy's 2013 paper did not rest its
+          account on nonlinearity. It hypothesized that adversarial inputs sit
+          in rare, precisely located regions of the input space, and that the
+          learned map from input to output is close to discontinuous. A
+          classifier can behave sensibly almost everywhere and still hide
+          pockets where it fails.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Sec. 4">2</a></sup
+          >
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">In Szegedy's words</span>
+          <blockquote>
+            adversarial examples represent low-probability (high-dimensional)
+            "pockets" in the manifold, which are hard to efficiently find by
+            simply randomly sampling.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="Sec. 4">2</a></sup
+            >
+            <span class="nb-note-who">Szegedy et al., Intriguing Properties of Neural Networks (2013)</span>
+          </blockquote>
+        </div>
+        <p>
+          So the nonlinearity framing the paper argues against is partly its own
+          construction. The disagreement that matters is not about a straw man
+          but about geometry: pockets that are rare and hard to find, against
+          the abundance the linear view will need.
+        </p>
+      </section>
+
+      <section data-nb-section="linear-growth" id="linear-growth">
+        <h2>Why a bounded nudge grows with dimension</h2>
+        <p>
+          Start with the intuition the algebra will confirm. Digital images keep
+          only 8 bits per pixel, so any change below one part in 255 is thrown
+          away by the sensor. A perturbation whose every component stays under
+          that precision, written
+          <span class="nb-math-in">\lVert \eta \rVert_\infty < \epsilon</span>,
+          ought to leave a well-separated classifier's answer untouched. For a
+          single linear unit, that expectation is wrong, and the reason is the
+          dimension of the input.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec. 3">1</a></sup
+          >
+        </p>
+        <p>
+          Look at what the perturbation does to one weighted sum. The clean
+          activation is <span class="nb-math-in">w^\top x</span>; the perturbed
+          input adds a second term.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            w^\top \tilde{x} = w^\top x + w^\top \eta, \qquad \eta = \epsilon\, \operatorname{sign}(w)
+          </div>
+          <figcaption>
+            The perturbation adds
+            <span class="nb-math-in">w^\top \eta</span> to the unit's output.
+            Under the max-norm bound, the worst case sets every component to
+            plus or minus <span class="nb-math-in">\epsilon</span> along the sign
+            of the matching weight, so no term cancels.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Sec. 3">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          With that choice, the increase is a sum of
+          <span class="nb-math-in">n</span> non-negative terms whose average size
+          is <span class="nb-math-in">\epsilon\, m</span>, and it comes out as a
+          product of three plain quantities.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \htmlClass{nb-mc1}{w^\top \eta} = \htmlClass{nb-mc2}{\epsilon}\, \htmlClass{nb-mc3}{m}\, \htmlClass{nb-mc4}{n}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">w^\top \eta</span
+              ><span>the growth in the unit's pre-activation caused by the perturbation.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\epsilon</span
+              ><span>the max-norm bound on every component, fixed by sensor precision and never growing with dimension.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">m</span
+              ><span>the average magnitude of a weight.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">n</span
+              ><span>the input dimension.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The bound <span class="nb-math-in">\epsilon</span> does not scale with
+            the problem. The output change scales linearly with
+            <span class="nb-math-in">n</span>.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Sec. 3"
+                data-nb-note="the activation will grow by epsilon m n."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          That is the whole of the linear explanation. Many changes each too
+          small to see, aligned with the signs of the weights, sum to one change
+          large enough to move the decision. The paper calls the effect an
+          "accidental steganography," where a linear model is forced to attend
+          to whatever signal aligns with its weights, even when louder signals
+          are present.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec. 3">1</a></sup
+          >
+          A softmax regression is enough to show it; no depth is required.
+        </p>
+      </section>
+
+      <section data-nb-section="fast-gradient-sign" id="fast-gradient-sign">
+        <h2>One backprop step to fool the model</h2>
+        <p>
+          The units that make modern networks easy to train are built to act
+          linearly. ReLUs, maxout units, and LSTMs are deliberately close to
+          linear so gradients flow, and even sigmoid networks are tuned to sit
+          in their straight, non-saturating regime.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec. 4">1</a></sup
+          >
+          If a network behaves this linearly, the cheap linear attack should
+          damage it too. Linearize the loss around the current input, and the
+          best perturbation under the max-norm bound is the sign of the
+          gradient.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \eta = \epsilon\, \operatorname{sign}\!\bigl( \nabla_x J(\theta, x, y) \bigr)
+          </div>
+          <figcaption>
+            The fast gradient sign method: one linearized step, scaled to the
+            max-norm budget.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Sec. 4">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          A budget on
+          <span class="nb-math-in">\lVert \eta \rVert_\infty</span> caps each
+          component but not their number, so the fastest way to raise the loss
+          is to push every component to its limit in the direction that climbs.
+          Size buys nothing once a component is at the boundary; only its sign is
+          left to choose. One backpropagation gives the whole vector at once.
+          The attack is reliable across model families. On MNIST at
+          <span class="nb-math-in">\epsilon = 0.25</span>, a maxout network
+          misclassified 89.4% of test examples at 97.6% average confidence, and
+          a shallow softmax model 99.9%. On CIFAR-10 at
+          <span class="nb-math-in">\epsilon = 0.1</span>, a convolutional maxout
+          network reached 87.15%.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec. 4">1</a></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="adversarial-examples/asset-1.png"
+            alt="Three panels. Left: a photograph of a panda labeled 'panda' at 57.7% confidence. Middle: a field of colored static, the sign of the gradient, labeled 'nematode' at 8.2% confidence, added at 0.007 times its value. Right: the panda, visually unchanged, labeled 'gibbon' at 99.3% confidence."
+          />
+          <figcaption>
+            Fig. 1 · An imperceptible max-norm perturbation flips GoogLeNet from
+            "panda" at 57.7% to "gibbon" at 99.3%; the middle panel is the sign
+            of the gradient, a structured signal rather than random noise.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 1 · p. 3"
+                data-nb-url="https://arxiv.org/pdf/1412.6572#page=3"
+                data-nb-note="epsilon = 0.007, the smallest bit of an 8-bit encoding; correct label at 57.7% becomes a wrong label at 99.3%."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The figure spends its whole premise in one row. The added vector on the
+          left is <span class="nb-math-in">\epsilon = 0.007</span> of the sign
+          image, the magnitude of a single level in an 8-bit encoding. That is
+          why the panda on the right looks identical to the panda on the left.
+          The label underneath does not agree. Confidence does not merely
+          survive the change. It rises, from 57.7% on the true class to 99.3% on
+          a class the image does not resemble. The middle panel earns its place
+          by ruling out the easy dismissal: the perturbation is the gradient's
+          sign, a structured direction, so the flip is not a fluke of random
+          noise.
+        </p>
+      </section>
+
+      <section data-nb-section="adversarial-training" id="adversarial-training">
+        <h2>Training on the attack, and its ceiling</h2>
+        <p>
+          If the attack is one cheap step, the defense can be too. Mix each
+          clean example with its adversarial version inside the loss, weighting
+          the two halves equally.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \tilde{J}(\theta, x, y) = \alpha\, J(\theta, x, y) + (1 - \alpha)\, J\!\bigl( \theta,\; x + \epsilon\, \operatorname{sign}(\nabla_x J(\theta, x, y)) \bigr), \quad \alpha = 0.5
+          </div>
+          <figcaption>
+            Adversarial training: every batch is scored on clean inputs and on
+            their fast-gradient-sign perturbations at once.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Sec. 6">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          It works, up to a point the paper states plainly. Clean MNIST test
+          error fell from 0.94% to 0.84%, and a wider 1600-unit model reached
+          0.782%, then the best result on permutation-invariant MNIST. Error on
+          fresh fast-gradient-sign examples dropped from 89.4% to 17.9%.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec. 6">1</a></sup
+          >
+          The paper then records its own qualification: when the hardened model
+          is still wrong, it is wrong at 81.4% average confidence. The defense
+          narrows the hole without closing it, and the confident errors that
+          remain are the ones the next decade would have to account for.
+        </p>
+      </section>
+
+      <section data-nb-section="contiguous-regions" id="contiguous-regions">
+        <h2>Contiguous regions of the gradient direction</h2>
+        <p>
+          The linear view makes a geometric prediction, and it is the one that
+          separates it from Szegedy's pockets. If the sign of the gradient is a
+          direction of fast failure, sweeping the input along that direction
+          should cross a wide stretch of wrong answers, not a rare point. The
+          paper sweeps it and finds exactly that: adversarial examples fill a
+          contiguous band of the one-dimensional subspace defined by the fast
+          gradient sign method, not isolated pockets.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec. 8, Fig. 4">1</a></sup
+          >
+          Abundance, not rarity.
+        </p>
+        <p>
+          That abundance is what the transfer argument spends. Different models
+          trained on different data learn similar weights, because the task and
+          the data push them there, so the direction that aligns with one
+          model's weights tends to align with another's. A perturbation built
+          from one network's gradient lands on the next, which is why the same
+          adversarial image fools architectures it was never computed against.
+          Linearity predicts this. A picture of rare, model-specific pockets
+          does not. On its own terms, the linear view holds. The perturbations
+          are cheap to compute, aligned with the gradient, and shared across
+          models. The fast gradient sign method with adversarial training became
+          the starting line every later defense had to beat.
+        </p>
+      </section>
+
+      <section data-nb-section="reframed" id="reframed">
+        <h2>What linearity left out</h2>
+        <p>
+          The parts that held up are the shape of the problem. The part that did
+          not is the depth of it. The paper's framing treats the vulnerability
+          as a flaw in the model, an accident of training to be regularized
+          away. Ilyas and colleagues later attributed adversarial examples to
+          non-robust features: patterns in the data that are genuinely
+          predictive of the label yet brittle and unintelligible to people. They
+          trained an ordinary model on a dataset stripped to those features and
+          relabeled to track only them. It still generalized to the real
+          CIFAR-10 test set, reaching 43.7% to 63.3% where chance is
+          10%.<sup class="nb-cite"><a href="#s3" data-nb-locator="Sec. 3, Table 1">3</a></sup>
+          The signal is real and lives in the data, so "regularize out the flaw"
+          is the wrong picture even though adversarial training does help. The
+          same result confirms the paper's transfer argument by Goodfellow's own
+          route: independently trained models pick up the same features, so the
+          perturbation carries.
+        </p>
+        <p>
+          The paper also read robustness and clean accuracy as pulling together,
+          since adversarial training lowered clean error at the same time.
+          Tsipras and colleagues showed the opposite can hold: in a simple,
+          natural setting, any classifier with high standard accuracy must have
+          low robust accuracy, a trade-off they prove and then reproduce
+          empirically in harder settings.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          On MNIST at small <span class="nb-math-in">\epsilon</span> the tension
+          is mild, which is why the paper saw a gain; at the perturbation sizes
+          the field now targets, buying robustness costs clean accuracy.
+        </p>
+        <p>
+          The single step was the ceiling, too. A model trained only against the
+          fast gradient sign method stays weak against projected gradient
+          descent, the same attack run for many steps with a projection back
+          into the bound. Madry and colleagues made multi-step adversarial
+          training the durable baseline. It reached more than 89% robust accuracy
+          on MNIST at <span class="nb-math-in">\epsilon = 0.3</span> and about
+          46% on CIFAR-10 at
+          <span class="nb-math-in">\epsilon = 8/255</span>, well beyond what the
+          single-step recipe managed.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          Most defenses proposed in between did worse than they looked. Of nine
+          defenses accepted at ICLR 2018, seven produced robustness only by
+          obscuring the gradient an attacker needs. Adapted attacks broke six of
+          them completely and one in part.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          The pattern predates that audit: defensive distillation had cut attack
+          success from 95% to 0.5% until stronger optimization attacks found
+          adversarial examples on the distilled network with 100% success.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          A defense means little until it is measured against an attack adapted
+          to it.
+        </p>
+        <p>
+          Where the frontier sits now is a moving number, so read it as a dated
+          checkpoint. The field standardized its evaluation on RobustBench,
+          scoring a fixed threat model with AutoAttack, an ensemble that resists
+          the gradient masking the audits kept exposing.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="threat models: CIFAR-10 L-inf eps = 8/255">8</a></sup
+          >
+          As of Wang and colleagues in 2023, then the top of the CIFAR-10
+          leaderboard, the best robust accuracy at
+          <span class="nb-math-in">\epsilon = 8/255</span> was 70.69%, trained
+          with diffusion-generated data alone.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">~0%</span
+            ><span class="nb-stat-l">Undefended, under AutoAttack</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">45.8%</span
+            ><span class="nb-stat-l">PGD training, Madry 2018</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">70.69%</span
+            ><span class="nb-stat-l">Best as of Wang 2023</span>
+          </div>
+        </div>
+        <p>
+          The three figures share the
+          <span class="nb-math-in">\epsilon = 8/255</span> threat model but not
+          the attack behind them. Madry's 45.8% is measured under multi-step
+          projected gradient descent,<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          the other two under AutoAttack,<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+          so the strip marks the scale of a decade's movement, not a
+          like-for-like ranking. A decade of work moved CIFAR-10 robust accuracy
+          from near zero to about 71%, at a large cost in model size and
+          training data, and still well below the same networks' clean
+          accuracy.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          The cheap attack the linear view predicted is still cheap. The defense
+          it proposed is still expensive.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The linear explanation was right about the shape of the problem and
+            wrong about its depth. Perturbations are cheap, gradient-aligned, and
+            transferable, exactly as the argument said, and the fast gradient
+            sign method with adversarial training is still where robustness work
+            begins.<sup class="nb-cite"><a href="#s5">5</a></sup> But "linearity
+            is the cause" gave way to "non-robust but predictive features in the
+            data are the cause."<sup class="nb-cite"><a href="#s3">3</a></sup>
+            The regularizer optimism did not survive either. A single-step
+            defense buckled under stronger attacks, and the proven
+            accuracy-robustness trade-off removed the hope that hardening came
+            for free.<sup class="nb-cite"><a href="#s4">4</a></sup> An
+            explanation that predicted the current robustness frontier from
+            model linearity, rather than from the structure of the data, would
+            reopen the question.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1412.6572"
+              >arXiv · Goodfellow, Shlens &amp; Szegedy, Explaining and Harnessing Adversarial Examples (ICLR 2015)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1312.6199"
+              >arXiv · Szegedy et al., Intriguing Properties of Neural Networks (2013)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1905.02175"
+              >arXiv · Ilyas et al., Adversarial Examples Are Not Bugs, They Are Features (NeurIPS 2019)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1805.12152"
+              >arXiv · Tsipras et al., Robustness May Be at Odds with Accuracy (ICLR 2019)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1706.06083"
+              >arXiv · Madry et al., Towards Deep Learning Models Resistant to Adversarial Attacks (ICLR 2018)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1802.00420"
+              >arXiv · Athalye, Carlini &amp; Wagner, Obfuscated Gradients Give a False Sense of Security (ICML 2018)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1608.04644"
+              >arXiv · Carlini &amp; Wagner, Towards Evaluating the Robustness of Neural Networks (IEEE S&amp;P 2017)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2010.09670"
+              >arXiv · Croce et al., RobustBench: A Standardized Adversarial Robustness Benchmark (NeurIPS 2021)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2302.04638"
+              >arXiv · Wang et al., Better Diffusion Models Further Improve Adversarial Training (ICML 2023)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
