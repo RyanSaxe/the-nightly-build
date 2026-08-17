@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>beartype type-checks a whole list by reading one random item of it · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "beartype",
+        "template": "article",
+        "title": "beartype type-checks a whole list by reading one random item of it",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-17",
+        "tags": ["python", "runtime-type-checking", "beartype", "developer-tools"],
+        "sources": 14,
+        "words": 1885,
+        "reading_minutes": 8,
+        "dek": "A list of bytes where the annotation promised strings slips past mypy at author time and trips beartype's decorator at the call, which names the exact item that broke the hint.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">beartype type-checks a whole list by reading one random item of it</h1>
+        <p class="nb-dekline">
+          A list of bytes where the annotation promised strings slips past mypy at author time and trips beartype's decorator at the call, which names the exact item that broke the hint.
+        </p>
+        <div class="nb-byline">
+          <span>8 min read</span><span>2026-08-17</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The call boundary a static checker stops watching</h2>
+        <p>
+          A type hint is a promise the author writes and a static checker keeps
+          before the program runs. Point mypy or pyright at a function
+          annotated <code>list[str]</code> and it proves, at author time, that
+          every call it can see passes a list of strings. That proof covers the
+          code the checker reads. It says nothing about the value that arrives
+          at runtime from a place the checker cannot read: a JSON payload, a
+          database row, a third-party function annotated to return
+          <code>Any</code>. When that value is wrong, the body runs on it
+          anyway, and the failure surfaces deep inside the call with a message
+          that never mentions the promise that was broken.
+        </p>
+        <p>
+          beartype is a pure-Python decorator that closes that gap.<sup
+            class="nb-cite"><a href="#s1">1</a></sup>
+          Put <code>@beartype</code> on the function and the same hint mypy read
+          at author time becomes a check that runs at the call, on the live
+          object.<sup class="nb-cite"><a href="#s2">2</a></sup> Pass a real
+          list of strings and nothing happens. Pass a list of
+          <code>bytes</code>, and beartype raises before the body executes,
+          naming the parameter, the hint, and the item that failed it.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">render_row.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">from beartype import beartype
+
+@beartype
+def render_row(cells: list[str]) -&gt; str:
+    return " | ".join(cells)
+
+# cells arrived from a parser annotated `-&gt; Any`, so mypy proved nothing about it
+render_row([b"2026-08-17", b"OK"])
+# beartype.roar.BeartypeCallHintParamViolation: Function render_row()
+# parameter cells=[b'2026-08-17', b'OK'] violates type hint list[str],
+# as list index 0 item b'2026-08-17' not instance of str.</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · A value from an untyped boundary breaks
+            <code>list[str]</code>; beartype raises at the call and names the
+            offending item. The violation follows the shape beartype
+            documents.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The exception is a <code>BeartypeCallHintParamViolation</code>, from
+          the family of call-time violations beartype's own reference singles out
+          as its most important.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Without the
+          decorator, <code>" | ".join</code> would still raise, but from inside
+          the join, complaining about a bytes object with no word about
+          <code>render_row</code> or its contract. beartype did not coerce the
+          bytes into text or repair the input. It asserted that the value
+          already matched the hint, found that it did not, and stopped.
+        </p>
+      </section>
+
+      <section data-nb-section="decoration-time" id="decoration-time">
+        <h2>beartype writes the check once, at decoration time</h2>
+        <p>
+          The expensive work happens once, when Python first evaluates the
+          decorator, not on every call. beartype reads the hint and generates a
+          wrapper function as Python source, tailored to that exact
+          hint.<sup class="nb-cite"><a href="#s2">2</a></sup> The wrapper it
+          builds for <code>list[str]</code> holds the literal checks for a list
+          and for a string, with no hint left to interpret when the call comes.
+          That is what the project means when it advertises "O(1) non-amortized
+          worst-case time with negligible constant factors": the per-call work
+          is a short, pre-written function, and the reading of the hint already
+          happened.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Generating code instead of interpreting the hint has two consequences
+          worth naming. The wrapper closes over only what it needs. When a hint
+          requires picking a container item at random, beartype binds Python's
+          standard-library <code>getrandbits</code> into the wrapper's namespace,
+          and only then.<sup class="nb-cite"><a href="#s4">4</a></sup> And the
+          whole design carries nothing underneath it: "Beartype has no
+          install-time or runtime dependencies."<sup class="nb-cite"><a
+          href="#s2">2</a></sup> The thing you add to catch type errors does not
+          enlarge your supply chain.
+        </p>
+      </section>
+
+      <section data-nb-section="random-walk" id="random-walk">
+        <h2>One random item per level, and why the list's size drops out</h2>
+        <p>
+          For a flat <code>list[str]</code>, the generated wrapper does not
+          iterate the list. It confirms the object is a list, then checks a single item
+          chosen at random.<sup class="nb-cite"><a href="#s5">5</a></sup> A
+          nested hint such as <code>list[tuple[Sequence[str]]]</code> makes it
+          walk down one level per step. The object must be a list. A random item
+          of that list must be a tuple, a random item of that tuple a
+          <code>Sequence</code>, and a random item of that a string. beartype
+          calls this "a one-way random tree walk over the
+          expected nested structure of those objects at call time," and it
+          samples one item per level of nesting.<sup class="nb-cite"><a
+          href="#s5">5</a></sup> A structure nested three deep costs three
+          checks, whatever the width at each level.
+        </p>
+        <p>
+          This is what the O(1) claim means, and what it does not. The per-call
+          cost is independent of how many items sit at each level: a list of ten
+          strings and a list of ten million cost the same single check. It is
+          not independent of nesting depth, and it is not zero. beartype still
+          runs a real wrapper on every call, and the constant it advertises is a
+          small constant rather than an absent one. Its headline figure, roughly
+          a microsecond to check one access into a list of a million two-tuples,
+          is a number the project measured on itself, with no independent
+          reproduction I could find.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          Read it as beartype's claim about beartype.
+        </p>
+      </section>
+
+      <section data-nb-section="false-negatives" id="false-negatives">
+        <h2>What checking one item cannot promise</h2>
+        <p>
+          The trade the sampling makes is real, and beartype documents it against
+          itself. Checking one random item per level means a container can pass a
+          check it should fail.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">mean.py</span><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">from beartype import beartype
+
+@beartype
+def mean(xs: list[float]) -&gt; float:
+    return sum(xs) / len(xs)
+
+one_bad = [1.0, 2.0, "3.0"] + [0.0] * 10_000   # one string among ten thousand floats
+
+mean(one_bad)   # passes on a call that samples a float; raises only on a call
+                # that happens to sample the string. The same input can do both.</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · A single wrong item in a large list is caught only when the
+            random sample lands on it, so the same value can pass one call and
+            fail the next.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          A list uniformly of the wrong type, as in the first example, is caught
+          every call, because every item the sample could land on is wrong. A
+          lone bad item in a large right list is the case the sampling can miss,
+          and beartype says so plainly.
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">beartype on its own trade</span>
+          <blockquote>
+            beartype also invites false negatives, because this approach only
+            checks a vertical slice of the full container structure each call,
+            which is bad. We claim without evidence that false negatives are
+            unlikely under the optimistic assumption that most real-world
+            containers are homogeneous.<sup class="nb-cite"><a href="#s5">5</a></sup>
+            <span class="nb-note-who">beartype FAQ</span>
+          </blockquote>
+        </div>
+        <p>
+          There is a second half to the limit: you cannot ask for the full walk
+          instead. beartype defines four checking strategies. <code>O0</code> is
+          a no-op, <code>O1</code> is the default single-random-item check, and
+          <code>Ologn</code> and <code>On</code>, the log-many and
+          check-everything strategies, are named in the configuration but
+          "currently unimplemented."<sup class="nb-cite"><a href="#s6">6</a></sup>
+          Random sampling is beartype's default, and today it is also its only
+          container check: no setting makes it inspect more of a container.
+        </p>
+      </section>
+
+      <section data-nb-section="alternatives" id="alternatives">
+        <h2>beartype, typeguard, and pydantic answer different questions</h2>
+        <p>
+          beartype, typeguard, and pydantic all run at the call, and each does
+          something different with a value that fails its hint.
+        </p>
+        <table class="nb-table">
+          <caption>
+            What each tool does at runtime to an argument annotated
+            <code>x: int</code>, given the string <code>"3"</code>.<sup
+            class="nb-cite"><a href="#s1">1</a><a href="#s7">7</a><a
+            href="#s8">8</a><a href="#s9">14</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th class="txt">What runs, and what happens to the value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">mypy / pyright</span></td>
+              <td class="txt">Nothing runs at the call; a mismatch is flagged only when you run the checker at author time.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">@beartype</span></td>
+              <td class="txt">Raises BeartypeCallHintParamViolation; the value is left unchanged.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">@typechecked</span></td>
+              <td class="txt">Raises TypeCheckError; the value is left unchanged. For collections it checks the first item only by default.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">@validate_call</span></td>
+              <td class="txt">Coerces "3" to the integer 3 and passes it on; validates every item, not a sample.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          typeguard is the closest to beartype. Since version 3 it also checks
+          one item per collection by default, so the per-call cost is
+          similar.<sup class="nb-cite"><a href="#s7">7</a><a href="#s9">14</a></sup> Two things
+          differ. Its sample is the first item rather than a random one, so a bad
+          value at index 0 is always caught and a bad value anywhere else never
+          is. And typeguard keeps the exhaustive option beartype dropped:
+          <code>CollectionCheckStrategy.ALL_ITEMS</code> restores a full
+          walk.<sup class="nb-cite"><a href="#s7">7</a></sup> Underneath, it
+          rewrites the abstract syntax tree rather than generating a wrapper, so
+          its decorator "will not work when there is another decorator wrapping
+          the function" and must sit innermost.<sup class="nb-cite"><a
+          href="#s7">7</a></sup>
+        </p>
+        <p>
+          pydantic's <code>@validate_call</code> does a different job. It coerces
+          before it checks: "types are by default coerced by the decorator before
+          they're passed to the actual function," so a <code>"3"</code> becomes
+          <code>3</code> and the call proceeds.<sup class="nb-cite"><a
+          href="#s8">8</a></sup> It validates every argument and is built to parse
+          untrusted input. beartype changes nothing about the values it inspects;
+          pydantic's purpose is to change them. Reach for pydantic at the edge of
+          the system where data arrives, and for beartype inside it, where you
+          want to assert that values already are what the hints say.
+        </p>
+        <p>
+          beartype's own coverage of the hint surface is broad but not total. The
+          mainstream annotations are fully supported; several advanced constructs
+          are only partial, including <code>TypedDict</code>,
+          <code>ParamSpec</code>, and the variadic generics of
+          <code>TypeVarTuple</code>, and a few of the newest PEPs are not
+          supported at all.<sup class="nb-cite"><a href="#s10">9</a></sup> If your
+          code leans on the newest typing features, read the coverage table
+          before assuming beartype enforces them.
+        </p>
+      </section>
+
+      <section data-nb-section="trust" id="trust">
+        <h2>Whether a one-maintainer decorator is safe to leave on</h2>
+        <p>
+          You do not decorate every function by hand. beartype's import hook
+          decorates a whole package from its <code>__init__.py</code>: a single
+          call to <code>beartype_this_package()</code> checks every annotated
+          callable and class in the package as it imports.<sup class="nb-cite"><a
+          href="#s11">10</a></sup> A broader <code>beartype_all()</code> exists,
+          and the docs tell you not to reach for it: "most codebases should not
+          call this hook."<sup class="nb-cite"><a href="#s11">10</a></sup>
+        </p>
+        <p>
+          The package is MIT-licensed, requires Python 3.10 or newer, and its
+          current stable release is 0.22.9, from December 2025.<sup
+          class="nb-cite"><a href="#s12">11</a></sup> It has shipped point
+          releases roughly monthly across 2025, with 0.23.0 now in release
+          candidate.<sup class="nb-cite"><a href="#s13">12</a></sup> It is
+          essentially one person's project, maintained by Cecil Curry, and that
+          is the main risk to weigh: the bus factor is one.<sup class="nb-cite"><a
+          href="#s12">11</a></sup> Against it, the zero-dependency design adds no
+          third-party supply-chain surface when you adopt it,<sup class="nb-cite"><a
+          href="#s2">2</a></sup> and the roughly 108 open issues cluster on
+          advanced-hint support and edge cases rather than core
+          breakage.<sup class="nb-cite"><a href="#s14">13</a></sup> The release
+          notes claim a milestone of a million downloads a
+          day.<sup class="nb-cite"><a href="#s13">12</a></sup> Treat the exact
+          figure as self-reported, though the direction is clear enough that a
+          single maintainer stepping away would strand a great deal of code.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Leave beartype on where values cross into typed code from untyped
+            sources, and treat its check as a smoke detector rather than a proof.
+            It reliably catches a container whose items are uniformly wrong, and
+            it will let a lone bad item in a large one through more often than
+            not.<sup class="nb-cite"><a href="#s5">5</a></sup> If you need every
+            item verified, beartype cannot promise that today, where typeguard's
+            <code>ALL_ITEMS</code> can.<sup class="nb-cite"><a
+            href="#s6">6</a><a href="#s7">7</a></sup> Implementing the <code>On</code> strategy, or
+            gaining a second maintainer, is what would raise the assessment.
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/beartype/beartype"
+              >GitHub · beartype README</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://beartype.readthedocs.io/en/latest/eli5/"
+              >beartype documentation · Beartype in five (or fewer) minutes</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://beartype.readthedocs.io/en/latest/api_roar/"
+              >beartype documentation · Exceptions and warnings (beartype.roar)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/beartype/beartype/blob/main/beartype/_check/code/codemain.py"
+              >GitHub · beartype type-check code factory (codemain.py)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://beartype.readthedocs.io/en/latest/faq/"
+              >beartype documentation · Frequently asked questions</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://beartype.readthedocs.io/en/latest/api_decor/"
+              >beartype documentation · Decorator API (BeartypeStrategy)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://typeguard.readthedocs.io/en/stable/userguide.html"
+              >typeguard documentation · User guide</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://docs.pydantic.dev/latest/concepts/validation_decorator/"
+              >pydantic documentation · Validation decorator</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://typeguard.readthedocs.io/en/latest/versionhistory.html"
+              >typeguard documentation · Version history</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://beartype.readthedocs.io/en/latest/pep/"
+              >beartype documentation · PEP compliance</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://beartype.readthedocs.io/en/latest/api_claw/"
+              >beartype documentation · Import hooks (beartype.claw)</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/beartype/"
+              >PyPI · beartype</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/beartype/beartype/releases"
+              >GitHub · beartype releases</a
+            >
+          </li>
+          <li id="s14">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/beartype/beartype/issues"
+              >GitHub · beartype issue tracker</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
