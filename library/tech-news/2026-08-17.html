@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News · 2026-08-17</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "tech-news",
+        "slug": "2026-08-17",
+        "template": "brief",
+        "title": "Two labs ship vulnerability-finding models on opposite terms",
+        "mode": "rolling",
+        "order": null,
+        "date": "2026-08-17",
+        "tags": ["ai-security", "cybersecurity", "open-weights", "synthetic-biology"],
+        "sources": 9,
+        "words": 746,
+        "reading_minutes": 3,
+        "dek": "OpenAI gates GPT-5.6-Cyber behind identity checks and legal attestations while Z.ai moves to publish GLM-5.3's weights for anyone to run.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Tech News</div>
+        <h1 class="nb-title">Two labs ship vulnerability-finding models on opposite terms</h1>
+        <p class="nb-dekline">OpenAI gates GPT-5.6-Cyber behind identity checks and legal attestations while Z.ai moves to publish GLM-5.3's weights for anyone to run.</p>
+        <div class="nb-byline">
+          <span>3 min read</span><span>2026-08-17</span>
+        </div>
+      </header>
+
+      <section data-nb-section="items" id="items">
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Cyber AI</span>
+          <h3>
+            <a href="https://openai.com/index/gpt-5-6-cyber/"
+              >OpenAI gates its vulnerability-finding model behind identity checks</a
+            ><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </h3>
+          <p>
+            OpenAI released GPT-5.6-Cyber around August 10 or 11, a model built
+            for vulnerability research, penetration testing, and incident
+            response. The company put it behind a verification gate it calls
+            Daybreak Red: identity checks, legal attestations, and an approved
+            use before access.<sup class="nb-cite"><a href="#s1">1</a></sup> A second tier,
+            Daybreak Blue, strips the usual refusals for vetted defenders. The
+            Hacker News reads the launch as safeguards deliberately loosened for
+            exploit development.<sup class="nb-cite"><a href="#s2">2</a></sup>
+            On its own evaluation OpenAI reports the model completing 95.0% of
+            advanced exploit-chain scenarios, against 57.3% for the earlier
+            GPT-5.5-Cyber and 1.5% for the general-purpose GPT-5.6 Sol. No one
+            outside the company has reproduced those figures.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            The one claim a reader can check independently is a single named
+            find, CVE-2026-15903, a flaw in the V8 JavaScript engine rated CVSS
+            8.8. Its separate report of "over 400" privilege-escalation bugs in
+            operating-system kernels names none of them.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Cyber AI</span>
+          <h3>
+            <a href="https://z.ai/blog/glm-5.3"
+              >Z.ai answers with GLM-5.3 and promises open weights within two weeks</a
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </h3>
+          <p>
+            Days later, Z.ai took the opposite path. GLM-5.3, announced
+            August 14 under the slogan "Built to Code, Ready for Cyber Defense,"
+            is post-trained on the company's existing 743B GLM-5.2 base with no
+            new pre-training run. Z.ai says it will publish the weights on
+            Hugging Face under an open license within about two
+            weeks.<sup class="nb-cite"><a href="#s3">3</a></sup> Where OpenAI
+            decides who may run its model, Z.ai proposes to let anyone. The
+            capability case is again the vendor's own. Z.ai reports its CyberGym
+            score climbing from 77.2% to 84.5%, ahead of the 83.8% it attributes
+            to Anthropic's Claude Mythos 5, though by SiliconANGLE's account it
+            still trails Anthropic on two other cybersecurity
+            tests.<sup class="nb-cite"><a href="#s3">3</a></sup><sup
+              class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            SiliconANGLE also relays Z.ai's claim of more than 2,400
+            vulnerabilities found across 269 projects, one in code written 40
+            years ago, with no independent audit of the
+            count.<sup class="nb-cite"><a href="#s4">4</a></sup> The two accounts
+            do not even agree on the model's size. Z.ai describes a 743B base,
+            and SiliconANGLE reports 753B total
+            parameters.<sup class="nb-cite"><a href="#s3">3</a></sup><sup
+              class="nb-cite"
+              ><a href="#s4">4</a></sup
+            >
+            Nathan Lambert, reading it from outside either company, judges that
+            open Chinese labs stay within reach of the closed frontier on coding
+            and cyber work.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Open models</span>
+          <h3>
+            <a href="https://research.meta.ai/blog/introducing-muse-glimmer-open-agentic-model"
+              >Meta releases Muse Glimmer, a 30B open-weights agentic model</a
+            ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </h3>
+          <p>
+            The same week's other open release came from Meta. On August 10 its
+            Superintelligence Labs published Muse Glimmer, a 30B multimodal
+            model under an Apache 2.0 license. The model is distilled from its
+            larger Muse system and tuned for local agent work, coding, and use
+            as an LLM judge.<sup class="nb-cite"><a href="#s6">6</a></sup> Quantized to
+            4-bit it runs under about 20 GB, inside a single consumer
+            GPU.<sup class="nb-cite"><a href="#s6">6</a></sup><sup class="nb-cite"
+              ><a href="#s7">7</a></sup
+            >
+            Unlike the week's two cyber models, Muse Glimmer is a general agent
+            model with no offensive-security purpose, and under Apache 2.0
+            anyone may download and use it commercially
+            today.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          </p>
+        </div>
+
+        <div class="nb-brief-item" data-nb-item>
+          <span class="nb-brief-tag">Synthetic biology</span>
+          <h3>
+            <a href="https://www.nature.com/articles/s41586-026-10909-6"
+              >Engineered gut bacteria sense glucose and improve control in mice and monkeys</a
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </h3>
+          <p>
+            In synthetic biology, a Nature paper published August 12 describes
+            an engineered probiotic that behaves like a glucose
+            sensor.<sup class="nb-cite"><a href="#s8">8</a></sup> The bacteria
+            carry a synthetic gene circuit, a HexR regulator wired to a
+            synthetic promoter, that switches on and secretes therapeutic
+            factors only when gut glucose crosses a threshold, then clears
+            instead of colonizing permanently.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            In mice and in non-human primates, long-term oral dosing improved
+            glycaemic control and lipid profiles and blunted diabetic
+            complications, according to the paper's
+            abstract.<sup class="nb-cite"><a href="#s8">8</a></sup> The work is
+            preclinical with no human data, and the full paper sits behind
+            Nature's paywall, so the effect sizes and how long the bacteria
+            persist cannot yet be checked against it.<sup class="nb-cite"
+              ><a href="#s8">8</a></sup
+            >
+            Nature's news desk covers the result as a step toward a
+            sense-and-respond "living drug" for blood
+            sugar.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/gpt-5-6-cyber/"
+              >OpenAI · GPT-5.6-Cyber launch and Daybreak access program</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thehackernews.com/2026/08/openai-launches-gpt-56-cyber-with.html"
+              >The Hacker News · OpenAI Launches GPT-5.6-Cyber with Reduced Safeguards for Exploit Development</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://z.ai/blog/glm-5.3"
+              >Z.ai · GLM-5.3: Built to Code, Ready for Cyber Defense</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://siliconangle.com/2026/08/14/z-ai-debuts-glm-5-3-long-horizon-coding-cybersecurity-upgrades/"
+              >SiliconANGLE · Z.ai debuts GLM-5.3 with long-horizon coding and cybersecurity upgrades</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.interconnects.ai/p/glm-53-how-chinese-labs-keep-stride"
+              >Interconnects (Nathan Lambert) · GLM-5.3 and how Chinese labs keep stride</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://research.meta.ai/blog/introducing-muse-glimmer-open-agentic-model"
+              >Meta Superintelligence Labs · Introducing Muse Glimmer</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.phoronix.com/news/Meta-Muse-Glimmer"
+              >Phoronix · Meta Publishes Muse Glimmer As 30B Open Agentic Model</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nature.com/articles/s41586-026-10909-6"
+              >Nature · Glucose-responsive probiotics for glycaemic modulation in mice and monkeys</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.nature.com/articles/d41586-026-02521-5"
+              >Nature News · The probiotic bacteria engineered to treat diabetes</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
