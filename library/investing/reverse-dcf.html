@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Run the valuation backward and read the growth already priced in · Investing</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "investing",
+        "slug": "reverse-dcf",
+        "template": "lesson",
+        "title": "Run the valuation backward and read the growth already priced in",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-17",
+        "tags": ["valuation", "reverse-dcf", "market-implied-expectations", "dcf"],
+        "sources": 10,
+        "words": 1929,
+        "reading_minutes": 8,
+        "dek": "Invert the discounted-cash-flow model and Mastercard's $569 price turns into the growth rate the buyer is paying for, a number that shifts with every assumption behind it.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Investing</div>
+        <h1 class="nb-title">Run the valuation backward and read the growth already priced in</h1>
+        <p class="nb-dekline">
+          Invert the discounted-cash-flow model and Mastercard's $569 price turns into the growth rate the buyer is paying for, a number that shifts with every assumption behind it.
+        </p>
+        <div class="nb-byline">
+          <span>8 min read</span><span>2026-08-17</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Every price in the market is a bet on the future, and the bet is
+          usually invisible. The ticker shows a number, not the growth and
+          returns that number quietly assumes. Reverse DCF makes the bet legible.
+          It takes the discounted-cash-flow model this course already built and
+          runs it backward, holding a company's price fixed and solving for the
+          free-cash-flow growth the price must be counting on. This lesson does
+          that once, all the way through, for Mastercard at $569 a share. It
+          turns the price into an implied growth rate. It shows how far that rate
+          shifts when the discount rate or the terminal assumption behind it
+          changes. And it asks whether a company already this large can grow into
+          the price. By the end you will be able to run any price backward into
+          the expectation it carries, and to say plainly which assumptions your
+          answer depends on.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../investing/discounted-cash-flow.html">Three-quarters of a discounted-cash-flow value comes from after the forecast ends</a>: the model this lesson runs backward, and why one growth point swings the whole value.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../investing/margin-of-safety.html">At $264, Adobe is a 12% premium and a 30% discount at once</a>: the conservative and optimistic values this lesson reads a price between.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../investing/free-cash-flow.html">Apple's profit rose while its free cash flow fell</a>: why the cash base fed into the model is a choice, not a figure any rule fixes.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The model runs the other way</h2>
+        <p>
+          The discounted-cash-flow model this course built takes a forecast of
+          free cash flow, a discount rate, and a terminal value, and returns one
+          number: what the business is worth today. Reverse DCF keeps the same
+          machine and swaps which number is unknown. Hold the current price fixed
+          as the answer, and solve instead for the growth the price must assume.
+          Rappaport and Mauboussin, who set out the method, call it using "the
+          market's own pricing model, the discounted cash flow model, with an
+          important twist."<sup class="nb-cite"><a href="#s1">1</a></sup> The
+          output is no longer a value to set against the price. It is the
+          expectation already inside the price, stated as a number that can be
+          judged.
+        </p>
+        <p>
+          The margin-of-safety lesson built two values for one company, a
+          conservative one and an optimistic one, and read the price against the
+          lower.<sup class="nb-cite"><a href="#s1">1</a></sup> Reverse DCF works
+          the same gap from the other side. Rather than ask what a business is
+          worth and where the price sits against that estimate, it asks what the
+          buyer at today's price is already assuming, and only then whether a
+          company like this one can deliver it.
+        </p>
+      </section>
+
+      <section data-nb-section="solving-for-growth" id="solving-for-growth">
+        <h2>Solving Mastercard's price for growth</h2>
+        <p>
+          Mastercard closed at $569.29 on Friday, August 14,
+          2026.<sup class="nb-cite"><a href="#s2">2</a></sup> With 876.0 million
+          shares outstanding, that price is a market capitalization of about
+          $498.7 billion, the equity value the inversion has to
+          reproduce.<sup class="nb-cite"><a href="#s3" data-nb-locator="Cover page, shares as of 2026-07-27">3</a></sup>
+        </p>
+        <p>
+          The cash going in is fiscal-2025 free cash flow. Operating cash flow
+          was $17,648 million; subtract $489 million spent on property and
+          equipment and $726 million of capitalized software, and the base is
+          $16,433 million.<sup class="nb-cite"><a href="#s4" data-nb-locator="Consolidated Statements of Cash Flows">4</a></sup>
+          The discount rate is a cost of equity near 9 percent. The ten-year
+          Treasury yielded 4.69 percent on August 17,
+          2026,<sup class="nb-cite"><a href="#s5">5</a></sup> and an equity risk
+          premium of roughly 4.2 to 4.5 percent for 2026 sits on top of it.
+          Damodaran reads that premium off the whole index by the same inversion,
+          applied to the market at
+          large.<sup class="nb-cite"><a href="#s6">6</a></sup> Mastercard carries
+          little debt, so its weighted-average cost of capital lands close to
+          that cost of equity.
+        </p>
+        <p>
+          Now the machine. Grow the $16,433 million base for ten years at some
+          rate, add a terminal value at a perpetual rate of 4 percent, discount
+          every year back at 9 percent, and divide by the share count. Written
+          out, the target price fixes the left side and one term is left free.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            P_{0}\,N \;=\; \sum_{t=1}^{10} \frac{\htmlClass{nb-mc1}{F}\,(1+\htmlClass{nb-mc2}{g})^{t}}{(1+\htmlClass{nb-mc3}{r})^{t}} \;+\; \frac{\htmlClass{nb-mc1}{F}\,(1+\htmlClass{nb-mc2}{g})^{10}\,(1+\htmlClass{nb-mc4}{g_{T}})}{(\htmlClass{nb-mc3}{r}-\htmlClass{nb-mc4}{g_{T}})\,(1+\htmlClass{nb-mc3}{r})^{10}}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">F</span
+              ><span>Fiscal-2025 free cash flow, the $16,433M base the forecast grows from.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">g</span
+              ><span>Annual free-cash-flow growth for years 1 to 10, the one unknown the price solves for.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">r</span
+              ><span>The 9 percent cost of equity that discounts each year back to today.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">g_{T}</span
+              ><span>Terminal growth after year 10, held at 4 percent and capped by the economy.</span>
+            </li>
+          </ul>
+          <figcaption>
+            Price times shares fixes the left side, so the growth rate <em>g</em> is the single term left to solve for.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Everything but the growth rate is now pinned. The price supplies the
+          left side, and the value of the growth that makes the two sides equal
+          is 8.8 percent. At a 9 percent cost of equity and a 4 percent terminal
+          rate, $569 says the market expects Mastercard's free cash flow to
+          compound at about 8.8 percent a year for a decade. That is a testable
+          statement about the future, not a verdict on the stock.
+        </p>
+      </section>
+
+      <section data-nb-section="conditional-answer" id="conditional-answer">
+        <h2>The implied rate moves with your assumptions</h2>
+        <p>
+          The 8.8 percent looks precise, and it is not a fact the market states.
+          It is the answer to a question with three assumptions built in: the
+          discount rate, the terminal growth rate, and the length of the explicit
+          forecast. Move any one and the implied growth moves with it. The curve
+          below plots the model's output against the growth assumption; the
+          implied rate is wherever that curve crosses today's price. Slide the
+          terminal rate from 4 percent to 3 percent and the same $569 now demands
+          10.5 percent.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="reverse-dcf/chart-1.png"
+            alt="Two rising curves of implied value per share against assumed ten-year free-cash-flow growth. The 4 percent terminal-growth curve crosses the flat $569 price line at 8.8 percent growth; the 3 percent terminal curve crosses the same price line near 10.5 percent."
+          />
+          <figcaption>
+            Fig. 1 · Implied value per share against assumed ten-year growth, at a 9% cost of equity. The price line crosses the 4% terminal curve at 8.8% growth and the 3% curve near 10.5%.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          A simple perpetuity asks least; a longer forecast with
+          a lower terminal rate asks most.
+        </p>
+        <table class="nb-table">
+          <caption>
+            The implied growth Mastercard's $569 price yields under each modeling choice, all from the same $16,433M base and share count.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Model structure</th>
+              <th>Cost of equity</th>
+              <th>Terminal rate</th>
+              <th>Implied growth</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">Single-stage perpetuity</td>
+              <td>9%</td>
+              <td>—</td>
+              <td>5.5% forever</td>
+            </tr>
+            <tr>
+              <td class="txt">Ten years, then terminal</td>
+              <td>9%</td>
+              <td>4%</td>
+              <td>8.8% for the decade</td>
+            </tr>
+            <tr>
+              <td class="txt">Ten years, lower terminal</td>
+              <td>9%</td>
+              <td>3%</td>
+              <td>10.5%</td>
+            </tr>
+            <tr>
+              <td class="txt">Ten years, higher discount</td>
+              <td>9.5%</td>
+              <td>4%</td>
+              <td>10.1%</td>
+            </tr>
+            <tr>
+              <td class="txt">Ten years, lower discount</td>
+              <td>8.5%</td>
+              <td>4%</td>
+              <td>7.4%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          A one-point move in a single assumption shifts the answer by one to two
+          points of growth. The reason is where the value sits. In every column
+          the terminal block is about two-thirds of the total, and Damodaran's
+          rule follows: as the terminal value takes a larger share, the growth
+          assumptions carry more weight, not
+          less.<sup class="nb-cite"><a href="#s7">7</a></sup> The terminal rate
+          cannot be dialed freely either. A perpetual growth rate cannot exceed
+          the growth of the economy, which is why 3 to 4 percent is a defensible
+          band and 6 percent is
+          not.<sup class="nb-cite"><a href="#s8">8</a></sup> So the honest form of
+          the result carries its assumptions with it: 8.8 percent at a 9 percent
+          discount rate and a 4 percent terminal rate, never a bare 8.8 percent
+          the market is said to quote.
+        </p>
+      </section>
+
+      <section data-nb-section="which-cash-flow" id="which-cash-flow">
+        <h2>Which cash flow you feed it</h2>
+        <p>
+          The three modeling assumptions are not the only soft input. The base
+          itself is contestable, the point the free-cash-flow lesson made: no
+          accounting rule fixes what free cash flow is. Mastercard's operating
+          cash flow adds back stock-based compensation, a real cost paid to
+          employees in shares rather than cash, so operating cash flow minus
+          capital spending counts that compensation as money the owner keeps.
+          Capitalized software, $726 million in fiscal 2025, is a second
+          reinvestment an analyst can subtract or leave
+          in.<sup class="nb-cite"><a href="#s4" data-nb-locator="Consolidated Statements of Cash Flows">4</a></sup>
+          Leave it in and the base rises from $16,433 million to $17,159
+          million; strip out the stock-comp add-back instead and it falls. A
+          higher base clears the same price with less growth; a lower
+          base demands more. Damodaran's first rule holds throughout: the
+          inversion is only as sound as its inputs, and those inputs have to be
+          consistent with one
+          another.<sup class="nb-cite"><a href="#s9">9</a></sup> Reverse DCF does
+          not remove the analyst's judgment about cash flow. It relocates that
+          judgment from the forecast to the base and the discount rate.
+        </p>
+      </section>
+
+      <section data-nb-section="clearing-the-bar" id="clearing-the-bar">
+        <h2>Can Mastercard clear its own bar?</h2>
+        <p>
+          The number by itself judges nothing. Reverse DCF reads the expectation
+          in the price; it does not tell you the price is right. The method has
+          two skills, and reading the implied expectations is only the first. The
+          second is judging how those expectations are likely to be revised, which
+          is competitive-strategy work the arithmetic cannot
+          do.<sup class="nb-cite"><a href="#s10">10</a></sup> So the 8.8 percent
+          bar has to be set against what the company has actually done.
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">14.3%</span
+            ><span class="nb-stat-l">Revenue, annual FY23-25</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">15.6%</span
+            ><span class="nb-stat-l">Net income, annual FY23-25</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">22.8%</span
+            ><span class="nb-stat-l">Free cash flow, annual FY23-25</span>
+          </div>
+        </div>
+        <p>
+          Across fiscal 2023 to 2025, Mastercard grew revenue 14.3 percent a
+          year, net income 15.6 percent, and free cash
+          flow 22.8 percent.<sup class="nb-cite"><a href="#s4" data-nb-locator="Consolidated Statements of Operations and Cash Flows">4</a></sup>
+          Every one of those ran well ahead of the 8.8 percent the price now
+          asks.
+          The tempting read, that the bar sits below recent growth so the stock
+          is cheap, asks the wrong question. The bar is not this year's growth
+          rate. It is a decade of it, held by a company already generating $16
+          billion of free cash flow a year. The question the price leaves is
+          durability at scale: whether a business that large can compound cash at
+          high-single digits for ten years while the base it grows from keeps
+          getting bigger.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The price does not demand heroics from Mastercard. It demands
+            endurance: ten years of high-single-digit free-cash-flow growth from
+            a $16 billion base, a pace below the company's own recent record but
+            asked of it far longer. Whether that holds is a judgment about
+            Mastercard's competitive position, not a figure the inversion
+            produces. What the inversion contributes is to state the bar
+            precisely and to show it move as the assumptions behind it
+            move.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Reverse DCF turned Mastercard's $569 price into a bar: about 8.8
+          percent free-cash-flow growth a year for a decade, at a 9 percent
+          discount rate and a 4 percent terminal rate. Change either assumption
+          and the bar moves, to 10.5 percent at a 3 percent terminal rate, to 5.5
+          percent as a simple perpetuity. Quote the implied number with the assumptions that produced it,
+          never on its own. The bar sits below what Mastercard has grown lately,
+          so the question the price leaves you is not whether the company is fast
+          enough today but whether it can hold that pace for ten years at its
+          size. Reaching that question, and naming the assumptions that frame it,
+          is what running the model backward gives you that a forward valuation
+          does not.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://www.expectationsinvesting.com/">Expectations Investing (Rappaport &amp; Mauboussin)</a>: the book's own site, with free tutorials and a downloadable reverse-DCF spreadsheet.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://aswathdamodaran.blogspot.com/">Aswath Damodaran, "Musings on Markets"</a>: the DCF-myth series on terminal value, discount rates, and keeping a valuation's assumptions consistent.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.expectationsinvesting.com/the-book"
+              >Expectations Investing · The Book (Rappaport &amp; Mauboussin)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://stockanalysis.com/stocks/ma/statistics/"
+              >StockAnalysis · Mastercard (MA) statistics</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/1141391/000114139126000083/0001141391-26-000083-index.htm"
+              >U.S. SEC · Mastercard Incorporated Q2 2026 Form 10-Q</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.sec.gov/Archives/edgar/data/1141391/000114139126000013/0001141391-26-000013-index.htm"
+              >U.S. SEC · Mastercard Incorporated FY2025 Form 10-K</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://fred.stlouisfed.org/series/DGS10"
+              >FRED · 10-Year Treasury Constant Maturity Rate (DGS10)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aswathdamodaran.blogspot.com/2026/03/the-price-of-risk-equity-risk-premium.html"
+              >Aswath Damodaran · The Price of Risk: The Equity Risk Premium in 2026</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aswathdamodaran.blogspot.com/2016/11/myth-55-terminal-value-ate-my-dcf.html"
+              >Aswath Damodaran · DCF Myth 5.5: The Terminal Value ate my DCF</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aswathdamodaran.blogspot.com/2016/11/myth-54-negative-growth-rates-forever.html"
+              >Aswath Damodaran · DCF Myth 5.4: Negative Growth Rates Forever?</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://aswathdamodaran.blogspot.com/2015/02/dcf-myth-1-if-you-have-ddiscount-rate.html"
+              >Aswath Damodaran · DCF Myth 1: A DCF is an exercise in modeling, not math</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.expectationsinvesting.com/"
+              >Expectations Investing · Reading a stock's expectations</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
