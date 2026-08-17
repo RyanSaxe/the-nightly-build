@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Direct Preference Optimization · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "direct-preference-optimization",
+        "template": "paper",
+        "title": "DPO makes the policy its own reward model and drops RLHF's RL loop",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-17",
+        "tags": ["rlhf", "preference-optimization", "dpo", "alignment", "language-models"],
+        "sources": 8,
+        "words": 3157,
+        "reading_minutes": 14,
+        "dek": "Rafailov and colleagues proved the swap targets the same KL-constrained objective as PPO-based RLHF, and no later work overturns that theorem, though the record after it locates DPO's real cost in offline practice.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">DPO makes the policy its own reward model and drops RLHF's RL loop</h1>
+        <p class="nb-dekline">
+          Rafailov and colleagues proved the swap targets the same KL-constrained objective as PPO-based RLHF, and no later work overturns that theorem, though the record after it locates DPO's real cost in offline practice.
+        </p>
+        <div class="nb-byline">
+          <span>14 min read</span><span>2026-08-17</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Direct Preference Optimization: Your Language Model is Secretly a Reward Model</p>
+          <p class="nb-paper-meta">Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher D. Manning, Chelsea Finn · NeurIPS 2023 (arXiv:2305.18290) · 2023</p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2305.18290"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            While large-scale unsupervised language models (LMs) learn broad world knowledge and some reasoning skills, achieving precise control of their behavior is difficult due to the completely unsupervised nature of their training. Existing methods for gaining such steerability collect human labels of the relative quality of model generations and fine-tune the unsupervised LM to align with these preferences, often with reinforcement learning from human feedback (RLHF). However, RLHF is a complex and often unstable procedure, first fitting a reward model that reflects the human preferences, and then fine-tuning the large unsupervised LM using reinforcement learning to maximize this estimated reward without drifting too far from the original model. In this paper we introduce a new parameterization of the reward model in RLHF that enables extraction of the corresponding optimal policy in closed form, allowing us to solve the standard RLHF problem with only a simple classification loss. The resulting algorithm, which we call Direct Preference Optimization (DPO), is stable, performant, and computationally lightweight, eliminating the need for sampling from the LM during fine-tuning or performing significant hyperparameter tuning. Our experiments show that DPO can fine-tune LMs to align with human preferences as well as or better than existing methods. Notably, fine-tuning with DPO exceeds PPO-based RLHF in ability to control sentiment of generations, and matches or improves response quality in summarization and single-turn dialogue while being substantially simpler to implement and train.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>RLHF gets there in two stages and a reinforcement-learning loop</h2>
+        <p>
+          The alignment recipe an ML engineer already knows from InstructGPT runs in two stages. First it fits a reward model to human preference labels, training a network to score a completion the way the raters did. Then it holds that reward model fixed and optimizes the language model against it with reinforcement learning, usually PPO. A KL penalty keeps the policy from wandering away from the fine-tuned starting point.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup> The second stage is the expensive one. It samples completions from the current policy in the training loop, scores them with the reward model, and backpropagates a policy-gradient update. A run therefore carries a separate reward network, an online sampling loop, and the hyperparameters that keep PPO stable.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Direct Preference Optimization keeps the objective and deletes the machinery. It reaches the policy that the two-stage pipeline is trying to produce, but it never fits an explicit reward model and never runs a reinforcement-learning loop. The whole method is one supervised classification loss over pairs of completions, of the same shape the reward model was trained with, applied directly to the language model.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <img src="direct-preference-optimization/asset-1.png" alt="Two side-by-side schematics. Left, labeled RLHF: preference data feeds a reward model trained by maximum likelihood, then a reinforcement-learning loop samples completions, labels rewards, and updates an LM policy. Right, labeled DPO: the same preference data feeds a single maximum-likelihood objective straight into the final language model, with no reward model and no reinforcement-learning loop." />
+          <figcaption>
+            Fig. 1 · RLHF fits a reward model and then optimizes the policy against it with reinforcement learning; DPO trains the policy on the preference pairs directly, with one classification objective and no RL loop.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Figure 1, p. 1"
+                data-nb-url="https://arxiv.org/abs/2305.18290"
+                data-nb-note="The paper's own contrast of the RLHF pipeline against DPO; it settles what DPO removes."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The claim is not that DPO approximates RLHF. It is that DPO optimizes the same objective RLHF does. The derivation below shows why no separate reward model is needed: the policy already carries one.
+        </p>
+      </section>
+
+      <section data-nb-section="shared-objective" id="shared-objective">
+        <h2>The objective both methods are really solving</h2>
+        <p>
+          Start with what the reward model represents. RLHF assumes human preferences follow a Bradley-Terry model: given a prompt and two completions, the probability a rater prefers the first is a logistic function of the difference between their latent rewards.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            p^{*}(y_1 \succ y_2 \mid x) = \frac{\exp\bigl(r^{*}(x,y_1)\bigr)}{\exp\bigl(r^{*}(x,y_1)\bigr) + \exp\bigl(r^{*}(x,y_2)\bigr)}
+          </div>
+        </figure>
+        <p>
+          The reward model is fit by minimizing the negative log-likelihood of that classifier over the preference dataset, which is a plain logistic regression on the reward gap between the preferred completion <span class="nb-math-in">y_w</span> and the dispreferred one <span class="nb-math-in">y_l</span>.<sup class="nb-cite"><a href="#s1">1</a></sup> With a reward model <span class="nb-math-in">r_\phi</span> in hand, the second stage optimizes the policy against it under a KL constraint. This is the objective everything in the paper turns on.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \max_{\pi_\theta}\ \mathbb{E}_{x \sim \mathcal{D},\, y \sim \pi_\theta(y \mid x)}\bigl[\, r_\phi(x,y) \,\bigr] \;-\; \beta\, \mathbb{D}_{\mathrm{KL}}\!\bigl[\, \pi_\theta(y \mid x) \,\|\, \pi_{\mathrm{ref}}(y \mid x) \,\bigr]
+          </div>
+          <figcaption>
+            Maximize expected reward while a coefficient <span class="nb-math-in">\beta</span> charges the policy for every nat of KL divergence it spends drifting from the reference model <span class="nb-math-in">\pi_{\mathrm{ref}}</span>.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          RLHF cannot maximize this directly. The reward sits inside an expectation over the policy's own samples, and there is no gradient path from the policy through a discrete sampled completion back to its parameters. That is the gap reinforcement learning fills: PPO estimates the gradient from sampled completions instead of taking it in closed form.<sup class="nb-cite"><a href="#s3">3</a></sup> The sampling loop is the price of not being able to solve the objective analytically.
+        </p>
+      </section>
+
+      <section data-nb-section="closed-form" id="closed-form">
+        <h2>The objective has a closed-form optimum nobody can evaluate</h2>
+        <p>
+          The KL-constrained objective is not, in fact, opaque. For a fixed reward function it has a known optimal policy, a result standard in the reinforcement-learning-as-inference literature that the paper restates for its own reward.<sup class="nb-cite"><a href="#s1">1</a></sup> The optimum reweights the reference model by the exponentiated reward.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \pi_r(y \mid x) = \frac{1}{Z(x)}\, \pi_{\mathrm{ref}}(y \mid x)\, \exp\!\Bigl( \tfrac{1}{\beta}\, r(x,y) \Bigr), \qquad Z(x) = \sum_{y} \pi_{\mathrm{ref}}(y \mid x)\, \exp\!\Bigl( \tfrac{1}{\beta}\, r(x,y) \Bigr)
+          </div>
+          <figcaption>
+            The optimal policy tilts the reference distribution toward high-reward completions, with the temperature set by <span class="nb-math-in">\beta</span>; the normalizer <span class="nb-math-in">Z(x)</span> sums over every completion.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The derivation of that form is short, and the reparameterization to come reuses its one moving part. Write the objective as a minimization, then divide the exponentiated-reward expression by its own sum so it becomes a valid distribution. The objective collapses into a KL divergence from the policy to that distribution, minus a term in <span class="nb-math-in">Z(x)</span>. A KL divergence is minimized at zero when its two arguments are equal, and <span class="nb-math-in">Z(x)</span> does not depend on the policy. So the optimum is reached exactly when the policy equals the reweighted reference above. The step is licensed by that one fact: <span class="nb-math-in">Z(x)</span> is a constant the minimization over <span class="nb-math-in">\pi_\theta</span> can ignore.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The catch is <span class="nb-math-in">Z(x)</span> itself. It sums over every completion the model could produce, which for a language model is every string, so it cannot be computed or even estimated cheaply. The exact optimal policy is written down and unusable in the same line. RLHF's response is to give up on the closed form and approximate the objective with sampling. DPO's response is the opposite.
+        </p>
+      </section>
+
+      <section data-nb-section="implicit-reward" id="implicit-reward">
+        <h2>Reading the reward off the policy</h2>
+        <p>
+          Instead of solving for the policy given the reward, solve for the reward given the policy. The optimal-policy equation is a relationship between a reward and its policy, and it can be rearranged so the reward stands alone. Taking logs and isolating <span class="nb-math-in">r(x,y)</span> gives the reparameterization.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            r(x,y) = \beta \log \frac{\pi_r(y \mid x)}{\pi_{\mathrm{ref}}(y \mid x)} + \beta \log Z(x)
+          </div>
+        </figure>
+        <p>
+          Every reward function can now be expressed through its own optimal policy and the reference policy, plus the same intractable <span class="nb-math-in">Z(x)</span> as before. Nothing has been approximated. This is an identity, true for any reward and the policy the previous section proved optimal for it. The appendix formalizes what the rearrangement means. Two reward functions that differ only by a function of the prompt, <span class="nb-math-in">r'(x,y) = r(x,y) + f(x)</span>, induce the same Bradley-Terry preferences and the same optimal policy. Rewards therefore fall into equivalence classes, and the log-ratio above is the one member of each class already normalized into a valid policy.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">In plain language</span>
+          <p>
+            The paper's title is the literal content of this step. A policy trained against the reference model defines a reward, its own log-probability ratio scaled by <span class="nb-math-in">\beta</span>, and that reward is a genuine member of the Bradley-Terry equivalence class the reward model was fit to. There is no separate reward network to recover because the policy is already carrying one.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section data-nb-section="the-loss" id="the-loss">
+        <h2>One loss, and a gradient that knows when it is wrong</h2>
+        <p>
+          The reparameterization still carries <span class="nb-math-in">Z(x)</span>, so on its own it has traded one intractable quantity for another. What removes it is substituting the reparameterized reward back into the Bradley-Terry model. The preference probability depends only on the difference of two rewards at the same prompt, and <span class="nb-math-in">\beta \log Z(x)</span> is identical for both completions, so it cancels.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            p^{*}(y_1 \succ y_2 \mid x) = \sigma\!\Bigl( \beta \log \frac{\pi^{*}(y_1 \mid x)}{\pi_{\mathrm{ref}}(y_1 \mid x)} - \beta \log \frac{\pi^{*}(y_2 \mid x)}{\pi_{\mathrm{ref}}(y_2 \mid x)} \Bigr)
+          </div>
+        </figure>
+        <p>
+          The intractable normalizer is gone because the step that removed it needed only that <span class="nb-math-in">Z(x)</span> be the same for two completions of one prompt, which it is by construction. The preference model is now written entirely in terms of the policy and the reference model. Fitting it by maximum likelihood, exactly as the reward model was fit, gives the DPO loss.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \mathcal{L}_{\mathrm{DPO}}(\pi_\theta; \pi_{\mathrm{ref}}) = -\,\mathbb{E}_{\htmlClass{nb-mc4}{(x,\,y_w,\,y_l)\sim\mathcal{D}}}\Bigl[\, \htmlClass{nb-mc3}{\log \sigma}\Bigl( \htmlClass{nb-mc1}{\beta \log \tfrac{\pi_\theta(y_w \mid x)}{\pi_{\mathrm{ref}}(y_w \mid x)}} - \htmlClass{nb-mc2}{\beta \log \tfrac{\pi_\theta(y_l \mid x)}{\pi_{\mathrm{ref}}(y_l \mid x)}} \Bigr) \Bigr]
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\beta \log \tfrac{\pi_\theta(y_w \mid x)}{\pi_{\mathrm{ref}}(y_w \mid x)}</span
+              ><span>The implicit reward of the preferred completion: the policy's log-probability ratio against the reference, scaled by <span class="nb-math-in">\beta</span>.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\beta \log \tfrac{\pi_\theta(y_l \mid x)}{\pi_{\mathrm{ref}}(y_l \mid x)}</span
+              ><span>The same implicit reward for the dispreferred completion.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\log \sigma</span
+              ><span>The Bradley-Terry logistic loss, unchanged from the reward model: push the reward gap so the preferred completion wins.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">(x,\,y_w,\,y_l)\sim\mathcal{D}</span
+              ><span>One prompt with a preferred and a dispreferred completion, the same preference data RLHF trains its reward model on.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The whole method: a binary-cross-entropy loss on preference pairs, read as a classifier over the policy's own implicit reward.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The gradient says what the loss does to the model. Writing <span class="nb-math-in">\hat{r}_\theta(x,y) = \beta \log \tfrac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}</span> for the implicit reward, the update raises the log-probability of the preferred completion and lowers that of the dispreferred one, weighted by how badly the current implicit reward orders the pair.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \nabla_\theta \mathcal{L}_{\mathrm{DPO}} = -\beta\, \mathbb{E}_{(x,y_w,y_l) \sim \mathcal{D}} \Bigl[\, \underbrace{\sigma\bigl( \hat{r}_\theta(x,y_l) - \hat{r}_\theta(x,y_w) \bigr)}_{\text{weight, large when the ordering is wrong}} \bigl( \nabla_\theta \log \pi(y_w \mid x) - \nabla_\theta \log \pi(y_l \mid x) \bigr) \Bigr]
+          </div>
+          <figcaption>
+            The per-example weight is the probability the implicit reward assigns to the wrong ordering; it is near one when the model already ranks the dispreferred completion higher, and near zero once the pair is ordered correctly.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          That weight is not cosmetic. Drop it and the objective becomes a naive ratio that the paper reports drives the model to degenerate, an ablation the authors keep in the appendix because the failure is easy to reach.<sup class="nb-cite"><a href="#s1">1</a></sup> DPO is a classifier that spends gradient in proportion to how wrongly the policy, read as a reward model, currently ranks the pair in front of it.
+        </p>
+        <div class="nb-pull"><p>The reward model the pipeline trains was already recoverable from the policy it was training.</p></div>
+      </section>
+
+      <section data-nb-section="what-experiments-settle" id="what-experiments-settle">
+        <h2>What the experiments actually settle</h2>
+        <p>
+          A derivation that reaches the same objective on paper still has to be shown reaching comparable policies in practice. The paper's cleanest test is the one where the reward is known exactly. In controlled sentiment generation on IMDb prefixes, the preference pairs come from a pre-trained sentiment classifier. The ground-truth reward is therefore available, and the trade-off between reward and KL divergence to the reference is exactly computable. Plotting expected reward against KL, DPO's frontier sits above every baseline at every KL value, including PPO and a PPO variant given access to the ground-truth reward.<sup class="nb-cite"><a href="#s1">1</a></sup> For the same drift from the reference model, DPO buys more of what the objective was asking for.
+        </p>
+        <figure class="nb-figure">
+          <img src="direct-preference-optimization/asset-2.png" alt="Scatter plot titled IMDb Sentiment Generation. The x-axis is KL divergence from the reference policy, from 0 to 20; the y-axis is reward, from about 0.4 to 1.0. The DPO points form the highest frontier, reaching reward near 1.0 at low KL, above PPO, PPO-GT, Unlikelihood, and Preferred-FT, which all sit lower for the same KL." />
+          <figcaption>
+            Fig. 2 · On IMDb sentiment control, where the reward is a known classifier, DPO attains the highest expected reward at every level of KL divergence, above both PPO and the ground-truth-reward PPO variant.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Figure 2 (left), §6.1"
+                data-nb-url="https://arxiv.org/abs/2305.18290"
+                data-nb-note="The reward-vs-KL frontier the sentiment claim turns on; clean because the ground-truth reward is a classifier."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          On tasks where the reward is not known, the paper evaluates win rates judged by GPT-4. Summarizing Reddit TL;DR posts with a GPT-J policy, DPO peaks near a 61% win rate against the human reference summaries at sampling temperature zero. That beats PPO's 57% best case, and it holds as the temperature rises while PPO collapses toward the base model.<sup class="nb-cite"><a href="#s1">1</a></sup> The comparison the reader can hold is temperature robustness. PPO's advantage lives at one temperature and evaporates off it; DPO's does not.
+        </p>
+        <figure class="nb-figure">
+          <img src="direct-preference-optimization/asset-3.png" alt="Line plot titled TL;DR Summarization Win Rate vs Reference. The x-axis is sampling temperature from 0 to 1; the y-axis is win rate. DPO starts near 0.61 and declines gently to about 0.4. PPO starts near 0.57 at temperature 0 and falls steeply to below 0.1 at temperature 1. A dashed line marks a win rate of 0.5." />
+          <figcaption>
+            Fig. 3 · On TL;DR summarization, DPO's GPT-4 win rate peaks near 61% and stays high across sampling temperatures, while PPO peaks near 57% at temperature zero and falls off sharply as temperature rises.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Figure 2 (right), §6.2"
+                data-nb-url="https://arxiv.org/abs/2305.18290"
+                data-nb-note="Settles both the matches-or-beats-PPO claim and the temperature-robustness claim on summarization."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Single-turn dialogue on the Anthropic Helpful-Harmless data uses a Pythia-2.8B policy, with the win rate measured against the dataset's own preferred responses. DPO starts below that chosen-response baseline at the lowest temperature and rises above it as temperature climbs, overtaking the compute-heavy Best-of-128 reference at the top of the range. Among the methods trained here, the paper reports DPO as the only one to improve over the chosen responses.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <img src="direct-preference-optimization/asset-4.png" alt="Line plot titled Anthropic-HH Dialogue Win Rate vs Chosen. The x-axis is sampling temperature from 0.25 to 1; the y-axis is win rate. DPO rises from about 0.37 to above 0.6, crossing above a dashed 0.5 baseline line and above Best of 128, which stays near 0.55. Preferred-FT sits near 0.3 to 0.43 and Pythia-2.8B near 0.16 to 0.25." />
+          <figcaption>
+            Fig. 4 · On Anthropic-HH one-step dialogue, DPO's win rate against the dataset's preferred responses rises from below the chosen-response line at low temperature to above it as temperature climbs, ending above the compute-heavy Best-of-128 reference.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Figure 3 (left), §6.2"
+                data-nb-url="https://arxiv.org/abs/2305.18290"
+                data-nb-note="The dialogue win-rate result; the paper reports DPO as the only trained method to improve over the chosen responses."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The paper also runs one out-of-distribution test, and it is the result to watch, because it is where the later record disagrees. Policies trained on Reddit TL;DR are evaluated zero-transfer on CNN/DailyMail news articles, and DPO's GPT-4 win rate against the ground-truth summaries lands above PPO's at both temperatures tested.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Out-of-distribution win rate against ground-truth summaries: TL;DR-trained policies evaluated zero-transfer on CNN/DailyMail news.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>temp 0</th>
+              <th>temp 0.25</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">DPO</span></td>
+              <td>0.36</td>
+              <td>0.31</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">PPO</span></td>
+              <td>0.26</td>
+              <td>0.23</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The authors read this table cautiously, calling it an initial result that suggests DPO can generalize similarly to PPO-based models and asking for more comprehensive study.<sup class="nb-cite"><a href="#s1">1</a></sup> It is one transfer of a single trained pair of policies.
+        </p>
+      </section>
+
+      <section data-nb-section="later-record" id="later-record">
+        <h2>The theorem held; the practice got contested</h2>
+        <p>
+          One distinction has to stay fixed through everything that follows. DPO's central result is that its loss optimizes the same KL-constrained objective as RLHF, and no later work overturns it. Nobody has shown the objective-level equivalence is wrong. What the record after the paper contests is narrower and more consequential for a practitioner: what offline DPO, trained on a fixed preference set with no on-policy sampling, actually reaches compared to on-policy RLHF.
+        </p>
+        <p>
+          The sharpest disagreement is with the table above. Xu et al. built a comprehensive study to answer the question directly. They argue that the set of policies DPO can reach is a superset of what PPO can reach, and that the extra ones include out-of-distribution exploitative solutions. DPO is thus more exposed than PPO to the shift between the preference data and the model's own outputs. With careful tuning their PPO surpasses DPO across the benchmarks they test, reaching state-of-the-art on a hard code-competition suite.<sup class="nb-cite"><a href="#s5">5</a></sup> This does not refute the paper's table so much as outweigh it. It is a single zero-transfer test read one way, against a broader and harder suite with heavy PPO tuning read the other. DPO's own out-of-distribution evidence was thin, and the fuller test that followed reads the shift as a liability where the preliminary result had read it as a strength.
+        </p>
+        <p>
+          The generation gap is not confined to one benchmark. Tang et al. find a clear and persistent advantage for online alignment over offline methods such as standard DPO at matched budgets. Offline-trained policies get good at classifying pairs but worse at generating. The gap survives both contrastive and non-contrastive losses, and it does not close by scaling the policy network.<sup class="nb-cite"><a href="#s6">6</a></sup> Their result points at on-policy sampling itself, the very loop DPO removed, as the active ingredient rather than the form of the loss.
+        </p>
+        <p>
+          Two analyses locate failure modes inside the offline loss. Azar et al. show that DPO's substitution of pointwise Bradley-Terry rewards for pairwise preferences can hollow out the KL regularization. When the empirical preference between two completions is near-deterministic, the logistic transform drives the target reward gap toward infinity. The constraint then stops binding regardless of <span class="nb-math-in">\beta</span>, and the policy collapses toward determinism. Their IPO loss regularizes the policy log-ratio toward a bounded margin so the KL term keeps binding.<sup class="nb-cite"><a href="#s7">7</a></sup> Pal et al. show the gradient's stated behavior can fail on the preferred side. The loss depends only on the relative reward margin, so it can be reduced by pushing the preferred completion's log-probability down, as long as the dispreferred one falls faster. DPO can therefore lower the likelihood of the very response it prefers, most acutely when the two completions differ by a small edit distance. Their DPO-Positive term penalizes the preferred log-probability for dropping below its reference value. It trained the Smaug-72B model, reported as the first open model above 80% average on the Open LLM Leaderboard.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>The theorem: DPO's loss optimizes the same KL-constrained objective as RLHF, uncontested since publication.<sup class="nb-cite"><a href="#s1">1</a></sup></li>
+              <li>The clean sentiment result, where a known reward makes the reward-vs-KL frontier exact and DPO dominates PPO.<sup class="nb-cite"><a href="#s1">1</a></sup></li>
+              <li>Matching or beating PPO on the paper's summarization and dialogue tasks, at a fraction of the implementation cost.<sup class="nb-cite"><a href="#s1">1</a></sup></li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>Offline DPO trails on-policy alignment at matched budgets, and scaling the policy does not close the gap.<sup class="nb-cite"><a href="#s6">6</a></sup></li>
+              <li>Its reachable policies include out-of-distribution exploitative ones; tuned PPO beat DPO in the fuller comparison.<sup class="nb-cite"><a href="#s5">5</a></sup></li>
+              <li>Near-deterministic preferences can void the KL constraint, and the loss can drive down the preferred response's likelihood.<sup class="nb-cite"><a href="#s7">7</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup></li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The derivation is correct and its central claim stands. A language model trained on preference pairs carries an implicit reward, so the RLHF objective can be reached without a reward network or an RL loop. The follow-up record establishes something the theorem does not cover. Reaching the objective's optimum on paper and reaching a good policy from a fixed offline dataset are different achievements, and the difference is on-policy sampling. DPO earned its place as a default because the simpler half of that trade is often enough. The case for keeping the RL loop is now specific and evidenced, in the measured out-of-distribution and generation-quality gaps.<sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2305.18290"
+              >arXiv · Rafailov et al., Direct Preference Optimization: Your Language Model is Secretly a Reward Model (NeurIPS 2023)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2203.02155"
+              >arXiv · Ouyang et al., Training language models to follow instructions with human feedback (2022)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1707.06347"
+              >arXiv · Schulman et al., Proximal Policy Optimization Algorithms (2017)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://doi.org/10.2307/2334029"
+              >Biometrika · Bradley &amp; Terry, Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons (1952)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2404.10719"
+              >arXiv · Xu et al., Is DPO Superior to PPO for LLM Alignment? A Comprehensive Study (ICML 2024)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2405.08448"
+              >arXiv · Tang et al., Understanding the performance gap between online and offline alignment algorithms (2024)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2310.12036"
+              >arXiv · Azar et al., A General Theoretical Paradigm to Understand Learning from Human Preferences (2023)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2402.13228"
+              >arXiv · Pal et al., Smaug: Fixing Failure Modes of Preference Optimisation with DPO-Positive (2024)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
