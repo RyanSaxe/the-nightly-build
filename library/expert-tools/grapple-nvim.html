@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grapple.nvim tags a file by name, and the name points to a different file on every branch · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "grapple-nvim",
+        "template": "article",
+        "title": "Grapple.nvim tags a file by name, and the name points to a different file on every branch",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-21",
+        "tags": ["neovim", "developer-tools", "navigation", "grapple-nvim"],
+        "sources": 10,
+        "words": 1621,
+        "reading_minutes": 7,
+        "dek": "The git_branch scope gives each branch its own tag file on disk, so checking out another branch loads a different set of names under keymaps that never change.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">
+          Grapple.nvim tags a file by name, and the name points to a
+          different file on every branch
+        </h1>
+        <p class="nb-dekline">
+          The git_branch scope gives each branch its own tag file on disk, so
+          checking out another branch loads a different set of names under
+          keymaps that never change.
+        </p>
+        <div class="nb-byline">
+          <span>7 min read</span><span>2026-08-21</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A session touches five files, and none of them have a name</h2>
+        <p>
+          A ticket touches a handful of files: the handler, its test, a
+          migration, a config flag, maybe a doc. By the third hour you're
+          moving between them by feel, not by name. Neovim gives three
+          habits for this. Cycle the buffer list and recognize a file by its
+          tail end. Drop a mark and hope you remember which letter you used.
+          Type enough of a path into <code>:b</code> and trust fuzzy
+          matching to guess right. None of the three remembers what you
+          called a file, because none of them let you call it anything.
+        </p>
+        <p>
+          Grapple.nvim adds a fourth habit. Tag a file, give the tag a name,
+          and ask for that name back later. A tag is a persistent pointer to
+          a file path, saved with the cursor position, so a later jump lands
+          on the line you left rather than just the file.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The catch is that "later" is scoped. Grapple decides which project
+          a name belongs to, and, if you tell it to, which git branch.
+          Switch branches, and the same name can resolve to a different
+          file.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="how-a-scope-decides-what-a-name-means"
+        id="how-a-scope-decides-what-a-name-means"
+      >
+        <h2>The project a tag belongs to is whatever a resolver returns</h2>
+        <p>
+          Underneath the tagging, a scope is nothing more than a function.
+          Each one defines a resolver that returns an identifier and a path,
+          or returns nothing at all, in which case Grapple falls through to
+          a fallback scope instead of erroring.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Grapple ships six of them out of the box.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          <code>global</code> puts every tag in one namespace and ignores
+          the project entirely. <code>static</code> and <code>cwd</code> key
+          off Neovim's working directory, one frozen at startup and one that
+          re-resolves on every <code>DirChanged</code>. <code>lsp</code>
+          keys off the attached language server's root directory, falling
+          back to <code>git</code> if nothing is attached; <code>git</code>
+          keys off the repository root, falling back to <code>cwd</code> if
+          there isn't one.
+        </p>
+        <p>
+          The scope that does the most work is <code>git_branch</code>. Its
+          resolver walks up from the current buffer for a
+          <code>.git</code> directory. Then it shells out to read the
+          current branch and folds the two together into one identifier:
+          root path and branch name, joined with a colon.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          The same repository root on <code>main</code> and on
+          <code>feature/rate-limit</code> produces two different
+          identifiers, and Grapple keeps a separate set of tags for each
+          one. Neither the <code>git</code> nor the <code>git_branch</code>
+          resolver runs on every keystroke. Both cache their result and only
+          re-resolve on buffer entry or focus, debounced by a second.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Switching windows doesn't mean shelling out to git each time.
+        </p>
+        <p>
+          Nothing in that design hardcodes a project to mean a git
+          repository. A resolver is any function with that shape. The
+          README's own example keys a custom scope to
+          <code>$HOME</code> in four lines,<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          and the same pattern works for a monorepo package root, or a
+          ticket number pulled out of a branch name.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="tag-by-name-jump-by-name"
+        id="tag-by-name-jump-by-name"
+      >
+        <h2>
+          One config: tag by name, jump by name, and the branch decides
+          which file answers
+        </h2>
+        <p>
+          The scope choice only matters once tagging and jumping go through
+          a name instead of a position. Here is a complete lazy.nvim spec
+          that does both, using the <code>git_branch</code> scope so the
+          proof below actually has something to switch:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">lua/plugins/grapple.lua</span
+            ><span>LUA</span>
+          </div>
+          <pre><code class="language-lua">return {
+  "cbochs/grapple.nvim",
+  event = { "BufReadPost", "BufNewFile" },
+  cmd = "Grapple",
+  opts = {
+    scope = "git_branch",
+  },
+  keys = {
+    {
+      "&lt;leader&gt;mm",
+      function()
+        vim.ui.input({ prompt = "Tag name: " }, function(name)
+          if name and name ~= "" then
+            require("grapple").tag({ name = name })
+          end
+        end)
+      end,
+      desc = "Grapple: tag current file with a name",
+    },
+    {
+      "&lt;leader&gt;mj",
+      function()
+        vim.ui.input({ prompt = "Jump to: " }, function(name)
+          if name and name ~= "" then
+            require("grapple").select({ name = name })
+          end
+        end)
+      end,
+      desc = "Grapple: jump to a name",
+    },
+    { "&lt;leader&gt;mt", "&lt;cmd&gt;Grapple toggle_tags&lt;cr&gt;", desc = "Grapple: list tags for this scope" },
+  },
+}</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · <code>Grapple.tag</code> and
+            <code>Grapple.select</code> both accept a <code>name</code>
+            field; the scope that resolves at the moment of the call decides
+            which tag set the name looks up in.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Run that on two branches of the same repository and the same name
+          stops meaning one file. On <code>feature/rate-limit</code>, open
+          <code>internal/limiter.go</code> and press
+          <code>&lt;leader&gt;mm</code>, typing <code>hot</code> as the
+          name. Check out <code>main</code>, where
+          <code>internal/limiter.go</code> may not even exist yet, open
+          <code>cmd/server/main.go</code> instead, and tag it
+          <code>hot</code> too. <code>&lt;leader&gt;mj hot</code> now opens
+          a different file depending on which branch was checked out when
+          you pressed it. The keymap never changed. The scope did.
+        </p>
+        <p>
+          Because every tag mutation writes straight to disk,<sup
+            class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          <code>hot</code> survives quitting Neovim entirely. Reopen the
+          repository on <code>feature/rate-limit</code> next week and
+          <code>&lt;leader&gt;mj hot</code> still opens
+          <code>internal/limiter.go</code>, cursor on the line you left.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="a-name-outlives-its-position"
+        id="a-name-outlives-its-position"
+      >
+        <h2>Deleting a tag never renumbers the names around it</h2>
+        <p>
+          Grapple stores tags in an ordered list, the same list a
+          harpoon-style keymap would iterate by number. It also keeps a
+          second lookup table keyed by name.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Selecting by index trusts the list's current order:
+          <code>select({ index = 2 })</code> returns whatever tag happens to
+          sit second right now. Selecting by name skips the list and goes
+          straight to the name table, which never changes shape just
+          because a different tag was removed.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Delete the tag that used to occupy the first slot and
+          <code>select({ index = 1 })</code> now returns what used to be
+          second. <code>select({ name = "hot" })</code> still returns
+          <code>hot</code>.
+        </p>
+        <p>
+          Harpoon runs on the same list-and-index model, without the second
+          path. Its documented setup wires keys straight to
+          <code>list():select(1)</code> through <code>select(4)</code>,<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          and the list itself can hold any number of entries,<sup
+            class="nb-cite"
+            ><a href="#s5">5</a></sup
+          >
+          but there is no field to address one by. A file's position is its
+          only identity: reorder the list, or drop an entry from the middle
+          of it, and the number that used to mean the test file now means
+          whatever moved into that slot.
+        </p>
+        <p>
+          Native Neovim marks sit further out on that same spectrum. A
+          lowercase mark is local to one buffer. It disappears once that
+          buffer leaves the buffer list. An uppercase mark is a genuine
+          cross-file pointer, written to the <code>'shada'</code> file the
+          same way Grapple writes its own JSON.<sup class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+          Neovim still hands you exactly 26 of them, though, and lets you
+          name each only with a single letter. <code>:b</code> keeps no
+          state of its own at all. Every jump re-derives itself from
+          whatever substring you type against whatever buffers happen to be
+          open in that session.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="old-branches-keep-their-files"
+        id="old-branches-keep-their-files"
+      >
+        <h2>Old branches keep their tag files long after the branch is gone</h2>
+        <p>
+          Every scope Grapple resolves gets its own save file: a JSON blob
+          in Neovim's data directory, named after the scope's identifier and
+          written to disk the moment a tag changes.<sup class="nb-cite"
+            ><a href="#s3">3</a></sup
+          >
+          Switch to the <code>git_branch</code> scope and that identifier is
+          the repository root plus the branch name, so a repository worked
+          across a dozen feature branches accumulates a dozen separate tag
+          files, none of them touching the others.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+        </p>
+        <p>
+          Nothing removes those files when a branch merges and its ref
+          disappears. Grapple ships a <code>prune</code> setting instead,
+          keyed to how long a save file has sat unmodified, defaulting to
+          thirty days,<sup class="nb-cite"><a href="#s2">2</a></sup> but
+          pruning only runs when something calls it. There's no background
+          timer clearing stale branches on its own; leave the default alone
+          and short-lived branches accumulate quietly in Neovim's data
+          directory until a prune runs or someone notices the folder.
+        </p>
+        <p>
+          A second cost lands sooner: only one tag survives per file, per
+          scope. Tag a file a second time under a different name, and
+          Grapple overwrites the name instead of stacking a second entry for
+          the same path.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Coming from harpoon's plain list, where re-adding a file just
+          moves it, that overwrite is the one behavior a new user has to
+          specifically unlearn.
+        </p>
+      </section>
+
+      <section
+        data-nb-section="whether-it-still-gets-fixed"
+        id="whether-it-still-gets-fixed"
+      >
+        <h2>
+          The commits stopped in 2024; the bug reports about newer Neovim
+          did not
+        </h2>
+        <p>
+          The last commit to Grapple's main branch landed on September 29,
+          2024: a documentation regeneration, not a feature.<sup
+            class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          The last pull request the maintainer merged, adding highlight
+          groups for the tag window, landed four months earlier than that,
+          on May 18, 2024.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">23mo</span
+            ><span class="nb-stat-l">SEPT 2024, LAST COMMIT</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">27mo</span
+            ><span class="nb-stat-l">MAY 2024, LAST MERGE</span>
+          </div>
+        </div>
+        <p>
+          The reports keep arriving anyway. In April 2026, a user found that
+          Grapple's deprecated table-form <code>vim.validate</code> call
+          throws warnings under Neovim 0.12, and named the three files
+          responsible.<sup class="nb-cite"><a href="#s9">9</a></sup>
+          A pull request fixing it, tested against Neovim 0.10 through 0.12,
+          has been open since that same day.<sup class="nb-cite"
+            ><a href="#s10">10</a></sup
+          >
+          Neither has drawn a reply from the maintainer.
+        </p>
+        <p>
+          Everything the plugin already does still works, because Neovim's
+          API hasn't broken it yet. The one place it has broken, the
+          <code>vim.validate</code> warning, has a reviewed, tested fix that
+          has simply gone unmerged for months. A team adopting Grapple now
+          is adopting the repository roughly as it stood in 2024, plus
+          whatever patches Neovim's own changes eventually force someone
+          other than the maintainer to carry.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/cbochs/grapple.nvim/blob/main/README.md"
+              >cbochs/grapple.nvim · README.md</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/cbochs/grapple.nvim/blob/main/lua/grapple/settings.lua"
+              >cbochs/grapple.nvim · lua/grapple/settings.lua (default scope
+              resolvers)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/cbochs/grapple.nvim/blob/main/lua/grapple/state.lua"
+              >cbochs/grapple.nvim · lua/grapple/state.lua (per-scope JSON
+              persistence)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/cbochs/grapple.nvim/blob/main/lua/grapple/tag_container.lua"
+              >cbochs/grapple.nvim · lua/grapple/tag_container.lua (name and
+              index lookup)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/ThePrimeagen/harpoon/blob/harpoon2/README.md"
+              >ThePrimeagen/harpoon · README.md (harpoon2 branch)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://neovim.io/doc/user/motion.html#mark-motions"
+              >Neovim documentation · motion.txt, mark-motions</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/cbochs/grapple.nvim/commit/b41ddfc1c39f87f3d1799b99c2f0f1daa524c5f7"
+              >cbochs/grapple.nvim · commit b41ddfc, September 29, 2024</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/cbochs/grapple.nvim/pull/164"
+              >cbochs/grapple.nvim · pull request #164, merged May 18,
+              2024</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/cbochs/grapple.nvim/issues/197"
+              >cbochs/grapple.nvim · issue #197, opened April 3, 2026</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/cbochs/grapple.nvim/pull/198"
+              >cbochs/grapple.nvim · pull request #198, opened April 3,
+              2026</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
