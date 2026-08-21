@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Did seven data brokers break Maryland's new privacy law? · Unbiased</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "unbiased",
+        "slug": "maryland-data-broker-privacy",
+        "template": "unbiased",
+        "title": "Did seven data brokers break Maryland's new privacy law, or is the law reaching past what they sell?",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-21",
+        "tags": ["privacy", "surveillance", "law", "technology"],
+        "sources": 11,
+        "words": 1871,
+        "reading_minutes": 8,
+        "dek": "A coalition wants Attorney General Anthony Brown to act against Penlink, Flock, Thomson Reuters and four other firms under a statute barely two months old, one whose reach turns on whether a license-plate scan is sensitive location data.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Unbiased</div>
+        <h1 class="nb-title">
+          Did seven data brokers break Maryland's new privacy law, or is the law
+          reaching past what they sell?
+        </h1>
+        <p class="nb-dekline">
+          A coalition wants Attorney General Anthony Brown to act against Penlink,
+          Flock, Thomson Reuters and four other firms under a statute barely two
+          months old, one whose reach turns on whether a license-plate scan is
+          sensitive location data.
+        </p>
+        <div class="nb-byline">
+          <span>8 min read</span><span>2026-08-21</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The definition that decides how far the statute reaches</h2>
+        <p>
+          A privacy coalition told Maryland's attorney general this week that
+          seven companies are selling residents' movements to police departments
+          and to firms that help federal agents find people to deport. The data
+          is granular: where a phone sleeps at night, where a car was parked at
+          noon. Maryland's data-privacy statute, seven weeks on the books,
+          forbids exactly that, the coalition says.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The companies say the statute does not reach what they sell.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          Both readings cannot be right, and nothing in the law's short life has
+          settled which is.
+        </p>
+
+        <p>
+          The complaint runs 29 pages, filed on August 20 with Attorney General
+          Anthony Brown. Georgetown Law's Technology Law Clinic wrote it for the
+          immigrant-rights group We Are CASA and eleven other organizations, among
+          them the Center for Democracy &amp; Technology and the Electronic
+          Privacy Information Center.<sup class="nb-cite"><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s2">2</a></sup>
+          It names seven firms. Penlink sells cell-phone location data through a
+          program called Webloc. Flock Safety, Motorola Solutions, and Insight LPR
+          sell vehicle locations captured by automated license-plate readers.
+          Thomson Reuters and LexisNexis fold such records into the CLEAR and
+          Accurint databases they sell to law enforcement and to Immigration and
+          Customs Enforcement. ThunderCat Technology supplies ICE's investigative
+          arm with taxpayer-identification data.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          ><sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+
+        <table class="nb-table">
+          <caption>
+            What each named firm sells, and the buyer the complaint objects
+            to.<sup class="nb-cite"><a href="#s2">2</a></sup
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Firm</th>
+              <th class="txt">What it sells</th>
+              <th class="txt">Buyer at issue</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Penlink</span></td>
+              <td class="txt">Cell-phone location, via its Webloc program</td>
+              <td class="txt">Police, and buyers tied to immigration work</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Flock Safety</span></td>
+              <td class="txt">Vehicle location from license-plate readers</td>
+              <td class="txt">Police networks</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Motorola</span></td>
+              <td class="txt">Vehicle location from license-plate readers</td>
+              <td class="txt">Police</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Insight LPR</span></td>
+              <td class="txt">Vehicle location from license-plate readers</td>
+              <td class="txt">Police</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Thomson Reuters</span></td>
+              <td class="txt">CLEAR: location plus personal records</td>
+              <td class="txt">Law enforcement and ICE</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">LexisNexis</span></td>
+              <td class="txt">Accurint: aggregated personal records</td>
+              <td class="txt">Law enforcement and ICE</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">ThunderCat</span></td>
+              <td class="txt">Taxpayer-identification (ITIN) data</td>
+              <td class="txt">Homeland Security Investigations, part of ICE</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          The law is the Maryland Online Data Privacy Act, amended this year by
+          House Bill 711 and in force since July 1.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          Two of its features make the complaint possible. The first is a flat
+          prohibition. A
+          controller &quot;may not&nbsp;... sell sensitive data,&quot; and
+          &quot;sensitive data&quot; includes &quot;precise geolocation
+          data.&quot;<sup class="nb-cite"><a href="#s4">4</a></sup>
+          House Bill 711 rewrote that definition to cover not just a person but
+          &quot;a mobile device, or a vehicle,&quot; each located &quot;within a
+          radius of 1,750 feet.&quot;<sup class="nb-cite"><a href="#s4">4</a></sup>
+          A phone ping and a plate scan both fix a point on a map to within a
+          third of a mile, which is what the definition now describes.
+        </p>
+
+        <p>
+          The second feature is aimed at immigration enforcement by name, a
+          provision no other state's privacy law carries.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          A controller may not &quot;knowingly sell the personal data of a consumer
+          to a&nbsp;... governmental unit that&nbsp;... has&nbsp;... supported
+          civil immigration enforcement through the provision of personnel or
+          material resources.&quot;<sup class="nb-cite"><a href="#s4">4</a></sup
+          ><sup class="nb-cite"><a href="#s6">6</a></sup>
+          The bar looks back six months, and it reaches a unit that merely
+          supported such enforcement, not only one that carried it out.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          A controller also may not sell to a buyer it knows &quot;seeks to use
+          the personal data for the purpose of immigration enforcement.&quot;<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          A separate rule governs the broker's usual answer, that it merely obeys
+          legal process. The Act lets a controller comply with a subpoena or
+          summons &quot;except to the extent&quot; the demand &quot;pertains
+          solely to immigration enforcement.&quot;<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          What lifts the bar is narrower: &quot;a valid warrant issued by a
+          federal or State court that particularly describes the personal data to
+          be accessed.&quot;<sup class="nb-cite"><a href="#s4">4</a></sup>
+          The same warrant-not-subpoena rule carries over to motor-vehicle records
+          held by the state.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+
+        <div class="nb-note">
+          <span class="nb-note-label">The rule in one line</span>
+          <p>
+            For data headed to immigration enforcement, a subpoena or an
+            administrative summons is not enough. Only a judge's warrant that
+            names the specific data will do.<sup class="nb-cite"
+              ><a href="#s4">4</a></sup
+            ><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </p>
+        </div>
+
+        <p>
+          Behind the statutory questions sits a constitutional one. Selling
+          information is not plainly the kind of conduct a state may forbid at
+          will. In 2011 the Supreme Court held that &quot;the creation and
+          dissemination of information are speech for First Amendment
+          purposes,&quot; and struck down a Vermont law that restricted the sale
+          of pharmacy records showing what doctors prescribed.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+          Whether that ruling shelters the sale of location data to a disfavored
+          buyer is the argument each side saves for last.
+        </p>
+
+        <div class="rs-docket">
+          <span class="rs-docket-case">Sorrell v. IMS Health Inc.</span>
+          <span class="rs-docket-court">U.S. Supreme Court · No. 10-779</span>
+          <dl class="rs-docket-grid">
+            <dt>Stage</dt>
+            <dd>Decided 6-3, June 2011; the Vermont statute struck down</dd>
+            <dt>Question</dt>
+            <dd>
+              May a state restrict the sale and use of truthful data as a limit
+              on commercial speech?
+            </dd>
+            <dt>Stakes</dt>
+            <dd>
+              Whether laws that limit who may buy data face heightened First
+              Amendment scrutiny
+            </dd>
+          </dl>
+        </div>
+
+        <p>
+          The attorney general's first decision is about neither immigration nor
+          the First Amendment. It is whether a plate scan and a phone ping are the
+          &quot;sensitive data&quot; the Act protects or the &quot;publicly
+          available information&quot; it exempts.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Most of the rest follows from that one call, and it is where the two
+          positions first divide.
+        </p>
+      </section>
+
+      <div class="nb-divide">
+        <section
+          class="nb-side nb-side-left"
+          data-nb-section="the-sale-is-the-violation"
+          id="the-sale-is-the-violation"
+        >
+          <h3 class="nb-side-camp">Selling it is already the violation</h3>
+          <p class="nb-side-thesis">
+            The captured data is sensitive personal data, so selling it is barred
+            on its face; the immigration-buyer rule and the warrant requirement
+            reach these transfers on their own; the attorney general should
+            investigate and enforce.
+          </p>
+          <div class="nb-side-argument">
+            <p>
+              Start with the plainest reading. Precise geolocation is sensitive
+              data, and the Act says a controller may not sell sensitive
+              data.<sup class="nb-cite"><a href="#s4">4</a></sup>
+              That prohibition carries no exception for consent, for a subpoena,
+              or for a warrant. It is a rule about the product, not the
+              process.<sup class="nb-cite"><a href="#s4">4</a></sup>
+              House Bill 711 extended &quot;precise geolocation&quot; to a
+              vehicle's position. So the plate scans that Flock, Motorola, and
+              Insight sell, and the phone locations Penlink sells, enter the
+              protected category the moment they fix a spot to within 1,750
+              feet.<sup class="nb-cite"><a href="#s4">4</a></sup>
+              Outside analysts read the Act the same way, as one that
+              &quot;strictly prohibits the sale&nbsp;... of sensitive
+              data.&quot;<sup class="nb-cite"><a href="#s9">9</a></sup>
+              On this reading the sale is over the line before any question about
+              the buyer arises.
+            </p>
+            <p>
+              The immigration provisions then reach the buyers directly. Selling
+              personal data to a government unit that recently supported civil
+              immigration enforcement is forbidden, and so is selling to any buyer
+              that seeks the data for immigration enforcement.<sup class="nb-cite"
+                ><a href="#s4">4</a></sup
+              >
+              Thomson Reuters' CLEAR and LexisNexis's Accurint already feed ICE,
+              and ThunderCat supplies its investigators with taxpayer data.<sup
+                class="nb-cite"
+                ><a href="#s2">2</a></sup
+              ><sup class="nb-cite"><a href="#s3">3</a></sup>
+              ICE's own planned CLEAR contract, a five-year $125 million deal it
+              later moved to recompete, bundled nationwide vehicle-location tools
+              of just this kind.<sup class="nb-cite"><a href="#s10">10</a></sup>
+              The sales the complaint describes are the sales the text names. The
+              brokers' standard answer, that they respond only to lawful process,
+              meets a rule written to defeat it. A subpoena or administrative
+              summons aimed at immigration enforcement does not count, and only a
+              court warrant naming the specific data does.<sup class="nb-cite"
+                ><a href="#s4">4</a></sup
+              >
+              Reviewers of the motor-vehicle provisions read them to reject
+              &quot;detainers or administrative subpoenas&quot; and to require
+              &quot;a warrant signed by a state or federal judge.&quot;<sup
+                class="nb-cite"
+                ><a href="#s7">7</a></sup
+              >
+            </p>
+          </div>
+          <p class="nb-side-champion">
+            <span class="nb-side-outlet">Laura Moy</span>, who directs Georgetown
+            Law's Technology Law Clinic and wrote the complaint, frames the harm
+            as a commercial one. Companies, she says, &quot;must not be allowed to
+            profit off of giving agencies a 'data broker loophole.'&quot;<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            Her clinic built the legal theory the attorney general is now asked to
+            adopt, which gives her the standing of the argument's author.
+          </p>
+        </section>
+
+        <section
+          class="nb-side nb-side-right"
+          data-nb-section="reach-exceeds-the-text"
+          id="reach-exceeds-the-text"
+        >
+          <h3 class="nb-side-camp">
+            The Act does not reach data taken from public view
+          </h3>
+          <p class="nb-side-thesis">
+            Much of this data is publicly available information the Act never
+            covers, and federal law separately authorizes the motor-vehicle
+            disclosures. A ban keyed to who the buyer is then collides with a
+            First Amendment that protects selling truthful information.
+          </p>
+          <div class="nb-side-argument">
+            <p>
+              The Act protects &quot;personal data,&quot; and by its own terms
+              &quot;personal data&quot; does not include &quot;publicly available
+              information.&quot;<sup class="nb-cite"><a href="#s4">4</a></sup>
+              A license plate sits in public view, bolted to a car on a public
+              road. A fixed camera that photographs it records what any passerby
+              could see. If a plate scan is publicly available information, its
+              sale sits outside the sensitive-data ban, because it never enters
+              the defined category at all.<sup class="nb-cite"
+                ><a href="#s4">4</a></sup
+              >
+              Penlink makes the parallel claim for its own product, telling NPR
+              that it &quot;does not process or sell precise location data of
+              Marylanders in accordance with Maryland privacy law.&quot;<sup
+                class="nb-cite"
+                ><a href="#s2">2</a></sup
+              >
+              Its position is that Webloc's data is not the covered category, not
+              that selling covered data would be fine.
+            </p>
+            <p>
+              Federal law complicates the motor-vehicle piece. The Driver's
+              Privacy Protection Act bars a state motor-vehicle department from
+              releasing a driver's personal information. But it permits release
+              &quot;for use by any government agency, including any court or law
+              enforcement agency, in carrying out its functions.&quot;<sup
+                class="nb-cite"
+                ><a href="#s11">11</a></sup
+              >
+              Maryland's statute in turn exempts data disclosed &quot;to the
+              extent necessary to comply as required by&quot; that federal
+              law.<sup class="nb-cite"><a href="#s4">4</a></sup>
+              Where Congress has authorized a disclosure to law enforcement, a
+              state ban on the same disclosure invites a preemption fight, and the
+              defense can argue the records fall in the exempted channel rather
+              than the prohibited one.<sup class="nb-cite"
+                ><a href="#s11">11</a></sup
+              >
+            </p>
+            <p>
+              The constitutional argument cuts deepest at the immigration-buyer
+              rule. That rule does not forbid collecting the data or selling it
+              generally. It forbids selling to one class of buyer, defined by what
+              the buyer does. Sorrell struck a Vermont law for imposing
+              &quot;content- and speaker-based burdens on protected
+              expression,&quot; and subjected it to &quot;heightened judicial
+              scrutiny.&quot;<sup class="nb-cite"><a href="#s8">8</a></sup>
+              A ban on selling truthful location data to agencies that support
+              immigration enforcement draws its line by the buyer's identity and
+              purpose, the speaker-based kind Sorrell viewed with suspicion.
+              Whether Maryland's interest in shielding immigrants clears that
+              scrutiny is unsettled, and the defense need only raise the doubt to
+              slow an enforcement action.<sup class="nb-cite"
+                ><a href="#s8">8</a></sup
+              >
+            </p>
+          </div>
+          <p class="nb-side-champion">
+            <span class="nb-side-outlet">Penlink</span>, one of the named brokers
+            and the only one selling phone-derived rather than plate-derived
+            location, denies the premise. The allegations &quot;are false,&quot;
+            it told NPR, because it does not sell the &quot;precise location data
+            of Marylanders&quot; the law reaches.<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            Thomson Reuters says it is &quot;confident&quot; it complies with
+            &quot;all applicable laws.&quot;<sup class="nb-cite"
+              ><a href="#s2">2</a></sup
+            >
+            As the firms most directly accused, they hold that the statute, read
+            correctly, leaves their products alone.
+          </p>
+        </section>
+      </div>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://wearecasa.org/coalition-files-formal-request-with-maryland-attorney-general-to-investigate-data-brokers-for-violating-state-privacy-laws/"
+              >We Are CASA · Coalition Files Formal Request with Maryland Attorney
+              General to Investigate Data Brokers</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.npr.org/2026/08/20/nx-s1-5938822/maryland-privacy-data-brokers"
+              >NPR · Privacy advocates call on Maryland to investigate data
+              brokers</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.lawnext.com/2026/04/the-legal-tech-giants-powering-ice-part-1-how-thomson-reuters-and-lexisnexis-helped-support-americas-immigration-surveillance-machine.html"
+              >LawSites · The Legal Tech Giants Powering ICE, Part 1: Thomson
+              Reuters and LexisNexis</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://mgaleg.maryland.gov/2026RS/bills/hb/hb0711t.pdf"
+              >Maryland General Assembly · House Bill 711 (2026), enacted text
+              (Data Privacy Act), amending the Commercial Law Article</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://mgaleg.maryland.gov/mgawebsite/Legislation/Details/hb0711?ys=2026RS"
+              >Maryland General Assembly · House Bill 711 (2026) legislative
+              record (sponsors, votes, effective July 1, 2026)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.fisherphillips.com/en/insights/insights/marylands-new-immigration-related-consumer-privacy-provisions"
+              >Fisher Phillips · Maryland's New Immigration-Related Consumer
+              Privacy Provisions</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://stateofsurveillance.org/news/maryland-data-privacy-act-hb711-ice-immigration-enforcement-database-2026/"
+              >State of Surveillance · What HB 711 Actually Does</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.law.cornell.edu/supct/html/10-779.ZS.html"
+              >Sorrell v. IMS Health Inc., 564 U.S. 552 (2011) · Cornell Legal
+              Information Institute (syllabus)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.cooley.com/news/insight/2025/2025-09-09-marylands-unique-state-privacy-law-takes-effect-october-1--what-you-should-know"
+              >Cooley LLP · Maryland's Unique State Privacy Law Takes Effect
+              October 1</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.biometricupdate.com/202608/ice-withdraws-125m-sole-source-thomson-reuters-surveillance-data-deal"
+              >Biometric Update · ICE withdraws $125M sole-source Thomson Reuters
+              surveillance data deal</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.law.cornell.edu/uscode/text/18/2721"
+              >Driver's Privacy Protection Act, 18 U.S.C. § 2721 · Cornell Legal
+              Information Institute</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
