@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mamba matches the Transformer with a state that never grows · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "mamba",
+        "template": "paper",
+        "title": "Mamba matches the Transformer with a state that never grows",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-28",
+        "tags": ["state-space-models", "mamba", "sequence-modeling", "efficiency", "recurrence"],
+        "sources": 8,
+        "words": 3375,
+        "reading_minutes": 15,
+        "dek": "Letting a linear-time recurrence change its parameters with each token is what finally closed the gap to attention on language, and the same fixed-size state that keeps it cheap is where it still falls short of what a growing cache can recall.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Mamba matches the Transformer with a state that never grows</h1>
+        <p class="nb-dekline">
+          Letting a linear-time recurrence change its parameters with each token
+          is what finally closed the gap to attention on language, and the same
+          fixed-size state that keeps it cheap is where it still falls short of
+          what a growing cache can recall.
+        </p>
+        <div class="nb-byline">
+          <span>15 min read</span><span>2026-08-28</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">
+            Mamba: Linear-Time Sequence Modeling with Selective State Spaces
+          </p>
+          <p class="nb-paper-meta">
+            Albert Gu, Tri Dao · arXiv:2312.00752 (v2) · 2023
+          </p>
+          <a class="nb-paper-link" href="https://arxiv.org/abs/2312.00752"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            Foundation models, now powering most of the exciting applications in
+            deep learning, are almost universally based on the Transformer
+            architecture and its core attention module. Many subquadratic-time
+            architectures such as linear attention, gated convolution and
+            recurrent models, and structured state space models (SSMs) have been
+            developed to address Transformers' computational inefficiency on long
+            sequences, but they have not performed as well as attention on
+            important modalities such as language. We identify that a key
+            weakness of such models is their inability to perform content-based
+            reasoning, and make several improvements. First, simply letting the
+            SSM parameters be functions of the input addresses their weakness
+            with discrete modalities, allowing the model to selectively propagate
+            or forget information along the sequence length dimension depending on
+            the current token. Second, even though this change prevents the use
+            of efficient convolutions, we design a hardware-aware parallel
+            algorithm in recurrent mode. We integrate these selective SSMs into a
+            simplified end-to-end neural network architecture without attention or
+            even MLP blocks (Mamba). Mamba enjoys fast inference (5x higher
+            throughput than Transformers) and linear scaling in sequence length,
+            and its performance improves on real data up to million-length
+            sequences. As a general sequence model backbone, Mamba achieves
+            state-of-the-art performance across several modalities such as
+            language, audio, and genomics. On language modeling, our Mamba-3B
+            model outperforms Transformers of the same size and matches
+            Transformers twice its size, both in pretraining and downstream
+            evaluation.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Where the efficient models kept losing</h2>
+        <p>
+          A state-space model is a linear recurrence borrowed from control
+          theory. It carries a hidden state
+          <span class="nb-math-in">h</span> through the sequence, updates it one
+          step at a time from the input, and reads an output off it. Written that
+          way it costs one fixed-size update per token, linear in the sequence
+          length and constant in memory, which is exactly the budget attention
+          spends past. The trouble is that the cheap version had never written as
+          good a language model.
+        </p>
+        <p>
+          It is worth being precise about what it was losing on. Across a suite
+          of efficient attention-free architectures, gated convolutions and their
+          relatives, the perplexity gap to attention on the Pile runs as high as
+          2.1. Roughly 82 percent of that gap is one skill: associative recall,
+          retrieving something the text mentioned earlier. Attention is
+          extravagant at recall for the parameters it spends, so much so that a
+          70-million-parameter attention model beats a 1.4-billion-parameter
+          gated-convolution model at it.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/2312.04927"
+              data-nb-note="Arora et al. (Zoology): up to 2.1 Pile perplexity gap, 82% attributable to associative recall; a 70M attention model beats a 1.4B gated-convolution model on recall. Tested pre-Mamba gated-convolution models, so this frames the gap rather than measuring Mamba."
+              >2</a
+            ></sup
+          >
+          Those tested models predate Mamba, so the number frames the problem
+          rather than grading Mamba on it. It names the thing the efficient
+          models could not do: read their own context.
+        </p>
+        <p>
+          Mamba's diagnosis is that the older state-space models are stuck
+          because their update is the same at every step. A recurrence with fixed
+          weights cannot look at the token in front of it and decide what to keep
+          and what to discard. The paper's fix, stated in one line, is to let the
+          parameters of the recurrence be functions of the input.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Abstract; §3.1"
+              data-nb-url="https://arxiv.org/abs/2312.00752"
+              data-nb-note="Diagnosis: prior SSMs cannot do content-based reasoning because their dynamics are input-independent; the fix is to make the SSM parameters functions of the input."
+              >1</a
+            ></sup
+          >
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">In plain language</span>
+          <p>
+            Give a linear-time recurrence the ability to change its own update
+            from one token to the next, and it can finally choose what to
+            remember. That single change is what lets a model with no attention
+            keep pace with one that has it.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section data-nb-section="the-recurrence" id="the-recurrence">
+        <h2>The recurrence a state-space model runs</h2>
+        <p>
+          Start with the continuous form the structured state-space line
+          inherits. A one-dimensional input signal
+          <span class="nb-math-in">x(t)</span> drives a hidden state
+          <span class="nb-math-in">h(t)</span> of size
+          <span class="nb-math-in">N</span> through a linear differential
+          equation, and the output <span class="nb-math-in">y(t)</span> is a
+          linear readout of the state.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            h'(t) = \mathbf{A}\,h(t) + \mathbf{B}\,x(t), \qquad y(t) =
+            \mathbf{C}\,h(t)
+          </div>
+        </figure>
+        <p>
+          <span class="nb-math-in">\mathbf{A}</span> is
+          <span class="nb-math-in">N \times N</span> and governs how the state
+          evolves on its own; <span class="nb-math-in">\mathbf{B}</span> writes
+          the input into the state; <span class="nb-math-in">\mathbf{C}</span>
+          reads the state out.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§2, Eq. 1a-1b"
+              data-nb-url="https://arxiv.org/abs/2312.00752"
+              data-nb-note="Continuous SSM: h'(t)=Ah(t)+Bx(t), y(t)=Ch(t); A is the N-by-N state matrix, B input map, C output map."
+              >1</a
+            ></sup
+          >
+          A network does not run in continuous time, so the model is discretized.
+          A step size <span class="nb-math-in">\Delta</span> turns the continuous
+          pair <span class="nb-math-in">(\mathbf{A}, \mathbf{B})</span> into a
+          discrete pair
+          <span class="nb-math-in">(\bar{\mathbf{A}}, \bar{\mathbf{B}})</span> by
+          the zero-order-hold rule, which assumes the input is held constant
+          across each step.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \bar{\mathbf{A}} = \exp(\Delta \mathbf{A}), \qquad \bar{\mathbf{B}} =
+            (\Delta \mathbf{A})^{-1}\!\left(\exp(\Delta \mathbf{A}) -
+            \mathbf{I}\right)\!\cdot \Delta \mathbf{B}
+          </div>
+          <figcaption>
+            The zero-order-hold discretization: the step size
+            <span class="nb-math-in">\Delta</span> sets how much of the
+            continuous dynamics one token advances.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="§2, Eq. 4"
+                data-nb-url="https://arxiv.org/abs/2312.00752"
+                data-nb-note="ZOH discretization: Abar=exp(Delta A), Bbar=(Delta A)^{-1}(exp(Delta A)-I) Delta B. Delta is the step size."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          With the discrete pair in hand the model is a plain recurrence: a
+          multiply-add per token, carrying the state forward.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            h_t = \bar{\mathbf{A}}\,h_{t-1} + \bar{\mathbf{B}}\,x_t, \qquad y_t =
+            \mathbf{C}\,h_t
+          </div>
+        </figure>
+        <p>
+          This is what runs at inference: constant work and constant memory per
+          token, no growing cache behind it. The rest of Mamba is a fight to keep
+          that recurrence while still training it at Transformer speed.
+        </p>
+      </section>
+
+      <section data-nb-section="the-convolution" id="the-convolution">
+        <h2>Why a fixed recurrence becomes a convolution</h2>
+        <p>
+          A recurrence is sequential. To get
+          <span class="nb-math-in">h_t</span> you first need
+          <span class="nb-math-in">h_{t-1}</span>, so a long sequence is a long
+          walk, and a walk wastes a GPU built to do thousands of multiplies at
+          once. S4 and the structured state-space models before Mamba escaped
+          that cost with one observation. If
+          <span class="nb-math-in">\bar{\mathbf{A}}</span>,
+          <span class="nb-math-in">\bar{\mathbf{B}}</span>, and
+          <span class="nb-math-in">\mathbf{C}</span> never change across the
+          sequence, the recurrence is linear and time-invariant, and unrolling it
+          gives an explicit convolution.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \bar{\mathbf{K}} = \left(\mathbf{C}\bar{\mathbf{B}},\
+            \mathbf{C}\bar{\mathbf{A}}\bar{\mathbf{B}},\ \dots,\
+            \mathbf{C}\bar{\mathbf{A}}^{\,k}\bar{\mathbf{B}},\ \dots\right),
+            \qquad y = x * \bar{\mathbf{K}}
+          </div>
+          <figcaption>
+            When the parameters are fixed, the whole output is the input
+            convolved with a single kernel whose
+            <span class="nb-math-in">k</span>-th tap is
+            <span class="nb-math-in"
+              >\mathbf{C}\bar{\mathbf{A}}^{\,k}\bar{\mathbf{B}}</span
+            >.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="§2, Eq. 3a-3b"
+                data-nb-url="https://arxiv.org/abs/2312.00752"
+                data-nb-note="Convolutional form of the time-invariant SSM: Kbar=(CBbar, CAbarBbar, ..., CAbar^k Bbar, ...), y = x * Kbar. This is the global convolution S4 uses and Mamba gives up."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          A convolution is embarrassingly parallel and runs as a fast Fourier
+          transform, so S4 trains at the speed of a convolutional network while
+          still behaving like a recurrence at inference.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Abstract; §3"
+              data-nb-url="https://arxiv.org/abs/2111.00396"
+              data-nb-note="Gu, Goel, Ré (S4): structured SSM with fixed (time-invariant) parameters computed as a global convolution; HiPPO normal-plus-low-rank A supplies long-range memory. LTI is what permits the convolution."
+              >3</a
+            ></sup
+          >
+          One kernel serves every position because the dynamics are the same at
+          every position.
+        </p>
+        <p>
+          That same property is why S4 cannot read its context. A kernel fixed
+          before the model sees a single token cannot treat one token differently
+          from another based on what the token is. It slides one filter over the
+          input and blurs it; it has no way to look at the current token and
+          decide, on the spot, to record it or let it pass. The convolution buys
+          speed by giving up the one thing recall needs.
+        </p>
+      </section>
+
+      <section data-nb-section="selection" id="selection">
+        <h2>Selection makes the recurrence read the token</h2>
+        <p>
+          The loose telling of Mamba's idea, that the model learns to attend to
+          the tokens that matter, is close enough to mislead. Attention is the
+          thing Mamba takes out. The precise version is narrower and mechanical:
+          three of the recurrence's parameters stop being fixed weights and
+          become functions of the current input.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \htmlClass{nb-mc1}{\mathbf{B}} \leftarrow
+            \mathrm{Linear}_N(\htmlClass{nb-mc4}{x}), \quad
+            \htmlClass{nb-mc2}{\mathbf{C}} \leftarrow
+            \mathrm{Linear}_N(\htmlClass{nb-mc4}{x}), \quad
+            \htmlClass{nb-mc3}{\Delta} \leftarrow \mathrm{softplus}\!\left(
+            \text{Parameter} +
+            \mathrm{Broadcast}_D(\mathrm{Linear}_1(\htmlClass{nb-mc4}{x}))
+            \right)
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\mathbf{B}</span
+              ><span
+                >How the input writes into the state, now a linear projection of
+                the current token instead of a fixed weight.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\mathbf{C}</span
+              ><span
+                >How the state is read out, also a projection of the current
+                token.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\Delta</span
+              ><span
+                >The step size, now input-dependent: a large value resets the
+                state toward the current token, a small value carries the old
+                state through.</span
+              >
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">x</span
+              ><span
+                >The current token, the single thing all three parameters now
+                depend on.</span
+              >
+            </li>
+          </ul>
+          <figcaption>
+            The selection assignment: <span class="nb-math-in">\mathbf{B}</span>,
+            <span class="nb-math-in">\mathbf{C}</span>, and the step size
+            <span class="nb-math-in">\Delta</span> become projections of the
+            current token, while
+            <span class="nb-math-in">\mathbf{A}</span> stays a learned
+            per-channel weight and turns input-dependent only through
+            <span class="nb-math-in">\Delta</span>.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="§3.2, Algorithm 2; §3.5.2"
+                data-nb-url="https://arxiv.org/abs/2312.00752"
+                data-nb-note="S6 selection: B, C are Linear_N(x); Delta is softplus(Parameter + Broadcast_D(Linear_1(x))). A remains a learned per-channel parameter, selective only via Delta. Shapes go from (D,N) to (B,L,D,N)."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The paper draws the interpretation in the model's own terms.
+          <span class="nb-math-in">\Delta</span> behaves like a gate. Push it
+          large and <span class="nb-math-in">\bar{\mathbf{A}} = \exp(\Delta
+          \mathbf{A})</span> drives the state toward forgetting what it held and
+          writing in the current token. Push it small and the token is ignored,
+          and the state coasts. In the one-dimensional case the selective update
+          reduces exactly to the gate of a gated recurrent network, the same
+          <span class="nb-math-in">g_t = \sigma(\mathrm{Linear}(x_t))</span> that
+          interpolates between the old state and the new input.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§3.5.1-3.5.2"
+              data-nb-url="https://arxiv.org/abs/2312.00752"
+              data-nb-note="Interpretation: Delta as a generalized gate; the 1-D selective SSM recovers the classic RNN gate g_t=sigma(Linear(x_t)), h_t=(1-g_t)h_{t-1}+g_t x_t."
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          Whether the input-dependence is what matters, rather than the block it
+          sits in, is a question the paper settles with an ablation on a
+          synthetic task. Selective copying asks the model to reproduce a handful
+          of marked tokens pulled out of a stream of noise. The markers sit at
+          random distances, so a fixed spacing cannot solve it and the model has
+          to select on content.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Selective-copying accuracy. Holding the surrounding architecture
+            fixed and swapping only the inner layer from S4 (time-invariant) to
+            S6 (selective) is what moves the score; adding a gate without
+            selection does not.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Table 1 · §4.1.1"
+                data-nb-url="https://arxiv.org/pdf/2312.00752v2#page=11"
+                data-nb-note="Table 1 (Selective Copying): S4 no-gate 18.3; S6 no-gate 97.0; H3+S4 57.0, H3+Hyena 30.1, H3+S6 99.7; Mamba+S4 56.4, Mamba+Hyena 28.4, Mamba+S6 99.8."
+                >1</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Architecture</th>
+              <th>Inner layer</th>
+              <th>Accuracy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">No gate</span></td>
+              <td>S4</td>
+              <td>18.3%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">No gate</span></td>
+              <td>S6</td>
+              <td>97.0%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">H3</span></td>
+              <td>S4</td>
+              <td>57.0%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">H3</span></td>
+              <td>Hyena</td>
+              <td>30.1%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">H3</span></td>
+              <td>S6</td>
+              <td>99.7%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Mamba</span></td>
+              <td>S4</td>
+              <td>56.4%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Mamba</span></td>
+              <td>Hyena</td>
+              <td>28.4%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Mamba</span></td>
+              <td>S6</td>
+              <td>99.8%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Read down the S6 rows and the number barely moves wherever it sits: 97
+          to 99.8 percent. Read the S4 rows and no architecture rescues it. The
+          plain S4 layer scores 18.3 percent, and wrapping it in the H3 or Mamba
+          block lifts it only to the mid-fifties.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The selective layer is doing the work on this task, and the block
+          around it is close to beside the point.
+        </p>
+        <p>
+          Selection has a price the rest of the paper is built to pay.
+          <span class="nb-math-in">\mathbf{B}</span>,
+          <span class="nb-math-in">\mathbf{C}</span>, and
+          <span class="nb-math-in">\Delta</span> now take a different value at
+          every position, and their shape grows from
+          <span class="nb-math-in">(D, N)</span> to
+          <span class="nb-math-in">(B, L, D, N)</span>, one setting per token. The
+          convolution assumed a single kernel for the whole sequence, and
+          selection has just made the kernel change from token to token. The
+          shortcut is gone.
+        </p>
+      </section>
+
+      <section data-nb-section="the-scan" id="the-scan">
+        <h2>The scan that pays for selection</h2>
+        <p>
+          Without the convolution the model is a sequential recurrence again, and
+          a naive version would be both slow and memory-hungry. The time-varying
+          state at full width is a tensor of shape
+          <span class="nb-math-in">(B, L, D, N)</span>. Moving it in and out of
+          the GPU's high-bandwidth memory at every step is the same traffic that
+          made attention slow in the first place. Mamba buys the speed back
+          with a hardware-aware selective scan, and it rests on two ideas.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§3.3, Algorithm 1"
+              data-nb-url="https://arxiv.org/abs/2312.00752"
+              data-nb-note="Hardware-aware scan: parallel associative scan instead of sequential loop; kernel fusion (read params from HBM once, discretize and scan in SRAM, write only outputs); recomputation of intermediate states in the backward pass."
+              >1</a
+            ></sup
+          >
+        </p>
+        <ol class="nb-steps">
+          <li>
+            <h3>Scan, do not loop</h3>
+            <p>
+              The recurrence is computed as a parallel scan rather than a
+              step-by-step loop. A scan is the prefix-sum pattern generalized past
+              addition, and because the state update composes associatively, the
+              outputs at every position can be produced in a logarithmic number
+              of parallel passes instead of a linear walk down the
+              sequence.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </p>
+          </li>
+          <li>
+            <h3>Fuse the kernel and recompute</h3>
+            <p>
+              The whole scan runs as one fused kernel that reads the parameters
+              from slow memory once, does the discretization and the scan in fast
+              on-chip SRAM, and writes only the outputs back. It stores none of
+              the intermediate states, recomputing them in the backward pass, the
+              same trade of arithmetic for memory that a fused attention kernel
+              makes.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            </p>
+          </li>
+        </ol>
+        <figure class="nb-figure">
+          <img
+            src="mamba/asset-1.png"
+            alt="Two panels. Left, a log-log plot of time in milliseconds against sequence length from 512 to 512k, with four lines: FlashAttention-2, Convolution, Scan in PyTorch, and Scan (ours). Below about 2k the lines are close; above it the FlashAttention-2 and convolution lines bend upward while Scan (ours) stays the lowest, with the PyTorch scan far above and out-of-memory crosses on the attention and convolution lines at long lengths. Right, a bar chart of inference throughput in tokens per second against batch size from 1 to 128, with tall blue Mamba-1.4B bars far exceeding orange Transformer-1.3B bars, and green Mamba-6.9B bars exceeding red Transformer-6.7B bars, the Transformer bars hitting out-of-memory at large batch sizes."
+          />
+          <figcaption>
+            Fig. 1 · Left: past a sequence length near 2,000 the fused selective
+            scan overtakes a strong attention kernel and stays roughly 20 to 40
+            times ahead of a standard scan. Right: with no key-value cache, Mamba
+            runs at far larger batch sizes and generates several times the tokens
+            per second of a Transformer, holding even against a much larger
+            model.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 8 · §4.5 · p. 15"
+                data-nb-url="https://arxiv.org/pdf/2312.00752v2#page=15"
+                data-nb-note="Figure 8. Left: scan faster than FlashAttention-2 beyond ~2K length, 20-40x over a standard PyTorch scan. Right: 4-5x inference throughput over a similar-size Transformer, from having no KV cache and thus larger batch sizes."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The left panel settles whether the scan actually pays. Below a sequence
+          length of about 2,000 a good attention kernel and the fused scan are
+          close, and the naive scan is already an order of magnitude behind. Past
+          2,000 the curves separate. The scan keeps rising in a straight line
+          while attention's time bends upward. It ends up faster than
+          FlashAttention-2 at long sequences, and 20 to 40 times faster than the
+          naive scan throughout.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          The crossover is the honest part of the figure. Below it a well-written
+          attention kernel is competitive, and the scan earns its keep only where
+          the sequence is long.
+        </p>
+        <p>
+          The right panel is the inference claim. Because a recurrent model holds
+          a fixed-size state and no key-value cache, it can run at batch sizes a
+          same-size Transformer cannot fit, and it reports 4 to 5 times the
+          generation throughput. The figure between them pushes the point past a
+          size gap: an untrained Mamba-6.9B out-generates a Transformer-1.3B five
+          times smaller.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§4.5; Abstract"
+              data-nb-url="https://arxiv.org/abs/2312.00752"
+              data-nb-note="4-5x throughput (abstract rounds to 5x); the gain is a batch-size effect from the absent KV cache. Mamba-6.9B out-throughputs the 5x-smaller Transformer-1.3B."
+              >1</a
+            ></sup
+          >
+          The multiple the abstract rounds to five is a batch-size effect, not
+          faster arithmetic.
+        </p>
+      </section>
+
+      <section data-nb-section="matching-a-transformer" id="matching-a-transformer">
+        <h2>Matching a Transformer twice its size</h2>
+        <p>
+          The synthetic task shows selection works in principle. The
+          language-modeling curves show it works at the size people actually
+          train at.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="mamba/asset-2.png"
+            alt="Two log-log panels of perplexity against training FLOPs for the Pile, at sequence length 2048 on the left and 8192 on the right. Each panel plots seven lines: Hyena, RWKV, Transformer, RetNet, H3++, Transformer++, and Mamba. In both panels the Mamba line is at or just below the Transformer++ line and beneath every other line. On the right panel, at sequence length 8192, Mamba's separation below Transformer++ is visibly larger than on the left."
+          />
+          <figcaption>
+            Fig. 2 · Perplexity against training compute, 125M to 1.3B
+            parameters, Chinchilla protocol on the Pile. Mamba tracks the strong
+            Transformer++ recipe and sits below every attention-free baseline,
+            and its margin widens at the longer sequence length.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 4 · §4.2.1 · p. 11"
+                data-nb-url="https://arxiv.org/pdf/2312.00752v2#page=11"
+                data-nb-note="Figure 4 (Scaling Laws): Mamba is the first attention-free model to match Transformer++; below Hyena, RWKV, RetNet, H3++; gap widens as sequence length grows (2048 vs 8192 panels)."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The panels plot perplexity against training compute for models from
+          125M to 1.3B parameters under the Chinchilla protocol. Mamba's curve
+          tracks Transformer++, the modern recipe with rotary embeddings, SwiGLU,
+          and RMSNorm. It sits below every attention-free line: Hyena, RWKV,
+          RetNet, and H3++. It is the first attention-free model to match that
+          recipe rather than merely beat weaker ones.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The two panels are one experiment at sequence length 2,048 and 8,192,
+          and Mamba's lead over the Transformer grows at the longer length, the
+          regime where attention's quadratic cost bites hardest.
+        </p>
+        <p>
+          Trained out to 300 billion tokens and evaluated with no task-specific
+          fine-tuning, the pattern holds against a matched open baseline.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Zero-shot results against Pythia, trained on the same data and
+            tokenizer. Average is over six common-sense and question-answering
+            tasks.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Table 3 · §4.2.2 · p. 12"
+                data-nb-url="https://arxiv.org/pdf/2312.00752v2#page=12"
+                data-nb-note="Table 3 (Zero-shot): Mamba-2.8B Pile ppl 6.22, LAMBADA acc 69.2, avg 63.3; Pythia-2.8B 6.73 / 64.7 / 59.1; Mamba-1.4B 6.80 / 64.9 / 59.7. Average over LAMBADA, HellaSwag, PIQA, ARC-e, ARC-c, WinoGrande."
+                >1</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Pile ppl</th>
+              <th>LAMBADA acc</th>
+              <th>Avg acc</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Mamba-2.8B</span></td>
+              <td>6.22</td>
+              <td>69.2%</td>
+              <td>63.3%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Pythia-2.8B</span></td>
+              <td>6.73</td>
+              <td>64.7%</td>
+              <td>59.1%</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Mamba-1.4B</span></td>
+              <td>6.80</td>
+              <td>64.9%</td>
+              <td>59.7%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Against Pythia-2.8B, Mamba-2.8B is ahead on every column: 6.22 against
+          6.73 in Pile perplexity, 69.2 against 64.7 percent on LAMBADA, 63.3
+          against 59.1 percent averaged over six tasks.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The sharper reading is one row down. Mamba-1.4B, at half the
+          parameters, already edges Pythia-2.8B on the same average, 59.7 against
+          59.1. That is the paper's headline claim made concrete: a selective
+          state-space model holding even with a Transformer of twice its size.
+        </p>
+        <p>
+          One synthetic result deserves a separate look, because the record after
+          publication turns on reading it correctly.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="mamba/asset-3.png"
+            alt="A line plot titled Induction Heads Extrapolation, accuracy from 0 to 1 against test sequence length on a log axis from about 64 to 1,000,000. A vertical dashed line marks the training length of 256. Six model lines and a flat Random baseline near 0.06 are shown. The Mamba line stays flat at accuracy 1.0 across the entire range. MHA-Absolute, MHA-RoPE, MHA-xPos, H3, and Hyena all start near 1.0 and fall toward the random baseline within roughly one order of magnitude past the training length."
+          />
+          <figcaption>
+            Fig. 3 · Trained at sequence length 256, only Mamba holds perfect
+            accuracy out to just over a million tokens; every attention variant
+            and the other efficient baselines collapse toward chance soon after
+            the training length.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Table 2 · §4.1.2 · p. 11"
+                data-nb-url="https://arxiv.org/pdf/2312.00752v2#page=11"
+                data-nb-note="Induction-heads extrapolation: trained at 2^8=256, Mamba solves to 2^20=1,048,576; attention baselines tested only to 2^14=16,384 and fall to chance past ~2x training length. Full numbers in Table 11. Read as narrow single-lookup retrieval, not bulk recall."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Induction heads is the associative-recall task in its simplest form.
+          Earlier in the stream the model saw a cue token followed by some value,
+          the cue appears again, and the model must produce the value that
+          followed it last time. Trained at length 256, Mamba solves the task out
+          to a sequence length of 2<sup>20</sup>, just over a million. That is
+          roughly four thousand times its training length, and accuracy stays flat
+          the whole way. Every attention variant and the other efficient baselines
+          drop toward chance within about an order of magnitude past 256.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+          The selective state has learned a retrieval rule that does not care how
+          long the sequence gets.
+        </p>
+        <p>
+          What that settles is narrow, and the width of the claim is where the
+          paper and its later critics part. Induction heads is a single lookup:
+          one cue, one value, retrieved once. A state of fixed size can hold that.
+          What a fixed state cannot obviously hold is many items at once, or a
+          long string reproduced word for word, and the figure says nothing about
+          either.
+        </p>
+      </section>
+
+      <section data-nb-section="where-a-fixed-state-stops" id="where-a-fixed-state-stops">
+        <h2>Where a fixed state stops</h2>
+        <p>
+          Mamba's central claim held, and the two years since have drawn its
+          edges. The same authors put the architecture on firmer ground with
+          Mamba-2, which proves that structured SSMs and a form of attention are
+          two views of one object, the state-space duality, through
+          decompositions of structured semiseparable matrices.<sup
+            class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="Abstract"
+              data-nb-url="https://arxiv.org/abs/2405.21060"
+              data-nb-note="Dao, Gu (Mamba-2 / SSD): structured SSMs and attention are two views of one object via semiseparable-matrix decompositions; Mamba-2's core layer is 2-8x faster than Mamba-1's selective SSM while staying competitive on language modeling."
+              >4</a
+            ></sup
+          >
+          The refined layer runs 2 to 8 times faster than Mamba's while staying
+          competitive on language. The duality is the more consequential half. It
+          says the choice was never SSM against attention as rival species, but a
+          dial between two ends of one design.
+        </p>
+        <p>
+          The clean limit was proved within months. A model whose state has a
+          fixed size, independent of sequence length, cannot copy an arbitrarily
+          long string out of its context, because a bounded state cannot store an
+          unbounded input. A two-layer Transformer can reproduce strings of
+          exponential length; a bounded-state model provably cannot.<sup
+            class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="Abstract; theory section"
+              data-nb-url="https://arxiv.org/abs/2402.01032"
+              data-nb-note="Jelassi et al. (Repeat After Me): fixed-size-state models (GSSMs, including Mamba) are limited at copying from context; a 2-layer Transformer copies exponential-length strings, a bounded-state model cannot; pretrained Transformers beat pretrained SSMs at retrieving and reproducing context."
+              >5</a
+            ></sup
+          >
+          This is the other face of the induction-heads win. One item fits in the
+          state; a long verbatim passage does not.
+        </p>
+        <p>
+          At 8 billion parameters and 3.5 trillion tokens, a controlled study
+          found the theory showing up in practice. Pure Mamba and Mamba-2 match
+          or beat Transformers on most standard tasks and fall short exactly where
+          copying and in-context learning are required, on five-shot MMLU, on a
+          phone-book retrieval task, and on long-context reasoning.<sup
+            class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="Abstract; task-category results"
+              data-nb-url="https://arxiv.org/abs/2406.07887"
+              data-nb-note="Waleffe et al. (NVIDIA, 8B/3.5T): pure SSMs lag on tasks needing strong copying or in-context learning (5-shot MMLU, Phonebook) and long-context reasoning; a hybrid of 43% Mamba-2, 7% attention, 50% MLP beats the 8B Transformer on all 12 standard tasks (+2.65 avg), ~8x projected inference speedup."
+              >6</a
+            ></sup
+          >
+          The remedy kept the SSM and spent a little attention. A hybrid of 43
+          percent Mamba-2, 7 percent attention, and 50 percent MLP layers beat the
+          8B Transformer on all twelve standard tasks and kept most of the speed.
+          Seven percent attention bought back the recall the pure model lacked.
+        </p>
+        <p>
+          Production has already taken that bargain. Jamba interleaves one
+          attention layer for every seven Mamba layers, and its ablation is blunt
+          about the reason. The pure-Mamba model often fails to follow an output
+          format, and the hybrid learns in context successfully with only one
+          attention layer in eight.<sup class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="Abstract; ablation on ICL"
+              data-nb-url="https://arxiv.org/abs/2403.19887"
+              data-nb-note="Lieber et al. (Jamba, AI21): 1 attention layer per 7 Mamba layers per 8-layer block, MoE on alternate layers; pure Mamba often fails format-following, the hybrid does successful ICL with only 1 of 8 layers attention; up to 256K context on one 80GB GPU."
+              >7</a
+            ></sup
+          >
+          The frontier long-context models keep a slice of attention on purpose.
+        </p>
+        <p>
+          A last limit qualifies the recurrent framing itself. Because Mamba is
+          sold as RNN-like, it is tempting to credit it with an RNN's power to
+          track state across a sequence. It does not have it. Selective
+          state-space models sit in the same complexity class as Transformers,
+          TC<sup>0</sup>, so they provably cannot solve permutation composition
+          and the state-tracking problems built on it, such as following entities
+          or evaluating code across a long input.<sup class="nb-cite"
+            ><a
+              href="#s8"
+              data-nb-locator="Abstract; TC0 result"
+              data-nb-url="https://arxiv.org/abs/2404.08819"
+              data-nb-note="Merrill, Petty, Sabharwal (Illusion of State): SSMs cannot express computation outside TC0, so they cannot solve permutation composition and related state tracking; a true RNN can. The 'state' is in that sense an illusion."
+              >8</a
+            ></sup
+          >
+          A true recurrent network can express those; a selective SSM's state, in
+          that sense, is an illusion.
+        </p>
+        <div class="nb-holdsup">
+          <div class="good">
+            <span class="nb-holdsup-label">What holds up</span>
+            <ul>
+              <li>
+                Linear-time training through the fused scan and constant-memory
+                inference with no key-value cache.
+              </li>
+              <li>
+                Language-modeling parity with a strong Transformer recipe at 125M
+                to 1.3B, and a 2.8B model beating a same-size Pythia zero-shot.
+              </li>
+              <li>
+                Length extrapolation on single-lookup retrieval far past the
+                training length.
+              </li>
+              <li>
+                A firmer footing and a faster successor in Mamba-2's state-space
+                duality.
+              </li>
+            </ul>
+          </div>
+          <div class="careful">
+            <span class="nb-holdsup-label">What to be careful about</span>
+            <ul>
+              <li>
+                A fixed-size state cannot copy long strings or recall many keys at
+                once.
+              </li>
+              <li>
+                At 8B scale the recall and in-context-learning gap to attention
+                reopens.
+              </li>
+              <li>
+                The working fix is to add back a fraction of attention, not to
+                run pure Mamba.
+              </li>
+              <li>
+                It cannot do RNN-style state tracking; its expressivity is
+                TC<sup>0</sup>, like attention's.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Mamba settled that a recurrent, linear-time model with a fixed-size
+            state can match a strong Transformer on language modeling. It did so
+            by making the recurrence input-dependent and paying for that with a
+            hardware-aware scan in place of the convolution.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+            What it did not settle is that a fixed state can stand in for
+            attention everywhere. The constant-size state that gives Mamba its
+            throughput is the same thing that caps its recall from a long
+            context. Bulk copying, multi-key recall, and state tracking are where
+            a growing cache still wins.<sup
+              class="nb-cite"
+              ><a href="#s5">5</a></sup
+            ><sup class="nb-cite"><a href="#s6">6</a></sup
+            ><sup class="nb-cite"><a href="#s8">8</a></sup>
+            Two years on, the best 8B models keep the selective state and leave
+            about seven percent of their layers as attention.<sup class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2312.00752"
+              >Gu, Dao, "Mamba: Linear-Time Sequence Modeling with Selective State
+              Spaces" (arXiv:2312.00752, v2 2024)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2312.04927"
+              >Arora, Eyuboglu, Timalsina, Johnson, Poli, Zou, Rudra, Ré,
+              "Zoology: Measuring and Improving Recall in Efficient Language
+              Models" (arXiv:2312.04927, 2023)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2111.00396"
+              >Gu, Goel, Ré, "Efficiently Modeling Long Sequences with Structured
+              State Spaces" (arXiv:2111.00396, ICLR 2022)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2405.21060"
+              >Dao, Gu, "Transformers are SSMs: Generalized Models and Efficient
+              Algorithms Through Structured State Space Duality"
+              (arXiv:2405.21060, ICML 2024)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2402.01032"
+              >Jelassi, Brandfonbrener, Kakade, Malach, "Repeat After Me:
+              Transformers are Better than State Space Models at Copying"
+              (arXiv:2402.01032, ICML 2024)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2406.07887"
+              >Waleffe et al. (NVIDIA), "An Empirical Study of Mamba-based Language
+              Models" (arXiv:2406.07887, 2024)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2403.19887"
+              >Lieber et al. (AI21 Labs), "Jamba: A Hybrid Transformer-Mamba
+              Language Model" (arXiv:2403.19887, 2024)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2404.08819"
+              >Merrill, Petty, Sabharwal, "The Illusion of State in State-Space
+              Models" (arXiv:2404.08819, ICML 2024)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
