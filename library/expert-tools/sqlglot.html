@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moving a date from Spark to Snowflake takes two casts, and SQLGlot writes them · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "sqlglot",
+        "template": "article",
+        "title": "Moving a date from Spark to Snowflake takes two casts, and SQLGlot writes them",
+        "mode": "open",
+        "order": null,
+        "date": "2026-08-28",
+        "tags": ["python", "sql", "data-engineering", "parsing"],
+        "sources": 10,
+        "words": 1620,
+        "reading_minutes": 7,
+        "dek": "A no-dependency library for more than 30 SQL dialects, honest that its lenient parser will accept queries a real engine would reject.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">Moving a date from Spark to Snowflake takes two casts, and SQLGlot writes them</h1>
+        <p class="nb-dekline">
+          A no-dependency library for more than 30 SQL dialects, honest that its
+          lenient parser will accept queries a real engine would reject.
+        </p>
+        <div class="nb-byline">
+          <span>7 min read</span><span>2026-08-28</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Where find-and-replace stops working</h2>
+        <p>
+          You have a working Spark query and a Snowflake warehouse that has to
+          run it. Most of the syntax is shared, so the quick fix is to patch the
+          few functions that differ with a pass of string substitution. That
+          holds until the first function whose replacement is not just another
+          function. Spark's <code>DATE_ADD(a, 1)</code> adds a day to a date.
+          Snowflake writes the same operation as <code>DATEADD(DAY, 1, ...)</code>,
+          and it will not accept the bare column Spark accepted: the argument has
+          to be cast to a date first. Character-level substitution cannot know
+          that, because it never parsed the query.
+        </p>
+        <p>
+          SQLGlot parses SQL into a real syntax tree and generates SQL back from
+          it, so it preserves what a query means even when the exact text
+          changes.<sup class="nb-cite"><a href="#s1">1</a></sup> It is written in
+          pure Python, carries no dependencies, and reads more than 30
+          dialects.<sup class="nb-cite"><a href="#s1">1</a></sup> The release I
+          tested, 30.17.0, registers 33 of them and imports nothing outside the
+          standard library.<sup class="nb-cite"><a href="#s2">2</a></sup> Once a
+          query is a tree instead of a string, a translation can rewrite
+          structure and not only spelling, which is what the Spark-to-Snowflake
+          case needs. For raw throughput there is an optional compiled build,
+          <code>sqlglot[c]</code>, that parses roughly three to five times faster
+          than the pure-Python default.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">0</span
+            ><span class="nb-stat-l">runtime dependencies, base install</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">33</span
+            ><span class="nb-stat-l">dialects registered in 30.17.0</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">3–5×</span
+            ><span class="nb-stat-l">faster parsing with the compiled build</span>
+          </div>
+        </div>
+      </section>
+
+      <section data-nb-section="the-translation" id="translation">
+        <h2>What one Spark date call becomes in Snowflake</h2>
+        <p>Here is the translation, run against 30.17.0.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">three cross-dialect translations</span
+            ><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">import sqlglot
+
+# Spark's DATE_ADD adds days to a date. Snowflake's DATEADD needs the unit
+# named and the argument cast to a date before it will add to it.
+sqlglot.transpile("SELECT DATE_ADD(a, 1) FROM t",
+                  read="spark", write="snowflake")[0]
+# SELECT DATEADD(DAY, 1, CAST(CAST(a AS TIMESTAMP) AS DATE)) FROM t
+
+# DuckDB epoch-milliseconds to Hive: the divide-by-1000 is inserted, not renamed.
+sqlglot.transpile("SELECT EPOCH_MS(1618088028295)",
+                  read="duckdb", write="hive")[0]
+# SELECT FROM_UNIXTIME(1618088028295 / POW(10, 3))
+
+# MySQL's strftime-style format becomes Postgres's TO_DATE pattern.
+sqlglot.transpile("SELECT STR_TO_DATE(x, '%Y-%m-%d') FROM t",
+                  read="mysql", write="postgres")[0]
+# SELECT TO_DATE(x, 'YYYY-MM-DD') FROM t</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 1 · <code>transpile</code> parses each query in its read dialect
+            and regenerates it in the write dialect; the outputs shown are what
+            30.17.0 prints.<sup class="nb-cite"
+              ><a href="#s3">3</a></sup
+            ><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          None of the three outputs is a rename. Spark's single
+          <code>DATE_ADD</code> becomes a <code>DATEADD</code> with the
+          <code>DAY</code> unit spelled out and the column wrapped in two casts,
+          because Snowflake will not add days to an untyped value. The
+          DuckDB-to-Hive line turns <code>EPOCH_MS</code> into
+          <code>FROM_UNIXTIME</code> and inserts the division by a thousand that
+          converts milliseconds to seconds, arithmetic no target function carried
+          on its own. The MySQL-to-Postgres line swaps
+          <code>STR_TO_DATE</code> for <code>TO_DATE</code> and rewrites the
+          format string <code>'%Y-%m-%d'</code> into <code>'YYYY-MM-DD'</code>.
+          Each rewrite is a decision about what the source meant, made by walking
+          the parsed tree and emitting the target dialect's equivalent.
+        </p>
+        <p>
+          The translation is best-effort by design. When a feature has no
+          equivalent in the target dialect, SQLGlot emits a warning and produces
+          the closest SQL it can rather than failing, and you can raise the error
+          level with <code>error_level</code> to make it stop
+          instead.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="reading-the-tree" id="reading-the-tree">
+        <h2>Asking the tree which tables a query touches</h2>
+        <p>
+          The same parse that made the translation possible also makes the query
+          inspectable. A tree is a data structure, so you can walk it and pull
+          out every node of a given kind.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">reading a parsed query</span
+            ><span>PYTHON</span>
+          </div>
+          <pre><code class="language-python">from sqlglot import parse_one, exp
+
+tree = parse_one("SELECT a, b FROM x JOIN y USING (id)")
+
+[t.name for t in tree.find_all(exp.Table)]   # ['x', 'y']
+[c.name for c in tree.find_all(exp.Column)]  # ['a', 'b']</code></pre>
+          <figcaption class="nb-code-cap">
+            Fig. 2 · <code>find_all</code> collects every node of a type from the
+            parsed tree, here the tables the query joins and the columns it
+            selects.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          <code>find_all(exp.Table)</code> returns the two tables the query
+          joins and <code>find_all(exp.Column)</code> returns the selected
+          columns, with no database connection and no catalog.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          > This is the operation a linter or an access check needs: given a
+          query, which objects does it read? The same tree also supports
+          column-level lineage. Asked which source produced an output column,
+          <code>lineage</code> traces it back through subquery aliases; for
+          <code>SELECT y.c AS c FROM (SELECT t.a AS c FROM t) AS y</code> it
+          follows the output <code>c</code> through the alias <code>y.c</code> to
+          the base column <code>t.a</code>.<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          > And given a schema, an optimizer over the same tree expands
+          <code>SELECT *</code> into fully qualified columns and folds a constant
+          predicate like <code>1 = 1</code> out of a
+          <code>WHERE</code> clause.<sup class="nb-cite"><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s2">2</a></sup> Each capability is one
+          more walk over the same parse tree.
+        </p>
+      </section>
+
+      <section data-nb-section="lenient-parser" id="lenient-parser">
+        <h2>The parser accepts SQL a database rejects</h2>
+        <p>
+          The permissiveness that lets SQLGlot parse so many dialects is also its
+          sharpest limit, and the project states it outright.
+        </p>
+        <div class="nb-note">
+          <span class="nb-note-label">The project's own caveat</span>
+          <blockquote>
+            The parser is intentionally lenient, so it can accept queries that a
+            real engine would reject. SQLGlot is a transpiler, not a validator. A
+            query that parses successfully may still fail at execution
+            time.<sup class="nb-cite"><a href="#s1">1</a></sup>
+            <span class="nb-note-who">SQLGlot README, FAQ</span>
+          </blockquote>
+        </div>
+        <p>
+          In practice, SQLGlot will parse
+          <code>SELECT SOMEUDF(x) OVER () FROM t</code> with an unknown function,
+          and a query that groups by column positions that do not exist, and hand
+          you a tree for either.<sup class="nb-cite"><a href="#s2">2</a></sup> It
+          is not a rubber stamp: genuinely malformed input like
+          <code>SELECT FROM WHERE</code> still raises a
+          <code>ParseError</code>.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          Lenient means it tolerates SQL that is well-formed but engine-invalid,
+          not arbitrary text. This is where SQLGlot is the wrong tool. If the job
+          is to decide whether a query is valid for a specific engine, SQLGlot
+          cannot answer it. That check belongs to the engine, which owns the
+          semantics SQLGlot declines to enforce.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          Coverage also varies by dialect. They fall into tiers: 18 are
+          officially maintained by the core team with priority on fixes and
+          features, 14 are community-maintained at lower priority, and a couple
+          more live as third-party plugins with no core-team
+          support.<sup class="nb-cite"><a href="#s1">1</a></sup> For a mainstream
+          engine the fidelity is high. For a niche one, a translation is close
+          without a guarantee of exactness, and the honest expectation is
+          best-effort.
+        </p>
+      </section>
+
+      <section data-nb-section="the-speed-cost" id="the-speed-cost">
+        <h2>The speed you trade for pure Python</h2>
+        <p>
+          Pure Python is the parser's headline feature and its main runtime cost.
+          The base install runs entirely in the interpreter, which is slower than
+          a native tokenizer.<sup class="nb-cite"><a href="#s2">2</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup> The remedy is the
+          optional compiled build, <code>sqlglot[c]</code>, produced by compiling
+          the same Python with mypyc. Installing it overlays compiled extensions
+          onto SQLGlot's own modules.<sup class="nb-cite"><a href="#s4">4</a></sup
+          ><sup class="nb-cite"><a href="#s5">5</a></sup> On the project's own
+          parse benchmark it runs each query in a fifth to a quarter of the
+          pure-Python time.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Parse time in seconds, pure-Python <code>sqlglot</code> against the
+            compiled <code>sqlglot[c]</code>; the factor is
+            <code>sqlglot[c]</code> relative to pure Python at 1.00, so lower is
+            faster. Python 3.14.3, parse-only.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="## Benchmarks table"
+                >1</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Query</th>
+              <th>sqlglot</th>
+              <th>sqlglot[c]</th>
+              <th>Factor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">tpch</span></td>
+              <td>0.002709</td>
+              <td>0.000740</td>
+              <td>0.27</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">values</span></td>
+              <td>0.466734</td>
+              <td>0.113762</td>
+              <td>0.24</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">complex_where</span></td>
+              <td>0.032710</td>
+              <td>0.006602</td>
+              <td>0.20</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Earlier, the accelerator was a tokenizer rewritten in Rust and shipped
+          as <code>sqlglotrs</code>. It landed in SQLGlot 20.3.0 in early 2024
+          with a claimed 30 to 40 percent improvement in overall parsing
+          speed.<sup class="nb-cite"><a href="#s6">6</a></sup> As of 30.17.0 the
+          source says <code>sqlglotrs</code> "is
+          deprecated and no longer compatible with sqlglot" and points users to
+          <code>sqlglotc</code> instead.<sup class="nb-cite"><a href="#s4">4</a></sup
+          ><sup class="nb-cite"><a href="#s7">7</a></sup> The maintainers' account
+          is that compiling the existing Python with mypyc matched the Rust
+          tokenizer while removing a separate build, an independent release cycle,
+          and any need for Rust expertise.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+        </p>
+        <p>
+          Two caveats sit under the speed. Peak performance is no longer
+          dependency-free: <code>sqlglot[c]</code> pulls a compiled wheel, so the
+          no-dependency claim holds for the base parser and not for the fast
+          path.<sup class="nb-cite"><a href="#s5">5</a></sup> And the FAQ notes
+          that a subclassed custom dialect "may not work properly" with
+          <code>sqlglot[c]</code> installed, so a team that writes its own dialect
+          and also wants native speed may have to pick
+          one.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="maintenance" id="maintenance">
+        <h2>Whether the project is here to stay</h2>
+        <p>
+          Whether to depend on SQLGlot comes down to whether it will be
+          maintained. It ships on the order of a new
+          minor release every week or two: 30.17.0 came out on 12 August 2026,
+          after 30.16.0, 30.15.0, and 30.14.0 across the preceding
+          weeks.<sup class="nb-cite"><a href="#s9">9</a></sup> It is MIT-licensed
+          and requires Python 3.9 or newer.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          > The cadence is not a volunteer's spare hours. SQLGlot is the
+          open-source core of Tobiko Data, a company that raised $21.8 million and
+          builds the SQLMesh data platform on top of
+          it.<sup class="nb-cite"><a href="#s10">10</a></sup> The maintainers'
+          own product depends on the parser, which is the strongest evidence that
+          it will keep being fixed.<sup class="nb-cite"><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s10">10</a></sup>
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            Reach for SQLGlot when you need to read, translate, or reason about
+            SQL as a data structure across dialects and can accept a parse that
+            is deliberately more permissive than any single engine. Reach for the
+            database itself when the question is whether a query is valid or
+            exactly how it will run. The trust question rests on the funded backer
+            and the weekly cadence. A stall in releases, or the flagship product
+            moving off it, is what would change the
+            assessment.<sup class="nb-cite"><a href="#s9">9</a></sup
+            ><sup class="nb-cite"><a href="#s10">10</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/tobymao/sqlglot/blob/v30.17.0/README.md"
+              >GitHub · SQLGlot README (v30.17.0)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/sqlglot/30.17.0/"
+              >Local run against sqlglot 30.17.0 (pip install sqlglot==30.17.0)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://sqlglot.com/sqlglot.html"
+              >SQLGlot · API documentation</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/tobymao/sqlglot/blob/v30.17.0/sqlglot/tokens.py"
+              >GitHub · SQLGlot tokenizer backend selection (tokens.py, v30.17.0)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/sqlglotc/"
+              >PyPI · sqlglotc (mypyc-compiled build)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.tobikodata.com/blog/sqlglot-jumps-on-the-rust-bandwagon"
+              >Tobiko Data · SQLGlot jumps on the Rust bandwagon</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/sqlglotrs/"
+              >PyPI · sqlglotrs (deprecated Rust tokenizer)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.fivetran.com/blog/how-we-accelerated-transpilation-by-compiling-sqlglot-with-mypyc"
+              >Fivetran · Accelerating transpilation by compiling SQLGlot with mypyc</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://pypi.org/project/sqlglot/"
+              >PyPI · sqlglot (release history)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://techcrunch.com/2024/06/05/with-21-8m-in-funding-tobiko-aims-to-build-a-modern-data-platform/"
+              >TechCrunch · Tobiko raises $21.8M to build a modern data platform</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
