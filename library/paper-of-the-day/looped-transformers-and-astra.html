@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Looped transformers turn depth into a dial · Paper of the Day</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "paper-of-the-day",
+        "slug": "looped-transformers-and-astra",
+        "template": "paper",
+        "title": "Looped transformers turn depth into a dial",
+        "mode": "open",
+        "order": null,
+        "date": "2026-09-05",
+        "tags": [
+          "looped-transformers",
+          "recurrent-depth",
+          "test-time-compute",
+          "transformers",
+          "ai-research",
+          "gpt-astra"
+        ],
+        "sources": 10,
+        "words": 2501,
+        "reading_minutes": 11,
+        "dek": "Giannou et al. show how a shallow, fixed-weight Transformer can execute iterative programs; later recurrent-depth work makes the idea relevant to Astra, whose public architecture OpenAI has not specified.",
+        "harness": "codex-nightly-build",
+        "model": "gpt-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Paper of the Day</div>
+        <h1 class="nb-title">Looped transformers turn depth into a dial</h1>
+        <p class="nb-dekline">
+          Giannou et al. show how a shallow, fixed-weight Transformer can execute
+          iterative programs; later recurrent-depth work makes the idea relevant
+          to Astra, whose public architecture OpenAI has not specified.
+        </p>
+        <div class="nb-byline">
+          <span>11 min read</span><span>2026-09-05</span>
+        </div>
+      </header>
+
+      <section data-nb-section="abstract" id="abstract">
+        <div class="nb-paper-card">
+          <p class="nb-paper-title">Looped Transformers as Programmable Computers</p>
+          <p class="nb-paper-meta">
+            Angeliki Giannou, Shashank Rajput, Jy-yong Sohn, Kangwook Lee, Jason D.
+            Lee, Dimitris Papailiopoulos · ICML 2023 · 2023
+          </p>
+          <a class="nb-paper-link" href="https://proceedings.mlr.press/v202/giannou23a.html"
+            >Read the paper</a
+          >
+          <blockquote class="nb-paper-abstract">
+            We present a framework for using transformer networks as universal
+            computers by programming them with specific weights and placing them
+            in a loop. Our input sequence acts as a punchcard, consisting of
+            instructions and memory for data read/writes. We demonstrate that a
+            constant number of encoder layers can emulate basic computing blocks,
+            including embedding edit operations, non-linear functions, function
+            calls, program counters, and conditional branches. Using these building
+            blocks, we emulate a small instruction-set computer. This allows us to
+            map iterative algorithms to programs that can be executed by a looped,
+            13-layer transformer. We show how this transformer, instructed by its
+            input, can emulate a basic calculator, a basic linear algebra library,
+            and in-context learning algorithms that employ backpropagation. Our
+            work highlights the versatility of the attention mechanism, and
+            demonstrates that even shallow transformers can execute full-fledged,
+            general-purpose programs.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Abstract · p. 1"
+                data-nb-url="https://proceedings.mlr.press/v202/giannou23a.html"
+                data-nb-note="Verbatim abstract of the focal paper."
+                >1</a
+              ></sup
+            >
+          </blockquote>
+        </div>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The Astra connection is a report, not a specification</h2>
+        <p>
+          OpenAI’s public Astra announcement describes a model by its behavior:
+          alignment, computer use, safeguards, and benchmark performance. The
+          announcement does not name a looped Transformer or recurrent depth.<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="GPT-6 Astra announcement · model description and evaluations"
+              data-nb-url="https://openai.com/index/gpt-6-astra/"
+              data-nb-note="OpenAI’s public announcement describes Astra’s capabilities and evaluations without specifying a looped-transformer architecture."
+              >2</a
+            ></sup
+          > The system card discusses chain-of-thought control, evaluation
+          awareness, sandbagging, and a decline in monitorability. It also does
+          not identify recurrent depth as the model’s architecture.<sup
+            class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="System Card · CoT control, monitorability, and covert sandbagging"
+              data-nb-url="https://deploymentsafety.openai.com/gpt-6-astra"
+              data-nb-note="The system card reports safety and monitorability findings, but contains no public architectural claim that Astra is a looped Transformer."
+              >3</a
+            ></sup
+          >
+        </p>
+        <p>
+          The link comes from secondary reporting. The Verge says The Information,
+          citing an unnamed person familiar with the unreleased model, reported
+          that Astra uses recurrent depth: computation is cycled through internal
+          layers before an answer is produced. The Verge also reports that OpenAI
+          did not confirm or deny the claim, and that OpenAI’s own announcement
+          did not describe the technical foundation.<sup class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="Report on recurrent depth and OpenAI’s response · September 2, 2026"
+              data-nb-url="https://www.theverge.com/ai-artificial-intelligence/988334/openai-astra-ai-monitoring-safety"
+              data-nb-note="Secondary report summarizing The Information’s unnamed-source claim; it records that OpenAI did not confirm or deny the architecture."
+              >4</a
+            ></sup
+          > That is enough to ask whether looped-transformer research explains the
+          rumor. It is not enough to state that Astra uses the design, or that the
+          design caused its safety or benchmark results.
+        </p>
+        <p>
+          The useful technical question is narrower. A standard Transformer has a
+          fixed stack of layers, each with its own parameters. A looped Transformer
+          applies a shared block repeatedly. The block can update a hidden state,
+          read the original input again, and hand its output to the next pass. The
+          weights stay fixed while the amount of serial computation changes. That
+          gives a model a depth dial: storage is set by the block, while effective
+          depth is set at execution time.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§§3–5 · pp. 5–17"
+              data-nb-url="https://proceedings.mlr.press/v202/giannou23a.html"
+              data-nb-note="The focal paper defines the loop as feedback from the output sequence to the input and uses it to execute successive instructions with fixed weights."
+              >1</a
+            ></sup
+          > The papers below show what has to be engineered for that simple idea
+          to become a computer, a learning algorithm, or a language model.
+        </p>
+      </section>
+
+      <section data-nb-section="universal-transformer" id="universal-transformer">
+        <h2>Universal Transformer made depth recurrent</h2>
+        <p>
+          The earliest important predecessor is Dehghani and colleagues’ Universal
+          Transformer, introduced in 2018 and published at ICLR 2019. It is not a
+          decoder-only looped language model, and it is not the first recurrent
+          neural architecture. Its contribution is more specific: it makes the
+          Transformer’s depth axis recurrent. All sequence positions are updated
+          in parallel. At each step, self-attention exchanges information across
+          positions, then a transition function shared across positions and steps
+          refines the representations.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="Abstract; §2.1 · pp. 1–4"
+              data-nb-url="https://arxiv.org/abs/1807.03819"
+              data-nb-note="The Universal Transformer defines parallel-in-time recurrent self-attention, shared transition functions, and recurrence over representation depth."
+              >5</a
+            ></sup
+          >
+        </p>
+        <p>
+          That distinction matters. A recurrent neural network normally advances
+          through positions in a sequence. Universal Transformer recurrence advances
+          through revisions of the representation at each position. A fixed number
+          of revisions is equivalent to a stack with tied parameters. A dynamic
+          halting rule lets different positions stop after different numbers
+          of revisions. Under stated assumptions, the authors prove a form of
+          computational universality and report gains on algorithmic tasks,
+          LAMBADA, and WMT14 English–German translation, where their base model
+          improves over the comparison Transformer by 0.9 BLEU.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="Abstract; §§2.1–2.2 and 3.5 · pp. 1–4, 9–11"
+              data-nb-url="https://arxiv.org/abs/1807.03819"
+              data-nb-note="The paper reports dynamic per-position halting, conditional computational universality, and a 0.9 BLEU improvement on WMT14 En–De."
+              >5</a
+            ></sup
+          >
+        </p>
+        <p>
+          Universal Transformer supplies the family resemblance. The 2023 paper
+          makes the construction legible as a machine.
+        </p>
+      </section>
+
+      <section data-nb-section="programmable-computer" id="programmable-computer">
+        <h2>Giannou’s loop turns attention into a small computer</h2>
+        <p>
+          Giannou et al. do not begin with a trained model discovering that loops
+          are useful. They specify weights that make attention perform named
+          operations, then place the Transformer in an external loop. The input
+          sequence is a punchcard. One region holds instructions. Another is
+          working memory. A third is a scratchpad for intermediate values. After
+          one pass, the output sequence becomes the next input, so the model can
+          fetch the next instruction while preserving the state of the computation.
+          Their Figure 1 is a compact picture of that interface.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§5.1–§5.2 and Fig. 1 · pp. 3, 17–22"
+              data-nb-url="https://proceedings.mlr.press/v202/giannou23a.html"
+              data-nb-note="The paper’s input sequence is divided into scratchpad, memory, and instructions; the output is fed back as the next input."
+              >1</a
+            ></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="looped-transformers-and-astra/asset-1.png"
+            alt="A Transformer receives an input embedding sequence divided into scratchpad, memory, and instructions. An arrow feeds the Transformer output back into the sequence."
+          />
+          <figcaption>
+            Fig. 1 · Giannou et al.’s loop interface. Pointers select the
+            instruction and memory locations; feedback makes the same Transformer
+            execute another cycle.<sup class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="Fig. 1 · p. 3"
+                data-nb-url="https://proceedings.mlr.press/v202/giannou23a.html"
+                data-nb-note="Source asset captured from Figure 1 of the focal paper."
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The instruction set is the paper’s main technical trick. The construction
+          starts from SUBLEQ, a one-instruction computer whose operation subtracts
+          one memory value from another and branches when the result is nonpositive.
+          Giannou et al. generalize it to FLEQ:
+          <span class="nb-math-in">mem[c] = f_m(mem[a], mem[b])</span>, followed by
+          <span class="nb-math-in">if mem[flag] \leq 0 goto instruction p</span>.
+          The function slot can select matrix multiplication, nonlinear functions,
+          or polynomials. Attention does the addressing, and the hard-coded
+          function blocks do the arithmetic.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§5.1–§5.2 and Eq. 9 · pp. 17–23"
+              data-nb-url="https://proceedings.mlr.press/v202/giannou23a.html"
+              data-nb-note="FLEQ generalizes SUBLEQ with a selectable function block and a conditional jump; the paper gives the memory-update and branch forms."
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          The rest is bookkeeping that ordinary software takes for granted. Binary
+          positional encodings represent addresses. Attention copies data between
+          memory and the scratchpad. ReLU-based blocks implement conditional
+          behavior. Other blocks maintain a program counter and make function calls.
+          The paper proves a 9-layer, 2-head construction for SUBLEQ-style programs.
+          Its matrix-inversion, power-iteration, and stochastic-gradient-descent
+          examples use 13 layers and one head in the summary table.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Informal Theorem 1; Lemma 4; Table 1 · pp. 3, 17–18"
+              data-nb-url="https://proceedings.mlr.press/v202/giannou23a.html"
+              data-nb-note="The focal paper reports 9 layers and 2 heads for SUBLEQ, and 13 layers and 1 head for the listed numerical and SGD constructions."
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          The loop changes the scaling law. Without feedback, a fixed-depth network
+          would need more layers as the program gained instructions. With feedback,
+          the network’s own depth stays constant while the number of cycles grows
+          with the program. Total work still grows with the number of instructions.
+          The result is not a faster computer. It is a way to separate the size of
+          the instruction executor from the length of the program it runs.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§5.1, ‘The importance of loops’ · p. 18"
+              data-nb-url="https://proceedings.mlr.press/v202/giannou23a.html"
+              data-nb-note="The paper states that its looped Transformer depth is independent of program length, while execution time still scales with the number of instructions."
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          This is why the paper is significant. It turns weight sharing from a
+          parameter-count observation into an explicit computational model. The
+          limitation is equally important: the weights are constructed for the
+          programs, and the input supplies the program. That is a proof of
+          expressivity, not evidence that a normally trained language model has
+          learned the same computer.
+        </p>
+      </section>
+
+      <section data-nb-section="learned-algorithm" id="learned-algorithm">
+        <h2>A trained loop has to learn an update rule</h2>
+        <p>
+          Yang and colleagues ask a more practical question: can a looped
+          Transformer learn an iterative algorithm from data? Their test case is
+          in-context linear regression. A standard Transformer can approximate a
+          closed-form least-squares computation involving
+          <span class="nb-math-in">(X^\top X)^{-1}X^\top y</span>. Gradient descent
+          avoids the inverse by repeatedly applying an update based on
+          <span class="nb-math-in">X^\top(Xw-y)</span>. A loop gives the model a
+          natural place to apply that update again.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="Abstract; Fig. 1; §3 · pp. 1–4"
+              data-nb-url="https://arxiv.org/abs/2311.12424"
+              data-nb-note="The paper contrasts a closed-form least-squares solution with repeated gradient-descent updates and studies a looped decoder Transformer."
+              >6</a
+            ></sup
+          >
+        </p>
+        <p>
+          Their one-layer looped model has 0.79 million parameters. The comparison
+          12-layer Transformer has 9.48 million. In the reported linear-regression
+          setup, the looped model reaches performance comparable to the standard
+          model while using less than 10% as many parameters. The authors train for
+          30 loop iterations, then observe a stable fixed-point solution beyond the
+          trained range in the illustrated experiment.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="Abstract; Fig. 2; §3 · pp. 1, 3–4"
+              data-nb-url="https://arxiv.org/abs/2311.12424"
+              data-nb-note="The paper reports the 0.79M versus 9.48M parameter comparison, the less-than-10% claim, and the 30-loop fixed-point experiment."
+              >6</a
+            ></sup
+          >
+        </p>
+        <p>
+          Two design choices make that result possible. First, the original prompt
+          is injected at every pass. If the recurrence receives only its previous
+          state, the initial data can fade and the model can diverge after the
+          number of passes seen in training. Second, the training loss covers a
+          range of loop outputs rather than rewarding only the final pass. The
+          model is pushed toward an operator whose later applications remain useful,
+          instead of a circuit that works at one exact depth.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="§§4.1–4.2 and Fig. 3–4 · pp. 4–6"
+              data-nb-url="https://arxiv.org/abs/2311.12424"
+              data-nb-note="Input injection and the choice of training loop count are the paper’s two central fixed-point design factors."
+              >6</a
+            ></sup
+          >
+        </p>
+        <p>
+          The result has a boundary. The experiments cover synthetic linear,
+          sparse-linear, decision-tree, and two-layer neural-network function
+          classes. The authors report an inductive bias toward simpler solutions
+          and a failure mode under some distribution shifts; they do not show that
+          the model has recovered a general regression algorithm for every input
+          distribution. Parameter efficiency therefore comes with a question about
+          what algorithm the loop has actually learned.
+        </p>
+      </section>
+
+      <section data-nb-section="recurrent-depth" id="recurrent-depth">
+        <h2>Recurrent depth makes the dial useful at language-model scale</h2>
+        <p>
+          Geiping and colleagues provide the closest public technical bridge to the
+          Astra report. Their 2025 model is a decoder-only language model split into
+          a prelude <span class="nb-math-in">P</span>, a shared recurrent core
+          <span class="nb-math-in">R</span>, and a coda <span class="nb-math-in">C</span>.
+          The prelude embeds the tokens. The core is applied repeatedly. The coda
+          turns the last latent state into next-token probabilities. The core sees
+          both the current latent state and an injected copy of the original input,
+          which gives each iteration access to the problem it is solving.<sup
+            class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="§3.1 and Fig. 2 · pp. 2–3"
+              data-nb-url="https://arxiv.org/abs/2502.05171"
+              data-nb-note="The recurrent-depth model is organized as prelude, shared recurrent core, and coda; the core receives the latent state and injected input."
+              >7</a
+            ></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            e=P(x),\quad s_0\sim\mathcal{N}(0,\sigma^2 I),\quad
+            s_i=\htmlClass{nb-mc1}{R}(e,s_{i-1}),\quad p=C(s_{\htmlClass{nb-mc2}{r}})
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">R</span
+              ><span>The shared recurrent block applied at every depth step.</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">r</span
+              ><span>The number of recurrent passes chosen for this computation.</span>
+            </li>
+          </ul>
+          <figcaption>
+            The model’s depth dial is an execution parameter. The paper injects
+            <span class="nb-math-in">e</span> on every pass so the recurrent core
+            keeps conditioning on the prompt.<sup class="nb-cite"
+              ><a
+                href="#s7"
+                data-nb-locator="§3.1 and Eq. 1 · pp. 2–3"
+                data-nb-url="https://arxiv.org/abs/2502.05171"
+                data-nb-note="Reconstructed from the paper’s architecture equations; the highlighted terms mark the shared core and recurrence count."
+                >7</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <figure class="nb-figure">
+          <img
+            src="looped-transformers-and-astra/asset-2.png"
+            alt="A prelude embeds Hello, a shared recurrent block R is applied several times with input injection, and a coda produces World."
+          />
+          <figcaption>
+            Fig. 2 · The prelude–core–coda layout in Geiping et al. The green core
+            is the parameter-sharing site; the dashed arrows are repeated input
+            injection.<sup class="nb-cite"
+              ><a
+                href="#s7"
+                data-nb-locator="Fig. 2 · p. 3"
+                data-nb-url="https://arxiv.org/abs/2502.05171"
+                data-nb-note="Source asset captured from Figure 2 of the recurrent-depth paper."
+                >7</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The engineering is as important as the diagram. The core uses ordinary
+          causal attention, rotary position embeddings, a gated SiLU MLP, RMSNorm,
+          and a sandwich normalization arrangement chosen to stabilize repeated
+          application. The large model has a (2, 4, 2) prelude/core/coda shape. It
+          has eight “real” layers before recurrence, but 32 passes unfold to an
+          effective depth of <span class="nb-math-in">2 + 4\times32 + 2 = 132</span>
+          layers.<sup class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="§§3.1–3.2 · pp. 2–4"
+              data-nb-url="https://arxiv.org/abs/2502.05171"
+              data-nb-note="The paper gives the standard Transformer sublayers, sandwich normalization, (2,4,2) shape, and effective-depth calculation."
+              >7</a
+            ></sup
+          >
+        </p>
+        <p>
+          Training must teach the model to remain useful across depths. The authors
+          sample the recurrence count from a heavy-tailed log-normal Poisson
+          distribution and backpropagate through only the last eight iterations.
+          That approximates truncated backpropagation through time while allowing
+          long occasional unrolls without storing every activation. Their proof of
+          concept has 3.5 billion parameters and trains on 0.8 trillion tokens.
+          At test time, the reported ARC-E score rises from 49.07 at four recurrences
+          to 69.91 at 32 recurrences. The same paper warns that the run is a proof
+          of concept and that more compute per parameter still means more inference
+          work.<sup class="nb-cite"
+            ><a
+              href="#s7"
+              data-nb-locator="§3.3; §4.1; Table 1; §5 and §10 · pp. 4, 6–7, 13"
+              data-nb-url="https://arxiv.org/abs/2502.05171"
+              data-nb-note="The paper reports log-normal Poisson sampling, eight-step truncated backpropagation, the 3.5B/0.8T run, ARC-E results at r=4 and r=32, and proof-of-concept caveats."
+              >7</a
+            ></sup
+          >
+        </p>
+        <p>
+          This is the bridge to a frontier model. Giannou’s Transformer executes a
+          program supplied by its input. Geiping’s model learns a shared latent
+          computation from ordinary language-model training and exposes recurrence
+          as a test-time budget. The common operation is weight reuse across depth.
+          The learned behavior is not the same, and the evidence does not support
+          treating one as a direct implementation of the other.
+        </p>
+      </section>
+
+      <section data-nb-section="reasoning-and-cost" id="reasoning-and-cost">
+        <h2>Latent reasoning adds depth, then asks how to pay for it</h2>
+        <p>
+          Saunshi and colleagues give the idea a reasoning interpretation. They
+          study a <span class="nb-math-in">k</span>-layer block looped
+          <span class="nb-math-in">L</span> times, written as
+          <span class="nb-math-in">k \otimes L</span>. The effective depth is roughly
+          <span class="nb-math-in">kL</span>, but the parameters belong mostly to
+          the smaller block. Their theoretical analysis treats intermediate hidden
+          states as latent thoughts: repeated application can simulate multiple
+          steps of a token-level chain of thought without emitting a token at every
+          step. Experiments on synthetic addition, p-hop, and math tasks, along with
+          language-model evaluations, compare looped models against both
+          parameter-matched and compute-matched fixed-depth baselines.<sup
+            class="nb-cite"
+            ><a
+              href="#s8"
+              data-nb-locator="Abstract; Fig. 1; §§3–5 · pp. 1–3, 6–12"
+              data-nb-url="https://arxiv.org/abs/2502.17416"
+              data-nb-note="The paper defines k-layer blocks looped L times, interprets the states as latent thoughts, and evaluates effective-depth and iso-compute comparisons."
+              >8</a
+            ></sup
+          >
+        </p>
+        <p>
+          That vocabulary explains why recurrent depth might matter for Astra. A
+          model can spend extra serial computation in a hidden state rather than
+          spend it on visible reasoning tokens. But “latent” describes where the
+          intermediate state lives, not whether the computation is safe, accurate,
+          or inaccessible to monitoring. A loop can be used for ordinary feature
+          refinement, algorithm emulation, or reasoning. The architecture alone
+          does not identify which behavior was learned.
+        </p>
+        <p>
+          The next technical problem is uneven difficulty. Mixture-of-Recursions
+          keeps a shared stack but adds lightweight routers that assign different
+          recursion depths to different tokens. It combines token-level stopping
+          with attention restricted to active tokens and a selective key-value
+          cache. This is a later engineering direction, not evidence about Astra,
+          but it shows how a fixed loop can become an adaptive compute allocator
+          rather than a single global knob.<sup class="nb-cite"
+            ><a
+              href="#s9"
+              data-nb-locator="Abstract; §§2–4 · pp. 1–8"
+              data-nb-url="https://arxiv.org/abs/2507.10524"
+              data-nb-note="Mixture-of-Recursions introduces token-specific routers, active-token attention, and selective KV-cache reuse for dynamic recursive depth."
+              >9</a
+            ></sup
+          >
+        </p>
+        <p>
+          There is also a cost that the phrase “same weights” can hide. Reusing
+          parameters can lower storage and communication per pass. Repeating the
+          pass increases serial FLOPs and can increase latency. Training stability,
+          residual scaling, activation memory, and KV-cache behavior become part of
+          the architecture. A loop trades parameter breadth for computation in
+          depth. It does not create free intelligence.
+        </p>
+        <p>
+          Nor does looping alone make a chain of thought disappear. Sebastian
+          Raschka’s technical discussion of the Astra report makes the narrower
+          point that reusing layers does not inherently suppress visible reasoning;
+          it may reduce intermediate tokens only when the model is trained and used
+          to carry more work in latent states.<sup class="nb-cite"
+            ><a
+              href="#s10"
+              data-nb-locator="‘How do looped transformers work?’ and ‘Do looped transformers make CoT invisible?’ · September 2, 2026"
+              data-nb-url="https://sebastianraschka.com/blog/2026/openai-astra-looped-transformers.html"
+              data-nb-note="Expert secondary analysis distinguishes layer reuse from the separate question of whether a model emits or hides textual chain-of-thought."
+              >10</a
+            ></sup
+          > That distinction matters for any claim about Astra’s monitorability.
+        </p>
+      </section>
+
+      <section data-nb-section="verdict" id="verdict">
+        <h2>What the papers establish, and what they do not</h2>
+        <p>
+          The technical lineage is clear. Universal Transformer makes the depth
+          axis recurrent and can halt at different times. Giannou et al. show that
+          a constant-depth, fixed-weight Transformer can act as an instruction
+          executor with memory, pointers, branches, and reusable function blocks.
+          Yang et al. show that a trained loop can learn an iterative solver with a
+          much smaller parameter count on controlled in-context tasks. Geiping et
+          al. show how to train a language model to use recurrent depth as a
+          test-time compute budget. Saunshi et al. give a theory of the same budget
+          as latent thought depth.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="§§5–9 · pp. 17–40"
+              data-nb-url="https://proceedings.mlr.press/v202/giannou23a.html"
+              data-nb-note="The focal construction supplies the programmable-computer baseline against which the later learned-loop papers are compared."
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          The Astra claim remains one level weaker. OpenAI’s public announcement
+          and system card establish performance and safety findings, including
+          lower monitorability in some settings, but they do not establish a
+          looped-transformer architecture.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="System Card · monitorability and CoT control"
+              data-nb-url="https://deploymentsafety.openai.com/gpt-6-astra"
+              data-nb-note="Official safety documentation supports claims about monitorability and chain-of-thought control, not the unconfirmed architecture report."
+              >3</a
+            ></sup
+          > The Verge’s account of The Information supplies a reported recurrent-
+          depth connection, but the source is unnamed and unconfirmed.<sup
+            class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="Report on recurrent depth and OpenAI’s response · September 2, 2026"
+              data-nb-url="https://www.theverge.com/ai-artificial-intelligence/988334/openai-astra-ai-monitoring-safety"
+              data-nb-note="The reported Astra architecture is secondary and explicitly not confirmed by OpenAI in the cited coverage."
+              >4</a
+            ></sup
+          > The papers make the report technically plausible. They do not prove
+          that Astra copied Giannou’s construction, uses Geiping’s training recipe,
+          or gained its benchmark and safety properties from recurrence.
+        </p>
+        <p>
+          The right study order is therefore Giannou first, Universal Transformer
+          for lineage, and Geiping for the language-model bridge. The durable idea
+          is a resource trade: reuse a learned block to buy serial depth, then
+          train the block to remain stable and useful across the depths a deployment
+          may request. That is a real technical innovation with real costs. It is
+          also the most the public evidence can support about Astra today.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://proceedings.mlr.press/v202/giannou23a.html"
+              >Angeliki Giannou et al., “Looped Transformers as Programmable
+              Computers” · ICML 2023</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://openai.com/index/gpt-6-astra/"
+              >OpenAI, “GPT-6 Astra: A new generation of intelligence” · 2026</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://deploymentsafety.openai.com/gpt-6-astra"
+              >OpenAI, “GPT-6 Astra System Card” · 2026</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.theverge.com/ai-artificial-intelligence/988334/openai-astra-ai-monitoring-safety"
+              >The Verge, “Researchers fear safety disaster ahead of OpenAI’s Astra
+              release” · 2026</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1807.03819"
+              >Mostafa Dehghani et al., “Universal Transformers” · ICLR 2019</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2311.12424"
+              >Liu Yang et al., “Looped Transformers are Better at Learning Learning
+              Algorithms” · ICLR 2024</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2502.05171"
+              >Jonas Geiping et al., “Scaling up Test-Time Compute with Latent
+              Reasoning: A Recurrent Depth Approach” · 2025</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2502.17416"
+              >Nikunj Saunshi et al., “Reasoning with Latent Thoughts: On the Power
+              of Looped Transformers” · ICLR 2025</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2507.10524"
+              >Sangmin Bae et al., “Mixture-of-Recursions: Learning Dynamic Recursive
+              Depths for Adaptive Token-Level Computation” · NeurIPS 2025</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://sebastianraschka.com/blog/2026/openai-astra-looped-transformers.html"
+              >Sebastian Raschka, “OpenAI Astra and Looped Transformers” · 2026</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
