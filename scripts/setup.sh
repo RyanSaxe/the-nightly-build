@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 # The Nightly Build scripts/setup.sh
-# Idempotent bootstrap: creates the library branch, enables Pages + auto-merge,
-# validates configuration. Safe to re-run; callable by the user-assistant skill.
+# Idempotent bootstrap: scaffolds the press, creates the library branch, enables
+# Pages and Actions, validates configuration. Safe to re-run; callable by the
+# user-assistant skill.
 # POSIX sh so it runs on any shell (dash, bash, zsh, ...), not just zsh.
 set -eu
 
@@ -71,13 +72,34 @@ MD
 profile: balanced
 required: false
 YAML
+	mkdir -p press/series/dispatches
+	cat >press/series/dispatches/series.yaml <<'YAML'
+# Articles you asked for, on any subject, whenever you ask. nb duty never
+# schedules this series; every article in it started as a request.
+name: Dispatches
+mode: open
+cadence: manual
+template: article
+prompt: prompt.md
+strict: false
+min_sources: 5
+bands:
+  words: [800, 2500]
+YAML
+	cat >press/series/dispatches/prompt.md <<'MD'
+Someone asked for this article. The request is the commission: find the
+question it raises and establish the answer rather than mention it. Whatever
+the request supplied, a link, a document, a claim, is starting material, not
+the evidence: read it, then read past it until the piece stands on sources the
+reader can check. Cover what was asked and nothing that was not.
+MD
 	cat >press/README.md <<'MD'
 # press/ is your side of the repo
 
-Everything here is yours; everything outside is the engine. Configure series
-under series/, your voice in editorial.md, role cost in production.yaml, and
-your look via site.yaml and themes/. Copy working examples from examples/ to
-get started.
+Everything here is yours; everything outside is the engine. Dispatches, under
+series/, takes the articles you ask for. Add a series when a kind of request
+recurs, your voice in editorial.md, role cost in production.yaml, and your look
+via site.yaml and themes/. Working examples live under examples/.
 MD
 	ok "press/ scaffolded. Configure it, or ask your agent to set you up"
 else
@@ -208,14 +230,10 @@ echo
 ok "The presses are ready."
 printf '%s\n' "
 Next steps:
-  1. Configure:  add a series (copy a working example from examples/), or open
-                 this checkout in your AI tool and ask it to set you up; see
+  1. Ask for an article: open this checkout in your AI tool and say what you
+                 want to read. The Dispatches series takes it; see
                  docs/getting-started/ask-your-ai.md.
-  2. Publish it: commit and push press/ to main. The scheduled run reads the
-                 press from the remote main branch, not this working tree.
-  3. Verify:     run the non-publishing smoke test in your real automation
-                 environment; see docs/getting-started/first-run.md.
-  4. Schedule:   pick a scheduler in docs/guides/operate/schedule.md and point
-                 it at .agents/prompts/run-scheduled-publication.md.
-  5. Morning:    your site lives at the Pages URL for $repo.
+  2. Morning paper, when you want one: add series with a cadence and schedule
+                 the run; see docs/guides/operate/schedule.md.
+  3. Your site:  the Pages URL for $repo.
 "

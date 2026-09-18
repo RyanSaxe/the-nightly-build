@@ -27,9 +27,9 @@ Start with [Ask your AI](ask-your-ai.md). A capable assistant should:
 When the assistant cannot perform a step itself, expect one exact manual action
 from it, and it continues from your result.
 
-`nb setup` scaffolds `press/`, creates the protected `library` branch, seeds its
-publishing workflows, enables Actions, and configures GitHub Pages and
-auto-merge. The local command requires `git`, an authenticated `gh`, `uv`, and
+`nb setup` scaffolds `press/` with one on-demand series, creates the protected
+`library` branch, seeds its publishing workflows, enables Actions, and
+configures GitHub Pages. It requires `git`, an authenticated `gh`, `uv`, and
 Python 3.10 or newer.
 
 Forks start with workflows disabled. If `nb setup` warns that it could not
