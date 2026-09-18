@@ -19,16 +19,17 @@ it. Diagnose and repair any other recoverable failure. For an external
 permission or service failure, report the evidence, exact manual action, and
 command to resume. Never report an unpublished run as successful.
 
-Refresh a separate checkout of `library`, then run:
+Run:
 
 ```text
-nb duty --library <library-checkout>
+nb duty
 ```
 
-When it exits 2, it has rejected the library checkout and printed the reason on
-stderr. Repair exactly that and rerun the command. A missing press is an error.
-`examples/` is documentation, never live configuration. If no work is due,
-finish without opening a PR.
+It fetches `origin/library` into a checkout it keeps under `.nb-work/` at the
+checkout root. When it exits 2, it has rejected that checkout and printed the
+reason on stderr. Repair exactly that and rerun the command. A missing press is
+an error. `examples/` is documentation, never live configuration. If no work is
+due, finish without opening a PR.
 
 ## Load the orchestrator skill
 

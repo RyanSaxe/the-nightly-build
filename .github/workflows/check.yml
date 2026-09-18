@@ -10,6 +10,9 @@ name: nightly-build-check
 on:
   pull_request:
     branches: [library]
+    # ready_for_review is not in the default set; without it a held draft
+    # marked ready would never reach the automerge job.
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -102,7 +105,9 @@ jobs:
 
   automerge:
     needs: validate
-    if: needs.validate.outputs.new_article == 'true' || needs.validate.outputs.sync == 'true'
+    if: >-
+      github.event.pull_request.draft == false
+      && (needs.validate.outputs.new_article == 'true' || needs.validate.outputs.sync == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -134,12 +139,14 @@ jobs:
 
       # Pushes made with GITHUB_TOKEN never fire push-triggered workflows
       # (recursion guard), so the merge above cannot start the press by
-      # itself, so dispatch it explicitly. Human merges trigger it normally.
+      # itself, so dispatch it explicitly. The deploy runs on the main ref,
+      # which the Pages environment allows without a branch policy; a human
+      # merge fires publish.yml's push trigger on library, which relays here.
       - name: Start the press
         if: needs.validate.outputs.new_article == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run publish.yml --repo ${{ github.repository }} --ref library || true
+        run: gh workflow run publish.yml --repo ${{ github.repository }} --ref main || true
 
       - name: Supersede competing PRs for the same slug
         if: needs.validate.outputs.new_article == 'true'

@@ -112,12 +112,6 @@ def check_open_slug(*, items, slug, pub, manual, revision, rep):
     if revision:
         # published is a fact: revising never requires the item's config
         return item_cfg
-    if manual and item_cfg is None:
-        rep.block(
-            "B-SLUG",
-            f"manual open series requires '{slug}' to be a configured item",
-        )
-        return None
     if pub is None:
         rep.notes.append(
             "library state not provided (--library); "
@@ -126,6 +120,10 @@ def check_open_slug(*, items, slug, pub, manual, revision, rep):
         return item_cfg
     if slug in pub:
         rep.block("B-MODE", f"'{slug}' is already published")
+    if manual:
+        # a manual series only ever publishes what a person asked for, so
+        # its items are suggestions and never gate the slug
+        return item_cfg
     pending = sorted(it.get("slug") for it in items if it.get("slug") not in pub)
     if pending and slug not in pending:
         rep.block(

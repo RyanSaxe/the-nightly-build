@@ -152,10 +152,12 @@ def test_open_article_keeps_requested_tag_order(
     assert "Selected item" not in direction
 
 
-def test_manual_open_article_requires_a_configured_commission(
+def test_manual_open_article_admits_any_slug(
     clone_testrepo,
     tmp_path: pathlib.Path,
 ) -> None:
+    # a manual series only publishes what a person asked for, so an unlisted
+    # slug needs no configured item
     repo = pathlib.Path(clone_testrepo("press", "templates", "spec"))
     series = repo / "press/series/wildcard"
     series.mkdir()
@@ -165,14 +167,15 @@ def test_manual_open_article_requires_a_configured_commission(
     )
     (series / "prompt.md").write_text("Choose a new subject.\n")
 
-    with pytest.raises(StartArticleError, match="has no item 'birds'"):
-        initialize(
-            repo=repo,
-            workspace=tmp_path / "article",
-            series_id="wildcard",
-            slug="birds",
-            template_id="article",
-        )
+    article = initialize(
+        repo=repo,
+        workspace=tmp_path / "article",
+        series_id="wildcard",
+        slug="birds",
+        template_id="article",
+    )
+
+    assert article.exists()
 
 
 def test_manual_open_article_accepts_a_configured_commission(
