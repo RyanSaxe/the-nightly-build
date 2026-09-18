@@ -31,4 +31,6 @@ article can stand in for that day's scheduled one. Tomorrow is never affected.
 Once any configuration change is validated and merged into `main`, production
 runs. The result is an ordinary Article PR through the same CI gate as a
 scheduled article: no source, artifact, rendering, or PR-shape requirement is
-bypassed, and a clean PR publishes automatically.
+bypassed, and a clean PR publishes automatically. Ask to read the article first
+and the PR opens as a draft instead: CI validates it and nothing merges until
+you mark it ready, which runs the check again and publishes.

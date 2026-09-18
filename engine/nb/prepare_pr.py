@@ -304,12 +304,16 @@ def _repository_name(library: pathlib.Path, gh: str) -> str | None:
     return result.stdout.strip() if result.returncode == 0 else None
 
 
-def _handoff(prepared: _PreparedBranch, *, reason: str, repository: str | None) -> int:
+def _handoff(
+    prepared: _PreparedBranch, *, reason: str, repository: str | None, hold: bool
+) -> int:
     print("NB_ARTICLE_PR_REQUIRED")
     print(f"reason={reason}")
     if repository:
         print(f"repository={repository}")
     print("base=library")
+    if hold:
+        print("draft=true")
     print(f"head={prepared.name}")
     print(f"title={_pr_title(prepared)}")
     print("body<<NB_ARTICLE_BODY")
@@ -323,21 +327,26 @@ def _handoff(prepared: _PreparedBranch, *, reason: str, repository: str | None) 
     return HANDOFF_EXIT
 
 
-def _open_pr(prepared: _PreparedBranch, *, library: pathlib.Path) -> int:
+def _open_pr(prepared: _PreparedBranch, *, library: pathlib.Path, hold: bool) -> int:
     gh = shutil.which("gh")
     if gh is None:
-        return _handoff(prepared, reason="gh is not installed", repository=None)
+        return _handoff(
+            prepared, reason="gh is not installed", repository=None, hold=hold
+        )
     authenticated = subprocess.run(
         [gh, "auth", "status"], capture_output=True, text=True
     )
     if authenticated.returncode:
-        return _handoff(prepared, reason="gh is not authenticated", repository=None)
+        return _handoff(
+            prepared, reason="gh is not authenticated", repository=None, hold=hold
+        )
     repository = _repository_name(library, gh)
     if repository is None:
         return _handoff(
             prepared,
             reason="gh cannot resolve the origin repository",
             repository=None,
+            hold=hold,
         )
 
     existing = subprocess.run(
@@ -363,7 +372,10 @@ def _open_pr(prepared: _PreparedBranch, *, library: pathlib.Path) -> int:
     )
     if existing.returncode:
         return _handoff(
-            prepared, reason="gh cannot inspect Article PRs", repository=repository
+            prepared,
+            reason="gh cannot inspect Article PRs",
+            repository=repository,
+            hold=hold,
         )
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8") as body_file:
@@ -399,13 +411,30 @@ def _open_pr(prepared: _PreparedBranch, *, library: pathlib.Path) -> int:
                 "--body-file",
                 body_file.name,
             ]
+            if hold:
+                command.append("--draft")
         result = subprocess.run(command, capture_output=True, text=True)
     if result.returncode:
         return _handoff(
             prepared,
             reason="gh cannot open or update the Article PR",
             repository=repository,
+            hold=hold,
         )
+    if url and hold:
+        # an existing PR is re-held rather than left ready to merge
+        held = subprocess.run(
+            [gh, "pr", "ready", "--undo", url, "--repo", repository],
+            capture_output=True,
+            text=True,
+        )
+        if held.returncode:
+            return _handoff(
+                prepared,
+                reason="gh cannot mark the Article PR as a draft",
+                repository=repository,
+                hold=hold,
+            )
     print(url or result.stdout.strip())
     return 0
 
@@ -416,6 +445,7 @@ def _prepare(
     main_root: pathlib.Path,
     library: pathlib.Path | None,
     check_links: bool,
+    hold: bool,
     today: dt.date | None = None,
 ) -> int:
     article = _article_from_workspace(article_path)
@@ -427,7 +457,7 @@ def _prepare(
         check_links=check_links,
         today=today,
     )
-    return _open_pr(prepared, library=checkout)
+    return _open_pr(prepared, library=checkout, hold=hold)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -439,6 +469,11 @@ def _parser() -> argparse.ArgumentParser:
         "--library",
         type=pathlib.Path,
         help="library checkout; defaults to one kept under .nb-work/ at origin/library",
+    )
+    parser.add_argument(
+        "--hold",
+        action="store_true",
+        help="open the Article PR as a draft that CI validates and never merges",
     )
     parser.add_argument(
         "--check-links",
@@ -458,6 +493,7 @@ def main(arguments: list[str] | None = None) -> int:
             main_root=repo_root(),
             library=parsed.library,
             check_links=parsed.check_links,
+            hold=parsed.hold,
             today=parsed.today,
         )
     except (_PrepareError, LibraryCheckoutError) as error:

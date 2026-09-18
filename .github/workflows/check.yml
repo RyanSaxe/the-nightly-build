@@ -10,6 +10,9 @@ name: nightly-build-check
 on:
   pull_request:
     branches: [library]
+    # ready_for_review is not in the default set; without it a held draft
+    # marked ready would never reach the automerge job.
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -102,7 +105,9 @@ jobs:
 
   automerge:
     needs: validate
-    if: needs.validate.outputs.new_article == 'true' || needs.validate.outputs.sync == 'true'
+    if: >-
+      github.event.pull_request.draft == false
+      && (needs.validate.outputs.new_article == 'true' || needs.validate.outputs.sync == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write
