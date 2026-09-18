@@ -90,6 +90,24 @@ def make_setup_repo(tmp_path: pathlib.Path) -> SetupRepo:
     return SetupRepo(checkout, origin, gh_log, fake_bin)
 
 
+def test_setup_without_gh_seeds_library_and_prints_the_clicks(
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = make_setup_repo(tmp_path)
+
+    result = repo.run(gh_mode="unauthenticated")
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert {"library/.gitkeep", *WORKFLOWS} <= repo.library_files()
+    assert "Still to do in the browser" in result.stdout
+    assert "The presses are ready" not in result.stdout
+    assert "settings/pages" in result.stdout
+    assert "/actions" in result.stdout
+    assert "settings/branches" in result.stdout
+    assert "auto-merge" not in result.stdout
+    assert "api" not in repo.gh_log.read_text()
+
+
 def test_setup_scaffolds_a_press_with_dispatches(tmp_path: pathlib.Path) -> None:
     repo = make_setup_repo(tmp_path)
 
@@ -111,7 +129,8 @@ def test_setup_with_gh_makes_the_settings_and_skips_the_environment(
 
     assert result.returncode == 0, result.stderr + result.stdout
     assert {"library/.gitkeep", *WORKFLOWS} <= repo.library_files()
-    assert "Not verified" not in result.stdout
+    assert "The presses are ready" in result.stdout
+    assert "Still to do" not in result.stdout
     calls = repo.gh_log.read_text()
     assert "repos/example/nightly-build/pages" in calls
     assert "actions/permissions" in calls

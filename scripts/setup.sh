@@ -2,7 +2,8 @@
 # The Nightly Build scripts/setup.sh
 # Idempotent bootstrap: scaffolds the press, creates the library branch, enables
 # Pages and Actions, validates configuration. Safe to re-run; callable by the
-# user-assistant skill.
+# user-assistant skill. Without a signed-in gh it does the git side and prints
+# the fork settings only an admin can make.
 # POSIX sh so it runs on any shell (dash, bash, zsh, ...), not just zsh.
 set -eu
 
@@ -31,17 +32,35 @@ cleanup_seed() {
 trap cleanup_seed EXIT HUP INT TERM
 
 # 1. Preconditions -----------------------------------------------------------
-command -v gh >/dev/null 2>&1 || die "gh (GitHub CLI) is required: https://cli.github.com"
 command -v git >/dev/null 2>&1 || die "git is required"
 command -v uv >/dev/null 2>&1 || die "uv is required: https://docs.astral.sh/uv/"
-gh auth status >/dev/null 2>&1 || die "gh is not authenticated. Run: gh auth login"
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "run this from your fork's checkout"
 
 origin_url=$(git remote get-url origin 2>/dev/null) ||
 	die "no 'origin' remote. Is this your fork's checkout?"
-repo=$(gh repo view "$origin_url" --json nameWithOwner -q .nameWithOwner 2>/dev/null) ||
-	die "no GitHub repo detected at origin ($origin_url)"
+
+# gh makes the settings only an admin can make. Without it the git side still
+# completes, and those settings are printed as clicks at the end.
+have_gh=false
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+	have_gh=true
+	repo=$(gh repo view "$origin_url" --json nameWithOwner -q .nameWithOwner 2>/dev/null) ||
+		die "no GitHub repo detected at origin ($origin_url)"
+else
+	repo=$(printf '%s\n' "$origin_url" |
+		sed -e 's#^https://github\.com/##' -e 's#^git@github\.com:##' -e 's#\.git$##' -e 's#/$##')
+	case "$repo" in
+	*/*) ;;
+	*) die "origin is not a GitHub repository ($origin_url)" ;;
+	esac
+	warn "gh is not signed in: the fork settings that need an admin are listed at the end"
+fi
 ok "repo: $repo"
+clicks=
+click() {
+	clicks="${clicks}
+  - $1"
+}
 
 # 1b. This repo is a press; the canonical repo is engine-only ------------------
 UPSTREAM_REPO="${UPSTREAM_REPO:-the-nightly-build/the-nightly-build}"
@@ -161,42 +180,54 @@ fi
 # 4. GitHub Pages (Actions-based deploy; publish.yml uploads site/) ----------
 # The deploy runs on the main ref and reads library at build time, so the
 # github-pages environment needs no branch policy for library.
-if gh api "repos/$repo/pages" >/dev/null 2>&1; then
+pages_click="required: set Pages Source to 'GitHub Actions' at https://github.com/$repo/settings/pages"
+if [ "$have_gh" = false ]; then
+	click "$pages_click"
+elif gh api "repos/$repo/pages" >/dev/null 2>&1; then
 	gh api -X PUT "repos/$repo/pages" -f build_type=workflow >/dev/null 2>&1 ||
 		true
 	ok "GitHub Pages already enabled"
+elif gh api -X POST "repos/$repo/pages" -f build_type=workflow >/dev/null 2>&1; then
+	ok "GitHub Pages enabled (workflow deploy)"
 else
-	if gh api -X POST "repos/$repo/pages" -f build_type=workflow >/dev/null 2>&1; then
-		ok "GitHub Pages enabled (workflow deploy)"
-	else
-		warn "could not enable Pages via API (a private repo on the free plan"
-		warn "  has no Pages: make it public, or use Pro). Then enable it at:"
-		warn "  https://github.com/$repo/settings/pages, Source: GitHub Actions"
-	fi
+	warn "could not enable Pages via API (a private repo on the free plan"
+	warn "  has no Pages: make it public, or use Pro)"
+	click "$pages_click"
 fi
 
 # 4c. Actions run the publishing gate; forks start with workflows disabled ---
-if [ "$(gh api "repos/$repo/actions/permissions" -q .enabled 2>/dev/null)" = "true" ]; then
+actions_click="required: enable workflows at https://github.com/$repo/actions (forks start with them off)"
+if [ "$have_gh" = false ]; then
+	click "$actions_click"
+elif [ "$(gh api "repos/$repo/actions/permissions" -q .enabled 2>/dev/null)" = "true" ]; then
 	ok "GitHub Actions enabled"
 elif gh api -X PUT "repos/$repo/actions/permissions" -F enabled=true >/dev/null 2>&1; then
 	ok "GitHub Actions enabled (forks start with workflows disabled)"
 else
 	warn "could not enable GitHub Actions. Without it the 'validate' check never"
-	warn "  runs and no article can merge. Enable workflows at:"
-	warn "  https://github.com/$repo/actions"
+	warn "  runs and no article can merge"
+	click "$actions_click"
 fi
 
 # 5. Auto-merge + library protection -----------------------------------------
-if gh api -X PATCH "repos/$repo" -F allow_auto_merge=true >/dev/null 2>&1; then
-	ok "repository auto-merge enabled"
-else
-	warn "could not enable auto-merge. Flip it at https://github.com/$repo/settings"
+# Article PRs are merged by the check itself. nb sync asks GitHub to auto-merge
+# its own PR once 'validate' passes, which needs the repository setting; without
+# it, sync hands that PR to the runtime's GitHub tool instead.
+if [ "$have_gh" = true ]; then
+	if gh api -X PATCH "repos/$repo" -F allow_auto_merge=true >/dev/null 2>&1; then
+		ok "repository auto-merge enabled"
+	else
+		warn "could not enable auto-merge; nb sync will hand its PR to your GitHub tool"
+	fi
 fi
 # enforce_admins:true is deliberate: the scheduled runtime holds your (admin) token,
 # so the required 'validate' check must bind admins too, or a prompt-injected
 # run could merge past the proof. Auto-merge still works (it merges only after
 # 'validate' passes). See docs/concepts/publishing-and-security.md.
-if gh api -X PUT "repos/$repo/branches/library/protection" --input - >/dev/null 2>&1 <<'JSON'; then
+protect_click="recommended: require the 'validate' check on library, enforced for admins, at https://github.com/$repo/settings/branches"
+if [ "$have_gh" = false ]; then
+	click "$protect_click"
+elif gh api -X PUT "repos/$repo/branches/library/protection" --input - >/dev/null 2>&1 <<'JSON'; then
 {
   "required_status_checks": { "strict": false, "contexts": ["validate"] },
   "enforce_admins": true,
@@ -209,8 +240,7 @@ JSON
 	ok "library branch protected (the editor's check gates every merge, incl. admins)"
 else
 	warn "could not protect library (needs admin / paid plan on private repos)"
-	warn "  recommended: require the 'validate' check (enforce for admins) at"
-	warn "  https://github.com/$repo/settings/branches"
+	click "$protect_click"
 fi
 
 # 6. Existing libraries synchronize through the protected PR path ------------
@@ -226,8 +256,24 @@ if [ "$library_created" = false ]; then
 fi
 
 # 7. Status ------------------------------------------------------------------
+owner=$(printf '%s' "${repo%%/*}" | tr '[:upper:]' '[:lower:]')
+name=$(printf '%s' "${repo#*/}" | tr '[:upper:]' '[:lower:]')
+if [ "$name" = "$owner.github.io" ]; then
+	site_url="https://$owner.github.io/"
+else
+	site_url="https://$owner.github.io/$name/"
+fi
 echo
-ok "The presses are ready."
+if [ -n "$clicks" ]; then
+	ok "The git side is done."
+	printf '%s\n' "
+Still to do in the browser (needs an admin):$clicks
+  Without Pages nothing deploys; without workflows the 'validate' check never
+  runs and no article can merge. Re-running nb setup with gh signed in makes
+  and verifies them instead."
+else
+	ok "The presses are ready."
+fi
 printf '%s\n' "
 Next steps:
   1. Ask for an article: open this checkout in your AI tool and say what you
@@ -235,5 +281,5 @@ Next steps:
                  docs/getting-started/ask-your-ai.md.
   2. Morning paper, when you want one: add series with a cadence and schedule
                  the run; see docs/guides/operate/schedule.md.
-  3. Your site:  the Pages URL for $repo.
+  3. Your site:  $site_url, once Pages is on and the first article merges.
 "
