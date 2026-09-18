@@ -354,6 +354,8 @@ def series_status(s, cfg):
         return f"{count} published", False
     if mode == "rolling":
         cadence = cfg.get("cadence")
+        if isinstance(cadence, list):
+            cadence = ", ".join(str(day) for day in cadence)
         return (esc(str(cadence)) if isinstance(cadence, str) else "nightly"), False
     return f"{count} published", False
 
