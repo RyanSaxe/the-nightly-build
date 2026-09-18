@@ -1,12 +1,15 @@
-# The press run: on every push to library, rebuild the site and deploy Pages.
+# The press run: rebuild the site from library and deploy Pages.
 # SECURITY: executable logic (builder, assets) is ALWAYS checked out from main
 # (§1 invariant 1). Library content is data, never code.
 # The built site is served from the Pages artifact; it is NOT committed back to
 # the library branch, so a protected library never blocks the deploy.
-# PLACEMENT: GitHub fires push triggers only from workflow files present on the
-# pushed branch, so nb setup seeds the first copy and nb sync keeps it
-# current. Auto-merge also dispatches it (GITHUB_TOKEN pushes fire no events).
-# Keep this a pure trigger: engine logic comes from main at run time.
+# PLACEMENT: the build and deploy run on the main ref, which the github-pages
+# environment allows without a branch policy. GitHub fires push triggers only
+# from workflow files present on the pushed branch, so this file is also seeded
+# onto library (nb setup, then nb sync), where a push runs only the relay job
+# that dispatches the same file on main. Auto-merge dispatches it on main
+# directly (GITHUB_TOKEN pushes fire no events). Keep this a pure trigger:
+# engine logic comes from main at run time.
 name: nightly-build-publish
 
 on:
@@ -19,8 +22,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  relay:
+    if: github.ref_name == 'library' && !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Hand the run to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish.yml --repo ${{ github.repository }} --ref main
+
   build:
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,6 +44,7 @@ jobs:
       - name: Checkout library (content)
         uses: actions/checkout@v4
         with:
+          ref: library
           fetch-depth: 0 # full history: revision merges date the feed's <updated>
 
       - name: Checkout engine + templates from main
