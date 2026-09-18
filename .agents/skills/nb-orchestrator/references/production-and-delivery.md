@@ -116,15 +116,19 @@ After editor approval and a fresh proof, deliver that article immediately. Do
 not hold a finished article for the rest of the edition. Run:
 
 ```text
-nb prepare-pr <workspace>/library/<series>/<slug>.html --library <library>
+nb prepare-pr <workspace>/library/<series>/<slug>.html
 ```
 
-The command creates the branch and commit from current `origin/library`, proves
-the submitted diff, pushes it, and opens or describes the one Article PR. If it
-prints `NB_ARTICLE_PR_REQUIRED`, use the connected GitHub tool exactly as the
-handoff directs. Never recreate or edit its generated branch manually. When its
-proof fails, fix a mechanical fault yourself or route the finding to its owning
-role. A prose change needs a fresh editor approval before preparing again.
+The command fetches current `origin/library` into a checkout it keeps under
+`.nb-work/` at the checkout root, creates the branch and commit from it, proves
+the submitted diff, pushes it, and opens or describes the one Article PR. Pass
+`--hold` when the owner asked to read the article first: the PR opens as a draft
+that CI validates and never merges; marking it ready runs the check again and
+publishes. If it prints `NB_ARTICLE_PR_REQUIRED`, use the connected GitHub tool
+exactly as the handoff directs. Never recreate or edit its generated branch
+manually. When its proof fails, fix a mechanical fault yourself or route the
+finding to its owning role. A prose change needs a fresh editor approval before
+preparing again.
 
 Monitor every Article PR through CI, merge, and the published website while
 other articles continue. Route a CI failure back through production, update the

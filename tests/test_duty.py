@@ -8,9 +8,11 @@ read an empty work list as permission to find configuration of its own.
 """
 
 import json
+import os
 import pathlib
 import shutil
 import subprocess
+import sys
 import tempfile
 from collections.abc import Callable
 
@@ -387,3 +389,40 @@ def test_a_tree_with_no_git_is_never_called_stale(
     empty_lib: str,
 ) -> None:
     assert run_duty("--repo", testrepo, "--library", empty_lib).returncode == 0
+
+
+def test_duty_keeps_its_own_library_checkout_by_default(
+    clone_testrepo: Callable[..., str], tmp_path: pathlib.Path
+) -> None:
+    # no --library: duty fetches origin/library under .nb-work/ itself
+    seed = tmp_path / "seed"
+    (seed / "library").mkdir(parents=True)
+    (seed / "library" / ".gitkeep").write_text("")
+    git("init", "-q", "-b", "library", cwd=str(seed))
+    git("config", "user.name", "Test Press", cwd=str(seed))
+    git("config", "user.email", "test@example.com", cwd=str(seed))
+    git("add", "-A", cwd=str(seed))
+    git("commit", "-qm", "library", cwd=str(seed))
+    origin = tmp_path / "origin.git"
+    subprocess.run(["git", "clone", "-q", "--bare", str(seed), str(origin)], check=True)
+    root = clone_testrepo("press", "templates", "engine")
+    git("init", "-q", "-b", "main", cwd=root)
+    git("remote", "add", "origin", str(origin), cwd=root)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(REPO / "engine" / "duty.py"),
+            "--repo",
+            root,
+            "--allow-stale",
+        ],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": str(REPO / "engine")},
+    )
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert duty_of(report, "ai-briefs") in report["due"]
+    assert (pathlib.Path(root) / ".nb-work" / "library" / "library").is_dir()

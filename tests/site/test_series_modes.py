@@ -116,5 +116,22 @@ def test_an_open_series_renders_no_placeholder_for_a_pending_commission(
     assert "On Commission" not in page
 
 
+def test_a_rolling_series_on_a_day_list_shows_its_days(
+    clone_testrepo: Callable[..., str], tmp_path: pathlib.Path
+) -> None:
+    repo = clone_testrepo("press", "templates", "engine")
+    series_yaml = pathlib.Path(repo, "press", "series", "ai-briefs", "series.yaml")
+    series_yaml.write_text(
+        series_yaml.read_text().replace("cadence: daily", "cadence: [mon, thu]")
+    )
+    library = tmp_path / "library-root"
+    (library / "library").mkdir(parents=True)
+    site = build_press(repo, str(library))
+
+    page = site.read("series", "index.html")
+
+    assert "mon, thu" in page
+
+
 def test_an_open_series_page_shows_the_template_choice_list(open_site: Site) -> None:
     assert "article, brief" in open_site.read("series", "wildcard", "index.html")

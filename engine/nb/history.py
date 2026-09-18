@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from html.parser import HTMLParser
 
 from nb import meta as nb_meta
+from nb.library_checkout import LibraryCheckoutError, ensure_library
 from nb.site.library import article_body_html, article_text, read_meta, scan_library
 
 __all__ = (
@@ -395,9 +396,9 @@ def parser() -> argparse.ArgumentParser:
     )
     command.add_argument(
         "--library",
-        default=os.getenv("NB_LIBRARY", "."),
         type=pathlib.Path,
-        help="library checkout (defaults to $NB_LIBRARY or the current directory)",
+        help="library checkout (defaults to $NB_LIBRARY, else one kept under "
+        ".nb-work/ at origin/library)",
     )
     command.add_argument("--series", help="restrict results to one series")
     command.add_argument("--limit", type=_limit, default=DEFAULT_LIMIT)
@@ -434,6 +435,14 @@ def _shown_article(library: pathlib.Path, reference: str) -> pathlib.Path | None
 def main(arguments: list[str] | None = None) -> None:
     command = parser()
     options = command.parse_args(arguments)
+    if options.library is None:
+        configured = os.getenv("NB_LIBRARY")
+        try:
+            options.library = (
+                pathlib.Path(configured) if configured else ensure_library()
+            )
+        except LibraryCheckoutError as error:
+            raise SystemExit(f"nb history: {error}") from error
     if options.structure:
         if options.query or options.series or options.show:
             command.error(

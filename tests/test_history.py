@@ -11,8 +11,10 @@ repetition checks, still never the markup itself.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
+import sys
 
 from nb.history import EXCERPT_LENGTH, HistoryEntry, excerpt, format_results, search
 from press import REPO
@@ -299,3 +301,61 @@ def test_nb_history_show_rejects_search_arguments(tmp_path: pathlib.Path) -> Non
 
     assert result.returncode == 2
     assert "--show cannot be combined with a query or --series" in result.stderr
+
+
+def test_nb_history_keeps_its_own_library_checkout_by_default(
+    tmp_path: pathlib.Path,
+) -> None:
+    # no --library and no NB_LIBRARY: the engine fetches origin/library itself
+    seed = tmp_path / "seed"
+    write_article(
+        seed,
+        series="the-wire",
+        slug="example",
+        title="A searchable title",
+        text="The unmistakable needle belongs to this article.",
+    )
+    subprocess.run(["git", "init", "-q", "-b", "library"], cwd=seed, check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@example.com", "add", "-A"],
+        cwd=seed,
+        check=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@example.com",
+            "commit",
+            "-qm",
+            "seed",
+        ],
+        cwd=seed,
+        check=True,
+    )
+    origin = tmp_path / "origin.git"
+    subprocess.run(["git", "clone", "-q", "--bare", str(seed), str(origin)], check=True)
+    root = tmp_path / "root"
+    root.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", str(origin)], cwd=root, check=True
+    )
+    environment = {
+        key: value for key, value in os.environ.items() if key != "NB_LIBRARY"
+    }
+    environment.update({"NB_ROOT": str(root), "PYTHONPATH": str(REPO / "engine")})
+
+    result = subprocess.run(
+        [sys.executable, str(REPO / "engine" / "nb" / "history.py"), "needle"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "the-wire/example" in result.stdout
+    assert (root / ".nb-work" / "library" / "library" / "the-wire").is_dir()
