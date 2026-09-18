@@ -26,8 +26,10 @@ from current `main`. Engine updates and press edits target this branch.
 `library` is downstream publication state. Article HTML, article assets, role
 artifacts, and protected publishing workflows live there. It changes only
 through its validated PR boundary. The Pages workflow builds the static site
-from that state and deploys it as a GitHub Pages artifact. The generated site,
-including `catalog.json`, is not committed to the branch.
+from that state and deploys it as a GitHub Pages artifact. That workflow runs on
+the `main` ref and reads `library` at build time; a push to `library` relays to
+it. The generated site, including `catalog.json`, is not committed to the
+branch.
 
 Never push directly to `library`, edit its article files in place, merge it back
 into `main`, or include it when forking upstream. New articles, revisions,

@@ -139,12 +139,14 @@ jobs:
 
       # Pushes made with GITHUB_TOKEN never fire push-triggered workflows
       # (recursion guard), so the merge above cannot start the press by
-      # itself, so dispatch it explicitly. Human merges trigger it normally.
+      # itself, so dispatch it explicitly. The deploy runs on the main ref,
+      # which the Pages environment allows without a branch policy; a human
+      # merge fires publish.yml's push trigger on library, which relays here.
       - name: Start the press
         if: needs.validate.outputs.new_article == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run publish.yml --repo ${{ github.repository }} --ref library || true
+        run: gh workflow run publish.yml --repo ${{ github.repository }} --ref main || true
 
       - name: Supersede competing PRs for the same slug
         if: needs.validate.outputs.new_article == 'true'
