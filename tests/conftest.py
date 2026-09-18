@@ -10,6 +10,7 @@ import contextlib
 import datetime as dt
 import io
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -35,6 +36,14 @@ from press import (
 DUTY = [sys.executable, str(REPO / "engine" / "duty.py")]
 VALIDATE_CONFIG = [sys.executable, str(REPO / "engine" / "validate_config.py")]
 CI_HELPERS = [sys.executable, str(REPO / "engine" / "ci_helpers.py")]
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _clean_git_environment() -> None:
+    # git exports these to hooks. From a linked worktree they are absolute, and
+    # every temporary repository the tests create would then be this checkout.
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_PREFIX"):
+        os.environ.pop(name, None)
 
 
 @pytest.fixture(scope="session")
