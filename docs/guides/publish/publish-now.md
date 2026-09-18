@@ -16,8 +16,8 @@ What a home requires depends on the series mode:
   slug is admissible. When the series has a pending commission queue, add the
   article to `items` so it joins the queue. Adding an item is always a valid way
   to record the commission.
-- A `cadence: manual` series requires a matching `items` entry for every
-  article. It is the natural home for pieces that should never be scheduled.
+- A `cadence: manual` series admits any slug and is never scheduled. It is the
+  natural home for pieces you ask for; its `items` are suggestions, not a gate.
 - A collection takes any configured, unpublished item, adding one if needed. A
   sequence admits only its next unpublished item.
 - A rolling series publishes one dated edition per UTC day, so publishing now

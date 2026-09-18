@@ -63,8 +63,8 @@ refuses new articles for a paused series.
 
 `cadence: manual` is valid for every mode and is never scheduled by `nb duty`.
 Collection and sequence keep their configured-item rules, and rolling keeps its
-date identity. An open manual series requires the article slug to match a
-configured `items` entry in both initialization and CI.
+date identity. An open manual series admits any slug: every article in it was
+asked for by a person, so its `items` are suggestions the proof never enforces.
 
 `section:` groups series under a heading on the Sections page, and front-page
 kickers show the heading before the series' name. It is the only level of
