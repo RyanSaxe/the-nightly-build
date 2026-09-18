@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import os
 import pathlib
 import shutil
 import subprocess
@@ -21,6 +20,7 @@ from dataclasses import dataclass
 
 from nb import meta as nb_meta
 from nb.artifacts import validate_artifacts
+from nb.library_checkout import LibraryCheckoutError, ensure_library, repo_root
 from nb.proof.pr import run_pr_mode
 from nb.report import Report, emit
 
@@ -414,19 +414,20 @@ def _prepare(
     article_path: pathlib.Path,
     *,
     main_root: pathlib.Path,
-    library: pathlib.Path,
+    library: pathlib.Path | None,
     check_links: bool,
     today: dt.date | None = None,
 ) -> int:
     article = _article_from_workspace(article_path)
+    checkout = (library or ensure_library(main_root)).resolve()
     prepared = _prepare_branch(
         article,
         main_root=main_root.resolve(),
-        library=library.resolve(),
+        library=checkout,
         check_links=check_links,
         today=today,
     )
-    return _open_pr(prepared, library=library.resolve())
+    return _open_pr(prepared, library=checkout)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -434,7 +435,11 @@ def _parser() -> argparse.ArgumentParser:
         description="Validate, commit, push, and open one exact Article PR"
     )
     parser.add_argument("article", type=pathlib.Path)
-    parser.add_argument("--library", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--library",
+        type=pathlib.Path,
+        help="library checkout; defaults to one kept under .nb-work/ at origin/library",
+    )
     parser.add_argument(
         "--check-links",
         action=argparse.BooleanOptionalAction,
@@ -447,16 +452,15 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(arguments: list[str] | None = None) -> int:
     parsed = _parser().parse_args(arguments)
-    root = pathlib.Path(os.environ.get("NB_ROOT", pathlib.Path(__file__).parents[2]))
     try:
         return _prepare(
             parsed.article,
-            main_root=root,
+            main_root=repo_root(),
             library=parsed.library,
             check_links=parsed.check_links,
             today=parsed.today,
         )
-    except _PrepareError as error:
+    except (_PrepareError, LibraryCheckoutError) as error:
         print(f"nb prepare-pr: {error}", file=sys.stderr)
         return 1
 

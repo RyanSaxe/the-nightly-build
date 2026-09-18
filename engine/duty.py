@@ -23,7 +23,7 @@ rather than answering, in two cases:
   A stale checkout. A cached workspace serves a press, prompts, and an engine
   the paper has moved past, and nothing downstream can tell.
 
-Run: python3 engine/duty.py --repo . --library <library-checkout> [--date YYYY-MM-DD]
+Run: python3 engine/duty.py --repo . [--library <library-checkout>] [--date YYYY-MM-DD]
 Prints JSON: {"date", "weekday", "due": [...], "idle": [...]}. Exits 0, except
 2 when the tree is refused (--allow-stale skips the staleness check, for
 offline work; nothing skips the missing-press check).
@@ -35,10 +35,12 @@ import argparse
 import datetime as _dt
 import json
 import os
+import pathlib
 import subprocess
 import sys
 
 from nb import meta as nb_meta
+from nb.library_checkout import LibraryCheckoutError, ensure_library
 
 try:
     import yaml
@@ -273,7 +275,10 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="Deterministic scheduled work list")
     p.add_argument("--repo", default=".", help="repo root (main checkout)")
     p.add_argument(
-        "--library", required=True, help="library-branch checkout (published state)"
+        "--library",
+        default=None,
+        help="library-branch checkout (published state); defaults to a checkout "
+        "of origin/library that duty keeps under .nb-work/",
     )
     p.add_argument("--date", default=None, help="UTC date, default today")
     p.add_argument(
@@ -289,6 +294,13 @@ def main(argv=None) -> int:
     if refusal:
         sys.stderr.write(f"duty.py: {refusal}\n")
         return 2
+    library = args.library
+    if library is None:
+        try:
+            library = str(ensure_library(pathlib.Path(args.repo)))
+        except LibraryCheckoutError as error:
+            sys.stderr.write(f"duty.py: {error}\n")
+            return 2
 
     date = (
         _dt.date.fromisoformat(args.date)
@@ -312,7 +324,7 @@ def main(argv=None) -> int:
                 {"series": sid, "mode": None, "reason": "series.yaml is not a mapping"}
             )
             continue
-        pub, pub_dates = published_state(args.library, sid)
+        pub, pub_dates = published_state(library, sid)
         is_due, entry = series_duty(
             sid, cfg, pub=pub, pub_dates=pub_dates, date=date, day=day
         )

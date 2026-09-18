@@ -60,7 +60,7 @@ def publish_article(library: pathlib.Path) -> None:
 def run_prepare(
     article_path: pathlib.Path,
     *,
-    library: pathlib.Path,
+    library: pathlib.Path | None,
     main_root: pathlib.Path,
     path: str,
     gh_log: pathlib.Path | None = None,
@@ -79,8 +79,7 @@ def run_prepare(
         sys.executable,
         str(pathlib.Path(__file__).parents[1] / "engine" / "nb" / "prepare_pr.py"),
         str(article_path),
-        "--library",
-        str(library),
+        *(("--library", str(library)) if library is not None else ()),
         "--no-check-links",
         "--today",
         "2026-07-06",
@@ -153,6 +152,32 @@ def test_prepare_pr_pushes_exact_bundle_and_opens_pr(tmp_path: pathlib.Path) -> 
         "agent-artifacts/semiconductors/micron/editor/01/editorial-review.md" in changed
     )
     assert not any(path.startswith(".nb-context/") for path in changed)
+    assert "pr create" in log.read_text()
+
+
+def test_prepare_pr_keeps_its_own_library_checkout(tmp_path: pathlib.Path) -> None:
+    # no --library: the engine fetches origin/library under .nb-work/ itself
+    _checkout, origin = make_library(tmp_path)
+    article_path = make_workspace(tmp_path)
+    main_root = pathlib.Path(make_press())
+    git("init", "-q", "-b", "main", cwd=str(main_root))
+    git("remote", "add", "origin", str(origin), cwd=str(main_root))
+    fake_bin = tmp_path / "bin"
+    log = tmp_path / "gh.log"
+    log.write_text("")
+    write_fake_gh(fake_bin)
+
+    result = run_prepare(
+        article_path,
+        library=None,
+        main_root=main_root,
+        path=f"{fake_bin}{os.pathsep}{os.environ['PATH']}",
+        gh_log=log,
+    )
+
+    assert result.returncode == 0, result.stderr
+    managed = main_root / ".nb-work" / "library"
+    assert (managed / "library").is_dir()
     assert "pr create" in log.read_text()
 
 
