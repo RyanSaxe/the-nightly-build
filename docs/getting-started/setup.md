@@ -17,9 +17,10 @@
 
 1. Fork with **Copy the main branch only**. A capable assistant does this for
    you.
-2. Clone the fork and run `./nb setup`. It scaffolds `press/` with one on-demand
-   series, Dispatches, and pushes it to `main`, where the publishing check reads
-   it. It creates the `library` branch, seeds the publishing workflows onto it,
+2. Clone the fork and run `./nb setup`. It scaffolds `press/` with three series,
+   Dispatches for the articles you ask for and News Brief and Feature for a
+   morning paper, and pushes it to `main`, where the publishing check reads it.
+   It creates the `library` branch, seeds the publishing workflows onto it,
    enables Actions, configures GitHub Pages, and protects `library` behind the
    `validate` check.
 3. Ask for the first article. [Your first article](./first-article.md) says what

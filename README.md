@@ -48,8 +48,8 @@ sentence to an AI product connected to your GitHub account. It does the git side
 of setup, tells you if a setting is still missing, and publishes the article the
 same way.
 
-Either way the article lands in Dispatches, the series a fresh paper starts
-with, and is live within the hour.
+Either way the article lands in Dispatches, the series every paper keeps for
+what you ask for, and is live within the hour.
 [Ask your AI](docs/getting-started/ask-your-ai.md) has the details, the
 [documentation](docs/README.md) the rest, and the
 [feature catalog](docs/reference/README.md) lists everything the engine

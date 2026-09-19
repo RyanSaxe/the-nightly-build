@@ -34,8 +34,10 @@ are.
 
 ## Give the paper a cadence
 
-A schedule publishes what `nb duty` finds due, and Dispatches is never due. Add
-or adjust series with a cadence through [update paper](./update-paper.md) or
-[create paper](./create-paper.md); one or two daily series make a normal morning
-paper. Confirm the usage the owner can sustain before multiplying cadence;
-`docs/reference/production.md` has the observed per-role work.
+A schedule publishes what `nb duty` finds due. The scaffolded News Brief and
+Feature are due daily and Dispatches never is, so a fresh paper has a morning
+paper the first night the schedule runs. Adjust series or their cadence through
+[update paper](./update-paper.md) or [create paper](./create-paper.md); one or
+two daily series make a normal morning paper. Confirm the usage the owner can
+sustain before multiplying cadence; `docs/reference/production.md` has the
+observed per-role work.
