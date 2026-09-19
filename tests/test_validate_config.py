@@ -69,7 +69,12 @@ def manifest_patched_repo(clone_testrepo: Callable[..., str]) -> Callable[..., s
 
     def patch_manifest(patch: str, template: str = "article") -> str:
         tmp = clone_testrepo("press", "templates", "engine")
-        m = pathlib.Path(tmp) / "templates" / template / "manifest.yaml"
+        folder = pathlib.Path(tmp) / "templates" / template
+        if not folder.is_dir():
+            # an example package, adopted the way a press does
+            folder = pathlib.Path(tmp) / "press" / "templates" / template
+            shutil.copytree(REPO / "examples" / "templates" / template, folder)
+        m = folder / "manifest.yaml"
         # A repeated key is fine here: yaml keeps the last one, the patch.
         m.write_text(m.read_text() + patch)
         return tmp
@@ -87,6 +92,27 @@ def test_the_shipped_examples_validate_as_a_press(
     shutil.copytree(REPO / "examples", repo / "press")
 
     assert vc_rc(str(repo)) == 0
+
+
+def test_a_series_on_an_example_package_is_told_where_to_copy_it_from(
+    clone_testrepo: Callable[..., str],
+    vc_output: Callable[[str], subprocess.CompletedProcess[str]],
+) -> None:
+    repo = clone_testrepo("press", "templates", "engine")
+    shutil.copytree(
+        REPO / "examples" / "templates", pathlib.Path(repo) / "examples" / "templates"
+    )
+    series = pathlib.Path(repo, "press", "series", "semiconductors", "series.yaml")
+    series.write_text(
+        series.read_text().replace("template: article", "template: lesson")
+    )
+
+    result = vc_output(repo)
+
+    assert result.returncode == 1
+    assert "copy examples/templates/lesson to press/templates/lesson" in (
+        result.stdout + result.stderr
+    )
 
 
 def test_a_template_choice_list_is_valid_for_every_scheduling_mode(
@@ -339,7 +365,7 @@ def test_every_skeleton_flex_section_contains_each_component_once(
     component_count: int,
 ) -> None:
     repo = manifest_patched_repo("", template="unbiased")
-    skeleton = pathlib.Path(repo) / "templates" / "unbiased" / "skeleton.html"
+    skeleton = pathlib.Path(repo) / "press" / "templates" / "unbiased" / "skeleton.html"
     old = '<h3 class="nb-side-camp">RECOGNIZABLE NAME FOR THIS POSITION</h3>'
     replacement = (
         '<h3 class="nb-side-camp">RECOGNIZABLE NAME FOR THIS POSITION</h3>' * 2

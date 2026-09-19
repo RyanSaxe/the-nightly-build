@@ -1,7 +1,8 @@
 # Template reference
 
 A template is an enforceable article package under shipped `templates/<id>/` or
-user-owned `press/templates/<id>/`:
+user-owned `press/templates/<id>/`. `examples/templates/<id>/` holds packages a
+press adopts by copying them there:
 
 ```text
 <id>/
@@ -20,18 +21,31 @@ package replaces a shipped package with the same ID wholesale.
 
 ## Shipped templates
 
-The engine ships six packages. Each manifest carries the exact enforced
+The engine ships three packages. Each manifest carries the exact enforced
 geometry. Their one-line identities:
 
 - `article`: enforced cited prose, two anchors plus flexible sections, every
   section cited.
 - `brief`: enforced structure, several tagged items, every item cited.
+- `paper`: reporting on one research paper, with the source's abstract and link
+  anchored first.
+
+## Example packages
+
+Three more packages live in `examples/templates/` and are not part of the
+shipped registry:
+
 - `lesson`: a teaching piece framed by two anchored bookends the proof requires.
 - `opinion`: an argued position that discloses its stance up front and can never
   skip the strongest opposing case.
-- `paper`: reporting on one research paper, with the source's abstract and link
-  anchored first.
 - `unbiased`: an enforced two-sided format where a one-sided article blocks.
+
+A press adopts one by copying it into `press/templates/<id>/`, whole, and gets
+the same enforcement a shipped package gets. A series that names one before the
+copy exists fails `nb validate`, and the error says which copy to make. Edit the
+copy freely; it is yours from then on. A press that used any of the three while
+they shipped, before 2026-09-19, makes the copy in the same change that takes
+the engine update.
 
 ## Manifest
 
