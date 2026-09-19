@@ -33,8 +33,8 @@ end-to-end run has been verified:
 and [OpenCode](https://dev.opencode.ai/docs/github/). A product's existence does
 not prove that it meets the contract, and provider behavior, permissions, and
 billing change independently. Before relying on one, run the
-[scheduled-runtime smoke test](../getting-started/first-run.md) in the same
-environment that will publish the paper.
+[scheduled-runtime smoke test](../guides/operate/verify-scheduled-runtime.md) in
+the same environment that will publish the paper.
 
 ## Harness independence
 

@@ -1,7 +1,10 @@
 # Create your paper
 
 A paper is the published result. Its press is the configuration under `press/`
-that produces it.
+that produces it. A fresh press has one series, Dispatches, and that is enough
+to publish what you ask for. This page is for when you want more: series with
+beats of their own, a voice, a reading rhythm, and articles that arrive without
+asking.
 
 You do not need answers prepared. Start the conversation and expect the
 assistant to propose directions, test them with representative article ideas and
@@ -32,8 +35,8 @@ contract. Use
 [appearance and voice](../guides/customize/appearance-and-voice.md) when the
 editorial concept needs a distinct visual system.
 
-Once the proposed press validates, commit it and push to `main`. The scheduled
-run reads the press from the remote `main` branch, so a press that exists only
-in a working tree publishes nothing. Then continue to
-[scheduled-runtime verification](first-run.md) if you want to test the
-automation before relying on it.
+Once the proposed press validates, commit it and push to `main`. Both the
+publishing check and the scheduled run read the press from the remote `main`
+branch, so a press that exists only in a working tree publishes nothing. Then,
+when you want articles without asking, continue to
+[Schedule publication](../guides/operate/schedule.md).
