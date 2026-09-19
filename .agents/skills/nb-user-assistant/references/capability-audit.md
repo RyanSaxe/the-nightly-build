@@ -6,17 +6,24 @@ environment has another environment's tools, identity, network, or approvals.
 
 ## Current assistant
 
-Identify the intended GitHub account, fork, and local checkout without exposing
-credentials. Verify every setup action this assistant claims it can perform:
+Identify the intended GitHub account, fork, and checkout without exposing
+credentials. Then find out which of three situations this is, because setup and
+delivery differ:
 
-- inspect or create the fork and clone
-- run `git`, authenticated GitHub operations, and the checkout-owned `nb`
-- create and validate `press/` changes
-- inspect or configure the chosen scheduled environment
+- `gh` signed in with admin rights on the fork: everything runs from here.
+- A sandbox or checkout with push credentials but no `gh`: `nb setup` does the
+  git side and prints the fork settings for the owner, and `nb prepare-pr`
+  prints `NB_ARTICLE_PR_REQUIRED` for the connected GitHub tool to open the PR.
+  Check research egress before production by opening one real source page.
+- A chat with no sandbox: it cannot run `nb` and cannot produce an article. Say
+  so and point the owner at `docs/integrations/README.md`.
 
-Use reversible checks. When a permission boundary requires the user, give one
-precise action in the provider's secure UI, say what result to expect, and wait
-for confirmation. Never request a token in chat.
+Verify with reversible checks every action this assistant claims it can perform:
+inspecting or creating the fork and clone; running `git`, the checkout-owned
+`nb`, and GitHub operations; creating and validating `press/` changes. When a
+permission boundary requires the user, give one precise action in the provider's
+secure UI, say what result to expect, and wait for confirmation. Never request a
+token in chat.
 
 ## Scheduled runtime
 
