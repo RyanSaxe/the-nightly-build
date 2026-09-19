@@ -8,8 +8,9 @@ will change.
 
 Translate the user's observation into its true owner before editing:
 
-- a different beat, angle, or recurring structure usually belongs in a series
-  prompt
+- what a series covers is the paragraph that opens its prompt; "more health,
+  less policy" is an edit to that paragraph, not a rule added below it
+- a different angle or recurring structure usually belongs in a series prompt
 - paper-wide register and reader assumptions belong in `editorial.md`
 - how articles should sound belongs in `editorial.md` for the whole paper, or in
   a register line in the series prompt for one section

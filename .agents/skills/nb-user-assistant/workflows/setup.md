@@ -40,6 +40,6 @@ verify it before continuing. Never ask for a pasted token.
 Setup ends when `nb setup` prints "The presses are ready", or when the owner has
 made the two required settings. Hand to [publish now](./publish-now.md) for the
 article the owner came for; the scaffolded Dispatches series takes it without
-any change to `press/`. Offer [create paper](./create-paper.md) when they want
-the paper to have a shape of its own, and [schedule](./schedule.md) when they
-want articles to arrive without asking.
+any change to `press/`. Offer [create paper](./create-paper.md) to make the
+paper theirs, two questions that rewrite what the default series cover, and
+[schedule](./schedule.md) when they want articles to arrive without asking.
