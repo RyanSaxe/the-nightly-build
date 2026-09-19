@@ -57,5 +57,5 @@ the resolution instead of the ambiguity.
 
 Run `nb validate`, build a preview where presentation changed, and show the user
 the material consequences. Commit the press configuration separately from any
-Article PR. Then return to [setup](./setup.md) to configure or verify the
-scheduled runtime.
+Article PR. Then, when the owner wants articles to arrive without asking,
+continue to [schedule](./schedule.md).
