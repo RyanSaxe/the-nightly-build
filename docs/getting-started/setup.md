@@ -50,8 +50,9 @@ already did.
 
 ## Later
 
-[Create your paper](./create-your-paper.md) gives the paper series of its own, a
-voice, and a rhythm. [Schedule publication](../guides/operate/schedule.md) adds
+[Create your paper](./create-your-paper.md) makes the paper yours: two questions
+rewrite what News Brief and Feature cover, and a longer conversation gives it
+series of its own. [Schedule publication](../guides/operate/schedule.md) adds
 the runtime that publishes while nobody is present, and
 [Verify the scheduled runtime](../guides/operate/verify-scheduled-runtime.md)
 proves that environment before it publishes anything.

@@ -11,8 +11,9 @@ the path that matches what you are trying to do.
   does on each, and the two settings only an owner can make.
 - [Your first article](getting-started/first-article.md) describes what happens
   between asking and the live page.
-- [Create your paper](getting-started/create-your-paper.md) is for when you want
-  the paper to have a shape of its own.
+- [Create your paper](getting-started/create-your-paper.md) is the two questions
+  that make the paper yours, and the longer conversation for a paper of your own
+  design.
 
 ## Operate your paper
 

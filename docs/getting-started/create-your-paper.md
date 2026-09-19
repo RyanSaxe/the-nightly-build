@@ -2,16 +2,29 @@
 
 A paper is the published result. Its press is the configuration under `press/`
 that produces it. A fresh press has three series. Dispatches publishes what you
-ask for, and News Brief and Feature make a morning paper about technology once
-you schedule a run. The first paragraph of each series prompt is its territory,
-and rewriting those paragraphs, or asking the assistant to, is the shortest way
-to make the paper yours. This page is for when you want more: series with beats
-of their own, a voice, a reading rhythm.
+ask for, and News Brief and Feature make a morning paper once you schedule a
+run. Until you say otherwise, both are about technology.
 
-You do not need answers prepared. Start the conversation and expect the
-assistant to propose directions, test them with representative article ideas and
-counterexamples, and simulate a first week before asking for approval. Every
-decision the press encodes gets settled this way. At a minimum:
+## Make it yours
+
+Ask your AI to make the paper yours, or to change what it covers. It asks two
+questions, one at a time: what news you want, and what you want to read about.
+Your answers rewrite the paragraph that opens each series prompt, the one that
+says what the series covers, and the sentence in `editorial.md` that says who
+reads the paper when your answers say something about you. Nothing else changes.
+The press is validated, committed, and pushed to `main`, and the next scheduled
+run reads it from there.
+
+Asking for an article never triggers the questions. The article goes ahead, and
+the paper's shape waits until you ask for it.
+
+## A paper of your own design
+
+This is for when you want more: series with beats of their own, a voice, a
+reading rhythm. You do not need answers prepared. Start the conversation and
+expect the assistant to propose directions, test them with representative
+article ideas and counterexamples, and simulate a first week before asking for
+approval. Every decision the press encodes gets settled this way. At a minimum:
 
 - what the paper is for and who reads it
 - the territory each series owns, and what it refuses to cover
