@@ -7,6 +7,7 @@ signed-in CLI it must still do the git side and print the settings only an
 admin can make.
 """
 
+import json
 import os
 import pathlib
 import shutil
@@ -118,18 +119,46 @@ def test_setup_without_gh_seeds_library_and_prints_the_clicks(
     assert "api" not in repo.gh_log.read_text()
 
 
-def test_setup_scaffolds_a_press_with_dispatches(tmp_path: pathlib.Path) -> None:
+def test_setup_scaffolds_the_default_paper(tmp_path: pathlib.Path) -> None:
     repo = make_setup_repo(tmp_path)
 
     result = repo.run(gh_mode="available")
 
     assert result.returncode == 0, result.stderr + result.stdout
-    series = repo.checkout / "press" / "series" / "dispatches"
-    assert "cadence: manual" in (series / "series.yaml").read_text()
-    assert (series / "prompt.md").read_text().strip()
+    series = repo.checkout / "press" / "series"
+    assert "cadence: manual" in (series / "dispatches" / "series.yaml").read_text()
+    news_brief = (series / "news-brief" / "series.yaml").read_text()
+    assert "mode: rolling" in news_brief and "cadence: daily" in news_brief
+    feature = (series / "feature" / "series.yaml").read_text()
+    assert "templates: [article, paper]" in feature and "cadence: daily" in feature
+    for name in ("dispatches", "news-brief", "feature"):
+        assert (series / name / "prompt.md").read_text().strip()
+        assert f"press/series/{name}/prompt.md" in repo.main_files()
+    assert (
+        "Ask your agent" not in (repo.checkout / "press" / "editorial.md").read_text()
+    )
     assert "Ask for an article" in result.stdout
     assert "pushed to main" in result.stdout
-    assert "press/series/dispatches/prompt.md" in repo.main_files()
+
+
+def test_scaffolded_paper_has_daily_work_and_dispatches_never_does(
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = make_setup_repo(tmp_path)
+    result = repo.run(gh_mode="available")
+    assert result.returncode == 0, result.stderr + result.stdout
+
+    duty = subprocess.run(
+        [str(repo.checkout / "nb"), "duty", "--repo", str(repo.checkout)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "UV_PROJECT_ENVIRONMENT": str(REPO / ".venv")},
+    )
+
+    assert duty.returncode == 0, duty.stderr + duty.stdout
+    report = json.loads(duty.stdout)
+    assert {entry["series"] for entry in report["due"]} == {"news-brief", "feature"}
+    assert {entry["series"] for entry in report["idle"]} == {"dispatches"}
 
 
 def test_setup_lists_a_refused_scaffold_push_as_a_step(tmp_path: pathlib.Path) -> None:

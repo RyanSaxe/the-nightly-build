@@ -1,10 +1,12 @@
 # Create your paper
 
 A paper is the published result. Its press is the configuration under `press/`
-that produces it. A fresh press has one series, Dispatches, and that is enough
-to publish what you ask for. This page is for when you want more: series with
-beats of their own, a voice, a reading rhythm, and articles that arrive without
-asking.
+that produces it. A fresh press has three series. Dispatches publishes what you
+ask for, and News Brief and Feature make a morning paper about technology once
+you schedule a run. The first paragraph of each series prompt is its territory,
+and rewriting those paragraphs, or asking the assistant to, is the shortest way
+to make the paper yours. This page is for when you want more: series with beats
+of their own, a voice, a reading rhythm.
 
 You do not need answers prepared. Start the conversation and expect the
 assistant to propose directions, test them with representative article ideas and

@@ -27,7 +27,9 @@ stalled PR so the check triggers.
 Run `nb duty` in the scheduled checkout and read its idle reasons. Confirm the
 runtime has current `main`, can fetch `origin/library`, and has a non-manual,
 non-paused series due on the current UTC day. `cadence: manual` is supposed to
-remain idle; Dispatches never appears as due.
+remain idle; Dispatches never appears as due. A fresh paper's News Brief and
+Feature are due every day, so an empty due list on a fresh paper means the
+checkout is not reading the scaffolded `press/`.
 
 ## Research cannot reach sources
 

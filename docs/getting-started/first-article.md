@@ -4,11 +4,12 @@ You ask, the paper publishes. This is what happens in between.
 
 ## Where it goes
 
-A fresh paper has one series, Dispatches. It is open and manual: it takes any
-article you ask for, never runs on a schedule, and needs no change to `press/`
-before an article can start. When the paper has other series, the assistant uses
-one of them if the request fits and that series admits the article, and says
-which it chose.
+A fresh paper has three series, and an article you ask for goes to Dispatches.
+It is open and manual: it takes any article, never runs on a schedule, and needs
+no change to `press/` before an article can start. The other two, News Brief and
+Feature, run once you schedule the paper. The assistant uses one of them instead
+when the request fits and that series admits the article, and says which it
+chose.
 
 ## What the assistant settles
 
