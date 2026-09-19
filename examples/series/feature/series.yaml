@@ -1,0 +1,14 @@
+# The scaffolded Feature with two example packages added to its list. The
+# orchestrator chooses the package per article and records it in nb-meta.
+# `opinion` and `unbiased` live in examples/templates/ and sit under
+# press/templates/ once this paper is adopted.
+name: Feature
+mode: open
+section: "Features"
+templates: [article, paper, opinion, unbiased]
+prompt: prompt.md
+strict: false
+min_sources: 5
+bands:
+  words: [800, 2500]
+cadence: daily
