@@ -69,7 +69,9 @@ if [ "$repo" = "$UPSTREAM_REPO" ]; then
 fi
 
 # 1c. Scaffold press/ (your side of the repo) ---------------------------------
+scaffolded=false
 if [ ! -d press ]; then
+	scaffolded=true
 	say "scaffolding press/ (your side of the repo)"
 	mkdir -p press/series press/themes press/templates
 	cat >press/site.yaml <<'YAML'
@@ -128,6 +130,25 @@ fi
 # 2. Configuration validates before anything else ----------------------------
 say "validating press/ configuration and the template packages"
 "$ROOT/nb" validate || die "fix the configuration above, then re-run"
+
+# 2b. Publish the scaffold ---------------------------------------------------
+# The check reads the press from remote main, so a scaffold that exists only
+# in this checkout publishes nothing. Commit it and push it now; a refused
+# push becomes a step to make rather than a silent gap.
+if [ "$scaffolded" = true ]; then
+	branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
+	author_name=$(git config user.name 2>/dev/null || printf 'The Nightly Build')
+	author_email=$(git config user.email 2>/dev/null || printf 'nightly-build@users.noreply.github.com')
+	git add press
+	git -c "user.name=$author_name" -c "user.email=$author_email" \
+		commit -qm "press: scaffold the paper"
+	if [ "$branch" = main ] && git push -q origin main 2>/dev/null; then
+		ok "press/ committed and pushed to main"
+	else
+		warn "press/ is committed on $branch but not on remote main"
+		click "required: get the press/ commit onto remote main (git push origin main, or merge $branch into main); the check reads the press from there"
+	fi
+fi
 
 # 3. The library branch (orphan, empty press) --------------------------------
 library_created=false
@@ -267,7 +288,7 @@ echo
 if [ -n "$clicks" ]; then
 	ok "The git side is done."
 	printf '%s\n' "
-Still to do in the browser (needs an admin):$clicks
+Still to do:$clicks
   Without Pages nothing deploys; without workflows the 'validate' check never
   runs and no article can merge. Re-running nb setup with gh signed in makes
   and verifies them instead."

@@ -28,12 +28,13 @@ Start with [Ask your AI](ask-your-ai.md). A capable assistant should:
 When the assistant cannot perform a step itself, expect one exact manual action
 from it, and it continues from your result.
 
-`nb setup` scaffolds `press/` with one on-demand series, creates the `library`
-branch, and seeds its publishing workflows. It requires `git`, `uv`, and Python
-3.10 or newer. With an authenticated `gh` it also enables Actions, configures
-GitHub Pages, and protects `library`; without one it prints those as clicks to
-make in the fork's settings, and the first two must be made before an article
-can publish. Re-running `nb setup` is safe; it repairs what is missing.
+`nb setup` scaffolds `press/` with one on-demand series and pushes it to `main`,
+where the publishing check reads it, then creates the `library` branch and seeds
+its publishing workflows. It requires `git`, `uv`, and Python 3.10 or newer.
+With an authenticated `gh` it also enables Actions, configures GitHub Pages, and
+protects `library`; without one it prints those as clicks to make in the fork's
+settings, and the first two must be made before an article can publish.
+Re-running `nb setup` is safe; it repairs what is missing.
 
 Forks start with workflows disabled. If `nb setup` lists Actions as a click to
 make, or warns that it could not enable them, enable workflows from the fork's
