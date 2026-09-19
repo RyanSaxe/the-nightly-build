@@ -700,10 +700,15 @@ def check_series(repo, registry, *, errors):
         tregs = []
         for template in allowed:
             treg = registry.get(template)
-            if not isinstance(treg, dict):
-                errors.append(f"{where}: template '{template}' not a known template")
-            else:
+            if isinstance(treg, dict):
                 tregs.append(treg)
+            elif os.path.isdir(os.path.join(repo, "examples", "templates", template)):
+                errors.append(
+                    f"{where}: template '{template}' is an example package;"
+                    f" copy examples/templates/{template} to press/templates/{template}"
+                )
+            else:
+                errors.append(f"{where}: template '{template}' not a known template")
         check_kind_bands(
             cfg.get("sources_by_kind"),
             key="sources_by_kind",

@@ -2,13 +2,19 @@
 
 ![The Nightly Build](assets/the-nightly-build-banner.png)
 
-## Your own AI-researched morning paper, published while you sleep
+<!-- markdownlint-disable MD026 -->
 
-The Nightly Build turns a GitHub repository into a personal newspaper. Describe
-what you want to read, connect an agent, and get original, cited articles on
-your own GitHub Pages site every morning.
+## Your own AI-researched paper. Ask for an article; schedule the rest.
 
-**No backend and no new accounts. It can run on AI tools you already use.**
+<!-- markdownlint-enable MD026 -->
+
+The Nightly Build turns a GitHub repository into a personal newspaper. Fork it,
+point the AI tool you already use at your fork, and ask for an article on
+anything: a topic, a question, a link. It researches, writes, checks its
+citations, and publishes to your GitHub Pages site. When you want a paper
+waiting every morning, add a schedule.
+
+**No backend and no new accounts. It runs on AI tools you already use.**
 
 Your paper and its archive live in your fork. You own it.
 
@@ -24,40 +30,35 @@ Your paper and its archive live in your fork. You own it.
 
 ## Get started
 
-Give this repository URL to the AI tool you already use and say:
+Fork this repository with **Copy the main branch only** checked. Then take
+whichever of these fits the machine in front of you.
 
-> Help me set up my own Nightly Build paper. Follow the repository's
-> instructions, tell me only the manual action you need from me right now, and
-> offer to verify the actual scheduled environment before we rely on it.
+**A terminal with `gh` signed in.** Open the checkout in your coding agent and
+say:
 
-The assistant will determine what it can do, walk you through the few actions
-that require your permission, interview you about the paper, configure the fork,
-and verify the actual scheduled environment. The AI you talk to now and the AI
-that works overnight can be different products.
+> Help me set up my Nightly Build paper and write my first article about
+> `<topic>`. Follow the repository's instructions.
 
-Start with [Ask your AI](docs/getting-started/ask-your-ai.md), or read the full
-[documentation](docs/README.md). The [feature catalog](docs/reference/README.md)
-lists everything the released engine supports and where to configure it.
+It runs `./nb setup`, which makes every fork setting itself, then writes the
+article and opens the pull request that publishes it.
 
-### Manual fallback
+**No terminal.** In the fork's settings, enable workflows on the Actions tab if
+GitHub asks, and set Pages to build from GitHub Actions. Then say the same
+sentence to an AI product connected to your GitHub account. It does the git side
+of setup, tells you if a setting is still missing, and publishes the article the
+same way.
 
-If your current AI cannot access GitHub, fork this repository with **Copy the
-main branch only** enabled, then:
+Either way the article lands in Dispatches, the series every paper keeps for
+what you ask for, and is live within the hour.
+[Ask your AI](docs/getting-started/ask-your-ai.md) has the details, the
+[documentation](docs/README.md) the rest, and the
+[feature catalog](docs/reference/README.md) lists everything the engine
+supports.
 
-```sh
-git clone https://github.com/<you>/<your-paper>.git
-cd <your-paper>
-./nb setup
-```
-
-Open that checkout in a coding agent and ask it to continue setup. Keep the fork
-public for GitHub Pages on the free plan; private Pages requires a supporting
-GitHub plan.
-
-Before unattended publication, you can verify that the exact scheduled runtime
-can reach the repository, install the required tools, browse real sources, and
-open and then clean up a draft smoke-test PR. See
-[Verify the scheduled runtime](docs/getting-started/first-run.md).
+When you want articles without asking, add series with a cadence and point a
+scheduler at the fork: [Schedule publication](docs/guides/operate/schedule.md)
+includes a smoke test that verifies the scheduled environment before it
+publishes anything.
 
 ## How it works
 
@@ -166,7 +167,9 @@ your respective AI agent. If you'd like to see how that might work, take a look 
 article, its assets, exact agent inputs and outputs, and validation result. Nothing
 reaches <code>library</code> without passing CI. This makes it easy to audit
 the process if there are issues, as well as give more direct feedback in prompts.
-Additionally, PRs are a natural entity that basically every AI harness interacts with.</p>
+Additionally, PRs are a natural entity that basically every AI harness interacts with.
+Ask to read an article first and its PR opens as a draft that nothing merges
+until you mark it ready.</p>
 
 ---
 
@@ -178,8 +181,10 @@ Additionally, PRs are a natural entity that basically every AI harness interacts
 ---
 
 <p>There is no hosted-service fee. You pay for the AI runtime you choose, and
-hosting can be free. One five-to-seven-article configuration took roughly
-45–90 minutes per run, but provider billing and limits vary. See
+hosting can be free. One asked-for article took about 45 minutes of agent time
+across the four roles and roughly half a million to a million tokens before any
+repair round. A scheduled run of five to seven articles took 45 to 90 minutes
+because articles run in parallel. Provider billing and limits vary. See
 <a href="docs/reference/production.md">Production cost and role models</a> for
 the observed workload and controls.</p>
 

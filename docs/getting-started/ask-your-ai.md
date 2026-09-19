@@ -1,25 +1,27 @@
 # Ask your AI
 
-The easiest setup path is to give this repository to the AI tool you already
-use. It needs to be able to work with GitHub. It does not need to be the same
-tool that will run scheduled publication.
+Give this repository to the AI tool you already use. It needs to work with
+GitHub in one of two ways: a coding agent in a terminal with `gh` signed in, or
+a product connected to your GitHub account that runs commands in a sandbox and
+opens pull requests. It does not need to be the tool that later runs a schedule.
 
-Send it this repository URL and say:
+Fork the repository first, with only `main`. Then say:
 
-> Help me set up my own Nightly Build paper. Follow the repository's
-> instructions, tell me only the manual action you need from me right now, and
-> offer to verify the actual scheduled environment before we rely on it.
+> Help me set up my Nightly Build paper and write my first article about
+> `<topic>`. Follow the repository's instructions.
 
-The assistant should first determine what it can do in the current chat. It may
-be able to fork, clone, configure, push, and open pull requests itself. When it
-lacks a permission, it should give you one precise action, wait for the result,
-and continue from there. Never paste API keys or access tokens into chat.
+With `gh`, the assistant runs `./nb setup` and needs nothing from you: the
+settings the fork needs are made for you. Without a terminal, make the two
+settings only you can make first, Pages and Actions, as [Set up](./setup.md)
+shows; `nb setup` cannot read them back and lists both anyway, and if one is
+missing the assistant gives it to you as one action with its URL. Never paste a
+token into chat.
 
-You will make editorial decisions in conversation: what the paper is for, who it
-serves, which recurring series it carries, and what excellent output looks like.
-The assistant should test those decisions with examples rather than hand you a
-generic questionnaire.
+The article goes into Dispatches, the series every paper keeps for what you ask
+for, and publishes through a pull request the repository's own check validates
+and merges. Add "let me read it first" to your request and the pull request
+opens as a draft that waits for you instead.
 
-If your current AI cannot access GitHub, use the manual fork-and-clone path in
-[Set up](./setup.md), then open the checkout in a coding agent and repeat the
-request above.
+A chat with no sandbox cannot run the engine; ChatGPT Work, which runs commands
+in one, can. [Integrations](../integrations/README.md) names the products that
+have published from a fresh fork and walks through each.

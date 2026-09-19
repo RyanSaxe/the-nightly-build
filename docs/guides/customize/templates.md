@@ -21,7 +21,9 @@ different subjects, rendered in your browser for reaction, before the contract
 settles. A fill you approve can become one of the package's samples.
 
 A `press/templates/<id>` package shadows a shipped template with the same ID
-wholesale. Prefer a new ID unless replacement is deliberate.
+wholesale. Prefer a new ID unless replacement is deliberate. Three finished
+packages, `lesson`, `opinion`, and `unbiased`, live in `examples/templates/`;
+copy one into `press/templates/` to run it as it is or to start from it.
 
 The [Template reference](../../reference/templates.md) defines the package
 files, the manifest contract, the skeleton rules, and the shipped templates.

@@ -69,7 +69,9 @@ if [ "$repo" = "$UPSTREAM_REPO" ]; then
 fi
 
 # 1c. Scaffold press/ (your side of the repo) ---------------------------------
+scaffolded=false
 if [ ! -d press ]; then
+	scaffolded=true
 	say "scaffolding press/ (your side of the repo)"
 	mkdir -p press/series press/themes press/templates
 	cat >press/site.yaml <<'YAML'
@@ -81,10 +83,15 @@ YAML
 	cat >press/editorial.md <<'MD'
 # Voice
 
-Your editorial voice, composed into every article's instructions after the
-house style (spec/editorial.md). Tone, register, language, assumed
-background: make the paper yours. Ask your agent to interview you and fill
-this in, or write it by hand.
+The reader is a professional who reads widely and does not need a field
+explained from the beginning. Write every piece for the people around that
+reader, never for one person.
+
+The register is a serious daily newspaper. Report first. State a judgment once
+the reporting has earned it, and say where the record stops and the paper's
+own reading begins.
+
+Assume the headline has been seen, and spend the words on what it left out.
 MD
 	cat >press/production.yaml <<'YAML'
 # Portable role guidance. See docs/reference/production.md.
@@ -112,13 +119,78 @@ the request supplied, a link, a document, a claim, is starting material, not
 the evidence: read it, then read past it until the piece stands on sources the
 reader can check. Cover what was asked and nothing that was not.
 MD
+	mkdir -p press/series/news-brief
+	cat >press/series/news-brief/series.yaml <<'YAML'
+# One brief a day on the subjects in prompt.md. Rolling: the date is the item,
+# and a missed day is skipped, never backfilled.
+name: News Brief
+mode: rolling
+template: brief
+prompt: prompt.md
+strict: false
+min_sources: 6
+# Every item carries the document that owns its claim and one account from
+# someone with no stake in it.
+per_item_sources:
+  primary: [1, null]
+  secondary: [1, null]
+cadence: daily
+YAML
+	cat >press/series/news-brief/prompt.md <<'MD'
+# News Brief
+
+What moved since yesterday in technology and the industries it is changing. A
+development qualifies when it changes what can be built, what it costs, who
+sells it, or what a government, court, or standards body does about it. A
+launch, a funding round, or a viral post qualifies only when it changes one of
+those.
+
+Being widely discussed does not qualify an item. Apply the same test to the
+story everyone is talking about.
+
+A second source that repeats the announcement is coverage, not an independent
+account. For each item, find someone with no stake in the claim who has read
+the same record.
+MD
+	mkdir -p press/series/feature
+	cat >press/series/feature/series.yaml <<'YAML'
+# One longer read a day in whichever of its packages fits the material. Open:
+# the beat in prompt.md chooses the subject and the orchestrator chooses the
+# package, recorded per article in nb-meta.
+name: Feature
+mode: open
+templates: [article, paper]
+prompt: prompt.md
+strict: false
+min_sources: 5
+bands:
+  words: [800, 2500]
+cadence: daily
+YAML
+	cat >press/series/feature/prompt.md <<'MD'
+# Feature
+
+One piece a day on technology, science, and the businesses built on them, in
+whatever form the material deserves. Some days the subject is the week's most
+consequential development, reported past the headline. Other days it is a
+question nobody is asking this week that is worth understanding anyway. Do not
+let the news set every day's subject.
+
+Use `paper` when the subject is one research paper and the piece reports and
+weighs it. Use `article` otherwise.
+
+Choose the subject by what will still be useful in a month.
+MD
 	cat >press/README.md <<'MD'
 # press/ is your side of the repo
 
-Everything here is yours; everything outside is the engine. Dispatches, under
-series/, takes the articles you ask for. Add a series when a kind of request
-recurs, your voice in editorial.md, role cost in production.yaml, and your look
-via site.yaml and themes/. Working examples live under examples/.
+Everything here is yours; everything outside is the engine. Three series come
+scaffolded under series/: Dispatches takes the articles you ask for, News Brief
+is a daily brief, and Feature is a daily longer read whose form varies. The
+first paragraph of each prompt.md is that series' territory. Rewrite it to make
+the paper yours, or ask your assistant to. Your reader and register live in
+editorial.md, role cost in production.yaml, and your look in site.yaml and
+themes/. Working examples live under examples/.
 MD
 	ok "press/ scaffolded. Configure it, or ask your agent to set you up"
 else
@@ -128,6 +200,25 @@ fi
 # 2. Configuration validates before anything else ----------------------------
 say "validating press/ configuration and the template packages"
 "$ROOT/nb" validate || die "fix the configuration above, then re-run"
+
+# 2b. Publish the scaffold ---------------------------------------------------
+# The check reads the press from remote main, so a scaffold that exists only
+# in this checkout publishes nothing. Commit it and push it now; a refused
+# push becomes a step to make rather than a silent gap.
+if [ "$scaffolded" = true ]; then
+	branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
+	author_name=$(git config user.name 2>/dev/null || printf 'The Nightly Build')
+	author_email=$(git config user.email 2>/dev/null || printf 'nightly-build@users.noreply.github.com')
+	git add press
+	git -c "user.name=$author_name" -c "user.email=$author_email" \
+		commit -qm "press: scaffold the paper"
+	if [ "$branch" = main ] && git push -q origin main 2>/dev/null; then
+		ok "press/ committed and pushed to main"
+	else
+		warn "press/ is committed on $branch but not on remote main"
+		click "required: get the press/ commit onto remote main (git push origin main, or merge $branch into main); the check reads the press from there"
+	fi
+fi
 
 # 3. The library branch (orphan, empty press) --------------------------------
 library_created=false
@@ -267,7 +358,7 @@ echo
 if [ -n "$clicks" ]; then
 	ok "The git side is done."
 	printf '%s\n' "
-Still to do in the browser (needs an admin):$clicks
+Still to do:$clicks
   Without Pages nothing deploys; without workflows the 'validate' check never
   runs and no article can merge. Re-running nb setup with gh signed in makes
   and verifies them instead."
@@ -279,7 +370,7 @@ Next steps:
   1. Ask for an article: open this checkout in your AI tool and say what you
                  want to read. The Dispatches series takes it; see
                  docs/getting-started/ask-your-ai.md.
-  2. Morning paper, when you want one: add series with a cadence and schedule
-                 the run; see docs/guides/operate/schedule.md.
+  2. Morning paper, when you want one: schedule the run. News Brief and
+                 Feature are already daily; see docs/guides/operate/schedule.md.
   3. Your site:  $site_url, once Pages is on and the first article merges.
 "

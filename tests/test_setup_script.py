@@ -7,6 +7,7 @@ signed-in CLI it must still do the git side and print the settings only an
 admin can make.
 """
 
+import json
 import os
 import pathlib
 import shutil
@@ -42,6 +43,15 @@ class SetupRepo:
             capture_output=True,
             text=True,
         )
+
+    def main_files(self) -> set[str]:
+        listing = subprocess.run(
+            ["git", f"--git-dir={self.origin}", "ls-tree", "-r", "--name-only", "main"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+        return set(listing.split())
 
     def library_files(self) -> set[str]:
         listing = subprocess.run(
@@ -99,8 +109,9 @@ def test_setup_without_gh_seeds_library_and_prints_the_clicks(
 
     assert result.returncode == 0, result.stderr + result.stdout
     assert {"library/.gitkeep", *WORKFLOWS} <= repo.library_files()
-    assert "Still to do in the browser" in result.stdout
+    assert "Still to do" in result.stdout
     assert "The presses are ready" not in result.stdout
+    assert "press/series/dispatches/series.yaml" in repo.main_files()
     assert "settings/pages" in result.stdout
     assert "/actions" in result.stdout
     assert "settings/branches" in result.stdout
@@ -108,16 +119,65 @@ def test_setup_without_gh_seeds_library_and_prints_the_clicks(
     assert "api" not in repo.gh_log.read_text()
 
 
-def test_setup_scaffolds_a_press_with_dispatches(tmp_path: pathlib.Path) -> None:
+def test_setup_scaffolds_the_default_paper(tmp_path: pathlib.Path) -> None:
     repo = make_setup_repo(tmp_path)
 
     result = repo.run(gh_mode="available")
 
     assert result.returncode == 0, result.stderr + result.stdout
-    series = repo.checkout / "press" / "series" / "dispatches"
-    assert "cadence: manual" in (series / "series.yaml").read_text()
-    assert (series / "prompt.md").read_text().strip()
+    series = repo.checkout / "press" / "series"
+    assert "cadence: manual" in (series / "dispatches" / "series.yaml").read_text()
+    news_brief = (series / "news-brief" / "series.yaml").read_text()
+    assert "mode: rolling" in news_brief and "cadence: daily" in news_brief
+    feature = (series / "feature" / "series.yaml").read_text()
+    assert "templates: [article, paper]" in feature and "cadence: daily" in feature
+    for name in ("dispatches", "news-brief", "feature"):
+        assert (series / name / "prompt.md").read_text().strip()
+        assert f"press/series/{name}/prompt.md" in repo.main_files()
+    assert (
+        "Ask your agent" not in (repo.checkout / "press" / "editorial.md").read_text()
+    )
     assert "Ask for an article" in result.stdout
+    assert "pushed to main" in result.stdout
+
+
+def test_scaffolded_paper_has_daily_work_and_dispatches_never_does(
+    tmp_path: pathlib.Path,
+) -> None:
+    repo = make_setup_repo(tmp_path)
+    result = repo.run(gh_mode="available")
+    assert result.returncode == 0, result.stderr + result.stdout
+
+    duty = subprocess.run(
+        [str(repo.checkout / "nb"), "duty", "--repo", str(repo.checkout)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "UV_PROJECT_ENVIRONMENT": str(REPO / ".venv")},
+    )
+
+    assert duty.returncode == 0, duty.stderr + duty.stdout
+    report = json.loads(duty.stdout)
+    assert {entry["series"] for entry in report["due"]} == {"news-brief", "feature"}
+    assert {entry["series"] for entry in report["idle"]} == {"dispatches"}
+
+
+def test_setup_lists_a_refused_scaffold_push_as_a_step(tmp_path: pathlib.Path) -> None:
+    # origin's main moves on before setup pushes, so the push is not a fast-forward
+    repo = make_setup_repo(tmp_path)
+    other = tmp_path / "other"
+    subprocess.run(["git", "clone", "-q", str(repo.origin), str(other)], check=True)
+    configure_author(other)
+    (other / "note.txt").write_text("someone else pushed first\n")
+    git(other, "add", "note.txt")
+    git(other, "commit", "-qm", "unrelated change on main")
+    git(other, "push", "-q", "origin", "main")
+
+    result = repo.run(gh_mode="available")
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "press/series/dispatches/series.yaml" not in repo.main_files()
+    assert "get the press/ commit onto remote main" in result.stdout
+    assert "Still to do" in result.stdout
 
 
 def test_setup_with_gh_makes_the_settings_and_skips_the_environment(

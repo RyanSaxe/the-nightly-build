@@ -8,9 +8,9 @@ professional: research-grade writing. It has two parts.
 - **Standards a paper cannot loosen.** Sourced claims, teach don't summarize,
   earned analysis, and the prose failures `spec/slop.md` rules out. A template
   or a press may allow one of those prose failures where its own work needs it.
-  `spec/slop.md` bans self-reference, for instance, and the lesson template
-  allows its two bookend cards to address the reader. Say which failure is
-  allowed and where. Nothing loosens sourced claims, teaching, or earned
+  `spec/slop.md` bans self-reference, for instance, and the example lesson
+  template allows its two bookend cards to address the reader. Say which failure
+  is allowed and where. Nothing loosens sourced claims, teaching, or earned
   analysis.
 - **Defaults a paper may override.** Everything that is taste rather than
   quality: register, formality, the assumed reader and that reader's background,

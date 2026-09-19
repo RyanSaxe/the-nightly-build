@@ -1,8 +1,9 @@
 # Production cost and role models
 
-The scheduled orchestrator uses the model selected in your automation. Article
-roles can use cheaper models without changing the schedule by adding the
-optional `press/production.yaml` file:
+The orchestrator, whether it is the assistant you asked or the scheduled
+runtime, uses the model its harness selected. Article roles can use cheaper
+models without changing that by adding the optional `press/production.yaml`
+file:
 
 ```yaml
 profile: balanced
@@ -50,7 +51,14 @@ work sits outside the four configured role stages.
 
 ## Observed workload
 
-One working configuration produced five to seven articles in 45 to 90 minutes
+One asked-for article, produced by an assistant in a session on the economy
+profile with the writer and editor on a capable-tier model, took about 45
+minutes of agent time: the writing coach 6 minutes and about 94k tokens, the
+researcher 9 minutes and 135k, the writer 13 minutes and 167k, the editor 11
+minutes and 157k, before any repair round. The coach and researcher ran in
+parallel.
+
+One scheduled configuration produced five to seven articles in 45 to 90 minutes
 because independent articles ran in parallel. Its role invocations consumed:
 
 | Work                       | Observed time | Observed tokens |

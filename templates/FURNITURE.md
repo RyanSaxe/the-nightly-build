@@ -303,8 +303,8 @@ class `major` for filled dots.
 
 One cleanly stated position: whose it is, the statement once, a summary of its
 basis, the citation. Use it for a named holder the article calls on, or for the
-paper's own position in an opinion piece (the opinion template pins it). The
-"Position" pill is fixed chrome.
+paper's own position in an opinion piece (the example opinion template pins it).
+The "Position" pill is fixed chrome.
 
 ```html
 <div class="nb-position">

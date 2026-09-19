@@ -8,7 +8,8 @@ question, a URL, a group of documents, or a detailed brief. For example:
 The request is not yet an article contract. Expect the assistant to inspect the
 press, choose a series and template, clarify only what materially changes the
 piece, and turn the request into a configured commission. Every article needs
-that home before production starts.
+that home before production starts. A fresh paper's Dispatches series takes any
+request with no configuration change; other series admit articles by their mode.
 
 What a home requires depends on the series mode:
 

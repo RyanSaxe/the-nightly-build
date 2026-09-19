@@ -27,15 +27,16 @@ allowlist.
 
 An open series needs the least curation. You describe a beat, the orchestrator
 reads the section's back catalog, picks something new, and chooses a template
-from the series' declared choices. One article per series per UTC date is the
-invariant, so a paper that wants several varied reads a day runs several open
-sections with distinct beats.
+from the series' declared choices. A scheduled run produces at most one article
+per series per UTC date, so a paper that wants several varied reads a night runs
+several open sections with distinct beats. Articles someone asks for are not
+limited that way; several can land in one series on one date.
 
 The engine does not define genres. Nearly every section runs the `article`
 template. What makes its articles dossiers, chronicles, lessons, or appraisals
 is the series prompt: the outline conventions it keeps and the furniture that
-carries them (`templates/FURNITURE.md`). Every section in `examples/` defines
-its genre this way.
+carries them (`templates/FURNITURE.md`). Most sections in `examples/` define
+their genre this way.
 
 An open section may still carry `items:`. That list is its commission queue.
 Anything you add must be published, in any order, before the section returns to

@@ -3,9 +3,16 @@
 ## Setup cannot create or configure the fork
 
 Confirm the current assistant is connected to the intended GitHub account and
-repository. If it lacks authority, complete the one requested GitHub action or
-use the manual path in [Set up](../getting-started/setup.md). Do not paste a
-token into chat.
+repository. Without `gh`, `nb setup` lists the settings it could not make under
+"Still to do" with a URL for each; make them in the browser and re-run it. Do
+not paste a token into chat.
+
+## The first article's check reports an unknown series
+
+The check reads the press from remote `main`. If `press/` exists in the checkout
+but was never pushed, because the push was refused or setup predates the push,
+get that commit onto `main`, then close and reopen the pull request so the check
+runs again.
 
 ## Article PR checks never register
 
@@ -18,9 +25,11 @@ stalled PR so the check triggers.
 ## The schedule starts but produces no work
 
 Run `nb duty` in the scheduled checkout and read its idle reasons. Confirm the
-runtime has current `main`, a sibling `library` checkout, and a non-manual,
+runtime has current `main`, can fetch `origin/library`, and has a non-manual,
 non-paused series due on the current UTC day. `cadence: manual` is supposed to
-remain idle.
+remain idle; Dispatches never appears as due. A fresh paper's News Brief and
+Feature are due every day, so an empty due list on a fresh paper means the
+checkout is not reading the scaffolded `press/`.
 
 ## Research cannot reach sources
 
