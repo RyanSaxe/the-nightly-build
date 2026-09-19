@@ -1,0 +1,20 @@
+# The machine contract for the unbiased template: an enforced two-sided format.
+# Exactly two flexible sections means a one-sided article blocks. Each position
+# must retain the split's four orienting components, while the argument inside
+# them remains open to the question and evidence.
+about: "Two evidence-backed positions on one genuinely contested question, presented without a house verdict."
+class: longread
+bands:
+  words: [1200, 3500]
+  flex_sections: [2, 2]
+sections: [orientation, sources]
+flex_components:
+  - nb-side-camp
+  - nb-side-thesis
+  - nb-side-argument
+  - nb-side-champion
+cite_rule: per-section
+chrome:
+  - '<body class="nb-article">'
+  - '<div class="nb-divide">'
+  - "<h2>Sources</h2>"
