@@ -1,40 +1,43 @@
 # Agent and scheduler integrations
 
 The Nightly Build does not depend on one model provider or agent product. It
-depends on capabilities in the actual unattended environment: a repository
+depends on capabilities in the environment that does the work: a repository
 checkout, access to `main` and `library`, live web research, non-interactive
 tool use, and permission to push a branch and open a pull request. See
-[Schedule](../guides/operate/schedule.md) for the complete contract.
+[Schedule](../guides/operate/schedule.md) for the scheduled contract.
 
-A paper needs a product for two jobs: manual work in a session you watch (setup,
-publishing now, revising), and scheduled publication while nobody is present.
-Some products do both through different surfaces.
+A paper needs a product for two jobs. The first article, and every article you
+ask for, happen in a session you watch. Scheduled publication happens while
+nobody is present. Some products do both through different surfaces, and the two
+can be different products.
 
 ## Verified
 
-| Product     | Manual publication | Scheduled publication                                                    | Billing      |
-| ----------- | ------------------ | ------------------------------------------------------------------------ | ------------ |
-| Claude Code | ✓ (local CLI)      | ✓ ([Routines](https://code.claude.com/docs/en/routines))                 | Subscription |
-| Codex       | ✓ (local CLI)      | TBD ([Cloud automations](https://openai.com/academy/codex-automations/)) | Subscription |
+| Product      | First article                                     | Scheduled publication                                                    | Billing      |
+| ------------ | ------------------------------------------------- | ------------------------------------------------------------------------ | ------------ |
+| Claude Code  | ✓ ([walkthrough](./claude-code.md), local CLI)    | ✓ ([Routines](https://code.claude.com/docs/en/routines))                 | Subscription |
+| ChatGPT Work | ✓ ([walkthrough](./chatgpt-work.md), no terminal) | TBD ([Cloud automations](https://openai.com/academy/codex-automations/)) | Subscription |
+| Codex        | ✓ (local CLI, no walkthrough)                     | TBD ([Cloud automations](https://openai.com/academy/codex-automations/)) | Subscription |
 
-A ✓ means that path has passed the non-publishing smoke test and published at
-least one real article in that exact environment, and Billing records what the
-verified runs drew down. Scheduled publication on Claude Code Routines runs a
-production paper nightly.
+A ✓ under "First article" means that product took a fresh fork to a published
+article on 2026-09-18, and the walkthrough is written from that run. A ✓ under
+"Scheduled publication" means the path passed the non-publishing smoke test and
+published at least one real article in that exact environment. Scheduled
+publication on Claude Code Routines runs a production paper nightly.
 
-## Other candidates
+## Other products
 
-These products advertise the needed capabilities and likely work, but no
-end-to-end run has been verified:
-[Jules](https://jules.google/docs/scheduled-tasks/),
+Most products that pair a sandbox with a GitHub connection will work; only the
+ones above are documented. [Jules](https://jules.google/docs/scheduled-tasks/),
 [Cursor](https://cursor.com/automate),
 [Devin](https://docs.devin.ai/product-guides/scheduled-sessions),
 [GitHub Copilot](https://docs.github.com/en/copilot/how-tos/github-copilot-app/using-automations),
-and [OpenCode](https://dev.opencode.ai/docs/github/). A product's existence does
-not prove that it meets the contract, and provider behavior, permissions, and
-billing change independently. Before relying on one, run the
-[scheduled-runtime smoke test](../getting-started/first-run.md) in the same
-environment that will publish the paper.
+and [OpenCode](https://dev.opencode.ai/docs/github/) advertise the needed
+capabilities, and no end-to-end run has been verified. A product's existence
+does not prove that it meets the contract, and provider behavior, permissions,
+and billing change independently. Before relying on one for a schedule, run the
+[scheduled-runtime smoke test](../guides/operate/verify-scheduled-runtime.md) in
+the same environment that will publish the paper.
 
 ## Harness independence
 

@@ -68,5 +68,5 @@ intentionally runs on `pull_request` with no scheduler secrets. See
 
 ## Prove it before relying on it
 
-Use [Verify the scheduled runtime](../../getting-started/first-run.md) for the
+Use [Verify the scheduled runtime](./verify-scheduled-runtime.md) for the
 complete smoke-test boundary and result interpretation.

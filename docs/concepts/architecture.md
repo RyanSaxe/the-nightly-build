@@ -9,10 +9,12 @@ boundary.
 
 ## Before the diagram
 
-The owner defines the press on `main`; published articles live on `library`. At
-the start of a scheduled run, `nb duty` compares those two states and returns
-the exact authorized work. The orchestrator may make editorial choices within
-that result, but it cannot expand it.
+The owner defines the press on `main`; published articles live on `library`. An
+article the owner asks for enters at the commission: the assistant's configured
+article is the authorized work. At the start of a scheduled run, `nb duty`
+compares those two states instead and returns the exact authorized work. The
+orchestrator may make editorial choices within that result, but it cannot expand
+it.
 
 That deterministic entrypoint keeps cadence and rerun safety out of model
 judgment. [Schedule publication](../guides/operate/schedule.md) documents the

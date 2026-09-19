@@ -10,9 +10,9 @@ cheaper model for research", "give the paper a new look". Each lands as one
 small diff under `press/`.
 
 Use `cadence: manual` for a series that should publish only when someone asks.
-It is never returned as due by `nb duty`. In a manual open series, every new
-article's slug must be a configured item, and both article initialization and CI
-enforce that.
+It is never returned as due by `nb duty`, and a manual open series admits any
+slug: every article in it was asked for, so its `items` are suggestions, not a
+gate.
 
 Configuration changes do not edit the published archive. To correct an article
 already on `library`, use [Revise an article](../publish/revise-an-article.md).

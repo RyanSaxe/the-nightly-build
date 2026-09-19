@@ -6,18 +6,19 @@ the path that matches what you are trying to do.
 ## Start here
 
 - [Ask your AI](getting-started/ask-your-ai.md) is the shortest path from this
-  repository to a working paper.
-- [Set up](getting-started/setup.md) explains the accounts, tools, permissions,
-  and handoffs involved.
-- [Create your paper](getting-started/create-your-paper.md) describes the
-  editorial decisions worth making before configuration.
-- [Verify the scheduled runtime](getting-started/first-run.md) runs a
-  non-publishing smoke test in the actual automation environment.
+  repository to a published article.
+- [Set up](getting-started/setup.md) explains the two ways in, what `nb setup`
+  does on each, and the two settings only an owner can make.
+- [Your first article](getting-started/first-article.md) describes what happens
+  between asking and the live page.
+- [Create your paper](getting-started/create-your-paper.md) is for when you want
+  the paper to have a shape of its own.
 
 ## Operate your paper
 
-- Operate: [manage your paper](guides/operate/manage-your-paper.md),
-  [schedule publication](guides/operate/schedule.md), or
+- Operate: [schedule publication](guides/operate/schedule.md) and
+  [verify the scheduled runtime](guides/operate/verify-scheduled-runtime.md),
+  [manage your paper](guides/operate/manage-your-paper.md), or
   [update the engine](guides/operate/update-engine.md)
 - Publish: [publish an article now](guides/publish/publish-now.md) or
   [revise a published article](guides/publish/revise-an-article.md)
