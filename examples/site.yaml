@@ -28,7 +28,7 @@ assets:
 # the-nightly-build.github.io. The public URL comes from your GitHub Pages URL,
 # never from this file. The description is one line on your card, and optional.
 directory:
-  description: "AI, markets, engineering, and whatever I cannot stop thinking about."
+  description: "AI: the research, the industry, the law around it, and a course in GPU kernels."
 # To opt out of the directory, uncomment:
 # directory:
 #   publish: false

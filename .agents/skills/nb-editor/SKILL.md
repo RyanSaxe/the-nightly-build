@@ -70,10 +70,10 @@ scope: body prose, headline, dek, subheads, captions, and the prose inside every
 furniture component.
 
 A template identity or press file may allow a prose failure `spec/slop.md` bans,
-and it says which one and where. The lesson template allows its two bookend
-cards to address the reader, for instance. Leave those sentences alone for
-addressing the reader, and judge them like any other: do they say anything? The
-allowance has to be written down. Do not read it off a component's evident
+and it says which one and where. The example lesson template allows its two
+bookend cards to address the reader, for instance. Leave those sentences alone
+for addressing the reader, and judge them like any other: do they say anything?
+The allowance has to be written down. Do not read it off a component's evident
 purpose.
 
 Then walk the edges a second time, on their own. Read the first and last

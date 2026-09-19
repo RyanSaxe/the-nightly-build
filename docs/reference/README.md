@@ -61,15 +61,15 @@ The engine does not estimate model cost. Use the provider's usage reporting.
 
 ## Design articles and the site
 
-| Capability               | What it supports                                                                                   | Configure or learn more                                                                                          |
-| ------------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Theme and color mode     | Shipped or press-owned CSS with automatic, light, and dark appearance                              | `theme` and `appearance` in `site.yaml`; see [Appearance and voice](../guides/customize/appearance-and-voice.md) |
-| Front-page density       | Compact story cells or comfortable cells with deks                                                 | `front` in `site.yaml`; see [Site reference](site.md)                                                            |
-| Reusable furniture       | Timelines, comparison grids, evidence cards, pull quotes, rubrics, and custom semantic components  | Shipped `templates/FURNITURE.md` or `press/furniture/`; see [Furniture reference](furniture.md)                  |
-| Custom templates         | Press-owned article skeletons with enforceable sections, citation geometry, chrome, and furniture  | `press/templates/<id>/`; see [Customize templates](../guides/customize/templates.md)                             |
-| Figures and charts       | Local, reviewable images and data-backed charts stored with an article; revisions can replace them | The article's matching asset directory and [Architecture](../concepts/architecture.md)                           |
-| Trusted external assets  | Owner-selected HTTPS scripts and styles with exact Subresource Integrity pins                      | `assets` in `site.yaml`; see [Site reference](site.md)                                                           |
-| Accessible static output | Semantic, script-free article content with responsive layouts and browser-render checks            | [Template reference](./templates.md) and [Publishing and security](../concepts/publishing-and-security.md)       |
+| Capability               | What it supports                                                                                   | Configure or learn more                                                                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Theme and color mode     | Shipped or press-owned CSS with automatic, light, and dark appearance                              | `theme` and `appearance` in `site.yaml`; see [Appearance and voice](../guides/customize/appearance-and-voice.md)                              |
+| Front-page density       | Compact story cells or comfortable cells with deks                                                 | `front` in `site.yaml`; see [Site reference](site.md)                                                                                         |
+| Reusable furniture       | Timelines, comparison grids, evidence cards, pull quotes, rubrics, and custom semantic components  | Shipped `templates/FURNITURE.md` or `press/furniture/`; see [Furniture reference](furniture.md)                                               |
+| Custom templates         | Press-owned article skeletons with enforceable sections, citation geometry, chrome, and furniture  | `press/templates/<id>/`, with finished packages to copy in `examples/templates/`; see [Customize templates](../guides/customize/templates.md) |
+| Figures and charts       | Local, reviewable images and data-backed charts stored with an article; revisions can replace them | The article's matching asset directory and [Architecture](../concepts/architecture.md)                                                        |
+| Trusted external assets  | Owner-selected HTTPS scripts and styles with exact Subresource Integrity pins                      | `assets` in `site.yaml`; see [Site reference](site.md)                                                                                        |
+| Accessible static output | Semantic, script-free article content with responsive layouts and browser-render checks            | [Template reference](./templates.md) and [Publishing and security](../concepts/publishing-and-security.md)                                    |
 
 ## Operate and deliver
 

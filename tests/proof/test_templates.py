@@ -19,6 +19,8 @@ from findings import Findings
 from press import LOREM, REPO, chronicle
 
 REGISTRY = check.load_registry(str(REPO))
+EXAMPLE_TEMPLATES = REPO / "examples" / "templates"
+EXAMPLE_IDS = sorted(p.name for p in EXAMPLE_TEMPLATES.iterdir() if p.is_dir())
 
 SOURCES = "".join(
     f'<li id="s{i}"><a data-nb-source href="https://example.org/u{i}">x</a></li>'
@@ -99,6 +101,8 @@ def user_repo(clone_testrepo: Callable[..., str]) -> str:
 def template_repo() -> str:
     repo = pathlib.Path(tempfile.mkdtemp())
     shutil.copytree(REPO / "templates", repo / "templates")
+    # the example packages, adopted the way a press does: under press/templates
+    shutil.copytree(EXAMPLE_TEMPLATES, repo / "press" / "templates")
     series = repo / "press" / "series" / "histories"
     series.mkdir(parents=True)
     (series / "series.yaml").write_text(
@@ -305,10 +309,11 @@ def test_unbiased_blocks_duplicate_furniture_within_one_side(
     assert "B-FURNITURE" in result.blocks
 
 
-@pytest.mark.parametrize("template_id", sorted(REGISTRY))
-def test_shipped_skeleton_is_structurally_sound(template_id: str) -> None:
-    treg = REGISTRY[template_id]
-    tpl_path = check.find_template(str(REPO), template_id)
+def assert_skeleton_is_structurally_sound(
+    repo: str, registry: dict, template_id: str
+) -> None:
+    treg = registry[template_id]
+    tpl_path = check.find_template(repo, template_id)
     assert tpl_path is not None, "no skeleton.html in templates/ or press/templates/"
 
     tpl = check.Article()
@@ -334,6 +339,20 @@ def test_shipped_skeleton_is_structurally_sound(template_id: str) -> None:
             counts.get(component) == 1
             for component in (treg.get("flex_components") or [])
         )
+
+
+@pytest.mark.parametrize("template_id", sorted(REGISTRY))
+def test_shipped_skeleton_is_structurally_sound(template_id: str) -> None:
+    assert_skeleton_is_structurally_sound(str(REPO), REGISTRY, template_id)
+
+
+@pytest.mark.parametrize("template_id", EXAMPLE_IDS)
+def test_example_package_is_structurally_sound_as_a_press_template(
+    template_id: str, template_repo: str
+) -> None:
+    registry = check.load_registry(template_repo)
+    assert template_id not in REGISTRY, "example packages are not shipped"
+    assert_skeleton_is_structurally_sound(template_repo, registry, template_id)
 
 
 def test_article_from_a_user_defined_template_passes(
