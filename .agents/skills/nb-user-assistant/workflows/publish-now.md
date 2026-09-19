@@ -5,7 +5,9 @@ Read `docs/guides/publish/publish-now.md`, `docs/reference/series.md`, and
 
 Take the request as it comes. A link, a topic, a question, a pasted document, a
 brief: each is starting material, never a sufficient commission, and never
-something to demand.
+something to demand. It is not the moment to shape the paper either: the two
+questions that make the default paper theirs belong to
+[create paper](./create-paper.md), and the article goes ahead without them.
 
 ## Find the home
 
