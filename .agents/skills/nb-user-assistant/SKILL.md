@@ -25,7 +25,8 @@ single workflow that owns the request and only the craft references it names:
 
 | User intent                                                        | Workflow                                      |
 | ------------------------------------------------------------------ | --------------------------------------------- |
-| Install, fork, connect GitHub, schedule, or verify access          | [setup](workflows/setup.md)                   |
+| Install, fork, connect GitHub, or publish the first article        | [setup](workflows/setup.md)                   |
+| Schedule publication or verify the scheduled runtime               | [schedule](workflows/schedule.md)             |
 | Define the first press or rethink its editorial concept            | [create paper](workflows/create-paper.md)     |
 | Change series, cadence, voice, source policy, or production policy | [update paper](workflows/update-paper.md)     |
 | Commission an article now from any starting material               | [publish now](workflows/publish-now.md)       |
