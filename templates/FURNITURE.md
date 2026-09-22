@@ -1,45 +1,41 @@
 # Furniture
 
 Furniture is the set of pre-designed components an article may use. The engine's
-shared CSS styles every class in both color schemes, so composing pieces cannot
-break the paper's look. Furniture is part of the article's language. Use it when
-its presentation meaningfully changes how a reader understands or experiences
-the material, including when deliberate emphasis is the point. Do not add it
-merely to fill space or create visual variety. There is no target count, but the
-finished piece should still read as a continuous article rather than a stack of
-components. In practice, a page with no furniture at all will rarely serve the
-reader well, and neither will one with furniture at every turn.
+shared CSS styles every class in both colour schemes, so composing pieces cannot
+break the paper's look.
 
-Section tags, citation markup, source entries, and the nb-meta block are article
-structure, not furniture. Template manifests and deterministic proof define
-them. This base catalogue is the engine's, always available to every template. A
-paper can add its own furniture (paper-wide in `press/furniture/`, or bespoke
-inside one template's folder) and instruct sections to use it in prompt.md.
+Section tags, citation markup, source entries and the nb-meta block are article
+structure and not furniture. Template manifests and the deterministic proof
+define those. This base catalogue is the engine's and every template has it. A
+paper can add its own, paper-wide in `press/furniture/` or bespoke inside one
+template's folder, and point a section at it from `prompt.md`.
 
-The catalogue is small on purpose: a few primitives the writer adapts beat a
-component per idea. Retired components (callout, epigraph, aside, cast,
-objectives box, check box, bridge, plain abstract, the standalone verdict
-component whose label now lives on a note, grade row, the paper template's
-anchored excerpt) stay styled so the published shelf keeps rendering. New
-articles express those moves through the note below, and a claim's judgment
-lives on the claim card itself.
+The catalogue is small on purpose: a few primitives a writer adapts beat a
+component per idea. Retired components stay styled so the published shelf keeps
+rendering, and new articles express those moves through the note below.
 
-In the samples below, ALL-CAPS runs are placeholders: replace every one in the
-article's own words. The proof warns on a caps run that survives into prose.
-Sentence-case labels a component renders ("What holds up", "What to be careful
-about") are fixed chrome: keep them verbatim. Everything else is sample data:
-replace it.
+In the samples, ALL-CAPS runs are placeholders and the proof warns on one that
+survives into prose. Sentence-case labels a component renders ("What holds up",
+"What to be careful about") are fixed chrome, so keep them verbatim. Replace
+everything else.
 
-The families, and how to choose within them. Evidence: a couple of heterogeneous
-headline numbers are a stat strip, rows of one shape three or more deep are a
-table, and anything the reader must see is a figure, drawn from data or captured
-from a source. A derivation the argument leans on is an equation, and source
-code is a listing when the article's claim depends on what the code does. Voice:
-a labeled passage of any kind is the note, and the article's own best sentence,
-promoted, is a pull quote. Structure: stages in order are steps, events in time
-a timeline, a stance anyone holds a position card, strengths against caveats the
-holds-up grid. Judgment: scored criteria are a rubric, and a prediction is a
-claim card, carried from open to hit or miss when a later article judges it.
+Which one to reach for, by what you have.
+
+**Evidence.** A couple of heterogeneous headline numbers are a stat strip. Rows
+of one shape, three or more deep, are a table. Anything somebody has to see is a
+figure, drawn from data or captured from a source. A derivation the argument
+turns on is an equation, and source code is a listing where the article's claim
+depends on what the code does.
+
+**Voice.** A labelled passage of any kind is the note. The article's own best
+sentence, promoted, is a pull quote.
+
+**Structure.** Stages in order are steps. Events in time are a timeline. A
+stance somebody holds is a position card. Strengths against caveats are the
+holds-up grid.
+
+**Judgment.** Scored criteria are a rubric. A prediction is a claim card,
+carried from open to hit or miss when somebody judges it later.
 
 ## Stat strip
 
@@ -302,9 +298,9 @@ class `major` for filled dots.
 ## Position card
 
 One cleanly stated position: whose it is, the statement once, a summary of its
-basis, the citation. Use it for a named holder the article calls on, or for the
-paper's own position in an opinion piece (the example opinion template pins it).
-The "Position" pill is fixed chrome.
+basis, the citation. Use it for a person the article quotes, or for the paper's
+own position in an opinion piece (the example opinion template pins it). The
+"Position" pill is fixed chrome.
 
 ```html
 <div class="nb-position">
@@ -371,8 +367,8 @@ the meter colors itself from the score.
 ## Claim card
 
 A falsifiable prediction that carries its own lifecycle. The night it is made it
-is open: the claim, the reasoning, confidence, and when it can be judged. When a
-later article judges it, that article renders the same card with
+is open: the claim, the reasoning, confidence, and when it can be judged. Where
+you judge it in a later article, render the same card there with
 `data-nb-resolution="hit"` or `"miss"`, the matching state chip text, and an
 outcome line saying what actually happened. If a section makes claims, later
 articles must grade them.
