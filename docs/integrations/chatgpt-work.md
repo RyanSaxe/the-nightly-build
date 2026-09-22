@@ -2,7 +2,7 @@
 
 ChatGPT Work can set up a paper and publish an article from a cloud session. Its
 scheduled tasks can run from a fresh cloud checkout without your computer
-running.
+running or an API key.
 
 ## Connect GitHub
 
@@ -33,12 +33,12 @@ daily time and timezone, and say whether the task may publish after checks pass
 or should leave a draft PR for you. For example:
 
 > Schedule The Nightly Build in `<owner>/<repo>` every day at 5:00 AM Eastern.
-> Follow the repository's scheduled publication instructions. Open a draft PR
-> for review instead of publishing automatically.
+> Follow the repository's scheduled publication instructions and auto-publish
+> after checks pass.
 
-Replace the repository name and schedule with yours. If you want automatic
-publication, say so explicitly. The task instructions should direct Work to
-start from the current `main` and follow
+Replace the repository name and schedule with yours. For draft-only publication,
+ask Work to leave each Article PR for your review. The task instructions should
+direct Work to start from the current `main` and follow
 `.agents/prompts/run-scheduled-publication.md`. That file is the source of truth
 for the run. See [Schedule publication](../guides/operate/schedule.md) for the
 full prompt.

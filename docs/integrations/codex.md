@@ -18,10 +18,9 @@ The assistant runs `./nb setup` when the paper needs setup, then follows the
 article workflow. The request to review first makes the Article PR a draft. To
 publish without a review hold, omit that sentence.
 
-For unattended publication, choose a scheduler with a current checkout, web
-research, command execution, and GitHub access. See
-[Schedule publication](../guides/operate/schedule.md) for the runtime contract
-and the external prompt. The scheduled workflow itself lives in
+For unattended publication, use a
+[ChatGPT Work scheduled task or Claude Code Routine](../guides/operate/schedule.md).
+The scheduled workflow itself lives in
 `.agents/prompts/run-scheduled-publication.md`.
 
 ## After publication

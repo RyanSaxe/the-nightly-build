@@ -11,14 +11,15 @@ the path that matches what you are trying to do.
   does on each, and the two settings only an owner can make.
 - [Your first article](getting-started/first-article.md) describes what happens
   between asking and the live page.
+- [Agent integrations](integrations/README.md) shows the article and scheduling
+  paths for Claude Code, Codex, and ChatGPT Work.
 - [Create your paper](getting-started/create-your-paper.md) explains how to
   personalize the default paper with two questions or design a paper from
   scratch.
 
 ## Operate your paper
 
-- Operate: [schedule publication](guides/operate/schedule.md) and
-  [verify the scheduled runtime](guides/operate/verify-scheduled-runtime.md),
+- Operate: [schedule publication](guides/operate/schedule.md),
   [manage your paper](guides/operate/manage-your-paper.md), or
   [update the engine](guides/operate/update-engine.md)
 - Publish: [publish an article now](guides/publish/publish-now.md) or
@@ -37,7 +38,6 @@ the path that matches what you are trying to do.
 - Reference details: [site](reference/site.md), [series](reference/series.md),
   [templates](reference/templates.md), [furniture](reference/furniture.md),
   [production](reference/production.md), and [delivery](reference/delivery.md)
-- [Agent and scheduler integrations](integrations/README.md)
 - Troubleshoot [setup and scheduling](troubleshooting/setup-and-scheduling.md)
   or [Article PRs](troubleshooting/article-prs.md)
 

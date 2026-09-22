@@ -36,23 +36,28 @@ setup path.
 
 ### Terminal with `gh`
 
-1. Clone your fork and open it in your coding agent with `gh` signed in.
+1. Sign in to GitHub from `gh` with an account that owns the fork.
+2. Clone your fork and open it in Claude Code or Codex.
 
-### Browser, no terminal
+### ChatGPT Work, no terminal
 
-1. In the fork's Actions tab, enable workflows if GitHub prompts you.
-2. Under Settings, Pages, set Source to GitHub Actions.
-3. Use an AI product connected to your GitHub account that can run commands in a
-   sandbox (Like ChatGPT in the Work tab instead of Chat).
+1. Connect GitHub in ChatGPT Work and allow access to your fork, including
+   permission to push branches and open pull requests.
+2. In the fork's Actions tab, enable workflows if GitHub prompts you. Under
+   Settings, Pages, set Source to GitHub Actions.
 
 ### Ask for your first article
 
 Give the assistant this request:
 
-> Help me set up my Nightly Build paper and write my first article about
-> `<topic>`. Follow the repository's instructions.
+> Help me set up my Nightly Build paper in `<owner>/<repo>` and write my first
+> article about `<topic>`. Follow the repository's instructions.
 
-The article should be live within an hour, depending on its complexity.
+The assistant runs `./nb setup` if the fork has not been set up. Setup prepares
+the repository and lists GitHub settings that may need you. Without `gh`, it
+lists Pages and Actions even if you already enabled them. A clean Article PR
+merges after its `validate` check passes, then GitHub Pages publishes the
+article. Ask to review it first if you want the PR to remain a draft.
 
 For more detail, see:
 
@@ -62,10 +67,9 @@ For more detail, see:
 
 ## Schedule publication
 
-To publish articles automatically every day, add a series with a cadence and
-point a scheduler at the fork.
-[Schedule publication](docs/guides/operate/schedule.md) includes a smoke test
-for the scheduled environment so you can make sure your setup works properly.
+To publish automatically, set up a
+[ChatGPT Work scheduled task or Claude Code Routine](docs/guides/operate/schedule.md)
+for your fork.
 
 ## How it works
 

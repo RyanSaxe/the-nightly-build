@@ -38,9 +38,7 @@ bills or limits the resulting work.
 A subscription converts model work into plan usage according to rules owned by
 the provider. Token observations do not reliably predict the share of a weekly
 or monthly allowance that one run will consume. Use the provider's usage report
-after the first normal production run as the baseline for that paper. The
-scheduled-runtime smoke test verifies access and permissions without producing
-articles, so it is not a usage baseline.
+after the first production run as the baseline for that paper.
 
 A metered API charges for the exact models and token classes used. Estimate
 dollars only after those models are selected and their current input, output,
@@ -70,9 +68,9 @@ because independent articles ran in parallel. Its role invocations consumed:
 | Editor, per article        | 5–15 minutes  | 150k–250k       |
 
 These are observations, not limits or promises. A role may run again after an
-editorial request or failed check. The table also excludes continuing
-orchestrator work because it has not been measured reliably. It describes
-workload, not a guaranteed subscription allowance or API bill.
+editorial request or failed check. The table covers role invocations and
+excludes the orchestrator's continuing work. It describes workload, not a
+guaranteed subscription allowance or API bill.
 
 ## Stage directives
 

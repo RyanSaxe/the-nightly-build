@@ -43,9 +43,7 @@ shipped registry:
 A press adopts one by copying it into `press/templates/<id>/`, whole, and gets
 the same enforcement a shipped package gets. A series that names one before the
 copy exists fails `nb validate`, and the error identifies which copy to make.
-Edit the copy freely. It belongs to your press after you copy it. A press that
-used any of the three while they shipped, before 2026-09-19, makes the copy in
-the same change that takes the engine update.
+Edit the copy freely. It belongs to your press after you copy it.
 
 ## Manifest
 

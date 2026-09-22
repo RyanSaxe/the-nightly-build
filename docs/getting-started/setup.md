@@ -1,57 +1,44 @@
-# Set up
+# Set up your paper
 
-## What you need
+Fork this repository with **Copy the main branch only** checked. Then choose one
+of these setup paths.
 
-- A GitHub account, and a public fork for free GitHub Pages or a plan that
-  supports Pages on a private repository.
-- An AI tool that can work in your fork: a coding agent in a terminal with `gh`
-  signed in, or a product connected to GitHub that runs commands in a sandbox
-  and opens pull requests.
-- Only for a morning paper: a scheduled runtime that can check out the
-  repository, browse research sources, push a work branch, and open a pull
-  request. An article you ask for needs none.
+## Use a terminal
 
-## Two ways in
+Sign in to GitHub from `gh` with an account that owns the fork. Clone the fork
+and open it in Claude Code or Codex. The agent can run setup for you, or you can
+run `./nb setup` yourself before asking for an article.
 
-### A terminal with gh
+With `gh`, `./nb setup` creates the default press and `library` branch, seeds
+the publishing workflows, and enables Actions, Pages, and repository auto-merge.
+It also tries to protect `library` with the `validate` check. If your GitHub
+account cannot make a setting, setup prints its link and tells you what to
+change.
 
-1. Fork with **Copy the main branch only**. A capable assistant does this for
-   you.
-2. Clone the fork and run `./nb setup`. It scaffolds `press/` with three series,
-   Dispatches for the articles you ask for and News Brief and Feature for a
-   morning paper, and pushes it to `main`, where the publishing check reads it.
-   It creates the `library` branch, seeds the publishing workflows onto it,
-   enables Actions, configures GitHub Pages, and protects `library` behind the
-   `validate` check.
-3. Ask for the first article. [Your first article](./first-article.md) says what
-   happens next.
+## Use ChatGPT Work
 
-### No terminal
+Connect GitHub in ChatGPT Work and authorize the account or organization that
+owns the fork. Give the app access to the fork and permission to push branches
+and open pull requests. Before asking for an article, enable Actions from the
+fork's Actions tab if GitHub prompts you. Under Settings, Pages, set Source to
+GitHub Actions.
 
-1. Fork in the browser with **Copy the main branch only**.
-2. Make the two settings only an owner can: on the fork's Actions tab, enable
-   workflows if GitHub asks. Under Settings, Pages, set Source to GitHub
-   Actions.
-3. Name the fork in your message so the product's GitHub connector opens it, and
-   ask for the first article. Its `nb setup` does the git side, then lists under
-   "Still to do" what it cannot make itself, with the URL for each: the two
-   settings above, and a recommended third, protecting `library` behind the
-   `validate` check under Settings, Branches.
+Without `gh`, `./nb setup` creates and pushes the git configuration, but cannot
+change or read repository settings. It lists Pages and Actions under "Still to
+do" even if you already enabled them. If either setting is missing, follow its
+GitHub link. Protecting `library` behind the `validate` check is recommended.
 
-`nb setup` requires `git`, `uv`, and Python 3.10 or newer. Run it again to
-restore missing settings. It verifies the settings it can read back.
+## Ask for your first article
 
-A fork may start with workflows disabled. If the Actions tab asks you to enable
-them, or `nb setup` warns that it could not, enable them there: without
-workflows the `validate` check never runs and no article can merge. Without
-`gh`, setup cannot read settings back. Its "Still to do" list therefore includes
-the two required settings even if you already made them.
+> Help me set up my Nightly Build paper in `<owner>/<repo>` and write my first
+> article about `<topic>`. Follow the repository's instructions.
 
-## Later
+`./nb setup` requires `git`, `uv`, and Python 3.10 or newer. An agent can
+install or use these in its own environment. You do not need to paste a GitHub
+token into chat.
 
-[Create your paper](./create-your-paper.md) makes the paper yours: two questions
-rewrite what News Brief and Feature cover, and a longer conversation gives it
-series of its own. [Schedule publication](../guides/operate/schedule.md) adds
-the runtime that publishes while nobody is present, and
-[Verify the scheduled runtime](../guides/operate/verify-scheduled-runtime.md)
-proves that environment before it publishes anything.
+The default press includes Dispatches for articles you request and News Brief
+and Feature for scheduled publication. The site appears after Pages is enabled
+and the first article merges. See [Your first article](./first-article.md) for
+the publication flow and [Schedule publication](../guides/operate/schedule.md)
+to set up a recurring run.

@@ -27,11 +27,3 @@ Both paths read their run instructions from
 The scheduler prompt should point to that file rather than copy its workflow.
 See [Schedule publication](../guides/operate/schedule.md) for the prompt and the
 publication choices.
-
-## Other agents
-
-An agent can use this repository if its environment provides a current checkout,
-web research, command execution, and the GitHub access needed for its task.
-Scheduled publication also needs to run unattended. Read the
-[scheduled runtime requirements](../guides/operate/schedule.md) before
-connecting another scheduler.

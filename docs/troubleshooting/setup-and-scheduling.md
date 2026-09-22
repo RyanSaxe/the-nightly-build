@@ -3,9 +3,10 @@
 ## Setup cannot create or configure the fork
 
 Confirm the current assistant is connected to the intended GitHub account and
-repository. Without `gh`, `nb setup` lists the settings it could not make under
-"Still to do" with a URL for each. Make them in the browser and re-run setup. Do
-not paste a token into chat.
+repository. Without `gh`, `nb setup` cannot change or read Pages and Actions. It
+lists both under "Still to do" with their GitHub settings links, even if you
+already enabled them. Make any missing changes in GitHub. Do not paste a token
+into chat.
 
 ## The first article's check reports an unknown series
 
@@ -24,12 +25,10 @@ stalled PR so the check triggers.
 
 ## The schedule starts but produces no work
 
-Run `nb duty` in the scheduled checkout and read its idle reasons. Confirm the
-runtime has current `main`, can fetch `origin/library`, and has a non-manual,
-non-paused series due on the current UTC day. `cadence: manual` is supposed to
-remain idle. Dispatches never appears as due. A fresh paper's News Brief and
-Feature are due every day, so an empty due list on a fresh paper means the
-checkout is not reading the scaffolded `press/`.
+Run `nb duty` in the scheduled checkout and read its idle reasons. A series may
+have no work because it is paused, does not run on the current UTC day, has
+already published for that day, or uses `cadence: manual`. An empty due list is
+expected when every series is idle.
 
 ## Research cannot reach sources
 
@@ -40,13 +39,14 @@ network capability for that runtime, then rerun the failed test step.
 ## The run cannot push or open a PR
 
 Verify the scheduled identity can push a generated branch and create a PR
-against `library`. Provider-hosted schedulers may need separate repository app
-permissions. A runtime authenticated with a GitHub Actions `GITHUB_TOKEN` also
-cannot trigger the `validate` check on PRs it opens. Scheduled runtimes need an
-identity whose PRs run checks.
+against `library`. Confirm GitHub Actions are enabled for the fork and that the
+identity's pull requests start the `validate` check. Provider-hosted tasks may
+need separate repository app permissions.
 
-## Verification works locally but fails on schedule
+## A local check works but the scheduled task fails
 
-The local run proved the wrong boundary. Trigger the non-publishing smoke check
-in the exact scheduled environment, then fix its first failed requirement and
-resume there.
+The local environment may have different repository access, tools, and network
+permissions. Check the scheduled task's run details. If they do not identify the
+problem, use the
+[optional scheduled runtime check](../guides/operate/verify-scheduled-runtime.md)
+in the same environment.

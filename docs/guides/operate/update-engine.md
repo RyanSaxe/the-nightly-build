@@ -7,11 +7,9 @@ alone.
 From GitHub, use **Sync fork**. The next scheduled run starts with `nb sync` and
 repairs protected publishing workflows through their own CI-gated PR when
 needed. An exact sync PR merges automatically once validated. The sync also
-validates the press against the updated engine, so a key the engine retired
-surfaces immediately instead of changing publication behavior silently. The same
-check names a template the engine moved to `examples/templates/` and the copy
-into `press/templates/` that keeps the series running. The `lesson`, `opinion`,
-and `unbiased` packages moved there on 2026-09-19.
+validates the press against the updated engine and names any retired key or
+template that needs an update. If a series uses a template moved to
+`examples/templates/`, copy it into `press/templates/<id>/` before syncing.
 
 From a clean local checkout, the complete update is:
 
