@@ -1,8 +1,8 @@
 # Schedule publication
 
-The setup assistant and the scheduled runtime may be different products. Audit
-the scheduled environment independently: it is the one that must check out the
-paper, browse sources, push a branch, and open a PR while nobody is present.
+Choose a scheduler that can run the publication workflow while you are away. The
+setup assistant and the scheduled agent can be different products. Start with
+the product-specific paths in [Integrations](../../integrations/README.md).
 
 ## Runtime requirements
 
@@ -19,9 +19,10 @@ Every run begins with `nb sync`, then calls `nb duty` to find the deterministic
 work list. One schedule can run the whole paper because series own their
 cadence. `cadence: manual` series never appear as due.
 
-Choose a scheduler only after its actual unattended environment meets all six
-requirements. Verified runtimes and remaining candidates are listed in
-[Integrations](../../integrations/README.md).
+Before enabling a schedule, confirm that its account can access the repository,
+the environment can browse and run commands without waiting for you, and the
+GitHub identity can push branches and open pull requests. Check the scheduler's
+own tool, permission, and billing limits as they change over time.
 
 A self-hosted GitHub Actions cron path is planned but not yet verified: a PR
 opened with the workflow's own `GITHUB_TOKEN` cannot trigger the required
