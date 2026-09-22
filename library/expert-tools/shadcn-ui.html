@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>shadcn/ui gives custom UI a source code boundary · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "shadcn-ui",
+        "template": "article",
+        "title": "shadcn/ui gives custom UI a source code boundary",
+        "mode": "open",
+        "order": null,
+        "date": "2026-09-22",
+        "tags": ["react", "ui", "design-systems", "frontend", "shadcn", "accessibility"],
+        "sources": 18,
+        "words": 2010,
+        "reading_minutes": 9,
+        "dek": "The strongest starting point is not the library with the prettiest demo; it is the layer your team can change without fighting its API.",
+        "harness": "Codex Work Mode",
+        "model": "GPT-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">shadcn/ui gives custom UI a source code boundary</h1>
+        <p class="nb-dekline">
+          The strongest starting point is not the library with the prettiest demo; it is the layer your team can change without fighting its API.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-09-22</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The prettiest component is the one your team can still change</h2>
+        <p>
+          The familiar component-library failure is not that the button looks bad. It is that the button looks almost right. A product designer asks for a different focus ring, a denser menu, a confirmation dialog with one extra region, or a DOM order the library did not anticipate. The team wraps the imported component, adds a prop, then adds a prop to the wrapper. Soon the public API of someone else's package is the architecture of the product.
+        </p>
+        <p>
+          That is why the best tooling for beautiful, custom UI is not a single winner. It is a deliberate boundary between three things: the visual surface your team owns, the difficult interaction behavior it borrows, and the place where every state can be inspected. shadcn/ui's documentation states the ownership idea more plainly than most marketing pages: “This is not a component library. It is how you build your component library.”<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The distinction matters in September 2026 because shadcn/ui is now a source-distribution layer with several possible behavior foundations. New projects default to Base UI, while Radix remains supported and React Aria is a first-class base.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup> The recommendation is therefore less “pick this component catalog” and more “decide which part of a component you are willing to own.”
+        </p>
+      </section>
+
+      <section data-nb-section="shadcn-source" id="shadcn-source">
+        <h2>shadcn/ui starts with a local visual surface</h2>
+        <p>
+          A conventional package gives you a component through an import boundary. shadcn/ui gives you a component by writing source into the application. The difference is practical: the file in <code>src/components/ui</code> is no longer an implementation detail hidden behind a version number. It is a local part of the product, available to a code review, a design-system refactor, or a small, opinionated change to the markup.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">a starting point, then a local component</span><span>SHELL</span>
+          </div>
+          <pre><code class="language-shell">pnpm dlx shadcn@latest init
+pnpm dlx shadcn@latest add button dialog
+
+# The visual surface now belongs to the app.
+# Edit src/components/ui/button.tsx when the product needs a new rule.
+
+pnpm dlx shadcn@latest diff button</code></pre>
+          <figcaption class="nb-code-cap">
+            The CLI distributes source and can show upstream changes; it is not a replacement for reviewing those changes.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          This is a better default for a bespoke product than a wrapper around a closed visual vocabulary. It is also a transfer of work. The shadcn/ui CLI documentation is explicit that copied components need manual updates. Before applying one, commit the local version, inspect the diff, and decide whether upstream's fix still fits the component your team has changed.<sup class="nb-cite"><a href="#s4">4</a></sup> Source ownership removes a package's visual boundary by moving merge decisions into the application.
+        </p>
+      </section>
+
+      <section data-nb-section="behavior-foundations" id="behavior-foundations">
+        <h2>The behavior layer is the decision that matters</h2>
+        <p>
+          Once the visual files are local, the next question is what not to reimplement. Menus, popovers, dialogs, comboboxes and date controls carry keyboard navigation, focus management, ARIA relationships, touch behavior and—in some cases—internationalization. A headless or unstyled foundation can supply that difficult behavior while leaving CSS, layout and component composition in your hands. Base UI documents exactly that boundary: no bundled CSS, WAI-ARIA patterns, and open component APIs that let an application add or remove parts.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            The useful comparison is the ownership boundary, not a leaderboard of defaults.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup><sup class="nb-cite"><a href="#s7">7</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Starting point</th>
+              <th>It owns</th>
+              <th>Use it when</th>
+              <th>The cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">shadcn/ui</span></td>
+              <td>Source-distributed visual components</td>
+              <td>You want the UI files in the product repository</td>
+              <td>Your team owns edits, drift and merges</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Base UI</span></td>
+              <td>Unstyled React behavior</td>
+              <td>You want CSS and DOM control without starting interaction logic from zero</td>
+              <td>You must design and maintain the visual layer</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Radix</span></td>
+              <td>Low-level React primitives</td>
+              <td>You have an existing Radix vocabulary or want incremental adoption</td>
+              <td>Its parts and composition model become your local convention</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">React Aria</span></td>
+              <td>Unstyled components, hooks and behavior</td>
+              <td>Internationalization and assistive-technology behavior are central</td>
+              <td>The composition model asks for more deliberate DOM and styling work</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Ark UI / Zag</span></td>
+              <td>Headless state-machine logic with adapters</td>
+              <td>The same behavior must travel across framework boundaries</td>
+              <td>Adapters and a lower-level mental model add surface area</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">MUI / Mantine / Chakra</span></td>
+              <td>Styled or prop-driven application components</td>
+              <td>Breadth and time-to-product beat a blank visual surface</td>
+              <td>You work inside an established styling vocabulary</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Base UI is the sensible shadcn/ui default for a new React project that wants to own its styles. It comes from the maintainers behind Radix, Material UI and Floating UI, and its open APIs expose the component nodes rather than sealing them behind a finished skin.<sup class="nb-cite"><a href="#s5">5</a></sup> That does not make it a visual system. It gives the team a sturdy place to make one.
+        </p>
+        <p>
+          Radix is still the right answer when a team already has Radix primitives in production or values its familiar parts, focus behavior and incremental adoption. The July change in shadcn/ui is not a reason to rewrite a working system: Radix remains supported, and the primitive library itself is still designed to be accessible, unstyled and customizable.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          React Aria deserves the deliberate choice when the interface has serious internationalization requirements or when moving between a ready component and a lower-level hook is valuable. Its documentation emphasizes unstyled components and hooks, built-in interaction behavior, and a roughly one-to-one relationship between components and DOM elements so the developer can control order and layout.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s7">7</a></sup> Ark UI and Zag take the same separation further: the behavior is modeled as framework-agnostic state-machine logic, and framework adapters render the result.<sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup>
+        </p>
+        <p>
+          None of those choices makes an application automatically accessible. A library can supply roles, focus mechanics and interaction patterns; the product still has to provide labels, sensible order, contrast, content, tests and a complete state model. “Headless” means you own the surface. It does not mean the surface is finished.
+        </p>
+      </section>
+
+      <section data-nb-section="styled-starting-points" id="styled-starting-points">
+        <h2>Styled libraries are valid starting points</h2>
+        <p>
+          There is a temptation to treat a styled library as a failure of taste. That is the wrong comparison. Tailwind is a styling system, not a component library: its utility classes keep structure and styling together, constrain values to a chosen design system, and make state and responsive variants local to the source.<sup class="nb-cite"><a href="#s10">10</a></sup> Pairing those constraints with source-owned components is powerful, but it still asks a team to make the decisions that turn tokens into a coherent product.
+        </p>
+        <p>
+          Tailwind's Catalyst makes the same trade in a more curated package of source. Its team describes the model with the useful phrase “Your components, not ours”: copy the pieces into the app, then make them yours.<sup class="nb-cite"><a href="#s11">11</a></sup> The appeal is not that a source file is automatically beautiful. The appeal is that a good default can disappear behind the system you build from it. If the starting code remains recognizable as a library six months later, the team has adopted a visual dependency, not a design language of its own.
+        </p>
+        <p>
+          Catalyst is the polished answer for a team already committed to Tailwind and willing to start from a strong visual point of view. Its documentation positions it as a React UI kit to copy into the project, with Headless UI, Motion and <code>clsx</code> in the surrounding toolchain.<sup class="nb-cite"><a href="#s11">11</a></sup><sup class="nb-cite"><a href="#s12">12</a></sup> That makes it a good accelerator for an admin surface or a product that needs a convincing first pass quickly. It also makes its assumptions part of the project: Tailwind's theme, its component composition, and the maintenance of code you have copied.
+        </p>
+        <p>
+          MUI is the more comprehensive speed-and-breadth option. Its Material UI package supplies a large, production-oriented React catalog with a deep customization system.<sup class="nb-cite"><a href="#s13">13</a></sup> Mantine advertises more than 120 customizable components and 70 hooks, which is a persuasive reason to use it when the product needs many controls before it needs a bespoke visual language.<sup class="nb-cite"><a href="#s14">14</a></sup> Chakra makes styling props, compositions, CSS variables and dark mode a first-class workflow.<sup class="nb-cite"><a href="#s15">15</a></sup>
+        </p>
+        <p>
+          These are not lesser choices. They are choices to optimize for a different constraint: shipping a broad application surface now, then customizing inside a library's vocabulary. Brad Frost's warning is useful here: “atomic design is not rigid dogma.”<sup class="nb-cite"><a href="#s16">16</a></sup> Do not turn “source-owned” or “headless” into a doctrine either. If a pre-styled system lets the team ship the product, and its theming boundary is honest enough for the work, it may be the most responsible foundation.
+        </p>
+      </section>
+
+      <section data-nb-section="storybook-feedback" id="storybook-feedback">
+        <h2>Storybook is the feedback loop your fork needs</h2>
+        <p>
+          A copied component becomes a system only when the team can see and exercise its states. Storybook is useful here not because it styles anything, but because it provides an isolated workshop for components and pages, including hard-to-reach states and edge cases. Its documentation also treats testing and documentation as part of the same surface, and says it can be adopted incrementally.<sup class="nb-cite"><a href="#s17">17</a></sup>
+        </p>
+        <p>
+          This is the UI version of a broader engineering habit. Mitchell Hashimoto's rule is short: “The goal is to always give yourself a good demo.”<sup class="nb-cite"><a href="#s18">18</a></sup> For a dialog, the demo is not only the happy path. It is the long title, the validation error, the empty result, the keyboard path, the narrow viewport, the dark theme and the loading state. Put those into stories before the team copies the component into three product flows.
+        </p>
+        <p>
+          The same loop keeps the ownership decision honest. If a Base UI or Radix primitive is hard to render in a story, the problem may be your composition rather than the primitive. If a MUI or Mantine component cannot express the product's states without an escape hatch, the library boundary may be too tight. If a shadcn file has accumulated six local variants with no explanation, the source is yours—but the system is not yet designed.
+        </p>
+        <p>
+          Start with stories for the components that have behavior, not for every atom on day one. The goal is a small, living catalogue where a visual change can be inspected beside its focus, disabled, error and responsive states. That catalogue is what makes future customization cheaper than the first customization.
+        </p>
+      </section>
+
+      <section data-nb-section="recommended-stack" id="recommended-stack">
+        <h2>The stack I would start with this week</h2>
+        <p>
+          For a new React product whose UI needs to look distinctly its own, I would start with shadcn/ui as the source distribution layer, Tailwind as the styling constraint, Base UI as the default behavior foundation, and Storybook for the states the team needs to keep visible. That stack gives the team a local visual surface without asking it to invent dialog and popover behavior from scratch.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s10">10</a></sup><sup class="nb-cite"><a href="#s17">17</a></sup>
+        </p>
+        <p>
+          Choose React Aria instead when internationalization and assistive-technology behavior are the hard part. Stay with Radix when the existing codebase already speaks Radix. Choose Ark UI or Zag when shared behavior across React, Vue, Solid or Svelte is a real requirement, not an architectural souvenir. Choose MUI, Mantine, Chakra or Catalyst when breadth and speed matter more than owning the first visual vocabulary. Each is a reasonable answer once the ownership boundary is explicit.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            The best UI toolkit is the one that lets the team change the product without negotiating with an imported visual surface. shadcn/ui is the strongest starting point when that means source in the repository. Base UI, Radix and React Aria are the places to borrow difficult behavior; MUI, Mantine, Chakra and Catalyst are the places to buy speed and breadth. Pick the layer you want to own, put its states in a workshop, and treat every upstream update as a reviewable change—not as permission to stop designing.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s17">17</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" href="https://ui.shadcn.com/docs">shadcn/ui · Introduction</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" href="https://ui.shadcn.com/docs/changelog/2026-07-base-ui-default">shadcn/ui · Base UI as the default</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" href="https://ui.shadcn.com/docs/changelog/2026-07-react-aria">shadcn/ui · React Aria base</a></li>
+          <li id="s4"><a data-nb-source data-nb-kind="primary" href="https://ui.shadcn.com/docs/changelog/2023-06-new-cli">shadcn/ui · New CLI and update workflow</a></li>
+          <li id="s5"><a data-nb-source data-nb-kind="primary" href="https://base-ui.com/react/overview/about">Base UI · About Base UI</a></li>
+          <li id="s6"><a data-nb-source data-nb-kind="primary" href="https://www.radix-ui.com/primitives/docs/overview/introduction">Radix · Primitives introduction</a></li>
+          <li id="s7"><a data-nb-source data-nb-kind="primary" href="https://react-aria.adobe.com/getting-started">Adobe · React Aria getting started</a></li>
+          <li id="s8"><a data-nb-source data-nb-kind="primary" href="https://ark-ui.com/docs/overview/about">Ark UI · About</a></li>
+          <li id="s9"><a data-nb-source data-nb-kind="primary" href="https://zagjs.com/">Zag · Headless component machines</a></li>
+          <li id="s10"><a data-nb-source data-nb-kind="primary" href="https://tailwindcss.com/docs/styling-with-utility-classes">Tailwind CSS · Styling with utility classes</a></li>
+          <li id="s11"><a data-nb-source data-nb-kind="primary" href="https://tailwindcss.com/blog/introducing-catalyst">Tailwind CSS · Introducing Catalyst</a></li>
+          <li id="s12"><a data-nb-source data-nb-kind="primary" href="https://catalyst.tailwindui.com/docs">Catalyst · Getting started</a></li>
+          <li id="s13"><a data-nb-source data-nb-kind="primary" href="https://mui.com/material-ui/getting-started/">MUI · Material UI overview</a></li>
+          <li id="s14"><a data-nb-source data-nb-kind="primary" href="https://mantine.dev/">Mantine · React components and hooks</a></li>
+          <li id="s15"><a data-nb-source data-nb-kind="primary" href="https://chakra-ui.com/docs/styling/overview">Chakra UI · Styling overview</a></li>
+          <li id="s16"><a data-nb-source data-nb-kind="primary" href="https://bradfrost.com/blog/post/extending-atomic-design/">Brad Frost · Extending Atomic Design</a></li>
+          <li id="s17"><a data-nb-source data-nb-kind="primary" href="https://storybook.js.org/">Storybook · Build, test and document components</a></li>
+          <li id="s18"><a data-nb-source data-nb-kind="primary" href="https://mitchellh.com/writing/building-large-technical-projects">Mitchell Hashimoto · Building large technical projects</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
