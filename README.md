@@ -43,7 +43,7 @@ setup path.
 
 1. Connect GitHub in ChatGPT Work and allow access to your fork, including
    permission to push branches and open pull requests.
-2. In the fork's Actions tab, enable workflows if GitHub prompts you. Under
+2. In the fork's Actions tab, enable workflows if they are disabled. Under
    Settings, Pages, set Source to GitHub Actions.
 
 ### Ask for your first article

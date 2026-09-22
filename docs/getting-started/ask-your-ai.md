@@ -13,9 +13,9 @@ On GitHub, fork this repository with **Copy the main branch only** checked.
 
 - In a terminal, sign in to GitHub with `gh`, clone your fork, and open the
   checkout in your coding agent.
-- In ChatGPT Work, connect GitHub and allow access to your fork. Enable Actions
-  for the fork if GitHub prompts you, and set Pages to use GitHub Actions under
-  Settings.
+- In ChatGPT Work, connect GitHub and allow access to your fork. Enable
+  workflows in the fork's Actions tab if they are disabled. Under Settings,
+  Pages, set Source to GitHub Actions.
 
 ## 3. Ask for an article
 

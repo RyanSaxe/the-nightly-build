@@ -19,8 +19,8 @@ change.
 
 Connect GitHub in ChatGPT Work and authorize the account or organization that
 owns the fork. Give the app access to the fork and permission to push branches
-and open pull requests. Before asking for an article, enable Actions from the
-fork's Actions tab if GitHub prompts you. Under Settings, Pages, set Source to
+and open pull requests. Before asking for an article, enable workflows in the
+fork's Actions tab if they are disabled. Under Settings, Pages, set Source to
 GitHub Actions.
 
 Without `gh`, `./nb setup` creates and pushes the git configuration, but cannot
