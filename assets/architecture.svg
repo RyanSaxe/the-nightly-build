@@ -184,10 +184,10 @@
   />
   <text class="title" x="55" y="116">Orchestrator</text>
   <text class="copy" x="55" y="148">
-    Creates the context each agent needs
+    Gives each role its exact inputs.
   </text>
   <text class="copy" x="55" y="173">
-    and manages work to completion.
+    Answers questions. Publishes every article.
   </text>
 
   <rect
@@ -277,7 +277,7 @@
     Studies strong writers for this subject.
   </text>
   <text class="role-copy" x="85" y="525">
-    Defines how the article should sound.
+    Shows what this article should sound like.
   </text>
 
   <rect class="role" x="60" y="720" width="320" height="120" rx="15" />
@@ -292,19 +292,19 @@
   <rect class="role" x="560" y="575" width="320" height="120" rx="15" />
   <text class="role-title" x="585" y="614">Writer</text>
   <text class="role-copy" x="585" y="645">
-    Drafts from the prepared inputs.
+    Writes the best article the evidence allows.
   </text>
   <text class="role-copy" x="585" y="670">
-    Fixes every failed article check.
+    Proves it before handing it on.
   </text>
 
   <rect class="role" x="1010" y="575" width="320" height="120" rx="15" />
   <text class="role-title" x="1035" y="614">Editor</text>
   <text class="role-copy" x="1035" y="645">
-    Challenges evidence, reasoning, and prose.
+    Correct, then how it reads and feels.
   </text>
   <text class="role-copy" x="1035" y="670">
-    Approves only when the article holds up.
+    Edits directly. Sends back only a redraft.
   </text>
 
   <rect
@@ -343,17 +343,8 @@
   </text>
   <path class="flow" d="M1170 320V200" />
 
-  <path class="request" d="M600 575V405H220V430" />
-  <text class="request-label" x="410" y="395">voice question</text>
-
-  <path class="request" d="M600 695V875H220V840" />
-  <text class="request-label" x="410" y="866">source question</text>
-
   <path class="request" d="M1080 695V765H830V695" />
-  <text class="request-label" x="955" y="757">revision request</text>
-
-  <path class="request" d="M1140 695V925H130V840" />
-  <text class="request-label" x="635" y="916">evidence request</text>
+  <text class="request-label" x="955" y="757">redraft</text>
 
   <path class="failure" d="M120 720V685H320V720" />
   <text class="label-failure" x="220" y="676">
@@ -366,10 +357,10 @@
   </text>
 
   <path class="request" d="M175 290V200" />
-  <text class="request-label" x="100" y="250">escalation</text>
+  <text class="request-label" x="100" y="250">query</text>
 
   <path class="success" d="M225 200V290" />
-  <text class="label-success" x="300" y="250">resolution</text>
+  <text class="label-success" x="300" y="250">answer</text>
 
   <path class="expand" d="M1360 660H1500" />
 

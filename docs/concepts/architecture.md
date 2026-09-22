@@ -33,13 +33,11 @@ The orchestrator chooses the commission; the engine assembles its governing
 context from the current repository revision. Roles consume those named files
 directly instead of relying on an orchestrator's paraphrase.
 
-Within an article, each role owns one kind of judgment. The return arrows in the
-diagram are ownership boundaries: voice questions return to the writing coach,
-evidence gaps to the researcher, and to the writer both the reporting the editor
-cannot do and a redraft when the piece needs rewriting past what editing
-reaches. The editor edits prose, structure, and furniture directly. The
-orchestrator routes those requests instead of silently resolving them in a
-shared context.
+Within an article, each role owns one kind of judgment. A role that needs an
+answer asks the orchestrator, which answers from the commission, decides, or
+starts a subagent and passes the result back. The asking role keeps working
+while it waits. One return is different: when the editor decides the piece needs
+a different argument, the writer drafts it again.
 
 The writing coach is the one role a run may skip. A series that pins a standing
 voice guide has already made the judgment the coach exists to make, so the

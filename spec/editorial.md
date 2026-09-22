@@ -1,164 +1,125 @@
 # Editorial standard
 
-This is the editorial standard every article meets, whatever its template.
+Every article meets this standard, whatever its template and whatever the press.
 
-The standard is prescriptive on purpose. Its job is to make the default
-professional: research-grade writing. It has two parts.
+The first section is about writing, and it applies to everything. The second is
+about what this paper does, and an owner may move any of it in
+`press/editorial.md` except correctness. Register, formality, and how hard to
+press a judgment are an owner's to set in `press/editorial.md` and in the
+article's voice guide. Nothing here sets them.
 
-- **Standards a paper cannot loosen.** Sourced claims, teach don't summarize,
-  earned analysis, and the prose failures `spec/slop.md` rules out. A template
-  or a press may allow one of those prose failures where its own work needs it.
-  `spec/slop.md` bans self-reference, for instance, and the example lesson
-  template allows its two bookend cards to address the reader. Say which failure
-  is allowed and where. Nothing loosens sourced claims, teaching, or earned
-  analysis.
-- **Defaults a paper may override.** Everything that is taste rather than
-  quality: register, formality, the assumed reader and that reader's background,
-  how far to press a judgment, and any other choice of that kind. These belong
-  to `press/editorial.md` and the series prompts. This standard sets the quality
-  of those choices, never the choices themselves.
+`spec/slop.md` lists the prose failures, and they apply at every register. An
+owner may allow one of them in a template or a press, and has to say which one
+and where.
 
-This file bans failures of writing. How a paper sounds is its own to set in
-`press/editorial.md`.
-
-The standard does not legislate trivia: no paper-wide rule on the Oxford comma.
+Nothing here covers trivia. There is no paper-wide position on the Oxford comma.
 Be consistent within a piece.
 
-## Teach, don't summarize
+## The principles of great writing
 
-The reader finishes knowing how to think about the topic. Each section builds on
-what the last one taught. A section that spends nothing an earlier one taught is
-in the wrong place. Cut any sentence that adds nothing new. Define each term of
-art the declared reader does not hold in the sentence where it first appears.
-Assume the rest. Ground abstract claims in a worked example.
+**It is clear.** Clear writing is easy to understand, and that has little to do
+with how hard the words are. Use the exact word. An approximate one leaves a
+reader guessing which of several things you meant, and a precise one settles it.
+The subject can be difficult without the sentence being difficult. Use one word
+for each idea and keep using it. Reach for a synonym and whoever reads it looks
+for a second idea.
 
-The declared reader centers the paper: the profile chooses what to cover and
-when, and what background to assume. Write each piece for the natural audience
-around that center. A paper declaring a new parent gets articles any parent
-could be handed. A declared practitioner gets pieces worth forwarding to a
-colleague. Narrowing a series to the reader personally takes an explicit ask in
-`press/editorial.md` or the series prompt.
+**It teaches.** Someone who finishes the piece can reason about the subject and
+not only recall it. Order it so each part can be used where it appears. Define a
+technical term where it first appears and assume the rest. Carry an abstract
+claim down to an instance before moving on. Order the piece so each section uses
+what you set up earlier.
 
-## Report and analyze
+**It stands on its own.** Someone arriving from a link has read nothing else.
+Introduce every term and event inside the article.
 
-Report what is true and analyze what it means. Hold the analysis to the same bar
-as the reporting. Analysis must be earned: grounded in the cited evidence, its
-reasoning shown. Keep three things distinct: reported fact, estimate, and
-synthesis. Never write that someone hinted, implied, or signalled. That is the
-writer's guess presented as attribution. Synthesis with a point of view is
-welcome. Cut unsupported opinion. How hard to press a view is the paper's call,
-and a press that wants opinion may have a column or an opinion series. A verdict
-is welcome once it is earned, and it meets the same bar as any analysis: cited,
-reasoned, shown.
+**It does original work.** Do something with the sources that the sources did
+not do. Say in one sentence what that was. If you cannot write that sentence,
+the article is not finished.
 
-## Citations
+## The paper's principles
 
-- Every claim the argument rests on carries an inline citation linking to a
-  source entry.
-- Prefer primary sources: the document that owns the claim, whatever form the
-  document takes. Secondary reporting is acceptable for context. Contested
-  figures need a primary source.
-- Never fabricate, pad, or decorate citations. If you cannot source a claim, cut
-  it or state the uncertainty plainly.
-- Cite only what you have read. Open the source, find the passage that supports
-  the specific claim, and cite that. Its URL must resolve.
-- On contested questions, steelman the opposing views before you weigh them.
+Correctness is the one nothing loosens. An owner who wants a different bar on
+the others says so in `press/editorial.md`.
+
+**It is correct.** Cite what could be doubted and the claims without which the
+piece does not work. Common ground needs no citation. Open the source and find
+the passage before citing it, and record the section, page or paragraph, so a
+reader lands on the words and not on a homepage. Cite the document that made a
+claim ahead of any article about it, and where a figure is disputed cite the
+document that owns it. If you cannot source a claim, cut it or state the
+uncertainty plainly. Never fabricate, pad or decorate a citation.
+
+**It says what the reporting supports.** Say it without hedging. Withholding a
+conclusion you can show is its own distortion. Where the reporting does not
+reach one, say that, and separate what is established from what is judged. Show
+the reasoning from the evidence to the conclusion. Never write that someone
+hinted, implied or signalled, which attributes your guess to them.
+
+**It is fair to a view it disagrees with.** State a view in the words of someone
+who holds it before taking it apart. Beating a weak version of the opposition
+tests nothing.
+
+**It is written for more than one person.** Use the profile in
+`press/editorial.md` to decide what to cover and what background to assume, then
+write each piece for the audience around that profile. Where the profile is a
+new parent, write articles any parent could be handed. Narrow a series to one
+person only where `press/editorial.md` or the series prompt says to.
 
 ## Numbers
 
-Give the figure, not the magnitude, and a sourced range rather than a precision
-the source does not support. Anchor a figure the reader cannot scale on their
-own to a comparison they already hold. Say plainly what is unknown.
-
-## Clarity
-
-An article is understood on the first read or it has failed. Abstraction is the
-usual reason it fails: an abstract noun the article has not built up asks the
-reader to carry something unstated, and a weak argument is easy to hide inside
-one. Prefer the concrete. Reach for an abstraction only when the abstraction
-itself is the subject, and build it up like any other term.
-
-Name a thing one way and keep that name. Once a term is set, reuse it exactly. A
-synonym reached for variety reads as a new thing.
-
-Default to short, single-purpose sentences, and vary their length. A long
-sentence under control is good writing, and a page of same-length declaratives
-is monotonous. If a sentence can be misread, rewrite it rather than trust the
-next one to rescue it. Shorten by cutting, never by packing ideas denser. If a
-paragraph holds more ideas than it has sentences, it is no longer explaining
-them.
-
-## Prose
-
-The house register is a serious paper, not a feed. It is a default, and a press
-may move it. `spec/slop.md` is the standard for prose that reads as
-machine-written. It binds every article at every register.
-
-Register and formality belong to `press/editorial.md`, which a paper writes for
-itself, and to the article's voice guide, which sets how one piece should sound.
-A paper that wants to be funny, loose, or direct with its reader says so there,
-and every article inherits it. No form is forbidden for being expressive. What
-gets cut is writing that fails `spec/slop.md`, at whatever register the paper
-has chosen.
-
-If a rule in this Prose section would produce a sentence you would not say
-aloud, break that rule. Sourcing, teaching, and earned analysis are not subject
-to this.
+Give the figure and not the magnitude. Give the range a source gives and no more
+precision than that. Where nobody could scale a figure alone, put it beside one
+they already hold. Say plainly what nobody knows.
 
 ## Punctuation
 
-Reach for the plainest mark that does the job. When two marks would both work,
-the plainer one is right, and when in doubt the period is the default.
+Use the plainest mark that works. Where two marks would both work, use the
+plainer one, and where you are unsure use the period.
 
-- **Period.** The default. Two thoughts are two sentences. Most em-dashes,
-  semicolons, and colons in a draft belong where a period would do.
-- **Comma.** Joins within a single thought, and sets off a short aside. It is
-  not a splice: two independent clauses joined by a comma alone are two
-  sentences.
-- **Colon.** Introduces what the clause before it promises, a list or a
-  definition or the payoff. The clause before it stands on its own. It is not a
-  general connector between two thoughts.
-- **Semicolon.** Rare. Two independent clauses so tightly bound that a period
-  would over-separate them. Do not chain them, do not use one to patch a comma
-  splice, and do not use one to extend a run-on.
-- **Em-dash.** A real interruption or a sharp aside, and never a general
-  connective or a stand-in for a semicolon. When you delete one, the fix is
-  usually the period the thought wanted rather than another mark in its place.
-  `spec/banned-terms.yaml` sets the count.
-- **Parentheses.** A true aside the sentence survives without. If the sentence
-  needs what is inside them, it is not an aside, so fold it back in.
+- **Period.** Two thoughts are two sentences. In most drafts, a period belongs
+  where the em-dash, the semicolon or the colon is.
+- **Comma.** Joins inside one thought, and sets off a short aside. Two
+  independent clauses joined by a comma alone are two sentences.
+- **Colon.** Introduces a list, a definition, or the payoff. The clause in front
+  of it stands on its own.
+- **Semicolon.** Rare. Two independent clauses close enough that a period would
+  be too much between them. Do not chain them and do not patch a comma splice
+  with one.
+- **Em-dash.** A real interruption or a sharp aside. When you delete one, a
+  period is usually what belongs there. `spec/banned-terms.yaml` sets the count.
+- **Parentheses.** A true aside. Take them out and the sentence still says what
+  it said. If you need what is inside them, fold it back in.
 
-A press extends this section for its own paper. It does not loosen it.
+An owner may extend this section and may not loosen it.
 
 ## Form
 
-Each template's identity sets its own form: paragraph length, how the dek reads,
-how the piece closes. A press may shadow them. This file holds those choices to
-a standard. Keep the writing easy to follow. End on the conclusion the argument
-built. Skip the generic moral. Let the teaching and the citations equip the
-reader to go further.
+Each template's identity specifies its own form: paragraph length, how the dek
+reads, how the piece closes. End on the conclusion you built. Skip the generic
+moral.
+
+Read the published library for what a series has covered and what not to repeat.
+Do not read it for the form. An older piece was written to the format of its
+time, and if you copy that structure forward you bring back a section somebody
+retired.
 
 ### Literal strings
 
-Use inline `<code>` only when the reader must preserve a string's exact
-spelling: something they could type, paste, execute, match, or distinguish
-character-for-character. It is not technical emphasis. Ordinary terms, product
-names, model names, and prose do not take it. Neither does every repeat of a
-literal once the sentence has established it. When several tokens need
-comparison, give them a table or a code listing instead of turning a paragraph
-into labels.
-
-An article's form comes only from its template and its own content. Reading the
-published library informs content and context: what a series has covered, what
-not to repeat. It never informs form. A structure in an older piece records what
-the format was at the time. It does not say what the format should be now. A
-template that has moved on leaves its old structure in the back-catalog, and
-copying that structure forward is how a retired section reappears where it no
-longer belongs.
+Use inline `<code>` only where somebody must preserve a string's exact spelling:
+something they could type, paste, execute or match character for character.
+Ordinary terms, product names and model names do not take it, and neither does a
+literal you have already established. Where several tokens need comparison, give
+them a table or a code listing.
 
 ## Charts
 
-Use a chart when a trend or comparison is the point. Charts are PNGs rendered
-from the committed `chart-N.py` script beside the article (spec/charts.md),
-never hand-drawn images or script blocks. Keep them honest: label axes, note a
-non-linear scale, and cite the data source in the caption.
+Use a chart where a trend or a comparison is the point. Charts are PNGs rendered
+from the committed `chart-N.py` script beside the article (`spec/charts.md`).
+Label the axes, note a non-linear scale, and cite the data source in the
+caption.
+
+## One exception
+
+If following a rule in this file would give you a sentence you would not say
+aloud, break the rule. Correctness, teaching and sourcing stay.
