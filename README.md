@@ -4,7 +4,7 @@
 
 <!-- markdownlint-disable MD026 -->
 
-## Your own AI-researched paper. Ask for an article; schedule the rest.
+## Your own AI-researched paper.
 
 <!-- markdownlint-enable MD026 -->
 
@@ -18,7 +18,8 @@ waiting every morning, add a schedule.
 
 Your paper and its archive live in your fork. You own it.
 
-> [!NOTE] Your articles will be searchable from
+> [!NOTE]
+> Your articles will be searchable from
 > [the-nightly-build.github.io](https://the-nightly-build.github.io/)
 >
 > If you don't want that, opt out in your `site.yaml`:
@@ -48,14 +49,13 @@ sentence to an AI product connected to your GitHub account. It does the git side
 of setup, tells you if a setting is still missing, and publishes the article the
 same way.
 
-Either way the article lands in Dispatches, the series every paper keeps for
-what you ask for, and is live within the hour.
+Either way the article, depending on complexity, should be live within the hour.
 [Ask your AI](docs/getting-started/ask-your-ai.md) has the details, the
 [documentation](docs/README.md) the rest, and the
 [feature catalog](docs/reference/README.md) lists everything the engine
 supports.
 
-When you want articles without asking, add series with a cadence and point a
+When you want articles without asking, add a series with a cadence and point a
 scheduler at the fork: [Schedule publication](docs/guides/operate/schedule.md)
 includes a smoke test that verifies the scheduled environment before it
 publishes anything.
