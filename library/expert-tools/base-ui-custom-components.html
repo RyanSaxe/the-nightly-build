@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Base UI keeps custom React components changeable · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "base-ui-custom-components",
+        "template": "article",
+        "title": "Base UI keeps custom React components changeable",
+        "mode": "open",
+        "order": null,
+        "date": "2026-09-22",
+        "tags": ["react", "design-systems", "accessibility", "developer-tools"],
+        "sources": 16,
+        "words": 1461,
+        "reading_minutes": 6,
+        "dek": "Use Base UI for interaction, own the visual source, and test the assembled component where automation stops.",
+        "harness": "ChatGPT Work / Codex",
+        "model": "GPT-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">Base UI keeps custom React components changeable</h1>
+        <p class="nb-dekline">Use Base UI for interaction, own the visual source, and test the assembled component where automation stops.</p>
+        <div class="nb-byline"><span>6 min read</span><span>2026-09-22</span></div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Base UI separates behavior from appearance</h2>
+        <p>
+          A React team choosing a component library is making three decisions at once. The skin is the color, type,
+          spacing, and motion. The skeleton is the DOM, parts, and composition. The behavior is everything a switch,
+          menu, dialog, or combobox must do with a keyboard, pointer, form, focus order, and accessibility tree. “Custom”
+          means being able to change the first two without quietly reimplementing the third.
+        </p>
+        <p>
+          Base UI is the strongest default for that job in a new, highly custom React interface. It ships no CSS,
+          works with any styling system, exposes the rendered parts, and permits parts to be added, removed, or
+          wrapped. It supports React 17 and newer and targets browsers classed as Baseline Widely available.<sup class="nb-cite"><a href="#s1" data-nb-locator="About Base UI; Unstyled; Customizable; Browser support; React">1</a></sup>
+          Those properties leave the product team in charge of the visual grammar while the dependency retains the
+          interaction machinery.
+        </p>
+        <p>
+          This boundary is more useful than a ranking by screenshots. A styled suite owns a visual language and gives
+          the fastest route to that language. A source-distributed catalog such as shadcn/ui gives the application a
+          polished set of files it can edit. Base UI owns difficult behavior without requiring either visual system.
+          Storybook and tokens answer a later question: whether fifty independently edited components still behave and
+          look like one product.
+        </p>
+      </section>
+
+      <section data-nb-section="base-ui-preserves-switch-behavior" id="base-ui-preserves-switch-behavior">
+        <h2>Base UI preserves switch behavior under new styling</h2>
+        <p>
+          Base UI documents a switch as a root and thumb, with an associated field label and a hidden checkbox for
+          form participation. Checked state appears as a data
+          attribute, so the application can replace the visual treatment without copying the state machine.<sup class="nb-cite"><a href="#s2" data-nb-locator="first code sample; Anatomy; ARIA labelling; Root API; styling examples">2</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">NotificationSwitch.tsx</span><span>JAVASCRIPT</span></div>
+          <pre><code class="language-javascript">import { Field } from '@base-ui/react/field';
+import { Switch } from '@base-ui/react/switch';
+
+export function NotificationSwitch() {
+  return (
+    &lt;Field.Root className="setting"&gt;
+      &lt;Field.Label&gt;Release alerts&lt;/Field.Label&gt;
+      &lt;Switch.Root className="switch"&gt;
+        &lt;Switch.Thumb className="switchThumb" /&gt;
+      &lt;/Switch.Root&gt;
+    &lt;/Field.Root&gt;
+  );
+}
+
+/* Product-owned visual grammar */
+.switch { background: var(--surface-muted); }
+.switch[data-checked] { background: var(--accent); }
+.switchThumb { transform: translateX(0); }
+.switch[data-checked] .switchThumb { transform: translateX(1.25rem); }</code></pre>
+          <figcaption class="nb-code-cap">Fig. 1 · The application owns the label text and visible styling; Base UI supplies checked state and the native form control.<sup class="nb-cite"><a href="#s2" data-nb-locator="ARIA labelling; Native button; styling examples">2</a></sup></figcaption>
+        </figure>
+        <p>
+          The implementation below that API does substantially more. <code>SwitchRoot</code> uses shared button
+          behavior, sets the switch role and checked state, carries field relationships, and delegates changes to the
+          hidden checkbox.<sup class="nb-cite"><a href="#s3" data-nb-locator="SwitchRoot implementation; useButton; useFieldRootContext; useRenderElement">3</a></sup>
+          Base UI's <code>render</code> prop can replace an element or component, and a render function can change markup
+          from internal state. A replacement component must forward its ref and spread the incoming props.<sup class="nb-cite"><a href="#s4" data-nb-locator="Custom components; Elements; Render functions">4</a></sup>
+          Drop either, and the markup may still look right while its focus or event behavior is gone.
+        </p>
+        <p>
+          That is the practical test for an abstraction. Adam Wathan, the creator of Tailwind CSS, put the pressure on
+          scope: “The more a component does, or the more specific a component is, the harder it is to reuse.”<sup class="nb-cite"><a href="#s5" data-nb-locator="Extracting components; paragraph beginning ‘While these components might be reusable’">5</a></sup>
+          Base UI keeps the dependency's responsibility narrow enough that a product can build a very specific visual
+          component on top.
+        </p>
+      </section>
+
+      <section data-nb-section="base-ui-needs-product-testing" id="base-ui-needs-product-testing">
+        <h2>Base UI still needs product-level accessibility tests</h2>
+        <p>
+          An accessible primitive does not produce an accessible finished component by itself. Base UI says it handles
+          ARIA roles and attributes, pointer and keyboard behavior, and focus management. It assigns visible focus
+          treatment, contrast, and required names or labels to the implementer.<sup class="nb-cite"><a href="#s6" data-nb-locator="opening paragraphs; Focus management; Color contrast; Labelling; Accessibility testing">6</a></sup>
+          A visually inventive switch that hides its focus indicator is still defective. A composed trigger that
+          discards Base UI's props may be worse.
+        </p>
+        <p>
+          Base UI 1.8.0 shipped on September 4, 2026 with fixes involving label association, roving focus, hover and
+          focus behavior, refs, props,
+          animation, and trigger performance.<sup class="nb-cite"><a href="#s7" data-nb-locator="page heading and release date; Fixes and enhancements">7</a></sup>
+          The same concentration of fixes says that upgrades should run against real component states.
+        </p>
+        <p>
+          A September 10 issue gives the qualification teeth. The reporter found that a high-priority toast in 1.8.0
+          could be keyboard-focusable while marked <code>aria-hidden</code>, which axe reported as
+          <code>aria-hidden-focus</code>. The message was still announced through sibling live regions, and the issue
+          was awaiting maintainer review when checked.<sup class="nb-cite"><a href="#s8" data-nb-locator="Description; Reproduction; What we expected; Notes that may save you time">8</a></sup>
+          One unconfirmed report does not establish a library-wide failure. It does establish the weakness of the
+          phrase “accessible by default.”
+        </p>
+        <p>
+          Storybook is the right place to turn that responsibility into routine work. A story records one isolated
+          state, including the states that a happy-path page makes inconvenient to reach.<sup class="nb-cite"><a href="#s9" data-nb-locator="Get started with Storybook; Main concepts">9</a></sup>
+          Build stories for disabled, invalid, focus-visible, long-copy, narrow-screen, right-to-left, and
+          reduced-motion variants. Its accessibility addon can run axe-core in the story and fail CI, but Storybook's
+          own results include an “Incomplete” class for checks that require manual confirmation.<sup class="nb-cite"><a href="#s10" data-nb-locator="Check for violations; results sub-tabs; Test behavior">10</a></sup>
+          Keyboard-path and assistive-technology checks remain part of shipping the assembled component.
+        </p>
+      </section>
+
+      <section data-nb-section="base-ui-fits-a-layered-stack" id="base-ui-fits-a-layered-stack">
+        <h2>Base UI fits inside a layered component stack</h2>
+        <p>
+          Each dependency in a custom component stack should own one kind of change. A visual starter supplies editable
+          source for the first screen. A primitive library carries the behavior that is easiest to get subtly wrong. Tokens keep
+          product-owned CSS from becoming a pile of nearby values. The workshop holds states still long enough to
+          review and test them.
+        </p>
+        <table class="nb-table">
+          <caption>The default stack for new custom React work, with the condition that changes each choice.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup><sup class="nb-cite"><a href="#s11">11</a></sup></caption>
+          <thead><tr><th>Job</th><th>Default</th><th class="txt">Choose something else when</th></tr></thead>
+          <tbody>
+            <tr><td><span class="nb-table-token">Visual start</span></td><td>shadcn/ui</td><td class="txt">A styled suite's existing visual language is already the product language.</td></tr>
+            <tr><td><span class="nb-table-token">Behavior</span></td><td>Base UI</td><td class="txt">React Aria's collections and internationalization fit the product, or Radix already works in production.</td></tr>
+            <tr><td><span class="nb-table-token">Constraints</span></td><td>Tailwind theme variables</td><td class="txt">The team has an established token compiler or styling system.</td></tr>
+            <tr><td><span class="nb-table-token">State catalog</span></td><td>Storybook</td><td class="txt">Another workshop already captures isolated states and runs component checks.</td></tr>
+            <tr><td><span class="nb-table-token">Complex motion</span></td><td>Motion</td><td class="txt">CSS can express the transition without layout, gesture, exit, or interruption logic.</td></tr>
+            <tr><td><span class="nb-table-token">Exploration</span></td><td>v0</td><td class="txt">The team cannot supply components, tokens, and examples that constrain the output.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          shadcn/ui's July 2026 decision clarifies both the start and the bill. New projects now use Base UI by
+          default, while Radix remains supported. Because shadcn distributes source, customized components and behavior
+          differences make automatic migration unsafe. Its creator's advice is blunt: “the worst thing you can do for
+          your production app is switch component libraries”.<sup class="nb-cite"><a href="#s11" data-nb-locator="Why Base UI; What about Radix?; Which one should I choose?; migration discussion">11</a></sup>
+          Source ownership gives a team editability, plus responsibility for reviewing upstream changes. It does not
+          justify moving a working Radix system.
+        </p>
+        <p>
+          Tailwind's theme variables can generate utilities and ordinary CSS variables from shared design tokens.<sup class="nb-cite"><a href="#s12" data-nb-locator="What are theme variables?; Customizing your theme; Sharing across projects">12</a></sup>
+          They constrain the skin but supply no focus, keyboard, form, or screen-reader behavior. Motion covers layout
+          animation, gestures, scrolling, springs, and interruptible keyframes, using browser animation APIs where
+          possible and JavaScript where required.<sup class="nb-cite"><a href="#s13" data-nb-locator="Why Motion for React?; feature overview">13</a></sup>
+          Bring that runtime in for behavior CSS cannot express cleanly. Leave simple hover, focus, and opacity changes
+          in CSS.
+        </p>
+      </section>
+
+      <section data-nb-section="react-aria-wins-on-collections-and-internationalization" id="react-aria-wins-on-collections-and-internationalization">
+        <h2>React Aria wins on collections and internationalization</h2>
+        <p>
+          React Aria is the better default when the product is built around rich collections, dates, localization, or
+          unusual assistive-technology interactions. Adobe documents more than 50 style-free components, plus lower-level
+          hooks, drag and drop, keyboard multi-selection, validation, table resizing, more than 30 languages, 13
+          calendar systems, five numbering systems, and right-to-left support.<sup class="nb-cite"><a href="#s14" data-nb-locator="Customizable; Built-in behavior; Adaptive interactions; International; Components; Hooks">14</a></sup>
+          That breadth matters more than Base UI's smaller conceptual surface in a global, data-dense application.
+        </p>
+        <p>
+          AI generation changes the exploration loop, not this selection rule. Vercel's own guidance for v0 recommends
+          breaking a Figma design into smaller components, iterating on each, and supplying a design system; v0 uses
+          shadcn/ui by default and accepts custom Tailwind configuration and public packages including React Aria.<sup class="nb-cite"><a href="#s15" data-nb-locator="Take the iterative approach; Working with existing design systems">15</a></sup>
+          A comparative preprint on GPT-4o and Qwen-generated interfaces found persistent difficulty with complex ARIA
+          and dynamic interaction. An accessibility-feedback loop improved results more than zero-shot, few-shot, or
+          self-criticism prompting.<sup class="nb-cite"><a href="#s16" data-nb-locator="abstract; experimental-method sections">16</a></sup>
+          Generated components belong in the same Storybook, keyboard, axe, and assistive-technology loop as code
+          written by hand.
+        </p>
+        <div class="nb-note nb-note-strong">
+          <span class="nb-note-label">Verdict</span>
+          <p>
+            For a new React product with a distinctive visual system, start from shadcn/ui source when it saves time,
+            put difficult interaction on Base UI, express design constraints as tokens, and make Storybook states the
+            unit of review. Choose React Aria when its collection and internationalization surface matches the product.
+            Keep Radix where it already works. Add Motion for transitions CSS cannot carry, and use v0 only when it can
+            inherit the system's components and tokens.<sup class="nb-cite"><a href="#s11">11</a></sup><sup class="nb-cite"><a href="#s13">13</a></sup><sup class="nb-cite"><a href="#s14">14</a></sup><sup class="nb-cite"><a href="#s15">15</a></sup>
+          </p>
+        </div>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" href="https://base-ui.com/react/overview/about">Base UI · About Base UI</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" href="https://base-ui.com/react/components/switch">Base UI · Switch</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" href="https://github.com/mui/base-ui/blob/master/packages/react/src/switch/root/SwitchRoot.tsx">Base UI · SwitchRoot implementation</a></li>
+          <li id="s4"><a data-nb-source data-nb-kind="primary" href="https://base-ui.com/react/handbook/composition">Base UI · Composition</a></li>
+          <li id="s5"><a data-nb-source data-nb-kind="primary" href="https://adamwathan.me/css-utility-classes-and-separation-of-concerns/">Adam Wathan · CSS Utility Classes and “Separation of Concerns”</a></li>
+          <li id="s6"><a data-nb-source data-nb-kind="primary" href="https://base-ui.com/react/overview/accessibility">Base UI · Accessibility</a></li>
+          <li id="s7"><a data-nb-source data-nb-kind="primary" href="https://base-ui.com/react/overview/releases/v1-8-0">Base UI · v1.8.0 release notes</a></li>
+          <li id="s8"><a data-nb-source data-nb-kind="primary" href="https://github.com/mui/base-ui/issues/5659">Base UI issue 5659 · Focusable element inside aria-hidden Toast.Root</a></li>
+          <li id="s9"><a data-nb-source data-nb-kind="primary" href="https://storybook.js.org/docs">Storybook · Documentation</a></li>
+          <li id="s10"><a data-nb-source data-nb-kind="primary" href="https://storybook.js.org/docs/writing-tests/accessibility-testing">Storybook · Accessibility testing</a></li>
+          <li id="s11"><a data-nb-source data-nb-kind="primary" href="https://ui.shadcn.com/docs/changelog/2026-07-base-ui-default">shadcn/ui · Base UI is now the default</a></li>
+          <li id="s12"><a data-nb-source data-nb-kind="primary" href="https://tailwindcss.com/docs/theme">Tailwind CSS · Theme variables</a></li>
+          <li id="s13"><a data-nb-source data-nb-kind="primary" href="https://motion.dev/docs/react">Motion · React animation documentation</a></li>
+          <li id="s14"><a data-nb-source data-nb-kind="primary" href="https://react-aria.adobe.com/">Adobe · React Aria</a></li>
+          <li id="s15"><a data-nb-source data-nb-kind="primary" href="https://vercel.com/blog/working-with-figma-and-custom-design-systems-in-v0">Vercel · Working with Figma and custom design systems in v0</a></li>
+          <li id="s16"><a data-nb-source data-nb-kind="primary" href="https://arxiv.org/abs/2503.15885">Zhang et al. · Accessibility of LLM-generated user interfaces</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
