@@ -19,6 +19,7 @@ from findings import Findings
 from press import LOREM, REPO, chronicle
 
 REGISTRY = check.load_registry(str(REPO))
+SHIPPED_IDS = {p.name for p in (REPO / "templates").iterdir() if p.is_dir()}
 EXAMPLE_TEMPLATES = REPO / "examples" / "templates"
 EXAMPLE_IDS = sorted(p.name for p in EXAMPLE_TEMPLATES.iterdir() if p.is_dir())
 
@@ -351,7 +352,7 @@ def test_example_package_is_structurally_sound_as_a_press_template(
     template_id: str, template_repo: str
 ) -> None:
     registry = check.load_registry(template_repo)
-    assert template_id not in REGISTRY, "example packages are not shipped"
+    assert template_id not in SHIPPED_IDS, "example packages are not shipped"
     assert_skeleton_is_structurally_sound(template_repo, registry, template_id)
 
 
