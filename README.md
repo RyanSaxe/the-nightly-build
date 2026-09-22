@@ -18,6 +18,7 @@ waiting every morning, add a schedule.
 
 Your paper and its archive live in your fork. You own it.
 
+<!-- prettier-ignore -->
 > [!NOTE]
 > Your articles will be searchable from [the-nightly-build.github.io](https://the-nightly-build.github.io/)
 >
@@ -61,10 +62,10 @@ For more detail, see:
 
 ## Schedule publication
 
-To publish articles automatically every day, add a series with a cadence and point a
-scheduler at the fork. [Schedule publication](docs/guides/operate/schedule.md)
-includes a smoke test for the scheduled environment so you can make sure your setup
-works properly.
+To publish articles automatically every day, add a series with a cadence and
+point a scheduler at the fork.
+[Schedule publication](docs/guides/operate/schedule.md) includes a smoke test
+for the scheduled environment so you can make sure your setup works properly.
 
 ## How it works
 
