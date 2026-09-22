@@ -1,72 +1,56 @@
 # Schedule publication
 
-The setup assistant and the scheduled runtime may be different products. Audit
-the scheduled environment independently: it is the one that must check out the
-paper, browse sources, push a branch, and open a PR while nobody is present.
+Set up a recurring task when you want articles to publish without asking for
+each one.
 
-## Runtime requirements
+## Choose a scheduler
 
-The scheduled runtime needs:
+The supported paths are
+[ChatGPT Work scheduled tasks](../../integrations/chatgpt-work.md#schedule-publication)
+and [Claude Code Routines](https://code.claude.com/docs/en/routines).
 
-1. A schedule or on-demand trigger.
-2. Current `main` plus access to `origin/main` and `origin/library`.
-3. Outbound web access for research.
-4. Permission to push generated branches and open PRs against `library`.
-5. `uv` on `PATH`, or permission to install it.
-6. Non-interactive permission to use every required tool.
+For ChatGPT Work, connect GitHub and give the app access to the fork. Create a
+scheduled task in Work, then specify the repository, a daily time and timezone,
+and whether Article PRs should publish automatically after checks pass or remain
+drafts for your review.
 
-Every run begins with `nb sync`, then asks `nb duty` for the deterministic work
-list. One schedule can run the whole paper because series own their cadence.
-`cadence: manual` series never appear as due.
+For Claude Code Routines, create a cloud routine with the fork, web access, and
+the required tools connected. Set the schedule and use the repository prompt
+below. Anthropic's [Routines guide](https://code.claude.com/docs/en/routines)
+has the current setup instructions.
 
-Choose a scheduler only after its actual unattended environment meets all six
-requirements. Verified runtimes and remaining candidates are listed in
-[Integrations](../../integrations/README.md).
+Both schedulers need to be able to update `main`, fetch `library`, research the
+web, run `uv` and repository commands without pausing for input, and push a
+branch and open an Article PR against `library`. Check the provider's GitHub
+permissions and network settings when creating the task.
 
-A self-hosted GitHub Actions cron path is planned but not yet verified: a PR
-opened with the workflow's own `GITHUB_TOKEN` cannot trigger the required
-`validate` check, so that recipe needs a separately scoped token and an
-end-to-end test before this documentation can recommend it. Progress is tracked
-in
-[issue #148](https://github.com/the-nightly-build/the-nightly-build/issues/148).
+## Give the scheduler its instructions
 
-## Canonical prompt
+Keep the scheduled prompt short. Point it to the repository-owned workflow:
 
-Keep the external schedule prompt deliberately small:
+> Work in The Nightly Build repository `<owner>/<repo>`. Update the checkout to
+> the current remote `main` before reading anything. Read
+> `.agents/prompts/run-scheduled-publication.md` and follow it in this agent.
+> This paragraph is the entire assignment. If that file is missing from
+> up-to-date remote `main`, stop and report the missing repository entrypoint.
 
-> Work in The Nightly Build repository `<repo>`. Update the checkout to the
-> current remote `main` before reading anything; a stale clone may predate the
-> entrypoint. Read `.agents/prompts/run-scheduled-publication.md` and follow it
-> in this agent. This paragraph is the entire assignment. If that file is
-> missing from up-to-date remote `main`, stop and report the missing repository
-> entrypoint.
+Choose the publication mode when configuring the task. Automatic publication
+lets validated Article PRs merge. Draft-only leaves each Article PR for you to
+review. The repository prompt defines how the agent researches, writes, checks,
+and submits each article; do not copy those steps into the scheduler prompt.
 
-The repository owns the workflow. The scheduler owns only location and
-authority. The scheduled agent loads the orchestrator skill in the same context.
-It does not launch an orchestrator subagent. Replace prompts that restate
-commands, role sequences, validation rules, or branch mechanics because those
-copies drift.
+Each run starts with `nb sync` and `nb duty`. One schedule can serve the whole
+paper because each series defines its own cadence. A series with
+`cadence: manual` never appears in scheduled work.
 
-## Verification prompt
+## If a run stops
 
-To test the exact scheduled environment without publishing, trigger an on-demand
-task with this assignment:
-
-> Work in The Nightly Build repository `<repo>`. Update the checkout to the
-> current remote `main` before reading anything; a stale clone may predate the
-> entrypoint. Read `.agents/prompts/verify-scheduled-runtime.md` and follow it
-> in this agent. This paragraph is the entire assignment. If that file is
-> missing from up-to-date remote `main`, stop and report the missing repository
-> entrypoint.
-
-The smoke prompt opens and cleans up a draft PR against `main`. It never loads
-the orchestrator or touches `library`.
+Check the task's run details and the Article PR's `validate` check. For setup,
+repository access, or research failures, see
+[Troubleshoot setup and scheduling](../../troubleshooting/setup-and-scheduling.md).
+The optional [scheduled runtime check](./verify-scheduled-runtime.md) can help
+diagnose a new provider environment without publishing an article.
 
 Keep scheduler credentials out of the `library` PR workflow. Article validation
-intentionally runs on `pull_request` with no scheduler secrets. See
+runs on `pull_request` without scheduler secrets. See
 [Publishing and security](../../concepts/publishing-and-security.md).
-
-## Prove it before relying on it
-
-Use [Verify the scheduled runtime](./verify-scheduled-runtime.md) for the
-complete smoke-test boundary and result interpretation.

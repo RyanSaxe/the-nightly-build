@@ -16,7 +16,7 @@ removes a role.
 | ------------ | ----------------------------- | ------------------------------------------------------------------------ | ------------------------- |
 | `collection` | an item list                  | the next unpublished item, or any of them with `selection: random`       | when the list is done     |
 | `sequence`   | an ordered syllabus           | the lowest-numbered missing item, building on the published ones         | when the syllabus is done |
-| `rolling`    | nothing; the date is the item | today's UTC date                                                         | never, until paused       |
+| `rolling`    | nothing. The date is the item | today's UTC date                                                         | never, until paused       |
 | `open`       | a beat in prompt.md           | a topic the agent picks within the beat, in one of the series' templates | never, until paused       |
 
 The mode controls scheduling only. Every mode may declare one `template:` or
@@ -28,9 +28,9 @@ allowlist.
 An open series needs the least curation. You describe a beat, the orchestrator
 reads the section's back catalog, picks something new, and chooses a template
 from the series' declared choices. A scheduled run produces at most one article
-per series per UTC date, so a paper that wants several varied reads a night runs
-several open sections with distinct beats. Articles someone asks for are not
-limited that way; several can land in one series on one date.
+per series per UTC date. To publish several distinct pieces in one night,
+configure several open sections with distinct beats. Requested articles are not
+limited that way. Several can appear in one series on one date.
 
 The engine does not define genres. Nearly every section runs the `article`
 template. What makes its articles dossiers, chronicles, lessons, or appraisals
@@ -47,20 +47,20 @@ one-line edit.
 
 ```yaml
 cadence: daily # default | weekdays | weekends | manual | [mon, thu]
-paused: true # skip this series entirely; the archive stays up
+paused: true # Skip this series entirely. The archive stays up.
 section: Foundations # optional shelf on the Sections page and in kickers
 ```
 
-One schedule can run the whole paper because each series owns its cadence. The
-scheduled run asks `nb duty` what is due for the selected UTC date, so a weekly
-deep-dive section and a daily brief coexist under the same schedule.
+One schedule can run the whole paper because each series has its own cadence.
+The scheduled run calls `nb duty` to find work for the selected UTC date. A
+weekly deep-dive section and a daily brief can therefore use the same schedule.
 
 Duty uses UTC everywhere. A `[mon, thu]` cadence means the run's UTC weekday,
 and `rolling` slugs the article by the run's UTC date, so a cron hour near
 midnight can land a "Monday" run on your local Sunday evening.
 
 `paused: true` stops new articles while the archive stays published. The proof
-refuses new articles for a paused series.
+rejects new articles for a paused series.
 
 `cadence: manual` is valid for every mode and is never scheduled by `nb duty`.
 Collection and sequence keep their configured-item rules, and rolling keeps its
@@ -107,18 +107,18 @@ Pages.
 `min_sources` only counts. It cannot see what kind of sources came in, so six
 items lifted from a single day's arXiv listing clear a floor of six. Two keys
 constrain the mix instead. They read the kind each source declares in the markup
-(`data-nb-kind`). A **primary** owns the claim (the filing, the ruling, the
-paper). A **secondary** reports on a primary from outside it. What separates
-them is independence: a lab's post about its own paper is an extension of that
-paper, never a second source.
+(`data-nb-kind`). A **primary** is a source that directly supports the claim,
+such as a filing, ruling, or paper. A **secondary** reports on a primary from
+outside it. What separates them is independence: a lab's post about its own
+paper is an extension of that paper, never a second source.
 
 ```yaml
 sources_by_kind: # the composition of what the article cites, any series
-  primary: [4, null] # at least four primaries; null means no ceiling
+  primary: [4, null] # at least four primaries. Null means no ceiling.
   secondary: [2, null]
 
 per_item_sources: # only when every selected template uses cite_rule: per-item
-  primary: [1, 1] # every item: exactly one document that owns its claim
+  primary: [1, 1] # Each item needs exactly one document that states its claim.
   secondary: [1, 2] # and one or two independent reads of it
 ```
 
@@ -145,7 +145,7 @@ claim about the sourcing, and only that review catches it.
 A reviewing series can pin the criteria every one of its articles must score:
 
 ```yaml
-rubric: # every article scores these; the writer adds fit-for-subject rows
+rubric: # Every article scores these. The writer adds fit-for-subject rows.
   - id: capability # the slug rubric rows carry in data-nb-criterion
     name: Capability # what the reader sees
     note: Judged against its own claims. # optional brief to the writer

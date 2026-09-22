@@ -1,52 +1,46 @@
-# Claude Code, from fork to first article
+# Use Claude Code
 
-Written from a run on 2026-09-18 against a fresh fork, in a terminal with `gh`
-signed in.
+Claude Code can set up a local paper and publish articles from a local clone. It
+can also run unattended with
+[Claude Code Routines](https://code.claude.com/docs/en/routines).
 
-## What you need
+## Publish an article now
 
-Claude Code in a terminal. `gh auth status` succeeds for an account that
-administers the fork. `git`, `uv`, and Python 3.10 or newer on the machine.
+Install Claude Code, Git, `uv`, and Python 3.10 or newer. Authenticate `gh` with
+an account that can administer the GitHub fork.
 
-## The run
+Fork this repository, clone your fork, and open the clone in Claude Code. Ask:
 
-1. Fork with **Copy the main branch only** and clone it, or let Claude Code do
-   both:
-   `gh repo fork the-nightly-build/the-nightly-build --default-branch-only --clone`.
-2. Open the checkout in Claude Code and say:
+> Help me set up my Nightly Build paper and publish my first article about
+> `<topic>`. Follow the repository's instructions. Let me review the article
+> before it publishes.
 
-   > Help me set up my Nightly Build paper and write my first article about
-   > `<topic>`. Follow the repository's instructions.
+The assistant runs `./nb setup` when the paper needs setup, then follows the
+article workflow. The request to review first makes the Article PR a draft. To
+publish without a review hold, omit that sentence.
 
-3. Setup. It runs `./nb setup`, which printed, in order: the repository, the
-   scaffolded `press/`, a valid configuration, the pushed `library` branch, the
-   seeded workflows, Pages enabled, Actions enabled, auto-merge enabled,
-   `library` protected, "The presses are ready", and the site URL. Nothing was
-   asked of the owner. The scaffold is pushed to `main` as part of setup.
-4. The article. The writing coach and researcher ran together, then the writer,
-   then the editor. `nb prepare-pr` opened the pull request through `gh`. The
-   `validate` check passed in 24 seconds and the auto-merge job in 8, the deploy
-   dispatched on `main` built and deployed, and the article was live at
-   `library/dispatches/<slug>.html` under the site URL. About 45 minutes of
-   agent time, nearly all of it the four roles, with the writer and editor on a
-   smaller model under the economy profile.
-5. Hold, if you want it. Add "let me read it first" to your request and the pull
-   request opens as a draft. In the same rehearsal, the draft was validated and
-   left unmerged; pressing "Ready for review" ran the check again, merged, and
-   deployed.
+## Schedule publication
 
-## Where things are
+Create a cloud Routine and give it access to the fork, web research, GitHub, and
+the tools required by the scheduled prompt. Set its schedule and use this
+prompt:
 
-Your site at `https://<owner>.github.io/<repo>/`, printed by setup. Each article
-at `library/<series>/<slug>.html` on the `library` branch, its production record
-beside it under `agent-artifacts/<series>/<slug>/`, and the pull request that
-published it in the fork's history.
+> Work in The Nightly Build repository `<owner>/<repo>`. Update the checkout to
+> the current remote `main` before reading anything. Read
+> `.agents/prompts/run-scheduled-publication.md` and follow it in this agent.
+> This paragraph is the entire assignment. If that file is missing from
+> up-to-date remote `main`, stop and report the missing repository entrypoint.
 
-## If something stops
+Choose whether the routine may publish automatically or should stop with a draft
+PR for review. For current Routine setup steps and limits, see
+[Claude Code's Routines guide](https://code.claude.com/docs/en/routines).
 
-A warning from setup about Pages or Actions names the setting and its URL; make
-it and re-run `./nb setup`. A pull request that shows no `validate` check means
-workflows are disabled: enable them on the Actions tab, then close and reopen
-the PR.
-[Troubleshoot setup and scheduling](../troubleshooting/setup-and-scheduling.md)
-covers the rest.
+## After publication
+
+Your site is `https://<owner>.github.io/<repo>/`. The assistant reports the
+published article and its URL when the workflow completes. If GitHub does not
+start the `validate` check on an Article PR, enable Actions for the fork and
+close and reopen the PR.
+
+For setup problems, see
+[Troubleshoot setup and scheduling](../troubleshooting/setup-and-scheduling.md).

@@ -27,7 +27,7 @@ article ideas and counterexamples, and simulate a first week before asking for
 approval. Every decision the press encodes gets settled this way. At a minimum:
 
 - what the paper is for and who reads it
-- the territory each series owns, and what it refuses to cover
+- the subjects each series covers and the topics outside its scope
 - what counts as evidence and which sources qualify
 - how the paper should sound, tested against real examples
 - the reading rhythm: how often, how long, how visual

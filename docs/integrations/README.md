@@ -1,50 +1,29 @@
-# Agent and scheduler integrations
+# Choose an agent
 
-The Nightly Build does not depend on one model provider or agent product. It
-depends on capabilities in the environment that does the work: a repository
-checkout, access to `main` and `library`, live web research, non-interactive
-tool use, and permission to push a branch and open a pull request. See
-[Schedule](../guides/operate/schedule.md) for the scheduled contract.
+The Nightly Build works with an agent that can follow repository instructions,
+run commands, research the web, and use GitHub. Choose a path by what you want
+to do.
 
-A paper needs a product for two jobs. The first article, and every article you
-ask for, happen in a session you watch. Scheduled publication happens while
-nobody is present. Some products do both through different surfaces, and the two
-can be different products.
+## Publish an article now
 
-## Verified
+- [Claude Code](./claude-code.md): work in a local clone from the terminal.
+- [Codex](./codex.md): work in a local clone with Codex CLI.
+- [ChatGPT Work](./chatgpt-work.md): work in a cloud session with a connected
+  GitHub account.
 
-| Product      | First article                                     | Scheduled publication                                                    | Billing      |
-| ------------ | ------------------------------------------------- | ------------------------------------------------------------------------ | ------------ |
-| Claude Code  | ✓ ([walkthrough](./claude-code.md), local CLI)    | ✓ ([Routines](https://code.claude.com/docs/en/routines))                 | Subscription |
-| ChatGPT Work | ✓ ([walkthrough](./chatgpt-work.md), no terminal) | TBD ([Cloud automations](https://openai.com/academy/codex-automations/)) | Subscription |
-| Codex        | ✓ (local CLI, no walkthrough)                     | TBD ([Cloud automations](https://openai.com/academy/codex-automations/)) | Subscription |
+Each path can set up the paper and publish an article through the repository's
+Article PR workflow. For the general setup flow, see
+[Set up](../getting-started/setup.md).
 
-A ✓ under "First article" means that product took a fresh fork to a published
-article on 2026-09-18, and the walkthrough is written from that run. A ✓ under
-"Scheduled publication" means the path passed the non-publishing smoke test and
-published at least one real article in that exact environment. Scheduled
-publication on Claude Code Routines runs a production paper nightly.
+## Publish on a schedule
 
-## Other products
+- [ChatGPT Work scheduled task](./chatgpt-work.md#schedule-publication): use a
+  recurring Work task with GitHub access and a fresh cloud checkout.
+- [Claude Code Routine](https://code.claude.com/docs/en/routines): use a
+  scheduled cloud routine with the repository and required tools connected.
 
-Most products that pair a sandbox with a GitHub connection will work; only the
-ones above are documented. [Jules](https://jules.google/docs/scheduled-tasks/),
-[Cursor](https://cursor.com/automate),
-[Devin](https://docs.devin.ai/product-guides/scheduled-sessions),
-[GitHub Copilot](https://docs.github.com/en/copilot/how-tos/github-copilot-app/using-automations),
-and [OpenCode](https://dev.opencode.ai/docs/github/) advertise the needed
-capabilities, and no end-to-end run has been verified. A product's existence
-does not prove that it meets the contract, and provider behavior, permissions,
-and billing change independently. Before relying on one for a schedule, run the
-[scheduled-runtime smoke test](../guides/operate/verify-scheduled-runtime.md) in
-the same environment that will publish the paper.
-
-## Harness independence
-
-The orchestrator does not require a provider-specific team feature. A harness
-may isolate bounded editorial roles in child contexts or execute the same
-recorded sequence in one context. See
-[Architecture](../concepts/architecture.md).
-
-Model names are harness-specific. Portable tiers and exact provider overrides
-are defined in [Production reference](../reference/production.md).
+Both paths read their run instructions from
+[`run-scheduled-publication.md`](../../.agents/prompts/run-scheduled-publication.md).
+The scheduler prompt should point to that file rather than copy its workflow.
+See [Schedule publication](../guides/operate/schedule.md) for the prompt and the
+publication choices.
