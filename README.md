@@ -18,8 +18,8 @@ waiting every morning, add a schedule.
 
 Your paper and its archive live in your fork. You own it.
 
-> [!NOTE] Your articles will be searchable from
-> [the-nightly-build.github.io](https://the-nightly-build.github.io/)
+> [!NOTE]
+> Your articles will be searchable from [the-nightly-build.github.io](https://the-nightly-build.github.io/)
 >
 > If you don't want that, opt out in your `site.yaml`:
 >
@@ -42,7 +42,7 @@ setup path.
 1. In the fork's Actions tab, enable workflows if GitHub prompts you.
 2. Under Settings, Pages, set Source to GitHub Actions.
 3. Use an AI product connected to your GitHub account that can run commands in a
-   sandbox.
+   sandbox (Like ChatGPT in the Work tab instead of Chat).
 
 ### Ask for your first article
 
@@ -51,9 +51,7 @@ Give the assistant this request:
 > Help me set up my Nightly Build paper and write my first article about
 > `<topic>`. Follow the repository's instructions.
 
-The assistant runs `./nb setup`, writes the article, and opens the pull request
-that publishes it. Without `gh`, it also reports any GitHub settings you need to
-change. The article should be live within an hour, depending on its complexity.
+The article should be live within an hour, depending on its complexity.
 
 For more detail, see:
 
@@ -63,9 +61,10 @@ For more detail, see:
 
 ## Schedule publication
 
-To publish articles automatically, add a series with a cadence and point a
+To publish articles automatically every day, add a series with a cadence and point a
 scheduler at the fork. [Schedule publication](docs/guides/operate/schedule.md)
-includes a smoke test for the scheduled environment.
+includes a smoke test for the scheduled environment so you can make sure your setup
+works properly.
 
 ## How it works
 
