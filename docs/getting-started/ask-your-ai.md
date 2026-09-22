@@ -11,17 +11,17 @@ Fork the repository first, with only `main`. Then say:
 > `<topic>`. Follow the repository's instructions.
 
 With `gh`, the assistant runs `./nb setup` and needs nothing from you: the
-settings the fork needs are made for you. Without a terminal, make the two
-settings only you can make first, Pages and Actions, as [Set up](./setup.md)
-shows; `nb setup` cannot read them back and lists both anyway, and if one is
-missing the assistant gives it to you as one action with its URL. Never paste a
-token into chat.
+settings the fork needs are made for you. Without a terminal, first make the two
+settings only you can change, Pages and Actions, as [Set up](./setup.md)
+explains. `nb setup` cannot read those settings back, so it lists both. If one
+is missing, the assistant gives you its URL and asks you to make the change.
+Never paste a token into chat.
 
-The article goes into Dispatches, the series every paper keeps for what you ask
-for, and publishes through a pull request the repository's own check validates
-and merges. Add "let me read it first" to your request and the pull request
-opens as a draft that waits for you instead.
+The article is published in Dispatches, the series for requested articles. A
+repository check validates the pull request and merges it. Add "let me read it
+first" to your request and the pull request opens as a draft. It stays unmerged
+until you mark it ready.
 
-A chat with no sandbox cannot run the engine; ChatGPT Work, which runs commands
-in one, can. [Integrations](../integrations/README.md) names the products that
-have published from a fresh fork and walks through each.
+A chat without a command sandbox cannot run the engine. ChatGPT Work can run
+commands in a sandbox. [Integrations](../integrations/README.md) lists products
+that have published from a fresh fork and explains how to use them.

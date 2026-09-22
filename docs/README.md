@@ -11,9 +11,9 @@ the path that matches what you are trying to do.
   does on each, and the two settings only an owner can make.
 - [Your first article](getting-started/first-article.md) describes what happens
   between asking and the live page.
-- [Create your paper](getting-started/create-your-paper.md) is the two questions
-  that make the paper yours, and the longer conversation for a paper of your own
-  design.
+- [Create your paper](getting-started/create-your-paper.md) explains how to
+  personalize the default paper with two questions or design a paper from
+  scratch.
 
 ## Operate your paper
 
@@ -41,10 +41,9 @@ the path that matches what you are trying to do.
 - Troubleshoot [setup and scheduling](troubleshooting/setup-and-scheduling.md)
   or [Article PRs](troubleshooting/article-prs.md)
 
-These pages explain how the system works and which decisions are yours. The
-skills under `.agents/` are where agents learn to execute the work, sometimes
-autonomously and sometimes with you, depending on the skill. These pages point
-at skill files by path, and your assistant reads them itself.
+These pages explain how the system works and which decisions belong to you.
+Agent instructions live under `.agents/`. Your assistant reads the relevant
+skill file when it handles a task, either with you or on its own.
 
-Files under `spec/` are production contracts for article-making agents and the
-engine. They are useful to contributors, but they are not the user manual.
+Files under `spec/` define the requirements for article-making agents and the
+engine. They are for contributors, not a user manual.

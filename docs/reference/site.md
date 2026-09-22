@@ -1,6 +1,6 @@
 # Site reference
 
-`press/site.yaml` owns paper-wide presentation and delivery settings.
+`press/site.yaml` sets paper-wide presentation and delivery settings.
 
 ```yaml
 title: "My Paper"
@@ -21,14 +21,14 @@ directory:
 
 | Key                     | Contract                                                                     |
 | ----------------------- | ---------------------------------------------------------------------------- |
-| `title`                 | Masthead title; defaults to "The Nightly Build"                              |
-| `theme`                 | Local CSS path; defaults to the shipped newspaper theme                      |
+| `title`                 | Masthead title. Defaults to "The Nightly Build"                              |
+| `theme`                 | Local CSS path. Defaults to the shipped newspaper theme                      |
 | `appearance`            | `auto`, `light`, or `dark`                                                   |
 | `front`                 | `compact` or `comfortable`                                                   |
-| `footer`                | Imprint, at most 80 characters; defaults to a product credit                 |
+| `footer`                | Imprint, at most 80 characters. Defaults to a product credit                 |
 | `assets.scripts/styles` | Entries of `url` (HTTPS), `integrity` (exact SRI hash), and optional `defer` |
 | `directory.description` | Optional public description, at most 280 characters                          |
-| `directory.publish`     | Boolean; set `false` to opt out of the shared directory                      |
+| `directory.publish`     | Boolean. Set `false` to opt out of the shared directory                      |
 
 External assets are owner-authored configuration. Scripts do not relax the
 article sandbox: articles still cannot add scripts, handlers, frames, forms, or

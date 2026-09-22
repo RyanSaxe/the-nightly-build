@@ -30,7 +30,7 @@
 
 1. Fork in the browser with **Copy the main branch only**.
 2. Make the two settings only an owner can: on the fork's Actions tab, enable
-   workflows if GitHub asks; under Settings, Pages, set Source to GitHub
+   workflows if GitHub asks. Under Settings, Pages, set Source to GitHub
    Actions.
 3. Name the fork in your message so the product's GitHub connector opens it, and
    ask for the first article. Its `nb setup` does the git side, then lists under
@@ -38,15 +38,14 @@
    settings above, and a recommended third, protecting `library` behind the
    `validate` check under Settings, Branches.
 
-`nb setup` requires `git`, `uv`, and Python 3.10 or newer. Re-running it is
-safe; it repairs what is missing and verifies what it can read back.
+`nb setup` requires `git`, `uv`, and Python 3.10 or newer. Run it again to
+restore missing settings. It verifies the settings it can read back.
 
 A fork may start with workflows disabled. If the Actions tab asks you to enable
 them, or `nb setup` warns that it could not, enable them there: without
 workflows the `validate` check never runs and no article can merge. Without
-`gh`, setup cannot read settings back, so its "Still to do" list names the two
-required settings whether or not you have made them; nothing is wrong if you
-already did.
+`gh`, setup cannot read settings back. Its "Still to do" list therefore includes
+the two required settings even if you already made them.
 
 ## Later
 

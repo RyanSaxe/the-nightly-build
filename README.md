@@ -18,8 +18,7 @@ waiting every morning, add a schedule.
 
 Your paper and its archive live in your fork. You own it.
 
-> [!NOTE]
-> Your articles will be searchable from
+> [!NOTE] Your articles will be searchable from
 > [the-nightly-build.github.io](https://the-nightly-build.github.io/)
 >
 > If you don't want that, opt out in your `site.yaml`:
@@ -31,34 +30,42 @@ Your paper and its archive live in your fork. You own it.
 
 ## Get started
 
-Fork this repository with **Copy the main branch only** checked. Then take
-whichever of these fits the machine in front of you.
+Fork this repository with **Copy the main branch only** checked, then choose a
+setup path.
 
-**A terminal with `gh` signed in.** Open the checkout in your coding agent and
-say:
+### Terminal with `gh`
+
+1. Clone your fork and open it in your coding agent with `gh` signed in.
+
+### Browser, no terminal
+
+1. In the fork's Actions tab, enable workflows if GitHub prompts you.
+2. Under Settings, Pages, set Source to GitHub Actions.
+3. Use an AI product connected to your GitHub account that can run commands in a
+   sandbox.
+
+### Ask for your first article
+
+Give the assistant this request:
 
 > Help me set up my Nightly Build paper and write my first article about
 > `<topic>`. Follow the repository's instructions.
 
-It runs `./nb setup`, which makes every fork setting itself, then writes the
-article and opens the pull request that publishes it.
+The assistant runs `./nb setup`, writes the article, and opens the pull request
+that publishes it. Without `gh`, it also reports any GitHub settings you need to
+change. The article should be live within an hour, depending on its complexity.
 
-**No terminal.** In the fork's settings, enable workflows on the Actions tab if
-GitHub asks, and set Pages to build from GitHub Actions. Then say the same
-sentence to an AI product connected to your GitHub account. It does the git side
-of setup, tells you if a setting is still missing, and publishes the article the
-same way.
+For more detail, see:
 
-Either way the article, depending on complexity, should be live within the hour.
-[Ask your AI](docs/getting-started/ask-your-ai.md) has the details, the
-[documentation](docs/README.md) the rest, and the
-[feature catalog](docs/reference/README.md) lists everything the engine
-supports.
+- [Ask your AI](docs/getting-started/ask-your-ai.md) for the first request.
+- [Documentation](docs/README.md) for the full guide.
+- [Feature catalog](docs/reference/README.md) for supported features.
 
-When you want articles without asking, add a series with a cadence and point a
-scheduler at the fork: [Schedule publication](docs/guides/operate/schedule.md)
-includes a smoke test that verifies the scheduled environment before it
-publishes anything.
+## Schedule publication
+
+To publish articles automatically, add a series with a cadence and point a
+scheduler at the fork. [Schedule publication](docs/guides/operate/schedule.md)
+includes a smoke test for the scheduled environment.
 
 ## How it works
 

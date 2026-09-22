@@ -15,9 +15,9 @@ The scheduled runtime needs:
 5. `uv` on `PATH`, or permission to install it.
 6. Non-interactive permission to use every required tool.
 
-Every run begins with `nb sync`, then asks `nb duty` for the deterministic work
-list. One schedule can run the whole paper because series own their cadence.
-`cadence: manual` series never appear as due.
+Every run begins with `nb sync`, then calls `nb duty` to find the deterministic
+work list. One schedule can run the whole paper because series own their
+cadence. `cadence: manual` series never appear as due.
 
 Choose a scheduler only after its actual unattended environment meets all six
 requirements. Verified runtimes and remaining candidates are listed in
@@ -35,7 +35,7 @@ in
 Keep the external schedule prompt deliberately small:
 
 > Work in The Nightly Build repository `<repo>`. Update the checkout to the
-> current remote `main` before reading anything; a stale clone may predate the
+> current remote `main` before reading anything. A stale clone may predate the
 > entrypoint. Read `.agents/prompts/run-scheduled-publication.md` and follow it
 > in this agent. This paragraph is the entire assignment. If that file is
 > missing from up-to-date remote `main`, stop and report the missing repository
@@ -53,7 +53,7 @@ To test the exact scheduled environment without publishing, trigger an on-demand
 task with this assignment:
 
 > Work in The Nightly Build repository `<repo>`. Update the checkout to the
-> current remote `main` before reading anything; a stale clone may predate the
+> current remote `main` before reading anything. A stale clone may predate the
 > entrypoint. Read `.agents/prompts/verify-scheduled-runtime.md` and follow it
 > in this agent. This paragraph is the entire assignment. If that file is
 > missing from up-to-date remote `main`, stop and report the missing repository

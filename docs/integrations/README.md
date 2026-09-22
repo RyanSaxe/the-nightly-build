@@ -27,8 +27,9 @@ publication on Claude Code Routines runs a production paper nightly.
 
 ## Other products
 
-Most products that pair a sandbox with a GitHub connection will work; only the
-ones above are documented. [Jules](https://jules.google/docs/scheduled-tasks/),
+Most products that pair a sandbox with a GitHub connection should work. This
+guide documents the products listed above.
+[Jules](https://jules.google/docs/scheduled-tasks/),
 [Cursor](https://cursor.com/automate),
 [Devin](https://docs.devin.ai/product-guides/scheduled-sessions),
 [GitHub Copilot](https://docs.github.com/en/copilot/how-tos/github-copilot-app/using-automations),

@@ -4,7 +4,7 @@
 
 Confirm the current assistant is connected to the intended GitHub account and
 repository. Without `gh`, `nb setup` lists the settings it could not make under
-"Still to do" with a URL for each; make them in the browser and re-run it. Do
+"Still to do" with a URL for each. Make them in the browser and re-run setup. Do
 not paste a token into chat.
 
 ## The first article's check reports an unknown series
@@ -27,7 +27,7 @@ stalled PR so the check triggers.
 Run `nb duty` in the scheduled checkout and read its idle reasons. Confirm the
 runtime has current `main`, can fetch `origin/library`, and has a non-manual,
 non-paused series due on the current UTC day. `cadence: manual` is supposed to
-remain idle; Dispatches never appears as due. A fresh paper's News Brief and
+remain idle. Dispatches never appears as due. A fresh paper's News Brief and
 Feature are due every day, so an empty due list on a fresh paper means the
 checkout is not reading the scaffolded `press/`.
 

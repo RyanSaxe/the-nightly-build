@@ -42,10 +42,10 @@ shipped registry:
 
 A press adopts one by copying it into `press/templates/<id>/`, whole, and gets
 the same enforcement a shipped package gets. A series that names one before the
-copy exists fails `nb validate`, and the error says which copy to make. Edit the
-copy freely; it is yours from then on. A press that used any of the three while
-they shipped, before 2026-09-19, makes the copy in the same change that takes
-the engine update.
+copy exists fails `nb validate`, and the error identifies which copy to make.
+Edit the copy freely. It belongs to your press after you copy it. A press that
+used any of the three while they shipped, before 2026-09-19, makes the copy in
+the same change that takes the engine update.
 
 ## Manifest
 
@@ -66,10 +66,10 @@ flex_components: [my-required-component]
 
 | Key               | Contract                                                     |
 | ----------------- | ------------------------------------------------------------ |
-| `about`           | Optional human-readable description; ignored by the proof    |
+| `about`           | Optional human-readable description. The proof ignores it.   |
 | `class`           | `longread` or `shortread`                                    |
 | `bands`           | Optional default `[low, high]` recommendations               |
-| `sections`        | Required section IDs; must include `sources`                 |
+| `sections`        | Required section IDs. Must include `sources`.                |
 | `cite_rule`       | `per-section` or `per-item`                                  |
 | `cite_exempt`     | Declared sections exempt from citation requirements          |
 | `chrome`          | Exact skeleton strings that a finished article must preserve |

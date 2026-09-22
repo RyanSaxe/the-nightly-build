@@ -32,7 +32,7 @@ administers the fork. `git`, `uv`, and Python 3.10 or newer on the machine.
    smaller model under the economy profile.
 5. Hold, if you want it. Add "let me read it first" to your request and the pull
    request opens as a draft. In the same rehearsal, the draft was validated and
-   left unmerged; pressing "Ready for review" ran the check again, merged, and
+   left unmerged. Pressing "Ready for review" ran the check again, merged, and
    deployed.
 
 ## Where things are
@@ -44,7 +44,7 @@ published it in the fork's history.
 
 ## If something stops
 
-A warning from setup about Pages or Actions names the setting and its URL; make
+A warning from setup about Pages or Actions names the setting and its URL. Make
 it and re-run `./nb setup`. A pull request that shows no `validate` check means
 workflows are disabled: enable them on the Actions tab, then close and reopen
 the PR.

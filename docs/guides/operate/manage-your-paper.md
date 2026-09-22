@@ -15,14 +15,14 @@ Feature it is the same edit the two questions in
 [Create your paper](../../getting-started/create-your-paper.md) make.
 
 Use `cadence: manual` for a series that should publish only when someone asks.
-It is never returned as due by `nb duty`, and a manual open series admits any
-slug: every article in it was asked for, so its `items` are suggestions, not a
-gate.
+`nb duty` never returns it as due. A manual open series admits any slug because
+the owner requests each article. Its `items` field suggests topics and does not
+restrict commissions.
 
-Articles you ask for are not held to one per series per day; several can land in
-one series on one date. The schedule is the exception. `nb duty` treats a series
-with an article dated today as done for that run, which is why an article you
-asked for stands in for that day's scheduled one.
+You can request several articles for one series on the same day. Scheduled work
+follows a different rule. `nb duty` treats a series with an article dated today
+as complete for that run. A requested article therefore counts as that day's
+scheduled article.
 
 Configuration changes do not edit the published archive. To correct an article
 already on `library`, use [Revise an article](../publish/revise-an-article.md).
