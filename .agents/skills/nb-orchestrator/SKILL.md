@@ -41,10 +41,11 @@ prevent a structure inherited from a prior article. Record the neighbouring
 articles from this run so that no two pieces cover the same ground and the
 edition reads as one paper.
 
-Resolve the series with `nb source-policy` and `nb production-policy`. A
-`required` model or effort directive is never yours to trade down. Where the
-runtime cannot honour one, use the closest available option and record the
-deviation. Record the actual model and effort for each role.
+Resolve the series with `nb source-policy --series <id>` and
+`nb production-policy --series <id>`. A `required` model or effort directive is
+never yours to trade down. Where the runtime cannot honour one, use the closest
+available option and record the deviation. Record the actual model and effort
+for each role.
 
 Initialize each article:
 
