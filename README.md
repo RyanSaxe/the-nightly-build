@@ -4,7 +4,7 @@
 
 <!-- markdownlint-disable MD026 -->
 
-## Your own AI-researched paper. Ask for an article; schedule the rest.
+## Your own AI-researched paper.
 
 <!-- markdownlint-enable MD026 -->
 
@@ -18,8 +18,9 @@ waiting every morning, add a schedule.
 
 Your paper and its archive live in your fork. You own it.
 
-> [!NOTE] Your articles will be searchable from
-> [the-nightly-build.github.io](https://the-nightly-build.github.io/)
+<!-- prettier-ignore -->
+> [!NOTE]
+> Your articles will be searchable from [the-nightly-build.github.io](https://the-nightly-build.github.io/)
 >
 > If you don't want that, opt out in your `site.yaml`:
 >
@@ -30,35 +31,45 @@ Your paper and its archive live in your fork. You own it.
 
 ## Get started
 
-Fork this repository with **Copy the main branch only** checked. Then take
-whichever of these fits the machine in front of you.
+Fork this repository with **Copy the main branch only** checked, then choose a
+setup path.
 
-**A terminal with `gh` signed in.** Open the checkout in your coding agent and
-say:
+### Terminal with `gh`
 
-> Help me set up my Nightly Build paper and write my first article about
-> `<topic>`. Follow the repository's instructions.
+1. Sign in to GitHub from `gh` with an account that owns the fork.
+2. Clone your fork and open it in Claude Code or Codex.
 
-It runs `./nb setup`, which makes every fork setting itself, then writes the
-article and opens the pull request that publishes it.
+### ChatGPT Work, no terminal
 
-**No terminal.** In the fork's settings, enable workflows on the Actions tab if
-GitHub asks, and set Pages to build from GitHub Actions. Then say the same
-sentence to an AI product connected to your GitHub account. It does the git side
-of setup, tells you if a setting is still missing, and publishes the article the
-same way.
+1. Connect GitHub in ChatGPT Work and allow access to your fork, including
+   permission to push branches and open pull requests.
+2. In the fork's Actions tab, enable workflows if they are disabled. Under
+   Settings, Pages, set Source to GitHub Actions.
 
-Either way the article lands in Dispatches, the series every paper keeps for
-what you ask for, and is live within the hour.
-[Ask your AI](docs/getting-started/ask-your-ai.md) has the details, the
-[documentation](docs/README.md) the rest, and the
-[feature catalog](docs/reference/README.md) lists everything the engine
-supports.
+### Ask for your first article
 
-When you want articles without asking, add series with a cadence and point a
-scheduler at the fork: [Schedule publication](docs/guides/operate/schedule.md)
-includes a smoke test that verifies the scheduled environment before it
-publishes anything.
+Give the assistant this request:
+
+> Help me set up my Nightly Build paper in `<owner>/<repo>` and write my first
+> article about `<topic>`. Follow the repository's instructions.
+
+The assistant runs `./nb setup` if the fork has not been set up. Setup prepares
+the repository and lists GitHub settings that may need you. Without `gh`, it
+lists Pages and Actions even if you already enabled them. A clean Article PR
+merges after its `validate` check passes, then GitHub Pages publishes the
+article. Ask to review it first if you want the PR to remain a draft.
+
+For more detail, see:
+
+- [Ask your AI](docs/getting-started/ask-your-ai.md) for the first request.
+- [Documentation](docs/README.md) for the full guide.
+- [Feature catalog](docs/reference/README.md) for supported features.
+
+## Schedule publication
+
+To publish automatically, set up a
+[ChatGPT Work scheduled task or Claude Code Routine](docs/guides/operate/schedule.md)
+for your fork.
 
 ## How it works
 

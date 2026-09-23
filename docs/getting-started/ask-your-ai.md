@@ -1,27 +1,32 @@
 # Ask your AI
 
-Give this repository to the AI tool you already use. It needs to work with
-GitHub in one of two ways: a coding agent in a terminal with `gh` signed in, or
-a product connected to your GitHub account that runs commands in a sandbox and
-opens pull requests. It does not need to be the tool that later runs a schedule.
+Use an agent that can run commands and work with your GitHub fork. You can use a
+coding agent in a terminal, such as Claude Code or Codex, or use ChatGPT Work
+with GitHub connected. See [Agent integrations](../integrations/README.md) for
+the product-specific steps.
 
-Fork the repository first, with only `main`. Then say:
+## 1. Fork the repository
 
-> Help me set up my Nightly Build paper and write my first article about
-> `<topic>`. Follow the repository's instructions.
+On GitHub, fork this repository with **Copy the main branch only** checked.
 
-With `gh`, the assistant runs `./nb setup` and needs nothing from you: the
-settings the fork needs are made for you. Without a terminal, make the two
-settings only you can make first, Pages and Actions, as [Set up](./setup.md)
-shows; `nb setup` cannot read them back and lists both anyway, and if one is
-missing the assistant gives it to you as one action with its URL. Never paste a
-token into chat.
+## 2. Connect an agent to your fork
 
-The article goes into Dispatches, the series every paper keeps for what you ask
-for, and publishes through a pull request the repository's own check validates
-and merges. Add "let me read it first" to your request and the pull request
-opens as a draft that waits for you instead.
+- In a terminal, sign in to GitHub with `gh`, clone your fork, and open the
+  checkout in your coding agent.
+- In ChatGPT Work, connect GitHub and allow access to your fork. Enable
+  workflows in the fork's Actions tab if they are disabled. Under Settings,
+  Pages, set Source to GitHub Actions.
 
-A chat with no sandbox cannot run the engine; ChatGPT Work, which runs commands
-in one, can. [Integrations](../integrations/README.md) names the products that
-have published from a fresh fork and walks through each.
+## 3. Ask for an article
+
+Name your fork and topic in this request:
+
+> Help me set up my Nightly Build paper in `<owner>/<repo>` and write my first
+> article about `<topic>`. Follow the repository's instructions.
+
+The agent runs `./nb setup` if the paper is not configured, then creates the
+article PR. A clean PR publishes after GitHub's `validate` check passes. Add
+"let me read it first" if you want a draft PR to review before it publishes.
+
+For more about setup, see [Set up](./setup.md). For scheduling, see
+[Schedule publication](../guides/operate/schedule.md).

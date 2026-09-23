@@ -90,7 +90,7 @@ Your press layers `press/banned-terms.yaml` over the seed, by `id`:
 - id: synergy
   terms: [synergy, synergies]
   max: 0
-  suggestion: name the mechanism; what does the combination actually do?
+  suggestion: name the mechanism. What does the combination actually do?
 
 # Reusing an engine id changes only the fields you state.
 - id: em-dash

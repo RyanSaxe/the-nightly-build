@@ -10,7 +10,7 @@ Create a one-off or on-demand task in the same automation environment used by
 the publication schedule. Give it this assignment:
 
 > Work in The Nightly Build repository `<repo>`. Update the checkout to the
-> current remote `main` before reading anything; a stale clone may predate the
+> current remote `main` before reading anything. A stale clone may predate the
 > entrypoint. Read `.agents/prompts/verify-scheduled-runtime.md` and follow it
 > in this agent. This paragraph is the entire assignment. If that file is
 > missing from up-to-date remote `main`, stop and report the missing repository
