@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SwiftUI’s ArrangementView Makes Adaptive Two-Pane Layout a Framework Decision · Technical</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "technical",
+        "slug": "swiftui-arrangement-view",
+        "template": "article",
+        "title": "SwiftUI’s ArrangementView Makes Adaptive Two-Pane Layout a Framework Decision",
+        "mode": "open",
+        "order": null,
+        "date": "2026-09-24",
+        "tags": ["swiftui", "ios", "layout"],
+        "sources": 9,
+        "words": 1356,
+        "reading_minutes": 6,
+        "dek": "The iOS 27.1 container expresses split and overlay relationships across changing geometry; its ratio remains a preference, and a reported Duo simulator bug calls for a targeted test.",
+        "harness": "Codex Work Mode",
+        "model": "GPT-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Technical</div>
+        <h1 class="nb-title">SwiftUI’s ArrangementView Makes Adaptive Two-Pane Layout a Framework Decision</h1>
+        <p class="nb-dekline">
+          The iOS 27.1 container expresses split and overlay relationships across changing geometry; its ratio remains a preference, and a reported Duo simulator bug calls for a targeted test.
+        </p>
+        <div class="nb-byline">
+          <span>6 min read</span><span>2026-09-24</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>ArrangementView turns geometry into a two-view decision</h2>
+        <p>
+          SwiftUI’s <code>ArrangementView</code> is a container for a relationship, not a second spelling of <code>HStack</code>. Apple describes an arrangement as a mapping from inputs such as size classes, a view’s aspect ratio, and active division regions to outputs such as whether a view appears and the frame it receives. In iOS 27.1, SwiftUI exposes system-provided arrangements to apps.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          That definition matters on devices whose usable space changes without the app changing its content. A hinge can create a division region, a fold can turn a wide area into two regions, and a tall aspect ratio can make a horizontal split unsuitable. <code>ArrangementView</code> takes one primary and one secondary view, then applies a selected style to the current bounds.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          This is narrower than responsive layout in general. It fits an interface that already says, “this is the main experience, and this is the companion view.” When the composition has arbitrary panels or independent placement rules, the app still has a case for an ordinary stack, a custom <code>Layout</code>, or a grid.
+        </p>
+      </section>
+
+      <section data-nb-section="primary-secondary" id="primary-secondary">
+        <h2>The primary and secondary closures carry the design</h2>
+        <p>
+          Apple’s Tech Talk demonstrates an audio-note player with an Up Next panel. The smallest SwiftUI version is a container with two closures and an explicit split style:
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">PlayerAndUpNext.swift · illustrative</span
+            ><span>swift</span>
+          </div>
+          <pre><code data-language="swift">struct PlayerAndUpNext: View {
+    var body: some View {
+        NavigationStack {
+            ArrangementView {
+                PlayerView()
+            } secondary: {
+                UpNextView()
+            }
+            .arrangementViewStyle(.split)
+        }
+    }
+}</code></pre>
+          <figcaption class="nb-code-cap">
+            The documented SwiftUI shape for a player as primary content and an Up Next panel as secondary content.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The first closure is the primary view; the trailing <code>secondary</code> closure is its companion. <code>.arrangementViewStyle(.split)</code> makes the choice explicit even though split is the default style. The container owns the two-view relationship and receives the bounds to arrange. The child views do not need to calculate a pane width just to participate in that relationship.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          The relationship stays the same while the framework changes placement. On a wide rectangle, the views can share a row. On a taller rectangle, the default split can run vertically. The useful unit is therefore primary content plus secondary content with a placement rule, rather than a list of width thresholds copied into each screen.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="split-overlay" id="split-overlay">
+        <h2>Split keeps both views visible; overlay gives one view the foreground</h2>
+        <p>
+          A split arrangement divides its provided bounds between the two views. By default it splits horizontally when the container is wider than it is tall, and vertically when it is taller than it is wide. An app can restrict the style to one axis. If that axis is unavailable for the current bounds, the arrangement falls back to showing only the primary view.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">HorizontalPlayerAndUpNext.swift · illustrative</span
+            ><span>swift</span>
+          </div>
+          <pre><code data-language="swift">struct HorizontalPlayerAndUpNext: View {
+    var body: some View {
+        ArrangementView {
+            PlayerView()
+        } secondary: {
+            UpNextView()
+        }
+        .arrangementViewStyle(.split.axes(.horizontal))
+    }
+}</code></pre>
+          <figcaption class="nb-code-cap">
+            Restricting split to the horizontal axis makes the single-view fallback relevant when the container is taller than it is wide.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Overlay encodes a different relationship. It prefers to place the two views above or below one another, and it can prefer side-by-side placement when a device folds. Apple maps overlay to a foreground/background relationship, such as controls over readable content, where partial obscuring is acceptable. A main-detail pair whose views must remain visible is the split case.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">OverlayUpNextView.swift · illustrative</span
+            ><span>swift</span>
+          </div>
+          <pre><code data-language="swift">enum UpNextMinimization {
+    case collapsed
+    case expanded
+}
+
+struct OverlayUpNextView: View {
+    @Environment(\.overlayArrangementZIndex)
+    private var zIndex: Int
+
+    var body: some View {
+        UpNextList(minimization: minimization)
+    }
+
+    private var minimization: UpNextMinimization {
+        zIndex &gt; 0 ? .collapsed : .expanded
+    }
+}
+
+struct OverlayPlayer: View {
+    var body: some View {
+        ArrangementView {
+            OverlayUpNextView()
+        } secondary: {
+            PlayerView()
+        }
+        .arrangementViewStyle(.overlay)
+    }
+}</code></pre>
+          <figcaption class="nb-code-cap">
+            Overlay content can read <code>overlayArrangementZIndex</code> and switch its presentation as the framework changes which view is in front. <code>UpNextList</code> is an app-owned view.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s5">5</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The environment value reports placement; it is not a general z-order control. The Tech Talk uses the sign of that value to choose a collapsed or expanded Up Next representation as the device folds and unfolds. That lets the secondary view adapt its content when its visual relationship changes, instead of merely shrinking the same view until it is unusable.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="ratio-preference" id="ratio-preference">
+        <h2>The ratio asks for a proportion, then yields to geometry</h2>
+        <p>
+          <code>splitArrangementLayoutRatio(0.3)</code> is useful because it expresses intent without pretending to be a measurement. Applied to the primary child, it asks for a preferred size ratio in the split arrangement. It does not set a fixed pixel width, and it does not guarantee that the primary view will occupy exactly 30 percent in every configuration.<sup
+            class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">RatioControlledPlayer.swift · illustrative</span
+            ><span>swift</span>
+          </div>
+          <pre><code data-language="swift">struct RatioControlledPlayer: View {
+    var body: some View {
+        ArrangementView {
+            PlayerView()
+                .splitArrangementLayoutRatio(0.3)
+        } secondary: {
+            UpNextView()
+        }
+        .arrangementViewStyle(.split)
+    }
+}</code></pre>
+          <figcaption class="nb-code-cap">
+            The ratio modifier belongs on the arranged child whose preferred share is being expressed; it is a layout preference rather than a frame constraint.<sup
+              class="nb-cite"
+              ><a href="#s6">6</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          That distinction changes how the layout should be tested. A value of <code>0.3</code> describes the preferred result when split has room. The arrangement may not honor that preference when the available aspect ratio, an active division region, or the selected axis cannot support it. Replacing the modifier with <code>frame(width:)</code> would trade the framework’s geometry decision for a number that describes only one size of window.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          Apple treats a fold or hinge as a reserved region that can divide a larger area into usable regions. SwiftUI exposes those regions through geometry APIs, and the Tech Talk describes the division region as active when the Duo is folded and inactive when it is flat. That gives an implementation a practical test matrix: wide and tall bounds, the restricted-axis fallback, folded and unfolded division regions, and both overlay z-index states.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="test-the-fold" id="test-the-fold">
+        <h2>Test the fold before choosing the abstraction</h2>
+        <p>
+          The new geometry needs a concrete test boundary. In a September 24, 2026 Apple Developer Forums report, an <code>ArrangementView</code> overlay implementation received a distinct <code>overlayArrangementZIndex</code> on other iPhone simulators but not on the Duo simulator. Apple’s developer support response identified the behavior as a known bug, said the expected condition is <code>zIndex &gt; 0</code>, and suggested wrapping the controls in a <code>VStack</code> in the primary closure as a workaround.<sup
+            class="nb-cite"
+            ><a href="#s8">8</a></sup
+          ><sup class="nb-cite"><a href="#s9">9</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">DuoOverlayWorkaround.swift · reported shape</span
+            ><span>swift</span>
+          </div>
+          <pre><code data-language="swift">struct DuoOverlayWorkaround: View {
+    var body: some View {
+        ArrangementView {
+            VStack {
+                Controls()
+            }
+        } secondary: {
+            PlayerView()
+        }
+        .arrangementViewStyle(.overlay)
+    }
+}</code></pre>
+          <figcaption class="nb-code-cap">
+            The forum report’s workaround shape wraps the overlay controls in <code>VStack</code> inside the primary closure. <code>Controls</code> and <code>PlayerView</code> stand for app-owned views; this is not a benchmark or a universal fix.<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+          </figcaption>
+        </figure>
+        <aside class="nb-note">
+          <span class="nb-note-label">Scope of the report</span>
+          <p>
+            One simulator report can justify a targeted workaround and a test case. It cannot establish that <code>ArrangementView</code> is broadly unreliable. Test the collapsed and expanded states on the target hardware and simulator versions that matter, then keep the workaround attached to that environment.<sup
+              class="nb-cite"
+              ><a href="#s9">9</a></sup
+            >
+          </p>
+        </aside>
+        <p>
+          Apple also says that an arrangement supplies layout infrastructure, not navigation infrastructure, and cautions against placing navigation containers inside one or placing an arrangement inside scrolling containers. Those boundaries make the choice more concrete: the framework can own a two-view placement decision, while the surrounding screen still owns navigation and scrolling.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          Use <code>ArrangementView</code> when the interface has one primary view and one secondary view whose placement should follow aspect ratio or a reserved division; keep an ordinary stack for a straightforward linear composition, and use <code>Layout</code> or a grid when the panel count or placement rules are arbitrary.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Transcript, 9:20–16:34"
+              href="https://developer.apple.com/videos/play/tech-talks/111463/"
+              >Apple Developer · Strike a pose with adaptive layouts on iPhone Duo</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="SwiftUI updates for September 2026"
+              href="https://developer.apple.com/documentation/Updates/SwiftUI?changes=_2_3_2&amp;language=objc"
+              >Apple Developer · SwiftUI updates</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developer.apple.com/documentation/swiftui/arrangementview"
+              >Apple Developer · ArrangementView</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developer.apple.com/documentation/swiftui/arrangementviewstyle/split"
+              >Apple Developer · split arrangement style</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developer.apple.com/documentation/swiftui/arrangementviewstyle/overlay"
+              >Apple Developer · overlay arrangement style</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developer.apple.com/documentation/swiftui/view/splitarrangementlayoutratio%28_%3A%29"
+              >Apple Developer · splitArrangementLayoutRatio(_:)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developer.apple.com/documentation/swiftui/reservedregion"
+              >Apple Developer · ReservedRegion</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developer.apple.com/documentation/swiftui/environmentvalues/overlayarrangementzindex"
+              >Apple Developer · overlayArrangementZIndex</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="Developer report and Apple DTS response"
+              href="https://developer.apple.com/forums/thread/848029"
+              >Apple Developer Forums · ArrangementView overlay z-index report</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
