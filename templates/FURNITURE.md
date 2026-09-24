@@ -1,88 +1,66 @@
 # Furniture
 
-Furniture is the set of pre-designed components an article may use. The engine's
-shared CSS styles every class in both colour schemes, so composing pieces cannot
-break the paper's look.
+The shared catalog gives articles a small set of reading aids. Choose a
+component for the information it makes easier to read. Section structure,
+citations, and sources follow the template and proof contracts, not this
+catalog.
 
-Section tags, citation markup, source entries and the nb-meta block are article
-structure and not furniture. Template manifests and the deterministic proof
-define those. This base catalogue is the engine's and every template has it. A
-paper can add its own, paper-wide in `press/furniture/` or bespoke inside one
-template's folder, and point a section at it from `prompt.md`.
-
-The catalogue is small on purpose: a few primitives a writer adapts beat a
-component per idea. Retired components stay styled so the published shelf keeps
-rendering, and new articles express those moves through the note below.
-
-In the samples, ALL-CAPS runs are placeholders and the proof warns on one that
-survives into prose. Sentence-case labels a component renders ("What holds up",
-"What to be careful about") are fixed chrome, so keep them verbatim. Replace
-everything else.
-
-Which one to reach for, by what you have.
-
-**Evidence.** A couple of heterogeneous headline numbers are a stat strip. Rows
-of one shape, three or more deep, are a table. Anything somebody has to see is a
-figure, drawn from data or captured from a source. A derivation the argument
-turns on is an equation, and source code is a listing where the article's claim
-depends on what the code does.
-
-**Voice.** A labelled passage of any kind is the note. The article's own best
-sentence, promoted, is a pull quote.
-
-**Structure.** Stages in order are steps. Events in time are a timeline. A
-stance somebody holds is a position card. Strengths against caveats are the
-holds-up grid.
-
-**Judgment.** Scored criteria are a rubric. A prediction is a claim card,
-carried from open to hit or miss when somebody judges it later.
+Each example below is rendered in the [gallery](../scripts/gallery/build.py).
+The examples use the cited papers by Holtzman, Finlayson, and Vaswani. Adapt the
+content and sources to the article. A press may add shared furniture in
+`press/furniture/`; a template may add furniture for its own articles.
 
 ## Stat strip
 
-The numbers that carry the thesis. Any count works, one included. Each must be
-cited in nearby prose.
+Use a stat strip when a few figures carry the point. Put the source and meaning
+in nearby prose; the strip is not a substitute for either.
 
 ```html
 <div class="nb-stat-strip">
   <div class="nb-stat">
-    <span class="nb-stat-n">$193B</span
-    ><span class="nb-stat-l">DATA-CENTER REVENUE</span>
+    <span class="nb-stat-n">2019</span
+    ><span class="nb-stat-l">NUCLEUS SAMPLING PAPER</span>
   </div>
   <div class="nb-stat">
-    <span class="nb-stat-n">92%</span><span class="nb-stat-l">SHARE</span>
+    <span class="nb-stat-n">2023</span
+    ><span class="nb-stat-l">FOLLOW-UP ANALYSIS</span>
   </div>
 </div>
 ```
 
 ## Table
 
-Compact worked rows: steps of a computation, a record, a mapping, a comparison,
-a ranking. Numeric cells are mono and never wrap (space digit groups so the
-table fits a phone). Add class `txt` on a cell that should read as prose. Prose
-columns retain a readable width on a phone while the row scrolls. First-column
-tokens may wear `nb-table-token` chips, and multiword chips wrap between words
-on narrow screens. The caption states what the rows show and carries the
-citation. Author the bare table exactly as below: the runtime dresses every one
-in the data-block card, rows scrolling inside it on a phone and the caption
-seated as the card's footer.
+Use a table for comparable rows. Keep explanations in prose cells and put the
+source in the caption. The runtime wraps the table for horizontal scrolling on a
+phone.
 
 ```html
 <table class="nb-table">
   <caption>
-    WHAT THE ROWS SHOW.<sup class="nb-cite"><a href="#s1">1</a></sup>
+    Two papers ask different questions about token truncation.<sup
+      class="nb-cite"
+      ><a href="#s1">1</a></sup
+    ><sup class="nb-cite"><a href="#s2">2</a></sup>
   </caption>
   <thead>
     <tr>
-      <th>STEP</th>
-      <th>VALUE</th>
-      <th class="txt">MEANING</th>
+      <th>Paper</th>
+      <th>Year</th>
+      <th class="txt">Question</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><span class="nb-table-token">ROW</span></td>
-      <td>1 0 0 1</td>
-      <td class="txt">WHAT THIS ROW SAYS, IN PROSE.</td>
+      <td><span class="nb-table-token">Holtzman et al.</span></td>
+      <td>2019</td>
+      <td class="txt">How does the decoding rule affect generated text?</td>
+    </tr>
+    <tr>
+      <td><span class="nb-table-token">Finlayson et al.</span></td>
+      <td>2023</td>
+      <td class="txt">
+        Why can truncating low-probability tokens improve text?
+      </td>
     </tr>
   </tbody>
 </table>
@@ -90,36 +68,21 @@ seated as the card's footer.
 
 ## Figure
 
-An image the argument needs, in one component with two kinds, told apart by
-filename. A **chart** is drawn from data at production time: render with
-`nb chart` (spec/charts.md), commit the `chart-N.py` script beside `chart-N.png`
-as its provenance (the `chart-` name is reserved), label axes, note a non-linear
-scale, and cite the data source in the caption. A **source asset**
-(`asset-N.png`/`.jpg`/`.webp`) is an exact visual captured from a cited primary
-or public document: a figure, photograph, or document detail. Crop away page
-furniture and printed captions unless that text is itself evidence, and cite the
-document. Both live beside the article in `library/<series>/<slug>/`, need
-useful alternative text, and restate what matters in caption and prose.
+Use a figure when the reader needs to see a diagram, chart, or source image.
+State whether an illustration is conceptual. Give the image useful alternative
+text and cite the source in the caption.
 
 ```html
 <figure class="nb-figure">
-  <img src="ARTICLE-SLUG/chart-1.png" alt="WHAT THE CHART SHOWS" />
+  <img
+    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='300' viewBox='0 0 800 300'%3E%3Crect width='800' height='300' fill='%23f7f4ec'/%3E%3Ctext x='40' y='45' font-family='Arial' font-size='22' fill='%23212730'%3ENext-token choices%3C/text%3E%3Crect x='40' y='80' width='330' height='70' fill='%237e9eaf'/%3E%3Crect x='370' y='80' width='220' height='70' fill='%239bb6c4'/%3E%3Crect x='590' y='80' width='170' height='70' fill='%23d9c1ae'/%3E%3Ctext x='55' y='121' font-family='Arial' font-size='18' fill='%23172129'%3Ehigh probability%3C/text%3E%3Ctext x='385' y='121' font-family='Arial' font-size='18' fill='%23172129'%3Emiddle%3C/text%3E%3Ctext x='605' y='121' font-family='Arial' font-size='18' fill='%23172129'%3Etail%3C/text%3E%3Cpath d='M590 165v45H40' stroke='%23a24935' stroke-width='3' fill='none'/%3E%3Ctext x='45' y='243' font-family='Arial' font-size='18' fill='%23212730'%3EA truncation rule removes the tail before sampling.%3C/text%3E%3C/svg%3E"
+    alt="Conceptual diagram of high-, middle-, and low-probability token choices; a truncation rule removes the low-probability tail"
+  />
   <figcaption>
-    Fig. 1 · CAPTION.<sup class="nb-cite"><a href="#s1">1</a></sup>
-  </figcaption>
-</figure>
-
-<figure class="nb-figure">
-  <img src="ARTICLE-SLUG/asset-1.png" alt="WHAT THE ASSET SHOWS" />
-  <figcaption>
-    Fig. 2 · A SHORT FACTUAL LABEL.<sup class="nb-cite"
-      ><a
-        href="#s1"
-        data-nb-locator="Fig. 1 · p. 4"
-        data-nb-url="https://example.org/source.pdf#page=4"
-        data-nb-note="WHAT THIS ASSET SUPPORTS IN THIS ARTICLE."
-        >1</a
-      ></sup
+    Fig. 1 · Nucleus sampling excludes the low-probability tail before choosing
+    a token. Diagram is conceptual, not a measured distribution.<sup
+      class="nb-cite"
+      ><a href="#s1">1</a></sup
     >
   </figcaption>
 </figure>
@@ -127,236 +90,209 @@ useful alternative text, and restate what matters in caption and prose.
 
 ## Equation
 
-Math the argument leans on, typeset from LaTeX. The element's text is the TeX
-source and the runtime typesets it. A reader without JS sees the TeX itself, so
-keep it clean. Three tiers, chosen by how much the equation needs to say. Inline
-math sits in prose in an `nb-math-in` span. A bare display equation (no caption)
-sits open on the page for a step the surrounding prose fully carries, cited in
-that prose. Group text with the equation and the figure becomes a data-block
-card: a caption when the equation needs its own cited line, and for the one
-equation an article is really about, the annotated form: wrap each term the
-reader must track in `\htmlClass{nb-mc1}{…}` through `nb-mc5` and name every
-colored term in the legend (the term cell repeats the TeX, and the colors hold
-in both schemes). At most one annotated equation per article. Punctuation,
-spacing commands, and sizing are the writer's: what renders must read as one
-sentence with the prose around it.
+Use an equation when its terms matter to the argument. KaTeX typesets the TeX
+when JavaScript loads; the TeX remains visible without it. Cite a sourced
+equation in its caption or nearby prose.
 
 ```html
-<p>
-  PROSE, WITH
-  <span class="nb-math-in">\varphi(x) = ax + bx^{3} + cx^{5}</span> RIDING
-  INLINE.
-</p>
-
+<p>The probability of a token depends on its score relative to the others.</p>
 <figure class="nb-math">
-  <div class="nb-math-eq">
-    \mathrm{Ortho}(G) = \operatorname*{arg\,min}_{O} \bigl\{\, \lVert O - G
-    \rVert_F : O^{\top} O = I \,\bigr\}
-  </div>
-</figure>
-
-<figure class="nb-math">
-  <div class="nb-math-eq">
-    \varphi^{N}(x) \to 1 \ \text{ as } \ N \to \infty
-  </div>
+  <div class="nb-math-eq">P(x_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}</div>
   <figcaption>
-    WHAT THE EQUATION SAYS, IN PROSE.<sup class="nb-cite"
-      ><a href="#s1">1</a></sup
+    Softmax turns token scores into a probability distribution.<sup
+      class="nb-cite"
+      ><a href="#s3">3</a></sup
     >
   </figcaption>
 </figure>
 
 <figure class="nb-math">
   <div class="nb-math-eq">
-    \mathrm{softmax}\!\left( \frac{ \htmlClass{nb-mc1}{Q} \,
-    \htmlClass{nb-mc2}{K^{\top}} }{ \htmlClass{nb-mc3}{\sqrt{d_k}} } \right)
-    \htmlClass{nb-mc4}{V}
+    \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(
+    \frac{\htmlClass{nb-mc1}{Q} \, \htmlClass{nb-mc2}{K^{\top}}}{
+    \htmlClass{nb-mc3}{\sqrt{d_k}}}\right) \htmlClass{nb-mc4}{V}
   </div>
   <ul class="nb-math-legend">
     <li>
       <span class="nb-math-term nb-mc1">Q</span
-      ><span>WHAT THIS TERM IS, IN ONE LINE.</span>
+      ><span>what each token is looking for</span>
     </li>
     <li>
       <span class="nb-math-term nb-mc2">K^{\top}</span
-      ><span>WHAT THIS TERM IS, IN ONE LINE.</span>
+      ><span>what each token offers to be found</span>
+    </li>
+    <li>
+      <span class="nb-math-term nb-mc3">\sqrt{d_k}</span
+      ><span>the scale that keeps scores stable</span>
+    </li>
+    <li>
+      <span class="nb-math-term nb-mc4">V</span
+      ><span>the content mixed into the result</span>
     </li>
   </ul>
   <figcaption>
-    WHAT THE EQUATION SAYS, IN PROSE.<sup class="nb-cite"
-      ><a href="#s1">1</a></sup
-    >
+    Annotated terms make the operation readable without leaving the
+    equation.<sup class="nb-cite"><a href="#s3">3</a></sup>
   </figcaption>
 </figure>
 ```
 
 ## Code listing
 
-A listing the reader should actually read: code whose behavior is evidence,
-never decoration. The header names the source (a path, or a short context) and
-the language. The `language-…` class drives the highlighter (python and
-javascript ship with the engine, and a press pins more via `site.yaml` assets).
-Escape the code as HTML. The caption states what the listing shows and carries
-the citation.
+Use a listing when the behavior of code is evidence. Put the language in
+`data-language`, escape the source as HTML, and name the file or context in the
+header. Shiki highlights it when available; plain source remains readable
+otherwise.
 
 ```html
 <figure class="nb-code">
   <div class="nb-code-head">
-    <span class="nb-code-file">PATH/TO/FILE.PY</span><span>PYTHON</span>
+    <span class="nb-code-file">decoding.py · illustrative</span
+    ><span>python</span>
   </div>
-  <pre><code class="language-python">THE LISTING, HTML-ESCAPED.</code></pre>
+  <pre><code data-language="python">def nucleus(tokens, probabilities, threshold):
+    ranked = sorted(zip(tokens, probabilities), key=lambda pair: -pair[1])
+    kept, mass = [], 0.0
+    for token, probability in ranked:
+        kept.append(token)
+        mass += probability
+        if mass >= threshold:
+            break
+    return kept</code></pre>
   <figcaption class="nb-code-cap">
-    Fig. 1 · WHAT THE LISTING SHOWS.<sup class="nb-cite"
+    Illustrative top-p selection: retain the smallest leading set whose
+    cumulative probability reaches the threshold.<sup class="nb-cite"
       ><a href="#s1">1</a></sup
     >
   </figcaption>
 </figure>
 ```
 
-## The note
+## Note
 
-The one labeled-passage component. You supply the label and the content: prose,
-a list, or a quotation. The label is not an enum. Name the move this passage
-makes. A definition wears its term. A plain-language rendering of a work's claim
-wears "In plain language". The weight-of-evidence landing wears "Verdict" and
-the `nb-note-strong` modifier (at most one per article). A sequenced series'
-pointer onward wears "Next article". A teaching piece's goals wear "In this
-article". Reuse a label the paper's shelf already uses before coining a new one,
-and never stack two notes where one carries both thoughts.
+Use a note for a labeled explanation that interrupts the main argument. Name the
+passage for its specific job. Do not add a repeated closing label to every
+article.
 
 ```html
-<div class="nb-note">
-  <span class="nb-note-label">THE MOVE THIS PASSAGE MAKES</span>
+<aside class="nb-note">
+  <span class="nb-note-label">Nucleus sampling</span>
   <p>
-    THE PASSAGE.<sup class="nb-cite"><a href="#s1">1</a></sup>
+    At each step, the method keeps the smallest set of leading tokens whose
+    combined probability passes a chosen threshold, then samples from that
+    set.<sup class="nb-cite"><a href="#s1">1</a></sup>
   </p>
-</div>
-
-<div class="nb-note nb-note-strong">
-  <span class="nb-note-label">Verdict</span>
-  <p>
-    THE WEIGHT THE READER SHOULD PUT ON IT, AND WHAT WOULD CHANGE THE
-    ASSESSMENT.<sup class="nb-cite"><a href="#s3">3</a></sup>
-  </p>
-</div>
-
-<div class="nb-note">
-  <span class="nb-note-label">A LABEL FOR A QUOTATION</span>
-  <blockquote>
-    THE QUOTATION, VERBATIM.<sup class="nb-cite"><a href="#s2">2</a></sup>
-    <span class="nb-note-who">WHO SAID IT, WHERE</span>
-  </blockquote>
-</div>
+</aside>
 ```
 
 ## Pull quote
 
-One sentence from the article itself, promoted for emphasis. Use at most one.
+Lift a sentence from the article itself when it earns visual emphasis. A pull
+quote adds no new claim or source.
 
 ```html
-<div class="nb-pull"><p>THE SENTENCE THAT EARNS THE SPACE.</p></div>
+<div class="nb-pull">
+  <p>
+    The decoding rule can change the writing even when the model stays the same.
+  </p>
+</div>
 ```
 
 ## Numbered steps
 
-A process, one stage per step. The connecting rule implies order. Do not use it
-for unordered lists. A ranking is a table.
+Use steps for a process whose order matters. Keep an unordered collection in
+prose or a list.
 
 ```html
 <ol class="nb-steps">
   <li>
-    <h3>STAGE</h3>
+    <h3>Rank the tokens</h3>
     <p>
-      WHAT HAPPENS AT THIS STAGE.<sup class="nb-cite"><a href="#s2">2</a></sup>
+      Order candidate tokens by their model probabilities.<sup class="nb-cite"
+        ><a href="#s1">1</a></sup
+      >
     </p>
   </li>
   <li>
-    <h3>NEXT STAGE</h3>
-    <p>...</p>
+    <h3>Find the threshold</h3>
+    <p>
+      Keep the shortest prefix whose cumulative probability reaches the chosen
+      value.
+    </p>
+  </li>
+  <li>
+    <h3>Sample</h3>
+    <p>Choose the next token from that retained set.</p>
   </li>
 </ol>
 ```
 
 ## Timeline
 
-Events along a dated spine, with optional prose interludes between eras. Add
-class `major` for filled dots.
+Use a timeline when dates explain the sequence. Each event needs a date and a
+specific consequence.
 
 ```html
 <ol class="nb-timeline">
   <li class="nb-tl-event major">
-    <span class="nb-tl-date">1997</span>
+    <span class="nb-tl-date">2019</span>
     <h3>
-      EVENT<sup class="nb-cite"><a href="#s2">2</a></sup>
+      Holtzman and colleagues propose nucleus sampling<sup class="nb-cite"
+        ><a href="#s1">1</a></sup
+      >
     </h3>
-    <p>WHAT HAPPENED, IN ONE OR TWO SENTENCES.</p>
+    <p>
+      The paper tests decoding strategies against the problem of repetitive
+      generated text.
+    </p>
   </li>
-  <li class="nb-tl-interlude"><p>WHAT THE ERA ADDED UP TO.</p></li>
+  <li class="nb-tl-interlude">
+    <p>The later question is why removing the tail can help.</p>
+  </li>
+  <li class="nb-tl-event major">
+    <span class="nb-tl-date">2023</span>
+    <h3>
+      Finlayson and colleagues revisit truncation<sup class="nb-cite"
+        ><a href="#s2">2</a></sup
+      >
+    </h3>
+    <p>The follow-up analyzes what a probability threshold excludes.</p>
+  </li>
 </ol>
-```
-
-## Position card
-
-One cleanly stated position: whose it is, the statement once, a summary of its
-basis, the citation. Use it for a person the article quotes, or for the paper's
-own position in an opinion piece (the example opinion template pins it). The
-"Position" pill is fixed chrome.
-
-```html
-<div class="nb-position">
-  <div class="nb-position-top">
-    <span class="nb-position-who">WHO HOLDS IT</span>
-    <span class="nb-position-pill">Position</span>
-  </div>
-  <p class="nb-position-statement">THE POSITION, STATED ONCE.</p>
-  <p class="nb-position-summary">
-    THE BASIS IT RESTS ON.<sup class="nb-cite"><a href="#s3">3</a></sup>
-  </p>
-</div>
-```
-
-## Holds-up grid
-
-Strengths against caveats, side by side. Its summary row is a "Verdict" note
-(see the note), usually right after it.
-
-```html
-<div class="nb-holdsup">
-  <div class="good">
-    <span class="nb-holdsup-label">What holds up</span>
-    <ul>
-      <li>STRENGTH.</li>
-    </ul>
-  </div>
-  <div class="careful">
-    <span class="nb-holdsup-label">What to be careful about</span>
-    <ul>
-      <li>LIMITATION.</li>
-    </ul>
-  </div>
-</div>
 ```
 
 ## Rubric
 
-Scored criteria for a review: each row a criterion, an integer score 0–5, and
-one cited line the score stands on. A series may pin criteria every review must
-score (`rubric:` in series.yaml, docs/reference/series.md § Rubrics). Add rows
-the subject demands. The rendered score text must agree with `data-score`, and
-the meter colors itself from the score.
+Use a rubric for a review with named criteria. Each row has a `data-score` from
+0 to 5, matching visible score text, and a cited reason.
 
 ```html
 <div class="nb-rubric">
-  <div class="nb-rubric-row" data-nb-criterion="CRITERION-SLUG" data-score="4">
+  <div class="nb-rubric-row" data-nb-criterion="repetition" data-score="4">
     <div class="nb-rubric-head">
-      <span class="nb-rubric-name">CRITERION</span>
-      <span class="nb-rubric-gauge"
+      <span class="nb-rubric-name">Repetition evidence</span
+      ><span class="nb-rubric-gauge"
         ><span class="nb-rubric-meter"><i></i></span
         ><span class="nb-rubric-score">4/5</span></span
       >
     </div>
     <p class="nb-rubric-note">
-      THE LINE THE SCORE STANDS ON.<sup class="nb-cite"
+      The paper compares decoding methods on repetition, but its examples do not
+      cover every writing task.<sup class="nb-cite"><a href="#s1">1</a></sup>
+    </p>
+  </div>
+  <div class="nb-rubric-row" data-nb-criterion="truncation" data-score="3">
+    <div class="nb-rubric-head">
+      <span class="nb-rubric-name">Truncation account</span
+      ><span class="nb-rubric-gauge"
+        ><span class="nb-rubric-meter"><i></i></span
+        ><span class="nb-rubric-score">3/5</span></span
+      >
+    </div>
+    <p class="nb-rubric-note">
+      The later analysis explains why truncation can help while noting that a
+      threshold also removes tokens with nonzero true probability.<sup
+        class="nb-cite"
         ><a href="#s2">2</a></sup
       >
     </p>
@@ -364,41 +300,61 @@ the meter colors itself from the score.
 </div>
 ```
 
-## Claim card
+## Reading card
 
-A falsifiable prediction that carries its own lifecycle. The night it is made it
-is open: the claim, the reasoning, confidence, and when it can be judged. Where
-you judge it in a later article, render the same card there with
-`data-nb-resolution="hit"` or `"miss"`, the matching state chip text, and an
-outcome line saying what actually happened. If a section makes claims, later
-articles must grade them.
+Use this optional card to connect an article's point to specific sources. The
+title and band label are yours to name. Name the point above the summary, then
+say why each linked source is worth reading. "Further reading" is a useful
+default, not a required label.
 
 ```html
-<div class="nb-claim" data-nb-resolution="open">
-  <div class="nb-claim-top">
-    <h3>
-      THE CLAIM<sup class="nb-cite"><a href="#s4">4</a></sup>
-    </h3>
-    <span class="nb-claim-state">Open</span>
-  </div>
-  <p>THE REASONING BEHIND IT.</p>
-  <div class="nb-claim-meta">
-    <span>confidence 70%</span><span>resolves by 2026-12-31</span>
-  </div>
-</div>
-
-<div class="nb-claim" data-nb-resolution="hit">
-  <div class="nb-claim-top">
-    <h3>
-      THE ORIGINAL CLAIM<sup class="nb-cite"><a href="#s4">4</a></sup>
-    </h3>
-    <span class="nb-claim-state">Hit</span>
-  </div>
-  <p class="nb-claim-outcome">
-    WHAT ACTUALLY HAPPENED.<sup class="nb-cite"><a href="#s5">5</a></sup>
+<aside class="nb-reading-card">
+  <p class="nb-reading-name">The decoding rule</p>
+  <div class="nb-reading-rule" aria-hidden="true"></div>
+  <p class="nb-reading-summary">
+    Holtzman and colleagues found that changing how a model selects the next
+    token changes its output, even when the model stays the same. They proposed
+    nucleus sampling to avoid low-probability tokens.
   </p>
-  <div class="nb-claim-meta">
-    <span>claimed 2026-01-08 at 70%</span><span>judged 2026-12-19</span>
+  <div class="nb-reading-band">
+    <span class="nb-reading-label">Further reading</span>
   </div>
-</div>
+  <dl class="nb-reading-list">
+    <dt>01</dt>
+    <dd>
+      <a href="https://arxiv.org/abs/1904.09751"
+        >The Curious Case of Neural Text Degeneration</a
+      >: why decoding changes repetition.
+    </dd>
+    <dt>02</dt>
+    <dd>
+      <a href="https://arxiv.org/abs/2310.01693"
+        >Closing the Curious Case of Neural Text Degeneration</a
+      >: why truncation can work.
+    </dd>
+  </dl>
+</aside>
+```
+
+## Quote card
+
+Reserve this card for a short quotation whose exact wording matters. Attribute
+it in the footer. Put ordinary quotations in the prose.
+
+```html
+<figure class="nb-quote-card">
+  <span class="nb-quote-mark" aria-hidden="true">“</span>
+  <blockquote>
+    <p>
+      However, thresholds are a coarse heuristic, and necessarily discard some
+      tokens with nonzero true probability as well.
+    </p>
+  </blockquote>
+  <figcaption>
+    Finlayson et al. ·
+    <a href="https://arxiv.org/abs/2310.01693"
+      >Closing the Curious Case of Neural Text Degeneration</a
+    >
+  </figcaption>
+</figure>
 ```

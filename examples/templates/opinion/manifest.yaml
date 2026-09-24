@@ -1,10 +1,6 @@
-# The machine contract for the opinion template: an argued position, never
-# both-sides reporting. Two anchors do the enforcement. `position` opens the
-# piece with the position card, so the stance is disclosed before any
-# argument. `counter` can never be skipped: the strongest opposing case,
-# stated and answered. The argument itself is 2-5 flex sections, each cited;
-# an opinion meets the same bar as any analysis (spec/editorial.md).
-about: "An argued position: the stance disclosed up front on the position card, the case built in cited sections, the strongest opposing case answered."
+# An opinion states its position before the argument, then answers the
+# strongest opposing case. The cited argument has 2-5 flexible sections.
+about: "An argued position stated up front, supported in cited sections, with the strongest opposing case answered."
 class: longread
 bands:
   words: [900, 2500]
@@ -13,6 +9,6 @@ sections: [position, counter, sources]
 cite_rule: per-section
 chrome:
   - '<body class="nb-article">'
-  - '<div class="nb-position">'
-  - '<span class="nb-position-pill">Position</span>'
+  - '<div class="nb-note">'
+  - '<span class="nb-note-label">Position</span>'
   - "<h2>Sources</h2>"

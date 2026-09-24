@@ -535,50 +535,25 @@ test("a press-pinned KaTeX outranks the engine's and typesets once it lands", as
 
 const CODE_FIGURE =
   '<figure class="nb-code"><div class="nb-code-head"><span class="nb-code-file">a.py</span><span>python</span></div>' +
-  '<pre><code class="language-python">def f(x):\n    return x</code></pre></figure>';
+  '<pre><code data-language="python">def f(x):\n    return x</code></pre></figure>';
 
-test("a code listing loads pinned Prism components in order, then highlights", async () => {
+test("a code listing keeps readable source when Shiki cannot load", async () => {
   const w = await loadNb(articlePage("<article>" + CODE_FIGURE + "</article>"));
-  assert.equal(w.Prism.manual, true, "Prism auto-highlight is off");
-
-  /* components chain one at a time; land each load to advance the chain */
-  const seen = [];
-  const highlighted = [];
-  w.Prism.highlightElement = (el) => highlighted.push(el);
-  for (let i = 0; i < 4; i++) {
-    const tags = [...w.document.querySelectorAll('script[src*="prism-"]')];
-    assert.equal(tags.length, seen.length + 1, "one new component per load");
-    const tag = tags[tags.length - 1];
-    assert.match(tag.integrity, /^sha384-/, "component is SRI-pinned");
-    seen.push(tag.src);
-    tag.dispatchEvent(new w.Event("load"));
-    await settle(w, 5);
-  }
-  assert.match(seen[0], /prism-core/);
-  assert.match(seen[1], /prism-clike/);
-  assert.match(seen[2], /prism-javascript/);
-  assert.match(seen[3], /prism-python/);
-  assert.equal(highlighted.length, 1, "the listing is highlighted once ready");
-  assert.equal(highlighted[0].className, "language-python");
+  const code = w.document.querySelector(".nb-code code");
+  assert.equal(code.dataset.language, "python");
+  assert.equal(code.textContent, "def f(x):\n    return x");
+  assert.equal(w.document.querySelectorAll('script[src*="prism"]').length, 0);
 });
 
-test("a press-pinned Prism is left to highlight on its own", async () => {
-  const html =
-    "<!doctype html><html><head>" +
-    '<script src="https://cdn.example/prism/prism-core.min.js" defer></script>' +
-    "</head><body><article>" +
-    CODE_FIGURE +
-    "</body></html>";
-  const w = await loadNb(html);
-  assert.equal(
-    w.document.querySelectorAll('script[src*="prism-"]').length,
-    1,
-    "no engine components are fetched beside the press copy",
+test("a published listing with a language class keeps readable source", async () => {
+  const old = CODE_FIGURE.replace(
+    'data-language="python"',
+    'class="language-python"',
   );
+  const w = await loadNb(articlePage("<article>" + old + "</article>"));
   assert.equal(
-    w.Prism,
-    undefined,
-    "the press copy's own bootstrap is untouched",
+    w.document.querySelector(".nb-code code").textContent,
+    "def f(x):\n    return x",
   );
 });
 

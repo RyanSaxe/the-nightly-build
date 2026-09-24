@@ -40,14 +40,19 @@ Owner-declared JavaScript or CSS libraries belong under `assets` in `site.yaml`.
 They must use HTTPS and Subresource Integrity. Articles themselves remain
 script-free, and CSS with semantic HTML is preferred whenever it is sufficient.
 
-The two components that need a real library ship with the engine: `nb.js` loads
-KaTeX for equations and Prism for code listings, version-pinned, SRI-hashed, and
-only on pages that carry the furniture, so most papers declare nothing. Declare
-a library under `assets` for anything beyond them, such as more Prism languages
-or a different typesetter. A press-declared copy of a library the engine also
-ships wins: `nb.js` sees it in the page and loads nothing. Readers with
-JavaScript off still get readable content: the TeX source of an equation, plain
-monospace code, and charts as ordinary PNG images.
+The engine loads KaTeX for equations and one version-pinned Shiki module for
+code listings only when those components appear. Shiki reads the code block's
+`data-language` value. If the network or grammar is unavailable, the original
+source stays visible. Other external assets declared by a press still require
+HTTPS and Subresource Integrity. Static components, including Reading and Quote
+cards, need no JavaScript.
+
+The shared catalog contains Stat strip, Table, Figure, Equation, Code listing,
+Note, Pull quote, Numbered steps, Timeline, Rubric, Reading card, and Quote
+card. Position card, Holds-up grid, and Claim card remain styled for published
+articles but are blocked by the proof in new articles. Give each Note an
+article-specific label. Link to media as ordinary links. When a social post is
+evidence, quote only the relevant words in a linked blockquote.
 
 ## The class inventory
 
@@ -55,11 +60,10 @@ The proof guards class names against likely typos. It builds an inventory from
 `nb.css`, the composed `theme.css`, and every stylesheet declared under
 `assets`, fetching each external sheet and verifying it against its pinned
 integrity hash before counting its classes. Article markup that names a class no
-inventoried stylesheet defines is reported as `W-DEAD-CLASS`. Classes the
-engine's code highlighting injects at runtime are known built-ins. When an
-external sheet cannot be fetched or verified, the check suppresses itself for
-that run and notes why instead of guessing. The inventory is automatic, and
-there is no user-maintained allowlist.
+inventoried stylesheet defines is reported as `W-DEAD-CLASS`. Classes that Shiki
+injects at runtime are known built-ins. When an external sheet cannot be fetched
+or verified, the check suppresses itself for that run and notes why instead of
+guessing. The inventory is automatic, and there is no user-maintained allowlist.
 
 See [Furniture](../guides/customize/furniture.md) for when and how to design
 components, and [Site reference](site.md) for the `assets` key.
