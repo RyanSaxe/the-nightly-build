@@ -29,6 +29,21 @@ def test_a_retired_component_declares_its_replacement() -> None:
     assert deprecated_classes(str(REPO))["nb-verdict"] == "nb-note"
 
 
+def test_retired_shared_cards_block_new_articles() -> None:
+    expected = {
+        "nb-position": "nb-note",
+        "nb-holdsup": "nb-note",
+        "nb-claim": "nb-note",
+        "nb-grade": "nb-rubric",
+    }
+    marks = deprecated_classes(str(REPO))
+    for cls, replacement in expected.items():
+        rep = check.Report()
+        check.check_deprecated(f'<div class="{cls}">old</div>', repo=str(REPO), rep=rep)
+        assert "B-DEPRECATED" in Findings(rep).blocks
+        assert marks[cls] == replacement
+
+
 def test_a_retired_subpart_blocks_as_deprecated() -> None:
     rep = check.Report()
     check.check_deprecated(

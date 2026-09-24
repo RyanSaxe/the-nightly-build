@@ -1232,7 +1232,7 @@ figure.nb-chart noscript {
 }
 
 /* the note: the one labeled-passage component. The writer supplies the
-   label (a definition's term, "In plain language", "Verdict", "Next
+   label (a definition's term, "In plain language", "Next
    article", a coined label) and any content: prose, a list, a quotation.
    `nb-note-strong` is the landing intensity; use it at most once. */
 .nb-note {
@@ -1690,6 +1690,7 @@ figure.nb-chart noscript {
   margin-bottom: 8px;
 }
 
+/* @deprecated nb-holdsup -> nb-note: retained for published articles. */
 .nb-holdsup {
   display: grid;
   grid-template-columns: 1fr;
@@ -1961,6 +1962,7 @@ figure.nb-chart noscript {
   color: var(--ink-soft);
 }
 
+/* @deprecated nb-position -> nb-note: retained for published articles. */
 .nb-position {
   margin: 18px 0;
   padding: 14px 16px;
@@ -2017,9 +2019,9 @@ figure.nb-chart noscript {
   margin: 0;
 }
 
-/* the claim card carries its whole lifecycle: open the night it is made,
-   hit or miss when a later article judges it (data-nb-resolution), so no
-   separate grading component exists. */
+/* The published shelf still contains claim cards with resolution states. */
+
+/* @deprecated nb-claim -> nb-note: retained for published articles. */
 .nb-claim {
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
@@ -2226,54 +2228,13 @@ figure.nb-chart noscript {
   }
 }
 
-/* code: a real listing with a header (file · language) and an optional
-   cited caption. The article writes plain <pre><code class="language-…">;
-   Prism (nb.js, pinned, loaded only when a page carries the furniture)
-   highlights it into .token spans colored below. No-JS readers get clean
-   monospace. Token colors are scoped to the component, set for day and
-   overridden for night, so they never leak into the page. */
+/* Code remains plain text until Shiki replaces the authored pre. */
 .nb-code {
-  --tk-com: #7a8494;
-  --tk-kw: #9a2b6b;
-  --tk-fn: #2b5b9a;
-  --tk-str: #2f7d4f;
-  --tk-num: #9c5a00;
-  --tk-builtin: #7a3ba0;
-
   margin: 24px 0;
   overflow: hidden;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-}
-
-@media (prefers-color-scheme: dark) {
-  .nb-code {
-    --tk-com: #7f8a9c;
-    --tk-kw: #e58ab8;
-    --tk-fn: #82b4ec;
-    --tk-str: #86cf9e;
-    --tk-num: #e6b968;
-    --tk-builtin: #c9a2ec;
-  }
-}
-
-:root[data-mode="light"] .nb-code {
-  --tk-com: #7a8494;
-  --tk-kw: #9a2b6b;
-  --tk-fn: #2b5b9a;
-  --tk-str: #2f7d4f;
-  --tk-num: #9c5a00;
-  --tk-builtin: #7a3ba0;
-}
-
-:root[data-mode="dark"] .nb-code {
-  --tk-com: #7f8a9c;
-  --tk-kw: #e58ab8;
-  --tk-fn: #82b4ec;
-  --tk-str: #86cf9e;
-  --tk-num: #e6b968;
-  --tk-builtin: #c9a2ec;
 }
 
 .nb-code-head {
@@ -2320,46 +2281,99 @@ figure.nb-chart noscript {
   color: var(--ink-soft);
 }
 
-.nb-code .token.comment,
-.nb-code .token.prolog,
-.nb-code .token.doctype {
-  color: var(--tk-com);
-  font-style: italic;
+/* Shiki supplies colors for both themes in CSS variables. */
+.nb-code .shiki,
+.nb-code .shiki span {
+  color: var(--shiki-light) !important;
 }
 
-.nb-code .token.keyword {
-  color: var(--tk-kw);
-  font-weight: 500;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .nb-code .shiki,
+  :root:not([data-mode="light"]) .nb-code .shiki span {
+    color: var(--shiki-dark) !important;
+  }
 }
 
-.nb-code .token.function,
-.nb-code .token.class-name {
-  color: var(--tk-fn);
+:root[data-mode="dark"] .nb-code .shiki,
+:root[data-mode="dark"] .nb-code .shiki span {
+  color: var(--shiki-dark) !important;
 }
 
-.nb-code .token.string,
-.nb-code .token.char {
-  color: var(--tk-str);
+.nb-code .shiki {
+  background: var(--panel) !important;
 }
 
-.nb-code .token.number,
-.nb-code .token.boolean {
-  color: var(--tk-num);
+/* Further reading is a static route from this article to named sources. */
+.nb-reading-card {
+  margin: 26px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--panel);
 }
 
-.nb-code .token.builtin,
-.nb-code .token.decorator,
-.nb-code .token.annotation {
-  color: var(--tk-builtin);
+.nb-reading-kicker {
+  margin: 0 0 10px;
+  font: 600 11px var(--sans);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
-.nb-code .token.operator {
+.nb-reading-summary {
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+
+.nb-reading-route {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--hair);
+}
+
+.nb-reading-route a {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hair);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.nb-reading-route a:hover,
+.nb-reading-route a:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.nb-reading-route a span {
+  flex: none;
+  font: 11px var(--mono);
+  color: var(--faint);
+}
+
+/* Reserve the card for a quote whose source matters at this point. */
+.nb-quote {
+  margin: 26px 0;
+  padding: 18px 20px;
+  border-left: 3px solid var(--accent);
+  background: var(--wash);
+}
+
+.nb-quote p {
+  margin: 0;
+  font-size: 1.18em;
+  line-height: 1.5;
+}
+
+.nb-quote footer {
+  margin-top: 12px;
+  font: 12px var(--sans);
   color: var(--ink-soft);
-  background: none;
 }
 
-/* @deprecated nb-grade -> nb-claim: retired from the catalog (the claim card
-   carries its own resolution); kept so the published shelf renders */
+/* @deprecated nb-grade -> nb-rubric: retained for published articles. */
 .nb-grade {
   display: flex;
   gap: 12px;
