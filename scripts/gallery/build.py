@@ -202,17 +202,26 @@ def build(repo: Path = REPO, out: Path = DEFAULT_OUT) -> Path:
       </p>
 {cards}
       <div class="gallery-sources">
-        Sample citations resolve here so the anchors behave:
+        Sources used in these examples:
         <ol>
-          <li id="s1" data-nb-source data-nb-kind="primary">Sample primary source</li>
-          <li id="s2" data-nb-source data-nb-kind="secondary">Sample secondary source</li>
-          <li id="s3" data-nb-source data-nb-kind="primary">Another sample source</li>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" href="https://arxiv.org/abs/1904.09751">Holtzman et al. · The Curious Case of Neural Text Degeneration</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" href="https://arxiv.org/abs/2310.01693">Finlayson et al. · Closing the Curious Case of Neural Text Degeneration</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" href="https://arxiv.org/abs/1706.03762">Vaswani et al. · Attention Is All You Need</a></li>
         </ol>
       </div>
     </main>
     <script src="{nb_js}"></script>
     <script>
       (function () {{
+        if (new URLSearchParams(location.search).has("shared")) {{
+          document.querySelectorAll(".gallery-piece").forEach(function (piece) {{
+            if (piece.querySelector(".gallery-scope").textContent !== "engine base")
+              piece.hidden = true;
+          }});
+          document.querySelector(".gallery-main > h1").textContent = "Shared furniture gallery";
+          document.querySelector(".gallery-lede").textContent =
+            "The shared components with source-linked examples. Toggle the mode to check both themes.";
+        }}
         var modes = ["auto", "light", "dark"];
         var button = document.getElementById("gallery-toggle");
         var i = 0;

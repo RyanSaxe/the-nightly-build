@@ -201,11 +201,9 @@ OPINION = f"""<!DOCTYPE html>
   "harness": "test-fixture", "model": "claude-fable-5"}}
 </script>
 </head><body class="nb-article">
-<section data-nb-section="position"><div class="nb-position">
-<div class="nb-position-top"><span class="nb-position-who">This paper's position</span>
-<span class="nb-position-pill">Position</span></div>
-<p class="nb-position-statement">Price new load at marginal cost.</p>
-<p class="nb-position-summary">After the coalition's filings.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
+<section data-nb-section="position"><div class="nb-note">
+<span class="nb-note-label">Position</span>
+<p>Price new load at marginal cost, as the coalition argues.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
 </div></section>
 <section data-nb-section="the-arithmetic"><p>{LOREM * 7}
 <sup class="nb-cite"><a href="#s2">2</a></sup></p></section>
@@ -234,12 +232,12 @@ def test_opinion_blocks_without_the_counter(
     assert "B-HTML" in result.blocks
 
 
-def test_opinion_blocks_when_the_position_card_is_reworded(
+def test_opinion_blocks_when_the_position_note_is_reworded(
     run_local: Callable[..., Findings], template_repo: str
 ) -> None:
     reworded = OPINION.replace(
-        '<span class="nb-position-pill">Position</span>',
-        '<span class="nb-position-pill">Stance</span>',
+        '<span class="nb-note-label">Position</span>',
+        '<span class="nb-note-label">Stance</span>',
     )
     result = run_local(reworded, "columns", slug="tariffs", repo=template_repo)
     assert "B-CHROME" in result.blocks

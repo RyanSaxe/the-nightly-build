@@ -1,29 +1,21 @@
 <ol class="nb-steps">
   <li>
-    <h3>Request</h3>
+    <h3>Rank the tokens</h3>
     <p>
-      The operator files an interconnection request with the regional grid
-      authority, joining a queue measured in years.<sup class="nb-cite"
-        ><a href="#s2">2</a></sup
+      Order candidate tokens by their model probabilities.<sup class="nb-cite"
+        ><a href="#s1">1</a></sup
       >
     </p>
   </li>
   <li>
-    <h3>Study</h3>
+    <h3>Find the threshold</h3>
     <p>
-      The utility models what the new load does to the grid and prices the
-      upgrades the request would force.<sup class="nb-cite"
-        ><a href="#s2">2</a></sup
-      >
+      Keep the shortest prefix whose cumulative probability reaches the chosen
+      value.
     </p>
   </li>
   <li>
-    <h3>Build</h3>
-    <p>
-      Substations and transmission go up on the utility's timeline, which no
-      amount of customer capital reliably compresses.<sup class="nb-cite"
-        ><a href="#s2">2</a></sup
-      >
-    </p>
+    <h3>Sample</h3>
+    <p>Choose the next token from that retained set.</p>
   </li>
 </ol>

@@ -4,9 +4,9 @@
  *   1. Appearance: ◐ auto → ○ light → ● dark, persisted in
  *      localStorage("nb-appearance"). Base/no-JS fallback is light (see theme).
  *   2. Vendor libraries for furniture that needs one, loaded here, never by
- *      articles: KaTeX typesets nb-math, Prism highlights nb-code listings,
- *      and Chart.js draws legacy declarative charts. Each is version-pinned,
- *      fetched from cdnjs only when the page carries the furniture.
+ *      articles: KaTeX typesets nb-math, Shiki highlights nb-code listings,
+ *      and Chart.js draws legacy declarative charts. Each loads only when the
+ *      page carries the furniture.
  *   3. Article furniture, retrofitted onto every article ever published:
  *      collapsible Contents, citation source-sheets with backrefs, byline
  *      normalization, series-linked eyebrow, series last/next from
@@ -240,12 +240,7 @@
   }
 
   /* ------------------------------------------------- math + code furniture
-   * nb-math and nb-code render with real libraries — KaTeX typesets, Prism
-   * highlights — loaded like Chart.js above but SRI-pinned: fetched only
-   * when the page carries the furniture, so light pages stay light. A press
-   * that pins its own copy in site.yaml assets wins; the engine defers to
-   * it. With no JS (or offline) the fallback is honest: raw TeX and plain
-   * monospace, both readable. */
+   * The source remains readable when JavaScript or a CDN is unavailable. */
 
   /* KaTeX rides jsdelivr, not cdnjs like the others: its webfonts load
      relative to the CSS, and cdnjs serves them as octet-stream, which
@@ -260,28 +255,8 @@
     integrity:
       "sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg",
   };
-  var PRISM_JS = [
-    {
-      url: "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js",
-      integrity:
-        "sha384-MXybTpajaBV0AkcBaCPT4KIvo0FzoCiWXgcihYsw4FUkEz0Pv3JGV6tk2G8vJtDc",
-    },
-    {
-      url: "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clike.min.js",
-      integrity:
-        "sha384-7LHwxHIDSHTBleLmgDWZbC/IMJsfYfFVOihKhvsrxYW4j47YQcRwZja4ToFE3bA8",
-    },
-    {
-      url: "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js",
-      integrity:
-        "sha384-D44bgYYKvaiDh4cOGlj1dbSDpSctn2FSUj118HZGmZEShZcO2v//Q5vvhNy206pp",
-    },
-    {
-      url: "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js",
-      integrity:
-        "sha384-WJdEkJKrbsqw0evQ4GB6mlsKe5cGTxBOw4KAEIa52ZLB7DDpliGkwdme/HMa5n1m",
-    },
-  ];
+  var SHIKI_URL = "https://esm.sh/shiki@3.12.2";
+  var shikiTask;
 
   function loadVendorStyle(spec) {
     return new Promise(function (resolve) {
@@ -360,23 +335,41 @@
   }
 
   function highlightCode() {
-    var blocks = document.querySelectorAll('.nb-code code[class*="language-"]');
+    var blocks = document.querySelectorAll(
+      '.nb-code pre code[data-language], .nb-code pre code[class*="language-"]',
+    );
     if (!blocks.length) return;
-    if (pressCopy("prism")) return; /* the press's Prism highlights itself */
-    window.Prism = window.Prism || {};
-    window.Prism.manual = true; /* highlight after all components land */
-    var chain = Promise.resolve();
-    PRISM_JS.forEach(function (spec) {
-      chain = chain.then(function () {
-        return loadVendorScript(spec);
+    shikiTask = shikiTask || import(SHIKI_URL);
+    shikiTask
+      .then(function (shiki) {
+        blocks.forEach(function (code) {
+          var source = code.textContent
+            .replace(/^\n/, "")
+            .replace(/\n[ \t]*$/, "");
+          shiki
+            .codeToHtml(source, {
+              lang:
+                code.dataset.language ||
+                (code.className.match(/(?:^|\s)language-([\w-]+)/) || [])[1] ||
+                "text",
+              themes: { light: "github-light", dark: "github-dark" },
+              defaultColor: false,
+            })
+            .then(function (html) {
+              if (!code.isConnected) return;
+              var holder = document.createElement("div");
+              holder.innerHTML = html;
+              var rendered = holder.querySelector("pre.shiki");
+              if (rendered) code.parentElement.replaceWith(rendered);
+            })
+            .catch(function () {
+              /* Unknown grammar: keep the authored source. */
+            });
+        });
+      })
+      .catch(function () {
+        /* Offline: keep every listing as plain source. */
       });
-    });
-    chain.then(function () {
-      if (!window.Prism.highlightElement) return;
-      blocks.forEach(function (b) {
-        window.Prism.highlightElement(b);
-      });
-    });
   }
 
   /* Every nb-table rides in the data-block card. The authored markup is
