@@ -272,28 +272,35 @@ Use a rubric for a review with named criteria. Each row has a `data-score` from
 
 ## Reading card
 
-Use this optional card when specific sources offer a useful next route from the
-article. The summary must say what this article established; links must say why
-each source is worth reading. The lesson template keeps its required bookends.
+Use this optional card to connect an article's point to specific sources. Name
+that point above the summary, then say why each linked source is worth reading.
 
 ```html
 <aside class="nb-reading-card">
-  <p class="nb-reading-kicker">Further reading</p>
+  <p class="nb-reading-name">The decoding rule</p>
+  <div class="nb-reading-rule" aria-hidden="true"></div>
   <p class="nb-reading-summary">
     Holtzman and colleagues found that changing how a model selects the next
     token changes its output, even when the model stays the same. They proposed
     nucleus sampling to avoid low-probability tokens.
   </p>
-  <nav class="nb-reading-route" aria-label="Further reading">
-    <a href="https://arxiv.org/abs/1904.09751"
-      ><span>01</span>The Curious Case of Neural Text Degeneration: why decoding
-      changes repetition</a
-    >
-    <a href="https://arxiv.org/abs/2310.01693"
-      ><span>02</span>Closing the Curious Case of Neural Text Degeneration: why
-      truncation can work</a
-    >
-  </nav>
+  <div class="nb-reading-band">
+    <span class="nb-reading-label">Further reading</span>
+  </div>
+  <dl class="nb-reading-list">
+    <dt>01</dt>
+    <dd>
+      <a href="https://arxiv.org/abs/1904.09751"
+        >The Curious Case of Neural Text Degeneration</a
+      >: why decoding changes repetition.
+    </dd>
+    <dt>02</dt>
+    <dd>
+      <a href="https://arxiv.org/abs/2310.01693"
+        >Closing the Curious Case of Neural Text Degeneration</a
+      >: why truncation can work.
+    </dd>
+  </dl>
 </aside>
 ```
 
@@ -303,13 +310,19 @@ Reserve this card for a short quotation whose exact wording matters. Attribute
 it in the footer. Put ordinary quotations in the prose.
 
 ```html
-<blockquote class="nb-quote">
-  <p>
-    However, thresholds are a coarse heuristic, and necessarily discard some
-    tokens with nonzero true probability as well.
-  </p>
-  <footer>
-    <a href="https://arxiv.org/abs/2310.01693">Finlayson et al., abstract</a>
-  </footer>
-</blockquote>
+<figure class="nb-quote-card">
+  <span class="nb-quote-mark" aria-hidden="true">“</span>
+  <blockquote>
+    <p>
+      However, thresholds are a coarse heuristic, and necessarily discard some
+      tokens with nonzero true probability as well.
+    </p>
+  </blockquote>
+  <figcaption>
+    Finlayson et al. ·
+    <a href="https://arxiv.org/abs/2310.01693"
+      >Closing the Curious Case of Neural Text Degeneration</a
+    >
+  </figcaption>
+</figure>
 ```
