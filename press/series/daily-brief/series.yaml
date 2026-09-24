@@ -1,0 +1,13 @@
+name: Daily Brief
+mode: rolling
+section: Daily
+template: brief
+prompt: prompt.md
+bands:
+  items: [6, 6]
+strict: true
+min_sources: 12
+per_item_sources:
+  primary: [1, 1]
+  secondary: [1, null]
+cadence: daily

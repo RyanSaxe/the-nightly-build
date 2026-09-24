@@ -1,0 +1,6 @@
+name: Feature
+mode: open
+section: Daily
+template: article
+prompt: prompt.md
+cadence: daily

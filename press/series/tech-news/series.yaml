@@ -1,6 +1,7 @@
 # The daily technology front page, with room for consequential science and
 # health research when the result changes technical knowledge or practice.
 name: Tech News
+paused: true
 mode: rolling
 section: "Daily Reading"
 template: brief

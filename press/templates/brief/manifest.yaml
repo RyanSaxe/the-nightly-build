@@ -1,0 +1,10 @@
+about: "A six-item daily brief with a word card first."
+class: shortread
+bands:
+  items: [6, 6]
+sections: [items, sources]
+cite_rule: per-item
+chrome:
+  - '<body class="nb-article">'
+  - '<div class="rs-word-card">'
+  - "<h2>Sources</h2>"

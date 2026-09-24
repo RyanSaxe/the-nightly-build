@@ -2,6 +2,7 @@
 # room for a precise definition, the word's real origin, and the distinction it
 # preserves without turning a lexical essay into a survey.
 name: Word of the Day
+paused: true
 mode: open
 section: "Daily Reading"
 template: word
