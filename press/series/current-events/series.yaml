@@ -2,6 +2,7 @@
 # selective; every item carries its primary record and at least one independent
 # account instead of the former brief's two-secondary floor.
 name: Current Events
+paused: true
 mode: rolling
 section: "Daily Reading"
 template: brief

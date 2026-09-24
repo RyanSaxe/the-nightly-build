@@ -1,6 +1,7 @@
 # A weekly engineering study that rebuilds the essential part of an idea to
 # reveal what a description hides. Room for real code and a run of it.
 name: Build From Scratch
+paused: true
 mode: open
 section: "Technical Practice"
 template: article

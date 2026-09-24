@@ -2,6 +2,7 @@
 # syllabus: each commission chooses the next prerequisite from what has and has
 # not been taught, rather than following a list fixed in advance.
 name: Investing Course
+paused: true
 mode: open
 section: "Investing"
 template: lesson

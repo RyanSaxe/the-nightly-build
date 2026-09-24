@@ -1,6 +1,7 @@
 # The current-affairs opinion desk: the paper takes a side and defends it. The
 # template pins the position card up front and the mandatory counter section.
 name: Opinion
+paused: true
 mode: open
 section: "Current Affairs"
 template: opinion

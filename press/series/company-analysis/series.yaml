@@ -2,6 +2,7 @@
 # market question, chosen dynamically from what the day makes instructive; there
 # is no watchlist. Charts are committed Plotly provenance scripts (spec/charts.md).
 name: Company Analysis
+paused: true
 mode: open
 section: "Investing"
 template: article

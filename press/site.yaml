@@ -18,4 +18,6 @@ footer: "Filed while you slept."
 # URL is derived from your GitHub Pages URL, so a one-line description is the
 # only field worth setting (set publish: false to opt out).
 directory:
-  description: "One reader's daily: research papers reconstructed, the news argued from both sides, markets, engineering, and a family in Westchester."
+  description: >-
+    A focused daily paper on news, ideas, and technical work for readers
+    fluent in mathematics and computer science.

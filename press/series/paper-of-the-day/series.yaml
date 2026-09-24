@@ -2,6 +2,7 @@
 # selection; the template owns the abstract card, the reconstruction, the
 # evidence review, and the verdict.
 name: Paper of the Day
+paused: true
 mode: open
 section: "Daily Reading"
 template: paper

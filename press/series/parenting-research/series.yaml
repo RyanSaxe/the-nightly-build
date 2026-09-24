@@ -2,6 +2,7 @@
 # topic earns an article when high-quality evidence could change a real family
 # decision, timed to when that decision is near.
 name: Parenting Research
+paused: true
 mode: open
 section: "Parenting"
 template: article

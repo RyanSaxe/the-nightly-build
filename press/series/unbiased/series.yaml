@@ -2,6 +2,7 @@
 # development. Strict mode makes the unbiased template's structure and citation
 # rules hard gates.
 name: Unbiased
+paused: true
 mode: open
 section: "Current Affairs"
 template: unbiased
