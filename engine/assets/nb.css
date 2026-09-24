@@ -2324,8 +2324,8 @@ figure.nb-chart noscript {
 .nb-reading-band {
   margin: 16px -18px 0;
   padding: 6px 18px;
-  background: var(--wash);
-  border-top: 1px solid var(--accent);
+  background: var(--panel);
+  border-top: 1px solid var(--hair);
   border-bottom: 1px solid var(--hair);
 }
 

@@ -105,6 +105,36 @@ equation in its caption or nearby prose.
     >
   </figcaption>
 </figure>
+
+<figure class="nb-math">
+  <div class="nb-math-eq">
+    \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(
+    \frac{\htmlClass{nb-mc1}{Q} \, \htmlClass{nb-mc2}{K^{\top}}}{
+    \htmlClass{nb-mc3}{\sqrt{d_k}}}\right) \htmlClass{nb-mc4}{V}
+  </div>
+  <ul class="nb-math-legend">
+    <li>
+      <span class="nb-math-term nb-mc1">Q</span
+      ><span>what each token is looking for</span>
+    </li>
+    <li>
+      <span class="nb-math-term nb-mc2">K^{\top}</span
+      ><span>what each token offers to be found</span>
+    </li>
+    <li>
+      <span class="nb-math-term nb-mc3">\sqrt{d_k}</span
+      ><span>the scale that keeps scores stable</span>
+    </li>
+    <li>
+      <span class="nb-math-term nb-mc4">V</span
+      ><span>the content mixed into the result</span>
+    </li>
+  </ul>
+  <figcaption>
+    Annotated terms make the operation readable without leaving the
+    equation.<sup class="nb-cite"><a href="#s3">3</a></sup>
+  </figcaption>
+</figure>
 ```
 
 ## Code listing
@@ -272,8 +302,10 @@ Use a rubric for a review with named criteria. Each row has a `data-score` from
 
 ## Reading card
 
-Use this optional card to connect an article's point to specific sources. Name
-that point above the summary, then say why each linked source is worth reading.
+Use this optional card to connect an article's point to specific sources. The
+title and band label are yours to name. Name the point above the summary, then
+say why each linked source is worth reading. "Further reading" is a useful
+default, not a required label.
 
 ```html
 <aside class="nb-reading-card">
