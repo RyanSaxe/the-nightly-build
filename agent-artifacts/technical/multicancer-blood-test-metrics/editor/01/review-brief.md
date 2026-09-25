@@ -1,0 +1,5 @@
+# Editor review brief
+
+Review `.nb-work/technical/multicancer-blood-test-metrics/library/technical/multicancer-blood-test-metrics.html` against `../../commission.md`, `../../editorial-direction.md`, `../../writing-coach/01/voice-guide.md`, `../../researcher/01/evidence.md`, and the exact writer instructions at `../../writer/01/brief.md`. Recompute the numerical example and verify every denominator, assay version, study population, endpoint, FDA status, and medical limitation. The prior Technical article used an antithetical opener, relation/container framing, repeated code blocks, five evenly weighted sections, and a “Test…” close; remove echoes. Edit directly where supported, then write `editorial-review.md` here with an `approve` or `redraft` decision. Run this proof after edits:
+
+`/workspace/scratch/1f7f2218ba86/nightly-build/nb check /workspace/scratch/1f7f2218ba86/nightly-build/.nb-work/technical/multicancer-blood-test-metrics/library/technical/multicancer-blood-test-metrics.html --series technical --repo /workspace/scratch/1f7f2218ba86/nightly-build`

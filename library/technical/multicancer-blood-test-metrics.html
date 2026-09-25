@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FDA’s Galleri review pairs 99.74% specificity with 31.6% sensitivity · Technical</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "technical",
+        "slug": "multicancer-blood-test-metrics",
+        "template": "article",
+        "title": "FDA’s Galleri review pairs 99.74% specificity with 31.6% sensitivity",
+        "mode": "open",
+        "order": null,
+        "date": "2026-09-25",
+        "tags": ["cancer-screening", "diagnostic-testing", "statistics", "fda"],
+        "sources": 10,
+        "words": 1492,
+        "reading_minutes": 6,
+        "dek": "Specificity and sensitivity divide different groups. Positive predictive value adds prevalence, and a diagnosis still requires a workup.",
+        "harness": "ChatGPT Work Mode",
+        "model": "GPT-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Technical</div>
+        <h1 class="nb-title">FDA’s Galleri review pairs 99.74% specificity with 31.6% sensitivity</h1>
+        <p class="nb-dekline">Specificity and sensitivity divide different groups. Positive predictive value adds prevalence, and a diagnosis still requires a workup.</p>
+        <div class="nb-byline"><span>6 min read</span><span>2026-09-25</span></div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One screening cohort contains two denominators</h2>
+        <p>
+          GRAIL’s Galleri test looks for methylation patterns in cell-free DNA from a blood sample. After bisulfite treatment and targeted sequencing, locked machine-learning classifiers report whether a cancer signal was detected and, for a positive result, predict its anatomic origin. The proposed indication covers adults 50 or older. A positive result calls for established diagnostic testing, while a negative result does not rule out cancer or replace recommended single-cancer screening.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          On September 23, an FDA advisory panel voted 10-0 that the test was safe, 6-4 that it was effective, and 7-2, with one abstention, that its benefits outweighed its risks.<sup class="nb-cite"><a href="#s2">2</a></sup> The vote is advice to FDA, whose review continues. It is not marketing authorization.<sup class="nb-cite"><a href="#s3">3</a></sup> FDA’s review also put a narrower technical dispute in view: whether the proposed label’s word “early” is supported when detection improves with advancing stage.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          The two percentages answer conditional questions. Let <em>D</em><sup>+</sup> mean that a person was diagnosed with cancer during the study’s 12-month window and <em>D</em><sup>−</sup> mean that the person was not. Let <em>T</em><sup>+</sup> and <em>T</em><sup>−</sup> denote positive and negative test results. Sensitivity, <em>P</em>(<em>T</em><sup>+</sup> | <em>D</em><sup>+</sup>), divides the people with cancer. Specificity, <em>P</em>(<em>T</em><sup>−</sup> | <em>D</em><sup>−</sup>), divides the people without it. FDA’s bridged analysis of the first NHS-Galleri screening round estimated 31.6% sensitivity and 99.74% specificity. Both can be true because their denominators do not overlap.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="worked-cohort" id="worked-cohort">
+        <h2>Prevalence changes what a positive result means</h2>
+        <p>
+          Positive predictive value, or PPV, conditions in the other direction. It is <em>P</em>(<em>D</em><sup>+</sup> | <em>T</em><sup>+</sup>): among people with positive results, what fraction have cancer under the study’s definition? That fraction depends on prevalence, the share of the screened population in <em>D</em><sup>+</sup>, as well as sensitivity and specificity.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\mathrm{PPV} = \frac{\mathrm{sensitivity}\,\times\,\mathrm{prevalence}}{\mathrm{sensitivity}\,\times\,\mathrm{prevalence} + (1-\mathrm{specificity})\,\times\,(1-\mathrm{prevalence})}</div>
+          <figcaption>PPV divides true positives by all positive results. The population’s prevalence appears in both branches of the denominator.<sup class="nb-cite"><a href="#s1">1</a></sup></figcaption>
+        </figure>
+        <p>
+          Take a hypothetical cohort of 10,000 people with 0.5% cancer prevalence and apply the NHS-Galleri bridge estimates. Fifty people are in <em>D</em><sup>+</sup>. At 31.6% sensitivity, the expected counts are 15.8 true positives and 34.2 false negatives. The other 9,950 people are in <em>D</em><sup>−</sup>. At 99.74% specificity, the expected counts are 9,924.1 true negatives and 25.9 false positives. The fractional counts are expectations before rounding, not observed people.
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat"><span class="nb-stat-n">15.8</span><span class="nb-stat-l">EXPECTED TRUE POSITIVES</span></div>
+          <div class="nb-stat"><span class="nb-stat-n">25.9</span><span class="nb-stat-l">EXPECTED FALSE POSITIVES</span></div>
+          <div class="nb-stat"><span class="nb-stat-n">37.9%</span><span class="nb-stat-l">EXPECTED PPV</span></div>
+        </div>
+        <p>
+          The calculation is 15.8 / (15.8 + 25.9) = 37.9%. Raising prevalence to 2.0% while holding the assay metrics fixed gives 63.2 expected true positives, 25.5 expected false positives, and a PPV of 71.3%. The assay did not improve between those examples. The screened population changed. This is why a PPV from a case-control validation set or a first prevalence screen cannot be carried unchanged into annual population screening.
+        </p>
+      </section>
+
+      <section data-nb-section="signal-to-resolution" id="signal-to-resolution">
+        <h2>A cancer signal begins a diagnostic sequence</h2>
+        <p>
+          A positive Galleri result adds a second prediction: cancer-signal origin, the organ or tissue where the classifier expects the signal to have arisen. FDA estimated first-origin accuracy of 91.9% in the bridged first NHS-Galleri round, measured as 238 correct predictions among 259 true-positive results. That denominator excludes false positives. The figure therefore does not say that 91.9% of all positive results point to the right organ, and it does not confirm a diagnosis.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <ol class="nb-steps">
+          <li><h3>Cancer-signal detection</h3><p>The assay classifies the blood sample as <em>T</em><sup>+</sup> or <em>T</em><sup>−</sup>. Sensitivity and specificity evaluate this step against cancer status during a defined follow-up window.<sup class="nb-cite"><a href="#s1">1</a></sup></p></li>
+          <li><h3>Origin prediction</h3><p>For a detected signal, the classifier ranks likely anatomic origins. Accuracy among true positives evaluates localization, not whether the signal is cancer.<sup class="nb-cite"><a href="#s1">1</a></sup></p></li>
+          <li><h3>Diagnostic workup</h3><p>Clinicians use imaging, endoscopy, biopsy, or other procedures to investigate the predicted origin. Time and procedural burden belong to this stage.</p></li>
+          <li><h3>Diagnostic resolution</h3><p>A completed evaluation ends with cancer confirmed or no cancer diagnosis within the study window. PPV uses that resolution among positive results.</p></li>
+        </ol>
+        <p>
+          PATHFINDER 2 followed that sequence prospectively with MCED-V2, an earlier assay version. Among 32,007 participants with completed 12-month assessments, 287 tested positive and 173 had cancer confirmed, for a PPV of 60.3%. Among 290 positive participants who underwent evaluation, 213, or 73.4%, had at least one invasive procedure. Median resolution took 37 days for participants with cancer and 70 days for those without it.<sup class="nb-cite"><a href="#s5">5</a></sup> Across all 35,878 enrolled participants, those 213 people were about 0.6%. Among positive participants evaluated, they were nearly three quarters. The first percentage describes population burden. The second describes what can follow a positive result.
+        </p>
+        <p>
+          The earlier PATHFINDER cohort shows why follow-up design matters. Of 6,621 people with analyzable results, 92 had a signal and 35 had cancer confirmed. Median resolution was 57 days for true positives and 162 days for false positives. Procedures occurred in 27 of 33 evaluated true positives and 17 of 57 false positives.<sup class="nb-cite"><a href="#s6">6</a></sup> Those counts do not make every procedure harmful. They identify the events a safety claim must count.
+        </p>
+      </section>
+
+      <section data-nb-section="two-evidence-records" id="two-evidence-records">
+        <h2>The submitted assay and the observed workups occupy different records</h2>
+        <p>
+          The prospective workup studies returned MCED-V2 results. The assay submitted to FDA differs in laboratory workflow, classifiers, and bioinformatics. FDA estimated the submitted Galleri assay’s effectiveness by applying it retrospectively to selected frozen plasma from PATHFINDER 2 and NHS-Galleri, then used the prospective MCED-V2 cohorts for the safety record.<sup class="nb-cite"><a href="#s1">1</a></sup> The bridge supplies current-assay estimates and the cohorts supply observed diagnostic journeys. No pivotal study in this record prospectively returned the submitted assay’s result and then observed its workups.
+        </p>
+        <p>
+          Study design also changes apparent performance. In three annual NHS-Galleri rounds using MCED-V2, PPV fell from 58.0% to 50.4% to 45.8%, while episode sensitivity fell from 37.2% to 27.1% to 26.7%. The first round contained cancers that had accumulated before screening; later rounds more closely represented incident disease between annual screens.<sup class="nb-cite"><a href="#s7">7</a></sup> By contrast, the 2021 CCGA case-control validation selected 2,823 participants with known cancer and 1,254 without it. Its 51.5% overall sensitivity describes that designed case mix, not a prospective screening cohort.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <p>
+          Stage matters too. In FDA’s bridged first-round NHS-Galleri analysis, sensitivity was 13.6% at stage I, 34.4% at stage II, 44.3% at stage III, and 60.0% at stage IV.<sup class="nb-cite"><a href="#s1">1</a></sup> FDA cautioned that a missed cancer discovered later may also be staged later, which can bias stage comparisons. Even without resolving that bias, the figures explain the panel’s dispute over “early detection.”
+        </p>
+        <p>
+          The randomized NHS-Galleri trial used the incidence of stage III and IV diagnoses after three annual screens as its primary endpoint. The screening arm did not achieve a significant reduction compared with usual care.<sup class="nb-cite"><a href="#s9">9</a></sup> The companion performance report says mortality, overdiagnosis, resource use, and psychological outcomes remain for later analyses.<sup class="nb-cite"><a href="#s7">7</a></sup> An independent patient-safety comment to FDA likewise focused on false negatives, false positives, mislocalized signals, invasive workups, and the absence of demonstrated patient benefit.<sup class="nb-cite"><a href="#s10">10</a></sup> Detection accuracy and clinical utility are separate claims.
+        </p>
+      </section>
+
+      <section data-nb-section="reading-checklist" id="reading-checklist">
+        <h2>Each claim has a population, assay, endpoint, and denominator</h2>
+        <p>
+          A compact reading check keeps the stages apart. For sensitivity, identify which cancers count, how long follow-up lasts, and whether the cases came from screening or were selected in advance. For specificity, identify who qualifies as cancer-free and whether recurrent cancers or diagnoses outside the window are excluded. For PPV, add prevalence and screening round. For origin accuracy, ask whether the denominator is all positive results or only confirmed cancers. For diagnostic burden, count the people evaluated, procedures, time to resolution, costs, and adverse events. For patient benefit, look for a randomized endpoint such as late-stage incidence or mortality.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">A result-reading ledger</span>
+          <p>Record four items beside every reported figure: the population, the assay version, the endpoint, and the denominator. Then record what happened after the result. A percentage supports only the question those entries define.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup></p>
+        </aside>
+        <p>
+          Galleri’s 99.74% specificity concerns people without a cancer diagnosis in the first-round bridged NHS analysis. Its 31.6% sensitivity concerns people with one. Its 66.2% PPV concerns positive results in that study population. None of the three percentages establishes that annual screening reduces late-stage cancer or mortality. A reported percentage supports only the population, assay, endpoint, and denominator that produced it.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" data-nb-locator="pp. 3, 6–9, 15–18, 21–24, 30–36, 38–41" href="https://www.fda.gov/media/194909/download">FDA · Executive summary for the September 23, 2026 advisory meeting</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" data-nb-locator="Opening three paragraphs" href="https://grail.com/press-releases/fda-advisory-committee-votes-in-favor-of-approval-of-grails-galleri-multi-cancer-early-detection-test/">GRAIL · FDA advisory committee vote announcement</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" data-nb-locator="What is an advisory committee?; Background; Event Materials" href="https://www.fda.gov/advisory-committees/advisory-committee-calendar/september-23-2026-molecular-and-clinical-genetics-panel-medical-devices-advisory-committee-meeting">FDA · Molecular and Clinical Genetics Panel meeting record</a></li>
+          <li id="s4"><a data-nb-source data-nb-kind="secondary" data-nb-locator="Paragraphs 1–9; updated September 23, 2026" href="https://www.reuters.com/legal/litigation/grail-rallies-fda-staff-flags-no-major-concerns-multi-cancer-test-2026-09-21/">Reuters · FDA review focuses on the multicancer test’s early-detection claim</a></li>
+          <li id="s5"><a data-nb-source data-nb-kind="primary" data-nb-locator="Results; Discussion; Figures 1–3; Tables 2–3" href="https://www.nature.com/articles/s41591-026-04618-w">Nature Medicine · PATHFINDER 2 prospective study</a></li>
+          <li id="s6"><a data-nb-source data-nb-kind="primary" data-nb-locator="Lancet 2023;402:1251–1260; Abstract, Methods and Findings" href="https://doi.org/10.1016/S0140-6736(23)01700-2">The Lancet · PATHFINDER prospective cohort</a></li>
+          <li id="s7"><a data-nb-source data-nb-kind="primary" data-nb-locator="Results; Discussion; Table 2; Figure 3" href="https://www.nature.com/articles/s41591-026-04652-8">Nature Medicine · NHS-Galleri performance across three annual rounds</a></li>
+          <li id="s8"><a data-nb-source data-nb-kind="primary" data-nb-locator="Abstract; Annals of Oncology 2021;32:1167–1177" href="https://pubmed.ncbi.nlm.nih.gov/34176681/">Annals of Oncology · CCGA independent validation set</a></li>
+          <li id="s9"><a data-nb-source data-nb-kind="primary" data-nb-locator="Abstract; Methods; Results; Conclusions" href="https://www.nejm.org/doi/full/10.1056/NEJMoa2505723">New England Journal of Medicine · Randomized NHS-Galleri clinical-utility report</a></li>
+          <li id="s10"><a data-nb-source data-nb-kind="secondary" data-nb-locator="Approval requires clear evidence regarding what Galleri can and cannot detect" href="https://stopcancerfund.org/policy/nchr-fda-public-comment-galleri-cancer-screening-test/">National Center for Health Research · Public comment on Galleri</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
