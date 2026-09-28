@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dependabot ages version updates before opening pull requests · Technical</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "technical",
+        "slug": "dependabot-cooldown-release-path",
+        "template": "article",
+        "title": "Dependabot ages version updates before opening pull requests",
+        "mode": "open",
+        "order": null,
+        "date": "2026-09-27",
+        "tags": ["dependabot", "dependency-management", "supply-chain-security"],
+        "sources": 8,
+        "words": 992,
+        "reading_minutes": 4,
+        "dek": "In one daily npm queue, a routine patch waits until Thursday while an alert bypasses the release-age gate and an excluded team-maintained package can move on Monday.",
+        "harness": "codex",
+        "model": "gpt-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Technical</div>
+        <h1 class="nb-title">Dependabot ages version updates before opening pull requests</h1>
+        <p class="nb-dekline">
+          In one daily npm queue, a routine patch waits until Thursday while an alert bypasses the release-age gate and an excluded team-maintained package can move on Monday.
+        </p>
+        <div class="nb-byline">
+          <span>4 min read</span><span>2026-09-27</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="the-release-enters-the-queue">
+        <h2>The release enters the queue</h2>
+        <p>
+          Take an npm service with two dependencies: the public package
+          <code>public-parser</code> and a team-maintained package named
+          <code>@acme/incident-client</code>. At 08:00 UTC on Monday, each
+          publishes a routine update. Dependabot does not respond to that
+          registry event by opening a version-update pull request. For a daily
+          configuration, it checks on the configured schedule and then applies
+          a release-age cooldown. A release younger than the applicable delay
+          is skipped. GitHub now applies a three-day default to version updates
+          even when the configuration has no <code>cooldown</code> block.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          Engineers were already choosing longer waits before that platform
+          default arrived. A 2026 study began with the 10,000 most-starred
+          GitHub repositories and retained 1,462 active repositories with a
+          Dependabot configuration. Of those, 135 had adopted cooldown by April
+          30, 2026. Among 244 retained repository-ecosystem configurations that
+          explicitly set a general delay, 157 chose seven days.<sup
+            class="nb-cite"
+            ><a href="#s2">2</a></sup
+          > The study measured configuration practice. It did not test whether
+          a cooldown prevented an attack or establish seven days as an optimum.
+          Gregor Ehrensperger recommends seven days but describes that interval
+          as a judgment call. Compared with GitHub's three-day default, his
+          choice also postpones legitimate version-update fixes and features by
+          four more days.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="the-configuration-changes-the-wait" id="the-configuration-changes-the-wait">
+        <h2>The configuration changes the wait</h2>
+        <p>
+          The service team wants ordinary patches to sit for three days, major
+          and minor releases to sit for seven, and its incident client to remain
+          available at the next scheduled check. Dependabot security updates are
+          separately enabled in the repository settings. Its complete
+          <code>.github/dependabot.yml</code> is:
+        </p>
+        <pre><code class="language-yaml">version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+    cooldown:
+      default-days: 7
+      semver-patch-days: 3
+      include:
+        - "*"
+      exclude:
+        - "@acme/incident-client"</code></pre>
+        <p>
+          The patch-specific value overrides <code>default-days</code> for patch
+          releases. Because the major- and minor-specific keys are absent, those
+          updates fall back to seven days. The wildcard puts every dependency
+          into the cooldown set, then the exact <code>exclude</code> match wins
+          for the incident client.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          On September 27, 2026, this YAML parsed successfully and produced zero
+          validation errors against the public SchemaStore Dependabot 2.0 JSON
+          Schema.<sup class="nb-cite"><a href="#s4">4</a></sup> That was a
+          syntax and schema check, not a run against hosted Dependabot. The
+          public schema is also an imperfect proxy for the service. GitHub's
+          tutorial documents 1–90 days and as many as 150 entries in each
+          package list. The schema caps those lists at 100 and permits zero only
+          for <code>semver-patch-days</code>.<sup class="nb-cite"
+            ><a href="#s5">5</a></sup
+          > The example stays inside both sets of bounds.
+        </p>
+      </section>
+
+      <section data-nb-section="three-releases-leave-by-different-paths" id="three-releases-leave-by-different-paths">
+        <h2>Three releases leave by different paths</h2>
+        <p>
+          The same configuration sends three releases through different gates.
+          The times below are documentation-backed analysis, not output from a
+          test repository. GitHub does not promise exact service latency or say
+          that every eligible release appears on the first run after its delay.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Release</th>
+              <th scope="col">Gate</th>
+              <th scope="col">Earliest path under the stated times</th>
+              <th scope="col">Policy outside cooldown</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Routine <code>public-parser</code> patch, Monday 08:00</td>
+              <td>The daily version-update run sees a three-day patch delay.</td>
+              <td>
+                The Monday, Tuesday, and Wednesday 09:00 runs skip it. Thursday
+                09:00 is the first scheduled run after it reaches three days.
+              </td>
+              <td>
+                CI, release-note review, and merge policy determine whether it
+                enters the codebase.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Urgent <code>public-parser</code> security patch, alert and fix
+                available Tuesday 14:00
+              </td>
+              <td>
+                The Dependabot alert starts the security-update path. The
+                schedule, cooldown, and version-update PR limit do not apply.<sup
+                  class="nb-cite"
+                  ><a href="#s6">6</a></sup
+                >
+              </td>
+              <td>
+                Dependabot attempts a security PR when the alert-triggered
+                update runs. There is no documented exact latency guarantee.
+              </td>
+              <td>
+                Security updates must be enabled.<sup class="nb-cite"
+                  ><a href="#s7">7</a></sup
+                > Severity triage, tests, review, deployment, and a manual
+                fallback remain repository policy.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Routine <code>@acme/incident-client</code> update, Monday 08:00
+              </td>
+              <td>
+                The dependency matches both lists. <code>exclude</code> wins, so
+                there is no release-age delay.
+              </td>
+              <td>
+                It is eligible at Monday's 09:00 version-update run, subject to
+                the open-PR limit. Exclusion does not create an event-triggered
+                update.
+              </td>
+              <td>
+                The team has traded the observation window for faster uptake
+                and needs an explicit trust and emergency policy for this
+                package.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Four controls are acting at different points. The schedule decides
+          when Dependabot looks. Cooldown decides which release ages are
+          eligible on that run. A <code>groups</code> rule, absent here, would
+          decide which eligible updates share a pull request. The open-PR limit
+          decides whether another version-update PR may open; its default is
+          five, and security PRs neither count toward nor obey that limit.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="the-observation-window-needs-an-exit" id="the-observation-window-needs-an-exit">
+        <h2>The observation window needs an exit</h2>
+        <p>
+          Cooldown delays Dependabot's proposal of a version update. It does not
+          stop a direct install, a manual lockfile refresh, or another bot from
+          adopting a fresh release, and it does not decide whether an eligible
+          Dependabot pull request is merged. The security bypass also depends on
+          an alert for a dependency on the default branch and a fix that
+          Dependabot can construct. GitHub documents a Gradle case in
+          which an uploaded transitive dependency can produce an alert but
+          Dependabot cannot locate it in the repository to create a security
+          PR.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+        <p>
+          The repository's operating rule should cover all three paths. Routine
+          releases wait for the configured observation window. Alerts enter an
+          enabled security-update path with human or automated escalation if no
+          PR appears. Excluded packages move on the next scheduled version run
+          only when the team has chosen to trust that faster route. Dependabot
+          enforces the release-age gate. The repository decides when to merge
+          routine updates and how to respond when an urgent security PR does
+          not appear.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="cooldown, lines 232-298; groups, lines 317-337; open-pull-requests-limit, lines 526-540; schedule, lines 700-726" href="https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference">GitHub Docs · Dependabot options reference</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Data collection, lines 139-148; Table 10 and RQ3 results, lines 403-433; conclusion, lines 476-482" href="https://arxiv.org/html/2609.16605v1">Tanaka et al. · An Exploratory Study of Dependabot Cooldown Adoption in Open-Source GitHub Projects</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Opening rationale, lines 7-17; So, 3 days or 7?, lines 18-30" href="https://ehrensperger.dev/blog/dependabot-cooldown-three-days.html">Gregor Ehrensperger · Dependabot now applies a 3-day cooldown by default; I still suggest 7</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="secondary" data-nb-locator="definitions.update.properties.cooldown" href="https://json.schemastore.org/dependabot-2.0.json">SchemaStore · Dependabot 2.0 JSON Schema</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Setting up a cooldown period for dependency updates, lines 87-149" href="https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/optimizing-pr-creation-version-updates">GitHub Docs · Optimizing the creation of pull requests for Dependabot version updates</a>
+          </li>
+          <li id="s6">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Pull requests for security updates, lines 32-49; Pull requests for version updates, lines 50-55" href="https://docs.github.com/en/enterprise-cloud@latest/code-security/concepts/supply-chain-security/dependabot-pull-requests">GitHub Docs · Dependabot pull requests</a>
+          </li>
+          <li id="s7">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Managing Dependabot security updates, lines 28-42" href="https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/configure-security-updates">GitHub Docs · Configuring Dependabot security updates</a>
+          </li>
+          <li id="s8">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Gradle, lines 129-148" href="https://docs.github.com/en/code-security/reference/supply-chain-security/supported-ecosystems-and-repositories">GitHub Docs · Dependabot supported ecosystems and repositories</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
