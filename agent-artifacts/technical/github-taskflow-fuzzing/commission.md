@@ -1,0 +1,7 @@
+# Commission: technical/github-taskflow-fuzzing
+
+Walk through how GitHub Security Lab's Taskflow Agent is being applied to fuzz C/C++ projects, drawing on its September 24, 2026 fuzzing taskflow release and the September 28 case study reporting 24 Android vulnerabilities. The angle: make the feedback loop legible—repo/task setup, agent roles, harness/fuzzing iterations, coverage feedback, triage/validation, and what evidence supports the claimed findings. This is recent and in actual use; distinguish the team's results from independent validation and disclose experimental limits. Include a small concrete annotated flow, command/code excerpt only if exactly supported by repository docs, and practical prerequisites/risks. Avoid describing an untested general promise as proven; do not imply 24 are all confirmed or fixed without evidence. Separate from daily brief's WSL/DeepSeek items.
+
+At least eight distinct sources, with primary GitHub blogs and both public source repositories plus underlying Android vulnerabilities/test corpus where possible; seek independent technical reporting and other methods/results for context. Make this a hands-on technical walkthrough grounded in the implementation (check license, status, setup and requirements directly). Cite direct source links and dates. No borrowed generic “agents find bugs” claims.
+
+Role settings: runtime GPT-6, no per-role model/effort selection available. Record nearest offered policy approximation and its deviation.
