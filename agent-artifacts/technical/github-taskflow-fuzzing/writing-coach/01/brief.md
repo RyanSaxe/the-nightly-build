@@ -1,0 +1,6 @@
+# writing-coach brief: technical/github-taskflow-fuzzing (01)
+
+Inputs: /workspace/scratch/53797a806fdc/nightly-build/.nb-work/technical/github-taskflow-fuzzing/agent-artifacts/technical/github-taskflow-fuzzing/commission.md; /workspace/scratch/53797a806fdc/nightly-build/.nb-work/technical/github-taskflow-fuzzing/agent-artifacts/technical/github-taskflow-fuzzing/editorial-direction.md; /workspace/scratch/53797a806fdc/nightly-build/press/series/technical/prompt.md; /workspace/scratch/53797a806fdc/nightly-build/press/editorial.md; /workspace/scratch/53797a806fdc/nightly-build/spec/editorial.md; /workspace/scratch/53797a806fdc/nightly-build/spec/slop.md; /workspace/scratch/53797a806fdc/nightly-build/spec/headlines.md; /workspace/scratch/53797a806fdc/nightly-build/templates/article/identity.md
+Output: /workspace/scratch/53797a806fdc/nightly-build/.nb-work/technical/github-taskflow-fuzzing/agent-artifacts/technical/github-taskflow-fuzzing/writing-coach/01/voice-guide.md
+
+Work from these inputs. Do not tour the repository, Git history or archive. Give the writer a concise, commission-specific voice and structure guide with concrete do/don't instructions and a distinctive approach. Avoid sample article sentences. Runtime GPT-6 inherited; role model/effort not configurable.

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub's fuzzing agent uses coverage gaps to revise its harnesses · Technical</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "technical",
+        "slug": "github-taskflow-fuzzing",
+        "template": "article",
+        "title": "GitHub's fuzzing agent uses coverage gaps to revise its harnesses",
+        "mode": "open",
+        "order": null,
+        "date": "2026-09-30",
+        "tags": [],
+        "sources": 9,
+        "words": 1174,
+        "reading_minutes": 5,
+        "dek": "GitHub reported 24 findings from separate Android audit taskflows on September 28, but left independent confirmation unclear.",
+        "harness": "GPT-6 inherited",
+        "model": "GPT-6"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Technical</div>
+        <h1 class="nb-title">GitHub's fuzzing agent uses coverage gaps to revise its harnesses</h1>
+        <p class="nb-dekline">
+          GitHub reported 24 findings from separate Android audit taskflows on September 28, but left independent confirmation unclear.
+        </p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-09-30</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Two builds turn a coverage gap into a task</h2>
+        <p>
+          On September 24, GitHub Security Lab's Antonio Morales published an open-source taskflow for fuzzing C and C++ projects. It feeds source-coverage gaps back to the model, which can revise the harness or inputs AFL++ will try next. The fuzzing taskflow runs on GitHub Security Lab's separate Taskflow Agent framework. The post describes the workflow and its code; it does not publish an independent benchmark of bugs found or coverage gained.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          A fuzz target is a small program that passes generated inputs into selected library code. The taskflow asks an agent to inspect a repository, identify APIs, and propose such harnesses. It then builds each candidate twice: an AFL-instrumented binary for mutation, and a Clang source-coverage binary for replaying the generated corpus. AFL++ mutates inputs and keeps cases that reach new program states; the separate coverage replay records which source lines and branches those cases execute.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          This distinction matters. AFL++ performs the input mutation. The model helps choose target APIs, construct harnesses, and react to coverage reports; MCP tools run the compiler, fuzzer, and related commands. The post describes three layers: a shell driver chains stages, taskflow YAML files give the agent stage-specific instructions, and MCP tools perform operations while SQLite holds shared state.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="feedback" id="feedback">
+        <h2>Uncovered branches change the next attempt</h2>
+        <p>
+          After an iteration, the taskflow replays the fuzzer's queue with the coverage build. A branch the corpus has not reached gives the agent a concrete target. Morales describes four possible responses: add a seed input, alter the harness to call another API, add useful constants to AFL's dictionary, or skip a cold path such as vendor code. The workflow then runs another fuzzing stage and compares coverage again.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The documented stage budgets double from 30 seconds through 960 seconds per target. The default stopping rule is two consecutive iterations that each add less than one percentage point of absolute line coverage. Those are design settings reported by the taskflow's author, not evidence that the settings are optimal across projects.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure>
+          <pre><code>repository
+  → inspect build and select API entry points
+  → generate harness; compile AFL and coverage variants
+  → AFL++ mutates corpus
+  → replay queue; report uncovered source branches
+  → revise seed, harness, or dictionary; repeat
+  → minimize crash; replay with AddressSanitizer
+  → group, classify, and prepare a report for human review</code></pre>
+          <figcaption>
+            Sequence described in the September 24 taskflow post. The arrows summarize its stages; they are not a command transcript or a claim that every run follows an identical path.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Coverage is a steering signal, not a security verdict. OSS-Fuzz documents source-based coverage by replaying a corpus against coverage-instrumented fuzz targets, a useful explanation of what the second build measures. AFL++ separately explains how instrumentation-guided mutation retains inputs that reach new state transitions. Neither coverage percentage proves the code secure or establishes that an unexecuted path contains a vulnerability.<sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="crash-review" id="crash-review">
+        <h2>Crashes still need a person to decide what they mean</h2>
+        <p>
+          The reported triage stage minimizes crashes with afl-tmin, replays them under AddressSanitizer, groups cases by a normalized top-of-stack hash, and checks known crashes. The model can then draft a report with reachability and exploitability assessments, a suggested patch, and a regression-test sketch. The author cautions that proposed fixes can be wrong and require review. A crash, a deduplicated group, and a vulnerability are different units; the implementation's labels include harness bugs, timeouts, out-of-memory failures, assertion failures, duplicates, and vulnerability candidates.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          GitHub Security Lab's September 28 account gives a separate sign that its agent framework has been used on real targets: Kevin Stubbings reported that Android audit taskflows had found and reported 24 app vulnerabilities. Those workflows gather Android entry points such as exported components, deep links, URL schemes, and WebView bridges. The article says some proof-of-concept cases need a researcher or debugger to establish behavior, and it does not say that all 24 were independently confirmed, fixed, or publicly disclosed. This count is evidence about the Android audit work, not the C/C++ fuzzing pipeline above.<sup class="nb-cite"><a href="#s6">6</a></sup><sup class="nb-cite"><a href="#s7">7</a></sup>
+        </p>
+        <p>
+          The public AI-agent disclosure index is useful for checking specific findings, but the index does not validate the 24-item total. A concrete claim about a particular Android vulnerability needs its own advisory and affected-version record; the count alone cannot supply either.<sup class="nb-cite"><a href="#s8">8</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="reproduction-boundary" id="reproduction-boundary">
+        <h2>The fuzzing script runs commands on the host</h2>
+        <p>
+          The fuzzing repository documents Python 3.11 or later, Linux or a Codespace with apt, Git, and GitHub CLI. Its quick start is <code>./scripts/fuzzing/run_fuzzing.sh tukaani-project/xz</code>; the author suggests DaveGamble/cJSON for a small smoke test. The README says installation can add AFL++, Clang/LLVM, lcov, ctags, cscope, and Graphviz, and describes the repository as actively developed under the MIT license. These instructions make the entry point inspectable; this reporting did not execute the taskflow or reproduce its results.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The fuzzing repository says its fuzzer, compilers, and model-selected build commands execute on the host without a container isolation layer. Its authors recommend a disposable Codespace or virtual machine, low privileges, and network access limited to build needs. The parent Taskflow Agent repository describes Docker as a deployment convenience; the fuzzing README still warns that commands execute without container isolation.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          Independent Android-agent research gives useful context without testing this tool. MobileCybench reports evaluated agents on 495 reviewed probes across 13 Android apps and found results varied by access setting; its best tested agent in the malicious-app setting triggered probes in 53.8% of applications using only an obfuscated APK. That preprint's probe task, agents, and access assumptions differ from GitHub's taskflows, so its figures are neither a replication nor a comparison of the reported 24 findings.<sup class="nb-cite"><a href="#s9">9</a></sup>
+        </p>
+        <p>
+          The released taskflow couples generated harnesses to AFL++ and uses source-coverage gaps to choose follow-up work. GitHub has published its implementation and reported separate Android findings, but the available sources give no comparative benchmark for the C/C++ taskflow's bug yield, false-positive rate, cost, or advantage over an established fuzzing setup. Security researchers still need to verify its generated harnesses and crash reports.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" href="https://github.blog/security/application-security/ai-powered-fuzzing-with-the-github-security-lab-taskflow-agent/">Antonio Morales, GitHub Blog · “AI-powered fuzzing with the GitHub Security Lab Taskflow Agent” · 2026-09-24</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/GitHubSecurityLab/seclab-taskflows-fuzzing">GitHub Security Lab · seclab-taskflows-fuzzing source repository and README · checked 2026-09-30</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/GitHubSecurityLab/seclab-taskflow-agent">GitHub Security Lab · seclab-taskflow-agent source repository and README · checked 2026-09-30</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="primary" href="https://google.github.io/oss-fuzz/advanced-topics/code-coverage/">Google OSS-Fuzz · “Code coverage” documentation · checked 2026-09-30</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="primary" href="https://aflplus.plus/docs/afl-fuzz_approach/">AFL++ · “Afl Fuzz Approach” documentation · checked 2026-09-30</a>
+          </li>
+          <li id="s6">
+            <a data-nb-source data-nb-kind="primary" href="https://github.com/GitHubSecurityLab/seclab-taskflows">GitHub Security Lab · seclab-taskflows source repository and README · checked 2026-09-30</a>
+          </li>
+          <li id="s7">
+            <a data-nb-source data-nb-kind="primary" href="https://github.blog/security/how-we-found-24-android-vulnerabilities-using-our-open-source-ai-security-agent/">Kevin Stubbings, GitHub Blog · “How we found 24 Android vulnerabilities using our open source AI security agent” · 2026-09-28</a>
+          </li>
+          <li id="s8">
+            <a data-nb-source data-nb-kind="primary" href="https://securitylab.github.com/ai-agents/">GitHub Security Lab · AI-agent disclosures and advisories index · checked 2026-09-30</a>
+          </li>
+          <li id="s9">
+            <a data-nb-source data-nb-kind="secondary" href="https://arxiv.org/abs/2609.23980">Andy K. Zhang et al. · “MobileCybench: Evaluating Agent Vulnerability Discovery via Executable Probes” · arXiv preprint 2609.23980, submitted 2026-09-21</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
