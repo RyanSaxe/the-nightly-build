@@ -1,0 +1,6 @@
+# researcher brief: daily-brief/2026-09-30 (01)
+
+Inputs: /workspace/scratch/53797a806fdc/nightly-build/.nb-work/daily-brief/2026-09-30/agent-artifacts/daily-brief/2026-09-30/commission.md; /workspace/scratch/53797a806fdc/nightly-build/.nb-work/daily-brief/2026-09-30/agent-artifacts/daily-brief/2026-09-30/editorial-direction.md; /workspace/scratch/53797a806fdc/nightly-build/press/series/daily-brief/prompt.md; /workspace/scratch/53797a806fdc/nightly-build/press/editorial.md
+Output: /workspace/scratch/53797a806fdc/nightly-build/.nb-work/daily-brief/2026-09-30/agent-artifacts/daily-brief/2026-09-30/researcher/01/evidence.md
+
+Work from these inputs. Do not tour the repo, Git history or archive. Conduct fresh source research and record source URLs, exact publication/event dates, primary vs independent secondary classification, claims supported, caveats and checked brief quotations where useful. Do not invent. Daily brief: 12 distinct sources total and one primary plus one secondary per card. Article: at least eight distinct sources. Technical: verify implementation/status/license/setup and evidence of actual use, distinguishing creator claims from outside validation. Feature: corroborate casualty and causal claims and explain uncertainty. Runtime GPT-6 inherited; role model/effort not configurable.
