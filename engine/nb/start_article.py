@@ -94,14 +94,11 @@ def _relative(path: pathlib.Path, repo: pathlib.Path) -> str:
 
 
 def _checkout_revision(repo: pathlib.Path) -> str:
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(repo), "rev-parse", "HEAD"],
-            capture_output=True,
-            text=True,
-        )
-    except OSError:
-        return "unavailable"
+    result = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+    )
     return result.stdout.strip() if result.returncode == 0 else "unavailable"
 
 

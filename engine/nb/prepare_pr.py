@@ -20,13 +20,14 @@ from dataclasses import dataclass
 
 from nb import meta as nb_meta
 from nb.artifacts import validate_artifacts
-from nb.git_handoff import HANDOFF_EXIT, GitHandoffError
+from nb.git_handoff import GitHandoffError
 from nb.library_checkout import LibraryCheckoutError, ensure_library, repo_root
 from nb.proof.pr import run_pr_mode
 from nb.report import Report, emit
 
 __all__ = ("main",)
 
+HANDOFF_EXIT = 3
 COMMIT_MARKER = "Nightly-Build-Article: v1"
 
 
@@ -48,8 +49,6 @@ class _PreparedBranch:
     article: _Article
     name: str
     commit: str
-    git_error: GitHandoffError | None = None
-    remote_commit: str | None = None
 
 
 # Git's argv is naturally variadic; ``check`` remains explicit at the call site.
@@ -278,20 +277,18 @@ def _prepare_branch(
                 today=today,
             )
             commit = _git(worktree, "rev-parse", "HEAD")
-            # Retain the proved object after the temporary worktree is removed.
-            _git(library, "update-ref", f"refs/nb/prepared/{name}", commit)
-            destination = f"{commit}:refs/heads/{name}"
-            try:
+            destination = f"HEAD:refs/heads/{name}"
+            if remote_commit:
                 _git(
-                    library,
+                    worktree,
                     "push",
                     "-q",
-                    f"--force-with-lease=refs/heads/{name}:{remote_commit or ''}",
+                    f"--force-with-lease=refs/heads/{name}:{remote_commit}",
                     "origin",
                     destination,
                 )
-            except GitHandoffError as error:
-                return _PreparedBranch(article, name, commit, error, remote_commit)
+            else:
+                _git(worktree, "push", "-q", "origin", destination)
         finally:
             _git(library, "worktree", "remove", "--force", str(worktree), check=False)
     return _PreparedBranch(article, name, commit)
@@ -345,22 +342,6 @@ def _handoff(
 
 
 def _open_pr(prepared: _PreparedBranch, *, library: pathlib.Path, hold: bool) -> int:
-    if prepared.git_error is not None:
-        prepared.git_error.emit()
-        print(f"commit={prepared.commit}")
-        print(f"local_ref=refs/nb/prepared/{prepared.name}")
-        print(f"expected_remote_commit={prepared.remote_commit or 'absent'}")
-        print(
-            "First deliver this exact proved commit to the reported head, "
-            "only if its remote ref still matches expected_remote_commit. "
-            "If it changed, rerun nb prepare-pr for its branch-safety check."
-        )
-        return _handoff(
-            prepared,
-            reason="Git push needs connected tools",
-            repository=None,
-            hold=hold,
-        )
     gh = shutil.which("gh")
     if gh is None:
         return _handoff(
@@ -533,13 +514,7 @@ def main(arguments: list[str] | None = None) -> int:
         print(f"nb prepare-pr: {error}", file=sys.stderr)
         return 1
     except GitHandoffError as error:
-        error.emit()
-        print(f"article={parsed.article.resolve()}")
-        print(f"hold={str(parsed.hold).lower()}")
-        print(
-            "No complete proved branch was delivered. Resume preparation before opening a PR."
-        )
-        return HANDOFF_EXIT
+        return error.emit()
 
 
 if __name__ == "__main__":

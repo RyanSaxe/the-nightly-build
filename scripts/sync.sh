@@ -28,9 +28,9 @@ emit_git_handoff() {
 	shift
 	printf 'argument=%s\n' "$@" >&2
 	cat >&2 <<'EOF'
-Use the runtime's connected Git/GitHub tools for this operation, or restore CLI
-Git access. Refresh local refs after a fetch and rerun the interrupted command.
-Keep library changes on the validated PR path. This handoff is unfinished work.
+Use the runtime's connected Git/GitHub tools to resolve Git access and refresh
+local refs, or restore CLI Git access. Then rerun the interrupted nb command.
+After a failed push, rerun preparation; temporary worktrees may be removed.
 EOF
 }
 
@@ -39,10 +39,6 @@ remote_git() {
 		return 0
 	else
 		git_status=$?
-		# ls-remote --exit-code uses 2 for a successful query with no matching ref.
-		case " $* " in
-		*" ls-remote --exit-code "*) [ "$git_status" -eq 2 ] && return 2 ;;
-		esac
 		emit_git_handoff "Git remote operation failed (exit $git_status)" "$@"
 		return 3
 	fi
@@ -208,15 +204,12 @@ prepare_sync_commit() {
 		--base origin/library --head HEAD >/dev/null ||
 		die "the generated workflow sync did not pass the local proof"
 
-	sync_commit=$(git -C "$worktree" rev-parse HEAD)
-	git -C "$ROOT" update-ref "refs/nb/prepared/$SYNC_BRANCH" "$sync_commit"
-	printf 'prepared_commit=%s\nlocal_ref=refs/nb/prepared/%s\n' "$sync_commit" "$SYNC_BRANCH"
 	if [ -n "$remote_sha" ]; then
-		remote_git -C "$ROOT" push -q \
+		remote_git -C "$worktree" push -q \
 			--force-with-lease="refs/heads/$SYNC_BRANCH:$remote_sha" \
-			origin "$sync_commit:refs/heads/$SYNC_BRANCH" || exit $?
+			origin "HEAD:refs/heads/$SYNC_BRANCH" || exit $?
 	else
-		remote_git -C "$ROOT" push -q --force-with-lease="refs/heads/$SYNC_BRANCH:" origin "$sync_commit:refs/heads/$SYNC_BRANCH" || exit $?
+		remote_git -C "$worktree" push -q origin "HEAD:refs/heads/$SYNC_BRANCH" || exit $?
 	fi
 	git -C "$ROOT" worktree remove --force "$worktree"
 	worktree=

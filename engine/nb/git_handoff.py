@@ -20,12 +20,9 @@ class GitHandoffError(RuntimeError):
         print(f"checkout={self.repo}")
         print("argv=" + json.dumps(["git", "-C", str(self.repo), *self.arguments]))
         print(
-            "Use the runtime's connected Git/GitHub tools for this operation, "
-            "or restore CLI Git access. Fetches must refresh the local refs and "
-            "checkout before rerunning the interrupted nb command."
-        )
-        print(
-            "Keep protected library changes on the validated PR path. "
-            "A handoff is unfinished work, not a successful proof or publication."
+            "Use the runtime's connected Git/GitHub tools to resolve Git access "
+            "and refresh local refs, or restore CLI Git access. Then rerun the "
+            "interrupted nb command. After a failed push, rerun preparation; "
+            "temporary worktrees may already have been removed."
         )
         return HANDOFF_EXIT

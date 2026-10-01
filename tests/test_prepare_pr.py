@@ -383,15 +383,13 @@ def test_prepare_pr_hands_off_when_git_is_missing(tmp_path, *, managed) -> None:
 
     assert result.returncode == 3
     assert "NB_GIT_REQUIRED" in result.stdout
-    assert f"article={article_path}" in result.stdout
-    assert "hold=true" in result.stdout
     assert "NB_ARTICLE_PR_REQUIRED" not in result.stdout
     assert "Traceback" not in result.stderr
 
 
 @pytest.mark.parametrize("operation", ["fetch", "ls-remote", "push"])
 def test_prepare_pr_hands_off_failed_remote_operations(tmp_path, operation) -> None:
-    library, origin = make_library(tmp_path)
+    library, _origin = make_library(tmp_path)
     article_path = make_workspace(tmp_path)
     fake_bin = tmp_path / "bin"
     refuse_git_remote(fake_bin, operation=operation)
@@ -407,34 +405,5 @@ def test_prepare_pr_hands_off_failed_remote_operations(tmp_path, operation) -> N
     assert result.returncode == 3, result.stderr
     assert "NB_GIT_REQUIRED" in result.stdout
     assert "remote access unavailable" in result.stdout
-    if operation == "push":
-        ref = "refs/nb/prepared/nb/article/semiconductors/micron"
-        commit = subprocess.check_output(
-            ["git", "-C", str(library), "rev-parse", ref], text=True
-        ).strip()
-        assert f"commit={commit}" in result.stdout
-        assert f"{commit}:refs/heads/nb/article/semiconductors/micron" in result.stdout
-        assert "expected_remote_commit=absent" in result.stdout
-        assert "base=library\ndraft=true" in result.stdout
-        assert "NB_ARTICLE_PR_REQUIRED" in result.stdout
-        # The commit survives cleanup, while neither remote publication nor
-        # PR creation is attempted as though the failed push succeeded.
-        assert (
-            subprocess.run(
-                [
-                    "git",
-                    f"--git-dir={origin}",
-                    "show-ref",
-                    "--verify",
-                    "refs/heads/nb/article/semiconductors/micron",
-                ],
-                capture_output=True,
-            ).returncode
-            != 0
-        )
-        assert "micron.html" in subprocess.check_output(
-            ["git", "-C", str(library), "ls-tree", "-r", "--name-only", commit],
-            text=True,
-        )
-    else:
-        assert "NB_ARTICLE_PR_REQUIRED" not in result.stdout
+    assert f'"{operation}"' in result.stdout
+    assert "NB_ARTICLE_PR_REQUIRED" not in result.stdout

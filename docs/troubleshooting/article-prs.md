@@ -43,19 +43,9 @@ generated commit is final and is never recreated or edited.
 
 ## Delivery reports `NB_GIT_REQUIRED`
 
-Git is missing or a remote operation was refused. The handoff names the local
-checkout and the requested operation for the runtime's connected Git/GitHub
-tools. It exits 3, the same unfinished-work status as a GitHub CLI handoff.
-
-If article preparation reached the push, it also reports the proved commit, its
-retained local ref, the expected remote head, and the exact PR request. Deliver
-that commit only while the remote head still matches the reported value, then
-open the PR. Never overwrite an intervening remote edit. Earlier failures
-require refreshing the local refs and resuming preparation before a PR can be
-opened. The handoff does not certify an unprepared article.
-
-`nb setup` and `nb sync` also report interrupted remote operations. Generated
-sync and setup seed commits are retained under `refs/nb/prepared/` when their
-push fails. After completing the operation through connected tools, refresh the
-checkout and rerun the command to finish its remaining checks. A failed remote
-query never means the publication branch is absent.
+Git is missing or a remote fetch, push, or branch query failed. The output names
+its checkout and arguments and exits 3. Resolve Git access through the runtime's
+connected tools or restore CLI access, refresh local refs, and rerun the
+command. After a failed push, rerun preparation because its temporary worktree
+is removed. This output does not claim a completed PR. A failed query does not
+mean a branch is absent.

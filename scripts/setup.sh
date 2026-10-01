@@ -24,9 +24,9 @@ emit_git_handoff() {
 	shift
 	printf 'argument=%s\n' "$@" >&2
 	cat >&2 <<'EOF'
-Use the runtime's connected Git/GitHub tools for this operation, or restore CLI
-Git access. Refresh local refs after a fetch and rerun the interrupted command.
-Keep library changes on the validated PR path. This handoff is unfinished work.
+Use the runtime's connected Git/GitHub tools to resolve Git access and refresh
+local refs, or restore CLI Git access. Then rerun the interrupted nb command.
+After a failed push, rerun preparation; temporary worktrees may be removed.
 EOF
 }
 
@@ -35,10 +35,6 @@ remote_git() {
 		return 0
 	else
 		git_status=$?
-		# ls-remote --exit-code uses 2 for a successful query with no matching ref.
-		case " $* " in
-		*" ls-remote --exit-code "*) [ "$git_status" -eq 2 ] && return 2 ;;
-		esac
 		emit_git_handoff "Git remote operation failed (exit $git_status)" "$@"
 		return 3
 	fi
@@ -252,11 +248,10 @@ fi
 
 # 3. The library branch (orphan, empty press) --------------------------------
 library_created=false
-if remote_git ls-remote --exit-code --heads origin library >/dev/null; then
+library_ref=$(remote_git ls-remote --heads origin library) || exit $?
+if [ -n "$library_ref" ]; then
 	ok "library branch already exists on origin"
 else
-	query_status=$?
-	[ "$query_status" -eq 2 ] || exit "$query_status"
 	say "creating orphan library branch"
 	# Plumbing instead of 'git checkout --orphan' on purpose: an orphan
 	# checkout starts from the current working tree, so it would need the
@@ -292,10 +287,7 @@ if [ "$library_created" = true ]; then
 	git -C "$seed_worktree" -c user.name="The Nightly Build" \
 		-c user.email="nightly-build@users.noreply.github.com" \
 		commit -qm "chore: seed library workflows [skip ci]"
-	seed_commit=$(git -C "$seed_worktree" rev-parse HEAD)
-	git update-ref refs/nb/prepared/setup-library "$seed_commit"
-	printf 'prepared_commit=%s\nlocal_ref=refs/nb/prepared/setup-library\n' "$seed_commit"
-	remote_git push -q origin "$seed_commit:refs/heads/library" || exit $?
+	remote_git -C "$seed_worktree" push -q origin HEAD:refs/heads/library || exit $?
 	git worktree remove --force "$seed_worktree"
 	seed_worktree=
 	rmdir "$seed_root"
