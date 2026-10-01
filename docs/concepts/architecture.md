@@ -21,12 +21,6 @@ judgment. [Schedule publication](../guides/operate/schedule.md) documents the
 runtime, and [Ownership and branches](ownership-and-branches.md) explains the
 state split.
 
-`nb stamp FILE` writes the current UTC publication date into article metadata
-and the standard byline, along with computed counts and reading time. Run it
-after the final edit and before proof. The date is owned by the engine rather
-than entered by an article-making agent. For an already published article,
-`nb stamp FILE --revision` refreshes counts while preserving its original date.
-
 ## The orchestrator coordinates, and roles decide
 
 The orchestrator plans the edition together, then creates one isolated workspace
