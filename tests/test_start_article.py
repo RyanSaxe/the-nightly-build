@@ -374,3 +374,25 @@ def test_main_prints_the_article_path_and_its_proof_command(
         f"proof: {repo.resolve() / 'nb'} check {article.resolve()}"
         f" --series semiconductors --repo {repo.resolve()}"
     )
+
+
+def test_start_article_can_record_an_unavailable_git_revision(
+    clone_testrepo, tmp_path, monkeypatch
+) -> None:
+    repo = pathlib.Path(clone_testrepo("press", "templates", "spec"))
+    monkeypatch.setenv("PATH", str(tmp_path / "no-git"))
+    workspace = tmp_path / "article"
+
+    article = initialize(
+        repo=repo,
+        workspace=workspace,
+        series_id="semiconductors",
+        slug="micron",
+        template_id="article",
+    )
+
+    assert article.is_file()
+    direction = (
+        workspace / "agent-artifacts/semiconductors/micron/editorial-direction.md"
+    )
+    assert "Checkout revision: `unavailable`" in direction.read_text()

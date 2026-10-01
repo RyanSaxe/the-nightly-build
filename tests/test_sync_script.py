@@ -383,3 +383,40 @@ def test_failed_sync_reports_the_check_and_repair_path(tmp_path: pathlib.Path) -
     assert repo.remote_blob("library", WORKFLOWS[0]) != repo.remote_blob(
         "main", WORKFLOWS[0]
     )
+
+
+def test_sync_failed_push_retains_the_proved_commit(tmp_path) -> None:
+    from press import refuse_git_remote
+
+    repo = make_sync_repo(tmp_path, drift="both")
+    before = repo.remote_ref("refs/heads/library")
+    refuse_git_remote(repo.fake_bin, operation="push")
+
+    result = repo.run()
+
+    assert result.returncode == 3, result.stderr
+    assert "NB_GIT_REQUIRED" in result.stderr
+    assert "argument=push" in result.stderr
+    ref = f"refs/nb/prepared/{SYNC_BRANCH}"
+    commit = git(repo.checkout, "rev-parse", ref)
+    assert f"prepared_commit={commit}" in result.stdout
+    assert repo.remote_ref("refs/heads/library") == before
+    assert "pr create" not in repo.gh_log.read_text()
+    for path in WORKFLOWS:
+        assert git(repo.checkout, "show", f"{commit}:{path}") == git(
+            repo.checkout, "show", f"origin/main:{path}"
+        )
+
+
+def test_sync_failed_branch_query_stops_before_preparation(tmp_path) -> None:
+    from press import refuse_git_remote
+
+    repo = make_sync_repo(tmp_path, drift="both")
+    refuse_git_remote(repo.fake_bin, operation="ls-remote")
+
+    result = repo.run()
+
+    assert result.returncode == 3, result.stderr
+    assert "NB_GIT_REQUIRED" in result.stderr
+    assert "prepared_commit=" not in result.stdout
+    assert "pr create" not in repo.gh_log.read_text()

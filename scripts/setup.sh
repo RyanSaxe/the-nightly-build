@@ -18,6 +18,32 @@ die() {
 	printf '✗ %s\n' "$1" >&2
 	exit 1
 }
+
+emit_git_handoff() {
+	printf '%s\n' "NB_GIT_REQUIRED" "reason=$1" "checkout=$ROOT" >&2
+	shift
+	printf 'argument=%s\n' "$@" >&2
+	cat >&2 <<'EOF'
+Use the runtime's connected Git/GitHub tools for this operation, or restore CLI
+Git access. Refresh local refs after a fetch and rerun the interrupted command.
+Keep library changes on the validated PR path. This handoff is unfinished work.
+EOF
+}
+
+remote_git() {
+	if git "$@"; then
+		return 0
+	else
+		git_status=$?
+		# ls-remote --exit-code uses 2 for a successful query with no matching ref.
+		case " $* " in
+		*" ls-remote --exit-code "*) [ "$git_status" -eq 2 ] && return 2 ;;
+		esac
+		emit_git_handoff "Git remote operation failed (exit $git_status)" "$@"
+		return 3
+	fi
+}
+
 seed_root=
 seed_worktree=
 cleanup_seed() {
@@ -32,7 +58,10 @@ cleanup_seed() {
 trap cleanup_seed EXIT HUP INT TERM
 
 # 1. Preconditions -----------------------------------------------------------
-command -v git >/dev/null 2>&1 || die "git is required"
+command -v git >/dev/null 2>&1 || {
+	emit_git_handoff "git is not installed" "nb setup"
+	exit 3
+}
 command -v uv >/dev/null 2>&1 || die "uv is required: https://docs.astral.sh/uv/"
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "run this from your fork's checkout"
 
@@ -212,7 +241,8 @@ if [ "$scaffolded" = true ]; then
 	git add press
 	git -c "user.name=$author_name" -c "user.email=$author_email" \
 		commit -qm "press: scaffold the paper"
-	if [ "$branch" = main ] && git push -q origin main 2>/dev/null; then
+	if [ "$branch" = main ]; then
+		remote_git push -q origin main || exit $?
 		ok "press/ committed and pushed to main"
 	else
 		warn "press/ is committed on $branch but not on remote main"
@@ -222,9 +252,11 @@ fi
 
 # 3. The library branch (orphan, empty press) --------------------------------
 library_created=false
-if git ls-remote --exit-code --heads origin library >/dev/null 2>&1; then
+if remote_git ls-remote --exit-code --heads origin library >/dev/null; then
 	ok "library branch already exists on origin"
 else
+	query_status=$?
+	[ "$query_status" -eq 2 ] || exit "$query_status"
 	say "creating orphan library branch"
 	# Plumbing instead of 'git checkout --orphan' on purpose: an orphan
 	# checkout starts from the current working tree, so it would need the
@@ -235,7 +267,7 @@ else
 	tree=$(printf '040000 tree %s\tlibrary\n' "$subtree" | git mktree)
 	commit=$(git commit-tree "$tree" -m "library: initialize the empty press")
 	git branch --force library "$commit"
-	git push -u origin library
+	remote_git push -u origin library || exit $?
 	library_created=true
 	ok "library branch pushed (contains only library/.gitkeep)"
 fi
@@ -247,7 +279,7 @@ fi
 # moments ago is seeded directly, before protection exists.
 if [ "$library_created" = true ]; then
 	say "seeding trigger workflows onto the new library"
-	git fetch -q origin main library
+	remote_git fetch -q origin main library || exit $?
 	seed_root=$(mktemp -d)
 	seed_worktree="$seed_root/worktree"
 	git worktree add -q --detach "$seed_worktree" origin/library
@@ -260,7 +292,10 @@ if [ "$library_created" = true ]; then
 	git -C "$seed_worktree" -c user.name="The Nightly Build" \
 		-c user.email="nightly-build@users.noreply.github.com" \
 		commit -qm "chore: seed library workflows [skip ci]"
-	git -C "$seed_worktree" push -q origin HEAD:refs/heads/library
+	seed_commit=$(git -C "$seed_worktree" rev-parse HEAD)
+	git update-ref refs/nb/prepared/setup-library "$seed_commit"
+	printf 'prepared_commit=%s\nlocal_ref=refs/nb/prepared/setup-library\n' "$seed_commit"
+	remote_git push -q origin "$seed_commit:refs/heads/library" || exit $?
 	git worktree remove --force "$seed_worktree"
 	seed_worktree=
 	rmdir "$seed_root"
