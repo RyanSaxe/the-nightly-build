@@ -1,0 +1,11 @@
+# Commission: feature/big-bend-border-pause
+
+Write an original feature about the federal border-security project around Big Bend and the September 30, 2026 court filing. The article's job is to show that “the Big Bend pause” describes different project lines and activities: the government's latest filing says it is considering a narrower approach to work inside Big Bend National Park after National Park Service/stakeholder input, while ground-disturbing work elsewhere in Presidio County may resume. Explain what is actually paused, what may proceed, what the filing commits the government to, and what remains undecided. The filing is the news peg; do not treat a contemplated adjustment as a final redesign.
+
+Build the article around the boundaries of the different projects and the status of their review, not a general pro/con argument about border barriers. Distinguish the national park, Big Bend Ranch State Park, private land, and the broader 61-mile project where the primary record supports those distinctions. Explain waivers and legal claims only as needed for the reader to understand the pending case. State advocates' strongest case in their own documented terms, then represent the government's rationale fairly. No environmental-impact conclusion may exceed the underlying record.
+
+Use at least 8 opened sources, including the September 30 filing, relevant orders/complaint or federal notices, National Park Service material, local reporting, and independent coverage. Record precise document locations. A map or table is welcome only if it clarifies actual project geography; do not invent a map or draw unsupported boundaries. End on a concrete finding about the scope/status of the latest filing, not a generic lesson.
+
+Avoid overlap with the daily brief's GDP/trade-court/military items and the technical article's agent-runtime controls. Recent features often use a straight chronology followed by a source-limits conclusion; find an argument structure specific to project geography and legal status instead.
+
+Production target: coach low, researcher high, writer medium, editor high; model directive `capable` for the first three and `inherit` for editor. Use inherited runtime model. Runtime model label is GPT-6 family; precise model ID is not exposed to this orchestrator. Record deviations explicitly.
