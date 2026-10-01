@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenShell puts a supervisor between agents and the network · Technical</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "technical",
+        "slug": "nvidia-openshell-runtime-controls",
+        "template": "article",
+        "title": "OpenShell puts a supervisor between agents and the network",
+        "mode": "open",
+        "order": null,
+        "date": "2026-10-01",
+        "tags": ["nvidia", "openshell", "agent-security"],
+        "sources": 19,
+        "words": 1740,
+        "reading_minutes": 8,
+        "dek": "The v0.1.0 runtime limits local and outbound authority around an existing agent, while leaving policy quality and model behavior outside its proof.",
+        "harness": "technical",
+        "model": "GPT-6 family"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Technical</div>
+        <h1 class="nb-title">OpenShell puts a supervisor between agents and the network</h1>
+        <p class="nb-dekline">The v0.1.0 runtime limits local and outbound authority around an existing agent, while leaving policy quality and model behavior outside its proof.</p>
+        <div class="nb-byline"><span>8 min read</span><span>2026-10-01</span></div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The agent chooses; the runtime checks</h2>
+        <p>An agent can decide to read a file, launch a command, or contact an API. Those decisions come from its model and tool loop. NVIDIA OpenShell 0.1.0 places controls around that existing workload: a Gateway supplies sandbox configuration, a runtime driver constructs its boundary, and a Supervisor mediates outbound connections. The distinction matters because policy enforcement can constrain an action without making the agent's reasoning reliable.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup></p>
+        <p>This walkthrough follows one illustrative task: read a project README and request a page of GitHub issues over the public API, while denying a write request. It is a source-based trace, not a test run. It shows which component gets a chance to reject each operation, and what the trace cannot establish about the agent or the remote API.</p>
+        <p>GitHub records the v0.1.0 release on September 25, 2026. The tag pins the implementation discussed here to commit <code>496ebba293f5cc2bb2753444dddd534f0b4aeb6a</code>. That avoids importing behavior from later releases or the moving development branch.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
+      </section>
+
+      <section data-nb-section="control-path" id="control-path">
+        <h2>The Gateway sets policy; the Supervisor decides egress</h2>
+        <p>The Gateway owns sandbox state and policy delivery. A compute driver creates the outer workload boundary using a configured runtime. Inside that boundary, the agent and its tools run alongside an OpenShell Supervisor. The sandbox routes DNS and TCP through the protected Supervisor channel. The outer fence is intended to prevent the workload from opening a direct route around that channel; the Supervisor evaluates the request and opens an approved upstream connection.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup></p>
+        <p>That makes the Gateway a control-plane owner, not the decision point for each packet. In the v0.1.0 implementation, the Supervisor's network service evaluates policy through OPA. The bundled Rego policy defaults <code>allow_network</code> to false and matches endpoint and calling binary. An allowed destination alone does not imply that every process in the sandbox may use it.<sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup></p>
+        <p>Policy composition affects the result. The versioned policy guide lists global, saved, image, and restrictive default policies. An active global policy replaces the sandbox policy and suppresses provider-contributed rules. A reviewer should therefore inspect the effective policy that reached the sandbox, not infer permissions from one YAML fragment in isolation.<sup class="nb-cite"><a href="#s3">3</a></sup></p>
+        <p>The 0.1.0 installation guide describes Docker, Podman, and MicroVM runtimes, with host-specific prerequisites. OpenShell does not require BlueField hardware for these software paths.<sup class="nb-cite"><a href="#s7">7</a></sup></p>
+      </section>
+
+      <section data-nb-section="local-authority" id="local-authority">
+        <h2>Landlock narrows files; seccomp helps route network calls</h2>
+        <p>For local files, OpenShell's Linux sandbox installs Landlock restrictions before launching the workload. Landlock is a Linux security module that lets a process add restrictions to its own filesystem access. In the example, the project directory is granted read-only access and no writable project path is configured. A write under that directory should therefore fail at the kernel boundary, assuming the configured rules are active and the process remains inside the sandboxed path.<sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup></p>
+        <p>There are two different failure modes to check. The mandatory private <code>/.openshell</code> self-protection baseline requires Landlock ABI v3. User filesystem rules can instead use <code>best_effort</code>; the tagged implementation may continue without those optional restrictions and emit a finding. Operators who depend on a particular project-path rule should check the effective mode and runtime evidence, or require that rule, rather than treating every filesystem setting as fail-closed.<sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup></p>
+        <p>Seccomp has a narrower role than a complete syscall allowlist. The v0.1.0 filter sets <code>no_new_privs</code> and applies a default-allow filter with targeted blocks and compatibility allowances. For supported Internet sockets, seccomp user notification can hand a <code>connect</code> decision to a userspace Supervisor. The Linux manual cautions that user notification alone is not a security-policy mechanism. OpenShell combines it with the Supervisor's policy check and an outer network fence; none of those layers should be described as an independent guarantee by itself.<sup class="nb-cite"><a href="#s10">10</a></sup><sup class="nb-cite"><a href="#s11">11</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup></p>
+      </section>
+
+      <section data-nb-section="request-trace" id="request-trace">
+        <h2>A read request passes a binary, endpoint, and method check</h2>
+        <p>The following policy illustrates a narrow rule for one executable, one host, and one HTTP method/path. The project name and executable path are examples. An operator would need to verify that the selected image actually places curl at this path. The public GitHub endpoint needs no credential in this example.</p>
+        <pre><code>version: 1
+filesystem_policy:
+  include_workdir: false
+  read_only:
+    - /workspace/project
+  read_write: []
+network_policies:
+  github_issues:
+    endpoints:
+      - host: api.github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow:
+              method: GET
+              path: /repos/acme/widget/issues
+    binaries:
+      - path: /usr/bin/curl</code></pre>
+        <p>First, the Gateway stores and supplies policy while the compute driver creates the sandbox boundary. Global policy or provider rules can change the effective result, so the fragment is not a complete account of policy composition. At startup, the sandbox applies filesystem and process controls; the Supervisor validates its protected position before allowing workload launch, according to the tagged architecture description.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup></p>
+        <p>Next, the agent asks to read <code>/workspace/project/README.md</code>. Landlock mediates the local file operation against the configured read-only path. An attempted write there has no configured write grant and should be rejected if the expected policy is active. This is file authority: it does not decide whether the contents are true, safe to follow, or suitable to send elsewhere.</p>
+        <p>For the API call, the agent launches curl with <code>GET https://api.github.com/repos/acme/widget/issues?per_page=5</code>. DNS and TCP are directed through the Supervisor path. The outer fence blocks direct outbound connections, and the Supervisor checks both <code>/usr/bin/curl</code> and <code>api.github.com:443</code>. REST inspection then compares the request method and path with the enforced rule before forwarding it upstream. A POST to the same path lacks a matching allow rule and is denied before forwarding; the documented policy flow returns a policy denial. These are expected steps inferred from source and documentation, not observed output from a run.<sup class="nb-cite"><a href="#s12">12</a></sup><sup class="nb-cite"><a href="#s13">13</a></sup><sup class="nb-cite"><a href="#s14">14</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup></p>
+        <p>Method filtering does not make GET semantically read-only. An upstream service can attach side effects to a GET, and an allowed response can still contain data the agent should not expose. The documented read-only preset permits GET, HEAD, and OPTIONS; the example above narrows the rule to GET, but neither form proves the API token or endpoint has read-only semantics. HTTP verbs are policy inputs, not a transaction guarantee.<sup class="nb-cite"><a href="#s12">12</a></sup></p>
+      </section>
+
+      <section data-nb-section="credentials-records" id="credentials-records">
+        <h2>Credentials stay outside only under compatible policy</h2>
+        <p>For supported provider flows, the agent can see a placeholder while the Supervisor substitutes the real credential on the upstream request. The intent is to keep provider secrets out of the workload and scope their use to an approved destination. But the source makes the boundary conditional: credentialed endpoints using only layer-four rules or skipping TLS inspection are rejected unless an explicit escape hatch is enabled. The policy does not prove that a token itself has narrow permissions. Where the provider supports it, use a least-privilege token as a separate control.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s14">14</a></sup><sup class="nb-cite"><a href="#s15">15</a></sup></p>
+        <p>OpenShell can emit structured events for network decisions, process and filesystem activity, and policy changes. Its v0.1.0 Gateway keeps a bounded recent-log buffer in memory; a restart loses that buffer, and a subscriber whose cursor fell behind can receive a gap indication or an out-of-range response. Operators need to export the event stream to durable storage if they need retention. The default buffer is useful for recent inspection, not evidence of a complete, immutable audit history.<sup class="nb-cite"><a href="#s16">16</a></sup></p>
+      </section>
+
+      <section data-nb-section="evidence-boundary" id="evidence-boundary">
+        <h2>Runtime controls cannot establish safe model behavior</h2>
+        <p>The public evidence supports a concrete integration surface: OpenClaw maintains documentation for an OpenShell sandbox backend, delegates lifecycle to the OpenShell CLI, and uses SSH to execute commands. That shows a third-party project has built an integration. It supplies no usage counts, deployment scale, or proof of production adoption by NVIDIA's named Cadence, Slack, and Gecko Robotics examples. Those named claims remain NVIDIA's statements in the available evidence.<sup class="nb-cite"><a href="#s17">17</a></sup></p>
+        <p>Keep the launch claims distinct as well: GitHub records the v0.1.0 release on September 25, 2026, and NVIDIA announced general availability on September 28. NVIDIA's Open Agent Safety Platform is a broader effort, while Sentry is a distinct hardware component; these announcements do not make them one deployed product.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s15">15</a></sup><sup class="nb-cite"><a href="#s18">18</a></sup></p>
+        <p>Independent launch reporting distinguishes OpenShell from Sentry and quotes an outside computer-science professor asking for case studies to weigh performance tradeoffs. The materials reviewed here contain no independent adversarial evaluation, penetration test, false-positive or false-negative rate, or measured security outcome for v0.1.0. A source review shows where checks are implemented; it does not establish their resistance to kernel/runtime defects, a compromised host, an overbroad policy, or operator error.<sup class="nb-cite"><a href="#s18">18</a></sup><sup class="nb-cite"><a href="#s19">19</a></sup></p>
+        <p>The useful conclusion is specific: OpenShell moves some authority out of an agent's hands by constraining files locally and requiring outbound requests to pass a separate policy decision. That can reduce the reach of a mistaken or manipulated tool call when the runtime, policy, and logging are configured as intended. It does not secure the model's honesty or correctness, decide whether granted access is wise, or prove that an allowed API read has no effect. A trial should evaluate those boundaries against the actual workload and preserve logs outside the Gateway.</p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          
+        <li id="s1"><a data-nb-source data-nb-kind="primary" href="https://github.com/NVIDIA/OpenShell/releases">NVIDIA OpenShell GitHub Releases · v0.1.0 entry, release timestamp and commit</a></li>
+        <li id="s2"><a data-nb-source data-nb-kind="primary" href="https://docs.nvidia.com/openshell/v0.1.0/about/architecture">NVIDIA OpenShell v0.1.0 Architecture · “What Each Piece Does,” “How a network request travels,” authentication and failure handling</a></li>
+        <li id="s3"><a data-nb-source data-nb-kind="primary" href="https://docs.nvidia.com/openshell/v0.1.0/how-it-works/policies/overview">NVIDIA OpenShell v0.1.0 Sandbox Policies · enforcement points and active policy composition</a></li>
+        <li id="s4"><a data-nb-source data-nb-kind="primary" href="https://github.com/NVIDIA/OpenShell/blob/v0.1.0/architecture/sandbox.md">NVIDIA OpenShell tag v0.1.0 · Sandbox architecture, runtime model, startup flow and isolation layers</a></li>
+        <li id="s5"><a data-nb-source data-nb-kind="primary" href="https://github.com/NVIDIA/OpenShell/blob/v0.1.0/crates/openshell-supervisor-network/src/opa.rs">NVIDIA OpenShell tag v0.1.0 · Supervisor OPA evaluation and egress authorization</a></li>
+        <li id="s6"><a data-nb-source data-nb-kind="primary" href="https://github.com/NVIDIA/OpenShell/blob/v0.1.0/crates/openshell-supervisor-network/data/sandbox-policy.rego">NVIDIA OpenShell tag v0.1.0 · Default-deny Rego network policy</a></li>
+        <li id="s7"><a data-nb-source data-nb-kind="primary" href="https://docs.nvidia.com/openshell/v0.1.0/about/installation">NVIDIA OpenShell v0.1.0 Installation · supported runtimes and prerequisites</a></li>
+        <li id="s8"><a data-nb-source data-nb-kind="primary" href="https://github.com/NVIDIA/OpenShell/blob/v0.1.0/crates/openshell-sandbox/src/sandbox/linux/landlock.rs">NVIDIA OpenShell tag v0.1.0 · Landlock availability probe and filesystem enforcement</a></li>
+        <li id="s9"><a data-nb-source data-nb-kind="primary" href="https://cdn.kernel.org/doc/html/latest/userspace-api/landlock.html">Linux kernel documentation · Landlock userspace API and ABI constraints</a></li>
+        <li id="s10"><a data-nb-source data-nb-kind="primary" href="https://github.com/NVIDIA/OpenShell/blob/v0.1.0/crates/openshell-sandbox/src/sandbox/linux/seccomp.rs">NVIDIA OpenShell tag v0.1.0 · Seccomp filter implementation</a></li>
+        <li id="s11"><a data-nb-source data-nb-kind="primary" href="https://man7.org/linux/man-pages/man2/seccomp_unotify.2.html">Linux man-pages · seccomp user notification, overview and policy warning</a></li>
+        <li id="s12"><a data-nb-source data-nb-kind="primary" href="https://docs.nvidia.com/openshell/v0.1.0/how-it-works/policies/network-rules">NVIDIA OpenShell v0.1.0 Network Rules · matching, enforcement, credentials and read-only API limits</a></li>
+        <li id="s13"><a data-nb-source data-nb-kind="primary" href="https://docs.nvidia.com/openshell/v0.1.0/tutorials/first-network-policy">NVIDIA OpenShell v0.1.0 Network Policy Tutorial · deny log and enforced GitHub API example</a></li>
+        <li id="s14"><a data-nb-source data-nb-kind="primary" href="https://github.com/NVIDIA/OpenShell/blob/v0.1.0/architecture/security-policy.md">NVIDIA OpenShell tag v0.1.0 · Security policy, network decisions, TLS inspection and credential rules</a></li>
+        <li id="s15"><a data-nb-source data-nb-kind="primary" href="https://developer.nvidia.com/blog/add-runtime-controls-to-ai-agents-with-nvidia-openshell/">NVIDIA Developer Blog · September 28 GA announcement, demo, adoption statements and Open Agent Safety Platform</a></li>
+        <li id="s16"><a data-nb-source data-nb-kind="primary" href="https://docs.nvidia.com/openshell/v0.1.0/observability/accessing-logs">NVIDIA OpenShell v0.1.0 Logs · event types, bounded Gateway buffer and loss handling</a></li>
+        <li id="s17"><a data-nb-source data-nb-kind="secondary" href="https://docs.openclaw.ai/gateway/openshell">OpenClaw documentation · OpenShell sandbox backend and lifecycle configuration</a></li>
+        <li id="s18"><a data-nb-source data-nb-kind="secondary" href="https://apnews.com/article/nvidia-ai-security-openshell-sentry-a4cfc84ed00353ff8f2dad4bed7b429e">Associated Press · OpenShell, Sentry, limits and independent expert comment</a></li>
+        <li id="s19"><a data-nb-source data-nb-kind="secondary" href="https://www.reuters.com/legal/litigation/nvidia-releases-ai-safety-software-it-says-could-have-stopped-hugging-face-hack-2026-09-28/">Reuters · September 28 launch and attributed NVIDIA security claims</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
