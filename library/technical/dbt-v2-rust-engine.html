@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>dbt v2 checks column names before the warehouse, in strict mode and only in the proprietary build · Technical</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "technical",
+        "slug": "dbt-v2-rust-engine",
+        "template": "article",
+        "title": "dbt v2 checks column names before the warehouse, in strict mode and only in the proprietary build",
+        "mode": "open",
+        "order": null,
+        "date": "2026-10-02",
+        "tags": ["dbt", "static-analysis", "rust", "duckdb"],
+        "sources": 15,
+        "words": 2051,
+        "reading_minutes": 9,
+        "dek": "On a two-model DuckDB project, dbt 2.0.6 flagged a misspelled column at models/b.sql:1:12 under --static-analysis strict, and dbt OSS 2.0.5 said it does not include the check.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Technical</div>
+        <h1 class="nb-title">dbt v2 checks column names before the warehouse, in strict mode and only in the proprietary build</h1>
+        <p class="nb-dekline">
+          On a two-model DuckDB project, dbt 2.0.6 flagged a misspelled column at models/b.sql:1:12 under --static-analysis strict, and dbt OSS 2.0.5 said it does not include the check.
+        </p>
+        <div class="nb-byline">
+          <span>9 min read</span><span>2026-10-02</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A misspelled column compiles cleanly in dbt v2</h2>
+<p>In dbt, each SQL file is a model that becomes a table or view in the warehouse, and <code>ref('a')</code> makes one model read from another. <code>dbt compile</code> renders the SQL and sends nothing to the warehouse. <code>dbt run</code> sends it. This article assumes you can read SQL and defines the rest of dbt's vocabulary as it comes up.</p>
+<p>The test project has two models on DuckDB. Model a is <code>select 1 as id, 'x' as name</code>. Model b is <code>select id, nme from {{ ref('a') }}</code>, which misspells <code>name</code> as <code>nme</code>. I installed dbt 2.0.6 with <code>pip install dbt</code><sup class="nb-cite"><a href="#s1">1</a></sup>, pointed a <code>type: duckdb</code> profile at a local file<sup class="nb-cite"><a href="#s2">2</a></sup>, and ran three commands with no <code>dbt login</code> and no warehouse account.</p>
+<figure class="nb-code">
+  <div class="nb-code-head"><span class="nb-code-file">toy project · dbt 2.0.6 · trimmed</span><span>shell</span></div>
+  <pre><code data-language="shell">$ dbt --version
+dbt 2.0.6
+
+$ dbt compile
+Finished 'compile' successfully for target 'dev' [603ms]
+Summary: 2 total | 2 success
+
+$ dbt compile --static-analysis strict
+    Failed model main.b (view)
+[error] [UnresolvedIdentifier (dbt0227)]: No column nme found. Available are toy.main.a.name, toy.main.a.id
+  --&gt; models/b.sql:1:12 (target/compiled/toy/models/b.sql:1:12)
+Finished 'compile' with 1 error for target 'dev' [390ms]
+Summary: 2 total | 1 success | 1 error
+
+$ dbt run
+ Succeeded model main.a (view)
+    Failed model main.b (view)
+[error] [DbDriverFailed (dbt1308)]: Database Error in model b (target/run/toy/models/b.sql)
+  Binder Error: Referenced column "nme" not found in FROM clause!
+  Candidate bindings: "name"
+Finished 'run' with 1 error for target 'dev' [1.5s]
+Summary: 2 total | 1 success | 1 error</code></pre>
+  <figcaption class="nb-code-cap">Real output from my run, cut to the lines the argument uses. Each error was followed by a Rust stack trace of 30 or more frames, which I removed along with the banner and per-model timing lines.</figcaption>
+</figure>
+<p>Default compile reports both models as successes and prints nothing about <code>nme</code>. With <code>--static-analysis strict</code>, the same compile fails on b and points to line 1, column 12 of <code>models/b.sql</code>, which is where <code>nme</code> starts, and lists the two columns that model a has. <code>dbt run</code> without the flag builds a, then fails on b inside DuckDB, whose error names <code>name</code> as the candidate.</p>
+      </section>
+
+      <section data-nb-section="v1-ref" id="v1-ref">
+        <h2>A missing ref already failed before the run in v1</h2>
+<p>The same project on dbt-core 1.12.5 with dbt-duckdb 1.11.0, the last Python line I tested, behaves like v2 without the flag.</p>
+<figure class="nb-code">
+  <div class="nb-code-head"><span class="nb-code-file">toy project · dbt-core 1.12.5 · trimmed</span><span>shell</span></div>
+  <pre><code data-language="shell"># dbt-core 1.12.5 with dbt-duckdb 1.11.0
+$ dbt compile
+(passes)
+
+$ dbt run
+1 of 2 OK created sql view model main.a
+2 of 2 ERROR creating sql view model main.b
+  Runtime Error in model b (models/b.sql)
+  Binder Error: Referenced column "nme" not found in FROM clause!
+  Candidate bindings: "name"
+Done. PASS=1 WARN=0 ERROR=1 SKIP=0 NO-OP=0 REUSED=0 TOTAL=2</code></pre>
+  <figcaption class="nb-code-cap">Real output from my run, log timestamps removed.</figcaption>
+</figure>
+<p>Compile passes and the database rejects the typo. dbt Labs' GA post says why in general terms: in v1, dbt did not understand the SQL it generated.<sup class="nb-cite"><a href="#s3">3</a></sup> I believe that explains the compile pass, since a template renderer has no schema to check <code>nme</code> against. I did not read v1's source to confirm it.</p>
+<p>A bad reference is a different case. I replaced model b with <code>select id from {{ ref('missing_model') }}</code> and compiled it on dbt-core 1.12.5 and on dbt OSS 2.0.5. dbt-core 1.12.5 failed with a Compilation Error saying b depends on a node named <code>missing_model</code> that was not found. dbt OSS 2.0.5 failed with <code>[DependencyNotFound (dbt1048)]</code>, naming the same missing ref. A ref names a model, and dbt resolves it against the project's model graph without understanding any SQL, so this pre-run failure was already there in v1. The pre-warehouse catch that v2 adds<sup class="nb-cite"><a href="#s4">4</a></sup> is the misspelled column, not the ref.</p>
+<p>The upgrade guide lists a separate parse-time change, which is that v2 enforces a language specification and raises errors for misspelled configs and unexpected YAML keys that v1 ignored.<sup class="nb-cite"><a href="#s5">5</a></sup> In a separate run, dbt OSS 2.0.5 rejected a misspelled <code>desciptin</code> key in a model's YAML. I did not establish what v1 prints for it.</p>
+      </section>
+
+      <section data-nb-section="strict" id="strict">
+        <h2>Strict mode resolves each column against the upstream model's schema</h2>
+<p>dbt Labs describes the mechanism as a local SQL compiler that builds a logical plan, validates sources, functions and seeds, and detects invalid column references, function signatures and argument types before anything reaches the warehouse.<sup class="nb-cite"><a href="#s3">3</a></sup> The dbt0227 message shows what that requires. To report that <code>nme</code> is missing, dbt has to know that model a outputs <code>name</code> and <code>id</code>, and it can only know that by analyzing a's SQL. A template renderer cannot do that. It takes a SQL parser, which dbt Labs says v1 lacked.<sup class="nb-cite"><a href="#s3">3</a></sup></p>
+<figure class="nb-figure">
+  <img src="dbt-v2-rust-engine/pipeline.png" alt="Drawing of three stages, parse, compile and run, with arrows between them. A missing ref is caught at parse. A misspelled column is caught at compile only under strict static analysis in dbt, and otherwise at run as a DuckDB error." />
+  <figcaption>Fig. 1 · A drawing, not an official dbt diagram. Where each error from the example surfaced in my runs; the stage names and the modes come from dbt Labs' documentation.<sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup></figcaption>
+</figure>
+<p>Three modes exist. <code>strict</code>, which was previously called <code>on</code>, analyzes all SQL before execution begins. <code>baseline</code> is the default for existing projects. <code>off</code> disables analysis.<sup class="nb-cite"><a href="#s6">6</a></sup> The upgrade guide says baseline parses SQL at compile time and reports findings as warnings, and that strict fully resolves column types.<sup class="nb-cite"><a href="#s5">5</a></sup> The config reference calls baseline a starting point that still catches most SQL errors, and does not list which ones.<sup class="nb-cite"><a href="#s6">6</a></sup> In my run baseline caught nothing for a plain misspelled column, with the default and with <code>--static-analysis baseline</code> given explicitly.</p>
+<p>A migration report points the same way. A practitioner's merged pull request in dbt Labs' agent-skills repository sets its reproduction command to strict because plain <code>dbt compile</code> misses errors strict mode catches. It calls case-sensitive column mismatches, reported as dbt0227 or dbt0209, the most common strict-mode pattern in one real migration. It also says static analysis reports only the first error per node.<sup class="nb-cite"><a href="#s7">7</a></sup></p>
+<p>The upgrade guide says strict requires <code>dbt login</code>.<sup class="nb-cite"><a href="#s5">5</a></sup> The feature matrix lists semantic error detection as needing no login.<sup class="nb-cite"><a href="#s8">8</a></sup> On DuckDB, strict ran for me with no login.</p>
+      </section>
+
+      <section data-nb-section="oss" id="oss">
+        <h2>dbt OSS prints a warning and compiles anyway</h2>
+<p>At the 16 September 2026 GA, dbt Labs renamed its builds. The default, <code>dbt</code>, is the former Fusion engine. <code>dbt OSS</code>, the former dbt Core v2, is the Apache 2.0 subset.<sup class="nb-cite"><a href="#s9">9</a></sup> I installed it with <code>pip install dbt-oss</code>.<sup class="nb-cite"><a href="#s10">10</a></sup></p>
+<figure class="nb-code">
+  <div class="nb-code-head"><span class="nb-code-file">toy project · dbt OSS 2.0.5</span><span>shell</span></div>
+  <pre><code data-language="shell">$ dbt --version
+dbt-oss 2.0.5
+
+$ dbt compile --static-analysis strict
+[warning] [Generic (dbt1000)]: static analysis was requested with `--static-analysis strict` but did not run: this distribution of dbt OSS does not include the static analysis engine. Install the full dbt distribution to enable it: dbt system upgrade-distribution
+Finished 'compile' with 1 warning for target 'dev' [259ms]
+Summary: 2 total | 2 success</code></pre>
+  <figcaption class="nb-code-cap">Real output from my run. The following <code>dbt run</code> failed in DuckDB with the same Binder Error as in the first listing.</figcaption>
+</figure>
+<p>The flag is accepted and the check does not run. The result is a warning, and compile reports two successes. dbt Labs' documents say the same thing in three places. The dbt OSS install page lists SQL comprehension and static analysis as not included.<sup class="nb-cite"><a href="#s10">10</a></sup> The comparison table marks advanced local features, including SQL comprehension, as present in dbt and absent from dbt OSS.<sup class="nb-cite"><a href="#s9">9</a></sup> The June roadmap placed advanced SQL comprehension, linting and column-level lineage in the Fusion-only group.<sup class="nb-cite"><a href="#s11">11</a></sup></p>
+<p>The repository README says its main branch holds the Apache 2.0 source of dbt v2, a ground-up Rust rewrite, and that <code>dbt</code> is a distribution of that repository with customizations released under a dbt product license.<sup class="nb-cite"><a href="#s12">12</a></sup> That license is proprietary.<sup class="nb-cite"><a href="#s13">13</a></sup> It costs nothing and needs no login to use, and dbt Labs recommends it over dbt OSS.<sup class="nb-cite"><a href="#s9">9</a></sup> The Fivetran and dbt Labs press release says both versions remain Apache 2.0-licensed.<sup class="nb-cite"><a href="#s14">14</a></sup> The documentation says only dbt OSS is. Datacoves, which sells managed dbt, describes the change as moving the split from the codebase to the license.<sup class="nb-cite"><a href="#s15">15</a></sup> I follow the documentation, because it is the document that owns the distinction.</p>
+<p>The two builds share the Rust code base underneath. Both parsed my 3,000-model test project in about two seconds (2.1 s for dbt OSS, 2.4 s for dbt). dbt OSS has the shared parser and not the column check.</p>
+      </section>
+
+      <section data-nb-section="speed" id="speed">
+        <h2>Speed figures come from three owners</h2>
+<p>dbt Labs' GA post reports a 10,000-node benchmark project compiling in 70 seconds on dbt 1.12.0 and 17 seconds on dbt v2, about 4x, and says normal-sized projects see 2x or more.<sup class="nb-cite"><a href="#s3">3</a></sup> The joint press release says dbt v2 parses a 10,000-model project up to 10x faster than v1 and gives no method.<sup class="nb-cite"><a href="#s14">14</a></sup> The two measure different steps, and no document I read reconciles them. I found no independent reproduction of either. My own run used a synthetic project of 3,000 models, each a one-line join of two earlier models, on a 4-core Linux machine at default settings. Parse took about 15.6 seconds on dbt-core 1.12.5, 2.1 on dbt OSS 2.0.5 and 2.4 on dbt 2.0.6. Compile took 32.2 and 32.5 seconds on v1 against about 4 on both v2 builds. That is a different workload from dbt Labs' project and no strict analysis was on, so it neither confirms nor refutes their figures.</p>
+<figure class="nb-figure">
+  <img src="dbt-v2-rust-engine/chart-1.png" alt="Two bar panels with run dots. Parsing 3,000 models took about 15.6 seconds on dbt-core 1.12.5, about 2.1 on dbt OSS 2.0.5 and about 2.4 on dbt 2.0.6. Compiling took about 32 seconds on dbt-core and about 4 on both dbt OSS and dbt." />
+  <figcaption>Fig. 2 · Wall-clock seconds, including process start, for a synthetic 3,000-model DuckDB project on one 4-core Linux machine. Parse is 3 runs per build with the target directory deleted first and partial parsing off on v1. Compile is 2 runs. My own measurement, not dbt Labs' benchmark, which used a different project.<sup class="nb-cite"><a href="#s3">3</a></sup> Data in chart-1.py.</figcaption>
+</figure>
+      </section>
+
+      <section data-nb-section="limits" id="limits">
+        <h2>One adapter, one project and one patch version</h2>
+<p>The check was run on DuckDB only. dbt Labs' own pages disagree on that adapter's status. The feature matrix lists DuckDB (CLI only) with the GA adapters,<sup class="nb-cite"><a href="#s8">8</a></sup> and the upgrade guide lists it under beta.<sup class="nb-cite"><a href="#s5">5</a></sup> The DuckDB setup page says some dbt-duckdb v1 features are not yet supported.<sup class="nb-cite"><a href="#s2">2</a></sup> I did not test BigQuery, Databricks, Redshift or Snowflake, the adapters the upgrade guide lists as GA.<sup class="nb-cite"><a href="#s5">5</a></sup></p>
+<p>Strict mode has the limits dbt Labs documents. A child model cannot be stricter than its parent, custom materializations are set to <code>off</code> and make everything downstream ineligible, and analysis can fail on dynamic SQL or unrecognized UDFs.<sup class="nb-cite"><a href="#s6">6</a></sup> The migration report adds that results differed between an isolated <code>--select</code> compile and a full-project compile of unchanged code, and that its authors check suspect findings against warehouse queries.<sup class="nb-cite"><a href="#s7">7</a></sup></p>
+<p>Independent evidence that people run v2 is thin. I found one production migration, relayed through a pull request in a dbt Labs repository,<sup class="nb-cite"><a href="#s7">7</a></sup> and a summit attendee who repeats the 10x claim.<sup class="nb-cite"><a href="#s4">4</a></sup> GitHub's API refused my reads of the repository, so I have no download, star or issue figures. Everything above was observed on dbt 2.0.6 and dbt OSS 2.0.5 and may change in later patches.</p>
+<p>The model in my example gets its columns from another model, so dbt could analyze it fully. The DuckDB setup page says static analysis may not infer schemas for models that read local files with <code>read_csv()</code>, <code>read_parquet()</code> or <code>read_json()</code>, and that dbt may report type-resolution warnings or compile errors for queries that work at run time.<sup class="nb-cite"><a href="#s2">2</a></sup> I did not run that case.</p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Install Commands by Platform; Optional: Sign In for Full v2 Features" href="https://docs.getdbt.com/docs/local/install-dbt">dbt Labs · Install dbt</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Installation; Limitations (dbt v2); Static Analysis with Local Files" href="https://docs.getdbt.com/docs/local/connect-data-platform/duckdb-setup">dbt Labs · Connect DuckDB to dbt v2</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="&quot;The biggest new features&quot; &gt; &quot;Find your (and your agents&#x27;) mistakes faster&quot; and &quot;Speed&quot;; &quot;Installation instructions&quot;" href="https://docs.getdbt.com/blog/dbt-v2-is-ga">dbt Labs · dbt v2 is GA</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="secondary" data-nb-locator="Section on the engine" data-nb-note="Summit attendee. The 10x parsing figure is repeated from dbt Labs, not tested." href="https://brainsandbots.substack.com/p/dbt-summit-2026-wrap-up-level-up">Brains &amp; Bots · dbt Summit 2026 wrap-up (Sonny Rivera)</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Strict Validation; Parse-Time Failures; Static Analysis; Supported Adapters in v2" href="https://docs.getdbt.com/docs/dbt-versions/dbt-upgrade/upgrading-to-v2">dbt Labs · Upgrading to dbt v2</a>
+          </li>
+          <li id="s6">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Definitions of Each Mode; Cascading Rules; Important Caveat" href="https://docs.getdbt.com/reference/resource-configs/static-analysis">dbt Labs · static_analysis config reference</a>
+          </li>
+          <li id="s7">
+            <a data-nb-source data-nb-kind="secondary" data-nb-locator="PR description and changelog entries, version 1.3.4 to 1.3.5" data-nb-note="Merged PR dated 23 September 2026 by a practitioner (b-per) in a dbt Labs repository, so not independent of dbt Labs." href="https://github.com/dbt-labs/dbt-agent-skills/pull/164">dbt-labs/dbt-agent-skills · PR 164, lessons from a production migration to v2</a>
+          </li>
+          <li id="s8">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Adapter list; Known Limitations" href="https://docs.getdbt.com/docs/dbt/supported-features">dbt Labs · dbt v2 supported features</a>
+          </li>
+          <li id="s9">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Feature Comparison Table; Key Distinctions; Recommendation" href="https://docs.getdbt.com/blog/comparing-dbt-and-dbt-oss">dbt Labs · Comparing dbt and dbt OSS</a>
+          </li>
+          <li id="s10">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="What&#x27;s Included; What&#x27;s NOT Included" href="https://docs.getdbt.com/docs/local/install-dbt-v2">dbt Labs · Install dbt OSS</a>
+          </li>
+          <li id="s11">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Present; The path from alpha to GA" href="https://github.com/dbt-labs/dbt/blob/main/docs/roadmap/2026-06-announcing-v2.md">dbt Labs · Announcing dbt v2 (roadmap, June 2026)</a>
+          </li>
+          <li id="s12">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="About dbt v2.0; License" href="https://github.com/dbt-labs/dbt">dbt-labs/dbt · README</a>
+          </li>
+          <li id="s13">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Use, redistribution and restriction sections" href="https://www.getdbt.com/dbt-product-license-agreement">dbt Labs · dbt Product License Agreement</a>
+          </li>
+          <li id="s14">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Opening paragraphs" data-nb-note="Joint vendor press release giving no benchmark method. It is the vendors&#x27; own claim, not independent." href="https://www.fivetran.com/press/fivetran-dbt-labs-announces-new-capabilities-to-make-enterprise-data-agent-ready-at-dbt-summit-2026">Fivetran and dbt Labs · press release, dbt Summit 2026</a>
+          </li>
+          <li id="s15">
+            <a data-nb-source data-nb-kind="secondary" data-nb-locator="Sections on licensing and migration" data-nb-note="Datacoves sells managed dbt and has a commercial stake against dbt Labs&#x27; platform. Written before GA." href="https://datacoves.com/post/dbt-fusion">Datacoves · dbt Fusion (Noel Gomez, 22 July 2026)</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
