@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Python 3.15's lazy keyword · Technical</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "technical",
+        "slug": "python-lazy-imports-pep-810",
+        "template": "article",
+        "title": "Python 3.15 adds a lazy keyword that binds a proxy instead of running an import",
+        "mode": "open",
+        "order": null,
+        "date": "2026-10-03",
+        "tags": ["python", "cpython", "imports"],
+        "sources": 9,
+        "words": 2146,
+        "reading_minutes": 9,
+        "dek": "First use of the name reifies the proxy into the real module, moving an import's errors and side effects out of startup and into the running program.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Technical</div>
+        <h1 class="nb-title">
+          Python 3.15 adds a <code>lazy</code> keyword that binds a proxy
+          instead of running an import
+        </h1>
+        <p class="nb-dekline">
+          First use of the name reifies the proxy into the real module, moving
+          an import's errors and side effects out of startup and into the
+          running program.
+        </p>
+        <div class="nb-byline"><span>9 min read</span><span>2026-10-03</span></div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Python already defers thousands of imports by hand</h2>
+        <p>
+          The CPython standard library carries nearly 3,500 imports written
+          inside function bodies instead of at the top of the file: about 17
+          percent of every import outside its test suite, spread across 730
+          files, each placed there to keep a module from loading until the code
+          that needs it runs.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="PEP 810 · Motivation"
+              data-nb-note="The PEP's own static analysis of the CPython standard library."
+              >1</a
+            ></sup
+          >
+          That hand-written pattern is what Python 3.15 turns into a keyword.
+        </p>
+        <p>
+          Writing <code>lazy</code> before an <code>import</code> or a
+          <code>from ... import</code> statement tells the interpreter to defer
+          the work. The name is bound, but the module is not loaded until the
+          name is first used.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Specification">1</a></sup
+          >
+          The target is startup cost. A command-line tool that imports a heavy
+          optional dependency for one code path in ten pays for that import on
+          every run; deferring it until the path that needs it runs removes the
+          cost from the other nine.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Motivation">1</a></sup
+          >
+        </p>
+        <p>
+          The feature is accepted and shipping, and not yet stable. The Python
+          Steering Council accepted PEP 810 unanimously on 3 November 2025.<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Acceptance post, 2025-11-03"
+              >2</a
+            ></sup
+          >
+          The implementation landed in CPython on 12 February 2026<sup
+            class="nb-cite"
+            ><a href="#s3" data-nb-locator="PR #142351 · merge banner">3</a></sup
+          >
+          and has ridden the beta and release-candidate series since; the
+          feature's documentation is live in the 3.15 docs served at release
+          candidate 3.<sup class="nb-cite"
+            ><a
+              href="#s4"
+              data-nb-locator="What's New in Python 3.15 · PEP 810"
+              >4</a
+            ></sup
+          >
+          As of this writing the interpreter is at 3.15.0rc3, dated 2 October
+          2026, with 3.15.0 final scheduled for 9 October.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="PEP 790 · Release schedule">5</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="binds-a-proxy" id="binds-a-proxy">
+        <h2>A lazy import binds a proxy, not a module</h2>
+        <p>
+          The confusion to clear first is between two facts that ordinary
+          English blurs: a name is bound, and a module has been imported. A
+          normal import does both. It runs the module's code, places the module
+          object in <code>sys.modules</code>, and binds a name to it. A lazy
+          import stops after the binding.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Lazy import mechanism"
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          <code>lazy import json</code> calls <code>__lazy_import__</code> in
+          place of the usual <code>__import__</code>. It binds the name
+          <code>json</code> to a <code>types.LazyImportType</code> proxy and
+          records the fully-qualified name in <code>sys.lazy_modules</code>, a
+          set the specification keeps for diagnostics and introspection. The
+          module stays absent from <code>sys.modules</code> until the proxy
+          reifies.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Lazy import mechanism"
+              >1</a
+            ></sup
+          >
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">bound, not imported · illustrative</span
+            ><span>python</span>
+          </div>
+          <pre><code data-language="python">lazy import json
+import sys
+
+# Look at the binding without using it. Fetching the name through
+# globals() returns the proxy and does not reify it.
+type(globals()["json"])      # &lt;class 'LazyImport'&gt;
+"json" in sys.lazy_modules   # True: recorded for introspection
+"json" in sys.modules        # False: the module is not imported yet</code></pre>
+          <figcaption class="nb-code-cap">
+            After <code>lazy import json</code>, the name exists and the module
+            does not. The behaviour each comment shows is the one the
+            specification defines; no 3.15 interpreter was run here.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="PEP 810 · reification examples"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The line that carries the point is the first one. Fetching the name
+          through <code>globals()</code> is the only way to look at the proxy
+          without consuming it, because <code>globals()</code> and a module's
+          <code>__dict__</code> return the binding without reifying it.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · reification examples">1</a></sup
+          >
+          Every other access reifies.
+        </p>
+      </section>
+
+      <section data-nb-section="reification" id="reification">
+        <h2>First use turns the proxy into the module</h2>
+        <p>
+          Reification is the moment the proxy becomes the module. Accessing a
+          lazy object, as a global variable or as a module attribute, reifies
+          it: the deferred import runs, the real module object takes the proxy's
+          place in the namespace and enters <code>sys.modules</code>, and the
+          access returns the real object.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Specification">1</a></sup
+          >
+          Continue the same session, and the first real use of
+          <code>json</code> is where its import finally happens.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">first use reifies · illustrative</span
+            ><span>python</span>
+          </div>
+          <pre><code data-language="python">json.dumps({"ok": True})     # first use: the import runs here
+type(globals()["json"])      # &lt;class 'module'&gt;
+"json" in sys.modules        # True</code></pre>
+          <figcaption class="nb-code-cap">
+            The call through <code>json</code> is its first use, so the import
+            runs at that line and the proxy is gone afterwards.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="PEP 810 · reification examples"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          First use is any ordinary use of the name: calling through it, reading
+          an attribute, passing it somewhere it will be touched. The two
+          accesses that do not count are the ones that let tooling inspect a
+          lazy binding, reading it out of <code>globals()</code> or a module's
+          <code>__dict__</code>.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Specification">1</a></sup
+          >
+          A program that needs the import to happen at a known point can force
+          it by calling the proxy's <code>resolve()</code> method, which reifies
+          without otherwise using the module.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · reification examples">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="mercurial-collision" id="mercurial-collision">
+        <h2>A deferred import already broke Mercurial</h2>
+        <p>
+          Deferral moves two things in time. An exception that an eager import
+          would raise at import time now raises at first use of the lazy name,
+          and an import-time side effect in the lazy module runs at first use
+          rather than at module import.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Specification">1</a></sup
+          >
+          For most modules neither matters, because a module's top level only
+          defines things. The case that breaks is a module whose top level does
+          work something depends on by the time import returns: it registers a
+          codec, mutates a global, patches another module, opens a connection.
+          Defer that import and the work does not happen when the importing
+          module finishes loading. It happens later, at first use of the name,
+          or never, if the name is never used.
+        </p>
+        <p>
+          Whether that is a bug turns on a fact the interpreter cannot see:
+          whether any code between the import and the first use relied on the
+          side effect having already run. If nothing did, the deferral is
+          invisible and the startup cost is gone. If something did, the program
+          is wrong in a way that moves with the first use. That is why eager is
+          the safe default and <code>lazy</code> is opt-in per statement.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Specification">1</a></sup
+          >
+        </p>
+        <p>
+          This is not hypothetical. In March 2026, during the pre-release
+          series, Mercurial hit it.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="mercurial-devel, 2026-03">6</a></sup
+          >
+          Mercurial ships its own lazy-import system, hgdemandimport, built on a
+          custom meta-path import hook; the 3.15 standard library now uses PEP
+          810 to import some of its own attributes lazily, and the two collided.
+          The symptom was exact:
+          <code>cannot import name 'nlargest' from 'heapq'</code>. Mads
+          Kiilerich's fix added <code>heapq</code> and <code>copy</code> to
+          hgdemandimport's ignore list, so Python's own lazy imports could
+          resolve on their own terms.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="mercurial-devel · patch body"
+              data-nb-note="Patch by Mads Kiilerich, 2026-03-28; the heapq failure and the heapq/copy ignore-list fix."
+              >6</a
+            ></sup
+          >
+          The episode shows two things at once: the 3.15 standard library is
+          already importing lazily in shipped code, and the first real conflicts
+          are being found and fixed against the release candidates.
+        </p>
+      </section>
+
+      <section data-nb-section="scope-and-controls" id="scope-and-controls">
+        <h2>Where the keyword is barred, and how to force eager</h2>
+        <p>
+          The keyword is a module-level statement. It raises
+          <code>SyntaxError</code> inside a function, inside a class, and inside
+          a try/except block, and <code>lazy from ... import *</code> is not
+          allowed, since star imports stay eager.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Specification">1</a></sup
+          >
+          One restriction a reader will see stated wrongly: the implementation
+          PR's prose summary bars lazy imports inside both try/except and
+          <code>with</code> statements. The PEP bars only try/except. It
+          explicitly rejected disallowing <code>lazy</code> inside
+          <code>with</code> blocks, reasoning that <code>with</code> is used for
+          resource management and has broader semantics than try/except.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Rejected Ideas">1</a></sup
+          >
+          The <code>with</code> block is allowed; the PR blurb is the secondary
+          account and loses to the specification.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="PR #142351 · summary">3</a></sup
+          >
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">where lazy is allowed · illustrative</span
+            ><span>python</span>
+          </div>
+          <pre><code data-language="python">lazy import json                 # ok at module level
+lazy from pathlib import Path     # ok
+
+with open("config.toml") as f:    # ok: with blocks are allowed
+    lazy import tomllib
+
+def load():
+    lazy import json              # SyntaxError: not inside a function
+
+class Loader:
+    lazy import json              # SyntaxError: not inside a class
+
+try:
+    lazy import json              # SyntaxError: not inside try/except
+except ImportError:
+    pass
+
+lazy from os import *             # SyntaxError: star imports stay eager</code></pre>
+          <figcaption class="nb-code-cap">
+            The allowed placements and the four that raise
+            <code>SyntaxError</code>, including the <code>with</code> block the
+            PR summary gets wrong.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="PEP 810 · Specification">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          A project can override the keyword globally. One setting decides
+          whether the keyword is honored at all, in three values.
+        </p>
+        <table class="nb-table">
+          <caption>
+            The three lazy-import modes a project can set globally.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="PEP 810 · Global lazy imports control"
+                >1</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th>Mode</th>
+              <th class="txt">Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">normal</span></td>
+              <td class="txt">
+                Honor the <code>lazy</code> keyword; every other import is
+                eager. This is the default.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">all</span></td>
+              <td class="txt">
+                Treat every import as potentially lazy, keyword or not.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">none</span></td>
+              <td class="txt">
+                Force every import eager and ignore the keyword.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The mode can be set three ways, and they override in a fixed order:
+          <code>sys.set_lazy_imports()</code> wins, then the
+          <code>-X lazy_imports</code> interpreter flag, then the
+          <code>PYTHON_LAZY_IMPORTS</code> environment variable;
+          <code>sys.get_lazy_imports()</code> returns the mode in force.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="PEP 810 · Global lazy imports control"
+              >1</a
+            ></sup
+          >
+          Two finer controls sit beside the modes.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">opting in without the keyword · illustrative</span
+            ><span>python</span>
+          </div>
+          <pre><code data-language="python"># A module can list fully-qualified names to defer, without the
+# keyword on each line. ["*"] is rejected; names must be real.
+__lazy_modules__ = ["numpy", "pandas"]
+
+# Force a whole run eager, ignoring the keyword:
+#   python -X lazy_imports=none app.py
+#   PYTHON_LAZY_IMPORTS=none python app.py</code></pre>
+          <figcaption class="nb-code-cap">
+            The <code>__lazy_modules__</code> opt-in and the per-run overrides.<sup
+              class="nb-cite"
+              ><a
+                href="#s1"
+                data-nb-locator="PEP 810 · Global lazy imports control"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The last control is a filter.
+          <code>sys.set_lazy_imports_filter(func)</code> installs a callable
+          with the signature
+          <code>func(importer, name, fromlist) -&gt; bool</code> that the
+          interpreter consults per import; passing <code>None</code> removes
+          it.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="PEP 810 · Global lazy imports control"
+              >1</a
+            ></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="when-it-earns-its-place" id="when-it-earns-its-place">
+        <h2>When a lazy import earns its place</h2>
+        <p>
+          The explicit keyword is the second lazy-imports design to reach the
+          interpreter from the same source. PEP 690, drawn from Meta's Cinder
+          work, proposed making imports lazy implicitly and globally, through a
+          flag rather than a keyword; it was rejected.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="PEP 690 · Status: Rejected">7</a></sup
+          >
+          PEP 810 answers the objection that sank it. Laziness is visible at the
+          import statement, chosen per line, and reasoned about where it sits,
+          instead of a global switch that changes what every import in a program
+          means.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · FAQ vs PEP 690">1</a></sup
+          >
+        </p>
+        <p>
+          The gains that motivated the work are real, and they come from that
+          earlier implicit design, measured at Meta. Instagram's server loads
+          about 28,000 modules at startup. Cinder's implicit lazy imports cut
+          its reload time by about 70 percent at the median and about 60 percent
+          at the 90th percentile. They loaded roughly 12 times fewer modules and
+          drove a class of daily circular-import errors from around 80 a day to
+          zero.<sup class="nb-cite"
+            ><a
+              href="#s8"
+              data-nb-locator="Instagram Server results, 2022"
+              data-nb-note="Implicit Cinder lazy imports, not PEP 810's keyword."
+              >8</a
+            ></sup
+          >
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">~70%</span
+            ><span class="nb-stat-l">P50 RELOAD TIME</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">~12&times;</span
+            ><span class="nb-stat-l">FEWER MODULES</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">80&rarr;0</span
+            ><span class="nb-stat-l">CIRCULAR-IMPORT ERRORS</span>
+          </div>
+        </div>
+        <p>
+          Those are Instagram's web-server figures from 2022. A later Meta
+          report on machine-learning workloads, again on the implicit Cinder
+          design, saw up to 40 percent faster time to first batch and a 20
+          percent cut in Jupyter kernel startup, a separate set of metrics on a
+          separate workload.<sup class="nb-cite"
+            ><a
+              href="#s9"
+              data-nb-locator="ML workload results, 2024"
+              data-nb-note="Implicit Cinder lazy imports, not PEP 810's keyword."
+              >9</a
+            ></sup
+          >
+        </p>
+        <p>
+          PEP 810 makes no such claim for its keyword. Its own performance
+          statement is the opposite kind: the feature is performance-neutral,
+          with no measurable overhead at import and zero overhead once a name
+          has reified.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Performance">1</a></sup
+          >
+          The keyword does not make a program faster. It lets a program avoid
+          paying for what it does not use, and whether that is worth anything
+          depends on how much the deferred import costs and how often the
+          program skips it.
+        </p>
+        <p>
+          So each <code>lazy</code> answers one narrow question: does this import
+          cost enough at startup, and go unused often enough, to be worth the
+          risk that its errors and side effects move to first use. For a heavy
+          optional dependency on a cold path, the answer is usually yes. For a
+          module whose top level registers something the program needs, eager
+          import is still the only correct choice, and the interpreter keeps it
+          the default for that reason.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="PEP 810 · Specification">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://peps.python.org/pep-0810/"
+              >peps.python.org &middot; "PEP 810 &ndash; Explicit lazy imports"
+              (Status: Final; Resolution 3 November 2025) &mdash; the
+              specification: the <code>lazy</code> soft keyword, the
+              <code>types.LazyImportType</code> proxy and
+              <code>sys.lazy_modules</code>, the reification rules and
+              <code>resolve()</code>, the placement restrictions and the
+              rejected <code>with</code>-block ban, the error and side-effect
+              timing, the modes and their precedence,
+              <code>__lazy_modules__</code>, the filter, and the
+              performance-neutral statement and Motivation figures</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://discuss.python.org/t/pep-810-explicit-lazy-imports/104131/466"
+              >discuss.python.org &middot; Barry Warsaw for the Python Steering
+              Council, PEP 810 acceptance post (3 November 2025) &mdash; the
+              unanimous acceptance and its attached conditions</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/python/cpython/pull/142351"
+              >GitHub &middot; python/cpython PR #142351, "gh-142349: Implement
+              PEP 810 - Explicit lazy imports" (merged 12 February 2026) &mdash;
+              the implementation landing on main; its prose summary misstates
+              the <code>with</code>-block restriction</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://docs.python.org/3.15/whatsnew/3.15.html"
+              >docs.python.org &middot; "What's New In Python 3.15" &rarr; "PEP
+              810: Explicit lazy imports" (served at 3.15.0rc3) &mdash; the
+              shipped documentation, confirming the feature is implemented and
+              live in the pre-release docs</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://peps.python.org/pep-0790/"
+              >peps.python.org &middot; "PEP 790 &ndash; Python 3.15 Release
+              Schedule" (Hugo van Kemenade) &mdash; the actual dates: beta 1 (7
+              May 2026) through candidate 3 (2 October 2026) and 3.15.0 final (9
+              October 2026)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://lists.mercurial-scm.org/pipermail/mercurial-devel/2026-March/299426.html"
+              >mercurial-devel &middot; Mads Kiilerich, hgdemandimport and PEP
+              810 patch (28 March 2026) &mdash; the collision between
+              hgdemandimport's import hook and the 3.15 standard
+              library's own lazy imports, the
+              <code>cannot import name 'nlargest' from 'heapq'</code> failure,
+              and the <code>heapq</code>/<code>copy</code> ignore-list fix</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://peps.python.org/pep-0690/"
+              >peps.python.org &middot; "PEP 690 &ndash; Lazy Imports" (Status:
+              Rejected; Python 3.12) &mdash; the earlier implicit, global
+              proposal from Meta's Cinder work that PEP 810's explicit keyword
+              replaced</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://developers.facebook.com/blog/post/2022/06/15/python-lazy-imports-with-cinder"
+              >developers.facebook.com &middot; Germán Méndez Bravo, "Python Lazy
+              Imports With Cinder" (15 June 2022) &mdash; Instagram Server's
+              ~28,000-module startup and the implicit Cinder results:
+              reload-time, module-count, memory, and circular-import figures</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://engineering.fb.com/2024/01/18/developer-tools/lazy-imports-cinder-machine-learning-meta/"
+              >engineering.fb.com &middot; Germán Méndez Bravo, "Lazy is the new
+              fast: How Lazy Imports and Cinder accelerate machine learning at
+              Meta" (18 January 2024) &mdash; the implicit Cinder results on ML
+              workloads: time to first batch and Jupyter kernel startup</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
