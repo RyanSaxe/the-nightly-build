@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google's economy ATLAS measures how much people talk to Gemini about work · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "ai-economy-atlas",
+        "template": "article",
+        "title": "Google's economy ATLAS measures how much people talk to Gemini about work",
+        "mode": "open",
+        "order": null,
+        "date": "2026-10-03",
+        "tags": ["ai", "labor", "measurement"],
+        "sources": 9,
+        "words": 1815,
+        "reading_minutes": 8,
+        "dek": "Its most-quoted figure, 30% of U.S. work-related AI use among computer and mathematical workers, is a share of Gemini request volume the released dataset reproduces only as 20.06%.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">
+          Google's economy ATLAS measures how much people talk to Gemini about work
+        </h1>
+        <p class="nb-dekline">
+          Its most-quoted figure, 30% of U.S. work-related AI use among computer
+          and mathematical workers, is a share of Gemini request volume the
+          released dataset reproduces only as 20.06%.
+        </p>
+        <div class="nb-byline">
+          <span>8 min read</span><span>2026-10-03</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Fourteen million conversations, sorted by a classifier</h2>
+        <p>
+          Between 6 and 19 April 2026, Google and Google DeepMind recorded
+          14,653,926 de-identified interactions across the Gemini app, Google AI
+          Mode, and the Gemini API, and an automated classifier sorted each one
+          into work or non-work.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          The work interactions were mapped to the 2018 Standard Occupational
+          Classification and to O*NET tasks. The project that resulted,
+          published on 15 September as the AI and Economy ATLAS, reports shares:
+          what fraction of work-related AI use falls to each occupation group
+          and each country.<sup class="nb-cite"><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The report is exact about what a share counts. Its definition of a
+          usage share is the relative volume of conversational AI queries
+          associated with an occupation group,<sup class="nb-cite"
+            ><a href="#s2">2</a></sup
+          >
+          and Section 2.3 states that the work
+          <q>measures behavioral interactions, not definitive productivity
+          outcomes</q>, and that a completed conversation
+          <q>does not guarantee that the user accomplished their intended goal,
+          saved time, or produced measurable economic value</q>.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec 2.3, p.7">1</a></sup
+          >
+          What gets quoted from the ATLAS is a different claim: that a 30% share
+          of work-related AI use measures how much of a job AI now performs. It
+          measures how much one group of workers talks to Gemini about work.
+        </p>
+      </section>
+
+      <section data-nb-section="usage-pool" id="usage-pool">
+        <h2>What the shares are shares of</h2>
+        <p>
+          A share is a ratio, and the denominator here is request volume within
+          a geography. The ATLAS reports that computer and mathematical
+          occupations account for 30% of United States work-related AI use,
+          which the announcement describes as about double the share in the rest
+          of the world.<sup class="nb-cite"><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s3">3</a></sup> Those occupations are
+          about 3 to 4% of United States employment.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Fig 1, p.11">1</a></sup
+          >
+          The 30% is therefore a statement about concentration in a pool of
+          conversations: a small part of the workforce sends a large part of the
+          work-related queries that reach Gemini. It moves when that group talks
+          to Gemini more or less, and it would move if the people who send the
+          other 70% changed how often they typed.
+        </p>
+        <p>
+          The exact figure is owned by the report's Figure 1 and the
+          interactive, not by the released data.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup> Google's public
+          dataset gives occupation volume shares only at the broad level, and
+          summing every United States computer-and-mathematical broad group in
+          it reaches 20.06%, not 30%.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="README.md, lines 29-66">5</a></sup
+          >
+          The README explains the difference: broad shares exclude the
+          <q>All Other</q> detailed occupations, so they do not aggregate to the
+          major-group total the headline uses.<sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="README.md, lines 34-38">5</a></sup
+          >
+          The <q>double the rest of the world</q> comparison implies a
+          rest-of-world share near 15%, a number the public files do not print.
+          That 15% is a back-calculation from the multiplier, not a published
+          figure.
+        </p>
+        <p>
+          The country figures read the same way, and the interactive carries
+          them from its own data rather than the public files.<sup
+            class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Each one is a share of that country's work-related request volume.
+          India's 19% for arts, design, and media says those fields are a large
+          part of what Indian users bring to Gemini, not that AI does 19% of
+          creative work.<sup class="nb-cite"><a href="#s4">4</a></sup
+          ><sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Each ATLAS headline figure and the quantity it counts.
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Figure</th>
+              <th class="txt">What the number measures</th>
+              <th class="txt">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">
+                30% of U.S. work-related AI use, computer and mathematical
+                occupations
+              </td>
+              <td class="txt">
+                Share of U.S. work-related Gemini request volume, 6-19 April
+                2026; those jobs are about 3 to 4% of U.S. employment
+              </td>
+              <td class="txt">
+                Report, Fig 1<sup class="nb-cite"><a href="#s1">1</a></sup>;
+                announcement<sup class="nb-cite"><a href="#s3">3</a></sup>
+              </td>
+            </tr>
+            <tr>
+              <td class="txt">
+                19% in India, arts, design, and media (1.6x the global average)
+              </td>
+              <td class="txt">
+                Share of India's work-related request volume
+              </td>
+              <td class="txt">
+                Interactive<sup class="nb-cite"><a href="#s4">4</a></sup>;
+                announcement<sup class="nb-cite"><a href="#s3">3</a></sup>
+              </td>
+            </tr>
+            <tr>
+              <td class="txt">
+                7% on manual tasks in Brazil and Germany (1.4x), 4% in Japan
+              </td>
+              <td class="txt">
+                Share of each country's work-related request volume directed at
+                manual tasks
+              </td>
+              <td class="txt">
+                Interactive<sup class="nb-cite"><a href="#s4">4</a></sup>;
+                announcement<sup class="nb-cite"><a href="#s3">3</a></sup>
+              </td>
+            </tr>
+            <tr>
+              <td class="txt">46.6% of scientists use AI daily</td>
+              <td class="txt">
+                Self-reported frequency; 637 U.S. and U.K. scientists,
+                unweighted, not representative
+              </td>
+              <td class="txt">
+                AI in Science, Fig 11<sup class="nb-cite"
+                  ><a href="#s6">6</a></sup
+                >
+              </td>
+            </tr>
+            <tr>
+              <td class="txt">About 6.9 hours a week saved</td>
+              <td class="txt">
+                Self-reported net time saving; same 637-scientist survey
+              </td>
+              <td class="txt">
+                AI in Science, Sec 5.2<sup class="nb-cite"
+                  ><a href="#s6">6</a></sup
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The shares also leave out paid and enterprise Gemini API usage, which
+          the report lists as its first limitation, so professional and
+          enterprise work is under-represented in every figure above by the
+          authors' own account.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec 2.3, limitation 1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="task-depth" id="task-depth">
+        <h2>How deep the use runs inside a job</h2>
+        <p>
+          The interactive separates two quantities that the headline shares fold
+          together. In its occupation chart, a circle's position is the share of
+          an occupation's tasks that show non-negligible AI use, and the
+          circle's size is the volume of use.<sup class="nb-cite"
+            ><a href="#s4">4</a></sup
+          >
+          Position is depth inside a job; size is the share of the usage pool.
+          The 30% is a size.
+        </p>
+        <p>
+          Depth is shallow almost everywhere. Across occupations with any
+          observed use, AI appears in about 21% of tasks for the median
+          occupation, 68.5% of occupations show some use, and only 3% show use
+          on more than three-quarters of their tasks.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Sec 3.4, Figs 3-4, pp.14-17">1</a
+            ></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup> End-to-end automation
+          attempts are under 10% of non-routine-cognitive conversations, which
+          are themselves about 65% of all work interactions.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Executive Summary, finding 3">1</a
+            ></sup
+          >
+        </p>
+        <p>
+          The depth metric is reported for each major occupation group, and even
+          the group that sends the most work queries stays well under half its
+          tasks.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="ai-economy-atlas/chart-1.png"
+            alt="Horizontal bar chart of 14 major occupation groups. For each group, two bars give the share of its tasks with any observed AI use and with intensive AI use. Computer and mathematical is highest, at about 46 percent for any use and 30 percent intensive, and the groups descend to building and grounds cleaning at about 10 percent any use and 1 percent intensive."
+          />
+          <figcaption>
+            Fig. 1 · Share of O*NET tasks with observed AI use, 14 of the
+            ATLAS's 22 major occupation groups, global, April 2026.
+            &ldquo;Any observed use&rdquo; and &ldquo;intensive use&rdquo; are
+            the dataset's two saturation thresholds.<sup class="nb-cite"
+              ><a
+                href="#s5"
+                data-nb-locator="atlas_v1_work_occupations.csv, GLOBAL rows"
+                >5</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          So the occupation group with the largest share of work-related AI use
+          is also one where most of its tasks show no AI use at all. The two
+          facts do not conflict. A share of the usage pool and a share of a
+          job's tasks are different measurements, and the ATLAS reports both.
+        </p>
+      </section>
+
+      <section data-nb-section="self-report" id="self-report">
+        <h2>Almost seven hours, by self-report</h2>
+        <p>
+          The science strand comes from a different instrument. For the AI in
+          Science paper, a third-party firm surveyed 637 active scientists in the
+          United States and the United Kingdom through the More in Common online
+          panel between 27 July and 11 August 2026, screened on four criteria.
+          The results are reported unweighted and, in the authors' words, not
+          representative of the universe of scientists.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Sec 2.2.3, p.7">6</a></sup
+          >
+          The paper classifies scientific work against a MIT FutureTech taxonomy
+          of 12 task areas and 2,433 task groups, built from job adverts, which
+          defines a scientific job as one whose primary responsibility is to
+          generate new scientific knowledge.<sup class="nb-cite"
+            ><a href="#s7">7</a></sup
+          >
+          In the sample, 46.6% report using AI daily and 77.2% weekly or
+          more.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Fig 11, p.24">6</a></sup
+          >
+        </p>
+        <p>
+          The paper's most-quoted number is a net time saving. Just under
+          three-quarters of respondents report that AI saves them time on net,
+          against 6% reporting net time lost, and the average works out to about
+          6.9 hours a week.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Sec 5.2, p.23">6</a></sup
+          >
+          That is a distinct quantity from the roughly 7 hours a week the same
+          scientists report spending on data analysis and interpretation. One is
+          a reported saving, the other a reported workload. Both are
+          self-reports. The 6.9 hours measures what a scientist believes AI
+          saved, gathered by asking, not time measured against a baseline.
+        </p>
+        <p>
+          The authors name the direction of the likely error. Section 6.1 states
+          that enthusiastic AI users probably over-responded, so both the
+          adoption rate and the time saving are likely over-estimates of the
+          scientist population.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="Sec 6.1, pp.26-29">6</a></sup
+          >
+          A footnote on the log data marks the same boundary from the other
+          side: the interaction counts give
+          <q>the absolute numbers of requests</q>, and
+          <q>we also do not see task completion or saved time</q>.<sup
+            class="nb-cite"
+            ><a href="#s6" data-nb-locator="footnote 14, p.11">6</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="felt-vs-measured" id="felt-vs-measured">
+        <h2>The gap between felt time and measured time</h2>
+        <p>
+          Two studies outside the ATLAS bear on the step from a reported saving
+          to an economic one. Neither looks at scientists, so neither refutes the
+          survey. They set the bounds on what a self-reported saving can carry.
+        </p>
+        <p>
+          A 2025 randomized controlled trial from METR had 16 experienced
+          open-source developers complete 246 real tasks from their own
+          repositories, half with early-2025 AI tools allowed and half without.
+          With the tools allowed they took 19% longer, after forecasting a 24%
+          speed-up and while still believing afterward that AI had sped them up
+          by about 20%.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="Headline result; arXiv 2507.09089"
+              >8</a
+            ></sup
+          >
+          The result is a point estimate for expert open-source work with
+          early-2025 tools, and METR has said a February 2026 follow-up on later
+          tools found different results.<sup class="nb-cite"
+            ><a href="#s8">8</a></sup
+          >
+        </p>
+        <p>
+          A 2025 labor-economics study by Humlum and Vestergaard linked two large
+          adoption surveys across 11 exposed occupations to Danish
+          employer-employee records. Adoption was fast, and self-reported time
+          savings were real but small, about 3% of hours. Difference-in-differences
+          estimates found no effect on earnings or recorded hours, with confidence
+          intervals ruling out gains larger than 1 to 2%.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="WP 2025-56, abstract">9</a></sup
+          >
+          Reported saved time and measured hours came apart, partly because new
+          AI-created tasks offset some of the saving.<sup class="nb-cite"
+            ><a href="#s9">9</a></sup
+          >
+        </p>
+        <p>
+          The survey's 46.6% daily use and 6.9 hours are consistent with heavy
+          adoption. They are not, on their own, evidence that measured research
+          hours fell or that output rose, which is the inference these two
+          studies constrain.
+        </p>
+      </section>
+
+      <section data-nb-section="what-it-bears" id="what-it-bears">
+        <h2>What the 30% and the 6.9 hours will bear</h2>
+        <p>
+          The ATLAS establishes some things cleanly. Work-related AI use is
+          spread across almost every occupation and concentrated in a few.
+          Within jobs it is shallow, reaching about a fifth of tasks in the
+          median occupation. Full automation is attempted in under a tenth of
+          non-routine-cognitive conversations.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s4">4</a></sup> Those are findings
+          about a classifier's read of 14.65 million conversations, and they are
+          reported as such.
+        </p>
+        <p>
+          What the figures do not establish is set by the same definitions. The
+          30% establishes that computer and mathematical workers are heavily
+          over-represented among the people sending work-related queries to
+          Gemini in April 2026. It does not establish that AI performs 30% of
+          their work, or that any hours were saved, and the released data
+          reproduces it only as 20.06%.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          ><sup class="nb-cite"><a href="#s5">5</a></sup> The 6.9 hours
+          establishes what the median surveyed scientist believes AI saved them.
+          It does not establish measured hours or output, and the people who
+          answered are, by the authors' account, the enthusiasts.<sup
+            class="nb-cite"
+            ><a href="#s6">6</a></sup
+          >
+        </p>
+        <p>
+          The 30% is a share of conversations and the 6.9 hours is a belief
+          about time, and an account of AI at work that quotes either one as a
+          measure of work done has changed the quantity without saying so.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://ai.google/static/documents/GoogleATLASv1.pdf"
+              data-nb-locator="Sec 2.3 Limitations (p.7); Sec 3.3, Fig 1 + Table 1 (pp.10-12); Sec 3.4, Figs 3-4 (pp.14-17)"
+              >Google &amp; Google DeepMind · AI and Economy ATLAS v1.0
+              (report)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://ai.google/economy/atlas/methodology/"
+              data-nb-locator="&ldquo;Share of AI Usage per Occupation Group&rdquo;; &ldquo;Sample&rdquo;; &ldquo;Classification&rdquo;"
+              >Google · AI and Economy ATLAS methodology note</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://blog.google/innovation-and-ai/technology/ai/ai-economy-atlas-september-2026/"
+              data-nb-locator="&ldquo;Work&rdquo; and &ldquo;Science&rdquo; sections"
+              data-nb-note="Google's own announcement; secondary to its data. Owns the verbatim phrasing of the five headline figures."
+              >Google · The AI and Economy ATLAS (announcement post)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://ai.google/economy/atlas/"
+              data-nb-locator="Work and Geography views; occupation beeswarm; country detail cards (India, Brazil, Germany, Japan)"
+              >Google · AI and Economy ATLAS (interactive)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://ai.google/economy/atlas/embed-report-2026/data/atlas_v1_public_data.zip"
+              data-nb-locator="README.md, lines 29-66 (occupational metrics) and 34-38 (&ldquo;All Other&rdquo; aggregation note); atlas_v1_work_occupations.csv"
+              data-nb-note="CC-BY 4.0 release. U.S. computer-and-mathematical broad groups sum to 20.06% of work volume; the public files withhold major-group volume shares and the per-country multipliers."
+              >Google · AI and Economy ATLAS public dataset and data
+              dictionary</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://ai.google/static/documents/AI-in-Science.pdf"
+              data-nb-locator="Sec 2.2.3 (p.7); Sec 5.1-5.2 + Fig 11 (pp.22-24); Sec 6.1 (pp.26-29); footnote 14 (p.11)"
+              >Google, Google DeepMind &amp; MIT FutureTech · AI in Science:
+              Early Insights (September 2026)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://futuretech.mit.edu/publication/scientific-work"
+              data-nb-locator="&ldquo;Scientific Work&rdquo; publication page; taxonomy of 12 Level-1 areas, 114 Level-2, 2,433 Level-3 groups"
+              >MIT FutureTech · Scientific Work (Emmens, Liu, Tri&scaron;ovi&cacute;,
+              Thompson)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/"
+              data-nb-locator="&ldquo;Headline result&rdquo; and &ldquo;Discussion&rdquo;; arXiv 2507.09089"
+              data-nb-note="Independent of Google. A February 2026 METR follow-up on later tools reportedly found different results."
+              >METR · Measuring the impact of early-2025 AI on experienced
+              open-source developer productivity</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://bfi.uchicago.edu/working-papers/large-language-models-small-labor-market-effects/"
+              data-nb-locator="WP 2025-56, abstract and the time-use and earnings sections"
+              data-nb-note="Independent of Google. Danish administrative records; precise-null effects on earnings and recorded hours."
+              >Becker Friedman Institute · Large language models, small labor
+              market effects (Humlum &amp; Vestergaard)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
