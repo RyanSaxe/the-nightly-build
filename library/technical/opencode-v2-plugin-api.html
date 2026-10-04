@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenCode 2 skips any plugin whose default export lacks an id and a setup or effect function · Technical</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "technical",
+        "slug": "opencode-v2-plugin-api",
+        "template": "article",
+        "title": "OpenCode 2 skips any plugin whose default export lacks an id and a setup or effect function",
+        "mode": "open",
+        "order": null,
+        "date": "2026-10-04",
+        "tags": ["opencode", "plugins", "typescript"],
+        "sources": 20,
+        "words": 2789,
+        "reading_minutes": 12,
+        "dek": "OpenCode 2.0.22 decodes a plugin's default export against { id, setup } or { id, effect }, so a v1 export with only server() fails the check and is skipped.",
+        "harness": "Claude Code",
+        "model": "Claude Sonnet 5.5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Technical</div>
+        <h1 class="nb-title">OpenCode 2 skips any plugin whose default export lacks an id and a setup or effect function</h1>
+        <p class="nb-dekline">OpenCode 2.0.22 decodes a plugin&#x27;s default export against { id, setup } or { id, effect }, so a v1 export with only server() fails the check and is skipped.</p>
+        <div class="nb-byline">
+          <span>12 min read</span><span>2026-10-04</span>
+        </div>
+      </header>
+
+<section data-nb-section="orientation" id="orientation">
+<h2>A plugin is the default export of one file</h2>
+<figure class="nb-code">
+  <div class="nb-code-head">
+    <span class="nb-code-file">.opencode/plugins/example.ts · illustrative</span><span>ts</span>
+  </div>
+  <pre><code data-language="ts">import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "example",
+  async setup(ctx) {
+    await ctx.storage.set("loaded", true)
+  },
+})</code></pre>
+  <figcaption class="nb-code-cap">Illustrative minimal plugin for OpenCode 2. It type-checks under <code>tsc --strict --module nodenext</code> against @opencode/plugin 2.0.22.<sup class="nb-cite"><a href="#s1">1</a></sup></figcaption>
+</figure>
+<p>That file is a complete OpenCode 2 plugin. OpenCode is an open-source terminal coding agent, and a plugin is a TypeScript module its CLI imports at startup to add tools or to change behavior at hooks, the named points where the host calls plugin code. The default export is the object that <code>Plugin.define</code> returns, and <code>define</code> returns its argument unchanged. In @opencode/plugin 2.0.22 the compiled function is <code>export function define(plugin) { return plugin; }</code>, so it exists only to type the object.<sup class="nb-cite"><a href="#s1">1</a></sup> The <code>id</code> names the plugin. The migration guide says plugin storage is scoped by it and that status and diagnostics identify the plugin with it.<sup class="nb-cite"><a href="#s2">2</a></sup> <code>setup(ctx)</code> runs when the plugin loads and may return a cleanup function that runs when the plugin unloads.<sup class="nb-cite"><a href="#s3">3</a></sup> The <code>ctx</code> argument is the context object. Its members are the host's domains, each the API for one part of the host: <code>storage</code> above, and also <code>tool</code>, <code>shell</code>, <code>session</code>, <code>event</code> and others.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
+<p>The package is recent. @opencode/cli 2.0.0 was published to npm on 2026-09-11 and @opencode/plugin 2.0.0 on 2026-09-12 (UTC), and both had reached 2.0.22 by 2026-10-02, after 23 stable versions in 21 days.<sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup> The project's GitHub release list shows only 1.18.x releases and no announcement of 2.0.0 was found, so the npm publish times are the only release dates this article has.<sup class="nb-cite"><a href="#s6">6</a></sup> Use is real and partial. Eight dated issues and pull requests in six third-party repositories record plugins that moved, planned to move or broke between 2026-08-15 and 2026-10-01. In the week to 2026-10-01 npm counted 174,464 downloads of @opencode/plugin against 25,688,212 of its v1 predecessor, @opencode-ai/plugin.<sup class="nb-cite"><a href="#s7">7</a></sup></p>
+</section>
+<section data-nb-section="loader-checks" id="loader-checks">
+<h2>What the loader checks before setup runs</h2>
+<figure class="nb-figure">
+  <img
+    src="opencode-v2-plugin-api/load-path.png"
+    alt="Conceptual flow chart of the OpenCode 2 plugin loader. Config plugins entries and files in the plugin or plugins directory are resolved to an entrypoint by file URL or npm.add, imported, then decoded: the default export must be an object with an id and either an effect or a setup function. A failing plugin is skipped. A setup plugin is wrapped with fromPromise, and the plugin is registered with its options."
+  />
+  <figcaption>
+    Fig. 1 · The load path for one plugin entry, read from the loader source at commit 907b3bc. The diagram is conceptual and shows what the source does, not the output of a run.<sup class="nb-cite"><a href="#s8">8</a></sup>
+  </figcaption>
+</figure>
+<p>The loader is a function in the repository at <code>packages/core/src/config/plugin/external.ts</code>, 91 lines at commit 907b3bc. The CLI binary contains it, and the @opencode/cli package on npm is only a launcher that installs the platform binary.<sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup> Plugins reach the loader in two ways. A config document lists them under the key <code>"plugins"</code>, each item a package name or an object <code>{ package, options }</code>. A <code>file://</code> item becomes a file path, and items starting with <code>./</code> or <code>../</code> resolve against the config file's directory. A config directory contributes the files matched by <code>{plugin,plugins}/*.{ts,js}</code>, which means <code>.ts</code> and <code>.js</code> files directly inside the directory, sorted.<sup class="nb-cite"><a href="#s8">8</a></sup></p>
+<p>An absolute path is imported as a file URL. Anything else goes through <code>npm.add(ref.package)</code>, which returns an entrypoint. How it chooses a version was not read.<sup class="nb-cite"><a href="#s8">8</a></sup> The loader then runs <code>import(entrypoint)</code> and decodes the module against a schema that requires <code>default</code> to be a struct of one of two shapes, <code>{ id: string, effect: function }</code> or <code>{ id: string, setup: function }</code>. If the value has an <code>effect</code> key it is used directly. Otherwise it is wrapped with <code>PluginPromise.fromPromise</code>, so the shape the host runs is always the Effect one.<sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup> The registered plugin is <code>{ id, effect: (host) =&gt; plugin.effect({ ...host, options: ref.options ?? {} }) }</code>, which is where <code>ctx.options</code> gets the options from the config entry.<sup class="nb-cite"><a href="#s8">8</a></sup></p>
+<p>Each plugin's load is wrapped in <code>Effect.ignoreCause</code>. A plugin that fails to import or fails the schema is skipped, and neither the CLI nor the other plugins stop.<sup class="nb-cite"><a href="#s8">8</a></sup> The loader file does not show what gets logged on a skip. One user reports that the host logs a warning only.<sup class="nb-cite"><a href="#s10">10</a></sup> One detail is documented but could not be confirmed in that file. The docs say a plugin at <code>.opencode/plugins/example/index.ts</code> loads automatically, but the glob matches only files directly in the directory, and the code path that would load a subdirectory entrypoint was not found, so the examples here use <code>.opencode/plugins/example.ts</code>.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup></p>
+</section>
+<section data-nb-section="effect-form" id="effect-form">
+<h2>The Effect form puts the plugin lifetime in a Scope</h2>
+<figure class="nb-code">
+  <div class="nb-code-head">
+    <span class="nb-code-file">.opencode/plugins/example.ts · illustrative · Effect form</span><span>ts</span>
+  </div>
+  <pre><code data-language="ts">import { Plugin } from "@opencode/plugin/effect"
+import { Effect } from "effect"
+
+export default Plugin.define({
+  id: "example",
+  effect: (ctx) =&gt;
+    Effect.gen(function* () {
+      const storage = ctx.storage
+      yield* storage.set("loaded", true)
+    }),
+})</code></pre>
+  <figcaption class="nb-code-cap">The same plugin in the Effect form. It type-checks under <code>tsc --strict --module nodenext</code> against @opencode/plugin 2.0.22 with effect 4.0.0-rc.112.<sup class="nb-cite"><a href="#s1">1</a></sup></figcaption>
+</figure>
+<p>The import path is <code>@opencode/plugin/effect</code>, and the docs install it with <code>bun add @opencode/plugin effect</code>.<sup class="nb-cite"><a href="#s11">11</a></sup> The type declaration is <code>Plugin&lt;R = Scope.Scope&gt;</code> with <code>effect: (context: Context) =&gt; Effect.Effect&lt;void, never, R&gt;</code>.<sup class="nb-cite"><a href="#s1">1</a></sup> The error channel is <code>never</code>, so an effect that can fail has to handle the failure itself. The docs put the idea this way: "<code>@opencode/plugin/effect</code> is the Effect-native version of the OpenCode plugin API. Its context operations return Effects or Streams, callbacks return Effects, and plugin lifetime is represented by Scope."<sup class="nb-cite"><a href="#s11">11</a></sup> The package depends on <code>effect</code> 4.0.0-rc.112, a release candidate.<sup class="nb-cite"><a href="#s4">4</a></sup></p>
+<p>Since the loader runs only the Effect shape, the Promise form is a wrapper. <code>fromPromise(plugin)</code> returns <code>define({ id, effect })</code>, and its doc comment says: "Hook registrations created during the async <code>setup</code> attach to the plugin's scope, so unloading the plugin disposes them." The same comment says the captured fiber context keeps boot-time batching, so Promise transforms coalesce into one reload per domain.<sup class="nb-cite"><a href="#s9">9</a></sup> A Promise plugin therefore gets the scope-bound cleanup of its hook registrations without any Effect code.</p>
+</section>
+<section data-nb-section="tool-and-hook" id="tool-and-hook">
+<h2>A tool and a hook, registered through ctx</h2>
+<figure class="nb-code">
+  <div class="nb-code-head">
+    <span class="nb-code-file">.opencode/plugins/greeting.ts · illustrative</span><span>ts</span>
+  </div>
+  <pre><code data-language="ts">import { Plugin } from "@opencode/plugin"
+
+export default Plugin.define({
+  id: "greeting",
+  async setup(ctx) {
+    await ctx.tool.transform((editor) =&gt; {
+      editor.add({
+        name: "greeting",
+        description: "Create a greeting",
+        input: {
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+          additionalProperties: false,
+        },
+        async execute(input) {
+          return { content: `Hello ${(input as { name: string }).name}!` }
+        },
+      })
+    })
+    await ctx.tool.hook("execute.before", (event) =&gt; {
+      console.log(event.tool)
+    })
+  },
+})</code></pre>
+  <figcaption class="nb-code-cap">A tool and a tool hook in one plugin. The code follows the docs' Tools and Tool Hooks sections and the migration guide, and type-checks against @opencode/plugin 2.0.22.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s1">1</a></sup></figcaption>
+</figure>
+<p><code>ctx.tool.transform</code> takes a callback that receives an editor, and <code>editor.add</code> registers a tool with a name, a description, an <code>input</code> written as JSON Schema and an <code>execute</code> function that returns <code>{ content }</code>.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup> The example casts <code>input</code> to <code>{ name: string }</code> to read it. The declared transform type is <code>(callback: (input: Input) =&gt; void) =&gt; Promise&lt;Registration&gt;</code>, so the callback is synchronous and the call is awaited. A <code>Registration</code> is <code>{ dispose(): Promise&lt;void&gt; }</code>.<sup class="nb-cite"><a href="#s1">1</a></sup> The docs add that transforms are replayed when a registry rebuilds, and that a plugin calls the domain's <code>reload()</code> after external inputs change. That is documented, and was not exercised here.<sup class="nb-cite"><a href="#s3">3</a></sup></p>
+<p><code>ctx.tool.hook("execute.before", callback)</code> registers a hook, and the callback receives one event. The 2.0.22 type declaration lists its fields as <code>tool</code>, <code>sessionID</code>, <code>agent</code>, <code>messageID</code>, <code>id</code> and <code>input</code>. The <code>"execute.after"</code> event has the same fields plus a <code>status</code>, which is <code>"completed"</code> with a <code>result</code> or <code>"error"</code> with an <code>error</code>.<sup class="nb-cite"><a href="#s1">1</a></sup> The migration guide says v2 hook callbacks receive one mutable event where v1 callbacks received <code>(input, output)</code>.<sup class="nb-cite"><a href="#s2">2</a></sup></p>
+<p>Only some hook names appear in the 2.0.22 type declarations. The table separates those from names that appear only in the docs, which this article could not check against the package.</p>
+<table class="nb-table">
+  <caption>Hook names by domain and where each is confirmed.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup></caption>
+  <thead><tr><th>Domain</th><th>Hook names</th><th class="txt">Evidence</th></tr></thead>
+  <tbody>
+    <tr><td><span class="nb-table-token">tool</span></td><td><span class="nb-table-token">execute.before</span> <span class="nb-table-token">execute.after</span></td><td class="txt">In the 2.0.22 type declarations, with the event fields listed above.</td></tr>
+    <tr><td><span class="nb-table-token">shell</span></td><td><span class="nb-table-token">create.before</span></td><td class="txt">In the type declarations. The event has <code>command</code>, <code>cwd</code>, <code>timeout</code>, <code>shell</code> and <code>env</code>, all mutable.</td></tr>
+    <tr><td><span class="nb-table-token">session</span></td><td><span class="nb-table-token">model.request</span> <span class="nb-table-token">http.request</span> <span class="nb-table-token">http.response</span></td><td class="txt">In the type declarations, with three <code>experimental.ws.*</code> hooks.</td></tr>
+    <tr><td><span class="nb-table-token">session</span></td><td><span class="nb-table-token">prompt</span> <span class="nb-table-token">context</span> <span class="nb-table-token">compaction</span> <span class="nb-table-token">generate</span> <span class="nb-table-token">title</span> <span class="nb-table-token">retry</span></td><td class="txt">Documented only.</td></tr>
+    <tr><td><span class="nb-table-token">permission</span></td><td><span class="nb-table-token">evaluate</span></td><td class="txt">Documented only.</td></tr>
+  </tbody>
+</table>
+</section>
+<section data-nb-section="porting-v1" id="porting-v1">
+<h2>Porting a v1 plugin takes a new export and a new config key</h2>
+<p>A v1 plugin in the project's v1 documentation is a named export, an async function that receives <code>{ project, client, $, directory, worktree }</code> and returns the hooks, typed with <code>import type { Plugin } from "@opencode-ai/plugin"</code> and listed in config under <code>"plugin"</code>.<sup class="nb-cite"><a href="#s12">12</a></sup> The v1 package's root types in 1.18.34 declare <code>Plugin = (input: PluginInput, options?: PluginOptions) =&gt; Promise&lt;Hooks&gt;</code> and <code>PluginModule = { id?: string; server: Plugin; tui?: never }</code>.<sup class="nb-cite"><a href="#s13">13</a></sup></p>
+<table class="nb-table">
+  <caption>The two plugin APIs at package level, as of 2026-10-04.<sup class="nb-cite"><a href="#s13">13</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup></caption>
+  <thead><tr><th></th><th class="txt">v1</th><th class="txt">v2</th></tr></thead>
+  <tbody>
+    <tr><td>Package</td><td class="txt"><span class="nb-table-token">@opencode-ai/plugin</span> 1.18.34, published 2026-09-30</td><td class="txt"><span class="nb-table-token">@opencode/plugin</span> 2.0.22, published 2026-10-02</td></tr>
+    <tr><td>Entry</td><td class="txt">A named export of type <code>Plugin</code>, or an object <code>{ id?, server }</code></td><td class="txt">A default export <code>{ id, setup }</code> or <code>{ id, effect }</code></td></tr>
+    <tr><td>Config key</td><td class="txt"><span class="nb-table-token">plugin</span></td><td class="txt"><span class="nb-table-token">plugins</span></td></tr>
+    <tr><td>Hook callback</td><td class="txt"><code>(input, output)</code></td><td class="txt">One mutable event</td></tr>
+  </tbody>
+</table>
+<p>The v1 package keeps the v1 shape at its root and still ships: 1.18.34 came out on 2026-09-30. It also exports <code>./v2/effect</code>, <code>./v2/promise</code> and <code>./v2/effect/plugin</code> subpaths.<sup class="nb-cite"><a href="#s13">13</a></sup> The migration guide says config can be normalized automatically and implementation code must be ported: "V1 plugin implementations do not run in V2. Moving a file or renaming its config entry is not enough." The config change is the key, <code>"plugin"</code> to <code>"plugins"</code>, and the <code>[path, options]</code> tuple becomes <code>{ package, options }</code>.<sup class="nb-cite"><a href="#s2">2</a></sup></p>
+<p>What a v1 plugin does under v2 comes from three user reports, since the binary was not run for this article. A v1 plugin has no default export carrying <code>setup</code> or <code>effect</code>. The named-export form has no default at all and the object form has only <code>server</code>, so by the loader's schema either fails the decode and is skipped. Reporters quote the same error in each: "Plugin must export a default definition with an id and an effect or setup function." In Honcho's tracker, @honcho-ai/opencode-honcho 0.1.4 declares @opencode-ai/plugin ^1.18.23 and fails to load on @opencode/cli 2.0.12.<sup class="nb-cite"><a href="#s14">14</a></sup> In Gortex's, v0.64.5 under OpenCode 2.0.15 prints the error with <code>(cause: SchemaError(Missing key at ["default"]))</code>. Its deny, enrich, nudge and session-briefing hooks go inactive while its MCP tools keep working.<sup class="nb-cite"><a href="#s10">10</a></sup> The oh-my-openagent issue lists the changes its author sees as required and states that no workaround exists, so users stay on v1 until the port is done.<sup class="nb-cite"><a href="#s15">15</a></sup> The error string was not found in the source that was read. The <code>Missing key</code> suffix fits the schema decode in the loader, so the string is reported here, not source-confirmed.<sup class="nb-cite"><a href="#s8">8</a></sup></p>
+<figure class="nb-code">
+  <div class="nb-code-head">
+    <span class="nb-code-file">opencode-plugin/index.ts · illustrative · diff</span><span>diff</span>
+  </div>
+  <pre><code data-language="diff">+import { Plugin } from "@opencode/plugin"
++
+ export default {
++  ...Plugin.define({
++    id: "example",
++    async setup(ctx) {
++      await ctx.tool.hook("execute.before", () =&gt; { console.log("A tool is about to run") })
++    },
++  }),
+   async server() {
+     return { "tool.execute.before": async () =&gt; { console.log("A tool is about to run") } }
+   },
+ }</code></pre>
+  <figcaption class="nb-code-cap">A port that keeps both versions in one file. The v1 half is the object form with <code>server()</code>, and the v2 half is the migration guide's dual export.<sup class="nb-cite"><a href="#s2">2</a></sup></figcaption>
+</figure>
+<p>The diff adds a v2 definition and removes nothing. Both sets of keys sit on one object, so OpenCode 2 reads <code>id</code> and <code>setup</code> and an OpenCode 1.18 reads <code>server</code>.<sup class="nb-cite"><a href="#s2">2</a></sup> The guide says the object form with <code>server()</code> is supported in OpenCode 1.18.29 and newer, and that older v1 releases may expect function exports, so a plugin supporting them needs separate package versions or entrypoints.<sup class="nb-cite"><a href="#s2">2</a></sup> Gortex's pull request 852 drops the @opencode/plugin dependency as well, since <code>define</code> is an identity function: <code>export default { id: "gortex", setup, server };</code>. Its description says the one file works on OpenCode 1.18 and 2.0.21, and the pull request was open when read.<sup class="nb-cite"><a href="#s16">16</a></sup><sup class="nb-cite"><a href="#s1">1</a></sup> It followed pull request 851, whose maintainer listed three faults. A fallback exported <code>undefined</code> as the default when @opencode/plugin could not be resolved, and OpenCode 1.18 rejected that. The code read event fields as <code>event.callID</code> and <code>event.output</code> where the real ones are <code>event.id</code> and <code>event.result</code>. And the dependency was one the file did not need.<sup class="nb-cite"><a href="#s17">17</a></sup> The 2.0.22 declarations give <code>id</code> and <code>result</code> for the tool hook event.<sup class="nb-cite"><a href="#s1">1</a></sup></p>
+<p>The merged port in opencode-parser, from 2026-09-29, replaced the @opencode-ai/plugin dependency with @opencode/plugin, added a <code>Plugin.define</code> entry whose <code>setup</code> registers a parse tool through <code>ctx.tool.transform</code>, and kept the v1 tool alongside. Its README tells v1 users to keep the <code>"plugin"</code> key and v2 users to use <code>"plugins"</code>.<sup class="nb-cite"><a href="#s18">18</a></sup></p>
+<p>The hooks need a mapping, and the migration guide supplies one. The third column says where each v2 name is confirmed.</p>
+<table class="nb-table">
+  <caption>Abridged v1 to v2 mapping from the migration guide.<sup class="nb-cite"><a href="#s2">2</a></sup></caption>
+  <thead><tr><th>v1</th><th class="txt">v2</th><th class="txt">v2 name confirmed in 2.0.22 declarations</th></tr></thead>
+  <tbody>
+    <tr><td><span class="nb-table-token">tool.execute.before</span></td><td class="txt"><code>ctx.tool.hook("execute.before")</code></td><td class="txt">Yes<sup class="nb-cite"><a href="#s1">1</a></sup></td></tr>
+    <tr><td><span class="nb-table-token">shell.env</span></td><td class="txt"><code>ctx.shell.hook("create.before")</code></td><td class="txt">Yes<sup class="nb-cite"><a href="#s1">1</a></sup></td></tr>
+    <tr><td><span class="nb-table-token">chat.headers</span></td><td class="txt"><code>ctx.session.hook("model.request")</code></td><td class="txt">Yes<sup class="nb-cite"><a href="#s1">1</a></sup></td></tr>
+    <tr><td><span class="nb-table-token">chat.params</span></td><td class="txt"><code>ctx.session.hook("context")</code></td><td class="txt">Documented only</td></tr>
+    <tr><td><span class="nb-table-token">chat.message</span></td><td class="txt"><code>ctx.session.hook("prompt")</code></td><td class="txt">Documented only</td></tr>
+    <tr><td><span class="nb-table-token">permission.ask</span></td><td class="txt"><code>ctx.permission.hook("evaluate")</code></td><td class="txt">Documented only</td></tr>
+    <tr><td><span class="nb-table-token">event</span></td><td class="txt"><code>ctx.event.subscribe()</code></td><td class="txt">Domain exists; event types not checked<sup class="nb-cite"><a href="#s1">1</a></sup></td></tr>
+    <tr><td><span class="nb-table-token">dispose</span></td><td class="txt">The cleanup function that <code>setup</code> returns</td><td class="txt">Yes, as the <code>Cleanup</code> type<sup class="nb-cite"><a href="#s1">1</a></sup></td></tr>
+    <tr><td><span class="nb-table-token">tool()</span> definitions</td><td class="txt"><code>editor.add</code> inside <code>ctx.tool.transform</code>, with JSON Schema <code>input</code></td><td class="txt">Yes, as in the example above<sup class="nb-cite"><a href="#s1">1</a></sup></td></tr>
+  </tbody>
+</table>
+<p>Four v1 hooks have no direct v2 equivalent in the guide: <code>experimental.compaction.autocontinue</code>, <code>experimental.provider.small_model</code>, <code>experimental.text.complete</code> and <code>command.execute.before</code>. The <code>$</code> Bun shell helper has none either.<sup class="nb-cite"><a href="#s2">2</a></sup> The port request for opencode-vision calls the work "mostly mechanical" and lists Bun globals to be replaced with Node <code>fs</code>, a v1 <code>FilePart.url</code> base64 value to become a v2 <code>MediaPart</code>, and <code>tool.definition</code> to become <code>ctx.tool.transform()</code>.<sup class="nb-cite"><a href="#s19">19</a></sup> Whether that is mechanical depends on which of those a plugin uses.</p>
+</section>
+<section data-nb-section="adoption" id="adoption">
+<h2>v1 is still installed about 147 times as often</h2>
+<table class="nb-table">
+  <caption>Downloads in the 7 days from 2026-09-25 to 2026-10-01. npm counts every install, including CI and mirrors, so these are not counts of developers.<sup class="nb-cite"><a href="#s7">7</a></sup></caption>
+  <thead><tr><th>Package</th><th>Downloads</th></tr></thead>
+  <tbody>
+    <tr><td><span class="nb-table-token">@opencode-ai/plugin</span> (v1)</td><td>25,688,212</td></tr>
+    <tr><td><span class="nb-table-token">@opencode/cli</span> (v2)</td><td>183,569</td></tr>
+    <tr><td><span class="nb-table-token">@opencode/plugin</span> (v2)</td><td>174,464</td></tr>
+  </tbody>
+</table>
+<p>v2 has not displaced v1. The v1 plugin package was downloaded about 147 times as often as the v2 one, and it kept releasing, with 1.18.34 on 2026-09-30.<sup class="nb-cite"><a href="#s7">7</a></sup><sup class="nb-cite"><a href="#s13">13</a></sup> The migration is real and early. The eight items below run from a plan written during the v2 beta to a merged port, in six repositories. They are a sample of the ones that were opened, not a count of migrations.</p>
+<table class="nb-table">
+  <caption>Dated migration issues and pull requests, with the state shown when each page was read.</caption>
+  <thead><tr><th>Date</th><th class="txt">Item</th><th class="txt">What it records</th><th class="txt">State</th></tr></thead>
+  <tbody>
+    <tr><td>2026-08-15</td><td class="txt">opencode-pty issue 55<sup class="nb-cite"><a href="#s20">20</a></sup></td><td class="txt">A plan to keep the v1 entry point and add a separate v2 export, written before the npm release. Its test is that the plugin appears in <code>opencode2 api get /api/plugin</code>.</td><td class="txt">Closed with PR 59</td></tr>
+    <tr><td>2026-09-19</td><td class="txt">oh-my-openagent issue 8489<sup class="nb-cite"><a href="#s15">15</a></sup></td><td class="txt">v4.19.4 and v5.0.0-beta.78 fail to load on v2.</td><td class="txt">Closed</td></tr>
+    <tr><td>2026-09-21</td><td class="txt">opencode-honcho issue 46<sup class="nb-cite"><a href="#s14">14</a></sup></td><td class="txt">0.1.4 fails on @opencode/cli 2.0.12.</td><td class="txt">Closed, linked to PR 50</td></tr>
+    <tr><td>2026-09-26</td><td class="txt">opencode-vision issue 5<sup class="nb-cite"><a href="#s19">19</a></sup></td><td class="txt">A port request with named mappings.</td><td class="txt">Open</td></tr>
+    <tr><td>2026-09-28</td><td class="txt">gortex issue 830<sup class="nb-cite"><a href="#s10">10</a></sup></td><td class="txt">v0.64.5 hooks inactive on OpenCode 2.0.15.</td><td class="txt">Open, linked to PR 852</td></tr>
+    <tr><td>2026-09-29</td><td class="txt">opencode-parser PR 2<sup class="nb-cite"><a href="#s18">18</a></sup></td><td class="txt">A port that keeps both versions in one package.</td><td class="txt">Merged</td></tr>
+    <tr><td>2026-10-01</td><td class="txt">gortex PRs 851 and 852<sup class="nb-cite"><a href="#s17">17</a></sup><sup class="nb-cite"><a href="#s16">16</a></sup></td><td class="txt">Two dual-export attempts, the second dependency-free.</td><td class="txt">Both open</td></tr>
+  </tbody>
+</table>
+<p>The failure in these items is quiet. Gortex's MCP tools kept working while its hooks went inactive, and the host logged a warning only.<sup class="nb-cite"><a href="#s10">10</a></sup> The opencode-pty plan names a check that does not depend on the log: after loading, the plugin should appear in the output of <code>opencode2 api get /api/plugin</code>.<sup class="nb-cite"><a href="#s20">20</a></sup></p>
+</section>
+
+<section class="nb-sources" data-nb-section="sources" id="sources">
+<h2>Sources</h2>
+<ol>
+<li id="s1"><a data-nb-source data-nb-kind="primary" href="https://registry.npmjs.org/@opencode/plugin/-/plugin-2.0.22.tgz" data-nb-locator="package/dist/promise/plugin.d.ts, package/dist/effect/plugin.d.ts, package/dist/promise/plugin.js">npm · @opencode/plugin 2.0.22 package tarball (type declarations)</a></li>
+<li id="s2"><a data-nb-source data-nb-kind="primary" href="https://opencode.ai/v2/docs/build/plugins/migrate-v1/" data-nb-locator="Replace the entrypoint; Migrate the context; Support V1 and V2 from one package">OpenCode · Migrate a v1 plugin (v2 documentation)</a></li>
+<li id="s3"><a data-nb-source data-nb-kind="primary" href="https://opencode.ai/v2/docs/build/plugins/" data-nb-locator="Lifecycle, Context, Transforms, Tools, Tool Hooks">OpenCode · Plugins (v2 documentation)</a></li>
+<li id="s4"><a data-nb-source data-nb-kind="primary" href="https://registry.npmjs.org/@opencode/plugin" data-nb-locator="versions[&quot;2.0.22&quot;].exports, time[&quot;2.0.0&quot;], time[&quot;2.0.22&quot;]" data-nb-note="Package page npmjs.com/package/@opencode/plugin returns 403 to scripted fetch; data read from the registry JSON.">npm · @opencode/plugin package metadata</a></li>
+<li id="s5"><a data-nb-source data-nb-kind="primary" href="https://registry.npmjs.org/@opencode/cli" data-nb-locator="bin, time[&quot;2.0.0&quot;]" data-nb-note="Package page npmjs.com/package/@opencode/cli returns 403 to scripted fetch; data read from the registry JSON.">npm · @opencode/cli package metadata</a></li>
+<li id="s6"><a data-nb-source data-nb-kind="primary" href="https://github.com/anomalyco/opencode/releases" data-nb-locator="release list">GitHub · anomalyco/opencode releases</a></li>
+<li id="s7"><a data-nb-source data-nb-kind="primary" href="https://api.npmjs.org/downloads/point/last-week/@opencode/plugin" data-nb-locator="JSON downloads, start, end; same endpoint for @opencode/cli and @opencode-ai/plugin">npm · weekly download counts (api.npmjs.org)</a></li>
+<li id="s8"><a data-nb-source data-nb-kind="primary" href="https://github.com/anomalyco/opencode/blob/907b3bc518fa48e90e8ec24dd327d13eee71c36c/packages/core/src/config/plugin/external.ts" data-nb-locator="lines 15-30, 45-52, 60-67, 78-87">anomalyco/opencode · packages/core/src/config/plugin/external.ts at 907b3bc</a></li>
+<li id="s9"><a data-nb-source data-nb-kind="primary" href="https://github.com/anomalyco/opencode/blob/907b3bc518fa48e90e8ec24dd327d13eee71c36c/packages/core/src/plugin/promise.ts" data-nb-locator="doc comment above fromPromise">anomalyco/opencode · packages/core/src/plugin/promise.ts at 907b3bc</a></li>
+<li id="s10"><a data-nb-source data-nb-kind="primary" href="https://github.com/zzet/gortex/issues/830" data-nb-locator="Error block" data-nb-note="Issue reported by a user of the tool.">zzet/gortex · issue 830</a></li>
+<li id="s11"><a data-nb-source data-nb-kind="primary" href="https://opencode.ai/v2/docs/build/plugins/effect/" data-nb-locator="intro and first listing; Plugin lifecycle">OpenCode · Effect plugins (v2 documentation)</a></li>
+<li id="s12"><a data-nb-source data-nb-kind="primary" href="https://opencode.ai/docs/plugins" data-nb-locator="named-export plugin example">OpenCode · Plugins (v1 documentation)</a></li>
+<li id="s13"><a data-nb-source data-nb-kind="primary" href="https://registry.npmjs.org/@opencode-ai/plugin/-/plugin-1.18.34.tgz" data-nb-locator="package/package.json exports; package/dist/index.d.ts, Plugin and PluginModule">npm · @opencode-ai/plugin 1.18.34 package</a></li>
+<li id="s14"><a data-nb-source data-nb-kind="primary" href="https://github.com/plastic-labs/opencode-honcho/issues/46" data-nb-locator="issue body" data-nb-note="Issue reported by a user, not the maintainer.">plastic-labs/opencode-honcho · issue 46</a></li>
+<li id="s15"><a data-nb-source data-nb-kind="primary" href="https://github.com/code-yeongyu/oh-my-openagent/issues/8489" data-nb-locator="Critical API Shape Changes" data-nb-note="Issue reported by a user; the page returns 403 to curl.">code-yeongyu/oh-my-openagent · issue 8489</a></li>
+<li id="s16"><a data-nb-source data-nb-kind="primary" href="https://github.com/zzet/gortex/pull/852" data-nb-locator="PR description" data-nb-note="Open when read.">zzet/gortex · pull request 852</a></li>
+<li id="s17"><a data-nb-source data-nb-kind="primary" href="https://github.com/zzet/gortex/pull/851" data-nb-locator="maintainer review comments" data-nb-note="Open when read, superseded by 852.">zzet/gortex · pull request 851</a></li>
+<li id="s18"><a data-nb-source data-nb-kind="primary" href="https://github.com/TejasS1233/opencode-parser/pull/2" data-nb-locator="API Migration; Configuration" data-nb-note="Merged.">TejasS1233/opencode-parser · pull request 2</a></li>
+<li id="s19"><a data-nb-source data-nb-kind="primary" href="https://github.com/JochenYang/opencode-vision/issues/5" data-nb-locator="Migration Requirements" data-nb-note="Open when read.">JochenYang/opencode-vision · issue 5</a></li>
+<li id="s20"><a data-nb-source data-nb-kind="primary" href="https://github.com/shekohex/opencode-pty/issues/55" data-nb-locator="Proposed Migration Approach" data-nb-note="Closed with PR 59.">shekohex/opencode-pty · issue 55</a></li>
+</ol>
+</section>
+    </article>
+  </body>
+</html>
