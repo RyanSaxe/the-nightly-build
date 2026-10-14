@@ -1,7 +1,6 @@
 # Niche, powerful tools for an expert workflow, rotating across Python packages,
 # Neovim plugins, and AI-harness extensions, roughly one of each a week.
 name: Expert Tools
-paused: true
 mode: open
 section: "Technical Practice"
 template: article
@@ -10,7 +9,9 @@ strict: false
 bands:
   words: [1200, 3000]
 min_sources: 6
-cadence: [mon, wed, fri]
+# Manual: never scheduled, accepts any requested slug. To resume the
+# rotation, set cadence back to [mon, wed, fri].
+cadence: manual
 items:
   - slug: pydantic-monty
     title: "Pydantic Monty"
