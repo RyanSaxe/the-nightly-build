@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A nowcasting RL task built in verifiers 0.4.0 has to close four routes to its own answer · Expert Tools</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "expert-tools",
+        "slug": "verifiers-rl-environments",
+        "template": "article",
+        "title": "A nowcasting RL task built in verifiers 0.4.0 has to close four routes to its own answer",
+        "mode": "open",
+        "order": null,
+        "date": "2026-10-14",
+        "tags": ["python", "reinforcement-learning", "verifiers", "prime-intellect", "nowcasting"],
+        "sources": 22,
+        "words": 2999,
+        "reading_minutes": 13,
+        "dek": "Written against Prime Intellect's TaskData, Task, Taskset and Toolset classes and built on real ALFRED vintages, a payrolls taskset let a command in the agent's box on the subprocess runtime read January 2024's hidden answer of 353,000 jobs.",
+        "harness": "claude-code",
+        "model": "claude"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Expert Tools</div>
+        <h1 class="nb-title">A nowcasting RL task built in verifiers 0.4.0 has to close four routes to its own answer</h1>
+        <p class="nb-dekline">
+          Written against Prime Intellect's TaskData, Task, Taskset and Toolset classes and built on real ALFRED vintages, a payrolls taskset let a command in the agent's box on the subprocess runtime read January 2024's hidden answer of 353,000 jobs.
+        </p>
+        <div class="nb-byline">
+          <span>13 min read</span><span>2026-10-14</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Two January payroll numbers for one verifiers task</h2>
+        <p>
+          On 2 February 2024 the first release of US total nonfarm payrolls put
+          January's gain at 353,000 jobs. The vintage of the same series that
+          ALFRED served on 14 October 2026 puts it at 175,000.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          ALFRED, the St. Louis Fed's vintage archive, keeps every version of
+          a series. In the FRED API's terms, "the real-time period marks when facts were true or when
+          information was known until it changed."<sup class="nb-cite"><a href="#s2">2</a></sup>
+          An environment that trains a language-model agent to nowcast
+          payrolls, estimating a month's figure before its release, has to
+          pick one of the two before it computes a reward.
+        </p>
+        <p>
+          verifiers is Prime Intellect's Python package for building such
+          environments. Release 0.4.0 reached PyPI on 12 October 2026 under the
+          MIT license, with the whole interface in one subpackage, imported as <code>import verifiers.v1 as vf</code>.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          An environment is an installable package. It can be published on the
+          Environments Hub, a community registry,<sup class="nb-cite"><a href="#s4">4</a></sup>
+          and trained with prime-rl, Prime's open-source asynchronous RL
+          trainer.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          Hosted Training runs prime-rl on Prime's GPUs.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          The listings come from nowcast_alfred, twelve tasks built on ALFRED
+          payroll vintages for 2024, and the eval config that ran it end to end against verifiers
+          0.4.0 on the subprocess runtime with a canned model that always
+          answers 200. The training config was not run, and nothing was trained.
+        </p>
+      </section>
+
+      <section data-nb-section="taskset-classes" id="taskset-classes">
+        <h2>Four verifiers classes make up the nowcasting taskset</h2>
+        <p>
+          <code>vf.TaskData</code> is a frozen pydantic row holding the prompt,
+          a network allowlist, timeouts, resources and the environment's own
+          fields.
+          <code>vf.Task</code> wraps one row and carries the hooks: an
+          <code>async def setup(self, trace, runtime)</code>, the reward and
+          metric methods, and a <code>toolsets</code> classmethod that returns
+          tool servers for each rollout. <code>vf.Taskset</code> has one
+          abstract method, <code>load(self) -> Iterable[TaskT]</code>, and
+          <code>vf.Toolset</code> registers every <code>@vf.tool</code> method
+          on an MCP server. The loader accepts an installed package whose
+          <code>__all__</code> exports exactly one Taskset subclass.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">nowcast_alfred/taskset.py · excerpt</span><span>python</span>
+          </div>
+          <pre><code data-language="python">class NowcastData(vf.TaskData):
+    series_id: str
+    as_of: str
+    reference_month: str
+    realized: float  # first release: hidden from the agent, read only by scoring
+    realized_latest: float  # a later vintage, recorded as a metric for contrast
+    baseline: float  # naive forecast: last change known on as_of
+    scale: float  # std of the last 24 known monthly changes
+
+
+class NowcastTaskset(vf.Taskset[NowcastTask, NowcastConfig]):
+    def load(self) -> list[NowcastTask]:
+        rows = json.loads(FIXTURE.read_text())["tasks"]
+        return [
+            NowcastTask(
+                NowcastData(
+                    id=f"{row['target_series']}@{row['as_of']}",
+                    prompt=PROMPT.format(as_of=row["as_of"], month=row["reference_month"][:7]),
+                    network_allow=[] if self.config.closed_egress else ["*"],
+                    series_id=row["target_series"],
+                    as_of=row["as_of"],
+                    reference_month=row["reference_month"],
+                    realized=row["realized_first"],
+                    realized_latest=row["realized_latest"],
+                    baseline=row["baseline"],
+                    scale=row["scale"],
+                ),
+                self.config.task,
+            )
+            for row in rows
+        ]</code></pre>
+          <figcaption class="nb-code-cap">
+            Excerpt from the nowcast_alfred package, which pins
+            verifiers==0.4.0. It loaded twelve tasks and ran under vf-eval on
+            the subprocess runtime with a stub model. Imports, the prompt and
+            the config classes are omitted. NowcastConfig adds one field,
+            closed_egress, defaulting to True.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Twelve tasks are a fixture, not a training set. Prime defines group
+          size as "Rollouts generated per task" and sets floors of 8 for group
+          size and 64 for batch size.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          Batch size counts rollouts. The training page's knob table says
+          tasks, but Prime's Wordle run counts 32 tasks of 16 rollouts as a
+          batch of 512.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          At the floors one step draws 8 tasks, and a 100-step run draws 800,
+          so each of twelve months would be seen about 67 times. A policy
+          trained on one task learns its realized number. A method is learned
+          only when it has to serve many series and as-of dates.
+        </p>
+      </section>
+
+      <section data-nb-section="first-release-reward" id="first-release-reward">
+        <h2>The nowcast reward scores the first release</h2>
+        <p>
+          Reward and metric hooks are decorated methods on the Task, and in
+          0.4.0 they must be coroutines. verifiers runs them through
+          <code>asyncio.gather</code>, so a plain <code>def</code> returning a
+          float raises <code>TypeError: An asyncio.Future, a coroutine or an awaitable is required</code>.
+          Parameters are matched by name: <code>task</code> is the TaskData
+          row, not the Task, <code>trace</code> is the rollout record and
+          <code>runtime</code> is the agent's box. The Task's three type
+          parameters name the row, the per-rollout State and the task config.
+          The trace's reward is the sum of each score times its weight.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">nowcast_alfred/taskset.py · NowcastTask hooks</span><span>python</span>
+          </div>
+          <pre><code data-language="python">FORECAST = re.compile(r"FORECAST:\s*(-?\d+(?:\.\d+)?)", re.IGNORECASE)
+
+
+def parse(trace: vf.Trace) -> float | None:
+    match = FORECAST.search(trace.last_reply)
+    return float(match.group(1)) if match else None
+
+
+class NowcastTask(vf.Task[NowcastData, CatalogState, NowcastTaskConfig]):
+    @vf.reward(weight=1.0)
+    async def beats_baseline(self, task: NowcastData, trace: vf.Trace) -> float:
+        forecast = parse(trace)
+        if forecast is None:
+            return -1.0
+        gain = abs(task.baseline - task.realized) - abs(forecast - task.realized)
+        return max(-1.0, min(1.0, gain / task.scale))
+
+    @vf.metric
+    async def abs_error_latest(self, task: NowcastData, trace: vf.Trace) -> float:
+        forecast = parse(trace)
+        return float("nan") if forecast is None else abs(forecast - task.realized_latest)
+
+    @vf.metric
+    async def lookups(self, trace: vf.Trace) -> float:
+        return float(trace.state.lookups)</code></pre>
+          <figcaption class="nb-code-cap">
+            Excerpt run against verifiers 0.4.0 on the subprocess runtime with
+            a stub model. The abs_error metric against the first release and
+            the setup and toolsets methods are omitted here.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The January task shows the arithmetic. The naive forecast of 216
+          missed the first release of 353 by 137, and the stub's 200 missed it
+          by 153. The gain is minus 16, and divided by that task's scale of
+          163.3 it gives the reward of -0.098 the run recorded.
+        </p>
+        <p>
+          Whether a quantity belongs in the reward turns on one test: should
+          the policy be pushed toward it? Error against the latest vintage
+          depends on revisions nobody could know on the as-of date, so it is a
+          metric. The lookup count describes how the agent worked, so it is a
+          metric too. Metrics land in <code>trace.metrics</code> and never
+          enter the reward.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">97.7k</span><span class="nb-stat-l">Mean absolute revision, 2024</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">104.3k</span><span class="nb-stat-l">Mean naive miss, 2024</span>
+          </div>
+        </div>
+        <p>
+          Over 2024, revisions moved the monthly change by 97.7 thousand jobs
+          on average between first release and the October 2026 vintage. The
+          naive forecast missed the first release by 104.3 thousand on
+          average.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Scoring against the latest vintage would move the target about as far
+          as the baseline misses it. The first release is a standard cut: the
+          FRED API returns it
+          with output type 4, "Observations, Initial Release Only".<sup class="nb-cite"><a href="#s9">9</a></sup>
+          The figures cover one series over twelve months.
+        </p>
+        <p>
+          One forecast window is also a noisy reward. In October 2024 the first
+          release showed a gain of 12 thousand against a naive forecast of 254
+          thousand.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Every rollout in a group faces that one draw, so the group's ranking
+          says which forecast was closest that month and nothing about other
+          months. A larger group sharpens the ranking on the draw. Only more
+          tasks average over draws. Prime's group floor exists because when a group's rollouts all succeed or all fail, "the within-group advantage
+          collapses to zero and the trainer learns nothing from that task".<sup class="nb-cite"><a href="#s7">7</a></sup>
+          The floor applies to group-relative algorithms such as the default,
+          GRPO.<sup class="nb-cite"><a href="#s10">10</a></sup>
+          The stub run hit that case: its fixed forecast gave identical
+          rewards within each group of two. The reward is a clipped,
+          scale-normalized gain because a hit-or-miss threshold would tie more
+          groups, a design judgment Prime's docs do not state.
+        </p>
+      </section>
+
+      <section data-nb-section="routes-to-the-answer" id="routes-to-the-answer">
+        <h2>What in verifiers 0.4.0 closes each route to the answer</h2>
+        <p>
+          A snapshot taken on 1 February 2024 ends at December 2023, at 157,232
+          thousand jobs. The release on 2 February added January at 157,700 and
+          revised December to 157,347, so January's change of 353 sits in any
+          catalog dated 2 February or later.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          A task dated one day late is scored against a number its own catalog
+          contains. The nowcast_alfred build dates each snapshot at month end
+          and asserts that no snapshot contains its own reference month. The
+          documented FRED API builds such a snapshot from
+          <code>realtime_start</code> and <code>realtime_end</code> set to the
+          as-of date, or from <code>vintage_dates</code>.<sup class="nb-cite"><a href="#s9">9</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">nowcast_alfred/taskset.py · NowcastTask.toolsets and setup</span><span>python</span>
+          </div>
+          <pre><code data-language="python">    @classmethod
+    def toolsets(cls, config: NowcastTaskConfig) -> list[vf.Toolset]:
+        return [CatalogToolset(config.tools)]
+
+    async def setup(self, trace: vf.Trace, runtime: vf.Runtime) -> None:
+        # Stage the as-of snapshot only. The realized value never enters the box.
+        row = next(
+            t
+            for t in json.loads(FIXTURE.read_text())["tasks"]
+            if t["reference_month"] == self.data.reference_month
+        )
+        for sid, obs in row["snapshot"].items():
+            lines = "date,value\n" + "".join(f"{d},{v}\n" for d, v in sorted(obs.items()))
+            await runtime.write(f"catalog/{sid}.csv", lines.encode())</code></pre>
+          <figcaption class="nb-code-cap">
+            Run against verifiers 0.4.0 on the subprocess runtime. For the
+            February task, setup wrote four CSVs into the box, and the last
+            PAYEMS rows were 157,347 for December and 157,700 for January, as
+            January's first release published them.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <table class="nb-table">
+          <caption>
+            Four routes to the answer and what closes each. Closed egress was read in the source, not
+            executed. The answer-file read was executed.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th class="txt">Instance</th>
+              <th class="txt">What closes it</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Snapshot date</span></td>
+              <td class="txt">A catalog dated 2 February 2024 holds January's 353.</td>
+              <td class="txt">Date each task before its release. Nothing in verifiers checks this.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Live internet</span></td>
+              <td class="txt">FRED serves today's vintage by default.</td>
+              <td class="txt"><code>network_allow=[]</code> on a docker, podman, prime, modal or e2b runtime. Subprocess refuses it.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Tool server</span></td>
+              <td class="txt">Tool URLs stay reachable under <code>network_allow=[]</code>.</td>
+              <td class="txt">Tools that serve only the as-of snapshot.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Answer file</span></td>
+              <td class="txt">The subprocess box read <code>"realized_first": 353.0</code> from the installed package.</td>
+              <td class="txt">An isolating runtime, toolsets left uncolocated, and no answers inside a package that ships to the box.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <code>network_allow=[]</code> does not mean no network. verifiers
+          turns an empty allowlist into a policy that blocks everything except
+          framework routes, and those include the model endpoint and every MCP
+          tool URL. The policy is applied after task setup, so Task.setup runs
+          with open egress and can fetch a snapshot itself. On the subprocess
+          runtime the rollout fails with "task 0 requires a network policy, but
+          the subprocess runtime does not support framework-aware policies".
+          vf-eval recorded that as an error on the episode, with empty rewards,
+          and still exited 0.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">nowcast_alfred/catalog.py · excerpt</span><span>python</span>
+          </div>
+          <pre><code data-language="python">class CatalogState(vf.State):
+    lookups: int = 0
+
+
+class CatalogToolset(vf.Toolset[vf.ToolsetConfig, CatalogState]):
+    TOOL_PREFIX = "catalog"
+
+    async def setup(self) -> None:
+        self.fixture = json.loads(FIXTURE.read_text())
+        self.snapshot: dict[str, dict[str, float]] = {}
+
+    async def setup_task(self, task) -> None:
+        # Serve only the vintage this task is dated at, never the realized value.
+        row = next(
+            t for t in self.fixture["tasks"] if t["reference_month"] == task.reference_month
+        )
+        self.snapshot = row["snapshot"]
+
+    @vf.tool
+    async def observations(self, series_id: str) -> dict[str, float]:
+        """Return every observation of one series known on the task's as-of date."""
+        self.state.lookups += 1
+        return self.snapshot.get(series_id, {})
+
+
+if __name__ == "__main__":
+    CatalogToolset.run()</code></pre>
+          <figcaption class="nb-code-cap">
+            Run against verifiers 0.4.0 on the subprocess runtime. The model
+            saw the tool as catalog_observations, and the lookups counter
+            reached the trace's state as 1.0. A search tool is omitted.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The tool server is the route the egress policy leaves open on
+          purpose. <code>setup</code> runs once per server process,
+          <code>setup_task</code> once per task, and <code>self.state</code>
+          is the rollout's typed state, synced with <code>trace.state</code>
+          on each call. By default a toolset is not colocated and runs as a
+          subprocess on the env-worker host, with that host's network and
+          files.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          A tool that queried FRED live would hand the agent today's vintage
+          through that open route.
+        </p>
+        <p>
+          The answer file is the route the subprocess run actually opened.
+          nowcast_alfred ships fixture.json, realized values included, inside
+          its package. On subprocess the agent's box is the host, and a command
+          run there printed <code>"realized_first": 353.0</code> from the
+          installed fixture. With <code>colocated=True</code>, verifiers
+          installs the toolset's whole package, fixture and all, into the
+          agent's runtime.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          The answer is hidden from the prompt and not from Prime. The realized
+          value rides on every trace as part of the task data, and vf-eval uploads runs to
+          Prime unless given <code>--no-push</code> or <code>push = false</code>.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s11">11</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="rollout-cost" id="rollout-cost">
+        <h2>Pricing a verifiers rollout, then measuring one with vf-eval</h2>
+        <p>
+          A rollout under the default prime runtime gets a box with 1 CPU, 2
+          GB of memory and 5 GB of disk on python:3.11-slim, with a
+          3,600-second idle timeout. The first use of an image triggers an
+          auto-build of about ten minutes.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          Prime's sandbox rates price exactly that box at $0.046 an hour,
+          billed while it runs.<sup class="nb-cite"><a href="#s12">12</a></sup>
+          Prime publishes no per-rollout, token or tool-call cost, and its
+          Hosted Training GPU-hour rate appears only in
+          <code>prime train models</code>.<sup class="nb-cite"><a href="#s13">13</a></sup>
+          Traces cost $1 per GiB ingested and $0.10 per GiB-month
+          stored.<sup class="nb-cite"><a href="#s14">14</a></sup>
+        </p>
+        <p>
+          A box that lives ten minutes costs $0.0077.
+          A run the size of Prime's Wordle example, 100 steps at 512 rollouts
+          a step, is 51,200 rollouts.<sup class="nb-cite"><a href="#s8">8</a></sup>
+          At ten minutes a box, that is about $393 of sandbox time before any
+          GPU, token or trace charge. Ten minutes is an assumption. The check
+          that replaces it is a baseline vf-eval run of a few rollouts with the
+          real harness and runtime. Each trace records its setup and agent
+          stage times, and box-minutes times $0.046 / 60 is the sandbox cost
+          per rollout.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">eval.toml · run with vf-eval @ eval.toml</span><span>toml</span>
+          </div>
+          <pre><code data-language="toml">model = "stub/model"
+num_rollouts = 2
+push = false
+
+[select]
+limit = 3
+
+[client]
+base_url = "http://127.0.0.1:8765/v1"
+api_key_var = "STUB_KEY"
+
+[env.taskset]
+id = "nowcast-alfred"
+closed_egress = false
+
+[env.taskset.task.rewards]
+beats_baseline = { weight = 1.0 }
+
+[env.agent.harness]
+id = "null"
+
+[env.agent.runtime]
+type = "subprocess"</code></pre>
+          <figcaption class="nb-code-cap">
+            The config that ran against the stub after a passing
+            --dry-run, two rollouts for each of three tasks. A real baseline swaps in the model and the bash harness.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          <code>num_rollouts</code> is the group size, and
+          <code>[env.taskset]</code> takes the taskset's own fields. The null harness serves MCP tools but cannot
+          execute code. The default harness, bash, can, and an agent that fits
+          its own model needs it.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          The bash harness was not run here.
+        </p>
+      </section>
+
+      <section data-nb-section="warm-start" id="warm-start">
+        <h2>A baseline eval decides the supervised warm start</h2>
+        <p>
+          Prime's end-to-end training guide says "a good training environment
+          should have a baseline reward between roughly 10–80%".<sup class="nb-cite"><a href="#s15">15</a></sup>
+          This reward runs from -1 to 1, and a reply without a FORECAST line
+          scores -1. A base model that never writes the line puts every group
+          at -1, where the advantage is zero and RL learns nothing.
+        </p>
+        <p>
+          Prime's examples reach for supervised fine-tuning (SFT) first when
+          the base model fails on format. In the Wordle example the base model averaged a
+          reward of about 0.2 with no wins, so the README says "Let's do some SFT warmup to
+          get the model to learn the format of the environment."<sup class="nb-cite"><a href="#s8">8</a></sup>
+          Reverse-text also starts with SFT, and alphabet-sort runs RL
+          without it. DeepSeek-AI fine-tuned R1 on long
+          chain-of-thought data "to prevent the early unstable cold start phase
+          of RL training from the base model". R1-Zero skipped SFT and still
+          learned to reason, with poor readability.<sup class="nb-cite"><a href="#s16">16</a></sup>
+        </p>
+        <p>
+          The judgment for nowcast_alfred follows from the reward. Run the
+          baseline eval with the bash harness and the base model. If most
+          traces lack a FORECAST line, fine-tune on the output format with
+          prime-rl's SFT entrypoint, part of what Prime's docs call an "SFT →
+          RL → SFT" workflow.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          If the rewards already vary within groups, start with RL.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">train.toml · run with prime train train.toml --volume &lt;name&gt;</span><span>toml</span>
+          </div>
+          <pre><code data-language="toml">[ckpt]
+
+[orchestrator]
+batch_size = 64
+
+[orchestrator.train]
+group_size = 8
+
+[[orchestrator.train.source]]
+
+[orchestrator.train.source.env.taskset]
+id = "nowcast-alfred"
+closed_egress = true
+
+[orchestrator.train.source.env.agent.harness]
+id = "bash"
+
+[orchestrator.train.source.env.agent.runtime]
+type = "prime"</code></pre>
+          <figcaption class="nb-code-cap">
+            Assembled from prime-rl at 782b84b and Prime's docs, not executed.
+            Model, deployment GPUs and renderer are omitted. Without [ckpt]
+            the volume gets no weights. Batch and group size sit at Prime's floors.<sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s15">15</a></sup><sup class="nb-cite"><a href="#s7">7</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          A training source's <code>env</code> field is the same verifiers
+          env config vf-eval reads from eval.toml's <code>[env]</code>
+          tables, so one taskset config serves the baseline and the run.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup>
+          Training turns closed_egress back on and moves to the prime runtime,
+          where the empty allowlist holds.
+        </p>
+      </section>
+
+      <section data-nb-section="docs-drift" id="docs-drift">
+        <h2>verifiers 0.4.0 has moved past Prime's own docs</h2>
+        <p>
+          Five final releases, 0.2.0 to 0.4.0, came between 10 July and 12
+          October 2026.<sup class="nb-cite"><a href="#s17">17</a></sup>
+          The repository took 447 commits from 35 author names in the three
+          months to 14 October.<sup class="nb-cite"><a href="#s11">11</a></sup>
+          The legacy v0 stack was removed on 31 August 2026, and 0.4.0 is the
+          first release without it.<sup class="nb-cite"><a href="#s18">18</a></sup>
+          Two days after 0.4.0, a pull request deleted vf-init, the
+          scaffolding command 0.4.0 still ships. The 0.4.1.dev18 wheel already
+          on PyPI lacks it.<sup class="nb-cite"><a href="#s19">19</a></sup><sup class="nb-cite"><a href="#s20">20</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Prime's documentation against the 0.4.0 package and prime-rl, as of
+            14 October 2026.<sup class="nb-cite"><a href="#s21">21</a></sup><sup class="nb-cite"><a href="#s15">15</a></sup><sup class="nb-cite"><a href="#s22">22</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Where</th>
+              <th class="txt">What it says</th>
+              <th class="txt">What the code does</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Environment model page</span></td>
+              <td class="txt">Teaches SingleTurnEnv, ToolEnv, Rubric and load_environment, and treats default and bash as two harnesses.</td>
+              <td class="txt">None of those classes exist. The loader reports that default was renamed to bash.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">End-to-end run page</span></td>
+              <td class="txt">Sets the training harness id to default.</td>
+              <td class="txt">A dry run with that id printed the rename message.</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Getting started page</span></td>
+              <td class="txt">Puts group_size under [orchestrator].</td>
+              <td class="txt">prime-rl reads it under [orchestrator.train] and forbids extra keys. Inferred from source, not run.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          vf-eval itself prints "vf-eval will be deprecated - move to prime-rl's
+          <code>uv run eval</code>" on every run.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          The package is maintained well enough to build on at a pinned
+          version.
+        </p>
+        <p>
+          Training on this reward makes sense only after every
+          snapshot predates its release, an isolating runtime enforces the
+          empty allowlist, the box holds no answer file, the tools serve only
+          the snapshot, and a baseline eval on the bash harness shows rewards
+          that differ within groups.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="PAYEMS vintages 2024-02-01, 2024-02-02, each 2024 month-end and first-release vintage, and the vintage served 2026-10-14 (20261013)" data-nb-note="Values read from the alfredgraph.csv download with vintage_date set to each date." href="https://alfred.stlouisfed.org/series?seid=PAYEMS">St. Louis Fed · ALFRED, PAYEMS vintages</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Introduction" href="https://fred.stlouisfed.org/docs/api/fred/realtime_period.html">St. Louis Fed · FRED API, Real-Time Periods</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="site-packages/verifiers/v1: task.py 81-320, taskset.py 49-180, utils/decorators.py 29-124, utils/loaders.py 70-160, mcp/toolset.py 16-27, mcp/server.py 132-350, configs/runtime.py 57-77, rollout.py 262-332, utils/compile.py 45-55, runtimes/prime.py 77-102, configs/cli/eval.py 76-120, cli/eval/hint.py 1-5" data-nb-note="Installed with uv into Python 3.13 and run on 2026-10-14." href="https://pypi.org/project/verifiers/0.4.0/">PyPI · verifiers 0.4.0 package source</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="top Note, About" href="https://docs.primeintellect.ai/tutorials-environments/environments">Prime Intellect · Environments Hub</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Architecture" href="https://docs.primeintellect.ai/prime-rl/overview">Prime Intellect · prime-rl overview</a>
+          </li>
+          <li id="s6">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="intro, Model Factory, Key Libraries" href="https://docs.primeintellect.ai/platform-overview">Prime Intellect · Platform overview</a>
+          </li>
+          <li id="s7">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Rules of Thumb (Batch size, Group size), Useful Knobs, SFT Trainer" href="https://docs.primeintellect.ai/prime-rl/training">Prime Intellect · prime-rl training</a>
+          </li>
+          <li id="s8">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="examples/basic/wordle/README.md lines 3, 35, 71 and rl.toml lines 17-27. examples/basic/reverse-text/README.md line 3. examples/basic/alphabet-sort/README.md line 3. packages/prime-rl-configs/src/prime_rl/configs/orchestrator.py lines 85-90 (EnvConfig.env is vf.EnvConfig), 232, 343" href="https://github.com/PrimeIntellect-ai/prime-rl/tree/782b84be89d28cd9d3903803d446a01301ccd414">GitHub · prime-rl at 782b84b</a>
+          </li>
+          <li id="s9">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Parameters: realtime_start, realtime_end, output_type, vintage_dates" href="https://fred.stlouisfed.org/docs/api/fred/series_observations.html">St. Louis Fed · FRED API, fred/series/observations</a>
+          </li>
+          <li id="s10">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="paragraph after the algorithm table" href="https://docs.primeintellect.ai/prime-rl/algorithms">Prime Intellect · prime-rl algorithms</a>
+          </li>
+          <li id="s11">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="tag v0.4.0 (6e69354): docs/v1/evaluation.md lines 49-52. git log of main to 269ff7b, 2026-07-14 to 2026-10-14" href="https://github.com/PrimeIntellect-ai/verifiers">GitHub · PrimeIntellect-ai/verifiers</a>
+          </li>
+          <li id="s12">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Pricing" href="https://docs.primeintellect.ai/sandboxes/overview">Prime Intellect · Sandboxes overview</a>
+          </li>
+          <li id="s13">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="What gets billed" href="https://docs.primeintellect.ai/hosted-training/billing">Prime Intellect · Hosted Training billing</a>
+          </li>
+          <li id="s14">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="pricing table" href="https://docs.primeintellect.ai/traces/pricing-and-settings">Prime Intellect · Traces pricing and settings</a>
+          </li>
+          <li id="s15">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Step 2 Tip, Step 4 config listing and key fields, Step 5 prime train command, Run Size Guidelines" href="https://docs.primeintellect.ai/hosted-training/end-to-end-run">Prime Intellect · Hosted Training end-to-end run</a>
+          </li>
+          <li id="s16">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="abstract, section 2.2, section 2.3.1" href="https://arxiv.org/abs/2501.12948">DeepSeek-AI · DeepSeek-R1 technical report</a>
+          </li>
+          <li id="s17">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="release history (JSON releases upload_time)" href="https://pypi.org/project/verifiers/#history">PyPI · verifiers release history</a>
+          </li>
+          <li id="s18">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="PR #2480, commit 66a6064, 2026-08-31" href="https://github.com/PrimeIntellect-ai/verifiers/pull/2480">GitHub · verifiers PR #2480, remove the legacy (v0) stack</a>
+          </li>
+          <li id="s19">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="PR #2843, commit c2b706c, 2026-10-14" href="https://github.com/PrimeIntellect-ai/verifiers/pull/2843">GitHub · verifiers PR #2843, remove vf-init</a>
+          </li>
+          <li id="s20">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="verifiers-0.4.1.dev18.dist-info/entry_points.txt" href="https://files.pythonhosted.org/packages/4e/1e/374bb8b48e79a156764c7ece7584db7e72106852726dbd3542e410eb1cd6/verifiers-0.4.1.dev18-py3-none-any.whl">PyPI · verifiers 0.4.1.dev18 wheel</a>
+          </li>
+          <li id="s21">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Legacy and Verifiers v1 environment configs, The Type Hierarchy" href="https://docs.primeintellect.ai/hosted-training/environment-model">Prime Intellect · Hosted Training environment model</a>
+          </li>
+          <li id="s22">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="4. Launch a run" href="https://docs.primeintellect.ai/hosted-training/getting-started">Prime Intellect · Hosted Training getting started</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
