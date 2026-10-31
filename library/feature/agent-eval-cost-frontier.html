@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A generic ReAct loop with GPT-5.5 matches Ai2’s science agent at under half the cost · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "agent-eval-cost-frontier",
+        "template": "article",
+        "title": "A generic ReAct loop with GPT-5.5 matches Ai2’s science agent at under half the cost",
+        "mode": "open",
+        "order": null,
+        "date": "2026-10-31",
+        "tags": ["ai-agents", "evaluation", "benchmarks"],
+        "sources": 6,
+        "words": 1134,
+        "reading_minutes": 5,
+        "dek": "On Ai2’s AstaBench leaderboard, ten of the eleven agents on the cost frontier are one baseline loop with a different model, and the top scorer ranks 21st of 23 per dollar.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5-5"
+      }
+    </script>
+  </head>
+    <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">A generic ReAct loop with GPT-5.5 matches Ai2’s science agent at under half the cost</h1>
+        <p class="nb-dekline">
+          On Ai2’s AstaBench leaderboard, ten of the eleven agents on the cost frontier are one baseline loop with a different model, and the top scorer ranks 21st of 23 per dollar.
+        </p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-10-31</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>AstaBench prices a run’s tokens, not its tools</h2>
+        <p>
+          Ai2’s AstaBench leaderboard lists an overall score and an overall cost per problem for 24 test-split agents. Eleven of them form the board’s cost frontier, meaning no other agent scores as much for less, and ten of the eleven are one Ai2 baseline, a ReAct loop, with a different language model dropped in.<sup class="nb-cite"><a href="#s1">1</a></sup> The lever on both score and cost is the model.
+        </p>
+        <p>
+          The cost is not a bill. The Asta Environment gives every agent the same tools: a paper-search corpus limited to papers before a per-task date cutoff, and a Jupyter notebook sandbox.<sup class="nb-cite"><a href="#s2">2</a></sup> Inspect logs which models an agent called and how many tokens each call used, and Ai2’s agent-eval toolkit multiplies those tokens by prices from a frozen snapshot of the litellm community price table.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup> The tool calls themselves carry no price. Figure 1 draws what is metered.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+  <svg viewBox="0 0 700 352" role="img" aria-label="Diagram of an AstaBench cost. An agent loop calls a language model; the model uses a fixed, unpriced environment of a paper-search corpus and a Jupyter notebook. Inspect logs each model call's tokens, a frozen litellm price table turns the tokens into dollars per problem, and the final answer is scored separately for accuracy." style="width: 100%; min-width: 34rem; height: auto; font-family: var(--sans)">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill: var(--ink-soft)"/></marker>
+    </defs>
+    <rect x="10" y="22" width="200" height="150" rx="8" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+    <text x="22" y="44" style="fill: var(--ink); font-size: 14px; font-weight: 600">Agent loop</text>
+    <text x="22" y="62" style="fill: var(--ink-soft); font-size: 12px">ReAct, Smolagents Coder</text>
+    <text x="22" y="78" style="fill: var(--ink-soft); font-size: 12px">or Asta v0</text>
+    <rect x="26" y="92" width="168" height="62" rx="6" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+    <text x="110" y="116" text-anchor="middle" style="fill: var(--ink); font-size: 14px; font-weight: 600">Language model</text>
+    <text x="110" y="136" text-anchor="middle" style="fill: var(--chart-1); font-size: 12px; font-weight: 600">priced, and the one swap</text>
+    <rect x="280" y="10" width="410" height="174" rx="8" style="fill: none; stroke: var(--ink-soft); stroke-width: 1.5; stroke-dasharray: 6 4"/>
+    <text x="294" y="32" style="fill: var(--ink); font-size: 14px; font-weight: 600">Asta Environment: same tools for every agent, unpriced</text>
+    <rect x="296" y="50" width="180" height="116" rx="6" style="fill: var(--panel); stroke: var(--ink-soft)"/>
+    <text x="386" y="86" text-anchor="middle" style="fill: var(--ink); font-size: 13px">Paper-search corpus</text>
+    <text x="386" y="106" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">papers before a</text>
+    <text x="386" y="122" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">per-task date cutoff</text>
+    <rect x="496" y="50" width="180" height="116" rx="6" style="fill: var(--panel); stroke: var(--ink-soft)"/>
+    <text x="586" y="96" text-anchor="middle" style="fill: var(--ink); font-size: 13px">Jupyter notebook</text>
+    <text x="586" y="116" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">sandbox, stateful</text>
+    <line x1="210" y1="108" x2="276" y2="108" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#arr)"/>
+    <text x="243" y="100" text-anchor="middle" style="fill: var(--ink-soft); font-size: 11px">tool call</text>
+    <line x1="276" y1="146" x2="210" y2="146" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#arr)"/>
+    <text x="243" y="140" text-anchor="middle" style="fill: var(--ink-soft); font-size: 11px">output</text>
+    <line x1="60" y1="172" x2="60" y2="236" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#arr)"/>
+    <line x1="160" y1="172" x2="200" y2="236" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#arr)"/>
+    <rect x="10" y="240" width="120" height="76" rx="6" style="fill: var(--panel); stroke: var(--ink-soft)"/>
+    <text x="70" y="270" text-anchor="middle" style="fill: var(--ink); font-size: 13px">Final answer</text>
+    <text x="70" y="290" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">scored for</text>
+    <text x="70" y="305" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">accuracy</text>
+    <rect x="160" y="240" width="160" height="76" rx="6" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+    <text x="240" y="262" text-anchor="middle" style="fill: var(--ink); font-size: 13px">Inspect log</text>
+    <text x="240" y="280" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">tokens per model call:</text>
+    <text x="240" y="294" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">input, output, cache,</text>
+    <text x="240" y="308" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">reasoning</text>
+    <line x1="320" y1="278" x2="356" y2="278" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#arr)"/>
+    <rect x="360" y="240" width="160" height="76" rx="6" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+    <text x="440" y="264" text-anchor="middle" style="fill: var(--ink); font-size: 13px">× frozen price table</text>
+    <text x="440" y="284" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">litellm snapshot, cache</text>
+    <text x="440" y="299" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">discounts, no batching</text>
+    <line x1="520" y1="278" x2="556" y2="278" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#arr)"/>
+    <rect x="560" y="240" width="130" height="76" rx="6" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+    <text x="625" y="274" text-anchor="middle" style="fill: var(--ink); font-size: 14px; font-weight: 600">Dollars</text>
+    <text x="625" y="294" text-anchor="middle" style="fill: var(--ink-soft); font-size: 12px">per problem</text>
+    <text x="10" y="340" style="fill: var(--ink-soft); font-size: 12px">Heavy outlines mark what is priced. The dashed box is fixed, and its output costs only as tokens read.</text>
+  </svg>
+  <figcaption>Fig. 1 · Where an AstaBench cost comes from. Only the model’s token usage is priced, and a tool shows up in the cost only as tokens the model reads. Conceptual diagram of the cost calculation the paper describes, not a measurement.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s3">3</a></sup></figcaption>
+</figure>
+      </section>
+
+      <section data-nb-section="model-swaps" id="model-swaps">
+        <h2>Ten of eleven frontier agents are one loop with the model swapped</h2>
+        <p>
+          Figure 2 plots the 23 costed agents that attempt all four categories. Read the dotted frontier left to right: ReAct with GPT-5 Mini scores 31.4 at $0.04 per problem, ReAct with GPT-5 scores 43.3 at $0.31, ReAct with claude-opus-4-7 scores 58.0 at $3.54. The frontier spans $0.0359 to $3.5422, a factor of about 99, so the cost axis is logarithmic.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <img src="agent-eval-cost-frontier/chart-1.png" alt="Scatter of overall score against overall cost per problem on a log axis for 23 AstaBench agents. Eleven agents on the dotted frontier rise from ReAct GPT-5 Mini near 31 points at $0.04 to ReAct claude-opus-4-7 near 58 points at $3.54. Asta v0, a hollow square at about 51 points and $3.40, sits below the frontier." />
+          <figcaption>Fig. 2 · Overall score against overall cost per problem, cost on a log scale. Filled markers are the 11 agents the leaderboard flags as frontier; hollow markers are the ones it leaves off. Ai2 AstaBench leaderboard, test split, retrieved 2026-10-31; the 24th costed row (3 of 4 categories) is omitted.<sup class="nb-cite"><a href="#s1">1</a></sup></figcaption>
+        </figure>
+        <p>
+          Asta v0, Ai2’s purpose-built science agent, is the hollow square under the line. It scored 50.9 at $3.40 per problem. ReAct with GPT-5.5 scored 52.9 at $1.61. The 2.0-point score gap is smaller than the 95% interval on either score, so the two tie on score while the generic loop costs 47% as much.<sup class="nb-cite"><a href="#s1">1</a></sup> That compares across a model generation, April 2026 against August 2025. Against the August 2025 ReAct GPT-5 run, Asta v0 scored 7.6 points higher and cost 11 times as much, and the paper leaves its engineering cost out of the figure.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          The scaffold moves scores too, by less. Holding the model fixed and swapping ReAct for Smolagents Coder moves the score by 0.4 to 9.3 points across seven models. Swapping the model inside ReAct moves it from 7.7 to 58.0.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="rerank" id="rerank">
+        <h2>Opus 4.7 scores first and ranks 21st of 23 per dollar</h2>
+        <p>
+          Divide score by cost and the order changes. ReAct with claude-opus-4-7 gets 58.0 points for $3.5422, or 16.4 points per dollar. ReAct with GPT-5 Mini gets 31.4 for $0.0366, or 857.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Seven of the 23 agents ranked two ways. Points per dollar is overall score (0 to 100) divided by overall cost per problem, computed from the leaderboard rows.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </caption>
+          <thead>
+            <tr><th class="txt">Agent</th><th>Score rank</th><th>Score</th><th>Cost per problem</th><th>Points per dollar</th><th>Per-dollar rank</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="txt">ReAct claude-opus-4-7</td><td>1</td><td>58.0</td><td>$3.5422</td><td>16.4</td><td>21</td></tr>
+            <tr><td class="txt">ReAct gpt-5.5</td><td>4</td><td>52.9</td><td>$1.6104</td><td>32.8</td><td>17</td></tr>
+            <tr><td class="txt">Asta v0</td><td>5</td><td>50.9</td><td>$3.3950</td><td>15.0</td><td>22</td></tr>
+            <tr><td class="txt">ReAct gpt-5.4</td><td>7</td><td>46.5</td><td>$0.7006</td><td>66.3</td><td>11</td></tr>
+            <tr><td class="txt">ReAct GPT-5</td><td>8</td><td>43.3</td><td>$0.3090</td><td>140</td><td>7</td></tr>
+            <tr><td class="txt">ReAct o3</td><td>9</td><td>37.8</td><td>$0.1635</td><td>231</td><td>5</td></tr>
+            <tr><td class="txt">ReAct GPT-5 Mini</td><td>13</td><td>31.4</td><td>$0.0366</td><td>857</td><td>1</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Opus 4.7 is still on the frontier, and the frontier prices each step. GPT-5 Mini trails it by 26.7 points at 1% of the cost. Moving from GPT-5 Mini to GPT-5 buys 12.0 points for 8.4 times the cost. Moving from GPT-5.5 to Opus 4.7 buys 5.2 points for 2.2 times the cost, $1.93 more per problem.<sup class="nb-cite"><a href="#s1">1</a></sup> The ranking also favors cheap agents by construction: Smolagents Coder with GPT-5 Mini is third per dollar, and ReAct with GPT-5 Mini beats it on both score and cost.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="what-the-frontier-supports" id="what-the-frontier-supports">
+        <h2>Ai2 submitted every costed row, and the top intervals overlap</h2>
+        <p>
+          Costs are token counts times a price table, so they are estimates and not billed amounts, and Ai2 says its costs reflect pricing at a fixed point in time.<sup class="nb-cite"><a href="#s4">4</a></sup> Tool calls carry no price, and reasoning effort is fixed at medium for general solvers.<sup class="nb-cite"><a href="#s5">5</a></sup> All 24 costed rows are Ai2 submissions: 15 ReAct, 8 Smolagents Coder, one Asta v0. Elicit, SciSpace, OpenAI Deep Research and the other commercial agents attempt one category and report no cost, so none can appear on the frontier.<sup class="nb-cite"><a href="#s1">1</a></sup> Overall cost also averages four category means, and the 80 End-to-End Discovery problems supply 69% of the category-cost sum for Opus 4.7.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Each score is one run. Applying the paper’s Appendix D method to Ai2’s raw result files gives 95% intervals of about ±2.4 to ±3.0 points for the top agents: 58.0 ±2.7 for opus-4-7, 55.3 ±2.4 for opus-4-6, 52.9 ±3.0 for gpt-5.5, 50.9 ±2.5 for Asta v0. The gpt-5.5 and Asta v0 intervals overlap, so the 2.0-point gap between them sits inside the noise; the opus-4-7 interval overlaps opus-4-6’s and sonnet-4-6’s. The board’s chart draws no error bars.<sup class="nb-cite"><a href="#s6">6</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          What the data supports is a model-selection curve for one Ai2-built loop under one frozen price table. It does not show that no agent design could beat that loop, because the board holds three designs with a cost, all submitted by Ai2.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" data-nb-locator="Test Set tab, AstaBench Overall Leaderboard (Aggregate); retrieved 2026-10-31" href="https://allenai.org/asta/leaderboard">Allen Institute for AI · AstaBench leaderboard</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" data-nb-locator="Section 4.2, pp. 6-7; Section 5, p. 7; Appendix D, p. 21; Tables 4 and 11" href="https://arxiv.org/abs/2510.21652">Bragg et al. · AstaBench: Rigorous Benchmarking of AI Agents with a Scientific Research Suite (arXiv 2510.21652, v2)</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" data-nb-locator="README, opening list" href="https://github.com/allenai/agent-eval">Allen Institute for AI · agent-eval toolkit</a></li>
+          <li id="s4"><a data-nb-source data-nb-kind="primary" data-nb-locator="Understanding the Leaderboards; Scoring &amp; Aggregation, cost note" href="https://allenai-asta-bench-leaderboard.hf.space/about">Allen Institute for AI · AstaBench leaderboard, About page</a></li>
+          <li id="s5"><a data-nb-source data-nb-kind="primary" data-nb-locator="Footnote on reasoning effort; Update 10/27 box" href="https://allenai.org/blog/astabench">Allen Institute for AI · AstaBench blog post (2025-08-26, updated 10/27)</a></li>
+          <li id="s6"><a data-nb-source data-nb-kind="primary" data-nb-locator="1.0.0/test/ result files (model_usages, model_costs)" href="https://huggingface.co/datasets/allenai/asta-bench-results">Allen Institute for AI · asta-bench-results dataset</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
