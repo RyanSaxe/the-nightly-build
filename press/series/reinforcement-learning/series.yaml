@@ -1,0 +1,20 @@
+# A daily open course. The curriculum outline in prompt.md sets the order, and the
+# published lessons show how far it has come. The writer runs at the orchestrator's
+# model and high effort because a lesson needs diagrams, derivations, and code that
+# has actually been run. The word band counts code.
+name: Reinforcement Learning
+mode: open
+section: "Courses"
+template: lesson
+prompt: prompt.md
+strict: false
+bands:
+  words: [2000, 3600]
+  flex_sections: [2, 5]
+min_sources: 4
+cadence: daily
+production:
+  stages:
+    writer:
+      model: inherit
+      effort: high

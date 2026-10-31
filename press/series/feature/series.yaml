@@ -1,6 +1,17 @@
+# The paper's five-minute read. Strict mode makes the word band a hard limit. The
+# writer runs at high effort because the visuals carry the piece.
 name: Feature
 mode: open
 section: Daily
 template: article
 prompt: prompt.md
+strict: true
+bands:
+  words: [600, 1200]
+  flex_sections: [2, 4]
+min_sources: 5
 cadence: daily
+production:
+  stages:
+    writer:
+      effort: high
