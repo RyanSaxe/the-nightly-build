@@ -1,4 +1,5 @@
 name: Technical
+paused: true
 mode: open
 section: Daily
 templates: [article, paper]
