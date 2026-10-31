@@ -8,10 +8,10 @@ environment and a verifier for a language model, and training on them. A package
 such as `verifiers` is a good place to practice, and the lessons teach what would
 survive a change of package.
 
-The course assumes fluency in probability, linear algebra, optimization, PyTorch,
-and production deep learning, plus past study of bandits and regret minimization.
-It teaches none of that. Where those ideas return, such as UCB in tree search or
-regret in counterfactual regret minimization, build on them directly.
+The course starts from no reinforcement learning. Math and code run at full
+difficulty, and every reinforcement learning idea, including bandits, UCB, and
+regret, is taught when the course first needs it. No lesson says or implies what
+anyone already knows or has studied.
 
 ## Curriculum
 
@@ -24,13 +24,13 @@ off-the-shelf agent training on it should arrive by about lesson 5, with the
 library treated as a black box that later lessons open. The course should finish
 Designing environments by about lesson 25.
 
-1. **Environments and the RL problem.** From bandits to states, Markov decision
+1. **Environments and the RL problem.** The agent-environment loop, Markov decision
    processes and the Bellman equations, the Gymnasium contract and a first custom
    environment, training an off-the-shelf agent on it, value iteration and policy
    iteration.
 2. **Learning from samples.** Monte Carlo and temporal-difference prediction, SARSA
-   and Q-learning, exploration from UCB to optimism in MDPs, n-step returns and
-   TD(λ), function approximation and the deadly triad.
+   and Q-learning, exploration from bandits and UCB to optimism in MDPs, n-step
+   returns and TD(λ), function approximation and the deadly triad.
 3. **Deep value methods.** DQN, Double DQN through Rainbow, debugging with probe
    environments, reporting results across seeds.
 4. **Policy gradients.** The policy gradient theorem and REINFORCE, baselines and
@@ -54,6 +54,10 @@ Designing environments by about lesson 25.
    environment.
 
 ## Each lesson
+
+Open Why this matters on the particular problem this lesson's idea solves, with one
+real case where it is at work, in ordinary sentences. Leave out lists of what the
+lesson will enable and claims about how much later work depends on it.
 
 Give the math in full, including the derivations. Whenever a concept can be drawn,
 draw it before explaining it. A learning curve shows that an agent improved, so go further
