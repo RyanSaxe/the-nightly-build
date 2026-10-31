@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The value of a policy, computed on a gridworld · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "environments-and-the-rl-problem",
+        "template": "lesson",
+        "title": "The value of a policy, computed on a gridworld",
+        "mode": "open",
+        "order": 1,
+        "date": "2026-10-31",
+        "tags": ["markov-decision-process", "bellman-equations", "value-functions"],
+        "sources": 5,
+        "words": 3576,
+        "reading_minutes": 16,
+        "dek": "A bandit becomes reinforcement learning once an action changes which state comes next, and scoring even the equiprobable policy then takes sixteen coupled Bellman equations this lesson solves two ways.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">The value of a policy, computed on a gridworld</h1>
+        <p class="nb-dekline">
+          A bandit becomes reinforcement learning once an action changes which
+          state comes next, and scoring even the equiprobable policy then takes
+          sixteen coupled Bellman equations this lesson solves two ways.
+        </p>
+        <div class="nb-byline">
+          <span>16 min read</span><span>2026-10-31</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          You already know the bandit: one situation, a menu of actions, and a
+          reward drawn after each pull. Reinforcement learning is what the
+          bandit becomes when the action also changes what you see next. A move
+          in a game, a motor command on a robot, a token appended to a prompt:
+          each earns a reward and hands you a new situation. The next choice is
+          made from there. This lesson builds the smallest honest version of
+          that, a four-by-four gridworld. It answers the first quantitative
+          question you can ask: given a fixed way of acting, how good is each
+          state? By the end you can do three things. You can write an environment as a Markov decision process. You
+          can write the Bellman equation that ties a state's value to its
+          neighbours'. And you can compute that value exactly, two independent
+          ways that check each other. Everything later in this course, up to
+          training agents and language models, builds on those moves.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="http://incompleteideas.net/book/RLbook2020.pdf"
+              >Sutton and Barto, Reinforcement Learning: An Introduction,
+              Chapter 3</a
+            >: the canonical treatment of finite Markov decision processes,
+            returns, and value functions.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a
+              href="https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-2-mdp.pdf"
+              >David Silver, UCL Course on RL, Lecture 2</a
+            >: the same material as lecture slides, where the name Bellman
+            expectation equation comes from.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The agent-environment loop</h2>
+        <p>
+          Fix the vocabulary first, because reinforcement learning reuses four
+          plain words with exact meanings. A
+          <strong>state</strong> is everything the agent sees at one moment; on
+          the gridworld it is simply which of the sixteen cells the agent
+          occupies. An <strong>action</strong> is a choice the agent can make
+          there: move up, down, left, or right. A
+          <strong>reward</strong> is the single number the environment pays
+          after an action. A <strong>transition</strong> is the rule that turns
+          the current state and action into the next state. A bandit has the
+          last three and not the first: one state, so the action never changes
+          where you are. Add states that the action moves between and you have
+          the reinforcement-learning problem.
+        </p>
+        <p>
+          The pieces run in a loop. At step
+          <span class="nb-math-in">t</span> the agent is in state
+          <span class="nb-math-in">S_t</span> and chooses an action
+          <span class="nb-math-in">A_t</span>. One step later the
+          environment returns a reward
+          <span class="nb-math-in">R_{t+1}</span> and the next state
+          <span class="nb-math-in">S_{t+1}</span>. The reward carries the index
+          <span class="nb-math-in">t+1</span>, not
+          <span class="nb-math-in">t</span>, to mark that it and the next state
+          are produced together by the same step. Both conventions appear in
+          the literature; this lesson keeps Sutton and Barto's.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 3.1 and footnote 4, p. 48"
+              >1</a
+            ></sup
+          >
+          Running the loop produces a trajectory
+          <span class="nb-math-in"
+            >S_0, A_0, R_1, S_1, A_1, R_2, S_2, \dots</span
+          >.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+          <svg
+            viewBox="0 0 720 300"
+            role="img"
+            aria-label="The agent-environment loop. The agent sends an action to the environment; the environment returns the next state and a reward of minus one, advancing the clock by one step."
+            style="width: 100%; min-width: 34rem; height: auto"
+          >
+            <defs>
+              <marker
+                id="ah"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--ink-soft)" />
+              </marker>
+            </defs>
+            <rect
+              x="48"
+              y="86"
+              width="208"
+              height="128"
+              rx="12"
+              style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"
+            />
+            <text
+              x="152"
+              y="138"
+              text-anchor="middle"
+              style="font-family: var(--sans); font-size: 22px; font-weight: 600; fill: var(--ink)"
+            >
+              Agent
+            </text>
+            <text
+              x="152"
+              y="168"
+              text-anchor="middle"
+              style="font-family: var(--sans); font-size: 15px; fill: var(--ink-soft)"
+            >
+              sees a cell, picks a move
+            </text>
+            <rect
+              x="464"
+              y="86"
+              width="208"
+              height="128"
+              rx="12"
+              style="fill: var(--panel); stroke: var(--chart-3); stroke-width: 2"
+            />
+            <text
+              x="568"
+              y="138"
+              text-anchor="middle"
+              style="font-family: var(--sans); font-size: 22px; font-weight: 600; fill: var(--ink)"
+            >
+              Environment
+            </text>
+            <text
+              x="568"
+              y="168"
+              text-anchor="middle"
+              style="font-family: var(--sans); font-size: 15px; fill: var(--ink-soft)"
+            >
+              the gridworld
+            </text>
+            <line
+              x1="256"
+              y1="126"
+              x2="462"
+              y2="126"
+              marker-end="url(#ah)"
+              style="stroke: var(--ink-soft); stroke-width: 2"
+            />
+            <text
+              x="360"
+              y="114"
+              text-anchor="middle"
+              style="font-family: var(--sans); font-size: 16px; fill: var(--ink)"
+            >
+              action A&#8348; (up / down / left / right)
+            </text>
+            <line
+              x1="464"
+              y1="176"
+              x2="258"
+              y2="176"
+              marker-end="url(#ah)"
+              style="stroke: var(--ink-soft); stroke-width: 2"
+            />
+            <text
+              x="360"
+              y="198"
+              text-anchor="middle"
+              style="font-family: var(--sans); font-size: 16px; fill: var(--ink)"
+            >
+              next state S&#8348;&#8330;&#8321;, reward R&#8348;&#8330;&#8321; = &#8722;1
+            </text>
+            <text
+              x="360"
+              y="258"
+              text-anchor="middle"
+              style="font-family: var(--sans); font-size: 14px; fill: var(--ink-soft)"
+            >
+              each step advances the clock: t &#8594; t+1
+            </text>
+          </svg>
+          <figcaption>
+            Fig. 1 · One step of the loop. The agent acts; the environment
+            answers with a reward and the next state, one tick of the clock
+            later. Diagram drawn for this lesson after the interface in Sutton
+            and Barto.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Figure 3.1, p. 48">1</a></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="gridworld-as-mdp" id="gridworld-as-mdp">
+        <h2>A gridworld, written as a Markov decision process</h2>
+        <p>
+          To compute anything, the loop needs a formal object. A finite
+          <strong>Markov decision process</strong> is written here as the tuple
+          <span class="nb-math-in">(S, A, P, R, \gamma)</span>: states,
+          actions, transition probabilities, a reward model, and a discount.<sup
+            class="nb-cite"
+            ><a href="#s2" data-nb-locator="slide 24">2</a></sup
+          >
+          The discount gets its own section next.
+          Sutton and Barto write no such tuple; they take a single
+          four-argument function as the primitive and derive the rest from
+          it.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 3.1, p. 49">1</a></sup
+          >
+          That function is the dynamics:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            p(s', r \mid s, a) \doteq \Pr\{\, S_t = s',\ R_t = r \mid S_{t-1} =
+            s,\ A_{t-1} = a \,\}
+          </div>
+          <figcaption>
+            The probability that taking action
+            <span class="nb-math-in">a</span> in state
+            <span class="nb-math-in">s</span> yields reward
+            <span class="nb-math-in">r</span> and next state
+            <span class="nb-math-in">s'</span>. Every quantity below is built
+            from it.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="equation 3.2, p. 48">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          From <span class="nb-math-in">p</span> come the two arrays the tuple
+          names. The transition probability
+          <span class="nb-math-in"
+            >P[s, a, s'] = p(s' \mid s, a) = \sum_r p(s', r \mid s, a)</span
+          >
+          sums the reward out. The expected reward
+          <span class="nb-math-in"
+            >R[s, a] = r(s, a) = \sum_{s', r} r\, p(s', r \mid s, a)</span
+          >
+          averages it in.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="equations 3.4 and 3.5, p. 49">1</a></sup
+          >
+          On the gridworld both are trivial, because the dynamics are
+          deterministic. A move up lands in the cell above with probability one,
+          and a move that would leave the grid stays put. Every
+          move earns <span class="nb-math-in">-1</span>, so
+          <span class="nb-math-in">R[s, a] = -1</span> for every non-goal cell.
+          The bottom-right cell is the <strong>goal</strong>: reaching it ends
+          the episode, and a state that ends the episode is
+          <strong>terminal</strong>, absorbing, with no further reward. Here is
+          the grid built in code.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">gridworld.py · build_mdp (runs with uv run gridworld.py)</span
+            ><span>python</span>
+          </div>
+          <pre><code data-language="python">N_ROWS, N_COLS = 4, 4
+N_STATES = N_ROWS * N_COLS
+GOAL = N_STATES - 1            # bottom-right cell, terminal
+STEP_REWARD = -1.0
+ACTIONS = ("up", "down", "left", "right")
+_DELTAS = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)}
+
+def build_mdp():
+    next_state = np.zeros((N_STATES, 4), dtype=int)
+    reward = np.zeros((N_STATES, 4), dtype=float)
+    terminal = np.zeros(N_STATES, dtype=bool)
+    terminal[GOAL] = True
+    for s in range(N_STATES):
+        if terminal[s]:
+            next_state[s, :], reward[s, :] = s, 0.0   # absorbing
+            continue
+        r, c = divmod(s, N_COLS)
+        for a, name in enumerate(ACTIONS):
+            dr, dc = _DELTAS[name]
+            nr, nc = r + dr, c + dc
+            inside = (0 &lt;= nr &lt; N_ROWS) and (0 &lt;= nc &lt; N_COLS)
+            next_state[s, a] = (nr * N_COLS + nc) if inside else s
+            reward[s, a] = STEP_REWARD
+    return next_state, reward, terminal</code></pre>
+          <figcaption class="nb-code-cap">
+            The running gridworld as a deterministic MDP. Cells are numbered
+            0 to 15 in row-major order, cell 15 is the terminal goal, and every
+            move off the grid keeps the agent where it is.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Example 4.1, p. 76 (grid design)"
+                >1</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          One word in the name needs care. The process is
+          <strong>Markov</strong> when the next state and reward depend on the
+          current state and action and, given those, on nothing earlier. It is
+          tempting to read this as "the past does not matter." The past matters,
+          but only through the state. The condition restricts the state, not the
+          process: the state must carry whatever about the history the future
+          depends on.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 3.1, p. 49">1</a></sup
+          >
+          On the gridworld the single cell index satisfies this, because where
+          the agent can go next turns only on where it is, never on how it got
+          there. Equivalently, a state is Markov when the distribution of the
+          next state given the whole history equals its distribution given the
+          current state alone.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="slide 4">2</a></sup
+          >
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+          <svg
+            viewBox="0 0 520 512"
+            role="img"
+            aria-label="The four-by-four gridworld. Each non-goal cell shows four arrows for the equiprobable random policy; the bottom-right cell is the terminal goal."
+            style="width: 100%; min-width: 34rem; height: auto"
+          >
+            <g style="font-family: var(--sans)">
+              <!-- grid cells -->
+              <!-- row 0 -->
+              <g>
+                <rect x="40" y="36" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="150" y="36" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="260" y="36" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="370" y="36" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+              </g>
+              <!-- row 1 -->
+              <g>
+                <rect x="40" y="146" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="150" y="146" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="260" y="146" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="370" y="146" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+              </g>
+              <!-- row 2 -->
+              <g>
+                <rect x="40" y="256" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="150" y="256" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="260" y="256" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="370" y="256" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+              </g>
+              <!-- row 3 -->
+              <g>
+                <rect x="40" y="366" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="150" y="366" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="260" y="366" width="110" height="110" rx="6" style="fill: var(--panel); stroke: var(--line); stroke-width: 1.5" />
+                <rect x="370" y="366" width="110" height="110" rx="6" style="fill: var(--chart-3); fill-opacity: 0.22; stroke: var(--chart-3); stroke-width: 2.5" />
+              </g>
+              <!-- goal label -->
+              <text x="425" y="416" text-anchor="middle" style="font-size: 18px; font-weight: 600; fill: var(--ink)">GOAL</text>
+              <text x="425" y="438" text-anchor="middle" style="font-size: 12px; fill: var(--ink-soft)">terminal</text>
+              <!-- policy arrows: 15 non-goal cells, 4 each -->
+              <g style="stroke: var(--chart-2); stroke-width: 1.6; fill: none" marker-end="url(#pa)">
+                <!-- defined per cell center below via use of a template is verbose; draw directly -->
+                <!-- row0 col0 center (95,91) -->
+                <line x1="95" y1="85" x2="95" y2="63"/><line x1="95" y1="97" x2="95" y2="119"/><line x1="89" y1="91" x2="67" y2="91"/><line x1="101" y1="91" x2="123" y2="91"/>
+                <!-- row0 col1 (205,91) -->
+                <line x1="205" y1="85" x2="205" y2="63"/><line x1="205" y1="97" x2="205" y2="119"/><line x1="199" y1="91" x2="177" y2="91"/><line x1="211" y1="91" x2="233" y2="91"/>
+                <!-- row0 col2 (315,91) -->
+                <line x1="315" y1="85" x2="315" y2="63"/><line x1="315" y1="97" x2="315" y2="119"/><line x1="309" y1="91" x2="287" y2="91"/><line x1="321" y1="91" x2="343" y2="91"/>
+                <!-- row0 col3 (425,91) -->
+                <line x1="425" y1="85" x2="425" y2="63"/><line x1="425" y1="97" x2="425" y2="119"/><line x1="419" y1="91" x2="397" y2="91"/><line x1="431" y1="91" x2="453" y2="91"/>
+                <!-- row1 col0 (95,201) -->
+                <line x1="95" y1="195" x2="95" y2="173"/><line x1="95" y1="207" x2="95" y2="229"/><line x1="89" y1="201" x2="67" y2="201"/><line x1="101" y1="201" x2="123" y2="201"/>
+                <!-- row1 col1 (205,201) -->
+                <line x1="205" y1="195" x2="205" y2="173"/><line x1="205" y1="207" x2="205" y2="229"/><line x1="199" y1="201" x2="177" y2="201"/><line x1="211" y1="201" x2="233" y2="201"/>
+                <!-- row1 col2 (315,201) -->
+                <line x1="315" y1="195" x2="315" y2="173"/><line x1="315" y1="207" x2="315" y2="229"/><line x1="309" y1="201" x2="287" y2="201"/><line x1="321" y1="201" x2="343" y2="201"/>
+                <!-- row1 col3 (425,201) -->
+                <line x1="425" y1="195" x2="425" y2="173"/><line x1="425" y1="207" x2="425" y2="229"/><line x1="419" y1="201" x2="397" y2="201"/><line x1="431" y1="201" x2="453" y2="201"/>
+                <!-- row2 col0 (95,311) -->
+                <line x1="95" y1="305" x2="95" y2="283"/><line x1="95" y1="317" x2="95" y2="339"/><line x1="89" y1="311" x2="67" y2="311"/><line x1="101" y1="311" x2="123" y2="311"/>
+                <!-- row2 col1 (205,311) -->
+                <line x1="205" y1="305" x2="205" y2="283"/><line x1="205" y1="317" x2="205" y2="339"/><line x1="199" y1="311" x2="177" y2="311"/><line x1="211" y1="311" x2="233" y2="311"/>
+                <!-- row2 col2 (315,311) -->
+                <line x1="315" y1="305" x2="315" y2="283"/><line x1="315" y1="317" x2="315" y2="339"/><line x1="309" y1="311" x2="287" y2="311"/><line x1="321" y1="311" x2="343" y2="311"/>
+                <!-- row2 col3 (425,311) -->
+                <line x1="425" y1="305" x2="425" y2="283"/><line x1="425" y1="317" x2="425" y2="339"/><line x1="419" y1="311" x2="397" y2="311"/><line x1="431" y1="311" x2="453" y2="311"/>
+                <!-- row3 col0 (95,421) -->
+                <line x1="95" y1="415" x2="95" y2="393"/><line x1="95" y1="427" x2="95" y2="449"/><line x1="89" y1="421" x2="67" y2="421"/><line x1="101" y1="421" x2="123" y2="421"/>
+                <!-- row3 col1 (205,421) -->
+                <line x1="205" y1="415" x2="205" y2="393"/><line x1="205" y1="427" x2="205" y2="449"/><line x1="199" y1="421" x2="177" y2="421"/><line x1="211" y1="421" x2="233" y2="421"/>
+                <!-- row3 col2 (315,421) -->
+                <line x1="315" y1="415" x2="315" y2="393"/><line x1="315" y1="427" x2="315" y2="449"/><line x1="309" y1="421" x2="287" y2="421"/><line x1="321" y1="421" x2="343" y2="421"/>
+              </g>
+              <!-- cell indices, faint -->
+              <g style="font-size: 12px; fill: var(--ink-soft)">
+                <text x="48" y="52">0</text><text x="158" y="52">1</text><text x="268" y="52">2</text><text x="378" y="52">3</text>
+                <text x="48" y="162">4</text><text x="158" y="162">5</text><text x="268" y="162">6</text><text x="378" y="162">7</text>
+                <text x="48" y="272">8</text><text x="158" y="272">9</text><text x="268" y="272">10</text><text x="378" y="272">11</text>
+                <text x="48" y="382">12</text><text x="158" y="382">13</text><text x="268" y="382">14</text><text x="378" y="382">15</text>
+              </g>
+              <text x="40" y="502" style="font-size: 14px; fill: var(--ink-soft)">Every move costs &#8722;1; off-grid moves stay put.</text>
+            </g>
+            <defs>
+              <marker id="pa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M0 0 L10 5 L0 10 z" style="fill: var(--chart-2)" />
+              </marker>
+            </defs>
+          </svg>
+          <figcaption>
+            Fig. 2 · The gridworld and the policy this lesson evaluates. Cell 15
+            is the terminal goal; the four arrows in every other cell are the
+            equiprobable random policy, which takes each move with probability
+            one quarter. Diagram drawn for this lesson.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Section 3.5, p. 58 (policy)">1</a></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="return-and-discounting" id="return-and-discounting">
+        <h2>Return and discounting</h2>
+        <p>
+          A reward is one step's pay. What the agent cares about is the whole
+          future. The <strong>return</strong> measures it: the sum of rewards
+          from a step onward, each later reward multiplied by a
+          <strong>discount</strong>
+          <span class="nb-math-in">\gamma \in [0, 1]</span> raised to its
+          delay.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="equation 3.8, p. 55">1</a></sup
+          >
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            G_t \doteq R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \cdots =
+            \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}
+          </div>
+          <figcaption>
+            The discounted return from step
+            <span class="nb-math-in">t</span>. It obeys the recursion
+            <span class="nb-math-in">G_t = R_{t+1} + \gamma G_{t+1}</span>,
+            which the Bellman equation turns into a statement about
+            values.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="equations 3.8 and 3.9, p. 55">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The discount does two jobs. It keeps the sum finite: when rewards are
+          bounded and <span class="nb-math-in">\gamma &lt; 1</span>, the
+          geometric weights make an infinite horizon converge, where an
+          undiscounted infinite sum need not.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Reward and Return">3</a></sup
+          >
+          And it values sooner reward above later: a reward
+          <span class="nb-math-in">k</span> steps away is scaled by
+          <span class="nb-math-in">\gamma^k</span>. The two limits bound the
+          behaviour. At <span class="nb-math-in">\gamma = 0</span> the return
+          collapses to <span class="nb-math-in">R_{t+1}</span>, and the agent is
+          myopic, weighing only the next reward. As
+          <span class="nb-math-in">\gamma \to 1</span> it weighs the distant
+          future almost as heavily as the present.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="slides 12 and 13">2</a></sup
+          >
+          On the gridworld the step reward and the discount pull the same way.
+          Every step costs <span class="nb-math-in">-1</span>, so a shorter route
+          forfeits fewer future rewards, and
+          <span class="nb-math-in">\gamma &lt; 1</span> discounts the costs that
+          remain. A return that sums <span class="nb-math-in">-1</span>'s prefers
+          to reach the goal quickly. This lesson fixes
+          <span class="nb-math-in">\gamma = 0.9</span>. A later section's
+          convergence argument needs
+          <span class="nb-math-in">\gamma &lt; 1</span>, and
+          <span class="nb-math-in">0.9</span> is what lets it apply.
+        </p>
+      </section>
+
+      <section data-nb-section="policy-to-bellman" id="policy-to-bellman">
+        <h2>From a policy to the Bellman equation</h2>
+        <p>
+          A <strong>policy</strong>
+          <span class="nb-math-in">\pi</span> is how the agent acts:
+          <span class="nb-math-in">\pi(a \mid s)</span> is the probability it
+          takes action <span class="nb-math-in">a</span> in state
+          <span class="nb-math-in">s</span>.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Section 3.5, p. 58">1</a></sup
+          >
+          The policy this lesson scores is the
+          <strong>equiprobable</strong> one, drawn in Fig. 2: each of the four
+          moves with probability one quarter, in every cell. Given a policy, the
+          <strong>state-value function</strong>
+          <span class="nb-math-in">v_\pi(s)</span> is the expected return from
+          <span class="nb-math-in">s</span> when the agent follows
+          <span class="nb-math-in">\pi</span>. The
+          <strong>action-value function</strong>
+          <span class="nb-math-in">q_\pi(s, a)</span> is the expected return
+          from <span class="nb-math-in">s</span> after first taking
+          <span class="nb-math-in">a</span>, then following
+          <span class="nb-math-in">\pi</span>.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="equations 3.12 and 3.13, p. 58">1</a></sup
+          >
+          The value of the terminal state is zero: there is no return left to
+          collect.
+        </p>
+        <p>
+          The <strong>Bellman equation for
+          <span class="nb-math-in">v_\pi</span></strong> relates a state's value
+          to its successors', and it falls out of the return's recursion in four
+          steps. Start from the definition and substitute
+          <span class="nb-math-in">G_t = R_{t+1} + \gamma G_{t+1}</span>:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            v_\pi(s) \doteq \mathbb{E}_\pi[\, G_t \mid S_t = s \,] =
+            \mathbb{E}_\pi[\, R_{t+1} + \gamma G_{t+1} \mid S_t = s \,]
+          </div>
+        </figure>
+        <p>
+          Now average over what happens on the step. Conditioned on
+          <span class="nb-math-in">S_t = s</span>, the agent draws an action
+          <span class="nb-math-in">a</span> with probability
+          <span class="nb-math-in">\pi(a \mid s)</span>, and then the
+          environment draws <span class="nb-math-in">(s', r)</span> with
+          probability <span class="nb-math-in">p(s', r \mid s, a)</span>. Writing
+          the expectation as those two sums:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            v_\pi(s) = \sum_a \pi(a \mid s) \sum_{s', r} p(s', r \mid s, a)
+            \Big[\, r + \gamma\, \mathbb{E}_\pi[\, G_{t+1} \mid S_{t+1} = s' \,]
+            \,\Big]
+          </div>
+        </figure>
+        <p>
+          The step the textbooks pass over is the one inside the brackets. The
+          inner expectation of
+          <span class="nb-math-in">G_{t+1}</span> should, in full, be
+          conditioned on everything known at that point:
+          <span class="nb-math-in">S_t = s</span>,
+          <span class="nb-math-in">A_t = a</span>,
+          <span class="nb-math-in">R_{t+1} = r</span> and
+          <span class="nb-math-in">S_{t+1} = s'</span>. The Markov property is
+          what removes all but the last. The return
+          <span class="nb-math-in">G_{t+1}</span> is a function of the future
+          <span class="nb-math-in">S_{t+1}, A_{t+1}, R_{t+2}, \dots</span>, and
+          given <span class="nb-math-in">S_{t+1} = s'</span> that future's
+          distribution no longer depends on how the agent reached
+          <span class="nb-math-in">s'</span>. So the conditioning on
+          <span class="nb-math-in">s</span>,
+          <span class="nb-math-in">a</span> and
+          <span class="nb-math-in">r</span> drops. What is left is the
+          expected return from <span class="nb-math-in">s'</span> under
+          <span class="nb-math-in">\pi</span>, which is
+          <span class="nb-math-in">v_\pi(s')</span> by definition. That
+          substitution gives the Bellman equation.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            v_\pi(s) = \sum_a \htmlClass{nb-mc1}{\pi(a \mid s)} \sum_{s', r}
+            \htmlClass{nb-mc2}{p(s', r \mid s, a)} \Big[\,
+            \htmlClass{nb-mc3}{r} + \htmlClass{nb-mc4}{\gamma\, v_\pi(s')} \,\Big]
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\pi(a \mid s)</span
+              ><span>the policy: how likely the agent is to pick action a in state s</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">p(s', r \mid s, a)</span
+              ><span>the dynamics: the chance of landing in s' and collecting r</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">r</span
+              ><span>the reward paid on this one step</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc4">\gamma\, v_\pi(s')</span
+              ><span>the discounted value of wherever the step lands</span>
+            </li>
+          </ul>
+          <figcaption>
+            Fig. 3 · The Bellman equation for
+            <span class="nb-math-in">v_\pi</span>, one equation per state.
+            Sutton and Barto call it the Bellman equation for
+            <span class="nb-math-in">v_\pi</span>; Silver's slides call the same
+            line the Bellman expectation equation.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="equation 3.14, p. 59">1</a></sup
+            ><sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="slide 33">2</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The same argument, started from
+          <span class="nb-math-in">q_\pi</span>, gives the action-value form
+          <span class="nb-math-in"
+            >q_\pi(s, a) = \sum_{s', r} p(s', r \mid s, a)\,[\, r + \gamma
+            \sum_{a'} \pi(a' \mid s')\, q_\pi(s', a') \,]</span
+          >. Sutton and Barto leave this one as an exercise and never number it,
+          so its printed form here follows Silver and Spinning Up.<sup
+            class="nb-cite"
+            ><a href="#s2" data-nb-locator="slide 34">2</a></sup
+          ><sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="Bellman Equations">3</a></sup
+          >
+          For the rest of the lesson the state-value form is enough.
+        </p>
+      </section>
+
+      <section data-nb-section="solving-for-v-pi" id="solving-for-v-pi">
+        <h2>Solving for v_pi, then checking it by iteration</h2>
+        <p>
+          Fig. 3 is not one equation but sixteen, one per cell, and they are
+          coupled: each cell's value is written in terms of its neighbours'. Two
+          definitions turn the coupling into linear algebra. For the fixed
+          policy <span class="nb-math-in">\pi</span>, let
+          <span class="nb-math-in"
+            >P_\pi[s, s'] = \sum_a \pi(a \mid s)\, p(s' \mid s, a)</span
+          >
+          be the chance of moving from
+          <span class="nb-math-in">s</span> to
+          <span class="nb-math-in">s'</span> under
+          <span class="nb-math-in">\pi</span>. Let
+          <span class="nb-math-in"
+            >r_\pi[s] = \sum_a \pi(a \mid s)\, r(s, a)</span
+          >
+          be the expected one-step reward. Neither array is Sutton and Barto's;
+          both follow Silver's induced Markov reward process.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="slide 27">2</a></sup
+          >
+          Stacked over the non-terminal states, Fig. 3 becomes one matrix
+          equation.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            v_\pi = r_\pi + \gamma P_\pi v_\pi \quad\Longrightarrow\quad (I -
+            \gamma P_\pi)\, v_\pi = r_\pi \quad\Longrightarrow\quad v_\pi = (I -
+            \gamma P_\pi)^{-1} r_\pi
+          </div>
+          <figcaption>
+            The Bellman equation in matrix form, and its direct solution.
+            Silver writes exactly this; Sutton and Barto note only that the
+            equation is a system of
+            <span class="nb-math-in">|S|</span> linear equations in
+            <span class="nb-math-in">|S|</span> unknowns.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="slide 36">2</a></sup
+            ><sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Section 4.1, p. 74">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The inverse exists, and one line says why, without a citation because
+          no source in the record states it. Suppose
+          <span class="nb-math-in">(I - \gamma P_\pi)\, x = 0</span>. Then
+          <span class="nb-math-in">x = \gamma P_\pi x</span>, so
+          <span class="nb-math-in">x</span> is a fixed point of the map
+          <span class="nb-math-in">v \mapsto \gamma P_\pi v</span>. Each row of
+          <span class="nb-math-in">P_\pi</span> is nonnegative and sums to at
+          most one, so it cannot increase the largest absolute entry of a
+          vector. Multiplying
+          by <span class="nb-math-in">\gamma &lt; 1</span> then strictly shrinks
+          it, so the map is a contraction and its only fixed point is
+          <span class="nb-math-in">0</span>. Hence
+          <span class="nb-math-in">x = 0</span>, and
+          <span class="nb-math-in">I - \gamma P_\pi</span> is invertible. The
+          discount is doing the work again.
+        </p>
+        <p>
+          There is a second route to the same vector that needs no inverse.
+          Treat the Bellman equation as an assignment and iterate it:
+          <strong>iterative policy evaluation</strong> starts from
+          <span class="nb-math-in">v_0 = 0</span> and repeats
+          <span class="nb-math-in"
+            >v_{k+1} = r_\pi + \gamma P_\pi v_k</span
+          >
+          until the values stop moving.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="equation 4.5, p. 74">1</a></sup
+          ><sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="slide 8">4</a></sup
+          >
+          It converges because the update
+          <span class="nb-math-in">T_\pi(v) = r_\pi + \gamma P_\pi v</span> is a
+          contraction in the maximum norm with factor
+          <span class="nb-math-in">\gamma</span>. By Banach's fixed-point
+          theorem it then has a unique fixed point, reached at a geometric rate,
+          and <span class="nb-math-in">v_\pi</span> is that fixed point.<sup
+            class="nb-cite"
+            ><a href="#s4" data-nb-locator="slides 38 to 40">4</a></sup
+          ><sup class="nb-cite"
+            ><a href="#s5" data-nb-locator="Appendix A, p. 77 and p. 79">5</a></sup
+          >
+          That guarantee holds only for
+          <span class="nb-math-in">\gamma &lt; 1</span>; at
+          <span class="nb-math-in">\gamma = 1</span> the contraction factor is
+          <span class="nb-math-in">1</span> and the argument proves nothing,
+          which is the reason this lesson's grid discounts.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">evaluate.py · both methods (runs with uv run evaluate.py)</span
+            ><span>python</span>
+          </div>
+          <pre><code data-language="python">def induced(next_state, reward, policy):        # P_pi and r_pi
+    n_states, n_actions = next_state.shape
+    p_pi = np.zeros((n_states, n_states))
+    r_pi = np.zeros(n_states)
+    for s in range(n_states):
+        for a in range(n_actions):
+            p_pi[s, next_state[s, a]] += policy[s, a]
+            r_pi[s] += policy[s, a] * reward[s, a]
+    return p_pi, r_pi
+
+def direct_solve(p_pi, r_pi, terminal, gamma):   # v = (I - gamma P)^-1 r
+    nt = np.where(~terminal)[0]                   # drop the terminal cell
+    p_sub, r_sub = p_pi[np.ix_(nt, nt)], r_pi[nt]
+    v = np.zeros(len(terminal))
+    v[nt] = np.linalg.solve(np.eye(len(nt)) - gamma * p_sub, r_sub)
+    return v
+
+def iterative_eval(p_pi, r_pi, terminal, gamma, theta=1e-10):
+    v, sweeps = np.zeros(len(terminal)), 0
+    while True:
+        v_new = r_pi + gamma * p_pi @ v
+        v_new[terminal] = 0.0
+        delta = np.max(np.abs(v_new - v))
+        v, sweeps = v_new, sweeps + 1
+        if delta &lt; theta:
+            return v, sweeps</code></pre>
+          <figcaption class="nb-code-cap">
+            The two methods, numpy only. The direct solve works on the
+            fifteen non-terminal cells; the iteration runs over all sixteen and
+            holds the goal at zero.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="slide 36">2</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          Before trusting this code on a new grid it is worth a sanity check
+          against a known answer. Run the same two functions on Sutton and
+          Barto's own examples: Figure 3.2 (a five-by-five grid at
+          <span class="nb-math-in">\gamma = 0.9</span>) and Figure 4.1 (a
+          four-by-four grid at <span class="nb-math-in">\gamma = 1</span>). Both
+          printed tables come back to the digit, down to the entry the book
+          rounds to <span class="nb-math-in">-1.7</span> and the code prints as
+          <span class="nb-math-in">-1.75</span>.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Figure 3.2, p. 60 and Figure 4.1, p. 77"
+              >1</a
+            ></sup
+          >
+          The evaluator reproduces the book, so its numbers on the running grid
+          can be read as the grid's own.
+        </p>
+        <p>
+          On the running gridworld, at
+          <span class="nb-math-in">\gamma = 0.9</span>, the direct solve and the
+          iteration agree:
+          <span class="nb-math-in"
+            >\max_s |v_{\text{direct}}(s) - v_{\text{iter}}(s)|</span
+          >
+          is <span class="nb-math-in">6.7 \times 10^{-10}</span>, with the
+          iteration reaching that in 187 sweeps. The values, rounded to one
+          decimal, fill the grid below.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="environments-and-the-rl-problem/chart-1.png"
+            alt="A four-by-four heatmap of the state-value function of the equiprobable policy at gamma 0.9. Values grow from minus 9.4 in the top-left cell, farthest from the goal, to 0.0 at the bottom-right terminal goal; the cells near the goal, minus 5.8, are the least negative. The grid is symmetric across the main diagonal."
+          />
+          <figcaption>
+            Fig. 4 · The value of every cell under the equiprobable policy,
+            <span class="nb-math-in">\gamma = 0.9</span>. Darker is a larger
+            expected cost to reach the goal from that cell. Computed for this
+            lesson by the code above; values printed by
+            <span class="nb-table-token">evaluate.py</span>. Grid design after
+            Sutton and Barto.<sup class="nb-cite"
+              ><a href="#s1" data-nb-locator="Example 4.1, p. 76">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The numbers read the way the setup demands. The goal is
+          <span class="nb-math-in">0</span>. Every other cell is negative,
+          because the equiprobable policy wanders and each wandering step costs
+          <span class="nb-math-in">-1</span>. The cell diagonally farthest from
+          the goal, the top-left, is the worst at
+          <span class="nb-math-in">-9.4</span>. The two cells touching the goal
+          are the least bad at <span class="nb-math-in">-5.8</span>. The grid is
+          symmetric across its main diagonal, exactly as the gridworld is. Cell
+          3 and cell 12 both read <span class="nb-math-in">-8.8</span>; cell 11
+          and cell 14 both read <span class="nb-math-in">-5.8</span>. That the
+          solution keeps a symmetry the grid and the policy have is a free check
+          that the computation is sound.
+        </p>
+        <p>
+          It is worth doing one backup by hand, because the gridworld hides a
+          twist. Take cell 14, one
+          move left of the goal. Up goes to cell 10, worth
+          <span class="nb-math-in">-7.42</span>. Left goes to cell 13, worth
+          <span class="nb-math-in">-7.97</span>. Right enters the goal, worth
+          <span class="nb-math-in">0</span>. Down bumps the bottom wall and
+          stays in cell 14, worth
+          <span class="nb-math-in">-5.76</span>. Each move pays
+          <span class="nb-math-in">-1</span> and is taken with probability one
+          quarter, so
+          <span class="nb-math-in"
+            >v_\pi(14) = \tfrac14[(-1 + 0.9 \cdot -7.42) + (-1 + 0.9 \cdot
+            -7.97) + (-1 + 0) + (-1 + 0.9 \cdot -5.76)] = -5.76</span
+          >.
+          The value of cell 14 appears on both sides, because one of its own
+          moves returns to it. No single cell's equation can be solved alone.
+          That is why the sixteen are coupled, and why both methods above exist:
+          one inverts the coupling, the other relaxes it.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Check your understanding</span>
+          <p>
+            Three questions answerable from this lesson alone.
+          </p>
+          <details>
+            <summary>Why is every non-goal cell's value negative?</summary>
+            <p>
+              The only reward on the grid is
+              <span class="nb-math-in">-1</span> per step, paid until the goal
+              ends the episode. The return from any non-goal cell is a
+              discounted sum of those
+              <span class="nb-math-in">-1</span>'s, so its expectation under any
+              policy that eventually reaches the goal is negative. The goal is
+              terminal with no further reward, so its value is
+              <span class="nb-math-in">0</span>, the one non-negative entry.
+            </p>
+          </details>
+          <details>
+            <summary>
+              What is
+              <span class="nb-math-in">v_\pi</span> at
+              <span class="nb-math-in">\gamma = 0</span>, and why?
+            </summary>
+            <p>
+              At <span class="nb-math-in">\gamma = 0</span> the return is just
+              <span class="nb-math-in">R_{t+1}</span>, so
+              <span class="nb-math-in">v_\pi(s) = r_\pi(s)</span>. Every non-goal
+              cell pays <span class="nb-math-in">-1</span> on its next step
+              regardless of the move, so
+              <span class="nb-math-in">v_\pi(s) = -1</span> for all fifteen, and
+              <span class="nb-math-in">0</span> at the goal. The myopic agent
+              sees only the immediate cost and none of the distance.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Why does dropping the terminal cell from the matrix solve not
+              change the answer?
+            </summary>
+            <p>
+              The terminal cell has value
+              <span class="nb-math-in">0</span> and never transitions out, so it
+              contributes
+              <span class="nb-math-in">\gamma \cdot 0 = 0</span> to every other
+              cell's equation. Removing its row and column leaves a
+              fifteen-by-fifteen system whose solution is unchanged. The
+              remaining matrix is substochastic: its rows can sum to less than
+              one, since mass leaks into the goal. That is what keeps
+              <span class="nb-math-in">I - \gamma P_\pi</span> invertible.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A reinforcement-learning problem is an environment plus a goal written
+          as rewards. The Markov decision process is how you write it down:
+          states, actions, the dynamics
+          <span class="nb-math-in">p(s', r \mid s, a)</span>, and a discount.
+          Fix a policy and the first question with a numerical answer is how
+          good each state is. The Bellman equation answers it, by tying a
+          state's value to the discounted values of where its actions lead. On
+          one small gridworld you computed that value two ways and watched them
+          agree to nine decimal places. That is worth more than either number
+          alone. The direct solve told you the answer exists and is unique; the
+          iteration told you an agent could reach it without ever inverting a
+          matrix. The hand backup on cell 14 showed why there is a system to
+          solve and not a formula to evaluate: a state's value can sit on both
+          sides of its own equation. The discount earned its place three times
+          over. It made the return converge, made
+          <span class="nb-math-in">I - \gamma P_\pi</span> invertible, and made
+          the iteration contract. What this lesson did not do is improve the
+          policy. Scoring a fixed policy is prediction. Turning the values into a
+          better policy is control: value iteration and policy iteration, the
+          next lesson, run on this same grid.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="http://incompleteideas.net/book/RLbook2020.pdf"
+              >Sutton and Barto, Chapter 4, Dynamic Programming (pp. 74-80)</a
+            >: iterative policy evaluation in full, then the policy-improvement
+            step that turns these values into a better policy, which the next
+            lesson needs.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a
+              href="https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf"
+              >David Silver, Lecture 3, Planning by Dynamic Programming (slides
+              36-40)</a
+            >: the contraction proof behind the iteration you ran, drawn out
+            step by step.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://sites.ualberta.ca/~szepesva/papers/RLAlgsInMDPs.pdf"
+              >Csaba Szepesvari, Algorithms for Reinforcement Learning, Appendix
+              A</a
+            >: Banach's fixed-point theorem with its full proof, the result the
+            convergence guarantee rests on.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-note="Defines the finite MDP, the dynamics p(s',r|s,a), the return, v_pi and q_pi, the Bellman equation for v_pi (3.14), and iterative policy evaluation. 2nd edition (2018), MIT Press; the authors' free copy is at incompleteideas.net/book/RLbook2020.pdf."
+              href="https://mitpress.mit.edu/9780262039246/reinforcement-learning/"
+              >Richard S. Sutton and Andrew G. Barto · Reinforcement Learning: An
+              Introduction, 2nd edition (MIT Press, 2018), Chapters 3 and 4</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-note="The MDP tuple, the induced Markov reward process, the Bellman expectation equations for v_pi and q_pi, and the matrix solve."
+              href="https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-2-mdp.pdf"
+              >David Silver · UCL Course on Reinforcement Learning, Lecture 2:
+              Markov Decision Processes</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-note="Teaching summary; supplies the one-line Bellman equation for the action-value function and a plain reason for the discount."
+              href="https://spinningup.openai.com/en/latest/spinningup/rl_intro.html"
+              >OpenAI · Spinning Up in Deep RL, Part 1: Key Concepts in RL</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-note="Iterative policy evaluation as a matrix iteration, and the maximum-norm contraction proof for the Bellman expectation operator."
+              href="https://davidstarsilver.wordpress.com/wp-content/uploads/2025/04/lecture-3-planning-by-dynamic-programming-.pdf"
+              >David Silver · UCL Course on Reinforcement Learning, Lecture 3:
+              Planning by Dynamic Programming</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-note="Banach's fixed-point theorem with a full proof and the T_pi contraction argument; author's draft, cited as the draft."
+              href="https://sites.ualberta.ca/~szepesva/papers/RLAlgsInMDPs.pdf"
+              >Csaba Szepesvari · Algorithms for Reinforcement Learning (author's
+              draft, updated 2019)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
