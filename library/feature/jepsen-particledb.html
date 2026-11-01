@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jepsen finds ParticleDB’s default mode losing committed writes among 96 issues · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "jepsen-particledb",
+        "template": "article",
+        "title": "Jepsen finds ParticleDB’s default mode losing committed writes among 96 issues",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-01",
+        "tags": ["databases", "jepsen", "transactions", "correctness"],
+        "sources": 8,
+        "words": 1057,
+        "reading_minutes": 5,
+        "dek": "In versions 1.1.4 through 1.1.17 of ParticleDB, advertised as “Full ACID. 159K TPS.”, WHERE 4 = 5 returned the row with primary key 5.",
+        "harness": "claude-code-routine",
+        "model": "claude-sonnet-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">Jepsen finds ParticleDB’s default mode losing committed writes among 96 issues</h1>
+        <p class="nb-dekline">
+          In versions 1.1.4 through 1.1.17 of ParticleDB, advertised as “Full ACID. 159K TPS.”, WHERE 4 = 5 returned the row with primary key 5.
+        </p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-11-01</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Guarantees tested one node at a time</h2>
+        <p>
+          Orkes advertised ParticleDB, a Postgres-compatible database, as “Full ACID. 159K TPS.” and as “formally proven” with TLA+, wording that Jepsen’s report quotes from the home page.<sup class="nb-cite"><a href="#s1" data-nb-locator="§1.1 Safety">1</a></sup>
+          On 2026-10-31 Jepsen reported 96 issues from tests of versions 1.1.4 through 1.1.18.11.rc-22 and wrote that the Full ACID claim was “somewhat premature.” The default transaction mode, <code>occ</code>, lost committed writes in normal operation. The TLA+ claim could not be checked, because no specification was available.<sup class="nb-cite"><a href="#s1" data-nb-locator="Introduction; §1.1 Safety; §4.4 Documentation">1</a></sup>
+        </p>
+        <p>
+          Orkes, the vendor, funded the analysis, which Jepsen says it conducted under its ethics policy. Every test ran on a single node, because the builds Orkes supplied did not support replication.<sup class="nb-cite"><a href="#s1" data-nb-locator="Introduction; §4.1 Impact">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="four-of-six" id="four-of-six">
+        <h2>Four of six claims met a measured failure</h2>
+        <p>
+          Each row is one advertised guarantee, in the words the report prints, and each cell to its right is what Jepsen recorded against it. Orkes has since rewritten the home page and documentation pages the report quotes, so the report is now the record of that wording.<sup class="nb-cite"><a href="#s1" data-nb-locator="§1.1 Safety">1</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Advertised wording against Jepsen’s result, with the anomaly defined where it first appears. The last two rows quote, in part or in full, an operator guide Orkes did not publish. Report sections, by row: 3.8.7, 3.8.8 and 3.8.14, 1.1, 3.8.16, 1.1, 3.2.3.<sup class="nb-cite"><a href="#s1" data-nb-locator="§§1.1, 3.2.3, 3.8.7, 3.8.8, 3.8.14, 3.8.16">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Advertised</th>
+              <th class="txt">Jepsen result</th>
+              <th class="txt">Build and mode</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">“Full ACID. 159K TPS.”</td>
+              <td class="txt">Committed writes lost; aborted reads (G1a), where a committed transaction reads a write from an aborted one;<sup class="nb-cite"><a href="#s2">2</a></sup> Lost Update, where a transaction overwrites a concurrent committed write it never observed.<sup class="nb-cite"><a href="#s3">3</a></sup></td>
+              <td class="txt">1.1.4 through 1.1.18.9, every mode, no faults</td>
+            </tr>
+            <tr>
+              <td class="txt">“snapshot isolation”</td>
+              <td class="txt">G-single, where a transaction observes one effect of another but misses a second effect of it (#73).<sup class="nb-cite"><a href="#s4">4</a></sup> Read skew (A5A), where it both observes and fails to observe the other’s effects (#106).<sup class="nb-cite"><a href="#s5">5</a></sup></td>
+              <td class="txt">G-single in rc-1 through rc-22; A5A with <code>table-2pl</code> in rc-18</td>
+            </tr>
+            <tr>
+              <td class="txt">“formally proven” with TLA+</td>
+              <td class="txt">Could not be checked. No specification was available.</td>
+              <td class="txt">None tested</td>
+            </tr>
+            <tr>
+              <td class="txt"><code>occ</code> is “Jepsen-safe”</td>
+              <td class="txt">Acknowledged writes discarded on a healthy node: 31 lost among about 20,000 keys, every few minutes (#110).</td>
+              <td class="txt">rc-18 through rc-22, both interfaces</td>
+            </tr>
+            <tr>
+              <td class="txt"><code>groupsync</code> gives the “same durability as sync”</td>
+              <td class="txt">A conflict between documents, not a measured failure. The public docs said <code>sync</code> had “stronger durability,” and Jepsen reports no comparison. Orkes’s current docs say the two give the same guarantee.<sup class="nb-cite"><a href="#s6">6</a></sup></td>
+              <td class="txt">Documentation</td>
+            </tr>
+            <tr>
+              <td class="txt">Prepared statements “all work as expected”</td>
+              <td class="txt">Any prepared statement through the Postgres JDBC driver raised an exception, leaving the database “essentially unusable” (#2).</td>
+              <td class="txt">1.1.4 through 1.1.18.9; appeared fixed by rc-1</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          “Jepsen-safe” was Orkes’s own label. Jepsen printed it and wrote that, since it evaluates safety against documentation and marketing claims, it was not clear how to interpret the term.<sup class="nb-cite"><a href="#s1" data-nb-locator="§1.1 Safety">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="where-4-equals-5" id="where-4-equals-5">
+        <h2><code>WHERE 4 = 5</code> returned the row with primary key 5</h2>
+        <p>
+          Jepsen’s example is a table t with columns a, the primary key, and b, holding rows 4 | 5 and 5 | 6. In versions 1.1.4 through 1.1.17, ParticleDB “aggressively interpreted WHERE something = x as a primary-key lookup of x, regardless of the value of something.”<sup class="nb-cite"><a href="#s1" data-nb-locator="§3.3.3 WHERE 4 = 5 (#18)">1</a></sup>
+          The query in the diagram therefore asked for key 5 and never compared the 4.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+          <svg
+            viewBox="0 0 720 290"
+            role="img"
+            aria-label="Two lanes for the query SELECT * FROM t WHERE 4 = 5. Expected: 4 = 5 is false, so no rows return. ParticleDB 1.1.4 through 1.1.17: the predicate is read as a primary-key lookup of 5, so the row 5 | 6 returns."
+            style="width: 100%; min-width: 34rem; height: auto"
+          >
+            <defs>
+              <marker id="ahB" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" style="fill: var(--ink-soft)" />
+              </marker>
+            </defs>
+            <g style="font-family: var(--sans); font-size: 15px; fill: var(--ink)">
+              <rect x="180" y="12" width="360" height="42" rx="4" style="fill: var(--panel); stroke: var(--line)" />
+              <text x="360" y="39" text-anchor="middle" style="font-family: var(--mono); font-size: 15px">SELECT * FROM t WHERE 4 = 5;</text>
+              <path d="M270 54 V76 H180 V98" marker-end="url(#ahB)" style="fill: none; stroke: var(--ink-soft); stroke-width: 1.5" />
+              <path d="M450 54 V76 H540 V98" marker-end="url(#ahB)" style="fill: none; stroke: var(--ink-soft); stroke-width: 1.5" />
+
+              <rect x="20" y="100" width="320" height="76" rx="4" style="fill: var(--panel); stroke: var(--line)" />
+              <text x="36" y="122" style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; fill: var(--ink-soft)">EXPECTED</text>
+              <text x="36" y="146">4 = 5 is false for every row,</text>
+              <text x="36" y="166">so the filter keeps nothing</text>
+
+              <rect x="380" y="100" width="320" height="76" rx="4" style="fill: var(--panel); stroke: var(--chart-4); stroke-width: 1.5" />
+              <text x="396" y="122" style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; fill: var(--ink-soft)">PARTICLEDB 1.1.4 THROUGH 1.1.17</text>
+              <text x="396" y="146">WHERE something = x is read as</text>
+              <text x="396" y="166">a primary-key lookup of x = 5</text>
+
+              <path d="M180 176 V212" marker-end="url(#ahB)" style="fill: none; stroke: var(--ink-soft); stroke-width: 1.5" />
+              <text x="192" y="199" style="font-size: 12px; fill: var(--ink-soft)">constant filter</text>
+              <rect x="20" y="214" width="320" height="58" rx="4" style="fill: var(--panel); stroke: var(--line)" />
+              <text x="36" y="236" style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; fill: var(--ink-soft)">RESULT</text>
+              <text x="36" y="261" style="font-family: var(--mono)">(0 rows)</text>
+
+              <path d="M540 176 V204" marker-end="url(#ahB)" style="fill: none; stroke: var(--ink-soft); stroke-width: 1.5" />
+              <text x="552" y="196" style="font-size: 12px; fill: var(--ink-soft)">lookup a = 5</text>
+              <rect x="380" y="206" width="320" height="22" style="fill: var(--wash); stroke: var(--line)" />
+              <text x="396" y="222" style="font-size: 12px; font-weight: 600; fill: var(--ink-soft)">a (primary key)</text>
+              <text x="556" y="222" style="font-size: 12px; font-weight: 600; fill: var(--ink-soft)">b</text>
+              <rect x="380" y="228" width="320" height="22" style="fill: var(--panel); stroke: var(--line)" />
+              <text x="396" y="244" style="font-family: var(--mono); font-size: 14px">4</text>
+              <text x="556" y="244" style="font-family: var(--mono); font-size: 14px">5</text>
+              <rect x="380" y="250" width="320" height="22" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--chart-4); stroke-width: 1.5" />
+              <text x="396" y="266" style="font-family: var(--mono); font-size: 14px">5</text>
+              <text x="556" y="266" style="font-family: var(--mono); font-size: 14px">6</text>
+              <text x="688" y="266" text-anchor="end" style="font-size: 12px; font-weight: 600">returned</text>
+              <line x1="540" y1="206" x2="540" y2="272" style="stroke: var(--line)" />
+            </g>
+          </svg>
+          <figcaption>
+            Fig. 1 · Jepsen’s example for issue #18: table t holds rows (4, 5) and (5, 6). The right lane follows the report’s description of the rewrite and is drawn for this article, not copied from ParticleDB’s planner.<sup class="nb-cite"><a href="#s1" data-nb-locator="§3.3.3 WHERE 4 = 5 (#18)">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The example is a single statement with no concurrent transaction. Version 1.1.18.4 stopped treating every equality as a key lookup. A related fault appeared only inside a transaction: in 1.1.4 through 1.1.18.8, <code>SELECT * FROM t WHERE TRUE</code> returned no rows (#35), and it seemed improved in 1.1.18.9.<sup class="nb-cite"><a href="#s1" data-nb-locator="§3.3.4 SELECT in a Transaction Returns Nonsense (#35)">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="ten-issues-survived" id="ten-issues-survived">
+        <h2>Ten issues survived to rc-22</h2>
+        <p>
+          Jepsen wrote that by 1.1.18.11.rc-22 all but ten of the 96 issues appeared resolved.<sup class="nb-cite"><a href="#s1" data-nb-locator="Introduction">1</a></sup>
+          The chart places seven findings on the builds Jepsen tested, four of them among the ten. A bar spans the builds where the behavior appeared, and a bar that reaches rc-22 was still open when testing ended.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+          <svg
+            viewBox="0 0 720 350"
+            role="img"
+            aria-label="Timeline of seven ParticleDB findings across eight builds from 1.1.4 to 1.1.19 rc.13. Issues 18, 35 and 2 were observed in early builds and fixed in later tested builds. Issues 73, 110, 109 and 107 were still observed at rc-22, and Orkes says rc.13 fixes them, which Jepsen did not test."
+            style="width: 100%; min-width: 34rem; height: auto"
+          >
+            <g style="font-family: var(--sans); font-size: 13px; fill: var(--ink)">
+              <g style="stroke: var(--line)">
+                <line x1="260" y1="48" x2="260" y2="312" />
+                <line x1="320" y1="48" x2="320" y2="312" />
+                <line x1="380" y1="48" x2="380" y2="312" />
+                <line x1="440" y1="48" x2="440" y2="312" />
+                <line x1="500" y1="48" x2="500" y2="312" />
+                <line x1="560" y1="48" x2="560" y2="312" />
+                <line x1="620" y1="48" x2="620" y2="312" />
+                <line x1="680" y1="48" x2="680" y2="312" />
+              </g>
+              <text x="0" y="38" style="font-size: 12px; font-weight: 600; fill: var(--ink-soft)">Finding</text>
+              <g style="font-size: 12px; fill: var(--ink-soft)">
+                <text x="560" y="14" text-anchor="middle">1.1.18.11</text>
+                <text x="680" y="14" text-anchor="middle">1.1.19</text>
+              </g>
+              <path d="M492 20 H628" style="fill: none; stroke: var(--ink-soft)" />
+              <g style="font-size: 12px" text-anchor="middle">
+                <text x="260" y="38">1.1.4</text>
+                <text x="320" y="38">1.1.17</text>
+                <text x="380" y="38">1.1.18.8</text>
+                <text x="440" y="38">1.1.18.9</text>
+                <text x="500" y="38">rc-1</text>
+                <text x="560" y="38">rc-18</text>
+                <text x="620" y="38">rc-22</text>
+                <text x="680" y="38">rc.13</text>
+              </g>
+
+              <text x="0" y="81">#18 WHERE 4 = 5</text>
+              <rect x="246" y="66" width="88" height="20" rx="3" style="fill: var(--chart-2); fill-opacity: 0.35; stroke: var(--chart-2)" />
+              <text x="344" y="81" style="font-size: 11px; fill: var(--ink-soft); paint-order: stroke; stroke: var(--wash); stroke-width: 4px">fixed by 1.1.18.4</text>
+
+              <text x="0" y="117">#35 WHERE TRUE in txn</text>
+              <rect x="246" y="102" width="148" height="20" rx="3" style="fill: var(--chart-2); fill-opacity: 0.35; stroke: var(--chart-2)" />
+              <text x="404" y="117" style="font-size: 11px; fill: var(--ink-soft); paint-order: stroke; stroke: var(--wash); stroke-width: 4px">improved in 1.1.18.9</text>
+
+              <text x="0" y="153">#2 prepared statements</text>
+              <rect x="246" y="138" width="208" height="20" rx="3" style="fill: var(--chart-2); fill-opacity: 0.35; stroke: var(--chart-2)" />
+              <text x="464" y="153" style="font-size: 11px; fill: var(--ink-soft); paint-order: stroke; stroke: var(--wash); stroke-width: 4px">appeared fixed by rc-1</text>
+
+              <text x="0" y="189">#73 G-single</text>
+              <rect x="486" y="174" width="148" height="20" rx="3" style="fill: var(--chart-4); fill-opacity: 0.35; stroke: var(--chart-4)" />
+              <text x="0" y="225">#110 lost committed writes</text>
+              <rect x="546" y="210" width="88" height="20" rx="3" style="fill: var(--chart-4); fill-opacity: 0.35; stroke: var(--chart-4)" />
+              <text x="0" y="261">#109 stale read</text>
+              <rect x="546" y="246" width="88" height="20" rx="3" style="fill: var(--chart-4); fill-opacity: 0.35; stroke: var(--chart-4)" />
+              <text x="0" y="297">#107 Lost Update after kills</text>
+              <rect x="546" y="282" width="88" height="20" rx="3" style="fill: var(--chart-4); fill-opacity: 0.35; stroke: var(--chart-4)" />
+
+              <g style="fill: none; stroke: var(--chart-4); stroke-dasharray: 4 3">
+                <path d="M634 184 H672" />
+                <path d="M634 220 H672" />
+                <path d="M634 256 H672" />
+                <path d="M634 292 H672" />
+                <circle cx="680" cy="184" r="7" />
+                <circle cx="680" cy="220" r="7" />
+                <circle cx="680" cy="256" r="7" />
+                <circle cx="680" cy="292" r="7" />
+              </g>
+
+              <rect x="0" y="328" width="22" height="12" rx="2" style="fill: var(--chart-2); fill-opacity: 0.35; stroke: var(--chart-2)" />
+              <text x="30" y="339" style="font-size: 12px">Resolved in a later tested build</text>
+              <rect x="250" y="328" width="22" height="12" rx="2" style="fill: var(--chart-4); fill-opacity: 0.35; stroke: var(--chart-4)" />
+              <text x="280" y="339" style="font-size: 12px">Open at rc-22</text>
+              <path d="M392 334 H414" style="fill: none; stroke: var(--chart-4); stroke-dasharray: 4 3" />
+              <circle cx="424" cy="334" r="6" style="fill: none; stroke: var(--chart-4); stroke-dasharray: 4 3" />
+              <text x="438" y="339" style="font-size: 12px">Orkes says fixed in rc.13, untested</text>
+            </g>
+          </svg>
+          <figcaption>
+            Fig. 2 · Builds are ordered, not to scale. Issue #35 appeared inside a transaction. Issues #107 and #109 were reproduced under <code>strict-serializable</code> at rc-18, a mode the report says may have been renamed <code>serializable</code> in rc-22, where its Discussion says both still occurred.<sup class="nb-cite"><a href="#s1" data-nb-locator="§§3.2.3, 3.3.3, 3.3.4, 3.8.8, 3.8.15, 3.8.16, 3.9.3; §4 Discussion">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Stale read, the behavior behind #109, is a read that fails to observe an earlier completed write, which strict serializability forbids.<sup class="nb-cite"><a href="#s7">7</a></sup>
+          Jepsen saw it roughly every 300,000 transactions at rc-18. Process kills produced Lost Update under the same mode (#107).<sup class="nb-cite"><a href="#s1" data-nb-locator="§3.8.15; §3.9.3">1</a></sup>
+        </p>
+        <p>
+          Jepsen has not evaluated any build after rc-22. It recommended that users halt further deployment of ParticleDB and migrate to other databases as soon as possible. Orkes told Jepsen the issues likely came from an extensive refactor in spring 2026 and that customers who stayed on an earlier version were likely unaffected.<sup class="nb-cite"><a href="#s1" data-nb-locator="§4.1 Impact">1</a></sup>
+          Orkes’s own post says: “As of ParticleDB 1.1.19, we report that all identified issues have been addressed.”<sup class="nb-cite"><a href="#s8" data-nb-locator="What we learned from Jepsen">8</a></sup>
+          Jepsen’s report names the build as 1.1.19-rc.13.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" href="https://jepsen.io/analyses/particledb-1.1.4">Jepsen · ParticleDB 1.1.4 (Kyle Kingsbury, 2026-10-31)</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="secondary" href="https://jepsen.io/consistency/phenomena/g1a">Jepsen · G1a (Aborted Read)</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="secondary" href="https://jepsen.io/consistency/phenomena/p4">Jepsen · P4 (Lost Update)</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="secondary" href="https://jepsen.io/consistency/phenomena/g-single">Jepsen · G-single</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="secondary" href="https://jepsen.io/consistency/phenomena/a5a">Jepsen · A5A (Read Skew)</a>
+          </li>
+          <li id="s6">
+            <a data-nb-source data-nb-kind="primary" href="https://particledb.ai/operations/modes/#durability---durability">ParticleDB · operations modes page, durability section</a>
+          </li>
+          <li id="s7">
+            <a data-nb-source data-nb-kind="secondary" href="https://jepsen.io/consistency/phenomena/stale-read">Jepsen · Stale Read</a>
+          </li>
+          <li id="s8">
+            <a data-nb-source data-nb-kind="primary" href="https://orkes.io/blog/particledb-database-built-for-ai-agents">Orkes · blog post on ParticleDB and the Jepsen findings, “What we learned from Jepsen”</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
