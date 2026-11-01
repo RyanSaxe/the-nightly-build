@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Two improvements find the best policy · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "finding-optimal-policies",
+        "template": "lesson",
+        "title": "Two improvements find the best policy",
+        "mode": "open",
+        "order": 2,
+        "date": "2026-11-01",
+        "tags": ["policy-iteration", "value-iteration", "bellman-optimality"],
+        "sources": 5,
+        "words": 3974,
+        "reading_minutes": 17,
+        "dek": "On lesson 1's slippery grid, two rounds of evaluate-and-improve lift cell 13 from −2.01 to −0.71, while the top half, already optimal, does not move.",
+        "harness": "claude-code-routine",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Two improvements find the best policy</h1>
+        <p class="nb-dekline">
+          On lesson 1's slippery grid, two rounds of evaluate-and-improve lift cell 13 from −2.01 to −0.71, while the top half, already optimal, does not move.
+        </p>
+        <div class="nb-byline">
+          <span>17 min read</span><span>2026-11-01</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Lesson 1 drew a policy on a slippery 4×4 grid by hand, worked out that standing on cell 13 is worth −2.01, and then said the obvious out loud: nobody had checked whether that hand-drawn rule was any good. A policy is the rule that chooses a move in each cell. The question this lesson answers is how to find the policy that earns the most from every cell, and how to find it without trying rules at random.
+        </p>
+        <p>
+          The answer is old and still in use. AlphaGo Zero, the program that learned Go from self-play alone, is described by its authors as an approximate policy iteration scheme. A tree search sharpens the network's current rule of play. Self-play games scored by that search measure how good the sharper rule is, and the network is trained to match both. By the end of this lesson you will have run the small, exact version of that loop on the grid. You will watch it reach the best policy in two improvements, and watch a second method reach the same policy by folding one improvement into every pass.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>: lesson 1 sets up the grid, the fixed policy, the value <span class="nb-math-in">v_\pi</span>, and the direct solve this lesson reuses. Its <code>gridworld.py</code> is the environment imported below.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="http://incompleteideas.net/book/RLbook2020.pdf">Sutton and Barto, Reinforcement Learning: An Introduction</a>: chapter 4 (printed pp. 73-84) is policy iteration and value iteration in the field's standard notation, with a second worked example.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>What the hand-drawn arrows are worth</h2>
+        <p>
+          The grid is lesson 1's, unchanged, so the numbers compare directly. Sixteen cells, numbered 0 to 15 row by row from the top. Arriving at cell 3, the goal, pays +10; arriving at cell 6, the pit, pays −20; any other move pays −1; both the goal and the pit end the run. Moves slip: with probability 0.8 a move goes where it is aimed, and with probability 0.1 to each side, so a cell's own choice does not fully decide where it lands. The discount rate is <span class="nb-math-in">\gamma = 0.9</span>, the weight on the next step's value.
+        </p>
+        <p>
+          Lesson 1 fixed one policy by hand, pointing most cells up and right toward the goal, and solved for its value function <span class="nb-math-in">v_\pi</span>, the expected discounted return from each cell under that policy.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 3.12, p. 58">1</a></sup> It did so with a direct solve. The policy's one-step move probabilities among the non-terminal cells form a matrix <span class="nb-math-in">Q</span>, and the expected one-step reward forms a vector <span class="nb-math-in">b</span>. Every cell's value then falls out of <span class="nb-math-in">v = (I - \gamma Q)^{-1} b</span>. The values it found, kept to two places, run from +6.48 next to the goal down to −2.01 at cell 13 in the bottom row.
+        </p>
+        <p>
+          A value function says how good each cell is to stand on. It does not say whether the move the policy makes there is the best move available. To ask that, you need the worth of each move, which the value of a cell does not give, and the hand-drawn arrows have never been measured against the alternatives. That measurement is where the search for a better policy starts.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.2, pp. 76-78">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="pricing-moves" id="pricing-moves">
+        <h2>Cell 14 would rather go right</h2>
+        <p>
+          The worth of a move is the action value. The action value <span class="nb-math-in">q_\pi(s, a)</span> is the expected return from taking action <span class="nb-math-in">a</span> in cell <span class="nb-math-in">s</span> once, and following the policy <span class="nb-math-in">\pi</span> everywhere after.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 3.13, p. 58">1</a></sup> Written in terms of the values already in hand, it is the average over where the move lands, of the reward on arrival plus the discounted value of the arrival cell.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 4.6, p. 78">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">q_\pi(s, a) = \sum_{s'} P(s' \mid s, a)\,\bigl[\, R(s') + \gamma\, v_\pi(s') \,\bigr]</div>
+          <figcaption>
+            The action value is one backup from lesson 1's <span class="nb-math-in">v_\pi</span>, with the move's own landing probabilities in place of the policy's.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 4.6, p. 78">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Take cell 14, in the bottom row, one cell from the lower-right corner. The hand-drawn policy sends it up. Price each of its four moves against the values in hand, in the order up, right, down, left. Up reaches cell 10 with probability 0.8 and pays its way to −1.08. Right reaches cell 15 with probability 0.8, and cell 15 is worth +1.98, so the move is worth +0.32. Down walks into the bottom wall and stays, worth −1.78. Left heads back toward the pit's neighbourhood, worth −2.55. The four numbers are −1.08, +0.32, −1.78, −2.55. The largest is right, and it beats the hand-drawn up by 1.40.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+<svg viewBox="0 0 420 250" role="img" aria-label="Greedy max backup at cell 14. From cell 14 a single choice node branches to the four moves up, right, down and left, with action values minus 1.08, plus 0.32, minus 1.78 and minus 2.55. The max picks right at plus 0.32, highlighted, which beats the hand-drawn up at minus 1.08." style="display:block;width:100%;min-width:34rem;height:auto;margin:0 auto">
+<rect x="148.0" y="8.0" width="124.0" height="38.0" rx="6" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--ink);stroke-width:1.4"/>
+<text x="210.0" y="24.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">cell 14</text>
+<text x="210.0" y="40.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:400">vπ = -1.08</text>
+<line x1="210.0" y1="46.0" x2="210.0" y2="58.0" style="stroke:var(--ink-soft);stroke-width:1.2;fill:none"/><polygon points="210.0,63.0 207.0,57.0 213.0,57.0" style="fill:var(--ink-soft)"/>
+<circle cx="210.0" cy="72.0" r="9" style="fill:var(--ink);fill-opacity:1.0;stroke:var(--ink);stroke-width:1"/>
+<text x="226.0" y="76.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">max over the four moves</text>
+<line x1="210.0" y1="81.0" x2="54.0" y2="138.0" style="stroke:var(--ink-soft);stroke-width:1.2;fill:none"/>
+<rect x="8.0" y="140.0" width="92.0" height="60.0" rx="6" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--line);stroke-width:1.2"/>
+<text x="54.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">up (↑)</text>
+<text x="54.0" y="178.0" text-anchor="middle" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">q = -1.08</text>
+<line x1="210.0" y1="81.0" x2="156.0" y2="138.0" style="stroke:var(--chart-1);stroke-width:2.2;fill:none"/>
+<rect x="110.0" y="140.0" width="92.0" height="60.0" rx="6" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--chart-1);stroke-width:1.8"/>
+<text x="156.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">right (→)</text>
+<text x="156.0" y="178.0" text-anchor="middle" style="font-family:var(--sans);font-size:13px;fill:var(--chart-1);font-weight:600">q = +0.32</text>
+<text x="156.0" y="195.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-1);font-weight:600">the pick</text>
+<line x1="210.0" y1="81.0" x2="258.0" y2="138.0" style="stroke:var(--ink-soft);stroke-width:1.2;fill:none"/>
+<rect x="212.0" y="140.0" width="92.0" height="60.0" rx="6" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--line);stroke-width:1.2"/>
+<text x="258.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">down (↓)</text>
+<text x="258.0" y="178.0" text-anchor="middle" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">q = -1.78</text>
+<line x1="210.0" y1="81.0" x2="360.0" y2="138.0" style="stroke:var(--ink-soft);stroke-width:1.2;fill:none"/>
+<rect x="314.0" y="140.0" width="92.0" height="60.0" rx="6" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--line);stroke-width:1.2"/>
+<text x="360.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">left (←)</text>
+<text x="360.0" y="178.0" text-anchor="middle" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">q = -2.55</text>
+<text x="210.0" y="228.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:400">greedy value maxₐ qπ(14, a) = +0.32, against vπ(14) = -1.08</text>
+</svg>
+          <figcaption>
+            Fig. 1 · The greedy backup at cell 14. Lesson 1's backup averaged the branches under the policy's one move; this one keeps all four moves and takes the largest. Right wins at +0.32, and the hand-drawn up sits at −1.08.
+          </figcaption>
+        </figure>
+        <p>
+          A policy that, in each cell, takes the move with the highest action value is the greedy policy with respect to <span class="nb-math-in">v_\pi</span>.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 4.9, p. 79">1</a></sup> The greedy step reads a value function and returns a policy: at cell 14 it returns right.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\pi'(s) = \operatorname*{arg\,max}_a\; q_\pi(s, a)</div>
+        </figure>
+        <p>
+          The step changes less than it might seem. Cell 13, next to cell 14, has action values −2.01, −2.05, −2.71, −2.61 in the same order, and the hand-drawn up is already the best of them. A greedy step leaves cell 13 exactly as it was. Cell 13 can only improve once cell 14, its right-hand neighbour, is worth more to move toward, and cell 14's new worth is not known until the whole policy is re-evaluated. One cell flips, most do not, and the cells that do not flip are waiting on the ones that do.
+        </p>
+      </section>
+
+      <section data-nb-section="improvement" id="improvement">
+        <h2>One greedy step is never a step down</h2>
+        <p>
+          Flipping cell 14 to right helps cell 14. The claim that makes the whole method work is larger: switching to the greedy policy helps everywhere at once, or at worst changes nothing, and never costs a cell. This is the policy improvement theorem. If a policy <span class="nb-math-in">\pi'</span> satisfies <span class="nb-math-in">q_\pi(s, \pi'(s)) \ge v_\pi(s)</span> at every cell, then <span class="nb-math-in">v_{\pi'}(s) \ge v_\pi(s)</span> at every cell, with strict improvement at any cell where the first inequality is strict.<sup class="nb-cite"><a href="#s1" data-nb-locator="equations 4.7 and 4.8, p. 78">1</a></sup> The greedy policy meets the hypothesis by construction, since choosing the best action is at least as good as keeping the policy's own.
+        </p>
+        <p>
+          The proof is one inequality applied over and over. Start at a cell, write its value as no larger than the greedy action's value, expand that one step, and the same inequality applies again to the cell reached next.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} v_\pi(s) &amp;\le q_\pi\bigl(s, \pi'(s)\bigr) \\ &amp;= \mathbb{E}_{\pi'}\bigl[\, R_{t+1} + \gamma\, v_\pi(S_{t+1}) \mid S_t = s \,\bigr] \\ &amp;\le \mathbb{E}_{\pi'}\bigl[\, R_{t+1} + \gamma\, q_\pi(S_{t+1}, \pi'(S_{t+1})) \mid S_t = s \,\bigr] \\ &amp;= \mathbb{E}_{\pi'}\bigl[\, R_{t+1} + \gamma R_{t+2} + \gamma^2 v_\pi(S_{t+2}) \mid S_t = s \,\bigr] \\ &amp;\;\;\vdots \\ &amp;= v_{\pi'}(s) \end{aligned}</div>
+          <figcaption>
+            Each line pushes the <span class="nb-math-in">v_\pi</span> term one step further out and reapplies the hypothesis. The step costs accumulate as a real return, and the leftover <span class="nb-math-in">v_\pi</span> term vanishes, leaving <span class="nb-math-in">v_{\pi'}(s)</span>.<sup class="nb-cite"><a href="#s1" data-nb-locator="p. 78">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Howard, who first wrote down this loop in 1960, proved the same fact with the linear algebra lesson 1 already set up. For the improved policy, the gain in value is <span class="nb-math-in">(I - \gamma Q')^{-1}</span> times the vector of per-cell gains in the greedy test, and that inverse has non-negative entries, so an improvement at one cell cannot pull any value down.<sup class="nb-cite"><a href="#s2" data-nb-locator="ch. 7, p. 87">2</a></sup> Van Roy's notes carry the operator form of the same chain.<sup class="nb-cite"><a href="#s3" data-nb-locator="Theorem 3, p. 3">3</a></sup>
+        </p>
+        <p>
+          A greedy step against the exact <span class="nb-math-in">q_\pi</span> is not a trade that costs one cell to help another; it is a change that holds every cell at its old value or lifts it. The first step past the hand-drawn policy lifts the eight cells of the bottom two rows and leaves the top two rows exactly where they were.<sup class="nb-cite"><a href="#s1" data-nb-locator="p. 79">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="policy-iteration" id="policy-iteration">
+        <h2>Evaluate, improve, repeat until the arrows stop</h2>
+        <p>
+          Two steps interlock. Evaluation reads a policy and returns its value function, the direct solve from lesson 1. Improvement reads a value function and returns the greedy policy. Policy iteration runs them in turn from any starting policy, and stops when a round of improvement changes no arrow, because an unchanged policy is greedy with respect to its own values and so cannot be bettered.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.3, pp. 80-81">1</a></sup>
+        </p>
+        <p>
+          Ties need a stated rule. At the optimum of this grid, cells 9 and 12 each have two moves of exactly equal value, so a plain argmax may keep flipping between them and inflate the count of rounds. The run follows Howard's 1960 rule: keep a cell's current move when its value ties the best, and compare moves by action value, since plain argmax can break a tie differently from one run to the next.<sup class="nb-cite"><a href="#s2" data-nb-locator="ch. 4, p. 39">2</a></sup> With that rule, starting from the hand-drawn policy, improvement changes cell 14 in the first round and cell 13 in the second, and the third round changes nothing. Two improvements, then one round that confirms there is nothing left to change.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+<svg viewBox="0 0 416 156" role="img" aria-label="Three policy grids, pi-0, pi-1 and pi-star, each a four by four grid of arrows over a value heatmap on one scale. From pi-0 to pi-1 cell 14 flips from up to right; from pi-1 to pi-star cell 13 flips from up to right. The bottom two rows grow lighter in red and turn green as the values rise toward the optimum; the top two rows are unchanged throughout." style="display:block;width:100%;min-width:34rem;height:auto;margin:0 auto">
+<text x="70.0" y="14.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">π₀</text>
+<rect x="6.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.239"/>
+<rect x="6.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="22.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="22.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">2.16</text>
+<rect x="38.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.448"/>
+<rect x="38.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="54.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="54.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">4.04</text>
+<rect x="70.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.720"/>
+<rect x="70.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="86.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="86.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">6.48</text>
+<rect x="103.0" y="23.0" width="30.0" height="30.0" rx="0" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--chart-3);stroke-width:1.6"/>
+<text x="118.0" y="41.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text>
+<rect x="6.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.068"/>
+<rect x="6.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="22.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="22.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.61</text>
+<rect x="38.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.007"/>
+<rect x="38.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="54.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="54.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.06</text>
+<rect x="71.0" y="55.0" width="30.0" height="30.0" rx="0" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--chart-4);stroke-width:1.6"/>
+<text x="86.0" y="73.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text>
+<rect x="102.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.720"/>
+<rect x="102.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="118.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="118.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">6.48</text>
+<rect x="6.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.079"/>
+<rect x="6.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="22.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="22.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-0.72</text>
+<rect x="38.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.114"/>
+<rect x="38.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="54.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="54.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-1.03</text>
+<rect x="70.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.011"/>
+<rect x="70.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="86.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="86.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-0.10</text>
+<rect x="102.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.447"/>
+<rect x="102.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="118.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="118.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">4.02</text>
+<rect x="6.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.207"/>
+<rect x="6.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="22.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="22.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-1.86</text>
+<rect x="38.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.223"/>
+<rect x="38.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="54.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="54.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-2.01</text>
+<rect x="70.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.119"/>
+<rect x="70.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="86.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="86.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-1.08</text>
+<rect x="102.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.219"/>
+<rect x="102.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="118.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="118.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">1.98</text>
+<text x="208.0" y="14.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">π₁</text>
+<rect x="144.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.239"/>
+<rect x="144.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="160.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="160.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">2.16</text>
+<rect x="176.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.448"/>
+<rect x="176.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="192.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="192.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">4.04</text>
+<rect x="208.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.720"/>
+<rect x="208.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="224.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="224.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">6.48</text>
+<rect x="241.0" y="23.0" width="30.0" height="30.0" rx="0" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--chart-3);stroke-width:1.6"/>
+<text x="256.0" y="41.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text>
+<rect x="144.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.068"/>
+<rect x="144.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="160.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="160.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.61</text>
+<rect x="176.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.007"/>
+<rect x="176.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="192.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="192.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.06</text>
+<rect x="209.0" y="55.0" width="30.0" height="30.0" rx="0" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--chart-4);stroke-width:1.6"/>
+<text x="224.0" y="73.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text>
+<rect x="240.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.720"/>
+<rect x="240.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="256.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="256.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">6.48</text>
+<rect x="144.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.079"/>
+<rect x="144.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="160.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="160.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-0.71</text>
+<rect x="176.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.113"/>
+<rect x="176.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="192.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="192.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-1.01</text>
+<rect x="208.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.007"/>
+<rect x="208.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="224.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="224.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.06</text>
+<rect x="240.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.448"/>
+<rect x="240.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="256.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="256.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">4.04</text>
+<rect x="144.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.205"/>
+<rect x="144.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="160.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="160.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-1.85</text>
+<rect x="176.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.204"/>
+<rect x="176.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="192.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="192.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-1.84</text>
+<rect x="208.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.068"/>
+<rect x="208.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="224.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="224.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.61</text>
+<rect x="240.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.239"/>
+<rect x="240.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="256.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="256.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">2.16</text>
+<text x="346.0" y="14.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">π*</text>
+<rect x="282.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.239"/>
+<rect x="282.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="298.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="298.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">2.16</text>
+<rect x="314.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.448"/>
+<rect x="314.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="330.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="330.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">4.04</text>
+<rect x="346.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.720"/>
+<rect x="346.0" y="22.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="362.0" y="35.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="362.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">6.48</text>
+<rect x="379.0" y="23.0" width="30.0" height="30.0" rx="0" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--chart-3);stroke-width:1.6"/>
+<text x="394.0" y="41.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text>
+<rect x="282.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.068"/>
+<rect x="282.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="298.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="298.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.61</text>
+<rect x="314.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.007"/>
+<rect x="314.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="330.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="330.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.06</text>
+<rect x="347.0" y="55.0" width="30.0" height="30.0" rx="0" style="fill:var(--panel);fill-opacity:1.000;stroke:var(--chart-4);stroke-width:1.6"/>
+<text x="362.0" y="73.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text>
+<rect x="378.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.720"/>
+<rect x="378.0" y="54.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="394.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="394.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">6.48</text>
+<rect x="282.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.079"/>
+<rect x="282.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="298.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="298.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-0.71</text>
+<rect x="314.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.113"/>
+<rect x="314.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="330.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="330.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-1.01</text>
+<rect x="346.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.007"/>
+<rect x="346.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="362.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="362.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.06</text>
+<rect x="378.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.448"/>
+<rect x="378.0" y="86.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="394.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="394.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">4.04</text>
+<rect x="282.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.193"/>
+<rect x="282.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="298.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="298.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-1.73</text>
+<rect x="314.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-4);fill-opacity:0.079"/>
+<rect x="314.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="330.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="330.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">-0.71</text>
+<rect x="346.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.068"/>
+<rect x="346.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="362.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">→</text>
+<text x="362.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">0.61</text>
+<rect x="378.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:var(--chart-3);fill-opacity:0.239"/>
+<rect x="378.0" y="118.0" width="32.0" height="32.0" rx="0" style="fill:none;stroke:var(--line);stroke-width:0.8"/>
+<text x="394.0" y="131.0" text-anchor="middle" style="font-family:var(--sans);font-size:14px;fill:var(--ink);font-weight:600">↑</text>
+<text x="394.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft);font-weight:400">2.16</text>
+<rect x="208.9" y="118.9" width="30.2" height="30.2" rx="0" style="fill:none;stroke:var(--chart-1);stroke-width:2.0"/>
+<rect x="314.9" y="118.9" width="30.2" height="30.2" rx="0" style="fill:none;stroke:var(--chart-1);stroke-width:2.0"/>
+</svg>
+          <figcaption>
+            Fig. 2 · The policy-iteration sequence. Each grid shows the policy's arrows over its value function on one colour scale, green for positive and red for negative. A ring marks the cell whose arrow just flipped: cell 14 in <span class="nb-math-in">\pi_1</span>, cell 13 in <span class="nb-math-in">\pi_*</span>. The top two rows do not move; the bottom two lighten in red and turn green as the values rise.
+          </figcaption>
+        </figure>
+        <p>
+          The gains are concentrated. The optimal values match the hand-drawn policy's across the top eight cells, and separate only in the bottom two rows, the cells near the pit that had room to steer wider of it.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Value under the hand-drawn policy and under <span class="nb-math-in">\pi_*</span>, with the per-cell gain. The top two rows (cells 0-7) are unchanged and omitted; their gain is 0.000.<sup class="nb-cite"><a href="#s1" data-nb-locator="p. 79, the improvement is weak">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Cell</th>
+              <th><span class="nb-math-in">v_\pi</span></th>
+              <th><span class="nb-math-in">v_*</span></th>
+              <th>Gain</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="nb-table-token">8</span></td><td>−0.72</td><td>−0.71</td><td>+0.00</td></tr>
+            <tr><td><span class="nb-table-token">9</span></td><td>−1.03</td><td>−1.01</td><td>+0.01</td></tr>
+            <tr><td><span class="nb-table-token">10</span></td><td>−0.10</td><td>+0.06</td><td>+0.16</td></tr>
+            <tr><td><span class="nb-table-token">11</span></td><td>+4.02</td><td>+4.04</td><td>+0.02</td></tr>
+            <tr><td><span class="nb-table-token">12</span></td><td>−1.86</td><td>−1.73</td><td>+0.13</td></tr>
+            <tr><td><span class="nb-table-token">13</span></td><td>−2.01</td><td>−0.71</td><td>+1.29</td></tr>
+            <tr><td><span class="nb-table-token">14</span></td><td>−1.08</td><td>+0.61</td><td>+1.69</td></tr>
+            <tr><td><span class="nb-table-token">15</span></td><td>+1.98</td><td>+2.16</td><td>+0.18</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Policy iteration stops for a reason that does not depend on the grid. There are finitely many ways to assign one move to each cell, each round strictly improves the policy until it cannot, and a thing that strictly improves through a finite list has to halt.<sup class="nb-cite"><a href="#s1" data-nb-locator="p. 80">1</a></sup> Van Roy states this as a theorem for any finite-state, finite-action problem with <span class="nb-math-in">\gamma</span> in <span class="nb-math-in">[0, 1]</span>.<sup class="nb-cite"><a href="#s3" data-nb-locator="Theorem 4, p. 3">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="value-iteration" id="value-iteration">
+        <h2>A max in place of the average</h2>
+        <p>
+          Policy iteration solves a full linear system each round. There is a way to reach the same answer without ever solving one, and it starts from the equation the optimal values obey. The value function of a fixed policy satisfies a backup that averages the next value under that policy. The optimal value function satisfies the same backup with one change: the average over the policy's move becomes a maximum over all four moves.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\htmlClass{nb-mc1}{v_*(s)} = \htmlClass{nb-mc2}{\max_a} \sum_{s'} \htmlClass{nb-mc3}{P(s' \mid s, a)} \bigl[\, \htmlClass{nb-mc4}{R(s')} + \gamma\, \htmlClass{nb-mc5}{v_*(s')} \,\bigr]</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">v_*(s)</span><span>the value of the cell under the best policy</span></li>
+            <li><span class="nb-math-term nb-mc2">\max_a</span><span>take the best move, where lesson 1 averaged under <span class="nb-math-in">\pi</span></span></li>
+            <li><span class="nb-math-term nb-mc3">P(s' \mid s, a)</span><span>the chance that move <span class="nb-math-in">a</span> lands in <span class="nb-math-in">s'</span></span></li>
+            <li><span class="nb-math-term nb-mc4">R(s')</span><span>the reward for arriving there, discounted by <span class="nb-math-in">\gamma</span> one step on</span></li>
+            <li><span class="nb-math-term nb-mc5">v_*(s')</span><span>the best-policy value of the arrival cell, 0 at the goal and the pit</span></li>
+          </ul>
+          <figcaption>
+            The Bellman optimality equation. It is lesson 1's expectation equation with a <span class="nb-math-in">\max</span> at the choice point in place of the policy average.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 3.19, p. 63">1</a></sup>
+          </figcaption>
+        </figure>
+        <h3>Value iteration</h3>
+        <p>
+          Read that equation as an instruction and it becomes an update. Start with every value at 0. In each sweep, replace each non-terminal cell by the maximum over its four moves of the arrival reward plus the discounted old value, and leave the goal and the pit at 0.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 4.10, p. 83">1</a></sup> This is value iteration. In code it is one line: price the four moves from the current values, take the row maximum, and repeat.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">v_{k+1}(s) = \max_a \sum_{s'} P(s' \mid s, a) \bigl[\, R(s') + \gamma\, v_k(s') \,\bigr]</div>
+        </figure>
+        <p>
+          Watch cell 13. For the first four sweeps its value falls, to −1.00, −1.90, −2.71, −3.44, each sweep adding one more step's cost of −1 at a smaller weight. It falls because the good news has not arrived. The shortest route from cell 13 to the goal is five moves, so the +10 cannot reach cell 13 until the fifth sweep, where the value turns and climbs. By sweep 18 the largest change anywhere in a sweep has dropped below 1e-4, and every value sits within 8e-5 of the optimum. Pushing to a tolerance of 1e-8 takes 30 sweeps. The greedy policy read off the result is the same <span class="nb-math-in">\pi_*</span> policy iteration found.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+          <img src="finding-optimal-policies/chart-1.png" alt="Value of cell 13 against iteration count. Value iteration starts at 0, falls to about -3.44 by sweep 4, then climbs and settles at the optimum -0.71 near sweep 15. Policy iteration starts at -2.01, moves to -1.84 after one round, and reaches -0.71 by its second round, then holds." style="display: block; width: 100%; height: auto" />
+          <figcaption>
+            Fig. 3 · The value of cell 13 as each method converges. Policy iteration reaches the optimum in two rounds; value iteration dips while the step costs pile up, then climbs once the goal's reward reaches cell 13. A policy-iteration round solves the full system; a value-iteration sweep is one cheap pass, so the two counts are iterations, not equal work. Both methods are Sutton and Barto's; the values are the run of <code>control.py</code> below.<sup class="nb-cite"><a href="#s1" data-nb-locator="Sections 4.3-4.4, pp. 80-84">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Value iteration converges for the same reason lesson 1's sweeps did. The backup is a contraction in the max-norm: apply it to any two value functions and the largest gap between them shrinks by a factor of at least <span class="nb-math-in">\gamma</span>.<sup class="nb-cite"><a href="#s4" data-nb-locator="Theorem 1, p. 4">4</a></sup> The one new step is that the maximum does not spoil this. Taking the best move of each of two value functions moves their gap by no more than the largest per-move gap, so <span class="nb-math-in">\max</span> is a non-expansion, and the optimality backup contracts just as the policy backup did.<sup class="nb-cite"><a href="#s5" data-nb-locator="Section 1.2.2, pp. 8-9">5</a></sup>
+        </p>
+        <p>
+          The two methods are the same idea in different proportions. Policy iteration evaluates a policy in full, then improves it, and repeats a few times. Value iteration folds a single improvement into every sweep and never evaluates any policy to the end. On this grid one reaches the best policy in two improvements and the other in eighteen sweeps, and both print the same arrows and, cell by cell, the same values. What neither can do is run when the rewards and the slip are unknown, the usual case outside a solved grid. Learning the best policy from sampled experience alone is the next lesson.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.4, p. 84">1</a></sup>
+        </p>
+        <h3>The code</h3>
+        <p>
+          One file holds all of it. It imports the environment from lesson 1's <code>gridworld.py</code> unchanged, and adds evaluation, the greedy step, policy iteration and value iteration. With both files in one folder, <code>uv run control.py</code> installs numpy from the inline metadata and finishes in about a second.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">control.py · complete (imports gridworld.py from lesson 1)</span><span>python</span>
+          </div>
+          <pre><code data-language="python"># /// script
+# requires-python = &quot;&gt;=3.10&quot;
+# dependencies = [&quot;numpy&quot;]
+# ///
+&quot;&quot;&quot;Find the best policy on lesson 1&#x27;s grid: policy iteration and value iteration.&quot;&quot;&quot;
+
+import numpy as np
+from gridworld import N, PI, R, TERMINAL, ARROWS, fixed_policy, transitions
+
+GAMMA, SLIP = 0.9, 0.2
+LIVE = [s for s in range(N) if s not in TERMINAL]
+
+
+def evaluate(policy):
+    &quot;&quot;&quot;v_pi by the direct solve from lesson 1: v = (I - gamma Q)^{-1} b.&quot;&quot;&quot;
+    Q, b = fixed_policy(policy, SLIP)
+    return np.linalg.solve(np.eye(N) - GAMMA * Q, b)
+
+
+def action_values(v, P):
+    &quot;&quot;&quot;q(s, a) = sum_s&#x27; P[s, a, s&#x27;] (R[s&#x27;] + gamma v[s&#x27;]) for every s, a.&quot;&quot;&quot;
+    return P @ (R + GAMMA * v)
+
+
+def greedy(v, P, old, tol=1e-9):
+    &quot;&quot;&quot;Greedy policy against v, keeping the old action on a tie (Howard, 1960).&quot;&quot;&quot;
+    q = action_values(v, P)
+    new = old.copy()
+    for s in LIVE:
+        if q[s, old[s]] &lt; q[s].max() - tol:
+            new[s] = int(q[s].argmax())
+    return new
+
+
+def policy_iteration(start):
+    P = transitions(SLIP)
+    policy, values = start.copy(), [evaluate(start)]
+    rounds = 0
+    while True:
+        nxt = greedy(values[-1], P, policy)
+        values.append(evaluate(nxt))
+        rounds += 1
+        changed = np.flatnonzero(nxt != policy)
+        print(f&quot;  round {rounds}: {changed.size} changed&quot;
+              + (f&quot; -&gt; cell {changed[0]}&quot; if changed.size else &quot;&quot;)
+              + f&quot;, v(13) = {values[-1][13]:.4f}&quot;)
+        if not changed.size:
+            return nxt, values
+        policy = nxt
+
+
+def value_iteration(tol):
+    P = transitions(SLIP)
+    v, trace13 = np.zeros(N), [0.0]
+    while True:
+        nxt = v.copy()
+        nxt[LIVE] = action_values(v, P)[LIVE].max(axis=1)
+        trace13.append(nxt[13])
+        if np.abs(nxt - v).max() &lt; tol:
+            return nxt, len(trace13) - 1, trace13
+        v = nxt
+
+
+def show(title, *grids):
+    print(title)
+    for r in range(4):
+        print(&quot;   &quot;.join(&quot; &quot;.join(f&quot;{g[4 * r + c]:6.2f}&quot; for c in range(4))
+                         for g in grids))
+
+
+def arrows(policy):
+    glyph = [(&quot;.&quot; if s in TERMINAL else ARROWS[policy[s]]) for s in range(N)]
+    for r in range(4):
+        print(&quot; &quot;.join(glyph[4 * r:4 * r + 4]))
+
+
+def main():
+    P = transitions(SLIP)
+    v_pi = evaluate(PI)
+    show(&quot;v_pi of the hand-drawn policy:&quot;, v_pi)
+    q = action_values(v_pi, P)
+    print(f&quot;v_pi(13) = {v_pi[13]:.4f} (lesson 1: -2.01)&quot;)
+    print(&quot;cell 14 q (up,right,down,left):&quot;, *q[14].round(4))
+    print(&quot;cell 13 q (up,right,down,left):&quot;, *q[13].round(4))
+
+    print(&quot;\nPolicy iteration (keep old action on tie):&quot;)
+    pi_star, vals = policy_iteration(PI)
+    v_star = vals[-1]
+    print(&quot;pi_* (arrows, &#x27;.&#x27; at goal and pit):&quot;)
+    arrows(pi_star)
+    show(&quot;v_* and the gain v_* - v_pi:&quot;, v_star, v_star - v_pi)
+    print(f&quot;v_*(13)={v_star[13]:.4f} v_*(14)={v_star[14]:.4f}; &quot;
+          f&quot;gains 13:{(v_star-v_pi)[13]:.4f} 14:{(v_star-v_pi)[14]:.4f}; &quot;
+          f&quot;max gain rows 0-1: {abs((v_star-v_pi)[:8]).max():.4f}&quot;)
+    q_star = action_values(v_star, P)
+    print(f&quot;ties at v_*: cell 9 {q_star[9,0]:.4f}={q_star[9,1]:.4f}, &quot;
+          f&quot;cell 12 {q_star[12,0]:.4f}={q_star[12,1]:.4f}&quot;)
+
+    print(&quot;\nValue iteration from v = 0:&quot;)
+    for tol in (1e-4, 1e-8):
+        v_vi, sweeps, _ = value_iteration(tol)
+        same = (greedy(v_vi, P, PI)[LIVE] == pi_star[LIVE]).all()
+        print(f&quot;  tol {tol:.0e}: {sweeps} sweeps, &quot;
+              f&quot;err {abs(v_vi - v_star).max():.1e}, greedy == pi_*: {bool(same)}&quot;)
+    _, _, trace = value_iteration(1e-4)
+    print(&quot;VI v(13) per sweep:&quot;, *[round(x, 4) for x in trace])
+    print(&quot;PI v(13) per round:&quot;, *[round(v[13], 4) for v in vals])
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run control.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">v_pi of the hand-drawn policy:
+  2.16   4.04   6.48   0.00
+  0.61   0.06   0.00   6.48
+ -0.72  -1.03  -0.10   4.02
+ -1.86  -2.01  -1.08   1.98
+v_pi(13) = -2.0055 (lesson 1: -2.01)
+cell 14 q (up,right,down,left): -1.076 0.3167 -1.7774 -2.5499
+cell 13 q (up,right,down,left): -2.0055 -2.0478 -2.7085 -2.6148
+
+Policy iteration (keep old action on tie):
+  round 1: 1 changed -&gt; cell 14, v(13) = -1.8412
+  round 2: 1 changed -&gt; cell 13, v(13) = -0.7142
+  round 3: 0 changed, v(13) = -0.7142
+pi_* (arrows, &#x27;.&#x27; at goal and pit):
+&gt; &gt; &gt; .
+^ ^ . ^
+^ ^ &gt; ^
+^ &gt; &gt; ^
+v_* and the gain v_* - v_pi:
+  2.16   4.04   6.48   0.00     0.00   0.00   0.00   0.00
+  0.61   0.06   0.00   6.48     0.00   0.00   0.00   0.00
+ -0.71  -1.01   0.06   4.04     0.00   0.01   0.16   0.02
+ -1.73  -0.71   0.61   2.16     0.13   1.29   1.69   0.18
+v_*(13)=-0.7142 v_*(14)=0.6129; gains 13:1.2912 14:1.6889; max gain rows 0-1: 0.0000
+ties at v_*: cell 9 -1.0142=-1.0142, cell 12 -1.7347=-1.7347
+
+Value iteration from v = 0:
+  tol 1e-04: 18 sweeps, err 7.6e-05, greedy == pi_*: True
+  tol 1e-08: 30 sweeps, err 4.1e-09, greedy == pi_*: True
+VI v(13) per sweep: 0.0 -1.0 -1.9 -2.71 -3.439 -1.9863 -1.3345 -0.9811 -0.8355 -0.7668 -0.7377 -0.7245 -0.7188 -0.7162 -0.7151 -0.7146 -0.7144 -0.7143 -0.7143
+PI v(13) per round: -2.0055 -1.8412 -0.7142 -0.7142</code></pre>
+        </figure>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. At cell 14, the hand-drawn up is worth −1.08 and right is worth +0.32. Confirm +0.32 by hand from the values in the output. Right reaches cell 15 (value +1.98) with probability 0.8, slips down and stays in cell 14 (value −1.08) with probability 0.1, and slips up to cell 10 (value −0.10) with probability 0.1. Each arrival pays −1.
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              <span class="nb-math-in">q = -1 + 0.9\,[\,0.8(1.98) + 0.1(-1.08) + 0.1(-0.10)\,] = -1 + 0.9(1.463) = 0.32</span>. The −1 is the arrival reward, common to all three landings, and the bracket is the discounted average of the three next values.
+            </p>
+          </details>
+          <p>
+            2. The output says optimal policies are not unique on this grid: cell 9 has up and right both worth −1.01. Which rule did the run use to break that tie, and why would plain argmax give a different count of rounds?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              The run keeps a cell's current move when it ties the best, so cell 9 stays on its hand-drawn up and never flips. Plain argmax would switch cell 9 to right on a tie decided only by floating-point noise, adding a round that changes an arrow without changing any value. The values <span class="nb-math-in">v_*</span> are unique; the arrows that achieve them need not be.
+            </p>
+          </details>
+          <p>
+            3. Value iteration leaves cell 13 falling for four sweeps before it rises. Why four, and what happens on the fifth?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              The shortest route from cell 13 to the goal at cell 3 is five moves. For the first four sweeps no path of reward has yet reached cell 13, so each sweep only adds one more step cost of −1 at a smaller weight, giving −1.00, −1.90, −2.71, −3.44. On the fifth sweep the goal's +10, discounted over five steps, first reaches cell 13, and the value turns upward to −1.99.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          The hand-drawn policy was half right. Across the top eight cells it was already the best any policy could do, and its values did not move. Near the pit it was beatable, and two rounds of evaluate-and-improve beat it: cell 13 rose from −2.01 to −0.71, cell 14 from −1.08 to +0.61, with no cell anywhere left worse. That is the answer to the question lesson 1 left hanging. The policy was good where the route to the goal was forced and loose where the walker had room to steer wider of the pit.
+        </p>
+        <p>
+          Two methods reach the same policy. Policy iteration evaluates a policy in full and then improves it, and here it finished in two improvements. Value iteration folds one improvement into each sweep and never evaluates a policy to the end, and here it took eighteen sweeps to settle cell 13 within a ten-thousandth of −0.71. Both only work because the slip and the rewards are known and the grid is small enough to write every equation down. When those go missing, the best policy has to be learned from sampled experience, the subject of the next lesson.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://discovery.ucl.ac.uk/id/eprint/10045895/1/agz_unformatted_nature.pdf">Silver and colleagues, Mastering the game of Go without human knowledge (2017)</a>: the Methods section, "Reinforcement learning", lays out the self-play loop as an approximate policy iteration scheme, with search as the improvement step.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://gwern.net/doc/statistics/decision/1960-howard-dynamicprogrammingmarkovprocesses.pdf">Howard, Dynamic Programming and Markov Processes (1960)</a>: chapter 7 (pp. 76-91) is the discounted routine this lesson runs, with the value-determination operation and the policy-improvement routine named for the first time.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://web.mit.edu/dimitrib/www/Ch1_Abstract_DP_2ND_EDITION.pdf">Bertsekas, Abstract Dynamic Programming, chapter 1</a>: section 1.2.2 (pp. 8-12) proves, for the finite discounted problem, that both backups are contractions and that value and policy iteration both reach the fixed point.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" data-nb-note="The authors' free copy is at incompleteideas.net/book/RLbook2020.pdf. Page numbers are the printed ones." href="https://mitpress.mit.edu/9780262039246/reinforcement-learning/">MIT Press · Richard S. Sutton and Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd edition, 2018 (second printing 2020)</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" data-nb-note="A scan with an OCR layer; page numbers are the printed ones. Chapter 7 is the discounted case that matches this lesson." href="https://gwern.net/doc/statistics/decision/1960-howard-dynamicprogrammingmarkovprocesses.pdf">Ronald A. Howard · Dynamic Programming and Markov Processes, MIT Press and John Wiley, 1960</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" href="https://web.stanford.edu/class/msande235a/files/lectures/lecture06.pdf">Benjamin Van Roy · MS&amp;E 235A Lecture Notes 06, Policy Iteration, Stanford, 2025</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="primary" href="https://web.stanford.edu/class/msande235a/files/lectures/lecture05.pdf">Benjamin Van Roy · MS&amp;E 235A Lecture Notes 05, Value Iteration, Stanford, 2025</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="primary" href="https://web.mit.edu/dimitrib/www/Ch1_Abstract_DP_2ND_EDITION.pdf">Dimitri P. Bertsekas · Abstract Dynamic Programming, chapter 1</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
