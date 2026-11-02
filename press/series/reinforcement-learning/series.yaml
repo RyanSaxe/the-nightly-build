@@ -1,7 +1,10 @@
 # A daily open course. The curriculum outline in prompt.md sets the order, and the
-# published lessons show how far it has come. The writer runs at the orchestrator's
-# model and high effort because a lesson needs diagrams, derivations, and code that
-# has actually been run. The word band counts code.
+# published lessons show how far it has come. The owner has chosen quality over cost for
+# this series, so every role runs at the orchestrator's model and extra-high effort, and
+# the voice guide is pinned so the course keeps one voice. The word band counts code and
+# printed output, so it runs wider than the prose target in the template's identity. A lesson
+# on a classic method can rest on one textbook, and a floor above that invites a citation
+# kept only to clear it.
 name: Reinforcement Learning
 mode: open
 section: "Courses"
@@ -9,12 +12,20 @@ template: lesson
 prompt: prompt.md
 strict: false
 bands:
-  words: [2000, 3600]
+  words: [2500, 6000]
   flex_sections: [2, 5]
-min_sources: 4
+min_sources: 1
 cadence: daily
+voice_guide: voice-guide.md
 production:
+  required: true
   stages:
+    researcher:
+      model: inherit
+      effort: xhigh
     writer:
       model: inherit
-      effort: high
+      effort: xhigh
+    editor:
+      model: inherit
+      effort: xhigh
