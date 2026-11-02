@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tether and Circle froze Binance’s stolen stablecoins and had no reach over the rest · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "binance-hack-freeze",
+        "template": "article",
+        "title": "Tether and Circle froze Binance’s stolen stablecoins and had no reach over the rest",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-02",
+        "tags": ["crypto-security", "stablecoins", "binance", "incident-analysis"],
+        "sources": 16,
+        "words": 1182,
+        "reading_minutes": 5,
+        "dek": "Elliptic counts 44% of the $6.43 billion as frozen or seized, almost all of it stablecoin, where Bybit’s 2025 haul held no stablecoin and saw 3% to 3.84% frozen.",
+        "harness": "claude-code",
+        "model": "claude-sonnet-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">Tether and Circle froze Binance&rsquo;s stolen stablecoins and had no reach over the rest</h1>
+        <p class="nb-dekline">Elliptic counts 44% of the $6.43 billion as frozen or seized, almost all of it stablecoin, where Bybit’s 2025 haul held no stablecoin and saw 3% to 3.84% frozen.</p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-11-02</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Over half the haul had an issuer to call</h2>
+        <p>
+          A freeze reaches only tokens that have an issuer, and only those the
+          thief has not yet swapped out. About $6.3 billion left Binance&rsquo;s
+          wallets on 29 October by Binance&rsquo;s estimate, $6.36 billion by TRM
+          Labs&rsquo; trace and $6.43 billion by Elliptic&rsquo;s.<sup class="nb-cite"><a href="#s1" data-nb-locator="Update note, estimated total impact">1</a></sup><sup class="nb-cite"><a href="#s2" data-nb-locator="How much was taken">2</a></sup><sup class="nb-cite"><a href="#s3" data-nb-locator="Key points">3</a></sup> Most moved in about 20 minutes from 20:05 UTC.<sup class="nb-cite"><a href="#s2" data-nb-locator="How the attack unfolded">2</a></sup>
+          Elliptic counts $3.46 billion of its total as stablecoin.<sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds">3</a></sup>
+        </p>
+        <p>
+          The frozen tally runs from about $2.7 billion (TRM, 30 October) to
+          $2.85 billion (Elliptic, 1 November) to about $3 billion (Binance,
+          method unstated).<sup class="nb-cite"><a href="#s2" data-nb-locator="Key takeaways">2</a></sup><sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds">3</a></sup><sup class="nb-cite"><a href="#s1" data-nb-locator="Body, ~$3 billion frozen on-chain">1</a></sup>
+          All are days old and still moving. Frozen is not returned: Binance
+          says it is working with partners and law enforcement to recover the
+          frozen assets, and CoinDesk reports none returned.<sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="only-an-administrator-can-flag-an-address" id="only-an-administrator-can-flag-an-address">
+        <h2>Only an administrator can flag an address</h2>
+        <p>
+          A stablecoin contract keeps a blocklist and checks it on transfers, so a
+          listed address cannot move its balance. Tether&rsquo;s
+          USDT on Ethereum gives its owner <code>addBlackList</code> and
+          <code>destroyBlackFunds</code>, which also sets a blacklisted balance
+          to zero.<sup class="nb-cite"><a href="#s6" data-nb-locator="Contract TetherToken, BlackList">6</a></sup> Circle&rsquo;s USDC restricts
+          <code>blacklist</code> to a designated blacklister.<sup class="nb-cite"><a href="#s7" data-nb-locator="Blacklistable.sol">7</a></sup> Tether
+          froze the main Ethereum wallet 37 minutes after the USDT arrived, and
+          Circle froze 823 million USDC three minutes after that.<sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds, freeze timing">3</a></sup>
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+          <svg role="img" viewBox="0 0 680 290" aria-label="Three rows, each running left to right from an asset to a check to an outcome. Stablecoin at a flagged address meets the issuer's blocklist and the transfer reverts, leaving the balance frozen in place. An un-administered asset such as BTC, XRP, SOL, NEAR or ETH has no issuer and no blocklist, so the transfer goes through and the funds are traced, not stopped. An administered non-stablecoin such as ARB, OP, WBETH or tokenized gold is frozen or moved out of reach by a governance body or its issuing party. A dashed arrow from the stablecoin row to the un-administered row marks a swap made before the flag lands, about 786 million dollars in this theft." style="width: 100%; min-width: 34rem; height: auto">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M0 0L10 5L0 10z" style="fill: var(--ink-soft)"/>
+              </marker>
+            </defs>
+            <rect x="10" y="10" width="220" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+            <text x="22" y="36" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">Stablecoin at a flagged address</text>
+            <text x="22" y="56" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft)">Tether, Circle, Ripple and others</text>
+            <line x1="230" y1="42" x2="268" y2="42" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#ah)"/>
+            <rect x="270" y="10" width="190" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+            <text x="282" y="36" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">Issuer&rsquo;s blocklist</text>
+            <text x="282" y="56" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft)">checked on every transfer</text>
+            <line x1="460" y1="42" x2="498" y2="42" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#ah)"/>
+            <rect x="500" y="10" width="170" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+            <text x="512" y="36" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">Transfer reverts</text>
+            <text x="512" y="56" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft)">balance frozen in place</text>
+
+            <line x1="120" y1="76" x2="120" y2="128" style="stroke: var(--chart-2); stroke-width: 2; stroke-dasharray: 5 4" marker-end="url(#ah)"/>
+            <text x="134" y="107" style="font-family: var(--sans); font-size: 12px; font-weight: 600; fill: var(--ink)">Swap before the flag lands: about $786M in this theft</text>
+
+            <rect x="10" y="130" width="220" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-3); stroke-width: 2"/>
+            <text x="22" y="156" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">Un-administered asset</text>
+            <text x="22" y="176" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft)">Bitcoin, XRP, Solana, NEAR</text>
+            <line x1="230" y1="162" x2="268" y2="162" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#ah)"/>
+            <rect x="270" y="130" width="190" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-3); stroke-width: 2"/>
+            <text x="282" y="167" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">No issuer, no blocklist</text>
+            
+            <line x1="460" y1="162" x2="498" y2="162" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#ah)"/>
+            <rect x="500" y="130" width="170" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-3); stroke-width: 2"/>
+            <text x="512" y="156" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">Transfer goes through</text>
+            <text x="512" y="176" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft)">traced, not stopped</text>
+
+            <rect x="10" y="214" width="220" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-4); stroke-width: 2"/>
+            <text x="22" y="240" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">Administered non-stablecoin</text>
+            <text x="22" y="260" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft)">ARB, tokenized gold, WBETH</text>
+            <line x1="230" y1="246" x2="268" y2="246" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#ah)"/>
+            <rect x="270" y="214" width="190" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-4); stroke-width: 2"/>
+            <text x="282" y="240" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">Someone administers it</text>
+            <text x="282" y="260" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft)">governance or issuer acts</text>
+            <line x1="460" y1="246" x2="498" y2="246" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#ah)"/>
+            <rect x="500" y="214" width="170" height="64" rx="6" style="fill: var(--panel); stroke: var(--chart-4); stroke-width: 2"/>
+            <text x="512" y="240" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">Frozen or moved aside</text>
+            <text x="512" y="260" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft)">$36M in ETH, ARB and OP</text>
+          </svg>
+          <figcaption>
+            Fig. 1 &middot; Three outcomes for a flagged address. Conceptual
+            diagram; the $786 million and $36 million are Elliptic&rsquo;s figures.<sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds; chart 2, Arbitrum and Optimism">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Nothing stolen on Bitcoin, the XRP Ledger, Solana or NEAR has been
+          frozen, Elliptic reports, because native assets have no issuer that can
+          freeze them.<sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds">3</a></sup> The dividing line is whether anyone administers
+          the asset. Arbitrum&rsquo;s Security Council moved, and Optimism&rsquo;s governance
+          appears to have moved, about $36 million of ETH, ARB and OP out of the
+          attacker&rsquo;s reach, and Binance froze its own WBETH.<sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds">3</a></sup>
+          Circle did not freeze about $230
+          million of USDC from April&rsquo;s Drift exploit and says it freezes
+          only when legally compelled. A Circle spokesperson told American Banker
+          the company froze more than $1.1 billion for Binance, which no
+          on-chain count reproduces: TRM and Elliptic find $823 million to $825
+          million.<sup class="nb-cite"><a href="#s8" data-nb-locator="Circle policy and spokesperson paragraphs">8</a></sup><sup class="nb-cite"><a href="#s2" data-nb-locator="Stablecoin freezes and conversion">2</a></sup><sup class="nb-cite"><a href="#s3" data-nb-locator="Chart 3">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="most-stablecoins-froze-before-the-thief-could-swap-them" id="most-stablecoins-froze-before-the-thief-could-swap-them">
+        <h2>Most stablecoins froze before the thief could swap them</h2>
+        <p>
+          Read each bar of Fig. 2 from the left: frozen, then swapped out before
+          the freeze, then out of any issuer&rsquo;s reach.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="binance-hack-freeze/chart-1.png"
+            alt="Two horizontal stacked bars in US dollars. Stablecoins, 3.46 billion stolen: 2.68 billion frozen or seized and 0.79 billion swapped out before the freeze, so 77% frozen. Everything else, 2.97 billion stolen: 0.17 billion frozen and 2.80 billion not frozen, so 6% frozen."
+          />
+          <figcaption>
+            Fig. 2 &middot; Binance haul by asset type, US$ billions, Elliptic&rsquo;s
+            figures. Frozen stablecoin is derived as 94% of its $2.85 billion and
+            carries about a point of rounding error. Stolen amounts are at
+            theft-time prices and frozen amounts at 1 November prices.<sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Before the freezes landed, the attacker converted about $786 million of
+          stablecoins into ETH and TRX, including 434 million USDT into 160,451
+          ETH at a 12% to 26% loss against market.<sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds">3</a></sup> About 77% of the stolen stablecoin ended up frozen, against
+          about 6% of everything else. The issuers froze nearly all the stablecoin still in
+          place when they acted, so the gap came from speed as well as from the asset model.
+        </p>
+      </section>
+
+      <section data-nb-section="bybit-s-haul-held-no-stablecoin-for-an-issuer-to-freeze" id="bybit-s-haul-held-no-stablecoin-for-an-issuer-to-freeze">
+        <h2>Bybit&rsquo;s haul held no stablecoin for an issuer to freeze</h2>
+        <p>
+          The FBI put the 2025 Bybit theft at approximately $1.5 billion.<sup class="nb-cite"><a href="#s9" data-nb-locator="Press release, first paragraph">9</a></sup>
+          Block Scholes read the haul from the chain as 401,347 ETH, 90,376
+          stETH, 8,000 mETH and 15,000 cmETH, about $1.46 billion, with no
+          stablecoin.<sup class="nb-cite"><a href="#s10" data-nb-locator="Bybit stolen-asset list">10</a></sup> Bybit&rsquo;s CEO Ben Zhou counted 3.84% frozen on 21 April
+          2025, as Decrypt reported,<sup class="nb-cite"><a href="#s11" data-nb-locator="Zhou quote, 21 April 2025">11</a></sup> up from 3% in early March.
+          Block Scholes found no freeze of the stolen ETH in its 22 February
+          update, and no source says what the 3.84% consists of.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="binance-hack-freeze/chart-2.png"
+            alt="Grouped horizontal bars comparing two thefts. Stablecoin share of the haul: Binance 54%, Bybit 0%. Frozen or seized share of the haul: Binance 44%, Bybit 3% to 3.84%."
+          />
+          <figcaption>
+            Fig. 3 &middot; Stablecoin share and frozen share of each haul.
+            Binance: Elliptic, by dollar value. Bybit: Zhou&rsquo;s frozen share
+            of about 500,000 ETH, and Block Scholes&rsquo; reading of the chain.
+            The Bybit bar shows 3.84%.<sup class="nb-cite"><a href="#s3">3</a></sup><sup class="nb-cite"><a href="#s10">10</a></sup><sup class="nb-cite"><a href="#s11">11</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Two thefts are not a rule, but the mechanism in Fig. 1 predicts the
+          order. The haul with an issuer behind 54% of it saw 44% frozen or
+          seized, and the haul with none saw under 4%.
+        </p>
+      </section>
+
+      <section data-nb-section="binance-has-walked-back-its-breach-path-and-the-attributions-are-assessments" id="binance-has-walked-back-its-breach-path-and-the-attributions-are-assessments">
+        <h2>Binance has walked back its breach path, and the attributions are assessments</h2>
+        <p>
+          Binance&rsquo;s initial finding, posted by co-CEO Richard Teng on 30
+          October, was that the incident &ldquo;may have started with a compromised DevOps
+          engineer&rsquo;s laptop.&rdquo; The laptop, he wrote, gave an attacker access to a
+          service container, where they submitted unauthorized withdrawal
+          transactions.<sup class="nb-cite"><a href="#s12" data-nb-locator="Post body, paragraphs 3 to 5">12</a></sup> About 70
+          minutes later Binance said its later investigation &ldquo;has uncovered
+          additional points of breach&rdquo; and did not name them.<sup class="nb-cite"><a href="#s13" data-nb-locator="Post body, paragraph 1">13</a></sup> TRM&rsquo;s
+          assessment is that the attacker compromised Binance&rsquo;s hot wallet
+          signing infrastructure, and it says the early phishing hypothesis
+          &ldquo;covers Ethereum and leaves the other chains unexplained.&rdquo;<sup class="nb-cite"><a href="#s2" data-nb-locator="Evidence points to Binance's signing infrastructure">2</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Who attributes the theft, in each holder&rsquo;s words. These are
+            assessments, not a court finding.
+          </caption>
+          <thead>
+            <tr><th>Holder</th><th class="txt">Assessment</th><th class="txt">Stated confidence</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="nb-table-token">TRM Labs</span></td><td class="txt">TraderTraitor, North Korea&rsquo;s elite hacking unit.<sup class="nb-cite"><a href="#s2" data-nb-locator="Key takeaways, attribution">2</a></sup></td><td class="txt">&ldquo;high confidence&rdquo;</td></tr>
+            <tr><td><span class="nb-table-token">Binance</span></td><td class="txt">&ldquo;Our investigation has not attributed responsibility to any individual.&rdquo;<sup class="nb-cite"><a href="#s12">12</a></sup></td><td class="txt">none given</td></tr>
+            <tr><td><span class="nb-table-token">Chainalysis</span></td><td class="txt">&ldquo;likely done by DPRK group TraderTraitor due to links to previous hack.&rdquo;<sup class="nb-cite"><a href="#s14" data-nb-locator="Post body">14</a></sup></td><td class="txt">&ldquo;likely&rdquo;</td></tr>
+            <tr><td><span class="nb-table-token">Elliptic</span></td><td class="txt">Linked the theft to TraderTraitor before the FBI spoke.<sup class="nb-cite"><a href="#s3" data-nb-locator="Key points">3</a></sup></td><td class="txt">&ldquo;likely&rdquo;</td></tr>
+            <tr><td><span class="nb-table-token">FBI</span></td><td class="txt">North Korea &ldquo;was responsible for the theft of more than $6 billion&rdquo;; 628 addresses to block. Quoted by BleepingComputer; the FBI&rsquo;s own page could not be opened.<sup class="nb-cite"><a href="#s15" data-nb-locator="FBI statement, paragraphs 1 to 4">15</a></sup></td><td class="txt">an attribution</td></tr>
+            <tr><td><span class="nb-table-token">North Korea</span></td><td class="txt">Has denied such thefts before and did not respond to Reuters here, per IBTimes.<sup class="nb-cite"><a href="#s16">16</a></sup></td><td class="txt">denial</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Whoever is named in the end, Elliptic counts about $3.25 billion that
+          no issuer can freeze, at 1 November prices, across more than 800
+          addresses. That is $1.42 billion in BTC, $1.32 billion in
+          ETH and $502 million in XRP, Solana, TRX, NEAR and others.<sup class="nb-cite"><a href="#s3" data-nb-locator="Following the stolen funds, chart 3">3</a></sup>
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.binance.com/en/support/announcement/detail/c5a8729a97ac486d963784d96c5642d7"
+              data-nb-locator="Body: estimated total impact, ~$3 billion frozen, laptop finding"
+              >Binance &middot; Security Incident Update</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.trmlabs.com/resources/blog/north-korea-steals-usd-6-36-billion-from-binance-in-the-largest-hack-in-history"
+              data-nb-locator="Key takeaways; How much was taken; Stablecoin freezes and conversion"
+              >TRM Labs &middot; North Korea steals $6.36 billion from Binance</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.elliptic.co/insights/binance-largest-hack-in-history/"
+              data-nb-locator="Key points; Following the stolen funds (frozen, 94% and $786 million sentences; charts 2 and 3)"
+              data-nb-note="Primary for Elliptic's own tracing. Elliptic is a blockchain-analytics vendor whose product screens these funds."
+              >Elliptic &middot; Binance: the largest hack in history</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://x.com/binance/status/2116121748555153621"
+              data-nb-locator="Post of 30 Oct 10:55 UTC: working with partners and law enforcement to recover the frozen assets"
+              >Binance &middot; X post on frozen assets</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://coindesk.com/markets/2026/11/01/binance-opens-crypto-withdrawals-in-phases-starting-with-bitcoin-following-usd6-3-billion-hack"
+              data-nb-locator="1 Nov 2026 report; no frozen funds recovered or returned"
+              >CoinDesk &middot; Binance opens withdrawals in phases</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://eth.blockscout.com/address/0xdAC17F958D2ee523a2206206994597C13D831ec7?tab=contract"
+              data-nb-locator="Source tab: contracts BlackList and TetherToken"
+              >Blockscout &middot; Tether USDT contract</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/circlefin/stablecoin-evm/blob/master/contracts/v1/Blacklistable.sol"
+              data-nb-locator="blacklist(address) onlyBlacklister; modifier notBlacklisted"
+              >Circle &middot; stablecoin-evm, Blacklistable.sol</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.americanbanker.com/news/6b-binance-heist-provokes-stablecoin-freeze-dilemma"
+              data-nb-locator="Circle spokesperson's $1.1 billion figure; April 2026 Drift decision"
+              data-nb-note="Reports Circle's statements; the $1.1 billion figure is unreconciled against on-chain counts."
+              >American Banker &middot; $6B Binance heist provokes stablecoin freeze dilemma</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.ic3.gov/PSA/2025/PSA250226"
+              data-nb-locator="Public service announcement, 26 Feb 2025: approximately $1.5 billion"
+              >FBI IC3 &middot; $1.5 Billion Bybit Hack</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://blockscholes.com/research/bybit-eth-hack"
+              data-nb-locator="Stolen-asset list, updated 22 Feb 2025"
+              >Block Scholes &middot; Bybit ETH hack</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://decrypt.co/315593/bybit-ceo-two-thirds-of-funds-from-lazarus-group-hack-still-traceable"
+              data-nb-locator="Ben Zhou quote, 21 April 2025: 3.84% frozen"
+              data-nb-note="Reports Zhou's post, which owns the figure. The 3% early-March count is from other coverage in the research record, not this page."
+              >Decrypt &middot; Bybit CEO on traceable funds</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://x.com/_RichardTeng/status/2116072080525656150"
+              data-nb-locator="Post of 30 Oct 07:37 UTC, paragraphs 3 to 5"
+              >Richard Teng &middot; X post</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://x.com/binance/status/2116089661408108712"
+              data-nb-locator="Post of 30 Oct 08:47 UTC, paragraph 1"
+              >Binance &middot; X post, additional points of breach</a
+            >
+          </li>
+          <li id="s14">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://x.com/jony_levin/status/2116020833227587637"
+              data-nb-locator="Post of 30 Oct 04:14 UTC"
+              data-nb-note="Primary for Chainalysis' stated assessment; the account owner is described as Chainalysis' CEO in coverage."
+              >Jonathan Levin &middot; X post</a
+            >
+          </li>
+          <li id="s15">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.bleepingcomputer.com/news/security/fbi-links-63-billion-binance-crypto-heist-to-north-korean-hackers/"
+              data-nb-locator="FBI statement as quoted; address list"
+              data-nb-note="Secondary for the FBI. The FBI page returned a bot challenge and was not opened."
+              >BleepingComputer &middot; FBI links Binance heist to North Korea</a
+            >
+          </li>
+          <li id="s16">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://www.ibtimes.co.uk/fbi-binance-theft-tradertraitor-north-korea-1829324"
+              data-nb-locator="North Korean denials and non-response, relaying Reuters"
+              >IBTimes &middot; FBI and the Binance theft</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
