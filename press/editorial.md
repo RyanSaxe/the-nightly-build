@@ -16,9 +16,14 @@ for whichever of these fits, along with anything else in the furniture catalogs:
   colors and fonts with theme variables in `style` attributes (`var(--ink)`,
   `var(--ink-soft)`, `var(--panel)`, `var(--chart-1)` through `var(--chart-6)`,
   `var(--sans)`) so the diagram follows the light and dark themes. Give the `svg`
-  an `aria-label` saying what it shows and `style="width: 100%; min-width: 34rem;
-  height: auto"`, with `style="overflow-x: auto"` on the figure, so its text stays
-  readable on a phone.
+  an `aria-label` saying what it shows and `style="display: block; width: 100%;
+  max-width: 34rem; margin: 0 auto; height: auto"`, and use a `viewBox` about 400 units
+  wide so its text stays readable on a phone and in proportion on a desktop. Draw
+  panels meant to be compared as separate `svg` elements inside
+  `<div style="display: flex; flex-wrap: wrap; gap: 1rem">`, each with
+  `style="flex: 1 1 18rem; min-width: 0; height: auto"`, so they stack on a phone.
+  A diagram that can't shrink can scroll sideways inside a
+  `<div style="overflow-x: auto">`, with its caption outside that `div`.
 - Plotly figures from `nb chart`, for anything computed: heatmaps, small multiples,
   surfaces, annotated plots.
 - Figures captured from a source with `nb asset`, where the original shows the idea
@@ -26,6 +31,8 @@ for whichever of these fits, along with anything else in the furniture catalogs:
 - Annotated equations, with color-coded terms in an `nb-math` legend and every
   symbol defined, wherever the math is the point.
 
-Look at every visual in the rendered article before handing it on. Overlapping
-labels and arrows that stop short of their target are the common faults, and the
-proof catches neither.
+Look at every visual in the rendered article before handing it on, at phone and desktop
+width and in both the light and dark themes. Build the page with `nb preview` and capture it
+with Playwright, which is in this checkout's `figure-capture` dependency group. Overlapping
+labels and arrows that stop short of their target are the common faults, and the proof
+catches neither.
