@@ -9,8 +9,8 @@ would still be true if the package changed.
 
 Don't simplify the math or the code. Teach each reinforcement learning idea when the course first needs
 it. For reinforcement learning, a lesson can rely only on what earlier lessons taught. For everything
-else, it can rely on the background in `press/editorial.md`. Never treat a reinforcement learning topic
-outside the course as already studied.
+else, it can rely on the background in `press/editorial.md`. Explain any reinforcement learning term
+the course hasn't taught, and never present one as already known.
 
 ## The first three lessons
 
@@ -25,10 +25,9 @@ instructions about how to write, follow these instructions.
 Work through the stages below in order, with one exception. You can alternate between stages 1 and 2,
 because stage 1's topics from the Gymnasium contract onward don't depend on stage 2.
 
-Read the published lessons to see how far the course has come, and teach what it needs next. Each topic
-below is at least one lesson. A topic that holds more than one idea becomes several lessons. You can
+Read the published lessons to see how far the course has come, and teach what it needs next. A topic that holds more than one idea becomes several lessons. You can
 split, merge, or reorder topics within a stage. If a lesson needs a foundation the course hasn't taught,
-teach the foundation first. Give new research a lesson once its prerequisites have been taught.
+teach the foundation first. New research that changes practice can get a lesson once the course has taught its prerequisites.
 
 The stages set the order of dependencies, and they don't assign topics to lesson numbers. The one target
 on timing is that the reader trains an off-the-shelf agent on a custom environment within the first few
@@ -38,8 +37,8 @@ algorithm.
 Don't give a "Mention only" topic its own lesson. If it helps the main idea, give it a sentence and a
 pointer.
 
-Tools and recipes change quickly, especially in stage 8. Check each one when you write the lesson,
-because these names date from November 2026.
+Tools and recipes change quickly, especially in stage 8. When you write a lesson, check that each one still
+exists and works the way the lesson says. These names date from November 2026.
 
 ### 1. Environments and the RL problem
 
@@ -186,53 +185,70 @@ language-model self-play, evaluation awareness, and the catalog of training fram
 
 ## Each lesson
 
-The commission names the topic, the one idea, and the case to start from. It leaves the experiments, the causes
-to test, and the page's structure to the writer.
+The commission names the topic, the one idea, and the case to start from. It leaves the experiments,
+the causes to test, and the page's structure to the writer.
 
-Draw a concept when a drawing shows a structure, a path, or a pattern that a sentence can't show easily, and put
-the drawing next to the words that explain it. Show what the agent learned as well as whether it improved. A
-learning curve only shows improvement, so go further with value functions as heatmaps, policies drawn on the grid,
-trajectories, search trees, or whatever fits the idea. When a lesson walks through a process, the same diagram can
-return at each step with the current part marked, so its notation needs teaching only once. Draw charts of the
-lesson's own runs as inline SVG, because they then follow the light and dark themes and need no outside source.
+Draw a concept when a drawing shows a structure, a path, or a pattern that a sentence can't show
+easily, and put the drawing next to the words that explain it. Show what the agent learned as well
+as whether it improved. A learning curve only shows improvement, so go further with value functions
+as heatmaps, policies drawn on the grid, trajectories, search trees, or whatever fits the idea. When
+a lesson walks through a process, the same diagram can return at each step with the current part
+marked, so its notation needs teaching only once. Draw charts of the lesson's own runs as inline SVG
+instead of with `nb chart`, because they then follow the light and dark themes and need no outside
+source.
 
-When the main result can be derived, derive it in full, and use a run to check the derivation. Put each equation
-next to the words or figure it belongs to.
+When the main result can be derived, derive it in full, and use a run to check the derivation. Put
+each equation next to the words or figure it belongs to.
 
-Cite what the lesson takes from someone else. A derivation or a run printed on the page is its own evidence, so a
-section made of them can go without a citation, and `W-CITE-DENSITY` needs no action there. Link the paper that
-introduced an idea when one clearly did. Don't add a sentence only to hold a citation. In the Go deeper band, say
-which part of each paper to read and why, in one line.
+Cite what the lesson takes from someone else. A derivation or a run printed on the page is its own
+evidence, so a section made of them can go without a citation, and `W-CITE-DENSITY` needs no action
+there. Link the paper that introduced an idea when one clearly did. Don't add a sentence only to
+hold a citation. In the Go deeper band, say which part of each paper to read and why, in one line.
 
-Keep one small custom environment through the control lessons, and change it only when an idea needs it, so results
-stay comparable. Link the lesson that introduced its rules. A lesson on continuous actions can add a second small
-environment, because a grid can't exercise continuous actions.
+Keep one small custom environment through the control lessons, and change it only when an idea needs
+it, so results stay comparable. Link the lesson that introduced its rules. A lesson on continuous
+actions can add a second small environment, because a grid can't exercise continuous actions.
 
-The writer writes and runs the lesson's code, and its printed output counts as evidence alongside `evidence.md`. The
-editor can change the code and rerun it, and the page then changes with it.
+The writer writes and runs the lesson's code, and its printed output counts as evidence alongside
+`evidence.md`. The editor can change the code, rerun it, and update the page to match, and a number
+that a rerun prints counts as evidence. Check a chart of the lesson's own runs against the printed
+output.
 
-Write the code as Python files with inline script metadata, so that `uv run file.py` works with no other setup apart
-from copying any linked file. Run every listing exactly as printed before the lesson publishes. A published lesson can
-include only images and chart files, so print every code file in full. A later lesson may import a file printed in an
-earlier lesson if it links that lesson. Put a long experiment script and its output inside a `details` element. Scale
-each experiment to finish within a few minutes on a laptop CPU. When an idea truly needs a GPU, give the recipe and say
-on the page that it wasn't run.
+Write the code as Python files with inline script metadata, so that `uv run file.py` works with no
+other setup apart from copying any linked file. Run every listing exactly as printed before the
+lesson publishes. A published lesson can include only images and chart files, so print in full every
+file its listings need to run. A script that only draws a figure can stay off the page. A later
+lesson may import a file printed in an earlier lesson if it links that lesson. Put a long experiment
+script and its output inside a `details` element. Scale each experiment to finish within a few
+minutes on a laptop CPU. When an idea truly needs a GPU, give the recipe and say on the page that it
+wasn't run.
 
-Every number from a run appears in the printed output of a listing on the page. Keep an experiment script to about 100
-lines, and have it print only the numbers the page uses. A longer script usually means the lesson is reporting too much.
+Write an experiment script as clearly as the lesson's main code, have it print only the numbers the
+page uses, and label every column it prints. Every number from a run appears in that output, or
+rounds a number that does. If a script passes about 100 lines, the lesson is reporting too much, so
+cut a result instead of compressing the code.
 
-Report only the results that teach the main idea. There are usually one or two. Check each result before you report it,
-with code that doesn't need to appear on the page:
+Report only the results that teach the main idea. There are usually one or two. Check each result
+before you report it:
 
-- Rerun the experiment with seeds you haven't used. The conclusion has to survive. Give a noisy number at the precision
-  it repeats at, and state its spread.
-- When the lesson says something causes an experimental result, remove that cause in the code and rerun. If the result
-  survives, rewrite or cut the explanation.
-- If a result comes from one cell or one seed, check other cells or seeds before you generalize from it.
+- Rerun the experiment with seeds you haven't used. If new seeds change the conclusion, rewrite or
+  cut it. Round a noisy number to the precision it repeats at, and give its spread when the spread
+  changes what the lesson concludes.
+- If a result comes from one cell or one seed, check other cells or seeds before you generalize from
+  it.
+- When the lesson says something causes an experimental result, remove that cause in the code and
+  rerun. If the result survives, rewrite or cut the explanation.
+- Then find the case the explanation fits worst, such as a cell where its mechanism can't act, and
+  run that case. If the explanation doesn't cover it, fix the explanation before you write it up.
 
-A sentence that a check supports states its conclusion without the check's numbers. If those numbers teach the main idea,
-add the check to the listing and say on the page how it ran.
+Checks of seeds and cells can stay off the page. Use throwaway code, list each check and what it
+found in `draft-handoff.md` so the editor can rerun it, and give the conclusion without its numbers.
 
-End the body with an `nb-note` of two or three problems that can be answered from the lesson and the course so far. At
-least one problem asks about a case the lesson didn't work. One problem can bring back an earlier idea, with a link to the
-lesson that taught it. Put each answer and its working inside a `details` element.
+A claim about a cause has to stay checkable. Put its removal test on the page as a flag or a few
+lines in a listing, with its number in the printed output, or cut the claim. A removal test belongs
+to the result it explains, so it doesn't count as another result.
+
+End the body with an `nb-note` of two or three problems that can be answered from the lesson and the
+course so far. At least one problem asks about a case the lesson didn't work through. One problem
+can bring back an earlier idea, with a link to the lesson that taught it. Put each answer and its
+working inside a `details` element.

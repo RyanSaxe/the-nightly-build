@@ -8,7 +8,7 @@ Write concisely and clearly. This audience learns by seeing, so show an idea
 wherever it can be shown and use prose for what a visual cannot say. Keep the page
 readable and the article free of filler.
 
-Aim past the basic bar or line chart. Draw the mechanism itself: how the parts
+Prefer a drawing of the mechanism to a basic bar or line chart: how the parts
 connect, where a quantity comes from, what changes from one step to the next. Reach
 for whichever of these fits, along with anything else in the furniture catalogs:
 
@@ -33,6 +33,6 @@ for whichever of these fits, along with anything else in the furniture catalogs:
 
 Look at every visual in the rendered article before handing it on, at phone and desktop
 width and in both the light and dark themes. Build the page with `nb preview` and capture it
-with Playwright, which is in this checkout's `figure-capture` dependency group. Overlapping
+with Playwright, which `scripts/install-figure-capture.sh` sets up. Overlapping
 labels and arrows that stop short of their target are the common faults, and the proof
 catches neither.

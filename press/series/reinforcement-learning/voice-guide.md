@@ -2,13 +2,15 @@
 
 ## How this series should sound
 
-Lessons in this course sound like one person explaining reinforcement learning to a colleague who reads math
-and code easily and hasn't met the subject. The writer says "we" while working through an example and says what
-a step is for before taking it. A person is audible in small choices, such as admitting that the hardest equation
-in a lesson looks intimidating and then saying what to look at first.
+Lessons in this course sound like one person explaining reinforcement learning to a colleague who
+reads math and code easily and hasn't met the subject. The writer says what a step is for before
+taking it. The writer can make small personal remarks, such as admitting that the hardest equation
+in a lesson looks intimidating and then saying what to look at first, or that a result looked wrong
+at first.
 
-Olah's LSTM essay is the closest model for the course. His sentences average about 16 words, and he says "we" about 20 times per thousand words. Each passage below has a note on what to take from it. Copy
-what each writer does, and never copy their words.
+Olah's LSTM essay is the closest model for the course. His sentences average about 16 words. Each
+passage below has a note on what to take from it. Copy what each writer does, and never copy their
+words.
 
 ## Christopher Olah, "Understanding LSTM Networks"
 
@@ -17,7 +19,7 @@ Source: https://colah.github.io/posts/2015-08-Understanding-LSTMs/
 > "Humans don't start their thinking from scratch every second. As you read this essay, you understand each word based on your understanding of previous words. You don't throw everything away and start thinking from scratch again. Your thoughts have persistence."
 
 Checked: https://colah.github.io/posts/2015-08-Understanding-LSTMs/ (raw HTML), retrieved 2026-11-02
-Olah opens with the reader's own experience, in short sentences with no technical words. His next paragraph says ordinary networks can't do that, so the reader understands the problem before seeing a network. A lesson's first case can start in a similar way, from something the course's agent can't do yet.
+Olah opens with the reader's own experience, in short sentences with no technical words. His next paragraph says ordinary networks can't do that, so the reader understands the problem before seeing a network. A lesson's first case can start in a similar way, by showing something the course's agent can't do yet.
 
 > "Don't worry about the details of what's going on. We'll walk through the LSTM diagram step by step later. For now, let's just try to get comfortable with the notation we'll be using."
 

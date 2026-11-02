@@ -3,7 +3,8 @@
 # this series, so every role runs at the orchestrator's model and extra-high effort, and
 # the voice guide is pinned so the course keeps one voice. The word band counts code and
 # printed output, so it runs wider than the prose target in the template's identity. A lesson
-# on a classic method can rest on a textbook and one paper, so the source floor stays low.
+# on a classic method can rest on one textbook, and a floor above that invites a citation
+# kept only to clear it.
 name: Reinforcement Learning
 mode: open
 section: "Courses"
@@ -13,7 +14,7 @@ strict: false
 bands:
   words: [2500, 6000]
   flex_sections: [2, 5]
-min_sources: 2
+min_sources: 1
 cadence: daily
 voice_guide: voice-guide.md
 production:
