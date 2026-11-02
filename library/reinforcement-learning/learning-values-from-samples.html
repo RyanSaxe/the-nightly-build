@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learning a value function from episodes alone · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "learning-values-from-samples",
+        "template": "lesson",
+        "title": "Learning a value function from episodes alone",
+        "mode": "open",
+        "order": 3,
+        "date": "2026-11-02",
+        "tags": ["monte-carlo", "temporal-difference", "prediction", "bias-variance"],
+        "sources": 4,
+        "words": 4045,
+        "reading_minutes": 18,
+        "dek": "With the slip rates and rewards hidden, cell 13's value can only be learned from sampled episodes, where Monte Carlo averaging and one-step TD both reach −2.01 by routes that trade variance against bias.",
+        "harness": "claude-code",
+        "model": "claude-opus-4-8"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Learning a value function from episodes alone</h1>
+        <p class="nb-dekline">
+          With the slip rates and rewards hidden, cell 13's value can only be learned from sampled episodes, where Monte Carlo averaging and one-step TD both reach &minus;2.01 by routes that trade variance against bias.
+        </p>
+        <div class="nb-byline">
+          <span>18 min read</span><span>2026-11-02</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Lessons 1 and 2 could solve the grid because every slip probability and every reward was written down. Take those away and the equations have nothing to run on. What a learner has instead is experience: episodes it played, each a list of the cells it stood in, the moves it made and the rewards it collected, and nothing about the mechanism underneath. This lesson is about turning those episodes into the value of a fixed way of acting, with the slip rates and the rewards that drive them unseen.
+        </p>
+        <p>
+          The first great success of the idea worked this way. In the early 1990s Gerald Tesauro's TD-Gammon learned to evaluate backgammon positions with a neural network by playing itself and nudging each estimate toward the next position's, with no model of the dice and no library of expert games. The network that started from a raw board and zero built-in knowledge trained for 200,000 self-play games and reached a strong intermediate level, about even with Neurogammon. Later versions, given hand-built features and a two-ply search, took a 40-game session against the world-class player Bill Robertie down to a one-point loss. Backgammon has more than a hundred billion billion positions, so none of this came from a table. It came from samples.
+        </p>
+        <p>
+          By the end you will have run two ways of learning a value function from samples on lesson 1's grid, with its model hidden. The runs show where each one's error comes from: the method that averages whole outcomes against the method that learns one step at a time.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>: lesson 1 builds the slippery grid, the fixed policy, the value <span class="nb-math-in">v_\pi</span> and the exact &minus;2.01, and its <code>gridworld.py</code> is the environment imported here unchanged.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="http://incompleteideas.net/book/RLbook2020.pdf">Sutton and Barto, Reinforcement Learning: An Introduction</a>: chapters 5 and 6 (printed pp. 91-128) give Monte Carlo and temporal-difference prediction in the field's standard notation, with a second worked example.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>When the model is hidden</h2>
+        <p>
+          Lessons 1 and 2 treated the grid as fully known. The transition probabilities <span class="nb-math-in">P</span> and the rewards <span class="nb-math-in">R</span> were arrays in memory, so the value of the fixed policy fell out of a linear system, <span class="nb-math-in">v = (I - \gamma Q)^{-1} b</span>. Lesson 1 put cell 13 at exactly &minus;2.01. Outside a written-down grid that array does not exist. A learner sees only a stream of episodes: each a list of the cell it was in, the reward it got and the cell it reached, with the slip that produced the step unobserved.<sup class="nb-cite"><a href="#s1" data-nb-locator="Chapter 5, p. 91">1</a></sup>
+        </p>
+        <p>
+          The task is lesson 1's, with less to work from. For a fixed policy <span class="nb-math-in">\pi</span>, estimate its value function <span class="nb-math-in">v_\pi(s)</span>, the expected discounted return from each cell, from sampled episodes alone.<sup class="nb-cite"><a href="#s1" data-nb-locator="Chapter 5 p. 92, Chapter 6 p. 119">1</a></sup> This is prediction: it scores one fixed policy and does not try to improve it. Every method below reads only the rewards and next cells the episodes report. The exact solve returns once, as a referee, to measure how far each estimate sits from the &minus;2.01 and the other thirteen values lesson 1 computed, and it never appears inside an estimator.
+        </p>
+        <p>
+          Lesson 1 already averaged 20,000 sampled returns from cell 13 and landed at &minus;1.94, a breath from its &minus;2.01, but it did that as a one-cell check with the model in hand. Here the sampling is the method rather than the check: it has to cover all fourteen non-terminal cells and work with the model gone.
+        </p>
+      </section>
+
+      <section data-nb-section="monte-carlo" id="monte-carlo">
+        <h2>Averaging the returns</h2>
+        <p>
+          The value of a cell is the expected return from it, and an average is what estimates an expectation. So the first method is the plainest thing that could work, the one lesson 1 reached for at a single cell: follow the policy, record the return that came after each cell, and average. This is Monte Carlo prediction.<sup class="nb-cite"><a href="#s1" data-nb-locator="Chapter 5, pp. 91-92">1</a></sup>
+        </p>
+        <p>
+          A visit is one occurrence of a cell in an episode.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.1, p. 92">1</a></sup> How visits are counted splits the method in two. First-visit Monte Carlo averages, for each cell, the returns that followed the first time the cell appeared in each episode. Every-visit Monte Carlo averages over every appearance. On this grid a slip can send the walker back through a cell it already left, so the two counts differ.
+        </p>
+        <p>
+          Neither needs the episode history kept. The average of <span class="nb-math-in">n</span> returns can be built one return at a time, holding only the running estimate and the count.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 2.4, p. 31">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\htmlClass{nb-mc3}{V(s)} \leftarrow \htmlClass{nb-mc3}{V(s)} + \htmlClass{nb-mc1}{\tfrac{1}{N(s)}} \bigl[\, \htmlClass{nb-mc2}{G} - \htmlClass{nb-mc3}{V(s)} \,\bigr]</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc3">V(s)</span><span>the running estimate of the cell's value, corrected by the error <span class="nb-math-in">G - V(s)</span></span></li>
+            <li><span class="nb-math-term nb-mc1">\tfrac{1}{N(s)}</span><span>the step, one over the number of returns averaged into <span class="nb-math-in">s</span> so far</span></li>
+            <li><span class="nb-math-term nb-mc2">G</span><span>the return this cell earned on this episode, the target the estimate moves toward</span></li>
+          </ul>
+          <figcaption>
+            The running-mean update. With the step <span class="nb-math-in">1/N(s)</span> the estimate is exactly the average of the returns seen so far.<sup class="nb-cite"><a href="#s1" data-nb-locator="equations 2.3-2.4, p. 31">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Hold the step at a fixed <span class="nb-math-in">\alpha</span> instead and the update becomes <span class="nb-math-in">V(s) \leftarrow V(s) + \alpha\,[\,G - V(s)\,]</span>, a running average that forgets, weighting recent returns more. That matters when the quantity being estimated drifts, and it costs exact convergence, as the runs below show.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 6.1, pp. 119-120">1</a></sup>
+        </p>
+        <p>
+          Three properties fix where Monte Carlo is useful. It cannot update a cell until the episode ends, because the return <span class="nb-math-in">G</span> is not known until the last reward is in.<sup class="nb-cite"><a href="#s1" data-nb-locator="Chapter 5, p. 91">1</a></sup> First-visit Monte Carlo is unbiased: each first-visit return is an independent sample of <span class="nb-math-in">v_\pi(s)</span>, so their average is an unbiased estimate whose error falls like <span class="nb-math-in">1/\sqrt{n}</span>.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.1, p. 93">1</a></sup> Every-visit Monte Carlo is not. Returns from repeated visits in one episode share a tail, so at a finite sample size its estimate is biased: lower in error early, higher later, though it too converges.<sup class="nb-cite"><a href="#s2" data-nb-locator="Section 2.3 p. 5, Table 1 p. 16">2</a></sup> And because every return is a whole sampled trajectory, Monte Carlo carries the run's full variance: one lucky or unlucky episode shifts the average by a lot.
+        </p>
+      </section>
+
+      <section data-nb-section="temporal-difference" id="temporal-difference">
+        <h2>Learning before the episode ends</h2>
+        <p>
+          Monte Carlo waits for the terminal reward. Temporal-difference learning does not. It replaces the unknown return in the update with an estimate of it, assembled from one observed step: the reward just received, plus the discounted value the learner currently assigns to the cell it landed in.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 6.2, p. 120">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\htmlClass{nb-mc3}{V(S_t)} \leftarrow \htmlClass{nb-mc3}{V(S_t)} + \alpha \bigl[\, \htmlClass{nb-mc2}{R_{t+1} + \gamma V(S_{t+1})} - \htmlClass{nb-mc3}{V(S_t)} \,\bigr]</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc3">V(S_t)</span><span>the estimate for the cell just left, the one being updated</span></li>
+            <li><span class="nb-math-term nb-mc2">R_{t+1} + \gamma V(S_{t+1})</span><span>the TD target: one observed reward plus the discounted current estimate of the next cell</span></li>
+          </ul>
+          <figcaption>
+            The TD(0) update, made the moment the step is taken. The step size <span class="nb-math-in">\alpha</span> lies in <span class="nb-math-in">(0, 1]</span>.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 6.1, p. 120">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The bracket is the TD error, the gap between the one-step target and the old estimate, and it is available one step after leaving <span class="nb-math-in">S_t</span>.<sup class="nb-cite"><a href="#s1" data-nb-locator="equation 6.5, p. 121">1</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\delta_t = \htmlClass{nb-mc2}{R_{t+1} + \gamma V(S_{t+1})} - \htmlClass{nb-mc3}{V(S_t)}</div>
+        </figure>
+        <p>
+          The target <span class="nb-math-in">R_{t+1} + \gamma V(S_{t+1})</span> is an estimate for two reasons. It samples the environment, taking the one reward and next cell that happened instead of averaging over all that could. And it leans on <span class="nb-math-in">V(S_{t+1})</span>, the learner's own current guess for the next cell, in place of the true value. Using an existing estimate inside the target is bootstrapping, the move dynamic programming made in lesson 1, except there the model supplied the average over next cells and here a single sampled step stands in for it.<sup class="nb-cite"><a href="#s1" data-nb-locator="pp. 120-121">1</a></sup>
+        </p>
+        <p>
+          Two things follow. TD updates online, after every step, so it learns during an episode and needs no terminal state to arrive, which is what lets it run on long or unending tasks.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 6.2, p. 124">1</a></sup> And because the target holds <span class="nb-math-in">V(S_{t+1})</span>, which is wrong early, TD is biased while the estimates are still forming: a one-step target is only as good as the neighbour it trusts.<sup class="nb-cite"><a href="#s3" data-nb-locator="Section 3.1, pp. 16-18">3</a></sup> Sutton, who introduced temporal-difference methods in 1988, argued that trusting the neighbour can still be the better bet. A successor's estimate is uncorrupted by the noise the rest of the episode would add, and dropping that noise is how a bootstrapped target can carry less variance than the full return.<sup class="nb-cite"><a href="#s3" data-nb-locator="p. 18">3</a></sup>
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+<svg viewBox="0 0 760 372" role="img" aria-label="A contrast of two backups for the value of cell 13 on lesson 1's seed-2 episode. On top, Monte Carlo backs cell 13 up toward the whole sampled return of the episode 13, 9, 5, 4, 0, 1, 2, goal, which sums to 0.63. On the bottom, TD(0) backs cell 13 up toward a single observed step: minus one plus 0.9 times the current estimate of cell 9, ignoring the rest of the episode." style="display:block;width:100%;min-width:34rem;height:auto;margin:0 auto">
+<text x="12" y="44" text-anchor="start" style="font-family:var(--sans);font-size:13px;fill:var(--chart-1);font-weight:600">Monte Carlo</text>
+<text x="12" y="60" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">back up the</text>
+<text x="12" y="74" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">whole return</text>
+<circle cx="70" cy="92" r="17" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:2.4"/>
+<text x="70" y="96" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">13</text>
+<circle cx="163" cy="92" r="17" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.4"/>
+<text x="163" y="96" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">9</text>
+<circle cx="256" cy="92" r="17" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.4"/>
+<text x="256" y="96" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">5</text>
+<circle cx="349" cy="92" r="17" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.4"/>
+<text x="349" y="96" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">4</text>
+<circle cx="442" cy="92" r="17" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.4"/>
+<text x="442" y="96" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">0</text>
+<circle cx="535" cy="92" r="17" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.4"/>
+<text x="535" y="96" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">1</text>
+<circle cx="628" cy="92" r="17" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.4"/>
+<text x="628" y="96" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">2</text>
+<rect x="704" y="75" width="34" height="34" rx="4" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.6"/>
+<text x="721" y="96" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--chart-1);font-weight:600">goal</text>
+<line x1="87.0" y1="92.0" x2="142.0" y2="92.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none"/>
+<polygon points="142.0,92.0 134.0,96.5 134.0,87.5" style="fill:var(--ink-soft)"/>
+<text x="116.5" y="69" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">-1</text>
+<line x1="180.0" y1="92.0" x2="235.0" y2="92.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none"/>
+<polygon points="235.0,92.0 227.0,96.5 227.0,87.5" style="fill:var(--ink-soft)"/>
+<text x="209.5" y="69" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">-1</text>
+<line x1="273.0" y1="92.0" x2="328.0" y2="92.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none"/>
+<polygon points="328.0,92.0 320.0,96.5 320.0,87.5" style="fill:var(--ink-soft)"/>
+<text x="302.5" y="69" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">-1</text>
+<line x1="366.0" y1="92.0" x2="421.0" y2="92.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none"/>
+<polygon points="421.0,92.0 413.0,96.5 413.0,87.5" style="fill:var(--ink-soft)"/>
+<text x="395.5" y="69" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">-1</text>
+<line x1="459.0" y1="92.0" x2="514.0" y2="92.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none"/>
+<polygon points="514.0,92.0 506.0,96.5 506.0,87.5" style="fill:var(--ink-soft)"/>
+<text x="488.5" y="69" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">-1</text>
+<line x1="552.0" y1="92.0" x2="607.0" y2="92.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none"/>
+<polygon points="607.0,92.0 599.0,96.5 599.0,87.5" style="fill:var(--ink-soft)"/>
+<text x="581.5" y="69" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">-1</text>
+<line x1="645.0" y1="92.0" x2="700.0" y2="92.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none"/>
+<polygon points="700.0,92.0 692.0,96.5 692.0,87.5" style="fill:var(--ink-soft)"/>
+<text x="674.5" y="69" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">+10</text>
+<path d="M70 126 L70 134 L721 134 L721 126" style="fill:none;stroke:var(--chart-1);stroke-width:1.2"/>
+<text x="395.5" y="152" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);font-weight:400">target G = -1 - 0.9 - … + 0.9⁶·10 = 0.63, a sample of the whole tail</text>
+<line x1="40" y1="200" x2="740" y2="200" style="stroke:var(--line);stroke-width:1;stroke-dasharray:3 4"/>
+<text x="12" y="250" text-anchor="start" style="font-family:var(--sans);font-size:13px;fill:var(--chart-2);font-weight:600">TD(0)</text>
+<text x="12" y="266" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">back up one</text>
+<text x="12" y="280" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">observed step</text>
+<circle cx="150" cy="262" r="17" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:2.4"/>
+<text x="150" y="266" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">13</text>
+<circle cx="300" cy="262" r="17" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.4"/>
+<text x="300" y="266" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">9</text>
+<line x1="167.0" y1="262.0" x2="279.0" y2="262.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none"/>
+<polygon points="279.0,262.0 271.0,266.5 271.0,257.5" style="fill:var(--ink-soft)"/>
+<text x="225.0" y="248" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">-1</text>
+<text x="300" y="296" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">current estimate V(9)</text>
+<line x1="317.0" y1="262.0" x2="342.0" y2="262.0" style="stroke:var(--line);stroke-width:1.4;fill:none" stroke-dasharray="5 4"/>
+<polygon points="342.0,262.0 334.0,266.5 334.0,257.5" style="fill:var(--line)"/>
+<text x="366" y="266" text-anchor="middle" style="font-family:var(--sans);font-size:16px;fill:var(--line);font-weight:400">⋯</text>
+<text x="366" y="284" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--line);font-weight:400">rest unused</text>
+<rect x="430" y="236" width="250" height="52" rx="6" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.4"/>
+<text x="555.0" y="256" text-anchor="middle" style="font-family:var(--sans);font-size:12.5px;fill:var(--ink);font-weight:600">target = -1 + 0.9·V(9)</text>
+<text x="555.0" y="276" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);font-weight:400">one reward plus a bootstrap</text>
+<path d="M430 244 C 360 192, 180 192, 150 241" style="fill:none;stroke:var(--chart-2);stroke-width:1.6;stroke-dasharray:4 3"/>
+<polygon points="150,242 145,233 155,233" style="fill:var(--chart-2)"/>
+<text x="300.0" y="202" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--chart-2);font-weight:400">update V(13)</text>
+</svg>
+          <figcaption>
+            Fig. 1 &middot; Two backups for cell 13 on lesson 1's seed-2 episode, 13, 9, 5, 4, 0, 1, 2, goal. Monte Carlo moves <span class="nb-math-in">V(13)</span> toward the whole discounted return of the episode, 0.63. TD(0) moves it toward one reward plus the current estimate of cell 9, and uses nothing past the first step. Both are Sutton and Barto's backup pictures, redrawn for the grid.<sup class="nb-cite"><a href="#s1" data-nb-locator="pp. 94-95, 121">1</a></sup>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="bias-and-variance" id="bias-and-variance">
+        <h2>What the runs show</h2>
+        <p>
+          Put both estimators on lesson 1's grid with the model hidden. Each run starts every value at 0, draws episodes from random cells, and scores the estimate against the exact <span class="nb-math-in">v_\pi</span> over the fourteen non-terminal cells. First-visit MC uses the <span class="nb-math-in">1/N(s)</span> mean; TD(0) uses a step that decays as <span class="nb-math-in">N(s)^{-0.7}</span>, slow enough to keep moving and fast enough to settle. Forty seeds give the spread.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+          <img src="learning-values-from-samples/chart-1.png" alt="Log-log plot of RMS error over the 14 cells against episodes seen, for first-visit Monte Carlo and TD(0), each with a shaded 10-to-90 percentile band over 40 seeds. TD starts lower, near 3.4 at 10 episodes against Monte Carlo's 5.2, with a tighter band, and both fall steadily; the two cross near 4,000 episodes, after which Monte Carlo is slightly lower, ending at 0.25 against TD's 0.29." style="display: block; width: 100%; height: auto" />
+          <figcaption>
+            Fig. 2 &middot; RMS error against episodes seen, log-log, mean over 40 seeds with the 10th-to-90th percentile band. Both step sizes decay, so both curves fall toward 0. The values are the run of <code>samples.py</code> below.<sup class="nb-cite"><a href="#s1" data-nb-locator="Example 6.2, p. 125">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          TD's error is lower at every checkpoint out to 2,000 episodes. By 100 episodes its RMS error over the grid is 1.66 against Monte Carlo's 2.11, and its band across seeds is tighter. A bootstrapped estimate is usable from the first steps, before any episode has returned a complete <span class="nb-math-in">G</span>. Monte Carlo's error falls more slowly and more raggedly, and somewhere past 2,000 episodes the unbiased average slips under TD, ending at 0.25 against 0.29 by 6,000. Which of the two should be ahead is not settled in general. Sutton and Barto state plainly that no one has proved either method converges faster, and that in practice TD usually wins on stochastic tasks.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 6.2, p. 124">1</a></sup><sup class="nb-cite"><a href="#s3" data-nb-locator="Section 4.2, p. 29">3</a></sup> The ordering here also turns on the step sizes, and a different schedule moves the crossing.
+        </p>
+        <p>
+          Cell 13 shows the two error sources directly. Monte Carlo's estimate of it swings, reading &minus;1.26, &minus;3.61 and &minus;3.96 over the first checkpoints, each an honest average of a handful of wildly varying returns, before it converges to &minus;2.00. TD's estimate slides smoothly but sits too low for a while. It reaches &minus;2.69 near 100 episodes before climbing to &minus;2.01, because early on it bootstraps off neighbours the pit has dragged down. High variance and a settling bias, read off one cell.
+        </p>
+        <figure class="nb-figure" style="overflow-x: auto">
+          <img src="learning-values-from-samples/chart-2.png" alt="Four 4x4 grid heatmaps of the first-visit Monte Carlo value estimate on one seed, after 100, 1,000 and 6,000 episodes, beside lesson 1's exact v_pi. At 100 episodes the grid is noisy and far off, with cell 13 reading -9.9; by 1,000 it is close; at 6,000 it matches the exact grid cell for cell, with cell 13 at -2.1 against the exact -2.0." style="display: block; width: 100%; height: auto" />
+          <figcaption>
+            Fig. 3 &middot; What first-visit Monte Carlo learned on one seed: the value estimate over the grid after 100, 1,000 and 6,000 episodes, beside lesson 1's exact <span class="nb-math-in">v_\pi</span>. Blue is positive, red negative; cell 13 reads &minus;9.9 at 100 episodes and settles to &minus;2.1. The estimator is Sutton and Barto's; the numbers are the run of <code>samples.py</code> below.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.1, pp. 92-94">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          A decaying step is what lets both reach <span class="nb-math-in">v_\pi</span>. Hold the step at a constant 0.05 and neither does: the estimates keep lurching in response to the latest episodes and settle into a band around the answer rather than onto it. At that step every-visit Monte Carlo floors at an RMS of 1.42 and TD at 0.82, both far above the hundredths the decaying schedules reach. A constant step buys adaptivity to a moving target and pays for it with a standing error.<sup class="nb-cite"><a href="#s1" data-nb-locator="Example 6.2, p. 125">1</a></sup>
+        </p>
+        <h3>The code</h3>
+        <p>
+          One file holds it. It imports the environment from lesson 1's <code>gridworld.py</code> unchanged and adds the three estimators and the scoring. Each estimator takes a list of <span class="nb-math-in">(s, a, r, s')</span> steps and reads only the reward and the next cell; <code>transitions</code> and the exact solve appear only in the environment that hands out episodes and in <code>exact_values</code>, which scores. With both files in one folder, <code>uv run samples.py</code> installs numpy from the inline metadata and finishes in a few minutes.
+        </p>
+<figure class="nb-code">
+  <div class="nb-code-head">
+    <span class="nb-code-file">samples.py · complete (imports gridworld.py from lesson 1)</span><span>python</span>
+  </div>
+  <pre><code data-language="python"># /// script
+# requires-python = &quot;&gt;=3.10&quot;
+# dependencies = [&quot;numpy&quot;]
+# ///
+&quot;&quot;&quot;Estimate a fixed policy&#x27;s value function from sampled episodes alone.
+
+First-visit and every-visit Monte Carlo prediction and TD(0) prediction on
+lesson 1&#x27;s slippery grid, with the model hidden. The estimators read only what
+gridworld.episode returns, the reward and next cell of each step; they never
+touch P, R, transitions or the policy. The exact solve is used in one place,
+scoring, to report error against the known v_pi, never inside an estimator.
+&quot;&quot;&quot;
+
+import numpy as np
+
+from gridworld import N, PI, TERMINAL, episode, fixed_policy, transitions
+
+GAMMA, SLIP = 0.9, 0.2
+TD_DECAY = 0.7  # TD(0) step size alpha(s) = N(s) ** -TD_DECAY, a decaying rule
+LIVE = [s for s in range(N) if s not in TERMINAL]
+
+
+# --- Scoring only: the exact v_pi, never read by an estimator ---------------
+def exact_values():
+    &quot;&quot;&quot;v_pi by lesson 1&#x27;s direct solve, v = (I - gamma Q)^{-1} b.&quot;&quot;&quot;
+    Q, b = fixed_policy(PI, SLIP)
+    return np.linalg.solve(np.eye(N) - GAMMA * Q, b)
+
+
+def rms(V, v_pi):
+    &quot;&quot;&quot;Root-mean-square error over the 14 non-terminal cells.&quot;&quot;&quot;
+    return float(np.sqrt(np.mean((V[LIVE] - v_pi[LIVE]) ** 2)))
+
+
+# --- The estimators: one episode in, the running estimate updated -----------
+# An episode is a list of (cell, action, reward, next cell). Only the reward
+# and the next cell are read below.
+def first_visit_mc(ep, V, n):
+    &quot;&quot;&quot;Average the return following the first visit to each cell, step 1/N(s).&quot;&quot;&quot;
+    seen, G = {}, 0.0
+    for s, _a, r, _s2 in reversed(ep):
+        G = r + GAMMA * G
+        seen[s] = G  # going backward, the final write is the earliest visit
+    for s, g in seen.items():
+        n[s] += 1
+        V[s] += (g - V[s]) / n[s]
+
+
+def every_visit_mc(ep, V, n, alpha=None):
+    &quot;&quot;&quot;Average the return over every visit; step 1/N(s), or a constant alpha.&quot;&quot;&quot;
+    G = 0.0
+    for s, _a, r, _s2 in reversed(ep):
+        G = r + GAMMA * G
+        n[s] += 1
+        V[s] += (alpha if alpha else 1.0 / n[s]) * (G - V[s])
+
+
+def td0(ep, V, n, alpha=None):
+    &quot;&quot;&quot;One-step TD; step alpha(s) = N(s) ** -0.7, or a constant alpha.&quot;&quot;&quot;
+    for s, _a, r, s2 in ep:
+        n[s] += 1
+        step = alpha if alpha else n[s] ** -TD_DECAY
+        V[s] += step * (r + GAMMA * V[s2] - V[s])
+
+
+# --- One training run over a stream of episodes, scored at checkpoints -------
+def run(seed, episodes, checkpoints, v_pi):
+    rng = np.random.default_rng(seed)
+    P = transitions(SLIP)  # the environment&#x27;s model; the learner never reads it
+    V = {k: np.zeros(N) for k in (&quot;fv&quot;, &quot;ev&quot;, &quot;td&quot;)}
+    n = {k: np.zeros(N) for k in (&quot;fv&quot;, &quot;ev&quot;, &quot;td&quot;)}
+    curve = {k: [] for k in (&quot;fv&quot;, &quot;ev&quot;, &quot;td&quot;)}
+    v13 = {k: [] for k in (&quot;fv&quot;, &quot;td&quot;)}
+    snap = {}
+    cps = set(checkpoints)
+    for k in range(1, episodes + 1):
+        start = int(rng.integers(N))
+        while start in TERMINAL:
+            start = int(rng.integers(N))
+        ep = episode(P, PI, start, rng)
+        first_visit_mc(ep, V[&quot;fv&quot;], n[&quot;fv&quot;])
+        every_visit_mc(ep, V[&quot;ev&quot;], n[&quot;ev&quot;])
+        td0(ep, V[&quot;td&quot;], n[&quot;td&quot;])
+        if k in cps:
+            for name in curve:
+                curve[name].append(rms(V[name], v_pi))
+            for name in v13:
+                v13[name].append(float(V[name][13]))
+            snap[k] = {name: V[name].copy() for name in (&quot;fv&quot;, &quot;td&quot;)}
+    return curve, v13, snap
+
+
+def main():
+    v_pi = exact_values()
+    print(&quot;exact v_pi(13) =&quot;, round(float(v_pi[13]), 4), &quot;(lesson 1: -2.01)\n&quot;)
+
+    episodes, seeds = 6000, 40
+    cps = [10, 20, 50, 100, 200, 500, 1000, 2000, 4000, 6000]
+    agg = {k: {c: [] for c in cps} for k in (&quot;fv&quot;, &quot;ev&quot;, &quot;td&quot;)}
+    v13 = {k: {c: [] for c in cps} for k in (&quot;fv&quot;, &quot;td&quot;)}
+    snap0 = None
+    for seed in range(seeds):
+        curve, v, snap = run(seed, episodes, cps, v_pi)
+        for name in agg:
+            for i, c in enumerate(cps):
+                agg[name][c].append(curve[name][i])
+        for name in v13:
+            for i, c in enumerate(cps):
+                v13[name][c].append(v[name][i])
+        if seed == 0:
+            snap0 = snap
+
+    print(f&quot;RMS error over 14 cells vs episodes ({seeds} seeds)&quot;)
+    print(&quot;episodes       &quot;, &quot;&quot;.join(f&quot;{c:7d}&quot; for c in cps))
+    for name, label in ((&quot;fv&quot;, &quot;first-visit MC &quot;), (&quot;ev&quot;, &quot;every-visit MC &quot;),
+                        (&quot;td&quot;, &quot;TD(0) decaying &quot;)):
+        mean = [np.mean(agg[name][c]) for c in cps]
+        print(label, &quot;&quot;.join(f&quot;{m:7.3f}&quot; for m in mean))
+    for name, label in ((&quot;fv&quot;, &quot;first-visit p10&quot;), (&quot;td&quot;, &quot;TD(0)       p10&quot;)):
+        print(label, &quot;&quot;.join(f&quot;{np.percentile(agg[name][c], 10):7.3f}&quot; for c in cps))
+    for name, label in ((&quot;fv&quot;, &quot;first-visit p90&quot;), (&quot;td&quot;, &quot;TD(0)       p90&quot;)):
+        print(label, &quot;&quot;.join(f&quot;{np.percentile(agg[name][c], 90):7.3f}&quot; for c in cps))
+
+    print(&quot;\nv(13) estimate vs episodes (mean over seeds), exact -2.01&quot;)
+    for name, label in ((&quot;fv&quot;, &quot;first-visit MC&quot;), (&quot;td&quot;, &quot;TD(0)         &quot;)):
+        print(label, &quot;&quot;.join(f&quot;{np.mean(v13[name][c]):7.2f}&quot; for c in cps))
+
+    print(&quot;\nseed-0 learned grids (for the heatmap):&quot;)
+    for k in (100, 1000, 6000):
+        print(f&quot;  first-visit MC @ {k}:&quot;,
+              [round(float(x), 2) for x in snap0[k][&quot;fv&quot;]])
+    print(&quot;  exact v_pi      :&quot;, [round(float(x), 2) for x in v_pi])
+
+    print(&quot;\nconstant alpha = 0.05, final RMS (mean over seeds), a floor above 0:&quot;)
+    for label, est in ((&quot;every-visit MC&quot;, every_visit_mc), (&quot;TD(0)         &quot;, td0)):
+        finals = []
+        for seed in range(seeds):
+            rng = np.random.default_rng(1000 + seed)
+            P, V, n = transitions(SLIP), np.zeros(N), np.zeros(N)
+            for _ in range(episodes):
+                start = int(rng.integers(N))
+                while start in TERMINAL:
+                    start = int(rng.integers(N))
+                est(episode(P, PI, start, rng), V, n, alpha=0.05)
+            finals.append(rms(V, v_pi))
+        print(f&quot;  {label}: {np.mean(finals):.3f} +- {np.std(finals):.3f}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre>
+</figure>
+<figure class="nb-code">
+  <div class="nb-code-head">
+    <span class="nb-code-file">output of uv run samples.py</span><span>text</span>
+  </div>
+  <pre><code data-language="text">exact v_pi(13) = -2.0055 (lesson 1: -2.01)
+
+RMS error over 14 cells vs episodes (40 seeds)
+episodes             10     20     50    100    200    500   1000   2000   4000   6000
+first-visit MC    5.165  4.829  3.110  2.110  1.423  0.914  0.630  0.440  0.307  0.252
+every-visit MC    5.199  4.808  3.118  2.090  1.428  0.940  0.641  0.444  0.316  0.259
+TD(0) decaying    3.437  3.112  2.086  1.663  1.189  0.796  0.548  0.424  0.324  0.287
+first-visit p10   3.175  2.998  2.068  1.479  0.979  0.563  0.438  0.314  0.211  0.181
+TD(0)       p10   1.902  1.708  1.261  1.051  0.647  0.541  0.364  0.300  0.226  0.176
+first-visit p90   7.995  7.145  4.891  2.986  1.996  1.255  0.872  0.627  0.403  0.346
+TD(0)       p90   5.654  4.609  2.994  2.466  1.558  1.082  0.742  0.567  0.429  0.387
+
+v(13) estimate vs episodes (mean over seeds), exact -2.01
+first-visit MC   -1.26  -3.61  -3.96  -3.52  -2.42  -2.30  -2.12  -2.04  -2.06  -2.00
+TD(0)            -0.91  -1.59  -2.57  -2.69  -2.48  -2.19  -2.08  -2.03  -2.05  -2.01
+
+seed-0 learned grids (for the heatmap):
+  first-visit MC @ 100: [-0.39, 0.5, 4.39, 0.0, -0.36, -0.89, 0.0, 6.12, -1.41, -5.36, -2.46, 3.33, -4.56, -9.88, -7.73, 6.2]
+  first-visit MC @ 1000: [2.78, 4.44, 7.12, 0.0, 1.19, 1.01, 0.0, 6.39, -0.13, -0.47, -0.99, 3.68, -1.13, -2.45, -3.1, 1.48]
+  first-visit MC @ 6000: [2.29, 4.31, 6.83, 0.0, 0.81, 0.35, 0.0, 6.56, -0.61, -1.15, -0.14, 3.97, -2.02, -2.14, -1.07, 2.2]
+  exact v_pi      : [2.16, 4.04, 6.48, 0.0, 0.61, 0.06, 0.0, 6.48, -0.72, -1.03, -0.1, 4.02, -1.86, -2.01, -1.08, 1.98]
+
+constant alpha = 0.05, final RMS (mean over seeds), a floor above 0:
+  every-visit MC: 1.423 +- 0.418
+  TD(0)         : 0.825 +- 0.279</code></pre>
+</figure>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. Why must first-visit Monte Carlo wait for the episode to end before it can update cell 13, while TD(0) can update cell 13 after the first move?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Monte Carlo's target is the return <span class="nb-math-in">G</span>, which is the discounted sum of every reward after cell 13 and is not known until the last one arrives. TD(0)'s target is <span class="nb-math-in">R_{t+1} + \gamma V(S_{t+1})</span>, one observed reward plus the current estimate of the next cell, both in hand one step later, so it updates without waiting.
+            </p>
+          </details>
+          <p>
+            2. The run estimates <span class="nb-math-in">v_\pi(9) = -1.03</span>. Taking that as the current estimate, what one-step TD target does the seed-2 episode's first step (13 to 9, reward &minus;1) give for cell 13, and how does it sit against the exact &minus;2.01?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              The target is <span class="nb-math-in">R + \gamma V(9) = -1 + 0.9(-1.03) = -1.93</span>, within 0.08 of the exact &minus;2.01. One bootstrapped step already lands near the truth when the neighbour estimate is good. Early in training, when <span class="nb-math-in">V(9)</span> is still far off, the same step would miss, which is the bias the curves show.
+            </p>
+          </details>
+          <p>
+            3. Every-visit Monte Carlo ended with a slightly higher RMS error than first-visit (0.26 against 0.25). Which of the two is unbiased, and why can every-visit still have the lower error early?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              First-visit is unbiased: its returns are independent samples of <span class="nb-math-in">v_\pi(s)</span>. Every-visit is biased at a finite sample size, because returns from repeated visits in one episode share a tail and are not independent. It uses more of each episode, though, so it can reach a lower error early before its bias dominates and first-visit passes it.<sup class="nb-cite"><a href="#s2" data-nb-locator="Table 1, p. 16">2</a></sup>
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section data-nb-section="prediction-not-control" id="prediction-not-control">
+        <h2>Scoring a policy is not improving one</h2>
+        <p>
+          Everything here evaluated a single fixed policy. Lesson 2 improved a policy by making it greedy with respect to action values <span class="nb-math-in">q(s, a)</span>, and it built those from <span class="nb-math-in">v</span> by averaging over next cells with <span class="nb-math-in">P</span>, the one step that needed the model.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.2, pp. 76-78">1</a></sup> With <span class="nb-math-in">P</span> hidden that step is gone. A value function alone cannot say which move is best, because comparing moves means pricing the moves the policy did not take, and the samples only ever show the move it did. Recovering the worth of the alternatives takes action values learned directly. Learning those takes a policy willing to try moves it currently rates low, which a fixed policy never does. Action values and exploration are the two missing pieces, and the lessons that follow add them.<sup class="nb-cite"><a href="#s1" data-nb-locator="Sections 6.4-6.5, pp. 129-132">1</a></sup>
+        </p>
+        <p>
+          TD-Gammon had already crossed that line. It did not score a fixed player; it chose each move by the very values it was learning and improved as those values sharpened, which Tesauro calls a combined prediction and control task.<sup class="nb-cite"><a href="#s4" data-nb-locator="Conclusion">4</a></sup> This lesson isolated the prediction half, on a grid small enough to check every number against the exact answer. The control half, learning the best moves from samples without the model, is the ground the course turns to from here.
+        </p>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          With the slip rates and rewards hidden, cell 13's value could no longer be solved for. Both methods recovered it from sampled episodes anyway: first-visit Monte Carlo by averaging whole returns, TD(0) by nudging each estimate toward the next one a step at a time. Both reached &minus;2.01, and the way they got there was the lesson. Monte Carlo's estimate was unbiased and jumped around, each reading an honest average of a few high-variance returns. TD's was smoother and lower in error early, bought with a bias that faded as its neighbours' estimates came right. Which is quicker is not a theorem: it turned on the step size and the grid, and the textbook leaves it open.
+        </p>
+        <p>
+          What a value function cannot do is rank the moves not taken. That is the distance between scoring a fixed policy and finding a better one, and closing it without the model is the work ahead.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="http://incompleteideas.net/book/RLbook2020.pdf">Sutton and Barto, chapters 5 and 6</a>: read Example 6.2 (p. 125), the five-state random walk that compares TD with constant-<span class="nb-math-in">\alpha</span> Monte Carlo, and the batch-updating analysis just after it (pp. 126-128).
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="http://incompleteideas.net/papers/sutton-88-with-erratum.pdf">Sutton, Learning to Predict by the Methods of Temporal Differences (1988)</a>: Section 3.1 (pp. 16-18) is the noise argument for why a biased bootstrapped target can beat the actual outcome.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="http://incompleteideas.net/papers/singh-sutton-96.pdf">Singh and Sutton, Reinforcement Learning with Replacing Eligibility Traces (1996)</a>: Section 2.3 (p. 5) and Table 1 settle which Monte Carlo estimator is unbiased and why every-visit trades early error for late.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://doi.org/10.1145/203330.203343">Tesauro, Temporal Difference Learning and TD-Gammon (1995)</a>: the full account, the TD(&lambda;) weight rule, the self-play setup, and the results by version against human players.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" data-nb-note="The authors' free copy is at incompleteideas.net/book/RLbook2020.pdf. Page numbers are the printed ones; the printed page is the PDF page minus 22." href="https://mitpress.mit.edu/9780262039246/reinforcement-learning/">MIT Press &middot; Richard S. Sutton and Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd edition, 2018 (second printing 2020)</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" data-nb-note="Read in the authors' free copy at incompleteideas.net/papers/singh-sutton-96.pdf, an image scan; article pages are the scan's printed numbers, journal pagination 123-158." href="https://doi.org/10.1007/BF00114726">Machine Learning &middot; Satinder P. Singh and Richard S. Sutton, Reinforcement Learning with Replacing Eligibility Traces, 22(1-3), 1996</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" data-nb-note="Read in the author's free copy at incompleteideas.net/papers/sutton-88-with-erratum.pdf; the corrected Figure 3 is on the erratum page at the end of that PDF." href="https://doi.org/10.1007/BF00115009">Machine Learning &middot; Richard S. Sutton, Learning to Predict by the Methods of Temporal Differences, 3(1), 1988</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="primary" data-nb-note="Communications of the ACM 38(3), 58-68, 1995; read in full in the ACM-permitted transcription at bkgm.com/articles/tesauro/tdl.html, which carries no page numbers." href="https://doi.org/10.1145/203330.203343">Communications of the ACM &middot; Gerald Tesauro, Temporal Difference Learning and TD-Gammon, 1995</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
