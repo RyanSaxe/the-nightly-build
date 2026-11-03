@@ -185,6 +185,9 @@ compares the restatement with the main-idea sentence, and a mismatch means the p
 For each place, the editor first asks whether the passage can be cut. The editor adds explanation
 only where the main idea needs it, and records the action on each place in the editorial review.
 
-If the editor's response changes the lesson's central explanation or rewrites a whole section, the
-orchestrator runs the check again on the new page with a new agent, because no reader has seen that
-text.
+If the editor's response to the first report changes the lesson's central explanation or rewrites a
+whole section, the orchestrator runs the check once more on the new page with a new agent, because
+no reader has seen that text. Never run more than two checks, because a careful reader always finds
+something. The editor answers the second report by cutting or correcting text. It can rerun the
+lesson's code but doesn't start new experiments, and it cuts any explanation the existing runs can't
+support.
