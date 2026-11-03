@@ -17,10 +17,10 @@ belongs on the page, only if it changes what the lesson says.
 
 Aim for about 2,000 words of prose. Prose means every sentence a person reads, including the two
 cards, captions, table cells, and problems. It leaves out equations, code, printed output, text
-inside drawings, and the sources list. The editor counts these words on the rendered page and
-reports the count under The experience in the editorial review.
+inside drawings, the reading bands, and the sources list. The editor counts these words on the
+rendered page and reports the count under The experience in the editorial review.
 
-When a lesson runs past about 2,500 words, cut a whole idea or result. Don't shorten the explanation
+When a lesson runs past about 2,200 words, cut a whole idea or result. Don't shorten the explanation
 of what stays, because a reader can't follow a half-explained step.
 
 ## Build on earlier lessons
@@ -51,8 +51,9 @@ idea.
 Explain one thing at a time, and return to the same example each time. The reader then has to learn
 only the new idea.
 
-Let each section answer a question the last one raised, and ask that question on the page in plain
-words. A result with no question in front of it reads as a report.
+Let each section answer a question the last one raised, so the reader knows why the next step comes.
+Put a question on the page only a few times in a lesson, and don't end sections on one. Elsewhere, a
+plain sentence can say what's still unsolved.
 
 - Before: "Temporal-difference learning updates an estimate after each move, using the next cell's
   estimate in place of the rest of the return."

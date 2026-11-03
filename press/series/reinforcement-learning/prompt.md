@@ -186,7 +186,8 @@ language-model self-play, evaluation awareness, and the catalog of training fram
 ## Each lesson
 
 The commission names the topic, the one idea, and the case to start from. It leaves the experiments,
-the causes to test, and the page's structure to the writer.
+the causes to test, and the page's structure to the writer. Ask the researcher only for what the
+page will use, because a lesson on a classic method cites little.
 
 Draw a concept when a drawing shows a structure, a path, or a pattern that a sentence can't show
 easily, and put the drawing next to the words that explain it. Show what the agent learned as well
@@ -197,8 +198,8 @@ marked, so its notation needs teaching only once. Draw charts of the lesson's ow
 instead of with `nb chart`, because they then follow the light and dark themes and need no outside
 source.
 
-When the main result can be derived, derive it in full, and use a run to check the derivation. Put
-each equation next to the words or figure it belongs to.
+When the main idea can be derived, derive it in full, and use a run to check the derivation. A side
+result doesn't get a derivation. Put each equation next to the words or figure it belongs to.
 
 Cite what the lesson takes from someone else. A derivation or a run printed on the page is its own
 evidence, so a section made of them can go without a citation, and `W-CITE-DENSITY` needs no action
@@ -206,7 +207,8 @@ there. Link the paper that introduced an idea when one clearly did. Don't add a 
 hold a citation. In the Go deeper band, say which part of each paper to read and why, in one line.
 
 Keep one small custom environment through the control lessons, and change it only when an idea needs
-it, so results stay comparable. Link the lesson that introduced its rules. A lesson on continuous
+it, so results stay comparable. A lesson can start the agent from any policy, so pick the one that
+shows the idea most plainly. Link the lesson that introduced its rules. A lesson on continuous
 actions can add a second small environment, because a grid can't exercise continuous actions.
 
 The writer writes and runs the lesson's code, and its printed output counts as evidence alongside
@@ -228,8 +230,11 @@ page uses, and label every column it prints. Every number from a run appears in 
 rounds a number that does. If a script passes about 100 lines, the lesson is reporting too much, so
 cut a result instead of compressing the code.
 
-Report only the results that teach the main idea. There are usually one or two. Check each result
-before you report it:
+Outside a project lesson, report at most two experimental results, the ones that teach the main
+idea. A lesson explains how a method works and why, from its construction and its math, and it
+doesn't have to explain everything a run does. When nobody knows why a run behaves as it does, or
+showing why would take more than a short section, say so in a sentence or two and move on. Check
+each result before you report it:
 
 - Rerun the experiment with seeds you haven't used. If new seeds change the conclusion, rewrite or
   cut it. Round a noisy number to the precision it repeats at, and give its spread when the spread
