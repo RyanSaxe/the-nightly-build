@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Action values let an agent improve its policy from episodes alone · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "action-values-from-samples",
+        "template": "lesson",
+        "title": "Action values let an agent improve its policy from episodes alone",
+        "mode": "open",
+        "order": 4,
+        "date": "2026-11-03",
+        "tags": ["monte-carlo", "action-values", "control", "generalized-policy-iteration", "exploring-starts"],
+        "sources": 4,
+        "words": 4115,
+        "reading_minutes": 18,
+        "dek": "Monte Carlo control with exploring starts reached the optimal policy in nearly every run on the course's slippery grid, where no convergence theorem yet applies.",
+        "harness": "claude-code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Action values let an agent improve its policy from episodes alone</h1>
+        <p class="nb-dekline">Monte Carlo control with exploring starts reached the optimal policy in nearly every run on the course's slippery grid, where no convergence theorem yet applies.</p>
+        <div class="nb-byline"><span>18 min read</span><span>2026-11-03</span></div>
+      </header>
+
+<section class="nb-bookend" data-nb-section="why" id="why">
+  <p class="nb-bookend-name">Why this matters</p>
+  <div class="nb-bookend-rule"></div>
+  <p>To improve a policy, an agent compares the moves open to it in each cell. From state values, that comparison weights each cell a move can land in by the chance of landing there, and an agent that learns from episodes never sees those chances. It can learn what each move is worth instead, by averaging the returns that followed the move, as Monte Carlo prediction averaged returns per cell. The average estimates the move's action value.</p>
+  <p>The greedy step then compares a cell's averages and needs no model. The agent can also improve after every episode without finishing an evaluation, a case of generalized policy iteration called Monte Carlo control with exploring starts. You will run it until it finds the grid's optimal arrows, and see why no theorem yet promises that it will.</p>
+  <div class="nb-bookend-band"><span class="nb-bookend-label">Background</span><span class="nb-bookend-note">optional reading</span></div>
+  <dl class="nb-bookend-reading">
+    <dt>01</dt>
+    <dd><a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>: the slippery grid, its rewards, the return, and <code>gridworld.py</code>, which the code below imports.</dd>
+    <dt>02</dt>
+    <dd><a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>: action values, the greedy step, the policy improvement theorem, and the optimal arrows used here as the answer key, with <code>control.py</code>.</dd>
+    <dt>03</dt>
+    <dd><a href="../reinforcement-learning/learning-values-from-samples.html">An agent can learn what each state is worth without knowing the rules</a>: first-visit Monte Carlo and <code>estimators.py</code>, which does the averaging below.</dd>
+    <dt>04</dt>
+    <dd><a href="http://incompleteideas.net/book/RLbook2020.pdf">Sutton and Barto, Reinforcement Learning: An Introduction</a>: Sections 5.2 and 5.3 (printed pp. 96-99) cover the same algorithm in the field's standard notation.</dd>
+  </dl>
+</section>
+
+<section data-nb-section="orientation" id="orientation">
+  <h2>Without the slip rule, state values cannot rank the moves at cell 14</h2>
+  <p>Cell 14 is in the bottom row of the <a href="../reinforcement-learning/environments-and-the-rl-problem.html">slippery grid</a>, one cell left of the bottom-right corner, and the fixed policy aims up there. <a href="../reinforcement-learning/finding-optimal-policies.html">Policy iteration</a> found that aiming right is better, worth 0.32 against up's &minus;1.08. It priced right by weighting each cell the move can land in by the chance of landing there, as the first panel of Fig. 1 shows.</p>
+  <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem">
+<svg viewBox="0 0 400 232" role="img" aria-label="From state values: aiming right in cell 14 lands in cell 15 with probability 0.8, slips up to cell 10 with 0.1 and slips down into the wall, staying in cell 14, with 0.1. The move is worth minus 1 plus 0.9 times the probability-weighted values, 0.32. The three probabilities are the part an agent learning from episodes does not have." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="8.0" y="16.0" text-anchor="start" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">From state values</text>
+<rect x="14" y="78" width="66" height="54" rx="3" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1.2"/>
+<text x="47.0" y="100.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">cell 14</text>
+<text x="47.0" y="118.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">aim right</text>
+<line x1="80" y1="105" x2="236" y2="36" style="stroke:var(--ink-soft);stroke-width:1.2"/>
+<rect x="238" y="19" width="150" height="34" rx="3" style="fill:var(--panel);stroke:var(--line);stroke-width:1"/>
+<text x="246.0" y="34.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">cell 15</text>
+<text x="246.0" y="48.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);font-weight:400">v = +1.98  (as aimed)</text>
+<rect x="161.7" y="52.2" width="30" height="17" rx="3" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.4"/>
+<text x="176.7" y="65.2" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-1);font-weight:600">0.8</text>
+<line x1="80" y1="105" x2="236" y2="105" style="stroke:var(--ink-soft);stroke-width:1.2"/>
+<rect x="238" y="88" width="150" height="34" rx="3" style="fill:var(--panel);stroke:var(--line);stroke-width:1"/>
+<text x="246.0" y="103.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">cell 10</text>
+<text x="246.0" y="117.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);font-weight:400">v = −0.10  (slips up)</text>
+<rect x="161.7" y="95.0" width="30" height="17" rx="3" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.4"/>
+<text x="176.7" y="108.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-1);font-weight:600">0.1</text>
+<line x1="80" y1="105" x2="236" y2="174" style="stroke:var(--ink-soft);stroke-width:1.2"/>
+<rect x="238" y="157" width="150" height="34" rx="3" style="fill:var(--panel);stroke:var(--line);stroke-width:1"/>
+<text x="246.0" y="172.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">cell 14</text>
+<text x="246.0" y="186.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);font-weight:400">v = −1.08  (slips into wall)</text>
+<rect x="161.7" y="137.8" width="30" height="17" rx="3" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.4"/>
+<text x="176.7" y="150.8" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-1);font-weight:600">0.1</text>
+<text x="8.0" y="206.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400">−1 + 0.9 × (0.8 × 1.98 + 0.1 × −0.10 + 0.1 × −1.08) = +0.32</text>
+<text x="8.0" y="224.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--chart-1);font-weight:400">The boxed probabilities come from the slip rule.</text>
+</svg>
+<svg viewBox="0 0 400 232" role="img" aria-label="From action values: cell 14 drawn as four triangles, one per move, holding the expected return after each move: up minus 1.08, right plus 0.32, down minus 1.78, left minus 2.55. The greedy step picks right, the largest, and needs no probabilities." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="8.0" y="16.0" text-anchor="start" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">From action values</text>
+<polygon points="115.0,107.0 40,32 190,32" style="fill:var(--chart-4);fill-opacity:0.153;stroke:var(--line);stroke-width:1"/>
+<polygon points="115.0,107.0 190,32 190,182" style="fill:var(--chart-3);fill-opacity:0.045;stroke:var(--line);stroke-width:1"/>
+<polygon points="115.0,107.0 190,182 40,182" style="fill:var(--chart-4);fill-opacity:0.252;stroke:var(--line);stroke-width:1"/>
+<polygon points="115.0,107.0 40,182 40,32" style="fill:var(--chart-4);fill-opacity:0.361;stroke:var(--line);stroke-width:1"/>
+<text x="115.0" y="62.0" text-anchor="middle" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">−1.08</text>
+<text x="158.0" y="111.0" text-anchor="middle" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">+0.32</text>
+<text x="115.0" y="160.0" text-anchor="middle" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">−1.78</text>
+<text x="72.0" y="111.0" text-anchor="middle" style="font-family:var(--sans);font-size:13px;fill:var(--ink);font-weight:600">−2.55</text>
+<polygon points="115.0,107.0 190,32 190,182" style="fill:none;stroke:var(--ink);stroke-width:2.4"/>
+<text x="115.0" y="200.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft);font-weight:400">cell 14</text>
+<text x="212.0" y="64.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400">Each number is the expected</text>
+<text x="212.0" y="80.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400">return after that move.</text>
+<text x="212.0" y="96.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400"></text>
+<text x="212.0" y="112.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400">The greedy step takes the</text>
+<text x="212.0" y="128.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400">largest: right, +0.32.</text>
+<text x="212.0" y="144.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400"></text>
+<text x="212.0" y="160.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--chart-3);font-weight:600">No probabilities needed.</text>
+</svg>
+</div>
+    <figcaption>Fig. 1 · Two ways to score moves at cell 14 under the fixed policy. From state values, the weighted sum for one move needs the boxed probabilities. From action values, cell 14 is four triangles, one per move, each holding that move's action value. Values from <code>experiment.py</code>.</figcaption>
+  </figure>
+  <p>An agent that <a href="../reinforcement-learning/learning-values-from-samples.html">learned state values from episodes</a> has the three values in that sum. It does not have 0.8, 0.1 and 0.1, because those come from the slip rule and the agent only sees what happened. Without them it cannot score right, or any other move, from state values.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.2, p. 96">1</a></sup></p>
+  <p>It can score a move by trying it. Suppose the agent in cell 14 aims right once and then follows the fixed policy. The table shows one such episode.</p>
+  <table class="nb-table">
+    <caption>One episode that opens with right in cell 14 and ends in the pit, with returns discounted by 0.9. From <code>experiment.py</code>.</caption>
+    <thead>
+      <tr><th>Cell</th><th>Move</th><th>Reward</th><th>Return after this pair</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="nb-table-token">14</span></td><td>right</td><td>&minus;1</td><td>&minus;17.29</td></tr>
+      <tr><td><span class="nb-table-token">15</span></td><td>up</td><td>&minus;1</td><td>&minus;18.10</td></tr>
+      <tr><td><span class="nb-table-token">14</span></td><td>up</td><td>&minus;1</td><td>&minus;19.00</td></tr>
+      <tr><td><span class="nb-table-token">10</span></td><td>right</td><td>&minus;20</td><td>&minus;20.00</td></tr>
+    </tbody>
+  </table>
+  <p>The returns come from the backward pass of <a href="../reinforcement-learning/learning-values-from-samples.html">first-visit Monte Carlo</a>, with one change: each step is labeled by its (cell, move) pair instead of its cell. Cell 14 appears twice, aimed right and then up, so the episode gives a return to each of those moves, &minus;17.29 to right and &minus;19.00 to up.</p>
+  <p>One return is noisy, and this one ended in the pit. The average of many returns after a pair estimates the pair's <a href="../reinforcement-learning/finding-optimal-policies.html">action value</a>, the expected return from taking move <span class="nb-math-in">a</span> in cell <span class="nb-math-in">s</span> and following <span class="nb-math-in">\pi</span> afterward.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.2, p. 96">1</a></sup></p>
+  <figure class="nb-math"><div class="nb-math-eq">q_\pi(s, a) = \mathbb{E}_\pi\bigl[\, G_t \mid S_t = s,\ A_t = a \,\bigr]</div></figure>
+  <p>Each return after (14, right) is a sample of <span class="nb-math-in">q_\pi(14, \text{right})</span>, so their average converges to 0.32 without the agent using any probability.</p>
+</section>
+
+<section data-nb-section="greedy-over-q" id="greedy-over-q">
+  <h2>The greedy step over action values reads no probabilities</h2>
+  <p>Policy iteration improved a policy with the greedy step. Written out, the step uses the model.</p>
+  <figure class="nb-math"><div class="nb-math-eq">\pi'(s) = \operatorname*{arg\,max}_a \sum_{s'} P(s' \mid s, a)\,\bigl[\, R(s') + \gamma\, v_\pi(s') \,\bigr]</div></figure>
+  <p>The sum is <span class="nb-math-in">q_\pi(s, a)</span>, so the same step reads as follows.</p>
+  <figure class="nb-math"><div class="nb-math-eq">\pi'(s) = \operatorname*{arg\,max}_a\; q_\pi(s, a)</div></figure>
+  <p>Every use of <span class="nb-math-in">P</span> and <span class="nb-math-in">R</span> now sits inside <span class="nb-math-in">q_\pi</span>, and an agent can estimate <span class="nb-math-in">q_\pi</span> by averaging returns. An agent holding estimates of the action values picks the greedy move in a cell by comparing four numbers. In Sutton and Barto's words, with an action-value function "no model is needed to construct the greedy policy".<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.3, p. 97, equation 5.1">1</a></sup></p>
+  <p>The greedy policy is also no worse than <span class="nb-math-in">\pi</span>. The <a href="../reinforcement-learning/finding-optimal-policies.html">policy improvement theorem</a> says that if <span class="nb-math-in">q_\pi(s, \pi'(s)) \ge v_\pi(s)</span> in every cell, then <span class="nb-math-in">v_{\pi'}(s) \ge v_\pi(s)</span> in every cell. The greedy step meets that condition, and checking it takes only action values.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.3, p. 98">1</a></sup></p>
+  <figure class="nb-math"><div class="nb-math-eq">q_\pi\bigl(s, \pi'(s)\bigr) = \max_a q_\pi(s, a) \;\ge\; q_\pi\bigl(s, \pi(s)\bigr) = v_\pi(s)</div></figure>
+  <p>The first equality is what greedy means. The inequality holds because the largest of four values is at least the value of any one of them, the policy's own move included. The last equality holds because <span class="nb-math-in">\pi</span> picks one move per cell, so taking <span class="nb-math-in">\pi</span>'s move and then following <span class="nb-math-in">\pi</span> is just following <span class="nb-math-in">\pi</span>.</p>
+</section>
+
+<section data-nb-section="exploring-starts" id="exploring-starts">
+  <h2>Exploring starts give every move returns of its own</h2>
+  <p>Averages exist only for moves the agent has tried. A greedy agent takes one move in each cell, so after an episode's first move every pair it visits is the policy's own. The other three moves in each cell get no returns, and their estimates never change.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.2, p. 96">1</a></sup> In the code below a move with no returns has no estimate yet, and the greedy step skips it, so the policy could never switch to such a move.</p>
+  <p>This lesson supplies the missing returns with exploring starts: each episode begins from a random (cell, move) pair, and every pair has some chance of being picked.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.2, p. 96">1</a></sup> Here the pick is uniform over the 56 pairs, and after the first move the agent follows its policy.</p>
+  <p>Exploring starts needs an environment that can open an episode at any (cell, move) pair, and <code>play</code> below takes the start pair as an argument. Sutton and Barto note that the assumption "cannot be relied upon in general, particularly when learning directly from actual interaction with an environment".<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.2, p. 96">1</a></sup> The usual alternative, a policy that keeps some chance on every move, needs a lesson of its own.</p>
+  <p>The runs below depend on the assumption. With <code>explore=False</code>, each episode starts in a random cell with the policy's own move, and none of the 20 runs reaches the optimal policy in 10,000 episodes. Every average then belongs to a move the policy already takes, so each greedy step returns the policy it started from.</p>
+</section>
+
+<section data-nb-section="every-episode" id="every-episode">
+  <h2>Monte Carlo ES improves the policy after every episode</h2>
+  <p>Policy iteration evaluated each policy completely before improving it. From samples, a complete evaluation would take infinitely many episodes. Sutton and Barto call the general scheme generalized policy iteration (GPI): evaluation and improvement interact at any granularity, and neither has to finish before the other runs.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.6, pp. 86-87; Section 5.3, p. 98">1</a></sup> <a href="../reinforcement-learning/finding-optimal-policies.html">Value iteration</a> was one case of it, with an improvement folded into every sweep.</p>
+  <p>Monte Carlo ES, short for Monte Carlo with exploring starts, takes the episode as its unit. After each episode it adds the episode's returns to the averages of the pairs it visited, then makes the policy greedy, which can change only the cells the episode visited. The averages are never reset, so a pair's average mixes returns earned under every policy the agent has used.<sup class="nb-cite"><a href="#s1" data-nb-locator="Monte Carlo ES box and text, p. 99">1</a></sup></p>
+  <p><code>mc_control.py</code> is the complete method. It imports the grid from <code>gridworld.py</code>, printed with the <a href="../reinforcement-learning/environments-and-the-rl-problem.html">exact solve</a>, and <code>first_visit_mc</code> from <code>estimators.py</code>, printed with <a href="../reinforcement-learning/learning-values-from-samples.html">Monte Carlo prediction</a>. <code>pairs</code> numbers each pair as 4 &times; cell + move, so <code>first_visit_mc</code> averages returns per pair as it averaged them per cell. <code>greedy</code> is the improvement step, and <code>step</code>, the environment, is the only function that reads the grid's rules.</p>
+  <p>A greedy policy in mid-training can press the bottom row into the wall, like the <a href="../reinforcement-learning/environments-and-the-rl-problem.html">stuck policy</a>, and an episode under it never ends. <code>play</code> stops every episode after 200 moves, so a cut episode's returns leave out whatever would have come later. In the main runs, 84 of 2,000,000 episodes were cut.</p>
+  <figure class="nb-code"><div class="nb-code-head"><span class="nb-code-file">mc_control.py · complete</span><span>python</span></div><pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["numpy"]
+# ///
+"""Monte Carlo control with exploring starts on the slippery grid.
+
+The agent's side is pairs, greedy and the call to first_visit_mc. It sees
+only episodes. Only step reads the grid's rules, to play them out.
+"""
+
+import numpy as np
+from estimators import first_visit_mc
+from gridworld import N, R, TERMINAL, move
+
+SLIP = 0.2
+LIVE = [s for s in range(N) if s not in TERMINAL]
+CAP = 200  # an episode stops after this many moves
+
+
+def step(s, a, rng):
+    """The environment: the aimed move with probability 1 - SLIP, otherwise a
+    slip to either side, as in transitions(). Returns the reward and next cell."""
+    u = rng.random()
+    aim = a if u &lt; 1 - SLIP else (a + 1) % 4 if u &lt; 1 - SLIP / 2 else (a + 3) % 4
+    s_next = move(s, aim)
+    return R[s_next], s_next
+
+
+def play(policy, start, first, rng):
+    """One episode that opens with the move `first` in cell `start`, follows
+    `policy` after that, and stops at a terminal cell or after CAP moves."""
+    s, a, steps = start, first, []
+    while s not in TERMINAL and len(steps) &lt; CAP:
+        reward, s_next = step(s, a, rng)
+        steps.append((s, a, reward, s_next))
+        s, a = s_next, policy[s_next]
+    return steps
+
+
+def pairs(steps):
+    """Label each step by its (cell, move) pair, numbered 4 * cell + move, so
+    that first_visit_mc averages returns per pair instead of per cell."""
+    return [(4 * s + a, a, r, s_next) for s, a, r, s_next in steps]
+
+
+def greedy(q, count, policy):
+    """The move with the largest average return in each cell. A move with no
+    returns has no estimate yet, and a cell with none keeps its move."""
+    Q = np.where(count &gt; 0, q, -np.inf).reshape(N, 4)
+    return np.where(count.reshape(N, 4).any(axis=1), Q.argmax(axis=1), policy)
+
+
+def control(policy, episodes, rng, explore=True, every=1, forget=False,
+            watch=None):
+    """Monte Carlo ES. Each episode starts from a random (cell, move) pair, or
+    from a random cell and the policy's move if explore is False. The policy
+    turns greedy every `every` episodes, and forget clears the averages then."""
+    q, count = np.zeros(4 * N), np.zeros(4 * N)
+    for k in range(1, episodes + 1):
+        start = LIVE[rng.integers(len(LIVE))]
+        first = rng.integers(4) if explore else policy[start]
+        steps = play(policy, start, first, rng)
+        first_visit_mc(pairs(steps), q, count)
+        if k % every == 0:
+            policy = greedy(q, count, policy)
+            if forget:
+                q[:], count[:] = 0.0, 0.0
+        if watch:
+            watch(k, policy, q, count, steps)
+    return policy, q, count</code></pre></figure>
+  <p><code>experiment.py</code> plays 20 runs of 100,000 episodes, one per seed, each starting from the fixed policy with no averages. A run counts as optimal when every arrow is an optimal move, either up or right at cells 9 and 12, where the two tie. After 10,000 episodes half the runs are optimal, and after 100,000, 18 of 20 are. The two still short are wrong at cell 5, beside the pit, where the best move beats the next by only 0.35. Twenty other seeds repeat the half at 10,000 and do better at 100,000.</p>
+  <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 0.8rem; max-width: 26rem; margin: 0 auto">
+<svg viewBox="0 0 200 216" role="img" aria-label="Run 0 after 1,000 episodes: greedy arrows over each cell's four action-value averages; wrong at cells 9, 10, 13." style="flex: 1 1 9.5rem; min-width: 0; height: auto">
+<text x="100.0" y="15.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">1,000 episodes</text>
+<polygon points="31.0,49.0 8,26 54,26" style="fill:var(--chart-3);fill-opacity:0.149;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 54,26 54,72" style="fill:var(--chart-3);fill-opacity:0.319;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 54,72 8,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 8,72 8,26" style="fill:var(--chart-4);fill-opacity:0.092;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="27.0" y1="49.0" x2="40.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="44.0,49.0 38.0,52.5 38.0,45.5" style="fill:var(--ink)"/>
+<polygon points="77.0,49.0 54,26 100,26" style="fill:var(--chart-3);fill-opacity:0.435;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 100,26 100,72" style="fill:var(--chart-3);fill-opacity:0.625;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 100,72 54,72" style="fill:var(--chart-4);fill-opacity:0.031;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 54,72 54,26" style="fill:var(--chart-3);fill-opacity:0.452;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="73.0" y1="49.0" x2="86.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="90.0,49.0 84.0,52.5 84.0,45.5" style="fill:var(--ink)"/>
+<polygon points="123.0,49.0 100,26 146,26" style="fill:var(--chart-3);fill-opacity:0.642;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 146,26 146,72" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 146,72 100,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 100,72 100,26" style="fill:var(--chart-3);fill-opacity:0.628;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="49.0" x2="132.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,49.0 130.0,52.5 130.0,45.5" style="fill:var(--ink)"/>
+<rect x="147" y="27" width="44" height="44" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.6"/>
+<text x="169.0" y="53.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-3);font-weight:600">goal</text>
+<polygon points="31.0,95.0 8,72 54,72" style="fill:var(--chart-3);fill-opacity:0.070;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 54,72 54,118" style="fill:var(--chart-4);fill-opacity:0.226;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 54,118 8,118" style="fill:var(--chart-4);fill-opacity:0.437;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 8,118 8,72" style="fill:var(--chart-4);fill-opacity:0.187;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="99.0" x2="31.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,82.0 34.5,88.0 27.5,88.0" style="fill:var(--ink)"/>
+<polygon points="77.0,95.0 54,72 100,72" style="fill:var(--chart-4);fill-opacity:0.036;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 100,72 100,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 100,118 54,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 54,118 54,72" style="fill:var(--chart-4);fill-opacity:0.072;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="77.0" y1="99.0" x2="77.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="77.0,82.0 80.5,88.0 73.5,88.0" style="fill:var(--ink)"/>
+<rect x="101" y="73" width="44" height="44" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.6"/>
+<text x="123.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-4);font-weight:600">pit</text>
+<polygon points="169.0,95.0 146,72 192,72" style="fill:var(--chart-3);fill-opacity:0.825;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 192,72 192,118" style="fill:var(--chart-3);fill-opacity:0.383;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 192,118 146,118" style="fill:var(--chart-4);fill-opacity:0.584;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 146,118 146,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="99.0" x2="169.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,82.0 172.5,88.0 165.5,88.0" style="fill:var(--ink)"/>
+<polygon points="31.0,141.0 8,118 54,118" style="fill:var(--chart-4);fill-opacity:0.208;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 54,118 54,164" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 54,164 8,164" style="fill:var(--chart-4);fill-opacity:0.465;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 8,164 8,118" style="fill:var(--chart-4);fill-opacity:0.638;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="145.0" x2="31.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,128.0 34.5,134.0 27.5,134.0" style="fill:var(--ink)"/>
+<polygon points="77.0,141.0 54,118 100,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 100,118 100,164" style="fill:var(--chart-4);fill-opacity:0.716;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 100,164 54,164" style="fill:var(--chart-4);fill-opacity:0.553;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 54,164 54,118" style="fill:var(--chart-4);fill-opacity:0.445;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="81.0" y1="141.0" x2="68.0" y2="141.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="64.0,141.0 70.0,137.5 70.0,144.5" style="fill:var(--ink)"/>
+<rect x="56.5" y="120.5" width="41" height="41" style="fill:none;stroke:var(--chart-1);stroke-width:3"/>
+<polygon points="123.0,141.0 100,118 146,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 146,118 146,164" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 146,164 100,164" style="fill:var(--chart-4);fill-opacity:0.106;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 100,164 100,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="123.0" y1="137.0" x2="123.0" y2="150.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="123.0,154.0 119.5,148.0 126.5,148.0" style="fill:var(--ink)"/>
+<rect x="102.5" y="120.5" width="41" height="41" style="fill:none;stroke:var(--chart-1);stroke-width:3"/>
+<polygon points="169.0,141.0 146,118 192,118" style="fill:var(--chart-3);fill-opacity:0.322;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 192,118 192,164" style="fill:var(--chart-4);fill-opacity:0.328;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 192,164 146,164" style="fill:var(--chart-4);fill-opacity:0.399;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 146,164 146,118" style="fill:var(--chart-4);fill-opacity:0.807;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="145.0" x2="169.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,128.0 172.5,134.0 165.5,134.0" style="fill:var(--ink)"/>
+<polygon points="31.0,187.0 8,164 54,164" style="fill:var(--chart-4);fill-opacity:0.267;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 54,164 54,210" style="fill:var(--chart-4);fill-opacity:0.634;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 54,210 8,210" style="fill:var(--chart-4);fill-opacity:0.374;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 8,210 8,164" style="fill:var(--chart-4);fill-opacity:0.323;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="191.0" x2="31.0" y2="178.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,174.0 34.5,180.0 27.5,180.0" style="fill:var(--ink)"/>
+<polygon points="77.0,187.0 54,164 100,164" style="fill:var(--chart-4);fill-opacity:0.715;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 100,164 100,210" style="fill:var(--chart-4);fill-opacity:0.705;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 100,210 54,210" style="fill:var(--chart-4);fill-opacity:0.729;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 54,210 54,164" style="fill:var(--chart-4);fill-opacity:0.495;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="81.0" y1="187.0" x2="68.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="64.0,187.0 70.0,183.5 70.0,190.5" style="fill:var(--ink)"/>
+<rect x="56.5" y="166.5" width="41" height="41" style="fill:none;stroke:var(--chart-1);stroke-width:3"/>
+<polygon points="123.0,187.0 100,164 146,164" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 146,164 146,210" style="fill:var(--chart-4);fill-opacity:0.191;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 146,210 100,210" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 100,210 100,164" style="fill:var(--chart-4);fill-opacity:0.659;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="187.0" x2="132.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,187.0 130.0,190.5 130.0,183.5" style="fill:var(--ink)"/>
+<polygon points="169.0,187.0 146,164 192,164" style="fill:var(--chart-4);fill-opacity:0.317;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 192,164 192,210" style="fill:var(--chart-4);fill-opacity:0.439;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 192,210 146,210" style="fill:var(--chart-4);fill-opacity:0.718;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 146,210 146,164" style="fill:var(--chart-4);fill-opacity:0.757;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="191.0" x2="169.0" y2="178.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,174.0 172.5,180.0 165.5,180.0" style="fill:var(--ink)"/>
+</svg>
+<svg viewBox="0 0 200 216" role="img" aria-label="Run 0 after 10,000 episodes: greedy arrows over each cell's four action-value averages; wrong at cell 10." style="flex: 1 1 9.5rem; min-width: 0; height: auto">
+<text x="100.0" y="15.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">10,000 episodes</text>
+<polygon points="31.0,49.0 8,26 54,26" style="fill:var(--chart-3);fill-opacity:0.145;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 54,26 54,72" style="fill:var(--chart-3);fill-opacity:0.329;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 54,72 8,72" style="fill:var(--chart-4);fill-opacity:0.160;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 8,72 8,26" style="fill:var(--chart-3);fill-opacity:0.120;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="27.0" y1="49.0" x2="40.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="44.0,49.0 38.0,52.5 38.0,45.5" style="fill:var(--ink)"/>
+<polygon points="77.0,49.0 54,26 100,26" style="fill:var(--chart-3);fill-opacity:0.337;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 100,26 100,72" style="fill:var(--chart-3);fill-opacity:0.597;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 100,72 54,72" style="fill:var(--chart-3);fill-opacity:0.035;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 54,72 54,26" style="fill:var(--chart-3);fill-opacity:0.225;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="73.0" y1="49.0" x2="86.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="90.0,49.0 84.0,52.5 84.0,45.5" style="fill:var(--ink)"/>
+<polygon points="123.0,49.0 100,26 146,26" style="fill:var(--chart-3);fill-opacity:0.662;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 146,26 146,72" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 146,72 100,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 100,72 100,26" style="fill:var(--chart-3);fill-opacity:0.114;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="49.0" x2="132.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,49.0 130.0,52.5 130.0,45.5" style="fill:var(--ink)"/>
+<rect x="147" y="27" width="44" height="44" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.6"/>
+<text x="169.0" y="53.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-3);font-weight:600">goal</text>
+<polygon points="31.0,95.0 8,72 54,72" style="fill:var(--chart-3);fill-opacity:0.090;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 54,72 54,118" style="fill:var(--chart-4);fill-opacity:0.084;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 54,118 8,118" style="fill:var(--chart-4);fill-opacity:0.181;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 8,118 8,72" style="fill:var(--chart-4);fill-opacity:0.004;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="99.0" x2="31.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,82.0 34.5,88.0 27.5,88.0" style="fill:var(--ink)"/>
+<polygon points="77.0,95.0 54,72 100,72" style="fill:var(--chart-3);fill-opacity:0.037;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 100,72 100,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 100,118 54,118" style="fill:var(--chart-4);fill-opacity:0.756;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 54,118 54,72" style="fill:var(--chart-4);fill-opacity:0.058;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="77.0" y1="99.0" x2="77.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="77.0,82.0 80.5,88.0 73.5,88.0" style="fill:var(--ink)"/>
+<rect x="101" y="73" width="44" height="44" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.6"/>
+<text x="123.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-4);font-weight:600">pit</text>
+<polygon points="169.0,95.0 146,72 192,72" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 192,72 192,118" style="fill:var(--chart-3);fill-opacity:0.603;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 192,118 146,118" style="fill:var(--chart-3);fill-opacity:0.018;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 146,118 146,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="99.0" x2="169.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,82.0 172.5,88.0 165.5,88.0" style="fill:var(--ink)"/>
+<polygon points="31.0,141.0 8,118 54,118" style="fill:var(--chart-4);fill-opacity:0.112;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 54,118 54,164" style="fill:var(--chart-4);fill-opacity:0.335;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 54,164 8,164" style="fill:var(--chart-4);fill-opacity:0.362;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 8,164 8,118" style="fill:var(--chart-4);fill-opacity:0.278;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="145.0" x2="31.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,128.0 34.5,134.0 27.5,134.0" style="fill:var(--ink)"/>
+<polygon points="77.0,141.0 54,118 100,118" style="fill:var(--chart-4);fill-opacity:0.190;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 100,118 100,164" style="fill:var(--chart-4);fill-opacity:0.289;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 100,164 54,164" style="fill:var(--chart-4);fill-opacity:0.390;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 54,164 54,118" style="fill:var(--chart-4);fill-opacity:0.249;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="77.0" y1="145.0" x2="77.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="77.0,128.0 80.5,134.0 73.5,134.0" style="fill:var(--ink)"/>
+<polygon points="123.0,141.0 100,118 146,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 146,118 146,164" style="fill:var(--chart-4);fill-opacity:0.406;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 146,164 100,164" style="fill:var(--chart-4);fill-opacity:0.065;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 100,164 100,118" style="fill:var(--chart-4);fill-opacity:0.525;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="123.0" y1="137.0" x2="123.0" y2="150.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="123.0,154.0 119.5,148.0 126.5,148.0" style="fill:var(--ink)"/>
+<rect x="102.5" y="120.5" width="41" height="41" style="fill:none;stroke:var(--chart-1);stroke-width:3"/>
+<polygon points="169.0,141.0 146,118 192,118" style="fill:var(--chart-3);fill-opacity:0.574;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 192,118 192,164" style="fill:var(--chart-3);fill-opacity:0.073;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 192,164 146,164" style="fill:var(--chart-4);fill-opacity:0.012;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 146,164 146,118" style="fill:var(--chart-4);fill-opacity:0.289;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="145.0" x2="169.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,128.0 172.5,134.0 165.5,134.0" style="fill:var(--ink)"/>
+<polygon points="31.0,187.0 8,164 54,164" style="fill:var(--chart-4);fill-opacity:0.277;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 54,164 54,210" style="fill:var(--chart-4);fill-opacity:0.255;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 54,210 8,210" style="fill:var(--chart-4);fill-opacity:0.391;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 8,210 8,164" style="fill:var(--chart-4);fill-opacity:0.329;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="27.0" y1="187.0" x2="40.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="44.0,187.0 38.0,190.5 38.0,183.5" style="fill:var(--ink)"/>
+<polygon points="77.0,187.0 54,164 100,164" style="fill:var(--chart-4);fill-opacity:0.318;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 100,164 100,210" style="fill:var(--chart-4);fill-opacity:0.115;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 100,210 54,210" style="fill:var(--chart-4);fill-opacity:0.330;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 54,210 54,164" style="fill:var(--chart-4);fill-opacity:0.396;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="73.0" y1="187.0" x2="86.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="90.0,187.0 84.0,190.5 84.0,183.5" style="fill:var(--ink)"/>
+<polygon points="123.0,187.0 100,164 146,164" style="fill:var(--chart-4);fill-opacity:0.345;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 146,164 146,210" style="fill:var(--chart-3);fill-opacity:0.083;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 146,210 100,210" style="fill:var(--chart-4);fill-opacity:0.128;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 100,210 100,164" style="fill:var(--chart-4);fill-opacity:0.314;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="187.0" x2="132.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,187.0 130.0,190.5 130.0,183.5" style="fill:var(--ink)"/>
+<polygon points="169.0,187.0 146,164 192,164" style="fill:var(--chart-3);fill-opacity:0.268;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 192,164 192,210" style="fill:var(--chart-3);fill-opacity:0.083;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 192,210 146,210" style="fill:var(--chart-3);fill-opacity:0.057;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 146,210 146,164" style="fill:var(--chart-4);fill-opacity:0.062;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="191.0" x2="169.0" y2="178.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,174.0 172.5,180.0 165.5,180.0" style="fill:var(--ink)"/>
+</svg>
+<svg viewBox="0 0 200 216" role="img" aria-label="Run 0 after 100,000 episodes: greedy arrows over each cell's four action-value averages; every arrow optimal." style="flex: 1 1 9.5rem; min-width: 0; height: auto">
+<text x="100.0" y="15.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">100,000 episodes</text>
+<polygon points="31.0,49.0 8,26 54,26" style="fill:var(--chart-3);fill-opacity:0.153;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 54,26 54,72" style="fill:var(--chart-3);fill-opacity:0.312;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 54,72 8,72" style="fill:var(--chart-4);fill-opacity:0.021;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 8,72 8,26" style="fill:var(--chart-3);fill-opacity:0.124;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="27.0" y1="49.0" x2="40.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="44.0,49.0 38.0,52.5 38.0,45.5" style="fill:var(--ink)"/>
+<polygon points="77.0,49.0 54,26 100,26" style="fill:var(--chart-3);fill-opacity:0.400;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 100,26 100,72" style="fill:var(--chart-3);fill-opacity:0.580;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 100,72 54,72" style="fill:var(--chart-4);fill-opacity:0.049;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 54,72 54,26" style="fill:var(--chart-3);fill-opacity:0.147;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="73.0" y1="49.0" x2="86.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="90.0,49.0 84.0,52.5 84.0,45.5" style="fill:var(--ink)"/>
+<polygon points="123.0,49.0 100,26 146,26" style="fill:var(--chart-3);fill-opacity:0.745;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 146,26 146,72" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 146,72 100,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 100,72 100,26" style="fill:var(--chart-3);fill-opacity:0.082;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="49.0" x2="132.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,49.0 130.0,52.5 130.0,45.5" style="fill:var(--ink)"/>
+<rect x="147" y="27" width="44" height="44" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.6"/>
+<text x="169.0" y="53.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-3);font-weight:600">goal</text>
+<polygon points="31.0,95.0 8,72 54,72" style="fill:var(--chart-3);fill-opacity:0.088;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 54,72 54,118" style="fill:var(--chart-4);fill-opacity:0.089;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 54,118 8,118" style="fill:var(--chart-4);fill-opacity:0.212;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 8,118 8,72" style="fill:var(--chart-4);fill-opacity:0.021;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="99.0" x2="31.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,82.0 34.5,88.0 27.5,88.0" style="fill:var(--ink)"/>
+<polygon points="77.0,95.0 54,72 100,72" style="fill:var(--chart-3);fill-opacity:0.005;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 100,72 100,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 100,118 54,118" style="fill:var(--chart-4);fill-opacity:0.556;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 54,118 54,72" style="fill:var(--chart-4);fill-opacity:0.041;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="77.0" y1="99.0" x2="77.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="77.0,82.0 80.5,88.0 73.5,88.0" style="fill:var(--ink)"/>
+<rect x="101" y="73" width="44" height="44" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.6"/>
+<text x="123.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-4);font-weight:600">pit</text>
+<polygon points="169.0,95.0 146,72 192,72" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 192,72 192,118" style="fill:var(--chart-3);fill-opacity:0.717;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 192,118 146,118" style="fill:var(--chart-3);fill-opacity:0.047;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 146,118 146,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="99.0" x2="169.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,82.0 172.5,88.0 165.5,88.0" style="fill:var(--ink)"/>
+<polygon points="31.0,141.0 8,118 54,118" style="fill:var(--chart-4);fill-opacity:0.114;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 54,118 54,164" style="fill:var(--chart-4);fill-opacity:0.310;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 54,164 8,164" style="fill:var(--chart-4);fill-opacity:0.323;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 8,164 8,118" style="fill:var(--chart-4);fill-opacity:0.242;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="145.0" x2="31.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,128.0 34.5,134.0 27.5,134.0" style="fill:var(--ink)"/>
+<polygon points="77.0,141.0 54,118 100,118" style="fill:var(--chart-4);fill-opacity:0.163;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 100,118 100,164" style="fill:var(--chart-4);fill-opacity:0.193;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 100,164 54,164" style="fill:var(--chart-4);fill-opacity:0.278;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 54,164 54,118" style="fill:var(--chart-4);fill-opacity:0.256;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="77.0" y1="145.0" x2="77.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="77.0,128.0 80.5,134.0 73.5,134.0" style="fill:var(--ink)"/>
+<polygon points="123.0,141.0 100,118 146,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 146,118 146,164" style="fill:var(--chart-4);fill-opacity:0.004;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 146,164 100,164" style="fill:var(--chart-4);fill-opacity:0.044;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 100,164 100,118" style="fill:var(--chart-4);fill-opacity:0.460;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="141.0" x2="132.0" y2="141.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,141.0 130.0,144.5 130.0,137.5" style="fill:var(--ink)"/>
+<polygon points="169.0,141.0 146,118 192,118" style="fill:var(--chart-3);fill-opacity:0.565;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 192,118 192,164" style="fill:var(--chart-3);fill-opacity:0.330;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 192,164 146,164" style="fill:var(--chart-3);fill-opacity:0.081;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 146,164 146,118" style="fill:var(--chart-4);fill-opacity:0.088;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="145.0" x2="169.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,128.0 172.5,134.0 165.5,134.0" style="fill:var(--ink)"/>
+<polygon points="31.0,187.0 8,164 54,164" style="fill:var(--chart-4);fill-opacity:0.260;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 54,164 54,210" style="fill:var(--chart-4);fill-opacity:0.241;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 54,210 8,210" style="fill:var(--chart-4);fill-opacity:0.370;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 8,210 8,164" style="fill:var(--chart-4);fill-opacity:0.341;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="27.0" y1="187.0" x2="40.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="44.0,187.0 38.0,190.5 38.0,183.5" style="fill:var(--ink)"/>
+<polygon points="77.0,187.0 54,164 100,164" style="fill:var(--chart-4);fill-opacity:0.278;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 100,164 100,210" style="fill:var(--chart-4);fill-opacity:0.103;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 100,210 54,210" style="fill:var(--chart-4);fill-opacity:0.232;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 54,210 54,164" style="fill:var(--chart-4);fill-opacity:0.387;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="73.0" y1="187.0" x2="86.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="90.0,187.0 84.0,190.5 84.0,183.5" style="fill:var(--ink)"/>
+<polygon points="123.0,187.0 100,164 146,164" style="fill:var(--chart-4);fill-opacity:0.150;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 146,164 146,210" style="fill:var(--chart-3);fill-opacity:0.083;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 146,210 100,210" style="fill:var(--chart-4);fill-opacity:0.098;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 100,210 100,164" style="fill:var(--chart-4);fill-opacity:0.236;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="187.0" x2="132.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,187.0 130.0,190.5 130.0,183.5" style="fill:var(--ink)"/>
+<polygon points="169.0,187.0 146,164 192,164" style="fill:var(--chart-3);fill-opacity:0.298;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 192,164 192,210" style="fill:var(--chart-3);fill-opacity:0.140;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 192,210 146,210" style="fill:var(--chart-3);fill-opacity:0.087;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 146,210 146,164" style="fill:var(--chart-3);fill-opacity:0.011;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="191.0" x2="169.0" y2="178.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,174.0 172.5,180.0 165.5,180.0" style="fill:var(--ink)"/>
+</svg>
+<svg viewBox="0 0 200 216" role="img" aria-label="The exact optimal action values and optimal arrows from policy iteration." style="flex: 1 1 9.5rem; min-width: 0; height: auto">
+<text x="100.0" y="15.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">exact q* and π*</text>
+<polygon points="31.0,49.0 8,26 54,26" style="fill:var(--chart-3);fill-opacity:0.157;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 54,26 54,72" style="fill:var(--chart-3);fill-opacity:0.305;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 54,72 8,72" style="fill:var(--chart-4);fill-opacity:0.000;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,49.0 8,72 8,26" style="fill:var(--chart-3);fill-opacity:0.114;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="27.0" y1="49.0" x2="40.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="44.0,49.0 38.0,52.5 38.0,45.5" style="fill:var(--ink)"/>
+<polygon points="77.0,49.0 54,26 100,26" style="fill:var(--chart-3);fill-opacity:0.380;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 100,26 100,72" style="fill:var(--chart-3);fill-opacity:0.572;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 100,72 54,72" style="fill:var(--chart-4);fill-opacity:0.025;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,49.0 54,72 54,26" style="fill:var(--chart-3);fill-opacity:0.130;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="73.0" y1="49.0" x2="86.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="90.0,49.0 84.0,52.5 84.0,45.5" style="fill:var(--ink)"/>
+<polygon points="123.0,49.0 100,26 146,26" style="fill:var(--chart-3);fill-opacity:0.727;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 146,26 146,72" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 146,72 100,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,49.0 100,72 100,26" style="fill:var(--chart-3);fill-opacity:0.084;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="26" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="49.0" x2="132.0" y2="49.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,49.0 130.0,52.5 130.0,45.5" style="fill:var(--ink)"/>
+<rect x="147" y="27" width="44" height="44" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.6"/>
+<text x="169.0" y="53.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-3);font-weight:600">goal</text>
+<polygon points="31.0,95.0 8,72 54,72" style="fill:var(--chart-3);fill-opacity:0.087;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 54,72 54,118" style="fill:var(--chart-4);fill-opacity:0.117;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 54,118 8,118" style="fill:var(--chart-4);fill-opacity:0.206;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,95.0 8,118 8,72" style="fill:var(--chart-4);fill-opacity:0.061;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="99.0" x2="31.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,82.0 34.5,88.0 27.5,88.0" style="fill:var(--ink)"/>
+<polygon points="77.0,95.0 54,72 100,72" style="fill:var(--chart-3);fill-opacity:0.009;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 100,72 100,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 100,118 54,118" style="fill:var(--chart-4);fill-opacity:0.506;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,95.0 54,118 54,72" style="fill:var(--chart-4);fill-opacity:0.041;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="77.0" y1="99.0" x2="77.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="77.0,82.0 80.5,88.0 73.5,88.0" style="fill:var(--ink)"/>
+<rect x="101" y="73" width="44" height="44" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.6"/>
+<text x="123.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-4);font-weight:600">pit</text>
+<polygon points="169.0,95.0 146,72 192,72" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 192,72 192,118" style="fill:var(--chart-3);fill-opacity:0.727;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 192,118 146,118" style="fill:var(--chart-3);fill-opacity:0.084;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,95.0 146,118 146,72" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="72" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="99.0" x2="169.0" y2="86.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,82.0 172.5,88.0 165.5,88.0" style="fill:var(--ink)"/>
+<polygon points="31.0,141.0 8,118 54,118" style="fill:var(--chart-4);fill-opacity:0.101;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 54,118 54,164" style="fill:var(--chart-4);fill-opacity:0.259;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 54,164 8,164" style="fill:var(--chart-4);fill-opacity:0.341;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,141.0 8,164 8,118" style="fill:var(--chart-4);fill-opacity:0.229;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="145.0" x2="31.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,128.0 34.5,134.0 27.5,134.0" style="fill:var(--ink)"/>
+<polygon points="77.0,141.0 54,118 100,118" style="fill:var(--chart-4);fill-opacity:0.144;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 100,118 100,164" style="fill:var(--chart-4);fill-opacity:0.144;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 100,164 54,164" style="fill:var(--chart-4);fill-opacity:0.223;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,141.0 54,164 54,118" style="fill:var(--chart-4);fill-opacity:0.223;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="77.0" y1="145.0" x2="77.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="77.0,128.0 80.5,134.0 73.5,134.0" style="fill:var(--ink)"/>
+<polygon points="123.0,141.0 100,118 146,118" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 146,118 146,164" style="fill:var(--chart-3);fill-opacity:0.009;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 146,164 100,164" style="fill:var(--chart-4);fill-opacity:0.041;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,141.0 100,164 100,118" style="fill:var(--chart-4);fill-opacity:0.506;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="141.0" x2="132.0" y2="141.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,141.0 130.0,144.5 130.0,137.5" style="fill:var(--ink)"/>
+<polygon points="169.0,141.0 146,118 192,118" style="fill:var(--chart-3);fill-opacity:0.572;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 192,118 192,164" style="fill:var(--chart-3);fill-opacity:0.380;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 192,164 146,164" style="fill:var(--chart-3);fill-opacity:0.130;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,141.0 146,164 146,118" style="fill:var(--chart-4);fill-opacity:0.025;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="118" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="145.0" x2="169.0" y2="132.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,128.0 172.5,134.0 165.5,134.0" style="fill:var(--ink)"/>
+<polygon points="31.0,187.0 8,164 54,164" style="fill:var(--chart-4);fill-opacity:0.246;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 54,164 54,210" style="fill:var(--chart-4);fill-opacity:0.246;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 54,210 8,210" style="fill:var(--chart-4);fill-opacity:0.350;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="31.0,187.0 8,210 8,164" style="fill:var(--chart-4);fill-opacity:0.350;stroke:var(--line);stroke-width:0.6"/>
+<rect x="8" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="31.0" y1="191.0" x2="31.0" y2="178.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="31.0,174.0 34.5,180.0 27.5,180.0" style="fill:var(--ink)"/>
+<polygon points="77.0,187.0 54,164 100,164" style="fill:var(--chart-4);fill-opacity:0.259;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 100,164 100,210" style="fill:var(--chart-4);fill-opacity:0.101;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 100,210 54,210" style="fill:var(--chart-4);fill-opacity:0.229;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="77.0,187.0 54,210 54,164" style="fill:var(--chart-4);fill-opacity:0.341;stroke:var(--line);stroke-width:0.6"/>
+<rect x="54" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="73.0" y1="187.0" x2="86.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="90.0,187.0 84.0,190.5 84.0,183.5" style="fill:var(--ink)"/>
+<polygon points="123.0,187.0 100,164 146,164" style="fill:var(--chart-4);fill-opacity:0.117;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 146,164 146,210" style="fill:var(--chart-3);fill-opacity:0.087;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 146,210 100,210" style="fill:var(--chart-4);fill-opacity:0.061;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="123.0,187.0 100,210 100,164" style="fill:var(--chart-4);fill-opacity:0.206;stroke:var(--line);stroke-width:0.6"/>
+<rect x="100" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="119.0" y1="187.0" x2="132.0" y2="187.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="136.0,187.0 130.0,190.5 130.0,183.5" style="fill:var(--ink)"/>
+<polygon points="169.0,187.0 146,164 192,164" style="fill:var(--chart-3);fill-opacity:0.305;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 192,164 192,210" style="fill:var(--chart-3);fill-opacity:0.157;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 192,210 146,210" style="fill:var(--chart-3);fill-opacity:0.114;stroke:var(--line);stroke-width:0.6"/>
+<polygon points="169.0,187.0 146,210 146,164" style="fill:var(--chart-4);fill-opacity:0.000;stroke:var(--line);stroke-width:0.6"/>
+<rect x="146" y="164" width="46" height="46" style="fill:none;stroke:var(--line);stroke-width:1"/>
+<line x1="169.0" y1="191.0" x2="169.0" y2="178.0" style="stroke:var(--ink);stroke-width:2;fill:none"/>
+<polygon points="169.0,174.0 172.5,180.0 165.5,180.0" style="fill:var(--ink)"/>
+</svg>
+</div>
+<svg viewBox="0 0 400 44" role="img" aria-label="Colour scale: red for negative action values, green for positive, clipped at 6." style="display: block; width: 100%; max-width: 26rem; margin: 0.4rem auto 0; height: auto">
+<rect x="80" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.815"/>
+<rect x="90" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.744"/>
+<rect x="100" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.673"/>
+<rect x="110" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.602"/>
+<rect x="120" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.531"/>
+<rect x="130" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.460"/>
+<rect x="140" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.390"/>
+<rect x="150" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.319"/>
+<rect x="160" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.248"/>
+<rect x="170" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.177"/>
+<rect x="180" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.106"/>
+<rect x="190" y="6" width="10" height="12" style="fill:var(--chart-4);fill-opacity:0.035"/>
+<rect x="200" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.035"/>
+<rect x="210" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.106"/>
+<rect x="220" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.177"/>
+<rect x="230" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.248"/>
+<rect x="240" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.319"/>
+<rect x="250" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.390"/>
+<rect x="260" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.460"/>
+<rect x="270" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.531"/>
+<rect x="280" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.602"/>
+<rect x="290" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.673"/>
+<rect x="300" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.744"/>
+<rect x="310" y="6" width="10" height="12" style="fill:var(--chart-3);fill-opacity:0.815"/>
+<rect x="80" y="6" width="240" height="12" style="fill:none;stroke:var(--line)"/>
+<text x="80.0" y="32.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">−6 or less</text>
+<text x="200.0" y="32.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">0</text>
+<text x="320.0" y="32.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">+6 or more</text>
+<text x="76.0" y="16.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400;font-style:italic">q</text>
+<rect x="336" y="5" width="14" height="14" style="fill:none;stroke:var(--chart-1);stroke-width:3"/>
+<text x="356.0" y="16.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">wrong</text>
+</svg>
+    <figcaption>Fig. 2 · What run 0 learned. Each cell's four triangles are its moves, shaded by average return, green above 0 and red below. Arrows show the greedy policy, and an amber square marks an arrow that is not optimal. The last panel is the exact answer, where up and right tie at cells 9 and 12. Values from <code>experiment.py</code>.</figcaption>
+  </figure>
+  <p>Run 0 has three arrows wrong after 1,000 episodes, at cells 9, 10 and 13. By 10,000 only cell 10 is wrong. It aims down, whose exact action value is &minus;0.29, against 0.06 for right. By 100,000 every arrow is optimal.</p>
+  <p><code>uv run experiment.py</code> needs <code>gridworld.py</code>, <code>control.py</code> from the <a href="../reinforcement-learning/finding-optimal-policies.html">policy iteration lesson</a>, <code>estimators.py</code> and <code>mc_control.py</code> in one folder. It installs numpy and takes a little over two minutes on the machine used here.</p>
+  <details>
+    <summary><code>experiment.py</code>, complete</summary>
+    <figure class="nb-code"><div class="nb-code-head"><span class="nb-code-file">experiment.py · complete</span><span>python</span></div><pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["numpy"]
+# ///
+"""Run Monte Carlo ES on the grid and print every number on the page. The
+exact values from control.py appear only to grade the learned policy."""
+
+from collections import Counter
+
+import numpy as np
+from control import action_values, evaluate
+from estimators import first_visit_mc
+from gridworld import ARROWS, N, PI, draw, transitions
+from mc_control import CAP, LIVE, control, pairs, play
+
+PI_STAR = draw("""&gt; &gt; &gt; .
+                  ^ ^ . ^
+                  ^ ^ &gt; ^
+                  ^ &gt; &gt; ^""")  # the optimal arrows from policy iteration
+Q_STAR = action_values(evaluate(PI_STAR), transitions(0.2))
+BEST = {s: np.flatnonzero(Q_STAR[s] &gt; Q_STAR[s].max() - 1e-9) for s in LIVE}
+SEEDS, EPISODES = range(20), 100_000
+CHECKS = [1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000]
+
+
+def wrong(policy):
+    """Cells whose move is not optimal. Cells 9 and 12 have two optimal moves."""
+    return [s for s in LIVE if policy[s] not in BEST[s]]
+
+
+def arrows(policy):
+    marks = ["." if s not in LIVE else ARROWS[policy[s]] for s in range(N)]
+    return " / ".join(" ".join(marks[r:r + 4]) for r in range(0, N, 4))
+
+
+def one_episode():
+    """The return one episode gives each pair it visits."""
+    steps = play(PI, 14, 1, np.random.default_rng(1))
+    q, count = np.zeros(4 * N), np.zeros(4 * N)
+    first_visit_mc(pairs(steps), q, count)
+    print("cell, move, reward:", [(s, ARROWS[a], int(r)) for s, a, r, _ in steps])
+    print("return per pair:", [(s, ARROWS[a], round(float(q[4 * s + a]), 2))
+                               for s, a, _, _ in steps])
+
+
+def runs(episodes=EPISODES, **options):
+    """At each checkpoint, the number of runs with an optimal policy and the
+    cells the other runs get wrong, plus run 0's policy and averages."""
+    optimal, missed, snaps, cut = Counter(), {k: Counter() for k in CHECKS}, {}, [0]
+
+    def watch(k, policy, q, count, steps):
+        cut[0] += len(steps) == CAP
+        if k in CHECKS:
+            optimal[k] += not wrong(policy)
+            missed[k].update(wrong(policy))
+            if seed == 0:
+                snaps[k] = policy.copy(), q.copy()
+
+    for seed in SEEDS:
+        control(PI.copy(), episodes, np.random.default_rng(seed), watch=watch,
+                **options)
+    return optimal, missed, snaps, cut[0]
+
+
+def main():
+    v_pi = evaluate(PI)
+    print("fixed policy: v at cells 10, 13, 14, 15:", v_pi[[10, 13, 14, 15]].round(2))
+    print("fixed policy: q at cell 14 (up, right, down, left):",
+          action_values(v_pi, transitions(0.2))[14].round(2))
+    print("q* at cells 5 and 10 (up, right, down, left):",
+          Q_STAR[[5, 10]].round(2).tolist())
+    one_episode()
+    schedules = {"every episode": runs(),
+                 "every 5,600": runs(every=5_600),
+                 "every 5,600, cleared": runs(every=5_600, forget=True)}
+    print(f"\nruns with an optimal policy, of {len(SEEDS)}, by when it improves")
+    print("episodes", *[f"{name:&gt;21s}" for name in schedules])
+    for k in CHECKS:
+        print(f"{k:8d}", *[f"{s[0][k]:21d}" for s in schedules.values()])
+    print(f"episodes cut off at {CAP} moves:",
+          {name: s[3] for name, s in schedules.items()})
+    optimal, missed, snaps, _ = schedules["every episode"]
+    for k in (20_000, 100_000):
+        print(f"every episode, wrong cells at {k}: {dict(sorted(missed[k].items()))}")
+    for k in (1_000, 10_000, 100_000):
+        policy, _ = snaps[k]
+        print(f"run 0 at {k:6d}: {arrows(policy)}, wrong {wrong(policy)}")
+    optimal, *_ = runs(episodes=10_000, explore=False)
+    print("no exploring starts, optimal runs at 10,000:", optimal[10_000])
+
+
+if __name__ == "__main__":
+    main()</code></pre></figure>
+  </details>
+  <details>
+    <summary>The output of <code>uv run experiment.py</code></summary>
+    <figure class="nb-code"><div class="nb-code-head"><span class="nb-code-file">output of uv run experiment.py</span><span>text</span></div><pre><code data-language="text">fixed policy: v at cells 10, 13, 14, 15: [-0.1  -2.01 -1.08  1.98]
+fixed policy: q at cell 14 (up, right, down, left): [-1.08  0.32 -1.78 -2.55]
+q* at cells 5 and 10 (up, right, down, left): [[0.06, -15.93, -3.58, -0.29], [-15.93, 0.06, -0.29, -3.58]]
+cell, move, reward: [(14, '&gt;', -1), (15, '^', -1), (14, '^', -1), (10, '&gt;', -20)]
+return per pair: [(14, '&gt;', -17.29), (15, '^', -18.1), (14, '^', -19.0), (10, '&gt;', -20.0)]
+
+runs with an optimal policy, of 20, by when it improves
+episodes         every episode           every 5,600  every 5,600, cleared
+    1000                     2                     0                     0
+    2000                     3                     0                     0
+    5000                     6                     0                     0
+   10000                    10                     2                     2
+   20000                    12                    15                     3
+   50000                    16                    16                     5
+  100000                    18                    18                     2
+episodes cut off at 200 moves: {'every episode': 84, 'every 5,600': 277, 'every 5,600, cleared': 2902}
+every episode, wrong cells at 20000: {5: 4, 9: 1, 10: 3}
+every episode, wrong cells at 100000: {5: 2}
+run 0 at   1000: &gt; &gt; &gt; . / ^ ^ . ^ / ^ &lt; v ^ / ^ &lt; &gt; ^, wrong [9, 10, 13]
+run 0 at  10000: &gt; &gt; &gt; . / ^ ^ . ^ / ^ ^ v ^ / &gt; &gt; &gt; ^, wrong [10]
+run 0 at 100000: &gt; &gt; &gt; . / ^ ^ . ^ / ^ ^ &gt; ^ / &gt; &gt; &gt; ^, wrong []
+no exploring starts, optimal runs at 10,000: 0</code></pre></figure>
+  </details>
+</section>
+
+<section data-nb-section="carried-averages" id="carried-averages">
+  <h2>Unfinished evaluation works when the averages carry over</h2>
+  <p>Improving after every episode means each new policy is judged by averages that mix returns from many earlier policies. Fig. 3 compares it with two slower schedules, which make the policy greedy only every 5,600 episodes, about 100 starts per pair. One keeps the averages, as Monte Carlo ES does. The other clears them at each improvement with <code>forget=True</code>, so each policy is evaluated from scratch, as in policy iteration.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.3, p. 97">1</a></sup></p>
+  <figure class="nb-figure">
+<svg viewBox="0 0 400 296" role="img" aria-label="Line chart of how many of 20 runs have the optimal policy against episodes played, log scale from 1,000 to 100,000. Improving after every episode: 2 at 1,000, 3 at 2,000, 6 at 5,000, 10 at 10,000, 12 at 20,000, 16 at 50,000, 18 at 100,000. Improving every 5,600 episodes and keeping the averages: 0, 0, 0, 2, 15, 16, 18. Improving every 5,600 episodes and clearing the averages: 0, 0, 0, 2, 3, 5, 2." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="44" y1="254.0" x2="386" y2="254.0" style="stroke:var(--line);stroke-width:1"/>
+<text x="38.0" y="258.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">0</text>
+<line x1="44" y1="206.0" x2="386" y2="206.0" style="stroke:var(--line);stroke-width:1"/>
+<text x="38.0" y="210.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">5</text>
+<line x1="44" y1="158.0" x2="386" y2="158.0" style="stroke:var(--line);stroke-width:1"/>
+<text x="38.0" y="162.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">10</text>
+<line x1="44" y1="110.0" x2="386" y2="110.0" style="stroke:var(--line);stroke-width:1"/>
+<text x="38.0" y="114.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">15</text>
+<line x1="44" y1="62.0" x2="386" y2="62.0" style="stroke:var(--line);stroke-width:1"/>
+<text x="38.0" y="66.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">20</text>
+<line x1="44.0" y1="254" x2="44.0" y2="258" style="stroke:var(--ink-soft);stroke-width:1"/>
+<text x="44.0" y="270.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">1k</text>
+<line x1="95.5" y1="254" x2="95.5" y2="258" style="stroke:var(--ink-soft);stroke-width:1"/>
+<text x="95.5" y="270.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">2k</text>
+<line x1="163.5" y1="254" x2="163.5" y2="258" style="stroke:var(--ink-soft);stroke-width:1"/>
+<text x="163.5" y="270.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">5k</text>
+<line x1="215.0" y1="254" x2="215.0" y2="258" style="stroke:var(--ink-soft);stroke-width:1"/>
+<text x="215.0" y="270.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">10k</text>
+<line x1="266.5" y1="254" x2="266.5" y2="258" style="stroke:var(--ink-soft);stroke-width:1"/>
+<text x="266.5" y="270.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">20k</text>
+<line x1="334.5" y1="254" x2="334.5" y2="258" style="stroke:var(--ink-soft);stroke-width:1"/>
+<text x="334.5" y="270.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">50k</text>
+<line x1="386.0" y1="254" x2="386.0" y2="258" style="stroke:var(--ink-soft);stroke-width:1"/>
+<text x="386.0" y="270.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">100k</text>
+<text x="215.0" y="290.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft);font-weight:400">episodes played (log scale)</text>
+<text x="12" y="158.0" transform="rotate(-90 12 158.0)" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft)">optimal runs, of 20</text>
+<polyline points="44.0,234.8 95.5,225.2 163.5,196.4 215.0,158.0 266.5,138.8 334.5,100.4 386.0,81.2" style="fill:none;stroke:var(--chart-2);stroke-width:2.2"/>
+<circle cx="44.0" cy="234.8" r="3" style="fill:var(--chart-2)"/>
+<circle cx="95.5" cy="225.2" r="3" style="fill:var(--chart-2)"/>
+<circle cx="163.5" cy="196.4" r="3" style="fill:var(--chart-2)"/>
+<circle cx="215.0" cy="158.0" r="3" style="fill:var(--chart-2)"/>
+<circle cx="266.5" cy="138.8" r="3" style="fill:var(--chart-2)"/>
+<circle cx="334.5" cy="100.4" r="3" style="fill:var(--chart-2)"/>
+<circle cx="386.0" cy="81.2" r="3" style="fill:var(--chart-2)"/>
+<line x1="54" y1="10" x2="78" y2="10" style="stroke:var(--chart-2);stroke-width:2.2"/>
+<text x="84.0" y="14.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400">improve after every episode</text>
+<polyline points="44.0,254.0 95.5,254.0 163.5,254.0 215.0,234.8 266.5,110.0 334.5,100.4 386.0,81.2" style="fill:none;stroke:var(--chart-1);stroke-width:2.2;stroke-dasharray:6 4"/>
+<circle cx="44.0" cy="254.0" r="3" style="fill:var(--chart-1)"/>
+<circle cx="95.5" cy="254.0" r="3" style="fill:var(--chart-1)"/>
+<circle cx="163.5" cy="254.0" r="3" style="fill:var(--chart-1)"/>
+<circle cx="215.0" cy="234.8" r="3" style="fill:var(--chart-1)"/>
+<circle cx="266.5" cy="110.0" r="3" style="fill:var(--chart-1)"/>
+<circle cx="334.5" cy="100.4" r="3" style="fill:var(--chart-1)"/>
+<circle cx="386.0" cy="81.2" r="3" style="fill:var(--chart-1)"/>
+<line x1="54" y1="26" x2="78" y2="26" style="stroke:var(--chart-1);stroke-width:2.2;stroke-dasharray:6 4"/>
+<text x="84.0" y="30.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400">improve every 5,600, averages kept</text>
+<polyline points="44.0,254.0 95.5,254.0 163.5,254.0 215.0,234.8 266.5,225.2 334.5,206.0 386.0,234.8" style="fill:none;stroke:var(--chart-5);stroke-width:2.2"/>
+<circle cx="44.0" cy="254.0" r="3" style="fill:var(--chart-5)"/>
+<circle cx="95.5" cy="254.0" r="3" style="fill:var(--chart-5)"/>
+<circle cx="163.5" cy="254.0" r="3" style="fill:var(--chart-5)"/>
+<circle cx="215.0" cy="234.8" r="3" style="fill:var(--chart-5)"/>
+<circle cx="266.5" cy="225.2" r="3" style="fill:var(--chart-5)"/>
+<circle cx="334.5" cy="206.0" r="3" style="fill:var(--chart-5)"/>
+<circle cx="386.0" cy="234.8" r="3" style="fill:var(--chart-5)"/>
+<line x1="54" y1="42" x2="78" y2="42" style="stroke:var(--chart-5);stroke-width:2.2"/>
+<text x="84.0" y="46.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:400">improve every 5,600, averages cleared</text>
+</svg>
+    <figcaption>Fig. 3 · Runs, of 20, at the optimal policy under three schedules of improvement, on the same seeds. Kept averages carry over from one policy to the next, and cleared ones start empty. The two 5,600 lines coincide through 10,000 episodes, before the second improvement. Values from <code>experiment.py</code>.</figcaption>
+  </figure>
+  <p>Waiting 5,600 episodes between improvements gains nothing by the end. It delays the first improvement, catches up by 20,000 episodes, and from 50,000 on has no more runs at the optimal policy than improving after every episode. Clearing the averages is what costs. The cleared schedule never has more than 5 runs at the optimal policy, and it ends with 2. Each of its policies is judged on 5,600 episodes, about 100 returns for each move the policy does not take, while the kept schedule improves at the same episodes and keeps every return.</p>
+  <p>On this grid evaluation never had to finish before the policy changed, but its averages had to keep their returns.</p>
+</section>
+
+<section data-nb-section="what-is-proved" id="what-is-proved">
+  <h2>Only the optimal policy can be a resting point</h2>
+  <p>Sutton and Barto give half an argument that Monte Carlo ES ends at the optimal policy.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.3, p. 99">1</a></sup> Suppose the policy and the averages stopped changing. The averages would then be that policy's action values, and the policy would be greedy with respect to them, so in every cell the following holds.</p>
+  <figure class="nb-math"><div class="nb-math-eq">\begin{aligned} v_\pi(s) &amp;= q_\pi\bigl(s, \pi(s)\bigr) = \max_a q_\pi(s, a) \\ &amp;= \max_a \sum_{s'} P(s' \mid s, a)\,\bigl[\, R(s') + \gamma\, v_\pi(s') \,\bigr] \end{aligned}</div></figure>
+  <p>The last line is the <a href="../reinforcement-learning/finding-optimal-policies.html">Bellman optimality equation</a>, and only <span class="nb-math-in">v_*</span> solves it, so <span class="nb-math-in">\pi</span> is optimal. A suboptimal policy cannot be a resting point.</p>
+  <p>The other half, that the process must come to rest, has not been proved for this algorithm in general. Sutton and Barto call it "one of the most fundamental open theoretical questions in reinforcement learning".<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.3, p. 99">1</a></sup> Proofs now cover one variant and two classes of problem, each with conditions of its own on step sizes or on long episodes.</p>
+  <ul>
+    <li>Tsitsiklis proves convergence for a variant that updates only the pair each episode starts from, with every pair used as a start equally often, on any finite problem with a discount below 1.<sup class="nb-cite"><a href="#s2" data-nb-locator="p. 60; Proposition 5, p. 71">2</a></sup></li>
+    <li>Wang, Yuan, Shao and Ross prove it for first-visit updates to every pair, as in <code>mc_control.py</code>, on problems where an optimal policy never revisits a state.<sup class="nb-cite"><a href="#s3" data-nb-locator="Definitions pp. 4-5; Theorem 2, p. 7">3</a></sup></li>
+    <li>Delattre and Fournier prove it for first-visit Monte Carlo control on any finite problem with a discount below 1/2.<sup class="nb-cite"><a href="#s4" data-nb-locator="Algorithm 1, pp. 5-6; Theorem 3, p. 6">4</a></sup></li>
+  </ul>
+  <p>None of the three covers <code>mc_control.py</code> on this grid. Tsitsiklis's variant updates only the start pair, where <code>mc_control.py</code> updates every pair an episode visits. The grid's discount is 0.9, above 1/2, and its optimal policy can revisit a state: cell 2's only optimal move, right, slips up into the edge with probability 0.1 and leaves the agent in cell 2. Wang and colleagues list weaker conditions than theirs as an open problem,<sup class="nb-cite"><a href="#s3" data-nb-locator="Conclusion and Figure 3, p. 9">3</a></sup> and Delattre and Fournier write that "only half the way is done".<sup class="nb-cite"><a href="#s4" data-nb-locator="Introduction, p. 2">4</a></sup> For this grid the question stays open. The runs show what Monte Carlo ES did on the seeds tried, and no theorem says that every run must end at the optimal policy.</p>
+  <aside class="nb-note">
+    <span class="nb-note-label">Problems</span>
+    <p>1. Use the weighted sum from <a href="../reinforcement-learning/finding-optimal-policies.html">policy iteration</a> to price aiming down at cell 14 under the fixed policy, where <span class="nb-math-in">v_\pi(13) = -2.01</span>, <span class="nb-math-in">v_\pi(14) = -1.08</span> and <span class="nb-math-in">v_\pi(15) = 1.98</span>. Which cells can the move land in, with what probabilities? Compare your answer with Fig. 1.</p>
+    <details>
+      <summary>Answer</summary>
+      <p>Down runs into the bottom wall and stays in cell 14 with probability 0.8. It slips left to cell 13 or right to cell 15 with probability 0.1 each. Every landing pays &minus;1, so <span class="nb-math-in">q_\pi(14, \text{down}) = -1 + 0.9\,[\,0.8(-1.08) + 0.1(-2.01) + 0.1(1.98)\,] = -1.78</span>, the down triangle in Fig. 1.</p>
+    </details>
+    <p>2. Suppose every episode started in cell 13 with a random first move, and the agent followed its policy after that. Which cells could ever change their move?</p>
+    <details>
+      <summary>Answer</summary>
+      <p>Only cell 13. The agent reaches every other cell by following its policy, so the only pair with returns there is the policy's own, and the greedy step keeps it. Exploring starts need every pair, in every cell, to have some chance of opening an episode.</p>
+    </details>
+  </aside>
+</section>
+
+<section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+  <p class="nb-bookend-name">The takeaway</p>
+  <div class="nb-bookend-rule"></div>
+  <p>An action value is the expected return after a move in a cell, so an agent can estimate it by crediting each return to the (cell, move) pair it followed. The greedy step over action values compares a cell's averages and needs no model, and the policy improvement theorem still applies. Exploring starts supply returns for moves a greedy policy never takes. Improving after every episode reached the optimal policy within 100,000 episodes in nearly every run. Waiting between improvements did not help, and clearing the averages at each one did harm. Only the optimal policy can be a resting point, but no theorem yet says runs on this grid must reach it.</p>
+  <div class="nb-bookend-band"><span class="nb-bookend-label">Go deeper</span><span class="nb-bookend-note">optional reading</span></div>
+  <dl class="nb-bookend-reading">
+    <dt>01</dt>
+    <dd><a href="http://incompleteideas.net/book/RLbook2020.pdf">Sutton and Barto, Section 5.3 and Example 5.3</a>: read the Monte Carlo ES box on p. 99 line by line against <code>mc_control.py</code>, then Figure 5.2 (p. 100) for the blackjack policy it finds.</dd>
+    <dt>02</dt>
+    <dd><a href="https://www.jmlr.org/papers/v3/tsitsiklis02a.html">Tsitsiklis, On the Convergence of Optimistic Policy Iteration (2002)</a>: read p. 60 for the variant he settles, and Section 5 (pp. 70-71) for why the action-value version needs no model where the state-value version does.</dd>
+    <dt>03</dt>
+    <dd><a href="https://arxiv.org/abs/2002.03585">Wang, Yuan, Shao and Ross, On the Convergence of the Monte Carlo Exploring Starts Algorithm for Reinforcement Learning (2022)</a>: read the definitions on pp. 4-5 for the condition that no state is revisited, and Figure 3 (p. 9) for a 2022 map of what was proved.</dd>
+    <dt>04</dt>
+    <dd><a href="http://incompleteideas.net/papers/sutton-99.pdf">Sutton, Open Theoretical Questions in Reinforcement Learning (1999)</a>: Section 2 (p. 4) poses the convergence question in one paragraph, as it was first asked.</dd>
+  </dl>
+</section>
+
+<section class="nb-sources" data-nb-section="sources" id="sources">
+  <h2>Sources</h2>
+  <ol>
+    <li id="s1"><a data-nb-source data-nb-kind="primary" data-nb-note="The authors' free copy is at incompleteideas.net/book/RLbook2020.pdf. Page numbers are the printed ones; the printed page is the PDF page minus 22." href="https://mitpress.mit.edu/9780262039246/reinforcement-learning/">MIT Press &middot; Richard S. Sutton and Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd edition, 2018 (second printing 2020)</a></li>
+    <li id="s2"><a data-nb-source data-nb-kind="primary" data-nb-note="Journal of Machine Learning Research 3, 59-72; page numbers are the JMLR printed pages." href="https://www.jmlr.org/papers/v3/tsitsiklis02a.html">Journal of Machine Learning Research &middot; John N. Tsitsiklis, On the Convergence of Optimistic Policy Iteration, 2002</a></li>
+    <li id="s3"><a data-nb-source data-nb-kind="primary" data-nb-note="Published as a conference paper at ICLR 2022; page numbers are those of arXiv v2, 5 August 2022." href="https://arxiv.org/abs/2002.03585">ICLR 2022 &middot; Che Wang, Shuhan Yuan, Kai Shao and Keith Ross, On the Convergence of the Monte Carlo Exploring Starts Algorithm for Reinforcement Learning</a></li>
+    <li id="s4"><a data-nb-source data-nb-kind="primary" data-nb-note="Published in SIAM Journal on Control and Optimization 64(3), 1672-1697, 2026 (doi.org/10.1137/25M1726200). Read in arXiv v2, 22 September 2025; page and result numbers are that version's, and the journal's numbering was not checked." href="https://arxiv.org/abs/2501.08800">SIAM Journal on Control and Optimization &middot; Sylvain Delattre and Nicolas Fournier, Markov decision processes: on the convergence of the Monte-Carlo first visit algorithm, 2026</a></li>
+  </ol>
+</section>
+    </article>
+  </body>
+</html>
