@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moving at random half the time, Q-learning still learns the optimal arrows · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "sarsa-and-q-learning",
+        "template": "lesson",
+        "title": "Moving at random half the time, Q-learning still learns the optimal arrows",
+        "mode": "open",
+        "order": 6,
+        "date": "2026-11-05",
+        "tags": ["sarsa", "q-learning", "td-control", "off-policy", "on-policy"],
+        "sources": 7,
+        "words": 4012,
+        "reading_minutes": 17,
+        "dek": "Its update differs from SARSA's in one term: it takes the next cell's largest estimate, whatever move the agent makes there.",
+        "harness": "claude-code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Moving at random half the time, Q-learning still learns the optimal arrows</h1>
+        <p class="nb-dekline">Its update differs from SARSA's in one term: it takes the next cell's largest estimate, whatever move the agent makes there.</p>
+        <div class="nb-byline">
+          <span>17 min read</span><span>2026-11-05</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>Monte Carlo control changes its estimates only when an episode ends. With an ε-greedy policy it can rest only at the best ε-soft policy, whose arrows stop being optimal once ε reaches 0.33. TD prediction updates after every move instead. Written for action values, its target needs the estimate of one move in the next cell. Taking the move the agent will make there gives SARSA, and taking the move with the largest estimate gives Q-learning. These are the two basic methods of TD control. You will derive which action values each target settles on, and see why Q-learning ends on the optimal arrows while its agent keeps moving at random. DQN, which a later lesson builds, keeps Q-learning's target and replaces the table with a neural network.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="../reinforcement-learning/learning-values-from-samples.html">An agent can learn what each state is worth without knowing the rules</a>: the TD update, the two step-size conditions and <code>td0</code> in <code>estimators.py</code>, which the code below calls on (cell, move) pairs.</dd>
+          <dt>02</dt>
+          <dd><a href="../reinforcement-learning/epsilon-greedy-exploration.html">ε-greedy control settles for the best policy that keeps exploring</a>: the ε-greedy policy, on-policy control, the best ε-soft policy and <code>best_soft</code>, whose action values grade SARSA here.</dd>
+          <dt>03</dt>
+          <dd><a href="../reinforcement-learning/action-values-from-samples.html">Action values let an agent improve its policy from episodes alone</a>: action values learned from samples and <code>mc_control.py</code>, whose environment the code below uses.</dd>
+          <dt>04</dt>
+          <dd><a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>: the Bellman optimality equation and the optimal arrows, which grade Q-learning here.</dd>
+          <dt>05</dt>
+          <dd><a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>: the grid, its rewards, <code>gridworld.py</code> and the direct solve that scores each agent's moves below.</dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The random move that only SARSA's target uses</h2>
+        <p>Take one move on the <a href="../reinforcement-learning/environments-and-the-rl-problem.html">grid</a> with ε = 0.5. The agent is in cell 9 and aims up. It lands in cell 5, next to the pit, and receives &minus;1. Suppose its estimates in cell 5 are the optimal policy's action values: 0.06 for up, &minus;15.93 for right into the pit, &minus;3.58 for down and &minus;0.29 for left. Its estimate for aiming up from cell 9 is &minus;1.01, the optimal value too. Before it updates anything, the agent draws its next move from the <a href="../reinforcement-learning/epsilon-greedy-exploration.html">ε-greedy policy</a>. Half the time that draw is uniformly random, and this time it comes up right.</p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center"><svg viewBox="0 0 248 282" role="img" aria-label="SARSA's target. The agent aimed up from cell 9 and landed in cell 5, reward minus 1. Cell 5's four estimates are 0.06 for up, minus 15.93 for right into the pit, minus 3.58 for down and minus 0.29 for left. SARSA's target uses right, the move the agent drew at random." style="flex: 1 1 13rem; min-width: 0; max-width: 18rem; height: auto"><text x="124.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:12.5px;fill:var(--ink);font-weight:600">SARSA</text><polygon points="68.0,96.0 16.0,44.0 120.0,44.0" style="fill:var(--chart-3);fill-opacity:0.147;stroke:var(--line);stroke-width:0.8"/><polygon points="68.0,96.0 120.0,44.0 120.0,148.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="68.0,96.0 120.0,148.0 16.0,148.0" style="fill:var(--chart-4);fill-opacity:0.564;stroke:var(--line);stroke-width:0.8"/><polygon points="68.0,96.0 16.0,148.0 16.0,44.0" style="fill:var(--chart-4);fill-opacity:0.174;stroke:var(--line);stroke-width:0.8"/><polygon points="68.0,96.0 120.0,44.0 120.0,148.0" style="fill:none;stroke:var(--chart-2);stroke-width:3;stroke-linejoin:round"/><text x="68.0" y="70.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.06</text><text x="99.0" y="100.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">−15.93</text><text x="68.0" y="128.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−3.58</text><text x="35.0" y="100.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−0.29</text><rect x="122" y="46" width="100" height="100" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.6"/><text x="172.0" y="100.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--chart-4);font-weight:600">pit</text><rect x="16" y="44" width="104" height="104" style="fill:none;stroke:var(--ink-soft);stroke-width:0.8;stroke-opacity:0.7"/><text x="18.0" y="38.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">cell 5</text><rect x="16" y="148" width="104" height="104" style="fill:none;stroke:var(--ink-soft);stroke-width:0.8;stroke-opacity:0.7"/><text x="22.0" y="246.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">cell 9</text><rect x="120" y="148" width="104" height="104" style="fill:none;stroke:var(--ink-soft);stroke-width:0.8;stroke-opacity:0.7"/><text x="126.0" y="246.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">cell 10</text><line x1="50" y1="222" x2="50" y2="162" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="50.0,152.0 55.0,163.0 45.0,163.0" style="fill:var(--ink)"/><text x="60.0" y="196.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">aim up</text><text x="60.0" y="210.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">reward −1</text><text x="124.0" y="272.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--chart-2);font-weight:600">uses right, the move drawn next</text></svg><svg viewBox="0 0 248 282" role="img" aria-label="Q-learning's target for the same move. It uses up, worth 0.06, the largest of cell 5's four estimates, whatever move the agent makes next." style="flex: 1 1 13rem; min-width: 0; max-width: 18rem; height: auto"><text x="124.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:12.5px;fill:var(--ink);font-weight:600">Q-learning</text><polygon points="68.0,96.0 16.0,44.0 120.0,44.0" style="fill:var(--chart-3);fill-opacity:0.147;stroke:var(--line);stroke-width:0.8"/><polygon points="68.0,96.0 120.0,44.0 120.0,148.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="68.0,96.0 120.0,148.0 16.0,148.0" style="fill:var(--chart-4);fill-opacity:0.564;stroke:var(--line);stroke-width:0.8"/><polygon points="68.0,96.0 16.0,148.0 16.0,44.0" style="fill:var(--chart-4);fill-opacity:0.174;stroke:var(--line);stroke-width:0.8"/><polygon points="68.0,96.0 16.0,44.0 120.0,44.0" style="fill:none;stroke:var(--chart-2);stroke-width:3;stroke-linejoin:round"/><text x="68.0" y="70.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.06</text><text x="99.0" y="100.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−15.93</text><text x="68.0" y="128.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−3.58</text><text x="35.0" y="100.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−0.29</text><rect x="122" y="46" width="100" height="100" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.6"/><text x="172.0" y="100.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--chart-4);font-weight:600">pit</text><rect x="16" y="44" width="104" height="104" style="fill:none;stroke:var(--ink-soft);stroke-width:0.8;stroke-opacity:0.7"/><text x="18.0" y="38.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">cell 5</text><rect x="16" y="148" width="104" height="104" style="fill:none;stroke:var(--ink-soft);stroke-width:0.8;stroke-opacity:0.7"/><text x="22.0" y="246.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">cell 9</text><rect x="120" y="148" width="104" height="104" style="fill:none;stroke:var(--ink-soft);stroke-width:0.8;stroke-opacity:0.7"/><text x="126.0" y="246.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">cell 10</text><line x1="50" y1="222" x2="50" y2="162" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="50.0,152.0 55.0,163.0 45.0,163.0" style="fill:var(--ink)"/><text x="60.0" y="196.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">aim up</text><text x="60.0" y="210.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">reward −1</text><text x="124.0" y="272.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--chart-2);font-weight:600">uses up, the largest estimate</text></svg></div>
+<svg viewBox="0 0 258 30" role="img" aria-label="Legend: green shading for values above 0, red below, deepest at 6 or more either way." style="display: block; width: 100%; max-width: 19.8rem; margin: 0.4rem auto 0; height: auto"><rect x="8" y="9" width="14" height="14" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="27.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">−6 or less</text><rect x="111.0" y="9" width="14" height="14" style="fill:var(--chart-3);fill-opacity:0.140;stroke:var(--line);stroke-width:0.8"/><text x="130.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">0</text><rect x="154.6" y="9" width="14" height="14" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="173.6" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">+6 or more</text></svg>
+          <figcaption>Fig.&nbsp;1 · One move from cell 9 into cell 5. Cell 5's four triangles, one per move, are shaded by the agent's estimates, here the optimal policy's action values. The outlined triangle is the estimate each method puts in its target. Values from <code>targets.py</code>.</figcaption>
+        </figure>
+        <p>SARSA's target uses the estimate of the move the agent will make next, discounted by 0.9: <span class="nb-math-in">-1 + 0.9 \times (-15.93) = -15.34</span>. With a step size of 0.1, the estimate for aiming up from cell 9 falls from &minus;1.01 to &minus;2.44. Q-learning's target uses the largest estimate in cell 5, which belongs to up: <span class="nb-math-in">-1 + 0.9 \times 0.06 = -0.95</span>. Its estimate barely moves, to &minus;1.00.</p>
+        <p>If the draw had picked up, the greedy move, both targets would have been &minus;0.95. The two methods disagree only when the next move is not the greedy one. With ε = 0.5 the agent in cell 5 aims right one time in eight, and each time SARSA counts that move against aiming up from cell 9. Q-learning never counts it.</p>
+      </section>
+
+      <section data-nb-section="update-rules" id="update-rules">
+        <h2>The update rules differ in one term</h2>
+        <p>Both methods update the pair the agent just left, after every move, with the <a href="../reinforcement-learning/learning-values-from-samples.html">TD update</a> written for action values. Call <span class="nb-math-in">b</span> the move in the next cell whose estimate enters the target.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} \htmlClass{nb-mc3}{Q(S_t, A_t)} &amp;\leftarrow Q(S_t, A_t) + \alpha\, \delta_t \\ \delta_t &amp;= R_{t+1} + \gamma\, Q(S_{t+1}, \htmlClass{nb-mc1}{b}) - Q(S_t, A_t) \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc3">Q(S_t, A_t)</span><span>the estimate for the pair just left, the only one the update changes</span></li>
+            <li><span class="nb-math-term">\delta_t</span><span>the TD error, with the next pair's estimate in place of the next cell's</span></li>
+            <li><span class="nb-math-term nb-mc1">b = A_{t+1}</span><span>SARSA: the move the agent will make in <span class="nb-math-in">S_{t+1}</span></span></li>
+            <li><span class="nb-math-term nb-mc1">b = \arg\max_a Q(S_{t+1}, a)</span><span>Q-learning: the move with the largest estimate there, so the term is <span class="nb-math-in">\max_a Q(S_{t+1}, a)</span></span></li>
+          </ul>
+          <figcaption>The update of both methods, Sutton and Barto's equations (6.7) and (6.8), written with one symbol for the term in which they differ.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 6.4, equation 6.7, p. 129; Section 6.5, equation 6.8, p. 131">1</a></sup></figcaption>
+        </figure>
+        <p>SARSA's update reads all five of <span class="nb-math-in">S_t, A_t, R_{t+1}, S_{t+1}</span> and <span class="nb-math-in">A_{t+1}</span>, which gives the method its name.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 6.4, p. 129">1</a></sup> Rummery and Niranjan proposed the update in 1994, in a more general form for neural networks.<sup class="nb-cite"><a href="#s2" data-nb-locator="Section 3.2, p. 6, equation 9">2</a></sup> Watkins introduced Q-learning in his 1989 thesis.<sup class="nb-cite"><a href="#s3" data-nb-locator="Chapter 7, Section 3, p. 96">3</a></sup></p>
+        <p>Sutton and Barto's pseudocode also orders one step differently: SARSA draws its next move before the update and Q-learning after it.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 6.4 box, p. 130; Section 6.5 box, p. 131">1</a></sup> Q-learning's target never uses that move, so the code below can draw it before the update in both methods, which leaves <span class="nb-math-in">b</span> as the only difference. Rerunning Q-learning in the book's order changed no conclusion below.</p>
+        <p><code>td_control.py</code> runs both methods. It calls <code>td0</code> from <a href="../reinforcement-learning/learning-values-from-samples.html"><code>estimators.py</code></a>, unchanged, on (cell, move) pairs numbered as in <a href="../reinforcement-learning/action-values-from-samples.html"><code>mc_control.py</code></a>. Each pair's step size is therefore <span class="nb-math-in">N(s, a)^{-0.7}</span>, where <span class="nb-math-in">N(s, a)</span> counts that pair's updates. The variable <code>b</code> is the <span class="nb-math-in">b</span> of the update, and the one line that sets it is the only code that depends on the method. <code>G</code> adds up the discounted return the agent earns in the episode.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">td_control.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["numpy"]
+# ///
+"""SARSA and Q-learning: TD control, updating action values after every move.
+
+Both methods call td0 from estimators.py on (cell, move) pairs, numbered
+4 * cell + move as in mc_control.py. They differ in one line: which move in
+the next cell supplies the value in the target.
+"""
+
+import numpy as np
+from estimators import GAMMA, td0
+from gridworld import N, TERMINAL
+from mc_control import CAP, LIVE, step
+
+
+def choose(Q, s, eps, rng):
+    """The eps-greedy move in cell s: a uniformly random move with
+    probability eps, otherwise the move with the largest estimate."""
+    return rng.integers(4) if rng.random() &lt; eps else int(Q[s].argmax())
+
+
+def td_control(eps, episodes, rng, target="sarsa", watch=None):
+    """Each episode starts in a random cell and follows the eps-greedy policy
+    around the current estimates. After every move, td0 moves q[4s + a]
+    toward reward + GAMMA * q[next pair]. Terminal pairs stay at 0."""
+    q, count = np.zeros(4 * N), np.zeros(4 * N)
+    Q = q.reshape(N, 4)  # the same numbers, one row per cell
+    for k in range(1, episodes + 1):
+        s = start = LIVE[rng.integers(len(LIVE))]
+        a = choose(Q, s, eps, rng)
+        G, t = 0.0, 0
+        while s not in TERMINAL and t &lt; CAP:
+            reward, s_next = step(s, a, rng)
+            a_next = choose(Q, s_next, eps, rng)  # before the update, in both
+            # SARSA uses the move the agent will make, Q-learning the best one
+            b = a_next if target == "sarsa" else int(Q[s_next].argmax())
+            td0([(4 * s + a, a, reward, 4 * s_next + b)], q, count)
+            G += GAMMA**t * reward  # the return the agent actually earns
+            s, a, t = s_next, a_next, t + 1
+        if watch:
+            watch(k, Q, start, G)
+    return Q</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="target-averages" id="target-averages">
+        <h2>What each target averages to</h2>
+        <p>An update moves an estimate part of the way toward its target, so the estimates stop drifting when each one equals the average of its target. To find where that happens, hold the estimates fixed and average the target over one move from the pair <span class="nb-math-in">(s, a)</span>. The slip rule draws the landing cell <span class="nb-math-in">s'</span>. For SARSA, the policy <span class="nb-math-in">\pi</span> that the agent follows draws the next move <span class="nb-math-in">a'</span>.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;\mathbb{E}\bigl[\, R_{t+1} + \gamma\, Q(S_{t+1}, A_{t+1}) \mid s, a \,\bigr] \\ &amp;\quad = \sum_{s'} P(s' \mid s, a) \Bigl[\, R(s') \\ &amp;\qquad\quad + \gamma \htmlClass{nb-mc2}{\sum_{a'} \pi(a' \mid s')\, Q(s', a')} \,\Bigr] \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc2">\sum_{a'} \pi(a' \mid s')\, Q(s', a')</span><span>the average of the four estimates in <span class="nb-math-in">s'</span>, weighted by how often <span class="nb-math-in">\pi</span> picks each move</span></li>
+          </ul>
+          <figcaption>SARSA's target, averaged over one move.</figcaption>
+        </figure>
+        <p>Suppose every estimate equals this average. Then <span class="nb-math-in">Q</span> satisfies the equation that defines <span class="nb-math-in">q_\pi</span>, the <a href="../reinforcement-learning/finding-optimal-policies.html">action values</a> of <span class="nb-math-in">\pi</span>. Each <span class="nb-math-in">q_\pi(s, a)</span> is <span class="nb-math-in">\sum_{s'} P(s' \mid s, a)\,[R(s') + \gamma\, v_\pi(s')]</span>, and <span class="nb-math-in">v_\pi(s')</span> is <span class="nb-math-in">\pi</span>'s average of the action values in <span class="nb-math-in">s'</span>. For each <span class="nb-math-in">\pi</span> the equation has one solution, because its right side shrinks the largest gap between two sets of estimates by a factor of <span class="nb-math-in">\gamma</span>. So SARSA's estimates can rest only at the action values of the policy that makes its moves.</p>
+        <p>That policy is ε-greedy with respect to <span class="nb-math-in">Q</span> itself, so its average in <span class="nb-math-in">s'</span> puts <span class="nb-math-in">1 - \varepsilon</span> on the largest estimate and <span class="nb-math-in">\varepsilon/4</span> on each of the four. The condition for SARSA's estimates to rest becomes the following.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;Q(s, a) = \sum_{s'} P(s' \mid s, a) \Bigl[\, R(s') \\ &amp;\qquad + \gamma\, (1 - \varepsilon) \max_{a'} Q(s', a') \\ &amp;\qquad + \gamma\, \frac{\varepsilon}{4} \sum_{a'} Q(s', a') \,\Bigr] \end{aligned}</div>
+          <figcaption>Where SARSA rests when ε stays fixed.</figcaption>
+        </figure>
+        <p>The <a href="../reinforcement-learning/epsilon-greedy-exploration.html">best ε-soft policy's</a> action values <span class="nb-math-in">\tilde q</span> satisfy this equation. Each <span class="nb-math-in">\tilde q(s, a)</span> values the landing cells at <span class="nb-math-in">\tilde v_*</span>, and <span class="nb-math-in">\tilde v_*(s')</span> is exactly this ε-greedy average of <span class="nb-math-in">\tilde q</span> in <span class="nb-math-in">s'</span>. The right side again shrinks gaps by <span class="nb-math-in">\gamma</span>. Its ε-greedy average weights the largest estimate and the four estimates by amounts that add to 1, and as in value iteration none of these moves by more than the largest per-move gap. So <span class="nb-math-in">\tilde q</span> is the only solution. SARSA with a fixed ε can rest only where ε-greedy Monte Carlo control rested, at the best ε-soft policy. At ε = 0.5 that policy's arrow at cell 9 turns left or down.</p>
+        <p>Singh, Jaakkola, Littman and Szepesvári prove that SARSA reaches this point with probability 1 when its step sizes shrink.<sup class="nb-cite"><a href="#s4" data-nb-locator="Theorem 2, p. 297; Theorem 3, p. 299">4</a></sup> They prove it for discounted tasks that never end.<sup class="nb-cite"><a href="#s4" data-nb-locator="Section 2, pp. 289-290">4</a></sup> Episodes on the grid end at the goal or the pit, so for SARSA the runs below are the evidence.</p>
+        <p>Q-learning's average target contains no <span class="nb-math-in">\pi</span>.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;\mathbb{E}\bigl[\, R_{t+1} + \gamma \max_{a'} Q(S_{t+1}, a') \mid s, a \,\bigr] \\ &amp;\quad = \sum_{s'} P(s' \mid s, a) \Bigl[\, R(s') \\ &amp;\qquad\quad + \gamma \htmlClass{nb-mc1}{\max_{a'} Q(s', a')} \,\Bigr] \end{aligned}</div>
+          <figcaption>Q-learning's target, averaged over one move.</figcaption>
+        </figure>
+        <p>Write <span class="nb-math-in">q_*(s, a)</span> for the action values of an optimal policy, <span class="nb-math-in">\sum_{s'} P(s' \mid s, a)\,[R(s') + \gamma\, v_*(s')]</span>. The <a href="../reinforcement-learning/finding-optimal-policies.html">Bellman optimality equation</a> says that <span class="nb-math-in">v_*(s')</span> is the largest of the <span class="nb-math-in">q_*(s', a')</span>, so <span class="nb-math-in">q_*</span> satisfies the condition for Q-learning's estimates to rest.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;q_*(s, a) = \sum_{s'} P(s' \mid s, a) \Bigl[\, R(s') \\ &amp;\qquad + \gamma \max_{a'} q_*(s', a') \,\Bigr] \end{aligned}</div>
+          <figcaption>The Bellman optimality equation, written for action values.</figcaption>
+        </figure>
+        <p>Its right side shrinks gaps by <span class="nb-math-in">\gamma</span>, as value iteration's backup did, so <span class="nb-math-in">q_*</span> is its only solution. Q-learning's estimates can rest only at <span class="nb-math-in">q_*</span>, whatever policy makes the moves. That policy decides only which pairs get updated and how often, and an ε-greedy agent that starts each episode in a random cell keeps updating all of them. Watkins and Dayan prove that Q-learning reaches <span class="nb-math-in">q_*</span> with probability 1 if every pair is updated infinitely often.<sup class="nb-cite"><a href="#s5" data-nb-locator="Theorem, p. 282">5</a></sup> Each pair's step sizes must also have an infinite sum and a finite sum of squares, the two conditions TD prediction used,<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 2.5, equation 2.7, p. 33">1</a></sup> and the step size <span class="nb-math-in">N(s, a)^{-0.7}</span> in <code>td_control.py</code> meets both. Their proof also lets the updates come from separate stretches of experience, which covers episodes that end and restart.<sup class="nb-cite"><a href="#s5" data-nb-locator="Section 2, p. 281">5</a></sup></p>
+        <p>SARSA reaches <span class="nb-math-in">q_*</span> too if ε shrinks toward 0 while every pair is still tried infinitely often, since <span class="nb-math-in">\pi</span>'s average then approaches the largest estimate.<sup class="nb-cite"><a href="#s4" data-nb-locator="Theorem 1, p. 294">4</a></sup> Expected SARSA puts <span class="nb-math-in">\pi</span>'s average itself in the target, so it moves each estimate the way SARSA moves it on average.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 6.6, p. 133; bibliographical remarks 6.6, p. 140">1</a></sup> George John introduced it in 1994,<sup class="nb-cite"><a href="#s6" data-nb-locator="p. 1464, equation 2">6</a></sup> and van Seijen and colleagues named it in 2009.<sup class="nb-cite"><a href="#s7" data-nb-locator="Section I, p. 1">7</a></sup></p>
+      </section>
+
+      <section data-nb-section="off-policy" id="off-policy">
+        <h2>Learning about the greedy policy while following the ε-greedy one</h2>
+        <p>Control is <a href="../reinforcement-learning/epsilon-greedy-exploration.html">on-policy</a> when the agent learns the action values of the policy that makes its moves, so SARSA is on-policy. Q-learning learns the action values of the greedy policy while the ε-greedy policy makes its moves. The policy being learned about is called the target policy, and the policy that generates the moves is called the behavior policy.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.5, p. 103">1</a></sup> A method whose two policies differ is off-policy.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 5.4, p. 100">1</a></sup></p>
+      </section>
+
+      <section data-nb-section="cell-9" id="cell-9">
+        <h2>At ε = 0.5 the two methods part at cell&nbsp;9</h2>
+        <p><code>targets.py</code> runs each method 20 times, from seeds 0 to 19, for 100,000 episodes with ε = 0.5. It grades the final estimates against <span class="nb-math-in">\tilde q</span> from <code>best_soft</code> and against <span class="nb-math-in">q_*</span>, and counts a run's arrows as right when each one is among the tied best moves.</p>
+        <p><code>uv run targets.py</code> needs <code>gridworld.py</code>, <code>control.py</code>, <code>estimators.py</code>, <code>mc_control.py</code>, <code>soft_control.py</code>, <code>exploration.py</code> and <code>td_control.py</code> in one folder. It installs numpy and takes about two minutes on the machine used here.</p>
+        <details>
+          <summary><code>targets.py</code>, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">targets.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["numpy"]
+# ///
+"""Print every number on the page: SARSA and Q-learning with eps 0.5 on 20
+seeds, graded against the exact action values of the best eps-soft policy
+(q~) and of the optimal policy (q*), and what each agent earns."""
+
+import numpy as np
+from estimators import GAMMA
+from exploration import best_moves
+from gridworld import N, R, TERMINAL, transitions
+from mc_control import LIVE, SLIP
+from soft_control import best_soft
+from td_control import td_control
+
+EPS, EPISODES, SEEDS = 0.5, 100_000, range(20)
+LEFT = 3
+
+
+def value_of(arrows, eps):
+    """The exact value of the eps-greedy policy around `arrows`. It moves like
+    the arrows on best_soft's grid, which replaces each aim with a random one
+    with probability eps, so the direct solve of control.evaluate gives it."""
+    P = transitions(SLIP)
+    P_eps = (1 - eps) * P + eps * P.mean(axis=1, keepdims=True)
+    P_pi = P_eps[np.arange(N), arrows]
+    Q = P_pi.copy()
+    Q[:, TERMINAL] = 0.0
+    return np.linalg.solve(np.eye(N) - GAMMA * Q, P_pi @ R)
+
+
+def runs(target):
+    """One row per run of `target`, with the columns that main() labels."""
+    soft, optimal = best_moves(EPS), best_moves(0.0)
+    _, q_soft = best_soft(EPS)
+    _, q_star = best_soft(0.0)
+    rows, misses = [], []
+    for seed in SEEDS:
+        returns = []
+
+        def watch(k, Q, start, G):
+            if k &gt; EPISODES // 2 and start == 9:
+                returns.append(G)
+
+        Q = td_control(EPS, EPISODES, np.random.default_rng(seed), target,
+                       watch)
+        arrows = Q.argmax(axis=1)
+        turned = arrows.copy()
+        turned[9] = LEFT
+        if target == "sarsa":  # the target policy at cell 9: eps-greedy
+            weights = np.full(4, EPS / 4)
+            weights[arrows[9]] += 1 - EPS
+        else:  # greedy, for Q-learning
+            weights = np.eye(4)[arrows[9]]
+        wrong = [s for s in LIVE if arrows[s] not in optimal[s]]
+        if wrong and target == "q":
+            misses.append((seed, wrong))
+        v = value_of(arrows, EPS)
+        rows.append([all(arrows[s] in soft[s] for s in LIVE), not wrong,
+                     np.abs(Q - q_soft)[LIVE].mean(),
+                     np.abs(Q - q_star)[LIVE].mean(),
+                     weights @ Q[9], np.mean(returns),
+                     v[9], value_of(turned, EPS)[9]])
+    return np.array(rows, dtype=float), misses
+
+
+def main():
+    _, q_star = best_soft(0.0)
+    print("exact action values of the optimal policy (up, right, down, left)")
+    for cell in (5, 9, 10):
+        print(f"  q* at cell {cell}:", q_star[cell].round(2))
+
+    sarsa, _ = runs("sarsa")
+    qlearn, misses = runs("q")
+    print(f"\n{len(SEEDS)} runs per method, eps {EPS}, {EPISODES:,} episodes")
+    labels = ["runs whose arrows are all best eps-soft moves",
+              "runs whose arrows are all optimal moves",
+              "mean |Q - q~| over the 56 pairs",
+              "mean |Q - q*| over the 56 pairs",
+              "cell 9 under the target policy, by the estimates",
+              "mean return from cell 9, second half",
+              "exact value at cell 9 of the eps-greedy policy",
+              "  the same with cell 9 turned left"]
+    print(f"{'':48s}{'SARSA':&gt;8s}{'Q-learning':&gt;12s}")
+    for i, label in enumerate(labels):
+        if i &lt; 2:  # counts of runs
+            row = sarsa[:, i].sum(), qlearn[:, i].sum()
+            print(f"{label:48s}{row[0]:8.0f}{row[1]:12.0f}")
+        else:  # averages over the runs
+            row = sarsa[:, i].mean(), qlearn[:, i].mean()
+            print(f"{label:48s}{row[0]:8.2f}{row[1]:12.2f}")
+    print("Q-learning runs with arrows that are not optimal (seed, cells):",
+          misses)
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+          </figure>
+        </details>
+        <details>
+          <summary>The output of <code>uv run targets.py</code></summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">output of uv run targets.py</span><span>text</span></div>
+            <pre><code data-language="text">exact action values of the optimal policy (up, right, down, left)
+  q* at cell 5: [  0.06 -15.93  -3.58  -0.29]
+  q* at cell 9: [-1.01 -1.01 -1.57 -1.57]
+  q* at cell 10: [-15.93   0.06  -0.29  -3.58]
+
+20 runs per method, eps 0.5, 100,000 episodes
+                                                   SARSA  Q-learning
+runs whose arrows are all best eps-soft moves         20           0
+runs whose arrows are all optimal moves                0          18
+mean |Q - q~| over the 56 pairs                     0.08        4.92
+mean |Q - q*| over the 56 pairs                     4.93        0.08
+cell 9 under the target policy, by the estimates   -7.09       -0.98
+mean return from cell 9, second half               -7.10       -7.29
+exact value at cell 9 of the eps-greedy policy     -7.10       -7.30
+  the same with cell 9 turned left                 -7.10       -7.11
+Q-learning runs with arrows that are not optimal (seed, cells): [(12, [10]), (14, [10])]</code></pre>
+          </figure>
+        </details>
+        <table class="nb-table">
+          <caption>Table&nbsp;1 · Twenty runs of each method after 100,000 episodes with ε = 0.5. Errors are absolute differences from the exact action values, averaged over the 56 (cell, move) pairs and the 20 runs. From <code>targets.py</code>.</caption>
+          <thead>
+            <tr><th class="txt"></th><th>SARSA</th><th>Q&#8209;learning</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="txt">Runs whose arrows are all best ε-soft moves</td><td>20</td><td>0</td></tr>
+            <tr><td class="txt">Runs whose arrows are all optimal moves</td><td>0</td><td>18</td></tr>
+            <tr><td class="txt">Mean error against <span class="nb-math-in">\tilde q</span></td><td>0.08</td><td>4.92</td></tr>
+            <tr><td class="txt">Mean error against <span class="nb-math-in">q_*</span></td><td>4.93</td><td>0.08</td></tr>
+          </tbody>
+        </table>
+        <p>Each method's estimates end within 0.08, on average, of the action values its average target predicts, and about 4.9 from the other method's. All 20 SARSA runs end on the best ε-soft arrows, with cell 9 aiming left or down. Eighteen Q-learning runs end on the optimal arrows, with cell 9 aiming up or right. The other two have a wrong arrow at cell 10, where the best move beats the next by 0.35. Both have the optimal arrow there when run for twice as many episodes, so they had not finished converging. The two methods share every line of code except the one that sets <code>b</code>, so that line is what separates their estimates.</p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center"><svg viewBox="0 0 220 234" role="img" aria-label="SARSA run 0 after 100,000 episodes with epsilon 0.5. The triangles are mostly red: its estimates include the cost of the agent's random moves. Cell 9 aims down, away from the pit, and carries the amber square because that arrow is not optimal. Every other arrow is optimal." style="flex: 1 1 13rem; min-width: 0; max-width: 20rem; height: auto"><text x="110.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:12.5px;fill:var(--ink);font-weight:600">SARSA, run 0</text><polygon points="35.0,51.0 10.0,26.0 60.0,26.0" style="fill:var(--chart-4);fill-opacity:0.663;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,51.0 60.0,26.0 60.0,76.0" style="fill:var(--chart-4);fill-opacity:0.541;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,51.0 60.0,76.0 10.0,76.0" style="fill:var(--chart-4);fill-opacity:0.810;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,51.0 10.0,76.0 10.0,26.0" style="fill:var(--chart-4);fill-opacity:0.700;stroke:var(--line);stroke-width:0.8"/><rect x="10" y="26" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="31.0" y1="51.0" x2="48.0" y2="51.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="52.5,51.0 48.0,54.6 48.0,47.4" style="fill:var(--ink)"/><polygon points="85.0,51.0 60.0,26.0 110.0,26.0" style="fill:var(--chart-4);fill-opacity:0.464;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,51.0 110.0,26.0 110.0,76.0" style="fill:var(--chart-4);fill-opacity:0.258;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,51.0 110.0,76.0 60.0,76.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,51.0 60.0,76.0 60.0,26.0" style="fill:var(--chart-4);fill-opacity:0.697;stroke:var(--line);stroke-width:0.8"/><rect x="60" y="26" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="81.0" y1="51.0" x2="98.0" y2="51.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="102.5,51.0 98.0,54.6 98.0,47.4" style="fill:var(--ink)"/><polygon points="135.0,51.0 110.0,26.0 160.0,26.0" style="fill:var(--chart-3);fill-opacity:0.249;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,51.0 160.0,26.0 160.0,76.0" style="fill:var(--chart-3);fill-opacity:0.842;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,51.0 160.0,76.0 110.0,76.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,51.0 110.0,76.0 110.0,26.0" style="fill:var(--chart-4);fill-opacity:0.650;stroke:var(--line);stroke-width:0.8"/><rect x="110" y="26" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="131.0" y1="51.0" x2="148.0" y2="51.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="152.5,51.0 148.0,54.6 148.0,47.4" style="fill:var(--ink)"/><rect x="162" y="28" width="46" height="46" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.6"/><text x="185.0" y="55.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--chart-3);font-weight:600">goal</text><polygon points="35.0,101.0 10.0,76.0 60.0,76.0" style="fill:var(--chart-4);fill-opacity:0.732;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,101.0 60.0,76.0 60.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,101.0 60.0,126.0 10.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,101.0 10.0,126.0 10.0,76.0" style="fill:var(--chart-4);fill-opacity:0.847;stroke:var(--line);stroke-width:0.8"/><rect x="10" y="76" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="35.0" y1="105.0" x2="35.0" y2="88.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="35.0,83.5 38.6,88.0 31.4,88.0" style="fill:var(--ink)"/><polygon points="85.0,101.0 60.0,76.0 110.0,76.0" style="fill:var(--chart-4);fill-opacity:0.712;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,101.0 110.0,76.0 110.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,101.0 110.0,126.0 60.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,101.0 60.0,126.0 60.0,76.0" style="fill:var(--chart-4);fill-opacity:0.828;stroke:var(--line);stroke-width:0.8"/><rect x="60" y="76" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="85.0" y1="105.0" x2="85.0" y2="88.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="85.0,83.5 88.6,88.0 81.4,88.0" style="fill:var(--ink)"/><rect x="112" y="78" width="46" height="46" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.6"/><text x="135.0" y="105.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--chart-4);font-weight:600">pit</text><polygon points="185.0,101.0 160.0,76.0 210.0,76.0" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,101.0 210.0,76.0 210.0,126.0" style="fill:var(--chart-3);fill-opacity:0.277;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,101.0 210.0,126.0 160.0,126.0" style="fill:var(--chart-4);fill-opacity:0.594;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,101.0 160.0,126.0 160.0,76.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="160" y="76" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="185.0" y1="105.0" x2="185.0" y2="88.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="185.0,83.5 188.6,88.0 181.4,88.0" style="fill:var(--ink)"/><polygon points="35.0,151.0 10.0,126.0 60.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,151.0 60.0,126.0 60.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,151.0 60.0,176.0 10.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,151.0 10.0,176.0 10.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="10" y="126" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="35.0" y1="155.0" x2="35.0" y2="138.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="35.0,133.5 38.6,138.0 31.4,138.0" style="fill:var(--ink)"/><polygon points="85.0,151.0 60.0,126.0 110.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,151.0 110.0,126.0 110.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,151.0 110.0,176.0 60.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,151.0 60.0,176.0 60.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="60" y="126" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="85.0" y1="147.0" x2="85.0" y2="164.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="85.0,168.5 81.4,164.0 88.6,164.0" style="fill:var(--ink)"/><rect x="62.5" y="128.5" width="45" height="45" style="fill:none;stroke:var(--chart-1);stroke-width:3"/><polygon points="135.0,151.0 110.0,126.0 160.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,151.0 160.0,126.0 160.0,176.0" style="fill:var(--chart-4);fill-opacity:0.710;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,151.0 160.0,176.0 110.0,176.0" style="fill:var(--chart-4);fill-opacity:0.827;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,151.0 110.0,176.0 110.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="110" y="126" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="131.0" y1="151.0" x2="148.0" y2="151.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="152.5,151.0 148.0,154.6 148.0,147.4" style="fill:var(--ink)"/><polygon points="185.0,151.0 160.0,126.0 210.0,126.0" style="fill:var(--chart-4);fill-opacity:0.212;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,151.0 210.0,126.0 210.0,176.0" style="fill:var(--chart-4);fill-opacity:0.457;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,151.0 210.0,176.0 160.0,176.0" style="fill:var(--chart-4);fill-opacity:0.701;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,151.0 160.0,176.0 160.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="160" y="126" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="185.0" y1="155.0" x2="185.0" y2="138.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="185.0,133.5 188.6,138.0 181.4,138.0" style="fill:var(--ink)"/><polygon points="35.0,201.0 10.0,176.0 60.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,201.0 60.0,176.0 60.0,226.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,201.0 60.0,226.0 10.0,226.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,201.0 10.0,226.0 10.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="10" y="176" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="31.0" y1="201.0" x2="48.0" y2="201.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="52.5,201.0 48.0,204.6 48.0,197.4" style="fill:var(--ink)"/><polygon points="85.0,201.0 60.0,176.0 110.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,201.0 110.0,176.0 110.0,226.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,201.0 110.0,226.0 60.0,226.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,201.0 60.0,226.0 60.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="60" y="176" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="81.0" y1="201.0" x2="98.0" y2="201.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="102.5,201.0 98.0,204.6 98.0,197.4" style="fill:var(--ink)"/><polygon points="135.0,201.0 110.0,176.0 160.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,201.0 160.0,176.0 160.0,226.0" style="fill:var(--chart-4);fill-opacity:0.730;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,201.0 160.0,226.0 110.0,226.0" style="fill:var(--chart-4);fill-opacity:0.847;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,201.0 110.0,226.0 110.0,176.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="110" y="176" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="131.0" y1="201.0" x2="148.0" y2="201.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="152.5,201.0 148.0,204.6 148.0,197.4" style="fill:var(--ink)"/><polygon points="185.0,201.0 160.0,176.0 210.0,176.0" style="fill:var(--chart-4);fill-opacity:0.538;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,201.0 210.0,176.0 210.0,226.0" style="fill:var(--chart-4);fill-opacity:0.660;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,201.0 210.0,226.0 160.0,226.0" style="fill:var(--chart-4);fill-opacity:0.702;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,201.0 160.0,226.0 160.0,176.0" style="fill:var(--chart-4);fill-opacity:0.797;stroke:var(--line);stroke-width:0.8"/><rect x="160" y="176" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="185.0" y1="205.0" x2="185.0" y2="188.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="185.0,183.5 188.6,188.0 181.4,188.0" style="fill:var(--ink)"/></svg><svg viewBox="0 0 220 234" role="img" aria-label="Q-learning run 0 after 100,000 episodes with epsilon 0.5. The triangles are lighter and greener than SARSA's: its estimates are the values of greedy play. Every arrow is optimal, and cell 9 aims right." style="flex: 1 1 13rem; min-width: 0; max-width: 20rem; height: auto"><text x="110.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:12.5px;fill:var(--ink);font-weight:600">Q-learning, run 0</text><polygon points="35.0,51.0 10.0,26.0 60.0,26.0" style="fill:var(--chart-3);fill-opacity:0.271;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,51.0 60.0,26.0 60.0,76.0" style="fill:var(--chart-3);fill-opacity:0.391;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,51.0 60.0,76.0 10.0,76.0" style="fill:var(--chart-4);fill-opacity:0.145;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,51.0 10.0,76.0 10.0,26.0" style="fill:var(--chart-3);fill-opacity:0.237;stroke:var(--line);stroke-width:0.8"/><rect x="10" y="26" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="31.0" y1="51.0" x2="48.0" y2="51.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="52.5,51.0 48.0,54.6 48.0,47.4" style="fill:var(--ink)"/><polygon points="85.0,51.0 60.0,26.0 110.0,26.0" style="fill:var(--chart-3);fill-opacity:0.455;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,51.0 110.0,26.0 110.0,76.0" style="fill:var(--chart-3);fill-opacity:0.610;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,51.0 110.0,76.0 60.0,76.0" style="fill:var(--chart-4);fill-opacity:0.167;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,51.0 60.0,76.0 60.0,26.0" style="fill:var(--chart-3);fill-opacity:0.248;stroke:var(--line);stroke-width:0.8"/><rect x="60" y="26" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="81.0" y1="51.0" x2="98.0" y2="51.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="102.5,51.0 98.0,54.6 98.0,47.4" style="fill:var(--ink)"/><polygon points="135.0,51.0 110.0,26.0 160.0,26.0" style="fill:var(--chart-3);fill-opacity:0.735;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,51.0 160.0,26.0 160.0,76.0" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,51.0 160.0,76.0 110.0,76.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,51.0 110.0,76.0 110.0,26.0" style="fill:var(--chart-3);fill-opacity:0.227;stroke:var(--line);stroke-width:0.8"/><rect x="110" y="26" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="131.0" y1="51.0" x2="148.0" y2="51.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="152.5,51.0 148.0,54.6 148.0,47.4" style="fill:var(--ink)"/><rect x="162" y="28" width="46" height="46" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.6"/><text x="185.0" y="55.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--chart-3);font-weight:600">goal</text><polygon points="35.0,101.0 10.0,76.0 60.0,76.0" style="fill:var(--chart-3);fill-opacity:0.213;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,101.0 60.0,76.0 60.0,126.0" style="fill:var(--chart-4);fill-opacity:0.241;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,101.0 60.0,126.0 10.0,126.0" style="fill:var(--chart-4);fill-opacity:0.308;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,101.0 10.0,126.0 10.0,76.0" style="fill:var(--chart-4);fill-opacity:0.186;stroke:var(--line);stroke-width:0.8"/><rect x="10" y="76" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="35.0" y1="105.0" x2="35.0" y2="88.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="35.0,83.5 38.6,88.0 31.4,88.0" style="fill:var(--ink)"/><polygon points="85.0,101.0 60.0,76.0 110.0,76.0" style="fill:var(--chart-3);fill-opacity:0.156;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,101.0 110.0,76.0 110.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,101.0 110.0,126.0 60.0,126.0" style="fill:var(--chart-4);fill-opacity:0.576;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,101.0 60.0,126.0 60.0,76.0" style="fill:var(--chart-4);fill-opacity:0.173;stroke:var(--line);stroke-width:0.8"/><rect x="60" y="76" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="85.0" y1="105.0" x2="85.0" y2="88.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="85.0,83.5 88.6,88.0 81.4,88.0" style="fill:var(--ink)"/><rect x="112" y="78" width="46" height="46" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.6"/><text x="135.0" y="105.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--chart-4);font-weight:600">pit</text><polygon points="185.0,101.0 160.0,76.0 210.0,76.0" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,101.0 210.0,76.0 210.0,126.0" style="fill:var(--chart-3);fill-opacity:0.758;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,101.0 210.0,126.0 160.0,126.0" style="fill:var(--chart-3);fill-opacity:0.240;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,101.0 160.0,126.0 160.0,76.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><rect x="160" y="76" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="185.0" y1="105.0" x2="185.0" y2="88.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="185.0,83.5 188.6,88.0 181.4,88.0" style="fill:var(--ink)"/><polygon points="35.0,151.0 10.0,126.0 60.0,126.0" style="fill:var(--chart-4);fill-opacity:0.222;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,151.0 60.0,126.0 60.0,176.0" style="fill:var(--chart-4);fill-opacity:0.356;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,151.0 60.0,176.0 10.0,176.0" style="fill:var(--chart-4);fill-opacity:0.422;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,151.0 10.0,176.0 10.0,126.0" style="fill:var(--chart-4);fill-opacity:0.326;stroke:var(--line);stroke-width:0.8"/><rect x="10" y="126" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="35.0" y1="155.0" x2="35.0" y2="138.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="35.0,133.5 38.6,138.0 31.4,138.0" style="fill:var(--ink)"/><polygon points="85.0,151.0 60.0,126.0 110.0,126.0" style="fill:var(--chart-4);fill-opacity:0.267;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,151.0 110.0,126.0 110.0,176.0" style="fill:var(--chart-4);fill-opacity:0.262;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,151.0 110.0,176.0 60.0,176.0" style="fill:var(--chart-4);fill-opacity:0.324;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,151.0 60.0,176.0 60.0,126.0" style="fill:var(--chart-4);fill-opacity:0.323;stroke:var(--line);stroke-width:0.8"/><rect x="60" y="126" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="81.0" y1="151.0" x2="98.0" y2="151.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="102.5,151.0 98.0,154.6 98.0,147.4" style="fill:var(--ink)"/><polygon points="135.0,151.0 110.0,126.0 160.0,126.0" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,151.0 160.0,126.0 160.0,176.0" style="fill:var(--chart-3);fill-opacity:0.169;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,151.0 160.0,176.0 110.0,176.0" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,151.0 110.0,176.0 110.0,126.0" style="fill:var(--chart-4);fill-opacity:0.559;stroke:var(--line);stroke-width:0.8"/><rect x="110" y="126" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="131.0" y1="151.0" x2="148.0" y2="151.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="152.5,151.0 148.0,154.6 148.0,147.4" style="fill:var(--ink)"/><polygon points="185.0,151.0 160.0,126.0 210.0,126.0" style="fill:var(--chart-3);fill-opacity:0.632;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,151.0 210.0,126.0 210.0,176.0" style="fill:var(--chart-3);fill-opacity:0.470;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,151.0 210.0,176.0 160.0,176.0" style="fill:var(--chart-3);fill-opacity:0.254;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,151.0 160.0,176.0 160.0,126.0" style="fill:var(--chart-4);fill-opacity:0.164;stroke:var(--line);stroke-width:0.8"/><rect x="160" y="126" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="185.0" y1="155.0" x2="185.0" y2="138.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="185.0,133.5 188.6,138.0 181.4,138.0" style="fill:var(--ink)"/><polygon points="35.0,201.0 10.0,176.0 60.0,176.0" style="fill:var(--chart-4);fill-opacity:0.341;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,201.0 60.0,176.0 60.0,226.0" style="fill:var(--chart-4);fill-opacity:0.342;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,201.0 60.0,226.0 10.0,226.0" style="fill:var(--chart-4);fill-opacity:0.430;stroke:var(--line);stroke-width:0.8"/><polygon points="35.0,201.0 10.0,226.0 10.0,176.0" style="fill:var(--chart-4);fill-opacity:0.429;stroke:var(--line);stroke-width:0.8"/><rect x="10" y="176" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="35.0" y1="205.0" x2="35.0" y2="188.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="35.0,183.5 38.6,188.0 31.4,188.0" style="fill:var(--ink)"/><polygon points="85.0,201.0 60.0,176.0 110.0,176.0" style="fill:var(--chart-4);fill-opacity:0.356;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,201.0 110.0,176.0 110.0,226.0" style="fill:var(--chart-4);fill-opacity:0.222;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,201.0 110.0,226.0 60.0,226.0" style="fill:var(--chart-4);fill-opacity:0.327;stroke:var(--line);stroke-width:0.8"/><polygon points="85.0,201.0 60.0,226.0 60.0,176.0" style="fill:var(--chart-4);fill-opacity:0.419;stroke:var(--line);stroke-width:0.8"/><rect x="60" y="176" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="81.0" y1="201.0" x2="98.0" y2="201.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="102.5,201.0 98.0,204.6 98.0,197.4" style="fill:var(--ink)"/><polygon points="135.0,201.0 110.0,176.0 160.0,176.0" style="fill:var(--chart-4);fill-opacity:0.244;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,201.0 160.0,176.0 160.0,226.0" style="fill:var(--chart-3);fill-opacity:0.219;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,201.0 160.0,226.0 110.0,226.0" style="fill:var(--chart-4);fill-opacity:0.189;stroke:var(--line);stroke-width:0.8"/><polygon points="135.0,201.0 110.0,226.0 110.0,176.0" style="fill:var(--chart-4);fill-opacity:0.308;stroke:var(--line);stroke-width:0.8"/><rect x="110" y="176" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="131.0" y1="201.0" x2="148.0" y2="201.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="152.5,201.0 148.0,204.6 148.0,197.4" style="fill:var(--ink)"/><polygon points="185.0,201.0 160.0,176.0 210.0,176.0" style="fill:var(--chart-3);fill-opacity:0.402;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,201.0 210.0,176.0 210.0,226.0" style="fill:var(--chart-3);fill-opacity:0.276;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,201.0 210.0,226.0 160.0,226.0" style="fill:var(--chart-3);fill-opacity:0.239;stroke:var(--line);stroke-width:0.8"/><polygon points="185.0,201.0 160.0,226.0 160.0,176.0" style="fill:var(--chart-3);fill-opacity:0.145;stroke:var(--line);stroke-width:0.8"/><rect x="160" y="176" width="50" height="50" style="fill:none;stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.6"/><line x1="185.0" y1="205.0" x2="185.0" y2="188.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="185.0,183.5 188.6,188.0 181.4,188.0" style="fill:var(--ink)"/></svg></div>
+<svg viewBox="0 0 258 52" role="img" aria-label="Legend: green shading for values above 0, red below, deepest at 6 or more either way; an amber square marks an arrow that is not optimal." style="display: block; width: 100%; max-width: 19.8rem; margin: 0.4rem auto 0; height: auto"><rect x="8" y="9" width="14" height="14" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="27.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">−6 or less</text><rect x="111.0" y="9" width="14" height="14" style="fill:var(--chart-3);fill-opacity:0.140;stroke:var(--line);stroke-width:0.8"/><text x="130.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">0</text><rect x="154.6" y="9" width="14" height="14" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="173.6" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">+6 or more</text><rect x="8" y="31" width="14" height="14" style="fill:none;stroke:var(--chart-1);stroke-width:2.4"/><text x="27.0" y="42.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">arrow not optimal</text></svg>
+          <figcaption>Fig.&nbsp;2 · What run 0 of each method learned after 100,000 episodes with ε = 0.5. Each triangle is shaded by the estimate for its move, arrows show the move with the largest estimate, and an amber square marks an arrow that is not optimal. From run 0 of <code>targets.py</code>.</figcaption>
+        </figure>
+        <p>SARSA's triangles are red in nearly every cell, because its estimates count the random moves the agent keeps making after each pair.</p>
+      </section>
+
+      <section data-nb-section="estimates-describe" id="estimates-describe">
+        <h2>Q-learning's estimates describe an agent that never moves at random</h2>
+        <p>Each method's estimates describe its target policy, and only SARSA's target policy makes the moves. So only SARSA's estimates predict what its agent earns. Averaged over its ε-greedy moves, SARSA's estimates put cell 9 at &minus;7.09. In the second half of each run, its episodes that start in cell 9 return &minus;7.1 on average. Taking the largest of its four, Q-learning's estimates put cell 9 at &minus;0.98, which estimates what an agent earns by following the optimal arrows and never moving at random. Its own agent's episodes from cell 9 return about &minus;7.3.</p>
+        <p>From cell 9, Q-learning's agent also earns less than SARSA's. An ε-greedy policy around a set of arrows moves like those arrows on the <a href="../reinforcement-learning/epsilon-greedy-exploration.html">modified grid</a> that replaces each aim with a random one with probability ε. The <a href="../reinforcement-learning/environments-and-the-rl-problem.html">direct solve</a> on that grid therefore gives the policy's exact value. Averaged over the runs' final policies, it gives &minus;7.10 at cell 9 for SARSA and &minus;7.30 for Q-learning. Q-learning's arrow at cell 9 aims at cell 5 or cell 10, both next to the pit, and that suits an agent that will not move at random once it gets there. Turning cell 9 left in each Q-learning run's arrows and solving again gives &minus;7.11, within 0.01 of SARSA's. The two runs with a wrong arrow at cell 10 account for that last 0.01.</p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>1. In the move of Fig.&nbsp;1, average SARSA's target over the agent's next move in cell 5, with ε = 0.5. How far below Q-learning's target is it?</p>
+          <details>
+            <summary>Answer</summary>
+            <p>The ε-greedy policy aims up, the greedy move, with probability 0.625 and each other way with 0.125. Its average of cell 5's estimates is <span class="nb-math-in">0.625 \times 0.06 + 0.125 \times (-15.93 - 3.58 - 0.29) = -2.44</span>, and the average target is <span class="nb-math-in">-1 + 0.9 \times (-2.44) = -3.20</span>. That is 2.25 below Q-learning's &minus;0.95. It is also Expected SARSA's target for this move.</p>
+          </details>
+          <p>2. With ε = 0.1, <a href="../reinforcement-learning/epsilon-greedy-exploration.html">the best ε-soft policy</a> has the optimal arrows. Do SARSA and Q-learning then learn the same estimates? What does SARSA's estimate for right at cell 14 approach?</p>
+          <details>
+            <summary>Answer</summary>
+            <p>No. The arrows agree, but SARSA's estimates still rest at <span class="nb-math-in">\tilde q</span> for ε = 0.1 and Q-learning's at <span class="nb-math-in">q_*</span>. For right at cell 14, <code>exploration.py</code> printed &minus;0.37 for the best ε-soft policy, which SARSA's estimate approaches, and 0.61 for the optimal policy, which Q-learning's approaches.</p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>SARSA and Q-learning both apply the TD update to action values after every move. The one difference is which estimate from the next cell enters the target. SARSA uses the move its ε-greedy agent will make, so its estimates rest at that policy's action values. With ε fixed it learns the best ε-soft policy, which at ε = 0.5 aims cell 9 left or down. Q-learning uses the largest estimate, so its estimates rest at <span class="nb-math-in">q_*</span> whatever the agent does, as long as every pair keeps being updated. It learns about the greedy policy while following the ε-greedy one, which makes it off-policy. Its agent still moves at random, and from cell 9 it earns less than SARSA's.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="http://incompleteideas.net/book/RLbook2020.pdf#page=151">Sutton and Barto, Sections 6.4 and 6.5</a>: read the two boxes (pp. 130&ndash;131) against <code>td_control.py</code>, including where each draws its next move, then Example 6.6 (p. 132), the cliff where Q-learning's agent earns far less.</dd>
+          <dt>02</dt>
+          <dd><a href="https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf">Watkins and Dayan, Q-learning</a>: the theorem on p. 282 states exactly what Q-learning needs from the step sizes and the behavior, and p. 281 explains why the updates need not come from one connected run.</dd>
+          <dt>03</dt>
+          <dd><a href="https://sites.ualberta.ca/~szepesva/papers/singh98convergence.pdf">Singh, Jaakkola, Littman and Szepesvári, Convergence Results for Single-Step On-Policy Reinforcement-Learning Algorithms</a>: Theorems 2 and 3 (pp. 297&ndash;299) prove the fixed-ε resting point derived here for tasks that never end, and p. 300 notes that the shrinking step size they need leaves a learner that still explores but can no longer learn from what it finds.</dd>
+          <dt>04</dt>
+          <dd><a href="https://www.cs.ox.ac.uk/people/shimon.whiteson/pubs/vanseijenadprl09.pdf">van Seijen, van Hasselt, Whiteson and Wiering, A Theoretical and Empirical Analysis of Expected Sarsa</a>: Section VI (p. 4) separates problems where the best ε-soft policy beats the ε-greedy policy around <span class="nb-math-in">q_*</span> from problems where the two coincide, the difference between ε = 0.5 and ε = 0.1 at cell 9.</dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" data-nb-note="Read in the authors' free copy at incompleteideas.net/book/RLbook2020.pdf, whose copyright page reads 2018, 2020. Page numbers are the printed ones; the PDF page is the printed page plus 22." href="https://mitpress.mit.edu/9780262039246/reinforcement-learning/">MIT Press &middot; Richard S. Sutton and Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd edition, 2018</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" data-nb-note="Technical report CUED/F-INFENG/TR 166, September 1994. The PDF is linked from this abstract page." href="https://mi.eng.cam.ac.uk/reports/abstracts/rummery_tr166.html">Cambridge University Engineering Department &middot; G. A. Rummery and M. Niranjan, On-line Q-learning using connectionist systems, 1994</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" data-nb-note="PhD thesis, King's College, May 1989, scanned from a photocopy. The printed page is the PDF page minus 7 in the body." href="https://www.cs.rhul.ac.uk/~chrisw/new_thesis.pdf">King's College &middot; Christopher J. C. H. Watkins, Learning from Delayed Rewards, 1989</a></li>
+          <li id="s4"><a data-nb-source data-nb-kind="primary" data-nb-note="Machine Learning 38(3), March 2000, pp. 287-308, per Crossref. The free copy at sites.ualberta.ca/~szepesva/papers/singh98convergence.pdf prints volume 39 and carries the journal pagination." href="https://doi.org/10.1023/A:1007678930559">Machine Learning &middot; Satinder Singh, Tommi Jaakkola, Michael L. Littman and Csaba Szepesvári, Convergence Results for Single-Step On-Policy Reinforcement-Learning Algorithms, 2000</a></li>
+          <li id="s5"><a data-nb-source data-nb-kind="primary" data-nb-note="Machine Learning 8(3-4), May 1992, pp. 279-292, per Crossref. Read in Dayan's copy at gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf." href="https://doi.org/10.1007/BF00992698">Machine Learning &middot; Christopher J. C. H. Watkins and Peter Dayan, Q-learning, 1992</a></li>
+          <li id="s6"><a data-nb-source data-nb-kind="primary" data-nb-note="AAAI-94 Proceedings, Student Abstracts, p. 1464." href="https://cdn.aaai.org/AAAI/1994/AAAI94-258.pdf">AAAI &middot; George H. John, When the Best Move Isn't Optimal: Q-learning with Exploration, 1994</a></li>
+          <li id="s7"><a data-nb-source data-nb-kind="primary" data-nb-note="2009 IEEE Symposium on Adaptive Dynamic Programming and Reinforcement Learning, pp. 177-184, per Crossref. Read in Whiteson's copy at www.cs.ox.ac.uk/people/shimon.whiteson/pubs/vanseijenadprl09.pdf; locators are pages of that 8-page PDF." href="https://doi.org/10.1109/ADPRL.2009.4927542">IEEE ADPRL &middot; Harm van Seijen, Hado van Hasselt, Shimon Whiteson and Marco Wiering, A Theoretical and Empirical Analysis of Expected Sarsa, 2009</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
