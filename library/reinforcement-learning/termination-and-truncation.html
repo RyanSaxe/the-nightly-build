@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Q-learning that treats its time limit as terminal learns the values of a different grid · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "termination-and-truncation",
+        "template": "lesson",
+        "title": "Q-learning that treats its time limit as terminal learns the values of a different grid",
+        "mode": "open",
+        "order": 7,
+        "date": "2026-11-06",
+        "tags": ["gymnasium", "termination", "truncation", "time-limits", "q-learning"],
+        "sources": 7,
+        "words": 4197,
+        "reading_minutes": 18,
+        "dek": "With a target that stops only at Gymnasium's terminated flag, the agent finds the optimal values on the course's grid even when a four-move limit cuts 62% of its episodes.",
+        "harness": "claude-code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Q-learning that treats its time limit as terminal learns the values of a different grid</h1>
+        <p class="nb-dekline">With a target that stops only at Gymnasium's terminated flag, the agent finds the optimal values on the course's grid even when a four-move limit cuts 62% of its episodes.</p>
+        <div class="nb-byline">
+          <span>18 min read</span><span>2026-11-06</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>Training loops stop episodes after a fixed number of moves. An agent written against Gymnasium, the environment interface the course adopts here, learns why an episode stopped only from what the environment returns. The TD target already handles the end of the task: a terminal state's future is worth 0, so the target is the reward alone. A time limit is a different ending. The cell the agent stands in keeps its value, so the target still bootstraps from it, which is called partial-episode bootstrapping. Gymnasium's <code>step</code> reports the two endings as two flags, terminated and truncated. Given the five values a step returns, you can write its target, and you can predict from one equation what a loop that confuses the two flags learns instead.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>: Q-learning, <code>choose</code> and <code>td_control.py</code>, and the averaging argument that finds where its estimates rest.</dd>
+          <dt>02</dt>
+          <dd><a href="../reinforcement-learning/action-values-from-samples.html">Action values let an agent improve its policy from episodes alone</a>: <code>mc_control.py</code>, whose <code>step</code> plays the grid here, and the 200-move cap.</dd>
+          <dt>03</dt>
+          <dd><a href="../reinforcement-learning/learning-values-from-samples.html">An agent can learn what each state is worth without knowing the rules</a>: the TD target and <code>estimators.py</code>, whose discount and step size the code below keeps.</dd>
+          <dt>04</dt>
+          <dd><a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>: <code>value_iteration</code> and <code>action_values</code> in <code>control.py</code>, which give the <span class="nb-math-in">q_*</span> that grades every run.</dd>
+          <dt>05</dt>
+          <dd><a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>: the grid, its rewards, <code>gridworld.py</code>, and why a terminal cell's value is 0.</dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A four-move limit stops the agent in cell&nbsp;7, next to the goal</h2>
+        <p>Start the agent in cell 13 of the <a href="../reinforcement-learning/environments-and-the-rl-problem.html">course's grid</a> and have it move right, right, up and up. With no slips it stands in cell 7 after the fourth move, one move below the goal. Now add a rule that stops every episode after four moves. The episode ends in cell 7, and the agent still has to update its estimate for its last move, up from cell 11, which paid &minus;1.</p>
+        <p>Suppose its estimates are already the <a href="../reinforcement-learning/finding-optimal-policies.html">optimal action values</a>. Cell 7 is then worth 6.48, because its next move reaches the goal's +10 with probability 0.8. <a href="../reinforcement-learning/sarsa-and-q-learning.html#update-rules">Q-learning's target</a> for the move from cell 11 is <span class="nb-math-in">-1 + 0.9 \times 6.48 = 4.83</span>. A loop that treats the end of the episode as the end of the task uses &minus;1 instead, as if nothing could be earned from cell 7.</p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center"><svg viewBox="0 0 204 268" role="img" aria-label="Episode from cell 13 under a four-move limit: right to 14, right to 15, up to 11, up to 7. The limit ends it in cell 7, one move below the goal. The fourth step returns terminated false, truncated true." style="flex: 1 1 13rem; min-width: 0; max-width: 17rem; height: auto"><text x="102.0" y="18.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">Start in cell 13</text><rect x="22" y="34" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">0</text><rect x="62" y="34" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">1</text><rect x="102" y="34" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">2</text><rect x="142" y="34" width="40" height="40" style="fill:var(--chart-3);fill-opacity:0.22;stroke:var(--line);stroke-width:0.8"/><text x="162.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-3);font-weight:600">goal</text><rect x="22" y="74" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">4</text><rect x="62" y="74" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">5</text><rect x="102" y="74" width="40" height="40" style="fill:var(--chart-4);fill-opacity:0.18;stroke:var(--line);stroke-width:0.8"/><text x="122.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="142" y="74" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">7</text><rect x="22" y="114" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">8</text><rect x="62" y="114" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">9</text><rect x="102" y="114" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">10</text><rect x="142" y="114" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">11</text><rect x="22" y="154" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">12</text><rect x="62" y="154" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">13</text><rect x="102" y="154" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">14</text><rect x="142" y="154" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">15</text><line x1="88.0" y1="174.0" x2="108.0" y2="174.0" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="116.0,174.0 108.0,178.5 108.0,169.5" style="fill:var(--ink)"/><text x="102.0" y="187.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">1</text><line x1="128.0" y1="174.0" x2="148.0" y2="174.0" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="156.0,174.0 148.0,178.5 148.0,169.5" style="fill:var(--ink)"/><text x="142.0" y="187.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">2</text><line x1="162.0" y1="168.0" x2="162.0" y2="148.0" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="162.0,140.0 166.5,148.0 157.5,148.0" style="fill:var(--ink)"/><text x="171.0" y="178.0" text-anchor="start" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">3</text><line x1="162.0" y1="128.0" x2="162.0" y2="108.0" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="162.0,100.0 166.5,108.0 157.5,108.0" style="fill:var(--ink)"/><text x="171.0" y="138.0" text-anchor="start" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">4</text><line x1="162.0" y1="88.0" x2="162.0" y2="68.0" style="stroke:var(--ink-soft);stroke-width:1.6;fill:none;stroke-dasharray:3 3"/><polygon points="162.0,60.0 166.5,68.0 157.5,68.0" style="fill:var(--ink-soft)"/><rect x="143.5" y="75.5" width="37" height="37" style="fill:none;stroke:var(--chart-1);stroke-width:2.4"/><text x="102.0" y="214.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">move 4 ends in cell 7, cut by the limit</text><text x="102.0" y="234.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-1);font-weight:600">terminated False · truncated True</text><text x="102.0" y="254.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">the dashed move 5 never happens</text></svg><svg viewBox="0 0 204 268" role="img" aria-label="Episode from cell 14 under the same limit: right to 15, then up to 11, 7 and the goal. The fourth move reaches the goal, so the fourth step returns terminated true and truncated true." style="flex: 1 1 13rem; min-width: 0; max-width: 17rem; height: auto"><text x="102.0" y="18.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">Start in cell 14</text><rect x="22" y="34" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">0</text><rect x="62" y="34" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">1</text><rect x="102" y="34" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">2</text><rect x="142" y="34" width="40" height="40" style="fill:var(--chart-3);fill-opacity:0.22;stroke:var(--line);stroke-width:0.8"/><text x="162.0" y="48.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-3);font-weight:600">goal</text><rect x="22" y="74" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">4</text><rect x="62" y="74" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">5</text><rect x="102" y="74" width="40" height="40" style="fill:var(--chart-4);fill-opacity:0.18;stroke:var(--line);stroke-width:0.8"/><text x="122.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="142" y="74" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">7</text><rect x="22" y="114" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">8</text><rect x="62" y="114" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">9</text><rect x="102" y="114" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">10</text><rect x="142" y="114" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">11</text><rect x="22" y="154" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">12</text><rect x="62" y="154" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">13</text><rect x="102" y="154" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">14</text><rect x="142" y="154" width="40" height="40" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">15</text><line x1="128.0" y1="174.0" x2="148.0" y2="174.0" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="156.0,174.0 148.0,178.5 148.0,169.5" style="fill:var(--ink)"/><text x="142.0" y="187.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">1</text><line x1="162.0" y1="168.0" x2="162.0" y2="148.0" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="162.0,140.0 166.5,148.0 157.5,148.0" style="fill:var(--ink)"/><text x="171.0" y="178.0" text-anchor="start" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">2</text><line x1="162.0" y1="128.0" x2="162.0" y2="108.0" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="162.0,100.0 166.5,108.0 157.5,108.0" style="fill:var(--ink)"/><text x="171.0" y="138.0" text-anchor="start" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">3</text><line x1="162.0" y1="88.0" x2="162.0" y2="68.0" style="stroke:var(--ink);stroke-width:2.2;fill:none"/><polygon points="162.0,60.0 166.5,68.0 157.5,68.0" style="fill:var(--ink)"/><text x="171.0" y="98.0" text-anchor="start" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">4</text><rect x="143.5" y="35.5" width="37" height="37" style="fill:none;stroke:var(--chart-3);stroke-width:2.4"/><text x="102.0" y="214.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">move 4 reaches the goal, paying +10</text><text x="102.0" y="234.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-3);font-weight:600">terminated True · truncated True</text><text x="102.0" y="254.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">the task is over: nothing follows</text></svg></div>
+          <figcaption>Fig.&nbsp;1 · Two episodes under a four-move limit, with no slips. Numbers on the arrows count moves. The flags are the ones the fourth step returns in the output of <code>grid_env.py</code> below.</figcaption>
+        </figure>
+        <p>Now start in cell 14 and move right, up, up and up. The fourth move lands in the goal and pays +10. This episode would end even without the rule. The goal is a terminal cell, and a terminal cell's <a href="../reinforcement-learning/environments-and-the-rl-problem.html#value">value is 0</a>, so the target is 10 and there is nothing to bootstrap. Both episodes stop on move 4 for different reasons, and the right target differs between them.</p>
+        <p>The course has met the first kind of ending before. <a href="../reinforcement-learning/action-values-from-samples.html#every-episode">Monte Carlo control</a> stopped every episode after <code>CAP = 200</code> moves. <code>td_control.py</code> kept the cap and already bootstrapped on the capped move, because it reads the next cell's estimate on every move. It recognized the goal and the pit through <code>TERMINAL</code> in <code>gridworld.py</code>. An agent that receives its episodes through Gymnasium does not import the grid's rules, so the environment has to say which ending happened. Gymnasium's <code>step</code> says it with two flags.<sup class="nb-cite"><a href="#s1" data-nb-locator="Env.step, Returns: terminated, truncated">1</a></sup></p>
+      </section>
+
+      <section data-nb-section="cut-bootstraps" id="cut-bootstraps">
+        <h2>A cut episode still bootstraps from its last cell</h2>
+        <p>A cell's value is the average of the returns that follow it. To see what a cut does to that average, split the return at time <span class="nb-math-in">T</span>, the move on which the limit stops the episode.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} G_t &amp;= \htmlClass{nb-mc2}{G_{t:T}} + \gamma^{T-t}\, \htmlClass{nb-mc1}{G_T} \\ \htmlClass{nb-mc2}{G_{t:T}} &amp;= R_{t+1} + \gamma R_{t+2} + \cdots + \gamma^{T-t-1} R_T \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc2">G_{t:T}</span><span>the discounted rewards the episode recorded, up to the cut</span></li>
+            <li><span class="nb-math-term nb-mc1">G_T</span><span>the return the agent would have earned after the cut</span></li>
+          </ul>
+          <figcaption>The return from time <span class="nb-math-in">t</span>, split at the cut.</figcaption>
+        </figure>
+        <p>The limit removes the rewards of <span class="nb-math-in">G_T</span> from the episode. It does not change the cell <span class="nb-math-in">S_T</span>. The slip rule and the rewards depend only on the cell and the move, never on how many moves came before, so an agent in <span class="nb-math-in">S_T</span> faces the same future at any time. The average of <span class="nb-math-in">G_T</span> given <span class="nb-math-in">S_T</span> is therefore <span class="nb-math-in">v_\pi(S_T)</span>, the cell's value. Averaging the split return gives the value of a cell in terms of a cut episode, as Pardo, Tavakoli, Levdik and Kormushev wrote it.<sup class="nb-cite"><a href="#s2" data-nb-locator="Section 3, Eq. (5), p. 4050">2</a></sup></p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">v_\pi(s) = \mathbb{E}_\pi\bigl[\, \htmlClass{nb-mc2}{G_{t:T}} + \gamma^{T-t}\, \htmlClass{nb-mc1}{v_\pi(S_T)} \mid S_t = s \,\bigr]</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">v_\pi(S_T)</span><span>what the rewards after the cut are worth on average</span></li>
+          </ul>
+          <figcaption>A cell's value, from an episode cut at time <span class="nb-math-in">T</span>. Pardo et al.'s Eq. (5).<sup class="nb-cite"><a href="#s2" data-nb-locator="Eq. (5), p. 4050">2</a></sup></figcaption>
+        </figure>
+        <p>For the move just before the cut, <span class="nb-math-in">T = t + 1</span>, the equation reads <span class="nb-math-in">v_\pi(s) = \mathbb{E}_\pi[R_{t+1} + \gamma\, v_\pi(S_{t+1}) \mid S_t = s]</span>. That is the average of the ordinary one-step target, so a time limit changes nothing in it. A terminal cell does change it. No rewards follow a terminal state, so its value is always 0.<sup class="nb-cite"><a href="#s3" data-nb-locator="Section 3.5, p. 58">3</a></sup> The same argument holds for action values. Written with Gymnasium's flags, Q-learning's target is the following.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">y_t = R_{t+1} + \gamma\, \htmlClass{nb-mc3}{(1 - \text{terminated})} \max_a Q(S_{t+1}, a)</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc3">\text{terminated}</span><span>1 if <span class="nb-math-in">S_{t+1}</span> is the goal or the pit, otherwise 0. Truncated does not appear.</span></li>
+          </ul>
+          <figcaption>Q-learning's target from Gymnasium's flags. Pardo et al. call bootstrapping at a cut partial-episode bootstrapping and give the rule for state values as their Eq. (6).<sup class="nb-cite"><a href="#s2" data-nb-locator="Section 3, Eq. (6), p. 4050">2</a></sup> Gymnasium's tutorial gives the same rule.<sup class="nb-cite"><a href="#s4" data-nb-locator="Importance in learning code; Solution">4</a></sup></figcaption>
+        </figure>
+        <p>The argument needed the limit to sit outside the task. If the task were to earn as much as possible in four moves, cell 12 with one move left would have a different future from cell 12 with four, so the cell alone would not fix the value. The remaining time would belong in the observation, and reaching the limit would be a termination.<sup class="nb-cite"><a href="#s2" data-nb-locator="Abstract; Section 1, pp. 4045-4046; Section 2, p. 4047">2</a></sup><sup class="nb-cite"><a href="#s4" data-nb-locator="Termination">4</a></sup> On this grid the task ends only at the goal or the pit, so a time limit is a rule of the training loop.</p>
+        <p>The two endings can also arrive together. The episode from cell 14 reaches the goal on the limit's last move, so both flags are true. The target above tests terminated alone and gives 10. A target that bootstrapped whenever truncated was true would add the goal's estimate. That estimate keeps its starting value, 0 in the course's tables, because no move starts in the goal.</p>
+      </section>
+
+      <section data-nb-section="gymnasium" id="gymnasium">
+        <h2>Gymnasium's step reports the two endings as two flags</h2>
+        <p>Gymnasium defines an environment as a Python class with two spaces and two methods.<sup class="nb-cite"><a href="#s1" data-nb-locator="gymnasium.Env: Methods and Attributes">1</a></sup> Its current release is 1.4.0, from 5 October 2026, and the listings pin it.<sup class="nb-cite"><a href="#s5" data-nb-locator="Release history: 1.4.0, 2026-10-05">5</a></sup> The <code>observation_space</code> and <code>action_space</code> say what the environment returns and accepts. <code>Discrete(16)</code> is the set of integers 0 to 15,<sup class="nb-cite"><a href="#s6" data-nb-locator="gymnasium.spaces.Discrete">6</a></sup> so the cells are the observations, and <code>Discrete(4)</code> holds the four moves.</p>
+        <p><code>reset</code> starts an episode and returns an observation and <code>info</code>, a dictionary for anything else. A custom environment's <code>reset</code> first calls <code>super().reset(seed=seed)</code>, which seeds the environment's generator, <code>self.np_random</code>. A seed passed to the first reset makes a run repeatable, and later resets without one continue the same generator.<sup class="nb-cite"><a href="#s1" data-nb-locator="Env.reset: seed parameter and Note">1</a></sup></p>
+        <p><code>step</code> takes a move and returns five values: the observation, the reward, <code>terminated</code>, <code>truncated</code> and <code>info</code>. Terminated says the agent reached a terminal state of the task. Truncated says that a condition outside the task, typically a time limit, ended the episode. After either one, the loop has to call <code>reset</code> before it steps again.<sup class="nb-cite"><a href="#s1" data-nb-locator="Env.step: Returns">1</a></sup></p>
+        <p><code>grid_env.py</code> puts the grid behind this interface. Its <code>step</code> hands the environment's own generator to <code>step</code> from <code>mc_control.py</code>, which already plays the slip rule. It returns terminated when the agent lands on the goal or the pit. It never returns truncated, because the grid has no limit of its own.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">grid_env.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""The course's slippery grid as a Gymnasium environment.
+
+mc_control.step already plays the grid's rules. SlipperyGrid puts them behind
+the interface a Gymnasium agent expects: two spaces, reset and step.
+"""
+
+import gymnasium as gym
+import mc_control
+from gridworld import N, TERMINAL
+from gymnasium.wrappers import TimeLimit
+
+
+class SlipperyGrid(gym.Env):
+    """Observations are cells 0 to 15 and actions are moves 0 to 3 (up,
+    right, down, left). An episode starts in a random non-terminal cell, or
+    in options["start"], and the task ends only at the goal or the pit."""
+
+    def __init__(self):
+        self.observation_space = gym.spaces.Discrete(N)
+        self.action_space = gym.spaces.Discrete(4)
+
+    def reset(self, *, seed=None, options=None):
+        super().reset(seed=seed)  # seeds self.np_random if seed is given
+        start = (options or {}).get("start")
+        if start is None:
+            live = mc_control.LIVE
+            start = live[self.np_random.integers(len(live))]
+        self.cell = start
+        return self.cell, {}
+
+    def step(self, action):
+        reward, self.cell = mc_control.step(self.cell, action, self.np_random)
+        terminated = self.cell in TERMINAL  # the goal or the pit: no future
+        return self.cell, float(reward), terminated, False, {}
+
+
+if __name__ == "__main__":
+    env = TimeLimit(SlipperyGrid(), max_episode_steps=4)
+    print(env.observation_space, env.action_space)
+    # Seed 29 is one under which none of the eight moves below slips.
+    print("reset:", env.reset(seed=29, options={"start": 13}))
+    for move in (1, 1, 0, 0):  # right, right, up, up
+        print("step: ", env.step(move))
+    print("reset:", env.reset(options={"start": 14}))
+    for move in (1, 0, 0, 0):  # right, up, up, up
+        print("step: ", env.step(move))</code></pre>
+        </figure>
+        <p>The limit comes from a wrapper, an environment that holds another and changes what passes through it. <code>TimeLimit(env, max_episode_steps=4)</code> counts the moves since the last reset and sets truncated on the move where the count reaches 4. It never changes terminated.<sup class="nb-cite"><a href="#s7" data-nb-locator="gymnasium.wrappers.TimeLimit, class docstring and Parameters">7</a></sup></p>
+        <p>The demo at the bottom of <code>grid_env.py</code> plays the two episodes of Fig.&nbsp;1 under that wrapper, with a seed under which none of their moves slips.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run grid_env.py</span><span>text</span></div>
+          <pre><code data-language="text">Discrete(16) Discrete(4)
+reset: (13, {})
+step:  (14, -1.0, False, False, {})
+step:  (15, -1.0, False, False, {})
+step:  (11, -1.0, False, False, {})
+step:  (7, -1.0, False, True, {})
+reset: (14, {})
+step:  (15, -1.0, False, False, {})
+step:  (11, -1.0, False, False, {})
+step:  (7, -1.0, False, False, {})
+step:  (3, 10.0, True, True, {})</code></pre>
+        </figure>
+        <p>In OpenAI Gym before version 0.26, <code>step</code> returned a single flag, <code>done</code>, in place of the two, and marked a time limit only with an entry in <code>info</code>.<sup class="nb-cite"><a href="#s1" data-nb-locator="Env.step: Changed in version 0.26; info and done entries">1</a></sup></p>
+      </section>
+
+      <section data-nb-section="different-grid" id="different-grid">
+        <h2>Treated as terminal, the cut makes Q-learning solve a grid that ends at random</h2>
+        <p><code>q_gym.py</code> is the Q-learning of <code>td_control.py</code>, rewritten to see only what the environment returns. It makes its ε-greedy moves with <code>choose</code> and uses the step size of <code>td0</code>, <span class="nb-math-in">N(s, a)^{-0.7}</span>, where <span class="nb-math-in">N(s, a)</span> counts the pair's updates. With <code>cut_is_terminal</code> left False, its target is the one derived above. Setting it True also stops the target at truncated, which is the mistake. Nothing else differs between the two.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">q_gym.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning that sees only what a Gymnasium environment returns.
+
+The method is td_control.py's Q-learning with td0's step size. Nothing here
+reads the grid's rules: the two flags say when an episode ends, and why.
+"""
+
+import numpy as np
+from estimators import GAMMA
+from td_control import choose
+
+
+def q_learning(env, eps, episodes, seed, cut_is_terminal=False, watch=None):
+    """eps-greedy Q-learning for `episodes` episodes. cut_is_terminal=True
+    also stops the target when a time limit cuts the episode: the mistake."""
+    Q = np.zeros((env.observation_space.n, env.action_space.n))
+    count = np.zeros_like(Q)
+    # reset(seed=seed) gives the environment the stream of default_rng(seed),
+    # so the agent draws its random moves from a different one.
+    rng = np.random.default_rng((seed, 1))
+    for k in range(episodes):
+        s, info = env.reset(seed=seed if k == 0 else None)
+        while True:
+            a = choose(Q, s, eps, rng)
+            s_next, reward, terminated, truncated, info = env.step(a)
+            stop = terminated or (cut_is_terminal and truncated)
+            target = reward + GAMMA * (not stop) * Q[s_next].max()
+            count[s, a] += 1
+            Q[s, a] += count[s, a] ** -0.7 * (target - Q[s, a])
+            if watch:
+                watch(k, s, a, terminated, truncated)
+            if terminated or truncated:
+                break
+            s = s_next
+    return Q</code></pre>
+        </figure>
+        <p>Where do the estimates rest under the mistake? The <a href="../reinforcement-learning/sarsa-and-q-learning.html#target-averages">last lesson</a> answered that question for Q-learning by averaging its target over one move from a pair <span class="nb-math-in">(s, a)</span>. With the cut treated as terminal, the target is <span class="nb-math-in">R(s')</span> on moves that end at the limit and <span class="nb-math-in">R(s') + \gamma \max_{a'} Q(s', a')</span> on the others. Let <span class="nb-math-in">p(s, a)</span> be the share of the pair's updates that come on a limit's last move. The slip rule does not look at the clock, so the landing cell <span class="nb-math-in">s'</span> has the same distribution on those moves as on the rest. Averaging gives the condition for the estimates to rest.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;Q(s, a) = \sum_{s'} P(s' \mid s, a) \bigl[\, R(s') \\ &amp;\qquad + \gamma\, \htmlClass{nb-mc4}{(1 - p(s, a))} \max_{a'} Q(s', a') \,\bigr] \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc4">1 - p(s, a)</span><span>the share of the pair's updates whose target bootstraps</span></li>
+          </ul>
+          <figcaption>Where Q-learning's estimates rest when the target also stops at the limit.</figcaption>
+        </figure>
+        <p>With <span class="nb-math-in">p = 0</span> this is the <a href="../reinforcement-learning/finding-optimal-policies.html">Bellman optimality equation</a>, whose only solution is <span class="nb-math-in">q_*</span>. With <span class="nb-math-in">p &gt; 0</span> it is the Bellman optimality equation of a different grid, on which a move from <span class="nb-math-in">(s, a)</span> also ends the episode with probability <span class="nb-math-in">p(s, a)</span>, with nothing more to earn. Its right side still shrinks the gap between two sets of estimates by a factor of at most <span class="nb-math-in">\gamma</span>, so it too has one solution. Each <span class="nb-math-in">p(s, a)</span> comes from the limit, the starting cells and the way the agent moves, and none of those belongs to the task. Pardo and colleagues call treating such cuts as terminations a common mistake.<sup class="nb-cite"><a href="#s2" data-nb-locator="Section 3, p. 4049">2</a></sup></p>
+      </section>
+
+      <section data-nb-section="runs" id="runs">
+        <h2>The runs settle where each target's average puts them</h2>
+        <p><code>limits.py</code> runs both versions with ε = 0.5 for 100,000 episodes, as the last lesson's runs did, five runs per version, under limits from 2 to 200 moves. It grades the estimates against <span class="nb-math-in">q_*</span>, measures <span class="nb-math-in">p(s, a)</span> in the second half of each run, and solves the resting-point equation for that <span class="nb-math-in">p</span> by iteration. <code>uv run limits.py</code> needs <code>gridworld.py</code>, <code>control.py</code>, <code>estimators.py</code>, <code>mc_control.py</code>, <code>td_control.py</code>, <code>grid_env.py</code> and <code>q_gym.py</code> in one folder. It takes about three minutes on the machine used here.</p>
+        <details>
+          <summary><code>limits.py</code>, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">limits.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Print every number on the page: Q-learning with eps 0.5 under time limits
+of 2 to 200 moves, once with the target that bootstraps at the limit and
+once with the target that treats the limit as terminal, 5 seeds each."""
+
+import numpy as np
+from control import action_values, value_iteration
+from estimators import GAMMA
+from grid_env import SlipperyGrid
+from gridworld import N, R, transitions
+from gymnasium.wrappers import TimeLimit
+from mc_control import LIVE, SLIP
+from q_gym import q_learning
+
+EPS, EPISODES, SEEDS = 0.5, 100_000, range(5)
+LIMITS = (2, 3, 4, 6, 10, 20, 200)
+P = transitions(SLIP)
+Q_STAR = action_values(value_iteration(1e-12)[0], P)
+
+
+def resting_point(p):
+    """The optimal action values of a grid on which a move from (s, a) also
+    ends the episode, with nothing more to earn, with probability p[s, a]."""
+    Q = np.zeros((N, 4))
+    for _ in range(1000):
+        Q = P @ R + GAMMA * (1 - p) * (P @ Q.max(axis=1))
+    return Q
+
+
+def run(limit, cut_is_terminal, seed):
+    """One run's estimates, its share of episodes cut by the limit, and p:
+    the share of each pair's updates in the second half on the last move."""
+    late, last, cut = np.zeros((N, 4)), np.zeros((N, 4)), [0]
+
+    def watch(k, s, a, terminated, truncated):
+        cut[0] += truncated and not terminated
+        if k &gt;= EPISODES // 2:
+            late[s, a] += 1
+            last[s, a] += truncated
+
+    env = TimeLimit(SlipperyGrid(), max_episode_steps=limit)
+    Q = q_learning(env, EPS, EPISODES, seed, cut_is_terminal, watch)
+    return Q, cut[0] / EPISODES, last / np.maximum(late, 1)
+
+
+def error(Q, exact):
+    """Mean absolute difference over the 56 (cell, move) pairs."""
+    return np.abs(Q - exact)[LIVE].mean()
+
+
+def grid(values):
+    return "\n".join("  " + " ".join(f"{x:6.2f}" for x in values[r:r + 4])
+                     for r in range(0, N, 4))
+
+
+def main():
+    print(f"eps {EPS}, {EPISODES:,} episodes, {len(SEEDS)} runs per row;")
+    print("errors are mean |Q - q*| over the 56 pairs, averaged over runs")
+    print(f"{'limit':&gt;5s}{'episodes cut':&gt;14s}{'bootstraps':&gt;12s}"
+          f"{'cut is terminal':&gt;17s}{'  ... vs its resting point':&gt;27s}")
+    values = {}
+    for limit in LIMITS:
+        boot = [run(limit, False, seed) for seed in SEEDS]
+        stop = [run(limit, True, seed) for seed in SEEDS]
+        cut = np.mean([r[1] for r in boot])
+        e_boot = np.mean([error(Q, Q_STAR) for Q, _, _ in boot])
+        e_stop = np.mean([error(Q, Q_STAR) for Q, _, _ in stop])
+        e_rest = np.mean([error(Q, resting_point(p)) for Q, _, p in stop])
+        print(f"{limit:5d}{cut:14.2f}{e_boot:12.2f}{e_stop:17.2f}{e_rest:27.2f}")
+        if limit == 4:
+            values = {"bootstraps": boot, "cut is terminal": stop}
+    print("\nlimit 4: each cell's largest estimate, mean of the runs")
+    print("exact optimal values v*\n" + grid(Q_STAR.max(axis=1)))
+    for name, runs in values.items():
+        print(name + "\n" + grid(np.mean([Q.max(axis=1) for Q, _, _ in runs], 0)))
+    p = np.mean([p for _, _, p in values["cut is terminal"]], 0)
+    print("share of updates on the limit's last move, cut is terminal: "
+          f"{p[LIVE].mean():.2f} (lowest pair {p[LIVE].min():.2f})")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+          </figure>
+        </details>
+        <details>
+          <summary>The output of <code>uv run limits.py</code></summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">output of uv run limits.py</span><span>text</span></div>
+            <pre><code data-language="text">eps 0.5, 100,000 episodes, 5 runs per row;
+errors are mean |Q - q*| over the 56 pairs, averaged over runs
+limit  episodes cut  bootstraps  cut is terminal   ... vs its resting point
+    2          0.79        0.14             1.29                       0.09
+    3          0.70        0.12             1.21                       0.10
+    4          0.62        0.12             1.15                       0.08
+    6          0.46        0.12             0.85                       0.09
+   10          0.24        0.10             0.38                       0.10
+   20          0.04        0.08             0.08                       0.07
+  200          0.00        0.09             0.09                       0.09
+
+limit 4: each cell's largest estimate, mean of the runs
+exact optimal values v*
+    2.16   4.04   6.48   0.00
+    0.61   0.06   0.00   6.48
+   -0.71  -1.01   0.06   4.04
+   -1.73  -0.71   0.61   2.16
+bootstraps
+    2.12   4.00   6.39   0.00
+    0.59  -0.12   0.00   6.42
+   -0.69  -1.03  -0.25   4.00
+   -1.69  -0.69   0.61   2.15
+cut is terminal
+    0.26   2.45   6.37   0.00
+   -1.02  -1.53   0.00   6.43
+   -1.92  -2.19  -1.55   2.52
+   -2.56  -1.91  -1.01   0.31
+share of updates on the limit's last move, cut is terminal: 0.20 (lowest pair 0.11)</code></pre>
+          </figure>
+        </details>
+        <p>Under the four-move limit, 62% of episodes are cut, and no episode from cell 12 can reach the goal, which is six moves away. The bootstrapping target still ends 0.12 from <span class="nb-math-in">q_*</span> on average over the 56 pairs, close to the 0.09 it reaches under a 200-move limit, which cuts nothing. Its largest gaps, at cells 5 and 10 beside the pit, shrink in longer runs. At cell 12 its estimate is &minus;1.69, against an optimal value of &minus;1.73 that counts the goal's +10. Bootstrapping carries that reward back one move per update, through episodes that never contain it.</p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center"><svg viewBox="0 0 164 186" role="img" aria-label="Exact optimal values on the grid. Top row 2.16, 4.04, 6.48, goal. Second row 0.61, 0.06, pit, 6.48. Third row minus 0.71, minus 1.01, 0.06, 4.04. Bottom row minus 1.73, minus 0.71, 0.61, 2.16." style="flex: 1 1 10rem; min-width: 0; max-width: 14rem; height: auto"><text x="82.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">Exact optimal values</text><rect x="6" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.306;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">2.16</text><rect x="44" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.572;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">4.04</text><rect x="82" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">6.48</text><rect x="120" y="28" width="38" height="38" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.4"/><text x="139.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text><rect x="6" y="66" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.086;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.61</text><rect x="44" y="66" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.040;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.06</text><rect x="82" y="66" width="38" height="38" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.4"/><text x="101.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="120" y="66" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">6.48</text><rect x="6" y="104" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.101;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−0.71</text><rect x="44" y="104" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.143;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.01</text><rect x="82" y="104" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.040;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.06</text><rect x="120" y="104" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.572;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">4.04</text><rect x="6" y="142" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.245;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.73</text><rect x="44" y="142" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.101;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−0.71</text><rect x="82" y="142" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.086;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.61</text><rect x="120" y="142" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.306;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">2.16</text></svg><svg viewBox="0 0 164 186" role="img" aria-label="Largest estimates learned with the target that bootstraps at the limit, mean of five runs under a four-move limit. Top row 2.12, 4.00, 6.39, goal. Second row 0.59, minus 0.12, pit, 6.42. Third row minus 0.69, minus 1.03, minus 0.25, 4.00. Bottom row minus 1.69, minus 0.69, 0.61, 2.15. Close to the exact values." style="flex: 1 1 10rem; min-width: 0; max-width: 14rem; height: auto"><text x="82.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">Bootstraps at the limit</text><rect x="6" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.300;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">2.12</text><rect x="44" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.567;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">4.00</text><rect x="82" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">6.39</text><rect x="120" y="28" width="38" height="38" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.4"/><text x="139.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text><rect x="6" y="66" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.084;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.59</text><rect x="44" y="66" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.040;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−0.12</text><rect x="82" y="66" width="38" height="38" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.4"/><text x="101.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="120" y="66" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">6.42</text><rect x="6" y="104" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.098;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−0.69</text><rect x="44" y="104" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.146;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.03</text><rect x="82" y="104" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.040;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−0.25</text><rect x="120" y="104" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.567;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">4.00</text><rect x="6" y="142" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.239;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.69</text><rect x="44" y="142" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.098;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−0.69</text><rect x="82" y="142" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.086;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.61</text><rect x="120" y="142" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.305;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">2.15</text></svg><svg viewBox="0 0 164 186" role="img" aria-label="Largest estimates learned with the target that treats the limit as terminal, mean of five runs. Top row 0.26, 2.45, 6.37, goal. Second row minus 1.02, minus 1.53, pit, 6.43. Third row minus 1.92, minus 2.19, minus 1.55, 2.52. Bottom row minus 2.56, minus 1.91, minus 1.01, 0.31. Lower than the exact values in every cell, least next to the goal." style="flex: 1 1 10rem; min-width: 0; max-width: 14rem; height: auto"><text x="82.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">Cut treated as terminal</text><rect x="6" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.040;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.26</text><rect x="44" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.347;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">2.45</text><rect x="82" y="28" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">6.37</text><rect x="120" y="28" width="38" height="38" style="fill:var(--panel);stroke:var(--chart-3);stroke-width:1.4"/><text x="139.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text><rect x="6" y="66" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.145;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.02</text><rect x="44" y="66" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.217;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.53</text><rect x="82" y="66" width="38" height="38" style="fill:var(--panel);stroke:var(--chart-4);stroke-width:1.4"/><text x="101.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="120" y="66" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="89.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">6.43</text><rect x="6" y="104" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.272;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.92</text><rect x="44" y="104" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.310;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−2.19</text><rect x="82" y="104" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.220;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.55</text><rect x="120" y="104" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.357;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="127.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">2.52</text><rect x="6" y="142" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.363;stroke:var(--line);stroke-width:0.8"/><text x="25.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−2.56</text><rect x="44" y="142" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.271;stroke:var(--line);stroke-width:0.8"/><text x="63.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.91</text><rect x="82" y="142" width="38" height="38" style="fill:var(--chart-4);fill-opacity:0.143;stroke:var(--line);stroke-width:0.8"/><text x="101.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">−1.01</text><rect x="120" y="142" width="38" height="38" style="fill:var(--chart-3);fill-opacity:0.044;stroke:var(--line);stroke-width:0.8"/><text x="139.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.31</text></svg></div>
+<svg viewBox="0 0 258 30" role="img" aria-label="Legend: green shading for values above 0, red below, deepest at 6 or more either way." style="display: block; width: 100%; max-width: 19.8rem; margin: 0.4rem auto 0; height: auto"><rect x="8" y="9" width="14" height="14" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="27.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">−6 or less</text><rect x="111.0" y="9" width="14" height="14" style="fill:var(--chart-3);fill-opacity:0.040;stroke:var(--line);stroke-width:0.8"/><text x="130.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">0</text><rect x="154.6" y="9" width="14" height="14" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/><text x="173.6" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">+6 or more</text></svg>
+          <figcaption>Fig.&nbsp;2 · Each cell's largest estimate after 100,000 episodes under a four-move limit, mean of five runs, beside the exact optimal values. From <code>limits.py</code>.</figcaption>
+        </figure>
+        <p>On average a fifth of each pair's updates come on a limit's last move, and the target that stops there ends 1.15 from <span class="nb-math-in">q_*</span>. It ends 0.08 from its own resting point, so the derivation predicts what it learns at least as closely as <span class="nb-math-in">q_*</span> predicts the bootstrapping target. Its estimates are lower than the optimal values in every cell. Cells 2 and 7, next to the goal, change least, because most of their value arrives with the move into the goal, whose target never bootstraps.</p>
+        <p>Fig.&nbsp;3 repeats the comparison at every limit. A longer limit cuts fewer episodes, so <span class="nb-math-in">p</span> shrinks and the mistaken resting point moves toward <span class="nb-math-in">q_*</span>. At 10 moves, 24% of episodes are cut and the mistake's error is 0.38. With 4% cut at 20 moves, the two targets can't be told apart. The course's cap of 200 moves cut no episode in any run, and the two versions learned identical estimates. That is why the cap did not matter in the last lesson's runs, and why the main runs here use a limit of four moves.</p>
+        <figure class="nb-figure">
+          <div style="overflow-x: auto">
+<svg viewBox="0 0 400 270" role="img" aria-label="Line chart of mean error against q-star for time limits of 2, 3, 4, 6, 10, 20 and 200 moves, spaced evenly. The target that treats the limit as terminal falls from 1.29 at 2 moves to 1.15 at 4, 0.85 at 6, 0.38 at 10 and 0.08 at 20, then 0.09 at 200. The target that bootstraps at the limit stays between 0.08 and 0.14 at every limit. The share of episodes cut falls from 79 percent at 2 moves to none at 200." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto"><line x1="50" y1="214.0" x2="382" y2="214.0" style="stroke:var(--line);stroke-width:1"/><text x="44.0" y="218.0" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">0.0</text><line x1="50" y1="186.3" x2="382" y2="186.3" style="stroke:var(--line);stroke-width:0.6"/><text x="44.0" y="190.3" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">0.2</text><line x1="50" y1="158.6" x2="382" y2="158.6" style="stroke:var(--line);stroke-width:0.6"/><text x="44.0" y="162.6" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">0.4</text><line x1="50" y1="130.9" x2="382" y2="130.9" style="stroke:var(--line);stroke-width:0.6"/><text x="44.0" y="134.9" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">0.6</text><line x1="50" y1="103.1" x2="382" y2="103.1" style="stroke:var(--line);stroke-width:0.6"/><text x="44.0" y="107.1" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">0.8</text><line x1="50" y1="75.4" x2="382" y2="75.4" style="stroke:var(--line);stroke-width:0.6"/><text x="44.0" y="79.4" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">1.0</text><line x1="50" y1="47.7" x2="382" y2="47.7" style="stroke:var(--line);stroke-width:0.6"/><text x="44.0" y="51.7" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">1.2</text><line x1="50" y1="20.0" x2="382" y2="20.0" style="stroke:var(--line);stroke-width:0.6"/><text x="44.0" y="24.0" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">1.4</text><line x1="74.0" y1="214" x2="74.0" y2="218" style="stroke:var(--ink-soft);stroke-width:0.8"/><text x="74.0" y="230.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">2</text><text x="74.0" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">79%</text><line x1="121.3" y1="214" x2="121.3" y2="218" style="stroke:var(--ink-soft);stroke-width:0.8"/><text x="121.3" y="230.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">3</text><text x="121.3" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">70%</text><line x1="168.7" y1="214" x2="168.7" y2="218" style="stroke:var(--ink-soft);stroke-width:0.8"/><text x="168.7" y="230.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">4</text><text x="168.7" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">62%</text><line x1="216.0" y1="214" x2="216.0" y2="218" style="stroke:var(--ink-soft);stroke-width:0.8"/><text x="216.0" y="230.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">6</text><text x="216.0" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">46%</text><line x1="263.3" y1="214" x2="263.3" y2="218" style="stroke:var(--ink-soft);stroke-width:0.8"/><text x="263.3" y="230.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">10</text><text x="263.3" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">24%</text><line x1="310.7" y1="214" x2="310.7" y2="218" style="stroke:var(--ink-soft);stroke-width:0.8"/><text x="310.7" y="230.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">20</text><text x="310.7" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">4%</text><line x1="358.0" y1="214" x2="358.0" y2="218" style="stroke:var(--ink-soft);stroke-width:0.8"/><text x="358.0" y="230.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">200</text><text x="358.0" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">0%</text><text x="42.0" y="245.0" text-anchor="end" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">cut</text><text x="216.0" y="264.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">time limit in moves (not to scale), with the share of episodes cut</text><text x="14" y="117.0" text-anchor="middle" transform="rotate(-90 14 117.0)" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">mean |Q − q*|</text><polyline points="74.0,35.2 121.3,46.3 168.7,54.6 216.0,96.2 263.3,161.3 310.7,202.9 358.0,201.5" style="fill:none;stroke:var(--chart-4);stroke-width:2.2;stroke-linejoin:round"/><circle cx="74.0" cy="35.2" r="3.2" style="fill:var(--chart-4)"/><circle cx="121.3" cy="46.3" r="3.2" style="fill:var(--chart-4)"/><circle cx="168.7" cy="54.6" r="3.2" style="fill:var(--chart-4)"/><circle cx="216.0" cy="96.2" r="3.2" style="fill:var(--chart-4)"/><circle cx="263.3" cy="161.3" r="3.2" style="fill:var(--chart-4)"/><circle cx="310.7" cy="202.9" r="3.2" style="fill:var(--chart-4)"/><circle cx="358.0" cy="201.5" r="3.2" style="fill:var(--chart-4)"/><text x="178.7" y="46.6" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--chart-4);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">cut treated as terminal</text><polyline points="74.0,194.6 121.3,197.4 168.7,197.4 216.0,197.4 263.3,200.1 310.7,202.9 358.0,201.5" style="fill:none;stroke:var(--chart-2);stroke-width:2.2;stroke-linejoin:round"/><circle cx="74.0" cy="194.6" r="3.2" style="fill:var(--chart-2)"/><circle cx="121.3" cy="197.4" r="3.2" style="fill:var(--chart-2)"/><circle cx="168.7" cy="197.4" r="3.2" style="fill:var(--chart-2)"/><circle cx="216.0" cy="197.4" r="3.2" style="fill:var(--chart-2)"/><circle cx="263.3" cy="200.1" r="3.2" style="fill:var(--chart-2)"/><circle cx="310.7" cy="202.9" r="3.2" style="fill:var(--chart-2)"/><circle cx="358.0" cy="201.5" r="3.2" style="fill:var(--chart-2)"/><text x="70.0" y="182.6" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">bootstraps at the limit</text></svg>
+          </div>
+          <figcaption>Fig.&nbsp;3 · Mean error against <span class="nb-math-in">q_*</span> over the 56 pairs, five runs per point. The row under the limits gives the share of episodes cut. At every limit the mistaken estimates end within 0.10 of their derived resting point. From <code>limits.py</code>.</figcaption>
+        </figure>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>1. An agent whose estimates equal <span class="nb-math-in">q_*</span> aims up from cell 11 and receives <code>(7, -1.0, False, True, {})</code>. Later it aims up from cell 7 and receives <code>(3, 10.0, True, True, {})</code>. Write both targets. Which would change under a five-move limit?</p>
+          <details>
+            <summary>Answer</summary>
+            <p>The first target is <span class="nb-math-in">-1 + 0.9 \times 6.48 = 4.83</span>, since terminated is False. The second is 10, since terminated is True. Neither changes under a five-move limit. The first step would come back with truncated False, which leaves its target as it was, because truncated never enters the target.</p>
+          </details>
+          <p>2. <a href="../reinforcement-learning/action-values-from-samples.html#every-episode">Monte Carlo control</a> left out the rewards after each cut. Using Pardo et al.'s Eq. (5) above, change a cut episode's returns so that Monte Carlo prediction can use them without that error. What does the change cost?</p>
+          <details>
+            <summary>Answer</summary>
+            <p>Add <span class="nb-math-in">\gamma^{T-t} V(S_T)</span> to the return from each time <span class="nb-math-in">t</span>, where <span class="nb-math-in">S_T</span> is the cell the episode was cut in. An episode that ends at the goal or the pit keeps its returns, since a terminal cell's value is 0. The corrected returns contain an estimate, so they inherit its error. That is the cost <a href="../reinforcement-learning/learning-values-from-samples.html#noise-and-bias">TD paid</a> for its quieter targets.</p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>Terminated and truncated, the two flags of Gymnasium's <code>step</code>, call for different targets. Terminated means the task is over and the next cell's future is worth 0, so the target is the reward alone. Truncated means a time limit outside the task cut the episode, and the cell keeps its value, so the target still bootstraps. The target is <span class="nb-math-in">R + \gamma (1 - \text{terminated}) \max_a Q(S', a)</span>, with truncated nowhere in it. Under a four-move limit on the grid, that target finds <span class="nb-math-in">q_*</span> although most episodes are cut. Stopping it at the limit as well makes Q-learning learn the optimal values of a grid that ends at random, 1.15 from <span class="nb-math-in">q_*</span> on average.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="https://proceedings.mlr.press/v80/pardo18a/pardo18a.pdf">Pardo, Tavakoli, Levdik and Kormushev, Time Limits in Reinforcement Learning</a>: Section 3 (pp. 4049&ndash;4050) derives partial-episode bootstrapping. Section 2.2 (p. 4048) finds the same kind of resting point on a deterministic grid where a third of the targets stop at the limit, and Fig.&nbsp;1 (p. 4046) draws what that agent learns.</dd>
+          <dt>02</dt>
+          <dd><a href="https://gymnasium.farama.org/v1.4.0/tutorials/gymnasium_basics/handling_time_limits/">Gymnasium, Handling Time Limits</a>: the section on learning code sets the incorrect target built from <code>done</code> beside the correct one.</dd>
+          <dt>03</dt>
+          <dd><a href="https://farama.org/Gymnasium-Terminated-Truncated-Step-API">Farama Foundation, Deep Dive: Gymnasium Terminated-Truncated Step API</a>: "Alternative Implementations" explains why the API returns two flags and not a richer <code>done</code>, so that old code fails loudly.</dd>
+          <dt>04</dt>
+          <dd><a href="http://incompleteideas.net/book/RLbook2020.pdf#page=79">Sutton and Barto, Section 3.4</a>: the absorbing state that pays 0 forever (p. 57), the reason a terminal state's value is 0.</dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" data-nb-note="API reference generated from the 1.4.0 docstrings; Env.step and Env.reset entries on one page." href="https://gymnasium.farama.org/v1.4.0/api/env/">Farama Foundation &middot; Gymnasium 1.4.0 documentation, Env</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" data-nb-note="Proceedings of the 35th International Conference on Machine Learning, PMLR 80:4045-4054. Page numbers are the proceedings' printed pages; the PDF is linked from this page." href="https://proceedings.mlr.press/v80/pardo18a.html">PMLR &middot; Fabio Pardo, Arash Tavakoli, Vitaly Levdik and Petar Kormushev, Time Limits in Reinforcement Learning, 2018</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" data-nb-note="Read in the authors' free copy at incompleteideas.net/book/RLbook2020.pdf, whose copyright page reads 2018, 2020. Page numbers are the printed ones; the PDF page is the printed page plus 22." href="https://mitpress.mit.edu/9780262039246/reinforcement-learning/">MIT Press &middot; Richard S. Sutton and Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd edition, 2018</a></li>
+          <li id="s4"><a data-nb-source data-nb-kind="primary" data-nb-note="The page states that the tutorial is compatible with Gymnasium 1.4.0." href="https://gymnasium.farama.org/v1.4.0/tutorials/gymnasium_basics/handling_time_limits/">Farama Foundation &middot; Gymnasium 1.4.0 documentation, Handling Time Limits</a></li>
+          <li id="s5"><a data-nb-source data-nb-kind="primary" data-nb-note="Version 1.4.0 uploaded 2026-10-05; requires Python 3.10 or later." href="https://pypi.org/project/gymnasium/1.4.0/">PyPI &middot; gymnasium 1.4.0</a></li>
+          <li id="s6"><a data-nb-source data-nb-kind="primary" href="https://gymnasium.farama.org/v1.4.0/api/spaces/fundamental/#gymnasium.spaces.Discrete">Farama Foundation &middot; Gymnasium 1.4.0 documentation, Fundamental Spaces: Discrete</a></li>
+          <li id="s7"><a data-nb-source data-nb-kind="primary" href="https://gymnasium.farama.org/v1.4.0/api/wrappers/misc_wrappers/#gymnasium.wrappers.TimeLimit">Farama Foundation &middot; Gymnasium 1.4.0 documentation, Misc Wrappers: TimeLimit</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
