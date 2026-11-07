@@ -16,7 +16,7 @@ the course hasn't taught, and never present one as already known.
 
 The first three lessons were written under older instructions. They are
 `environments-and-the-rl-problem`, `finding-optimal-policies`, and `learning-values-from-samples`. Read
-them to learn what the course has taught and to reuse their environment and code. Don't copy their
+them to learn what the course has taught and what code later lessons can reuse. Don't copy their
 length, structure, voice, or the way they refer to each other. Where they disagree with these
 instructions about how to write, follow these instructions.
 
@@ -185,14 +185,15 @@ language-model self-play, evaluation awareness, and the catalog of training fram
 
 ## Each lesson
 
-The commission names the topic, the one idea, and the case to start from. It leaves the experiments,
-the causes to test, and the page's structure to the writer. Ask the researcher only for what the
-page will use, because a lesson on a classic method cites little.
+The commission names the topic, the one idea, and the case to start from, including its
+environment. It leaves the experiments, the causes to test, and the page's structure to the writer.
+Ask the researcher only for what the page will use, because a lesson on a classic method cites
+little.
 
 Draw a concept when a drawing shows a structure, a path, or a pattern that a sentence can't show
 easily, and put the drawing next to the words that explain it. Show what the agent learned as well
 as whether it improved. A learning curve only shows improvement, so go further with value functions
-as heatmaps, policies drawn on the grid, trajectories, search trees, or whatever fits the idea. When
+as heatmaps, policies drawn over the states, trajectories, search trees, or whatever fits the idea. When
 a lesson walks through a process, the same diagram can return at each step with the current part
 marked, so its notation needs teaching only once. Draw charts of the lesson's own runs as inline SVG
 instead of with `nb chart`, because they then follow the light and dark themes and need no outside
@@ -206,10 +207,15 @@ evidence, so a section made of them can go without a citation, and `W-CITE-DENSI
 there. Link the paper that introduced an idea when one clearly did. Don't add a sentence only to
 hold a citation. In the Go deeper band, say which part of each paper to read and why, in one line.
 
-Keep one small custom environment through the control lessons, and change it only when an idea needs
-it, so results stay comparable. A lesson can start the agent from any policy, so pick the one that
-shows the idea most plainly. Link the lesson that introduced its rules. A lesson on continuous
-actions can add a second small environment, because a grid can't exercise continuous actions.
+The commission chooses each lesson's environment for the idea it teaches, and doesn't keep one only
+because the last lesson used it. The course should end having built and trained agents in many
+environments. A lesson can use an earlier lesson's environment, extend one with more states or a new
+rule, or build a new one. Reusing an environment lets the lesson compare its numbers with the earlier
+lesson's. A different environment helps when the idea needs something the earlier one lacks, such as
+more states than a table can hold, an observation that leaves out part of the state, continuous
+actions, or a classic case built to show where a method fails. Link the lesson that introduced each
+environment's rules. A lesson can start the agent from any policy, so pick the one that shows the
+idea most plainly.
 
 The writer writes and runs the lesson's code, and its printed output counts as evidence alongside
 `evidence.md`. The editor can change the code, rerun it, and update the page to match, and a number
