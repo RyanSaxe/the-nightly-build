@@ -193,11 +193,11 @@ little.
 Draw a concept when a drawing shows a structure, a path, or a pattern that a sentence can't show
 easily, and put the drawing next to the words that explain it. Show what the agent learned as well
 as whether it improved. A learning curve only shows improvement, so go further with value functions
-as heatmaps, policies drawn over the states, trajectories, search trees, or whatever fits the idea. When
-a lesson walks through a process, the same diagram can return at each step with the current part
-marked, so its notation needs teaching only once. Draw charts of the lesson's own runs as inline SVG
-instead of with `nb chart`, because they then follow the light and dark themes and need no outside
-source.
+as heatmaps, policies drawn on a map of the environment, trajectories, search trees, or whatever
+fits the idea. When a lesson walks through a process, the same diagram can return at each step with
+the current part marked, so its notation needs teaching only once. Draw charts of the lesson's own
+runs as inline SVG instead of with `nb chart`, because they then follow the light and dark themes
+and need no outside source.
 
 When the main idea can be derived, derive it in full, and use a run to check the derivation. A side
 result doesn't get a derivation. Put each equation next to the words or figure it belongs to.
@@ -207,15 +207,14 @@ evidence, so a section made of them can go without a citation, and `W-CITE-DENSI
 there. Link the paper that introduced an idea when one clearly did. Don't add a sentence only to
 hold a citation. In the Go deeper band, say which part of each paper to read and why, in one line.
 
-The commission chooses each lesson's environment for the idea it teaches, and doesn't keep one only
-because the last lesson used it. The course should end having built and trained agents in many
-environments. A lesson can use an earlier lesson's environment, extend one with more states or a new
-rule, or build a new one. Reusing an environment lets the lesson compare its numbers with the earlier
-lesson's. A different environment helps when the idea needs something the earlier one lacks, such as
-more states than a table can hold, an observation that leaves out part of the state, continuous
-actions, or a classic case built to show where a method fails. Link the lesson that introduced each
-environment's rules. A lesson can start the agent from any policy, so pick the one that shows the
-idea most plainly.
+Use many environments across the course, and pick each lesson's environment for its idea. Don't keep
+one only because the last lesson used it. A lesson can reuse an earlier environment, extend one with
+more states or a new rule, or build a new one. With the same environment, a lesson can compare its
+numbers with the earlier lesson's. Extend or build when the idea needs something the current
+environment lacks, such as more states than a table can hold, an observation that leaves out part of
+the state, continuous actions, or a classic case built to show where a method fails. Link the lesson
+that introduced each environment's rules. A lesson can start the agent from any policy, so pick the
+one that shows the idea most plainly.
 
 The writer writes and runs the lesson's code, and its printed output counts as evidence alongside
 `evidence.md`. The editor can change the code, rerun it, and update the page to match, and a number
