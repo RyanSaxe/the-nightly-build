@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gymnasium's environment checker passes a grid with a backward slip · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "checking-a-custom-environment",
+        "template": "lesson",
+        "title": "Gymnasium's environment checker passes a grid with a backward slip",
+        "mode": "open",
+        "order": 8,
+        "date": "2026-11-07",
+        "tags": ["gymnasium", "environment-checker", "baselines", "custom-environments", "testing"],
+        "sources": 10,
+        "words": 4366,
+        "reading_minutes": 19,
+        "dek": "Uniformly random moves earn the same −10.90 under the right slip rule and the wrong one, so only a baseline that favours some moves, like the hand-drawn policy, can expose the bug.",
+        "harness": "claude-code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Gymnasium's environment checker passes a grid with a backward slip</h1>
+        <p class="nb-dekline">Uniformly random moves earn the same −10.90 under the right slip rule and the wrong one, so only a baseline that favours some moves, like the hand-drawn policy, can expose the bug.</p>
+        <div class="nb-byline">
+          <span>19 min read</span><span>2026-11-07</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>When a later lesson hands <code>SlipperyGrid</code> to an off-the-shelf agent, the agent will learn a wrong rule as faithfully as a right one, and a poor result will not say which side is at fault. Gymnasium's environment checker, <code>check_env</code>, inspects only the form of what <code>reset</code> and <code>step</code> return. A rule is tested through what it predicts: a fixed policy whose value the course can solve exactly must earn that value, on average, in the environment. A fixed policy used this way is a baseline. This lesson writes two, random moves and the hand-drawn policy, and adds play by hand and a check of ranges. Each check misses some errors, and for random moves you can derive which ones before any episode runs.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="../reinforcement-learning/termination-and-truncation.html">Q-learning that treats its time limit as terminal learns the values of a different grid</a>: Gymnasium's <code>reset</code> and <code>step</code>, <code>TimeLimit</code>, and <code>grid_env.py</code>, whose <code>SlipperyGrid</code> every check here runs on.</dd>
+          <dt>02</dt>
+          <dd><a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>: the grid, its slip rule and rewards, the hand-drawn policy, and <code>gridworld.py</code>, which gives the exact values.</dd>
+          <dt>03</dt>
+          <dd><a href="../reinforcement-learning/action-values-from-samples.html">Action values let an agent improve its policy from episodes alone</a>: <code>mc_control.py</code>, whose <code>step</code> plays the slip rule that <code>SlipBack</code> changes.</dd>
+          <dt>04</dt>
+          <dd><a href="../reinforcement-learning/learning-values-from-samples.html">An agent can learn what each state is worth without knowing the rules</a>: <code>estimators.py</code>, whose discount, <code>GAMMA = 0.9</code>, every return here uses.</dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One character sends a slip backward in every cell</h2>
+        <p>Put the agent in cell 10 of the <a href="../reinforcement-learning/environments-and-the-rl-problem.html#orientation">slippery grid</a> and have it aim right, as the hand-drawn policy does there. The slip rule moves it to cell 11 with probability 0.8, and otherwise turns the move a quarter turn, up into the pit or down to cell 14, with probability 0.1 each. One line of <code>step</code> in <a href="../reinforcement-learning/action-values-from-samples.html#every-episode"><code>mc_control.py</code></a> plays the rule. With the moves numbered 0 to 3 clockwise from up, its two turns are <code>(a + 1) % 4</code> and <code>(a + 3) % 4</code>.</p>
+        <p>Write <code>(a + 2) % 4</code> for the second turn, a change of one character, and in every cell that slip sends the agent straight back. From cell 10, the slip that the rule sends into the pit now lands in cell 9 (Fig.&nbsp;1). <code>bugs.py</code> below calls this copy of <code>SlipperyGrid</code> <code>SlipBack</code>. Its <code>step</code> still returns an integer cell, a float reward and two flags, as Gymnasium's interface requires.</p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center"><svg viewBox="0 0 204 254" role="img" aria-label="The rule at cell 10, aiming right: cell 11 with probability 0.8, down to cell 14 with 0.1, and up into the pit with 0.1." style="flex: 1 1 13rem; min-width: 0; max-width: 17rem; height: auto"><text x="102.0" y="18.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">The rule</text><rect x="22.0" y="34.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">0</text><rect x="62.0" y="34.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">1</text><rect x="102.0" y="34.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">2</text><rect x="142.0" y="34.0" width="40.0" height="40.0" style="fill:var(--chart-3);fill-opacity:0.220;stroke:var(--line);stroke-width:0.8"/><text x="162.0" y="58.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-3);font-weight:600">goal</text><rect x="22.0" y="74.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">4</text><rect x="62.0" y="74.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">5</text><rect x="102.0" y="74.0" width="40.0" height="40.0" style="fill:var(--chart-4);fill-opacity:0.180;stroke:var(--line);stroke-width:0.8"/><text x="122.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="142.0" y="74.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">7</text><rect x="22.0" y="114.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">8</text><rect x="62.0" y="114.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">9</text><rect x="102.0" y="114.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">10</text><rect x="142.0" y="114.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">11</text><rect x="22.0" y="154.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">12</text><rect x="62.0" y="154.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">13</text><rect x="102.0" y="154.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">14</text><rect x="142.0" y="154.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">15</text><line x1="130.0" y1="134.0" x2="145.5" y2="134.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="153.0,134.0 145.5,138.2 145.5,129.8" style="fill:var(--ink)"/><text x="157.0" y="137.5" text-anchor="start" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.8</text><line x1="122.0" y1="142.0" x2="122.0" y2="157.5" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="122.0,165.0 117.8,157.5 126.2,157.5" style="fill:var(--ink)"/><text x="122.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.1</text><line x1="122.0" y1="126.0" x2="122.0" y2="110.5" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="122.0,103.0 126.2,110.5 117.8,110.5" style="fill:var(--ink)"/><text x="128.0" y="108.0" text-anchor="start" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.1</text><circle cx="122.0" cy="134.0" r="4.5" style="fill:var(--ink)"/><text x="102.0" y="214.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">aim right from cell 10</text><text x="102.0" y="230.0" text-anchor="middle" style="font-family:var(--mono);font-size:9.5px;fill:var(--ink)">(a + 1) % 4, (a + 3) % 4</text><text x="102.0" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">second slip: up, into the pit</text></svg><svg viewBox="0 0 204 254" role="img" aria-label="SlipBack at cell 10, aiming right: cell 11 with probability 0.8, down to cell 14 with 0.1, and back to cell 9 with 0.1, in place of the pit." style="flex: 1 1 13rem; min-width: 0; max-width: 17rem; height: auto"><text x="102.0" y="18.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">SlipBack</text><rect x="22.0" y="34.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">0</text><rect x="62.0" y="34.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">1</text><rect x="102.0" y="34.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="45.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">2</text><rect x="142.0" y="34.0" width="40.0" height="40.0" style="fill:var(--chart-3);fill-opacity:0.220;stroke:var(--line);stroke-width:0.8"/><text x="162.0" y="58.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-3);font-weight:600">goal</text><rect x="22.0" y="74.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">4</text><rect x="62.0" y="74.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">5</text><rect x="102.0" y="74.0" width="40.0" height="40.0" style="fill:var(--chart-4);fill-opacity:0.180;stroke:var(--line);stroke-width:0.8"/><text x="122.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="142.0" y="74.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="85.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">7</text><rect x="22.0" y="114.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">8</text><rect x="62.0" y="114.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">9</text><rect x="102.0" y="114.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">10</text><rect x="142.0" y="114.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="125.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">11</text><rect x="22.0" y="154.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="26.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">12</text><rect x="62.0" y="154.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="66.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">13</text><rect x="102.0" y="154.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="106.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">14</text><rect x="142.0" y="154.0" width="40.0" height="40.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="146.0" y="165.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">15</text><line x1="130.0" y1="134.0" x2="145.5" y2="134.0" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="153.0,134.0 145.5,138.2 145.5,129.8" style="fill:var(--ink)"/><text x="157.0" y="137.5" text-anchor="start" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.8</text><line x1="122.0" y1="142.0" x2="122.0" y2="157.5" style="stroke:var(--ink);stroke-width:2.0;fill:none"/><polygon points="122.0,165.0 117.8,157.5 126.2,157.5" style="fill:var(--ink)"/><text x="122.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.1</text><line x1="114.0" y1="134.0" x2="98.5" y2="134.0" style="stroke:var(--chart-2);stroke-width:2.0;fill:none"/><polygon points="91.0,134.0 98.5,129.8 98.5,138.2" style="fill:var(--chart-2)"/><text x="87.0" y="137.5" text-anchor="end" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2);font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px">0.1</text><circle cx="122.0" cy="134.0" r="4.5" style="fill:var(--ink)"/><text x="102.0" y="214.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">aim right from cell 10</text><text x="102.0" y="230.0" text-anchor="middle" style="font-family:var(--mono);font-size:9.5px;fill:var(--ink)">(a + 1) % 4, (a + 2) % 4</text><text x="102.0" y="245.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--chart-2)">second slip: back, to cell 9</text></svg></div>
+          <figcaption>Fig.&nbsp;1 · Where an agent in cell 10 that aims right can land, under the rule and under <code>SlipBack</code>. The changed slip is in blue.</figcaption>
+        </figure>
+        <p>Gymnasium's documentation recommends calling its environment checker, <code>check_env</code>, after constructing an environment.<sup class="nb-cite"><a href="#s1" data-nb-locator="Environment Checking: gymnasium.utils.env_checker.check_env">1</a></sup> It passes <code>SlipperyGrid</code> and <code>SlipBack</code> alike, with the same single warning, so a pass cannot mean that the slips go where the rule says.</p>
+      </section>
+
+      <section data-nb-section="checker" id="checker">
+        <h2>check_env compares an environment only with itself</h2>
+        <p><code>check_env</code> checks form.<sup class="nb-cite"><a href="#s2" data-nb-locator="check_env, L406-508">2</a></sup> It asserts that both spaces are well formed, which for <code>Discrete(16)</code> means <span class="nb-math-in">n &gt; 0</span> and a scalar shape. It asserts that <code>reset</code> returns an observation inside the space and a dictionary, and that the same seed leaves the environment's generator in the same state while a different seed does not. It takes a step and inspects the five values. Then it resets twice with seed 123, takes the same move after each reset, and asserts that the two steps return equal values. Last, it resets, takes up to two steps and resets again, and asserts that no two of those calls return the same mutable object.</p>
+        <p>The checker has no model of the grid to compare against. A step's output is compared only with a second run of the same environment,<sup class="nb-cite"><a href="#s2" data-nb-locator="check_step_determinism, L204-270">2</a></sup> and both runs share a seed, so a backward slip happens in both and the two agree.</p>
+        <p>A pass means that no assertion fired. In what <code>step</code> returns, several faults only warn: an observation of the wrong type or outside the space, a flag that is not a bool, a reward of a non-numeric type.<sup class="nb-cite"><a href="#s3" data-nb-locator="check_obs, L140-142 and L172-176; env_step_passive_checker, L316-340">3</a></sup> The other copies in <code>bugs.py</code> show both outcomes. <code>NeverEnds</code> writes <code>==</code> where <code>grid_env.py</code> writes <code>in</code>, so its goal and pit end nothing, and it passes as <code>SlipperyGrid</code> does. <code>ArrayCell</code> wraps its cell in an array and passes with two more warnings. <code>NoSeed</code> forgets <code>super().reset(seed=seed)</code>, and an assertion stops it.</p>
+        <p>The listings run with <code>uv run</code> from one folder that also holds <code>gridworld.py</code>, <code>estimators.py</code>, <code>mc_control.py</code> and <code>grid_env.py</code>, from the lessons in the Background band.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">bugs.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Copies of SlipperyGrid, each with one mistake a programmer could make.
+
+SlipBack and NeverEnds break a rule of the grid. ArrayCell and NoSeed break
+the Gymnasium interface instead.
+"""
+
+import mc_control
+import numpy as np
+from grid_env import SlipperyGrid
+from gridworld import R, TERMINAL, move
+from mc_control import LIVE, SLIP
+
+
+class SlipBack(SlipperyGrid):
+    """One character differs from mc_control.step: the second slip turns
+    (a + 2) % 4, straight back, where the rule turns (a + 3) % 4."""
+
+    def step(self, a):
+        u = self.np_random.random()
+        aim = a if u &lt; 1 - SLIP else (a + 1) % 4 if u &lt; 1 - SLIP / 2 else (a + 2) % 4
+        self.cell = move(self.cell, aim)
+        return self.cell, float(R[self.cell]), self.cell in TERMINAL, False, {}
+
+
+class NeverEnds(SlipperyGrid):
+    """terminated uses == where grid_env.py uses in. A cell never equals the
+    list TERMINAL, so no episode terminates, not even at the goal."""
+
+    def step(self, action):
+        reward, self.cell = mc_control.step(self.cell, action, self.np_random)
+        return self.cell, float(reward), self.cell == TERMINAL, False, {}
+
+
+class ArrayCell(SlipperyGrid):
+    """step returns the cell inside a one-element array, not as an int."""
+
+    def step(self, action):
+        cell, reward, terminated, truncated, info = super().step(action)
+        return np.array([cell]), reward, terminated, truncated, info
+
+
+class NoSeed(SlipperyGrid):
+    """reset never calls super().reset(seed=seed), so seeds change nothing."""
+
+    def reset(self, *, seed=None, options=None):
+        self.cell = LIVE[self.np_random.integers(len(LIVE))]
+        return self.cell, {}
+
+
+COPIES = {"correct": SlipperyGrid, "slip-back": SlipBack,
+          "never-ends": NeverEnds}</code></pre>
+        </figure>
+        <details>
+          <summary><code>checker.py</code>, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">checker.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Run Gymnasium's check_env on SlipperyGrid and four copies with a mistake."""
+
+import re
+import warnings
+
+from bugs import ArrayCell, NeverEnds, NoSeed, SlipBack
+from grid_env import SlipperyGrid
+from gymnasium.utils.env_checker import check_env
+
+
+def checked(env):
+    """check_env's verdict on env, then its error and warnings, if any."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        try:
+            check_env(env)
+            verdict, notes = "passes", []
+        except Exception as error:
+            verdict, notes = "fails", [f"{type(error).__name__}: {error}"]
+    notes += [re.sub(r"\x1b\[\d+m", "", str(w.message)) for w in caught]
+    return verdict, notes
+
+
+for copy in (SlipperyGrid, SlipBack, NeverEnds, ArrayCell, NoSeed):
+    verdict, notes = checked(copy())
+    print(f"{copy.__name__:14s}{verdict}")
+    for note in notes:
+        print(f"  {note[:96]}" + ("..." if len(note) &gt; 96 else ""))</code></pre>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run checker.py</span><span>text</span></div>
+          <pre><code data-language="text">SlipperyGrid  passes
+  WARN: Not able to test alternative render modes due to the environment not having a spec. Try in...
+SlipBack      passes
+  WARN: Not able to test alternative render modes due to the environment not having a spec. Try in...
+NeverEnds     passes
+  WARN: Not able to test alternative render modes due to the environment not having a spec. Try in...
+ArrayCell     passes
+  WARN: The obs returned by the `step()` method should be an int or np.int64, actual type: &lt;class ...
+  WARN: The obs returned by the `step()` method is not within the observation space.
+  WARN: Not able to test alternative render modes due to the environment not having a spec. Try in...
+NoSeed        fails
+  AssertionError: Most likely the environment reset function does not call `super().reset(seed=see...</code></pre>
+        </figure>
+        <p>The warning every passing copy gets is about render modes, the ways an environment can draw itself. The checker tries them only on an environment built by <code>gymnasium.make</code> from a registered name. That function would also add <code>PassiveEnvChecker</code>, a check of form on only the first <code>reset</code> and the first two steps of an environment's life.<sup class="nb-cite"><a href="#s4" data-nb-locator="PassiveEnvChecker.step and reset, L287-326">4</a></sup></p>
+      </section>
+
+      <section data-nb-section="baselines" id="baselines">
+        <h2>The rules fix what each baseline should earn</h2>
+        <p>Fix a policy, and the rules give its <a href="../reinforcement-learning/environments-and-the-rl-problem.html#value">value</a> in every cell by the <a href="../reinforcement-learning/environments-and-the-rl-problem.html#computing">linear solve</a> that <code>gridworld.py</code> sets up. Run the same policy in the environment, and the average discounted return of its episodes estimates the mean of those values over the 14 cells <code>reset</code> starts from, since it picks one uniformly. A gap larger than the noise means the environment does not play the rules.</p>
+        <p>A fixed policy used as such a reference, or as a floor that a trained agent has to beat, is called a baseline. <code>baselines.py</code> defines two, under names later lessons import. <code>random_policy</code> aims uniformly at random and never reads the observation, and <code>hand_drawn</code> plays the hand-drawn policy <code>PI</code>. <code>exact_value</code> solves the rules through <code>transitions</code>, never through the environment, and gives &minus;10.90 for random moves and 1.36 for the hand-drawn policy. Both sides of the comparison share <code>move</code> and <code>R</code> from <code>gridworld.py</code>, so an error in those would appear on both sides and cancel.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">baselines.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Two baseline policies for SlipperyGrid and what each should earn.
+
+A policy here is a function of the observation and a generator that returns
+a move. EXACT is solved from the grid's rules in gridworld.py, never from the
+environment, so an environment's episodes can be checked against it.
+"""
+
+import numpy as np
+from estimators import GAMMA
+from gridworld import N, PI, R, TERMINAL, transitions
+from mc_control import LIVE, SLIP
+
+
+def random_policy(obs, rng):
+    """A uniformly random move. It never reads the observation."""
+    return int(rng.integers(4))
+
+
+def hand_drawn(obs, rng):
+    """The hand-drawn policy PI from gridworld.py."""
+    return int(PI[obs])
+
+
+def exact_value(probs):
+    """The mean of v_pi over the 14 cells reset starts from, where
+    probs[s, a] is the policy's probability of move a in cell s."""
+    P_pi = np.einsum("sa,sat-&gt;st", probs, transitions(SLIP))
+    Q = P_pi.copy()
+    Q[:, TERMINAL] = 0.0
+    v = np.linalg.solve(np.eye(N) - GAMMA * Q, P_pi @ R)
+    return v[LIVE].mean()
+
+
+EXACT = {"random": exact_value(np.full((N, 4), 0.25)),
+         "hand-drawn": exact_value(np.eye(4)[PI])}
+
+
+def returns(env, policy, episodes, seed, watch=None):
+    """The discounted return of each of `episodes` episodes from its start.
+    watch, if given, sees every step's five values."""
+    rng = np.random.default_rng((seed, 1))
+    G = np.zeros(episodes)
+    for k in range(episodes):
+        obs, info = env.reset(seed=seed if k == 0 else None)
+        t, done = 0, False
+        while not done:
+            obs, reward, terminated, truncated, info = env.step(policy(obs, rng))
+            G[k] += GAMMA**t * reward
+            t, done = t + 1, terminated or truncated
+            if watch:
+                watch(k, obs, reward, terminated, truncated)
+    return G</code></pre>
+        </figure>
+        <p>The noise is the standard error, the standard deviation of the returns divided by <span class="nb-math-in">\sqrt{n}</span> for <span class="nb-math-in">n</span> episodes. <code>behaviour.py</code> runs each baseline for 4,000 episodes on <code>SlipperyGrid</code> and on each copy with a rule error, under a 200-move <a href="../reinforcement-learning/termination-and-truncation.html#gymnasium"><code>TimeLimit</code></a>, and prints <span class="nb-math-in">z</span>, the gap in standard errors. A gap beyond 3 is flagged. The third policy in the output, <code>up_or_right</code>, which <code>behaviour.py</code> adds with its exact value, belongs to the next section.</p>
+        <details>
+          <summary><code>behaviour.py</code>, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">behaviour.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Check SlipperyGrid and the two copies with a rule error by behaviour:
+each baseline's average return against its exact value, then the ranges of
+cells, rewards and returns in the random episodes."""
+
+import sys
+
+import numpy as np
+from baselines import EXACT, exact_value, hand_drawn, random_policy, returns
+from bugs import COPIES
+from gridworld import N
+from gymnasium.wrappers import TimeLimit
+
+EPISODES, LIMIT = 4000, 200
+SEED = int(sys.argv[1]) if len(sys.argv) &gt; 1 else 0
+
+
+def up_or_right(obs, rng):
+    """Random, but never down or left: the removal test for uniform aims."""
+    return int(rng.integers(2))
+
+
+POLICIES = {"random": random_policy, "hand-drawn": hand_drawn,
+            "up or right": up_or_right}
+EXACT["up or right"] = exact_value(np.tile([0.5, 0.5, 0, 0], (N, 1)))
+
+print(f"{EPISODES} episodes per row, seed {SEED}, limit {LIMIT} moves; "
+      "* marks a mean more than 3 standard errors from exact")
+print(f"{'copy':12s}{'policy':&gt;12s}{'exact':&gt;8s}{'mean':&gt;8s}{'sd':&gt;6s}"
+      f"{'z':&gt;7s}")
+ranges = {}
+for name, copy in COPIES.items():
+    for label, policy in POLICIES.items():
+        seen = {"cells": set(), "rewards": set(), "G": [0.0], "cut": 0}
+
+        def watch(k, obs, reward, terminated, truncated):
+            if k == len(seen["G"]):
+                seen["G"].append(0.0)
+            seen["cells"].add(obs)
+            seen["rewards"].add(reward)
+            seen["G"][k] += reward
+            seen["cut"] += truncated and not terminated
+
+        env = TimeLimit(copy(), max_episode_steps=LIMIT)
+        G = returns(env, policy, EPISODES, SEED, watch)
+        z = (G.mean() - EXACT[label]) / (G.std(ddof=1) / np.sqrt(EPISODES))
+        print(f"{name:12s}{label:&gt;12s}{EXACT[label]:8.2f}{G.mean():8.2f}"
+              f"{G.std(ddof=1):6.2f}{z:7.1f}{' *' if abs(z) &gt; 3 else ''}")
+        if label == "random":
+            ranges[name] = seen
+
+print(f"\nrandom episodes; the rules allow cells 0-15, rewards -20 -1 10, "
+      f"and returns from {-LIMIT - 19} to 10 (undiscounted)")
+print(f"{'copy':12s}{'cells':&gt;8s}{'rewards':&gt;14s}{'returns':&gt;15s}"
+      f"{'episodes cut':&gt;14s}")
+for name, seen in ranges.items():
+    cells = f"{min(seen['cells'])}-{max(seen['cells'])}"
+    rewards = " ".join(f"{r:g}" for r in sorted(seen["rewards"]))
+    G = f"{min(seen['G']):g} to {max(seen['G']):g}"
+    print(f"{name:12s}{cells:&gt;8s}{rewards:&gt;14s}{G:&gt;15s}{seen['cut']:14d}")</code></pre>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run behaviour.py</span><span>text</span></div>
+          <pre><code data-language="text">4000 episodes per row, seed 0, limit 200 moves; * marks a mean more than 3 standard errors from exact
+copy              policy   exact    mean    sd      z
+correct           random  -10.90  -10.82  7.30    0.7
+correct       hand-drawn    1.36    1.40  8.79    0.3
+correct      up or right   -4.18   -3.96 10.30    1.3
+slip-back         random  -10.90  -10.78  7.30    1.1
+slip-back     hand-drawn    1.36    2.40  7.31    9.0 *
+slip-back    up or right   -4.18   -5.23 10.23   -6.5 *
+never-ends        random  -10.90  -16.16 14.28  -23.3 *
+never-ends    hand-drawn    1.36   57.06 21.23  166.0 *
+never-ends   up or right   -4.18   39.25 24.42  112.5 *
+
+random episodes; the rules allow cells 0-15, rewards -20 -1 10, and returns from -219 to 10 (undiscounted)
+copy           cells       rewards        returns  episodes cut
+correct         0-15     -20 -1 10     -177 to 10             0
+slip-back       0-15     -20 -1 10     -171 to 10             0
+never-ends      0-15     -20 -1 10    -761 to 129          4000</code></pre>
+        </figure>
+        <p>On <code>SlipperyGrid</code> nothing is flagged. On <code>NeverEnds</code> everything is, by 23 standard errors or more, since an agent can collect the goal's and the pit's rewards again and again until the limit cuts the episode. On <code>SlipBack</code> the hand-drawn mean rises to 2.40, 9 standard errors above 1.36, while random moves earn &minus;10.78, within noise of &minus;10.90. A wrong rule can move a value either way, and the test flags both. Nine more seeds gave the same flags.</p>
+      </section>
+
+      <section data-nb-section="uniform-aims" id="uniform-aims">
+        <h2>Uniform aims average the slip rule away</h2>
+        <p>Fig.&nbsp;2 writes the slip rule as a table: for each aim, the probability of each direction the agent then moves. The rule puts 0.8 on the aim and 0.1 on each quarter turn. <code>SlipBack</code> moves one 0.1 in every row to the direction straight back, and every column still sums to 1.</p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center"><svg viewBox="0 0 258 196" role="img" aria-label="Table of the rule: probability of moving up, right, down, left for each aim. aim up: 0.8, 0.1, 0, 0.1; aim right: 0.1, 0.8, 0.1, 0; aim down: 0, 0.1, 0.8, 0.1; aim left: 0.1, 0, 0.1, 0.8. Every column sums to 1.0." style="flex: 1 1 15rem; min-width: 0; max-width: 20rem; height: auto"><text x="129.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">The rule</text><text x="130.0" y="34.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">direction moved</text><text x="79.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">↑</text><text x="113.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">→</text><text x="147.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">↓</text><text x="181.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">←</text><text x="55.0" y="74.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">aim ↑</text><rect x="62.0" y="58.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.340;stroke:var(--line);stroke-width:0.8"/><text x="79.0" y="74.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.8</text><rect x="96.0" y="58.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="113.0" y="74.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="130.0" y="58.0" width="34.0" height="25.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="147.0" y="74.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0</text><rect x="164.0" y="58.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="181.0" y="74.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><text x="55.0" y="99.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">aim →</text><rect x="62.0" y="83.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="79.0" y="99.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="96.0" y="83.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.340;stroke:var(--line);stroke-width:0.8"/><text x="113.0" y="99.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.8</text><rect x="130.0" y="83.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="147.0" y="99.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="164.0" y="83.0" width="34.0" height="25.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="181.0" y="99.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0</text><text x="55.0" y="124.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">aim ↓</text><rect x="62.0" y="108.0" width="34.0" height="25.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="79.0" y="124.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0</text><rect x="96.0" y="108.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="113.0" y="124.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="130.0" y="108.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.340;stroke:var(--line);stroke-width:0.8"/><text x="147.0" y="124.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.8</text><rect x="164.0" y="108.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="181.0" y="124.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><text x="55.0" y="149.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">aim ←</text><rect x="62.0" y="133.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="79.0" y="149.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="96.0" y="133.0" width="34.0" height="25.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="113.0" y="149.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0</text><rect x="130.0" y="133.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="147.0" y="149.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="164.0" y="133.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.340;stroke:var(--line);stroke-width:0.8"/><text x="181.0" y="149.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.8</text><rect x="62.0" y="83.0" width="136.0" height="25.0" style="fill:none;stroke:var(--chart-1);stroke-width:1.8"/><text x="203.0" y="93.0" text-anchor="start" style="font-family:var(--sans);font-size:9px;fill:var(--chart-1);font-weight:600">hand-drawn</text><text x="203.0" y="104.0" text-anchor="start" style="font-family:var(--sans);font-size:9px;fill:var(--chart-1)">at cell 10</text><line x1="62" y1="163" x2="198" y2="163" style="stroke:var(--ink-soft);stroke-width:1"/><text x="55.0" y="179.0" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">sum</text><text x="79.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">1.0</text><text x="113.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">1.0</text><text x="147.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">1.0</text><text x="181.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">1.0</text><text x="203.0" y="179.0" text-anchor="start" style="font-family:var(--sans);font-size:9px;fill:var(--ink-soft)">random: ÷ 4</text></svg><svg viewBox="0 0 258 196" role="img" aria-label="Table of SlipBack: probability of moving up, right, down, left for each aim. aim up: 0.8, 0.1, 0.1, 0; aim right: 0, 0.8, 0.1, 0.1; aim down: 0.1, 0, 0.8, 0.1; aim left: 0.1, 0.1, 0, 0.8. Every column still sums to 1.0. The row for aiming right, which the hand-drawn policy uses in cell 10, differs from the rule's." style="flex: 1 1 15rem; min-width: 0; max-width: 20rem; height: auto"><text x="129.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600">SlipBack</text><text x="130.0" y="34.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft)">direction moved</text><text x="79.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">↑</text><text x="113.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">→</text><text x="147.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">↓</text><text x="181.0" y="51.0" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">←</text><text x="55.0" y="74.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">aim ↑</text><rect x="62.0" y="58.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.340;stroke:var(--line);stroke-width:0.8"/><text x="79.0" y="74.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.8</text><rect x="96.0" y="58.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="113.0" y="74.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="130.0" y="58.0" width="34.0" height="25.0" style="fill:var(--chart-2);fill-opacity:0.180;stroke:var(--line);stroke-width:0.8"/><text x="147.0" y="74.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-2);font-weight:600">0.1</text><rect x="164.0" y="58.0" width="34.0" height="25.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="181.0" y="74.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-2);font-weight:600">0</text><text x="55.0" y="99.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">aim →</text><rect x="62.0" y="83.0" width="34.0" height="25.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="79.0" y="99.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-2);font-weight:600">0</text><rect x="96.0" y="83.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.340;stroke:var(--line);stroke-width:0.8"/><text x="113.0" y="99.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.8</text><rect x="130.0" y="83.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="147.0" y="99.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="164.0" y="83.0" width="34.0" height="25.0" style="fill:var(--chart-2);fill-opacity:0.180;stroke:var(--line);stroke-width:0.8"/><text x="181.0" y="99.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-2);font-weight:600">0.1</text><text x="55.0" y="124.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">aim ↓</text><rect x="62.0" y="108.0" width="34.0" height="25.0" style="fill:var(--chart-2);fill-opacity:0.180;stroke:var(--line);stroke-width:0.8"/><text x="79.0" y="124.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-2);font-weight:600">0.1</text><rect x="96.0" y="108.0" width="34.0" height="25.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="113.0" y="124.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-2);font-weight:600">0</text><rect x="130.0" y="108.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.340;stroke:var(--line);stroke-width:0.8"/><text x="147.0" y="124.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.8</text><rect x="164.0" y="108.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="181.0" y="124.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><text x="55.0" y="149.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">aim ←</text><rect x="62.0" y="133.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.130;stroke:var(--line);stroke-width:0.8"/><text x="79.0" y="149.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.1</text><rect x="96.0" y="133.0" width="34.0" height="25.0" style="fill:var(--chart-2);fill-opacity:0.180;stroke:var(--line);stroke-width:0.8"/><text x="113.0" y="149.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-2);font-weight:600">0.1</text><rect x="130.0" y="133.0" width="34.0" height="25.0" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><text x="147.0" y="149.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-2);font-weight:600">0</text><rect x="164.0" y="133.0" width="34.0" height="25.0" style="fill:var(--ink);fill-opacity:0.340;stroke:var(--line);stroke-width:0.8"/><text x="181.0" y="149.5" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.8</text><rect x="62.0" y="83.0" width="136.0" height="25.0" style="fill:none;stroke:var(--chart-1);stroke-width:1.8"/><text x="203.0" y="93.0" text-anchor="start" style="font-family:var(--sans);font-size:9px;fill:var(--chart-1);font-weight:600">hand-drawn</text><text x="203.0" y="104.0" text-anchor="start" style="font-family:var(--sans);font-size:9px;fill:var(--chart-1)">at cell 10</text><line x1="62" y1="163" x2="198" y2="163" style="stroke:var(--ink-soft);stroke-width:1"/><text x="55.0" y="179.0" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">sum</text><text x="79.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">1.0</text><text x="113.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">1.0</text><text x="147.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">1.0</text><text x="181.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">1.0</text><text x="203.0" y="179.0" text-anchor="start" style="font-family:var(--sans);font-size:9px;fill:var(--ink-soft)">random: ÷ 4</text></svg></div>
+          <figcaption>Fig.&nbsp;2 · The probability of each direction moved, for each aim, under the rule and under <code>SlipBack</code>, with <code>SlipBack</code>'s changes in blue. The hand-drawn policy uses one row in each cell, and random moves use the column sums.</figcaption>
+        </figure>
+        <p>Random moves aim each way with probability &frac14;. Write <span class="nb-math-in">p(k)</span> for the probability that a move turns <span class="nb-math-in">k</span> quarter turns clockwise. Both tables give every aim the same <span class="nb-math-in">p(k)</span>, which is all the argument assumes. The sum below gives the probability that random moves take the agent from any cell <span class="nb-math-in">s</span> to any next cell <span class="nb-math-in">s'</span>.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} P_{\text{random}}(s' \mid s) &amp;= \frac{1}{4} \sum_{a=0}^{3} \sum_{k=0}^{3} \htmlClass{nb-mc1}{p(k)}\, \htmlClass{nb-mc3}{m}(\htmlClass{nb-mc2}{a + k}) \\ &amp;= \sum_{k=0}^{3} \htmlClass{nb-mc1}{p(k)} \cdot \frac{1}{4} \sum_{\htmlClass{nb-mc2}{d}=0}^{3} \htmlClass{nb-mc3}{m}(\htmlClass{nb-mc2}{d}) \\ &amp;= \frac{1}{4} \sum_{d=0}^{3} m(d) \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">p(k)</span><span>the slip rule, the same for every aim: 0.8, 0.1, 0, 0.1 for <span class="nb-math-in">k</span> = 0 to 3 under the rule, and 0.8, 0.1, 0.1, 0 under <code>SlipBack</code></span></li>
+            <li><span class="nb-math-term nb-mc3">m(d)</span><span>1 if moving in direction <span class="nb-math-in">d</span> from <span class="nb-math-in">s</span> lands in <span class="nb-math-in">s'</span> and 0 otherwise</span></li>
+            <li><span class="nb-math-term nb-mc2">d</span><span>the direction moved, <span class="nb-math-in">a + k</span> counted mod 4. For each <span class="nb-math-in">k</span> it takes every value once as <span class="nb-math-in">a</span> runs over the four aims.</span></li>
+          </ul>
+          <figcaption>The probability that random moves take the agent from <span class="nb-math-in">s</span> to <span class="nb-math-in">s'</span>. After the change of variable the inner sum no longer depends on <span class="nb-math-in">k</span>, and the <span class="nb-math-in">p(k)</span> sum to 1.</figcaption>
+        </figure>
+        <p>The slip rule drops out. Rewards depend only on the cell the agent arrives in, so random moves give the same distribution of cells, rewards and returns under both rules, and no number of episodes separates them. The sum also hides any error that relabels the aims, such as a <code>step</code> that swaps the aims up and down, since it adds the four aims in any order.</p>
+        <p>The cancellation needs all four aims at weight &frac14;. <code>up_or_right</code> keeps the random choice but aims only up or right, so it adds just two rows of Fig.&nbsp;2. Its exact value is &minus;4.18, and on <code>SlipBack</code> its mean falls to &minus;5.23, 6.5 standard errors below (Fig.&nbsp;3). The hand-drawn policy uses a single row in each cell, and every row differs between the two tables.</p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 228" role="img" aria-label="Dot plot of each baseline's mean return minus its exact value, with bars of plus or minus 3 standard errors. SlipperyGrid, random: +0.08 plus or minus 0.35, z 0.7; SlipperyGrid, hand-drawn: +0.04 plus or minus 0.42, z 0.3; SlipperyGrid, up or right: +0.22 plus or minus 0.49, z 1.3; SlipBack, random: +0.12 plus or minus 0.35, z 1.1; SlipBack, hand-drawn: +1.04 plus or minus 0.35, z 9.0; SlipBack, up or right: -1.05 plus or minus 0.49, z -6.5. Only SlipBack's hand-drawn and up-or-right rows miss zero." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto"><line x1="166.8" y1="16" x2="166.8" y2="190" style="stroke:var(--line);stroke-width:0.6"/><text x="166.8" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">−1.5</text><line x1="194.9" y1="16" x2="194.9" y2="190" style="stroke:var(--line);stroke-width:0.6"/><text x="194.9" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">−1.0</text><line x1="222.9" y1="16" x2="222.9" y2="190" style="stroke:var(--line);stroke-width:0.6"/><text x="222.9" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">−0.5</text><line x1="251.0" y1="16" x2="251.0" y2="190" style="stroke:var(--line);stroke-width:1.2"/><text x="251.0" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">0</text><line x1="279.1" y1="16" x2="279.1" y2="190" style="stroke:var(--line);stroke-width:0.6"/><text x="279.1" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">+0.5</text><line x1="307.1" y1="16" x2="307.1" y2="190" style="stroke:var(--line);stroke-width:0.6"/><text x="307.1" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">+1.0</text><line x1="335.2" y1="16" x2="335.2" y2="190" style="stroke:var(--line);stroke-width:0.6"/><text x="335.2" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">+1.5</text><text x="251.0" y="220.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft)">mean return − exact value</text><text x="251.0" y="13.0" text-anchor="middle" style="font-family:var(--sans);font-size:9px;fill:var(--ink-soft)">exact</text><text x="392.0" y="13.0" text-anchor="end" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);font-style:italic">z</text><text x="8.0" y="31.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);font-weight:600">SlipperyGrid</text><text x="142.0" y="50.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">random</text><line x1="236.1" y1="46" x2="274.9" y2="46" style="stroke:var(--ink-soft);stroke-width:2"/><line x1="236.1" y1="42" x2="236.1" y2="50" style="stroke:var(--ink-soft);stroke-width:1.5"/><line x1="274.9" y1="42" x2="274.9" y2="50" style="stroke:var(--ink-soft);stroke-width:1.5"/><circle cx="255.5" cy="46" r="4" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1.8"/><text x="392.0" y="50.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft)">0.7</text><text x="142.0" y="71.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">hand-drawn</text><line x1="229.8" y1="67" x2="276.6" y2="67" style="stroke:var(--chart-1);stroke-width:2"/><line x1="229.8" y1="63" x2="229.8" y2="71" style="stroke:var(--chart-1);stroke-width:1.5"/><line x1="276.6" y1="63" x2="276.6" y2="71" style="stroke:var(--chart-1);stroke-width:1.5"/><circle cx="253.2" cy="67" r="4" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.8"/><text x="392.0" y="71.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft)">0.3</text><text x="142.0" y="92.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">up or right</text><line x1="235.9" y1="88" x2="290.8" y2="88" style="stroke:var(--chart-5);stroke-width:2"/><line x1="235.9" y1="84" x2="235.9" y2="92" style="stroke:var(--chart-5);stroke-width:1.5"/><line x1="290.8" y1="84" x2="290.8" y2="92" style="stroke:var(--chart-5);stroke-width:1.5"/><circle cx="263.3" cy="88" r="4" style="fill:var(--panel);stroke:var(--chart-5);stroke-width:1.8"/><text x="392.0" y="92.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft)">1.3</text><text x="8.0" y="118.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);font-weight:600">SlipBack</text><text x="142.0" y="137.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">random</text><line x1="238.3" y1="133" x2="277.2" y2="133" style="stroke:var(--ink-soft);stroke-width:2"/><line x1="238.3" y1="129" x2="238.3" y2="137" style="stroke:var(--ink-soft);stroke-width:1.5"/><line x1="277.2" y1="129" x2="277.2" y2="137" style="stroke:var(--ink-soft);stroke-width:1.5"/><circle cx="257.7" cy="133" r="4" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1.8"/><text x="392.0" y="137.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink-soft)">1.1</text><text x="142.0" y="158.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">hand-drawn</text><line x1="289.9" y1="154" x2="328.8" y2="154" style="stroke:var(--chart-1);stroke-width:2"/><line x1="289.9" y1="150" x2="289.9" y2="158" style="stroke:var(--chart-1);stroke-width:1.5"/><line x1="328.8" y1="150" x2="328.8" y2="158" style="stroke:var(--chart-1);stroke-width:1.5"/><circle cx="309.4" cy="154" r="4" style="fill:var(--chart-1);stroke:var(--chart-1);stroke-width:1.8"/><text x="392.0" y="158.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">9.0</text><text x="142.0" y="179.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink)">up or right</text><line x1="164.9" y1="175" x2="219.3" y2="175" style="stroke:var(--chart-5);stroke-width:2"/><line x1="164.9" y1="171" x2="164.9" y2="179" style="stroke:var(--chart-5);stroke-width:1.5"/><line x1="219.3" y1="171" x2="219.3" y2="179" style="stroke:var(--chart-5);stroke-width:1.5"/><circle cx="192.1" cy="175" r="4" style="fill:var(--chart-5);stroke:var(--chart-5);stroke-width:1.8"/><text x="392.0" y="179.0" text-anchor="end" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">−6.5</text></svg>
+          <figcaption>Fig.&nbsp;3 · Each baseline's mean return minus its exact value, with a bar of &plusmn;3 standard errors, from 4,000 episodes per row with seed 0. A filled dot is a flag. The <code>NeverEnds</code> rows lie 23 or more standard errors out, off the scale. From <code>behaviour.py</code>.</figcaption>
+        </figure>
+        <p>The hand-drawn policy aims only up or right, and the rule's slips turn a move only a quarter turn. So it never moves down from a cell where it aims up, such as 5, 9 or 13, or left from one where it aims right, such as 10. An error confined to such moves leaves its value at exactly 1.36, and of the two baselines only random moves, which go every way from every cell, can find it.</p>
+      </section>
+
+      <section data-nb-section="by-hand" id="by-hand">
+        <h2>Play by hand catches SlipBack at its first backward slip</h2>
+        <p>A player at the keyboard knows which way each move aimed and checks where it landed against the grid itself. The player never reads <code>gridworld.py</code>, so play by hand can also show a wrong <code>move</code> or <code>R</code>, which the baselines share with their exact values. In a 2016 talk on deep RL research, John Schulman lists trying a new task by hand beside watching the random policy and checking the scale of observations and rewards.<sup class="nb-cite"><a href="#s5" data-nb-locator="Slide 6, POMDP Design">5</a></sup> Gymnasium's own <code>play</code> function needs the pygame package and an environment that renders itself as images.<sup class="nb-cite"><a href="#s6" data-nb-locator="L24-31 and L78-82">6</a></sup> <code>SlipperyGrid</code> renders nothing, so <code>play.py</code> reads one key per line.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">play.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Play a copy of SlipperyGrid from the keyboard, one move per line:
+w, d, s and a aim up, right, down and left. Pass the copy's name from
+bugs.py and a seed, as in uv run play.py slip-back 4."""
+
+import sys
+
+from bugs import COPIES
+from gridworld import ARROWS
+
+KEYS = "wdsa"  # in the order of the moves 0 to 3: up, right, down, left
+
+env = COPIES[sys.argv[1]]()
+cell, info = env.reset(seed=int(sys.argv[2]))
+print(f"{sys.argv[1]}, seed {sys.argv[2]}: start in cell {cell}")
+for line in sys.stdin:
+    key = line.strip()
+    if key not in KEYS or len(key) != 1:
+        print("keys: w d s a")
+        continue
+    a = KEYS.index(key)
+    nxt, reward, terminated, truncated, info = env.step(a)
+    print(f"cell {cell:2d}, aim {ARROWS[a]}: cell {nxt:2d}, reward {reward:5.1f}"
+          f", terminated {terminated}")
+    cell = nxt
+    if terminated or truncated:
+        break</code></pre>
+        </figure>
+        <p>The runs below pipe the same six keys into <code>SlipperyGrid</code> and <code>SlipBack</code> with seed 33, chosen because it shows the slip early. At a terminal you would type them.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of printf 'w\nd\nw\nw\nd\nd\n' | uv run play.py correct 33</span><span>text</span></div>
+          <pre><code data-language="text">correct, seed 33: start in cell 14
+cell 14, aim ^: cell 10, reward  -1.0, terminated False
+cell 10, aim &gt;: cell  6, reward -20.0, terminated True</code></pre>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of printf 'w\nd\nw\nw\nd\nd\n' | uv run play.py slip-back 33</span><span>text</span></div>
+          <pre><code data-language="text">slip-back, seed 33: start in cell 14
+cell 14, aim ^: cell 10, reward  -1.0, terminated False
+cell 10, aim &gt;: cell  9, reward  -1.0, terminated False
+cell  9, aim ^: cell  5, reward  -1.0, terminated False
+cell  5, aim ^: cell  1, reward  -1.0, terminated False
+cell  1, aim &gt;: cell  2, reward  -1.0, terminated False
+cell  2, aim &gt;: cell  3, reward  10.0, terminated True</code></pre>
+        </figure>
+        <p>Both games draw the same numbers, and on the second move the draw lands in the second slip. Under the rule, aiming right from cell 10 drops the agent into the pit. Under <code>SlipBack</code> it lands in cell 9, which no aim to the right can reach from cell 10. One such move proves the bug, where the hand-drawn baseline averaged 4,000 episodes. Play by hand is weakest against an error in how often an allowed move happens, such as a wrong slip probability.</p>
+      </section>
+
+      <section data-nb-section="ranges" id="ranges">
+        <h2>The rules bound every number an agent will receive</h2>
+        <p><code>SlipperyGrid</code>'s observation is one integer from 0 to 15. Stable-Baselines3 2.9.2, the current release of one library of off-the-shelf agents,<sup class="nb-cite"><a href="#s7" data-nb-locator="Release history: 2.9.2, 2026-10-26">7</a></sup> turns it into a one-hot vector of 16 floats before its network reads it.<sup class="nb-cite"><a href="#s8" data-nb-locator="preprocess_obs, Discrete branch, L122-124">8</a></sup><sup class="nb-cite"><a href="#s9" data-nb-locator="SB3 Policy, first Note">9</a></sup> Every input is then 0 or 1, so the observation needs a check of its range, not of its scale.</p>
+        <p>Each step pays &minus;1, +10 or &minus;20, and nothing in Gymnasium's interface declares or checks that scale.<sup class="nb-cite"><a href="#s10" data-nb-locator="class Env, attributes, L64-77">10</a></sup> The rules bound each episode instead. Under a <span class="nb-math-in">T</span>-move limit, the lowest undiscounted return is <span class="nb-math-in">T - 1</span> ordinary moves and then the pit, <span class="nb-math-in">-T - 19</span>, and the highest is the goal on the first move, +10.</p>
+        <p><code>behaviour.py</code> records the ranges in its random episodes. <code>SlipperyGrid</code> and <code>SlipBack</code> stay inside them, so this check is blind to <code>SlipBack</code> too. <code>NeverEnds</code> breaks both bounds, with undiscounted returns from &minus;761 to 129, and the limit cuts all 4,000 of its episodes. An observation outside the space would show in the cells column on any move of any episode, where <code>check_env</code> and <code>PassiveEnvChecker</code> look no further than the second move after a reset.<sup class="nb-cite"><a href="#s2" data-nb-locator="check_env, L477-482; check_returned_data_not_reused, L273-307">2</a></sup></p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>1. A copy of <code>SlipperyGrid</code> sets <code>SLIP = 0.02</code> by mistake. Which of <code>check_env</code>, the random baseline and the hand-drawn baseline would flag it?</p>
+          <details>
+            <summary>Answer</summary>
+            <p><code>check_env</code> passes it, since nothing in it compares a move with the rules. The random baseline cannot flag it. The typo changes only <span class="nb-math-in">p(k)</span>, to 0.98, 0.01, 0, 0.01, and the sum over four equal aims removes <span class="nb-math-in">p(k)</span>. The hand-drawn baseline can, because it uses one row of Fig.&nbsp;2 in each cell and every row changes.</p>
+          </details>
+          <p>2. <code>NeverEnds</code> returns <code>terminated</code> False on every move, so a 200-move <code>TimeLimit</code> cuts every episode. What would the Q-learning of <a href="../reinforcement-learning/termination-and-truncation.html#different-grid"><code>q_gym.py</code></a>, which bootstraps at every cut, learn from it?</p>
+          <details>
+            <summary>Answer</summary>
+            <p>Its target treats both flags correctly, so it learns the optimal values of the grid <code>NeverEnds</code> plays, where arriving in the goal or the pit ends nothing. On that grid the best plan from any cell is to reach the goal and stay there, since aiming up from the goal bumps the wall and arrives in the goal again, for another +10. The agent would learn that task well. Only a check against the rules would show that the task is wrong, for example its returns rising past +10, the most an episode on the real grid can pay.</p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>Gymnasium's <code>check_env</code> checks form: well-formed spaces, a valid <code>reset</code>, repeatable seeding and unshared objects. It passes <code>SlipBack</code>, whose second slip turns back, and <code>NeverEnds</code>, which never terminates. A wrong rule shows when a baseline policy's average return misses the value solved from the rules, unless the environment and the solve share the error. Random moves average away any slip rule that treats every aim alike, so in all ten seeds they missed <code>SlipBack</code>, which the hand-drawn policy flagged. The hand-drawn policy is blind to errors in moves it never makes. Play by hand, judged against the grid itself, exposes an impossible move the first time it happens, and the derived ranges catch an episode that never ends.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="https://rll.berkeley.edu/deeprlcoursesp17/docs/nuts-and-bolts.pdf#page=6">Schulman, The Nuts and Bolts of Deep RL Research</a>: slide 6, &ldquo;POMDP Design&rdquo;, asks whether a random policy ever does the right thing and whether observations and rewards are on a reasonable scale. Slide 18 adds episode returns and lengths.</dd>
+          <dt>02</dt>
+          <dd><a href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/utils/env_checker.py#L406-L508">Gymnasium 1.4.0, env_checker.py</a>: <code>check_env</code> and the functions it calls, every assertion and warning that a pass rules out.</dd>
+          <dt>03</dt>
+          <dd><a href="https://gymnasium.farama.org/v1.4.0/introduction/create_custom_env/#debugging-your-environment">Gymnasium, Create a Custom Environment: Debugging Your Environment</a>: <code>check_env</code> beside a test that steps through known moves and prints each change of position and reward.</dd>
+          <dt>04</dt>
+          <dd><a href="https://stable-baselines3.readthedocs.io/en/v2.9.2/guide/rl_tips.html#tips-and-tricks-when-creating-a-custom-environment">Stable-Baselines3, Tips and Tricks when creating a custom environment</a>: the library's checklist before training, on normalized observations, a simplified problem first, and random actions alongside its own checker.</dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" data-nb-locator="Environment Checking: check_env" href="https://gymnasium.farama.org/v1.4.0/api/utils/#gymnasium.utils.env_checker.check_env">Farama Foundation &middot; Gymnasium 1.4.0 documentation, Utility functions: Environment Checking</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v1.4.0, byte-identical to the one in the gymnasium 1.4.0 wheel; line numbers are the file's own." href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/utils/env_checker.py">Farama Foundation &middot; Gymnasium 1.4.0 source, gymnasium/utils/env_checker.py</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v1.4.0, byte-identical to the one in the gymnasium 1.4.0 wheel." href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/utils/passive_env_checker.py">Farama Foundation &middot; Gymnasium 1.4.0 source, gymnasium/utils/passive_env_checker.py</a></li>
+          <li id="s4"><a data-nb-source data-nb-kind="primary" data-nb-note="Class PassiveEnvChecker, L225-368. gymnasium.make adds it as the innermost wrapper in envs/registration.py L801-805." href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/wrappers/common.py#L225-L368">Farama Foundation &middot; Gymnasium 1.4.0 source, gymnasium/wrappers/common.py, PassiveEnvChecker</a></li>
+          <li id="s5"><a data-nb-source data-nb-kind="primary" data-nb-note="Talk slides dated December 9th, 2016, one slide per PDF page. This copy is on the site of UC Berkeley's CS 294 Deep Reinforcement Learning (Spring 2017), which Schulman co-taught, and is byte-identical to the file at http://joschu.net/docs/nuts-and-bolts.pdf, the address Stable-Baselines3's documentation links; joschu.net does not serve it over https." href="https://rll.berkeley.edu/deeprlcoursesp17/docs/nuts-and-bolts.pdf">John Schulman &middot; The Nuts and Bolts of Deep RL Research, 2016</a></li>
+          <li id="s6"><a data-nb-source data-nb-kind="primary" href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/utils/play.py">Farama Foundation &middot; Gymnasium 1.4.0 source, gymnasium/utils/play.py</a></li>
+          <li id="s7"><a data-nb-source data-nb-kind="primary" data-nb-note="Version 2.9.2 uploaded 2026-10-26; requires gymnasium &gt;=0.29.1,&lt;2.0." href="https://pypi.org/project/stable-baselines3/2.9.2/">PyPI &middot; stable-baselines3 2.9.2</a></li>
+          <li id="s8"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2, byte-identical to the one in the 2.9.2 wheel." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/preprocessing.py#L91-L139">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/common/preprocessing.py</a></li>
+          <li id="s9"><a data-nb-source data-nb-kind="primary" href="https://stable-baselines3.readthedocs.io/en/v2.9.2/guide/custom_policy.html#sb3-policy">DLR-RM &middot; Stable-Baselines3 2.9.2 documentation, Policy Networks: SB3 Policy</a></li>
+          <li id="s10"><a data-nb-source data-nb-kind="primary" href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/core.py#L64-L77">Farama Foundation &middot; Gymnasium 1.4.0 source, gymnasium/core.py, class Env</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
