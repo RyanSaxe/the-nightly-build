@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PPO's greedy arrows outscore the sampled moves its training curve averages · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "training-an-off-the-shelf-agent",
+        "template": "lesson",
+        "title": "PPO's greedy arrows outscore the sampled moves its training curve averages",
+        "mode": "open",
+        "order": 9,
+        "date": "2026-11-08",
+        "tags": ["stable-baselines3", "ppo", "evaluation", "random-seeds", "baselines"],
+        "sources": 13,
+        "words": 4039,
+        "reading_minutes": 18,
+        "dek": "Of five Stable-Baselines3 runs on SlipperyGrid, an exact solve finds three on the optimal arrows and two one arrow short, a gap that ten evaluation episodes per run cannot detect.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">PPO's greedy arrows outscore the sampled moves its training curve averages</h1>
+        <p class="nb-dekline">Of five Stable-Baselines3 runs on SlipperyGrid, an exact solve finds three on the optimal arrows and two one arrow short, a gap that ten evaluation episodes per run cannot detect.</p>
+        <div class="nb-byline">
+          <span>18 min read</span><span>2026-11-08</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>Stable-Baselines3 is a library of off-the-shelf agents. While one of its agents trains, it logs a training curve, the average return of recent training episodes. Its PPO agent plays those episodes with moves sampled from a stochastic policy, so the curve scores that sampling policy. A trained agent should be judged by a different policy. Freeze the network, take its most probable move in each state, and play that greedy policy in a separate evaluation environment, for several training seeds, beside baselines such as random moves and a scripted policy. Henderson and colleagues call judging the policy an agent ends with the policy optimization view. On <code>SlipperyGrid</code> the course can solve every one of those values exactly, the sampling policy's included. On an environment of your own, each baseline is played in the evaluation environment too, for a number of episodes set by the smallest gap the comparison has to show.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="../reinforcement-learning/checking-a-custom-environment.html">Gymnasium's environment checker passes a grid with a backward slip</a>: <code>baselines.py</code>, whose <code>exact_value</code>, <code>returns</code> and two baselines score every policy here.</dd>
+          <dt>02</dt>
+          <dd><a href="../reinforcement-learning/termination-and-truncation.html">Q-learning that treats its time limit as terminal learns the values of a different grid</a>: <code>grid_env.py</code>, its <code>SlipperyGrid</code>, and the <code>TimeLimit</code> both environments here run under.</dd>
+          <dt>03</dt>
+          <dd><a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>: <code>value_iteration</code> and <code>action_values</code> in <code>control.py</code>, which give the optimal arrows and their value.</dd>
+          <dt>04</dt>
+          <dd><a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>: <code>gridworld.py</code> and the hand-drawn policy, one of the two baselines every result here is set against.</dd>
+          <dt>05</dt>
+          <dd><a href="../reinforcement-learning/learning-values-from-samples.html">An agent can learn what each state is worth without knowing the rules</a>: <code>estimators.py</code>, whose <code>GAMMA</code> = 0.9 the agent and every value here use.</dd>
+          <dt>06</dt>
+          <dd><a href="../reinforcement-learning/action-values-from-samples.html">Action values let an agent improve its policy from episodes alone</a>: <code>mc_control.py</code>, whose <code>step</code> plays the slip rule inside <code>SlipperyGrid</code>.</dd>
+          <dt>07</dt>
+          <dd><a href="../reinforcement-learning/epsilon-greedy-exploration.html">ε-greedy control settles for the best policy that keeps exploring</a>: the price of ε, the value an agent loses to its random moves.</dd>
+          <dt>08</dt>
+          <dd><a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>: the exact value of an ε-greedy policy around fixed arrows, which the first problem solves.</dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Seed 0's training curve and its frozen arrows</h2>
+        <p>We train the PPO agent of Stable-Baselines3, SB3 for short, on <a href="../reinforcement-learning/termination-and-truncation.html#gymnasium"><code>SlipperyGrid</code></a> with seed 0 and a budget of 50,000 steps. SB3 logs its training curve as <code>rollout/ep_rew_mean</code>, the average over the last 100 training episodes of each episode's undiscounted sum of rewards.<sup class="nb-cite"><a href="#s1" data-nb-locator="stats_window_size, L112; ep_info_buffer, L405">1</a></sup><sup class="nb-cite"><a href="#s2" data-nb-locator="Monitor.step, L87-L113; ep_rew = sum(self.rewards), L100">2</a></sup><sup class="nb-cite"><a href="#s3" data-nb-locator="L291">3</a></sup> The course discounts every return at <code>GAMMA</code> = 0.9, so we record the same 100 episodes' returns at <code>GAMMA</code>, and in this lesson the training curve means that discounted average. Every value here is averaged over starts drawn uniformly from the 14 cells <code>reset</code> uses, as the course's <a href="../reinforcement-learning/checking-a-custom-environment.html#baselines">baselines</a> were solved. Seed 0's curve ends at 1.01. Random moves earn &minus;10.90 and the <a href="../reinforcement-learning/environments-and-the-rl-problem.html">hand-drawn policy</a> earns 1.36, so by its curve the agent ends a little below the arrows drawn by hand.</p>
+        <p>Then we stop training and keep the network fixed. Its policy, which no longer changes, is called a frozen policy. In each cell we take the move the network rates most probable. Those 14 moves, one per cell, are seed 0's frozen greedy policy, and every one of them is <a href="../reinforcement-learning/finding-optimal-policies.html">optimal</a> (Fig.&nbsp;1). <code>exact_value</code> from <code>baselines.py</code> solves a policy's value from the grid's rules, and it puts this policy at 1.61, the value of an optimal policy.</p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 220" role="img" aria-label="Seed 0's frozen greedy policy on the 4 by 4 grid. Every arrow is an optimal move. Each cell also shows the probability that a sampled move is optimal: cell 0 0.82; cell 1 0.99; cell 2 0.91; cell 4 0.90; cell 5 0.99; cell 7 0.99; cell 8 0.96; cell 9 0.57; cell 10 0.96; cell 11 0.98; cell 12 0.95; cell 13 0.97; cell 14 0.95; cell 15 0.97. The lowest is cell 9 at 0.57. In cells 9 and 12, where up and right tie as optimal moves, the probability adds both. Shading is darker where the probability is lower." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto"><rect x="12" y="26" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="12" y="26" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.198;stroke:none"/><text x="15.5" y="36.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">0</text><text x="35.0" y="52.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="35.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.82</text><rect x="58" y="26" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="58" y="26" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.011;stroke:none"/><text x="61.5" y="36.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">1</text><text x="81.0" y="52.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="81.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.99</text><rect x="104" y="26" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="104" y="26" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.099;stroke:none"/><text x="107.5" y="36.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">2</text><text x="127.0" y="52.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="127.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.91</text><rect x="150" y="26" width="46" height="46" style="fill:var(--chart-3);fill-opacity:0.22;stroke:var(--line);stroke-width:0.8"/><text x="173.0" y="53.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text><rect x="12" y="72" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="12" y="72" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.110;stroke:none"/><text x="15.5" y="82.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">4</text><text x="35.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="35.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.90</text><rect x="58" y="72" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="58" y="72" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.011;stroke:none"/><text x="61.5" y="82.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">5</text><text x="81.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="81.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.99</text><rect x="104" y="72" width="46" height="46" style="fill:var(--chart-4);fill-opacity:0.18;stroke:var(--line);stroke-width:0.8"/><text x="127.0" y="99.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="150" y="72" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="150" y="72" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.011;stroke:none"/><text x="153.5" y="82.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">7</text><text x="173.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="173.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.99</text><rect x="12" y="118" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="12" y="118" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.044;stroke:none"/><text x="15.5" y="128.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">8</text><text x="35.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="35.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.96</text><rect x="58" y="118" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="58" y="118" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.473;stroke:none"/><text x="61.5" y="128.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">9</text><text x="81.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="81.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.57</text><rect x="104" y="118" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="104" y="118" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.044;stroke:none"/><text x="107.5" y="128.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">10</text><text x="127.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="127.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.96</text><rect x="150" y="118" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="150" y="118" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.022;stroke:none"/><text x="153.5" y="128.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">11</text><text x="173.0" y="144.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="173.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.98</text><rect x="12" y="164" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="12" y="164" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.055;stroke:none"/><text x="15.5" y="174.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">12</text><text x="35.0" y="190.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="35.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.95</text><rect x="58" y="164" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="58" y="164" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.033;stroke:none"/><text x="61.5" y="174.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">13</text><text x="81.0" y="190.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="81.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.97</text><rect x="104" y="164" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="104" y="164" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.055;stroke:none"/><text x="107.5" y="174.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">14</text><text x="127.0" y="190.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="127.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.95</text><rect x="150" y="164" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="150" y="164" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.033;stroke:none"/><text x="153.5" y="174.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">15</text><text x="173.0" y="190.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="173.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.97</text><text x="12.0" y="15.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);font-weight:600">Seed 0, frozen after training</text><text x="214.0" y="44.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">arrow: the greedy move, the</text><text x="214.0" y="58.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">most probable one</text><text x="214.0" y="80.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">number: the probability that a</text><text x="214.0" y="94.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">sampled move is optimal</text><rect x="214" y="108" width="14" height="14" style="fill:var(--chart-2);fill-opacity:0.45;stroke:var(--line);stroke-width:0.8"/><text x="234.0" y="119.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">shading: darker where the</text><text x="234.0" y="133.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">number is lower</text><text x="214.0" y="158.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">cells 9 and 12: up and right</text><text x="214.0" y="172.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">tie, and the number adds both</text></svg>
+          <figcaption>Fig.&nbsp;1 · Seed 0's frozen greedy policy after training, and in each cell the probability that a move sampled from PPO's policy is optimal. From the output of <code>seeds.py</code> below.</figcaption>
+        </figure>
+        <p>The curve scores a different policy from the frozen greedy one. PPO's policy is stochastic: in each cell its network gives each of the four moves a probability, and in training the agent samples its move from them.<sup class="nb-cite"><a href="#s4" data-nb-locator="get_actions, L82-L91; Categorical mode, L304-L305">4</a></sup> Seed 0's network makes an optimal move the most probable one in every cell, yet in every cell a sampled move is sometimes not optimal (Fig.&nbsp;1), and in cell 9 it is optimal only 0.57 of the time. Training episodes make those other moves and lose value on them, much as an ε-greedy agent pays the <a href="../reinforcement-learning/epsilon-greedy-exploration.html#price">price of ε</a> for its random moves. The greedy policy never makes them.</p>
+      </section>
+
+      <section data-nb-section="library" id="library">
+        <h2>PPO as a library call</h2>
+        <p>SB3 trains its agents on environments with Gymnasium's interface, and 2.9.2 is its current release.<sup class="nb-cite"><a href="#s5" data-nb-locator="Meta and Requires">5</a></sup> The course builds PPO in its stage on policy gradients, and nothing here depends on how PPO updates its network.</p>
+        <p><code>agent.py</code> trains it on <code>SlipperyGrid</code> and sets one hyperparameter. PPO's discount, <code>gamma</code>, becomes the course's <code>GAMMA</code> = 0.9 in place of SB3's default of 0.99,<sup class="nb-cite"><a href="#s6" data-nb-locator="PPO.__init__ defaults, L80-L108">6</a></sup> so the agent maximizes the return that <code>exact_value</code> measures. Every other setting keeps SB3's default. The listing's <code>Returns</code> wrapper records every training episode's return at <code>GAMMA</code>, and the training curve averages the last 100.</p>
+        <p><code>move_probs</code> reads the policy's probabilities in all 16 cells at once. <code>greedy_moves</code> keeps the most probable move in each cell, the move SB3's <code>model.predict</code> returns with <code>deterministic=True</code>, and asserts that the two agree.<sup class="nb-cite"><a href="#s4" data-nb-locator="get_actions, L82-L91">4</a></sup></p>
+        <p>The listings run with <code>uv run</code> from one folder that also holds <code>gridworld.py</code>, <code>estimators.py</code>, <code>mc_control.py</code>, <code>control.py</code>, <code>grid_env.py</code> and <code>baselines.py</code>, from the lessons in the Background band. SB3 does not promise the same results across PyTorch releases or platforms,<sup class="nb-cite"><a href="#s7" data-nb-locator="Reproducibility, first paragraph">7</a></sup> so your printed numbers may differ from these.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">agent.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "stable-baselines3==2.9.2", "torch==2.14.1"]
+#
+# [[tool.uv.index]]
+# name = "pytorch-cpu"
+# url = "https://download.pytorch.org/whl/cpu"
+# explicit = true
+#
+# [tool.uv.sources]
+# torch = { index = "pytorch-cpu", marker = "sys_platform == 'linux'" }
+# ///
+"""Stable-Baselines3's PPO trained on SlipperyGrid, and the policy it ends
+with, read off as a probability for each move in each cell."""
+
+import gymnasium as gym
+import numpy as np
+import torch
+from estimators import GAMMA
+from grid_env import SlipperyGrid
+from gridworld import N
+from gymnasium.wrappers import TimeLimit
+from stable_baselines3 import PPO
+
+LIMIT, STEPS = 200, 50_000
+torch.set_num_threads(1)  # so a seed's run does not depend on the core count
+
+
+class Returns(gym.Wrapper):
+    """Records the discounted return, at the course's GAMMA, of every
+    episode the agent trains on. SB3's own log sums rewards undiscounted."""
+
+    def __init__(self, env):
+        super().__init__(env)
+        self.G = []
+
+    def reset(self, **kwargs):
+        self.g, self.t = 0.0, 0
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        self.g += GAMMA**self.t * reward
+        self.t += 1
+        if terminated or truncated:
+            self.G.append(self.g)
+        return obs, reward, terminated, truncated, info
+
+
+def train(seed, steps=STEPS):
+    """PPO with the course's discount and every other setting at SB3's
+    default. Returns the model and the returns of its training episodes."""
+    env = Returns(TimeLimit(SlipperyGrid(), max_episode_steps=LIMIT))
+    model = PPO("MlpPolicy", env, gamma=GAMMA, seed=seed)
+    model.learn(total_timesteps=steps)
+    return model, np.array(env.G)
+
+
+def move_probs(model):
+    """probs[s, a], the probability the policy gives move a in cell s."""
+    obs, _ = model.policy.obs_to_tensor(np.arange(N))
+    with torch.no_grad():
+        return model.policy.get_distribution(obs).distribution.probs.numpy()
+
+
+def greedy_moves(model):
+    """The frozen greedy policy as a table: the most probable move in each
+    cell, the move model.predict returns with deterministic=True."""
+    moves = move_probs(model).argmax(axis=1)
+    for s in range(N):
+        assert model.predict(s, deterministic=True)[0] == moves[s]
+    return moves</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="two-policies" id="two-policies">
+        <h2>Which policy the training curve scores</h2>
+        <p>Machado and colleagues argue for reading the training curve. For Atari games they propose reporting the average of the last training episodes, a protocol &ldquo;requiring an agent to perform well while it is learning&rdquo;,<sup class="nb-cite"><a href="#s8" data-nb-locator="§4.2, Proposal: Performance During Training">8</a></sup> because scoring a policy after learning &ldquo;hides issues of sample efficiency&rdquo;.<sup class="nb-cite"><a href="#s8" data-nb-locator="§4.1, Common Performance Measures, Evaluation after learning">8</a></sup> Henderson and colleagues name two views. The online view scores the rewards an agent collects while it learns, and asks how well it does as it learns. The policy optimization view scores the policy the agent has learned, in an evaluation kept apart from learning, and asks what policy the agent ends with.<sup class="nb-cite"><a href="#s9" data-nb-locator="Online View vs. Policy Optimization, p. 6">9</a></sup> That is the question when an agent is put to use after training, and this lesson asks it.</p>
+        <p>For PPO, SB3's guide advises trying the most probable move in place of a sampled one, which &ldquo;frequently leads to better performance&rdquo;, and warns that the training curve &ldquo;is a good proxy but underestimates the agent's true performance&rdquo;.<sup class="nb-cite"><a href="#s10" data-nb-locator="How to evaluate an RL algorithm, paragraph after the second Note box">10</a></sup> SB3's log and this lesson's curve average the same episodes, so the warning can be checked here. <code>exact_value</code> takes any policy as a table of move probabilities, so it solves the policy PPO samples from, <code>move_probs(model)</code>, as readily as the greedy policy. <code>seeds.py</code> trains seeds 0 to 4 and scores each run both ways (Table&nbsp;1).</p>
+        <table class="nb-table">
+          <caption>Table&nbsp;1 · Each seed's training curve at its end, and the exact value of its frozen policy with sampled moves and with greedy moves. From the output of <code>seeds.py</code>.</caption>
+          <thead>
+            <tr><th>Seed</th><th>Training curve, last 100 episodes</th><th>Frozen policy, sampled moves</th><th>Frozen policy, greedy moves</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td>1.01</td><td>1.36</td><td>1.61</td></tr>
+            <tr><td>1</td><td>0.45</td><td>1.41</td><td>1.61</td></tr>
+            <tr><td>2</td><td>1.25</td><td>1.39</td><td>1.51</td></tr>
+            <tr><td>3</td><td>1.10</td><td>1.40</td><td>1.55</td></tr>
+            <tr><td>4</td><td>1.94</td><td>1.43</td><td>1.61</td></tr>
+          </tbody>
+        </table>
+        <p>With sampled moves the five networks are worth 1.36 to 1.43, about what the hand-drawn policy earns. With greedy moves the same networks are worth 1.51 to 1.61, and three of them are optimal. Which policy is scored decides whether an agent looks no better than arrows drawn by hand or nearly optimal.</p>
+        <p>Training episodes are played with sampled moves, so the curve estimates what sampled moves earn. PPO updates its network once per batch of 2,048 steps,<sup class="nb-cite"><a href="#s6" data-nb-locator="n_steps docstring, L33; default n_steps=2048, L85">6</a></sup><sup class="nb-cite"><a href="#s3" data-nb-locator="learn: collect_rollouts, L324; train, L337">3</a></sup> and in every seed the last 100 episodes fall inside the last batch, so the network one update before the frozen one played them. <code>seeds.py</code> prints a standard deviation of 8.6 for one training episode's return, so the curve's end has a <a href="../reinforcement-learning/checking-a-custom-environment.html#baselines">standard error</a> of 0.86. Each seed's end lies within about one standard error of its sampled value, from seed 1's 0.45 against 1.41 to seed 4's 1.94 against 1.43, so the curve cannot show what the final update changed.</p>
+        <p>So SB3's warning holds for what the curve estimates, since in every seed sampled moves are worth less than greedy ones. One curve's end is too noisy to show it. Four of the five fall below the hand-drawn 1.36, though all five greedy policies earn more than it, and seed 4's lies above even its greedy 1.61.</p>
+        <details>
+          <summary><code>seeds.py</code>, complete, and its output</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">seeds.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "stable-baselines3==2.9.2", "torch==2.14.1"]
+#
+# [[tool.uv.index]]
+# name = "pytorch-cpu"
+# url = "https://download.pytorch.org/whl/cpu"
+# explicit = true
+#
+# [tool.uv.sources]
+# torch = { index = "pytorch-cpu", marker = "sys_platform == 'linux'" }
+# ///
+"""Print every number on the page. PPO trains with five seeds, and each run
+is scored four ways: its last 100 training episodes, the exact value of its
+frozen policy with sampled and with greedy moves, and greedy episodes in a
+separate evaluation environment. Every value is a discounted return at
+GAMMA = 0.9 from a start drawn uniformly over the 14 cells reset uses."""
+
+import sys
+
+import numpy as np
+from agent import LIMIT, STEPS, greedy_moves, move_probs, train
+from baselines import EXACT, exact_value, returns
+from control import action_values, value_iteration
+from grid_env import SlipperyGrid
+from gridworld import ARROWS, N, TERMINAL, transitions
+from gymnasium.wrappers import TimeLimit
+from mc_control import LIVE, SLIP
+
+FIRST = int(sys.argv[1]) if len(sys.argv) &gt; 1 else 0
+SEEDS, EPISODES = range(FIRST, FIRST + 5), 10_000
+q_star = action_values(value_iteration(1e-12)[0], transitions(SLIP))
+optimal = np.isclose(q_star, q_star.max(axis=1, keepdims=True))  # ties: 9, 12
+EXACT["optimal"] = exact_value(np.eye(4)[q_star.argmax(axis=1)])
+
+
+def grid(moves, p):
+    """Each cell's move and a probability, drawn row by row."""
+    cell = lambda s: "  .   " if s in TERMINAL else f"{ARROWS[moves[s]]} {p[s]:.2f}"
+    return "\n".join("  " + "  ".join(cell(s) for s in range(r, r + 4))
+                     for r in range(0, N, 4))
+
+
+print("exact values: " + ", ".join(f"{k} {v:.2f}" for k, v in EXACT.items())
+      + f"; optimal - hand-drawn {EXACT['optimal'] - EXACT['hand-drawn']:.2f}")
+print(f"PPO, {STEPS:,} steps per seed")
+print(f"{'':4s}{'training':&gt;11s}{'frozen policy, exact':&gt;23s}"
+      f"{'evaluation env, greedy':&gt;26s}{'optimal':&gt;10s}")
+print(f"{'seed':4s}{'last 100':&gt;11s}{'sampled':&gt;11s}{'greedy':&gt;12s}"
+      f"{'10 eps':&gt;12s}{'10,000 eps':&gt;14s}{'arrows':&gt;10s}")
+tails, pooled, maps = [], [], {}
+for seed in SEEDS:
+    model, G = train(seed)
+    probs, moves = move_probs(model), greedy_moves(model)
+    eval_env = TimeLimit(SlipperyGrid(), max_episode_steps=LIMIT)
+    # The evaluation's own seed, which training never uses.
+    E = returns(eval_env, lambda obs, rng: int(moves[obs]), EPISODES, 1000 + seed)
+    tails.append(G[-100:])
+    pooled.append(E)
+    hits = optimal[LIVE, moves[LIVE]].sum()
+    print(f"{seed:4d}{G[-100:].mean():11.2f}{exact_value(probs):11.2f}"
+          f"{exact_value(np.eye(4)[moves]):12.2f}{E[:10].mean():12.2f}"
+          f"{E.mean():14.2f}{hits:7d}/14")
+    if seed == FIRST or hits &lt; 14:
+        maps[seed] = moves, (probs * optimal).sum(axis=1)
+
+sd_train, sd = (np.concatenate(x).std(ddof=1) for x in (tails, pooled))
+print(f"sd of one return: {sd_train:.1f} in training, {sd:.1f} in evaluation")
+print(f"standard error: {sd_train / 10:.2f} for the last 100, "
+      f"{sd / np.sqrt(10):.1f} for 10 evaluation episodes, "
+      f"{sd / np.sqrt(EPISODES):.2f} for {EPISODES:,}")
+for seed, (moves, p_optimal) in maps.items():
+    print(f"\nseed {seed}: each cell's greedy move, and the probability "
+          "that a sampled move is optimal")
+    print(grid(moves, p_optimal))
+    for s in LIVE:
+        if not optimal[s, moves[s]]:  # removal test: aim this cell optimally
+            fixed = moves.copy()
+            fixed[s] = q_star[s].argmax()
+            print(f"  greedy, with cell {s} aiming {ARROWS[fixed[s]]} instead "
+                  f"of {ARROWS[moves[s]]}: {exact_value(np.eye(4)[fixed]):.2f}")</code></pre>
+          </figure>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">output of uv run seeds.py</span><span>text</span></div>
+            <pre><code data-language="text">exact values: random -10.90, hand-drawn 1.36, optimal 1.61; optimal - hand-drawn 0.25
+PPO, 50,000 steps per seed
+       training   frozen policy, exact    evaluation env, greedy   optimal
+seed   last 100    sampled      greedy      10 eps    10,000 eps    arrows
+   0       1.01       1.36        1.61        1.27          1.54     14/14
+   1       0.45       1.41        1.61        5.82          1.68     14/14
+   2       1.25       1.39        1.51        2.86          1.41     13/14
+   3       1.10       1.40        1.55        3.72          1.59     13/14
+   4       1.94       1.43        1.61        3.67          1.50     14/14
+sd of one return: 8.6 in training, 8.5 in evaluation
+standard error: 0.86 for the last 100, 2.7 for 10 evaluation episodes, 0.09 for 10,000
+
+seed 0: each cell's greedy move, and the probability that a sampled move is optimal
+  &gt; 0.82  &gt; 0.99  &gt; 0.91    .   
+  ^ 0.90  ^ 0.99    .     ^ 0.99
+  ^ 0.96  ^ 0.57  &gt; 0.96  ^ 0.98
+  &gt; 0.95  &gt; 0.97  &gt; 0.95  ^ 0.97
+
+seed 2: each cell's greedy move, and the probability that a sampled move is optimal
+  &gt; 0.97  &gt; 0.97  &gt; 0.97    .   
+  ^ 0.96  ^ 0.96    .     ^ 0.97
+  &gt; 0.31  ^ 0.91  &gt; 0.98  ^ 0.99
+  &gt; 0.98  &gt; 0.96  &gt; 0.97  ^ 0.97
+  greedy, with cell 8 aiming ^ instead of &gt;: 1.61
+
+seed 3: each cell's greedy move, and the probability that a sampled move is optimal
+  &gt; 0.99  &gt; 0.99  &gt; 0.99    .   
+  ^ 0.95  ^ 0.98    .     ^ 0.95
+  ^ 0.98  &lt; 0.36  &gt; 0.94  ^ 0.96
+  ^ 0.83  &gt; 0.95  &gt; 0.94  ^ 0.89
+  greedy, with cell 9 aiming ^ instead of &lt;: 1.61</code></pre>
+          </figure>
+        </details>
+      </section>
+
+      <section data-nb-section="seeds" id="seeds">
+        <h2>Ten evaluation episodes cannot sort five seeds</h2>
+        <p>Without an exact solve, a frozen policy is scored by playing it. SB3's guide asks for a separate test environment to score an agent while it trains, &ldquo;because most algorithms use exploration noise during training&rdquo;.<sup class="nb-cite"><a href="#s10" data-nb-locator="How to evaluate an RL algorithm, paragraph after the first Note box">10</a></sup> After training, a second <code>SlipperyGrid</code> changes only the random stream that draws starts and slips. <code>seeds.py</code> builds one with a seed training never uses and the same 200-move <code>TimeLimit</code>. SB3's own evaluation function, <code>evaluate_policy</code>, sums rewards undiscounted,<sup class="nb-cite"><a href="#s11" data-nb-locator="docstring, L24-L25">11</a></sup> so <code>seeds.py</code> plays the greedy policy for 10,000 episodes with <code>returns</code> from <code>baselines.py</code>. The first 10 match <code>evaluate_policy</code>'s default count.<sup class="nb-cite"><a href="#s11" data-nb-locator="signature, L12-L22">11</a></sup></p>
+        <p>Ten episodes put every seed far above random moves' &minus;10.90 (Fig.&nbsp;2). They cannot place a seed between the hand-drawn and optimal values. <code>seeds.py</code> prints a standard deviation of 8.5 for one evaluation episode's return, so the mean of 10 has a standard error of 2.7, more than ten times the 0.25 between those two values. The 10-episode means run from 1.27 to 5.82, and they rank seed 0, whose arrows are all optimal, last.</p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 244" role="img" aria-label="Dot plot, one row per seed, of the frozen greedy policy's evaluation in a separate environment. seed 0: 10 episodes 1.27, 10,000 episodes 1.54, exact 1.61; seed 1: 10 episodes 5.82, 10,000 episodes 1.68, exact 1.61; seed 2: 10 episodes 2.86, 10,000 episodes 1.41, exact 1.51; seed 3: 10 episodes 3.72, 10,000 episodes 1.59, exact 1.55; seed 4: 10 episodes 3.67, 10,000 episodes 1.50, exact 1.61. The 10-episode bars span plus or minus 2.7, far wider than the band from the hand-drawn 1.36 to the optimal 1.61." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto"><rect x="167.7" y="36" width="7.3" height="154" style="fill:var(--chart-3);fill-opacity:0.28;stroke:none"/><line x1="70.0" y1="36" x2="70.0" y2="190" style="stroke:var(--line);stroke-width:0.5"/><text x="70.0" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">−2</text><line x1="128.2" y1="36" x2="128.2" y2="190" style="stroke:var(--line);stroke-width:1.1"/><text x="128.2" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">0</text><line x1="186.4" y1="36" x2="186.4" y2="190" style="stroke:var(--line);stroke-width:0.5"/><text x="186.4" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">2</text><line x1="244.5" y1="36" x2="244.5" y2="190" style="stroke:var(--line);stroke-width:0.5"/><text x="244.5" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">4</text><line x1="302.7" y1="36" x2="302.7" y2="190" style="stroke:var(--line);stroke-width:0.5"/><text x="302.7" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">6</text><line x1="360.9" y1="36" x2="360.9" y2="190" style="stroke:var(--line);stroke-width:0.5"/><text x="360.9" y="203.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">8</text><text x="230.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">discounted return of the frozen greedy policy</text><text x="164.7" y="14.0" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">hand-drawn 1.36</text><text x="178.0" y="14.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">optimal 1.61</text><text x="70.0" y="29.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">← random moves earn −10.90, far off this scale</text><text x="8.0" y="56.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">seed 0</text><line x1="86.6" y1="47" x2="243.7" y2="47" style="stroke:var(--chart-1);stroke-width:1.8"/><line x1="86.6" y1="44" x2="86.6" y2="50" style="stroke:var(--chart-1);stroke-width:1.4"/><line x1="243.7" y1="44" x2="243.7" y2="50" style="stroke:var(--chart-1);stroke-width:1.4"/><circle cx="165.1" cy="47" r="3.6" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.8"/><line x1="170.4" y1="57" x2="175.6" y2="57" style="stroke:var(--chart-2);stroke-width:1.8"/><circle cx="173.0" cy="57" r="3.2" style="fill:var(--chart-2);stroke:none"/><line x1="175.0" y1="41" x2="175.0" y2="63" style="stroke:var(--ink);stroke-width:2"/><text x="8.0" y="86.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">seed 1</text><line x1="218.9" y1="77" x2="376.0" y2="77" style="stroke:var(--chart-1);stroke-width:1.8"/><line x1="218.9" y1="74" x2="218.9" y2="80" style="stroke:var(--chart-1);stroke-width:1.4"/><line x1="376.0" y1="74" x2="376.0" y2="80" style="stroke:var(--chart-1);stroke-width:1.4"/><circle cx="297.5" cy="77" r="3.6" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.8"/><line x1="174.4" y1="87" x2="179.7" y2="87" style="stroke:var(--chart-2);stroke-width:1.8"/><circle cx="177.1" cy="87" r="3.2" style="fill:var(--chart-2);stroke:none"/><line x1="175.0" y1="71" x2="175.0" y2="93" style="stroke:var(--ink);stroke-width:2"/><text x="8.0" y="116.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">seed 2</text><line x1="132.8" y1="107" x2="289.9" y2="107" style="stroke:var(--chart-1);stroke-width:1.8"/><line x1="132.8" y1="104" x2="132.8" y2="110" style="stroke:var(--chart-1);stroke-width:1.4"/><line x1="289.9" y1="104" x2="289.9" y2="110" style="stroke:var(--chart-1);stroke-width:1.4"/><circle cx="211.4" cy="107" r="3.6" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.8"/><line x1="166.6" y1="117" x2="171.8" y2="117" style="stroke:var(--chart-2);stroke-width:1.8"/><circle cx="169.2" cy="117" r="3.2" style="fill:var(--chart-2);stroke:none"/><line x1="172.1" y1="101" x2="172.1" y2="123" style="stroke:var(--ink);stroke-width:2"/><text x="8.0" y="146.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">seed 3</text><line x1="157.9" y1="137" x2="314.9" y2="137" style="stroke:var(--chart-1);stroke-width:1.8"/><line x1="157.9" y1="134" x2="157.9" y2="140" style="stroke:var(--chart-1);stroke-width:1.4"/><line x1="314.9" y1="134" x2="314.9" y2="140" style="stroke:var(--chart-1);stroke-width:1.4"/><circle cx="236.4" cy="137" r="3.6" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.8"/><line x1="171.8" y1="147" x2="177.1" y2="147" style="stroke:var(--chart-2);stroke-width:1.8"/><circle cx="174.4" cy="147" r="3.2" style="fill:var(--chart-2);stroke:none"/><line x1="173.3" y1="131" x2="173.3" y2="153" style="stroke:var(--ink);stroke-width:2"/><text x="8.0" y="176.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--ink);font-weight:600">seed 4</text><line x1="156.4" y1="167" x2="313.5" y2="167" style="stroke:var(--chart-1);stroke-width:1.8"/><line x1="156.4" y1="164" x2="156.4" y2="170" style="stroke:var(--chart-1);stroke-width:1.4"/><line x1="313.5" y1="164" x2="313.5" y2="170" style="stroke:var(--chart-1);stroke-width:1.4"/><circle cx="234.9" cy="167" r="3.6" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.8"/><line x1="169.2" y1="177" x2="174.4" y2="177" style="stroke:var(--chart-2);stroke-width:1.8"/><circle cx="171.8" cy="177" r="3.2" style="fill:var(--chart-2);stroke:none"/><line x1="175.0" y1="161" x2="175.0" y2="183" style="stroke:var(--ink);stroke-width:2"/><circle cx="14" cy="232" r="3.6" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.8"/><text x="22.0" y="236.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">10 episodes, ±2.7 standard error</text><circle cx="200" cy="232" r="3.2" style="fill:var(--chart-2)"/><text x="208.0" y="236.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">10,000 episodes</text><line x1="300" y1="225" x2="300" y2="239" style="stroke:var(--ink);stroke-width:2"/><text x="306.0" y="236.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">exact value</text></svg>
+          <figcaption>Fig.&nbsp;2 · Each seed's frozen greedy policy scored in the evaluation environment: by its first 10 episodes, with a bar of one standard error each side, by all 10,000, and exactly. The shaded band runs from the hand-drawn value to the optimal one. From the output of <code>seeds.py</code>.</figcaption>
+        </figure>
+        <p>With 10,000 episodes the standard error falls to 0.09, and every mean lands near its exact value. The order can still be wrong. Seed 3 scores 1.59 and seed 4 scores 1.50, yet seed 4's arrows are all optimal and seed 3's are not. Their exact values, 1.55 and 1.61, differ by less than one standard error.</p>
+        <p>Seeds 2 and 3 each end with one arrow that is not optimal (Fig.&nbsp;3). Seed 2 aims right in cell 8, and seed 3 aims left in cell 9. With that one cell aimed up instead, each greedy policy is worth 1.61, the line under each grid in Fig.&nbsp;3, so the single arrow accounts for each shortfall. These runs do not show why a seed stops one arrow short, which depends on how PPO updates its network.</p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center"><svg viewBox="0 0 200 248" role="img" aria-label="Seed 2's frozen greedy policy. Cell 8 aims right, the one move that is not optimal, and the probability that a sampled move there is optimal is 0.31. The policy's value is 1.51; aiming up in cell 8 gives 1.61." style="flex: 1 1 13rem; min-width: 0; max-width: 17rem; height: auto"><text x="8.0" y="15.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);font-weight:600">Seed 2: cell 8 aims right</text><text x="8.0" y="30.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">greedy value 1.51</text><rect x="8" y="40" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="8" y="40" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.033;stroke:none"/><text x="11.5" y="50.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">0</text><text x="31.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="31.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.97</text><rect x="54" y="40" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="54" y="40" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.033;stroke:none"/><text x="57.5" y="50.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">1</text><text x="77.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="77.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.97</text><rect x="100" y="40" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="100" y="40" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.033;stroke:none"/><text x="103.5" y="50.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">2</text><text x="123.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="123.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.97</text><rect x="146" y="40" width="46" height="46" style="fill:var(--chart-3);fill-opacity:0.22;stroke:var(--line);stroke-width:0.8"/><text x="169.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text><rect x="8" y="86" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="8" y="86" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.044;stroke:none"/><text x="11.5" y="96.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">4</text><text x="31.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="31.0" y="126.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.96</text><rect x="54" y="86" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="54" y="86" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.044;stroke:none"/><text x="57.5" y="96.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">5</text><text x="77.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="77.0" y="126.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.96</text><rect x="100" y="86" width="46" height="46" style="fill:var(--chart-4);fill-opacity:0.18;stroke:var(--line);stroke-width:0.8"/><text x="123.0" y="113.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="146" y="86" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="146" y="86" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.033;stroke:none"/><text x="149.5" y="96.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">7</text><text x="169.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="169.0" y="126.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.97</text><rect x="8" y="132" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="8" y="132" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.600;stroke:none"/><text x="11.5" y="142.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">8</text><text x="31.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="31.0" y="172.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">0.31</text><rect x="54" y="132" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="54" y="132" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.099;stroke:none"/><text x="57.5" y="142.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">9</text><text x="77.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="77.0" y="172.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.91</text><rect x="100" y="132" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="100" y="132" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.022;stroke:none"/><text x="103.5" y="142.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">10</text><text x="123.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="123.0" y="172.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.98</text><rect x="146" y="132" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="146" y="132" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.011;stroke:none"/><text x="149.5" y="142.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">11</text><text x="169.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="169.0" y="172.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.99</text><rect x="8" y="178" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="8" y="178" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.022;stroke:none"/><text x="11.5" y="188.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">12</text><text x="31.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="31.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.98</text><rect x="54" y="178" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="54" y="178" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.044;stroke:none"/><text x="57.5" y="188.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">13</text><text x="77.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="77.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.96</text><rect x="100" y="178" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="100" y="178" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.033;stroke:none"/><text x="103.5" y="188.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">14</text><text x="123.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="123.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.97</text><rect x="146" y="178" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="146" y="178" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.033;stroke:none"/><text x="149.5" y="188.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">15</text><text x="169.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="169.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.97</text><rect x="9.2" y="133.2" width="43.6" height="43.6" style="fill:none;stroke:var(--chart-1);stroke-width:2.4"/><text x="8.0" y="240.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">aiming up in cell 8: 1.61</text></svg><svg viewBox="0 0 200 248" role="img" aria-label="Seed 3's frozen greedy policy. Cell 9 aims left, the one move that is not optimal, and the probability that a sampled move there is optimal is 0.36. The policy's value is 1.55; aiming up in cell 9 gives 1.61." style="flex: 1 1 13rem; min-width: 0; max-width: 17rem; height: auto"><text x="8.0" y="15.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);font-weight:600">Seed 3: cell 9 aims left</text><text x="8.0" y="30.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">greedy value 1.55</text><rect x="8" y="40" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="8" y="40" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.011;stroke:none"/><text x="11.5" y="50.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">0</text><text x="31.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="31.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.99</text><rect x="54" y="40" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="54" y="40" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.011;stroke:none"/><text x="57.5" y="50.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">1</text><text x="77.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="77.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.99</text><rect x="100" y="40" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="100" y="40" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.011;stroke:none"/><text x="103.5" y="50.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">2</text><text x="123.0" y="66.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="123.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.99</text><rect x="146" y="40" width="46" height="46" style="fill:var(--chart-3);fill-opacity:0.22;stroke:var(--line);stroke-width:0.8"/><text x="169.0" y="67.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-3);font-weight:600">goal</text><rect x="8" y="86" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="8" y="86" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.055;stroke:none"/><text x="11.5" y="96.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">4</text><text x="31.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="31.0" y="126.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.95</text><rect x="54" y="86" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="54" y="86" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.022;stroke:none"/><text x="57.5" y="96.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">5</text><text x="77.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="77.0" y="126.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.98</text><rect x="100" y="86" width="46" height="46" style="fill:var(--chart-4);fill-opacity:0.18;stroke:var(--line);stroke-width:0.8"/><text x="123.0" y="113.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--chart-4);font-weight:600">pit</text><rect x="146" y="86" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="146" y="86" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.055;stroke:none"/><text x="149.5" y="96.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">7</text><text x="169.0" y="112.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="169.0" y="126.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.95</text><rect x="8" y="132" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="8" y="132" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.022;stroke:none"/><text x="11.5" y="142.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">8</text><text x="31.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="31.0" y="172.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.98</text><rect x="54" y="132" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="54" y="132" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.600;stroke:none"/><text x="57.5" y="142.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">9</text><text x="77.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">←</text><text x="77.0" y="172.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink);font-weight:600">0.36</text><rect x="100" y="132" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="100" y="132" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.066;stroke:none"/><text x="103.5" y="142.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">10</text><text x="123.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="123.0" y="172.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.94</text><rect x="146" y="132" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="146" y="132" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.044;stroke:none"/><text x="149.5" y="142.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">11</text><text x="169.0" y="158.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="169.0" y="172.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.96</text><rect x="8" y="178" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="8" y="178" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.187;stroke:none"/><text x="11.5" y="188.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">12</text><text x="31.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="31.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.83</text><rect x="54" y="178" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="54" y="178" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.055;stroke:none"/><text x="57.5" y="188.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">13</text><text x="77.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="77.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.95</text><rect x="100" y="178" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="100" y="178" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.066;stroke:none"/><text x="103.5" y="188.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">14</text><text x="123.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">→</text><text x="123.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.94</text><rect x="146" y="178" width="46" height="46" style="fill:var(--panel);stroke:var(--line);stroke-width:0.8"/><rect x="146" y="178" width="46" height="46" style="fill:var(--chart-2);fill-opacity:0.121;stroke:none"/><text x="149.5" y="188.0" text-anchor="start" style="font-family:var(--sans);font-size:8.5px;fill:var(--ink-soft)">15</text><text x="169.0" y="204.0" text-anchor="middle" style="font-family:var(--sans);font-size:18px;fill:var(--ink);font-weight:600">↑</text><text x="169.0" y="218.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink)">0.89</text><rect x="55.2" y="133.2" width="43.6" height="43.6" style="fill:none;stroke:var(--chart-1);stroke-width:2.4"/><text x="8.0" y="240.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">aiming up in cell 9: 1.61</text></svg></div>
+          <figcaption>Fig.&nbsp;3 · The two seeds of five whose frozen greedy policy has an arrow that is not optimal, outlined, with each cell's probability that a sampled move is optimal. From the output of <code>seeds.py</code>.</figcaption>
+        </figure>
+        <p>The five seeds share code and settings, and they still end on different greedy policies. Seeds 5 to 9, from <code>uv run seeds.py 5</code>, end the same way, four of them on the optimal arrows.</p>
+        <p>So report each seed's number and set it between baselines. On an environment of your own, with no exact solve, the baselines are random moves and a scripted policy you write, as the course wrote the hand-drawn one, each played in the evaluation environment like the agent. Choose the number of episodes from the smallest gap <i>d</i> the comparison has to show. A mean of <i>n</i> episodes has a standard error of &sigma;/&radic;<i>n</i>, where &sigma; is the standard deviation of one return. With <i>n</i> &ge; (3&sigma;/<i>d</i>)&sup2;, a true gap of <i>d</i> spans at least 3 standard errors, a size the lesson on <a href="../reinforcement-learning/checking-a-custom-environment.html#baselines">checking a custom environment</a> flagged as more than noise, so noise rarely reverses the order of two policies that far apart. When both means are estimated, each needs about twice as many episodes. On <code>SlipperyGrid</code> the hand-drawn value is exact, so telling an optimal seed from it, a gap of 0.25, takes (3 &times; 8.5 / 0.25)&sup2;, about 10,000 episodes, the count <code>seeds.py</code> ran. Were the hand-drawn policy played too, each would need about 20,000. Telling seed 3's 1.55 from the optimal 1.61, a gap of 0.06, takes some 180,000.</p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>1. SB3's DQN agent takes a uniformly random move with probability 0.05 in training, once the first 10% of its training steps are over.<sup class="nb-cite"><a href="#s12" data-nb-locator="exploration defaults, L80-L108; schedule, L155-L159; predict, L236-L264">12</a></sup> Suppose a DQN run ends with the optimal arrows. Where would the end of its training curve sit on average? Solve the <a href="../reinforcement-learning/sarsa-and-q-learning.html#estimates-describe">ε-greedy policy around those arrows</a> with <code>exact_value</code>.</p>
+          <details>
+            <summary>Answer</summary>
+            <p>Its training episodes play the ε-greedy policy around the optimal arrows, with ε = 0.05. <code>exact_value</code> solves that table directly. <code>price.py</code> runs from the same folder as the listings above.</p>
+            <figure class="nb-code">
+              <div class="nb-code-head"><span class="nb-code-file">price.py · complete</span><span>python</span></div>
+              <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["numpy"]
+# ///
+"""The exact value of the eps-greedy policy around the optimal arrows: the
+policy a DQN run with those arrows trains on once eps has fallen to 0.05."""
+
+import numpy as np
+from baselines import exact_value
+from control import action_values, value_iteration
+from gridworld import transitions
+from mc_control import SLIP
+
+EPS = 0.05
+q_star = action_values(value_iteration(1e-12)[0], transitions(SLIP))
+arrows = np.eye(4)[q_star.argmax(axis=1)]
+value = exact_value((1 - EPS) * arrows + EPS / 4)
+print(f"eps {EPS}: value {value:.2f}, below optimal by {exact_value(arrows) - value:.2f}")</code></pre>
+            </figure>
+            <figure class="nb-code">
+              <div class="nb-code-head"><span class="nb-code-file">output of uv run price.py</span><span>text</span></div>
+              <pre><code data-language="text">eps 0.05: value 1.08, below optimal by 0.53</code></pre>
+            </figure>
+            <p>The curve would end near 1.08 on average, below the hand-drawn policy's 1.36, while the same run's frozen greedy policy earns 1.61. Any one window of 100 episodes adds its noise on top.</p>
+          </details>
+          <p>2. SB3's <code>EvalCallback</code> scores the current policy every <code>eval_freq</code> steps on 5 evaluation episodes by default. It records the highest mean so far and, given a save folder, saves that model as the best one.<sup class="nb-cite"><a href="#s13" data-nb-locator="EvalCallback defaults, L370-L383; best model, L518-L523">13</a></sup> Suppose an optimal policy that never changes were scored that way 30 times, with returns at <code>GAMMA</code>. Would the highest of the 30 means be near 1.61?</p>
+          <details>
+            <summary>Answer</summary>
+            <p>No. Each 5-episode mean has a standard error of about 8.5 / &radic;5, nearly 4, so the 30 means scatter widely around 1.61, and the highest lies several units above it. Machado and colleagues call the best score across training &ldquo;a statistically biased estimate&rdquo; that needs a second, independent evaluation.<sup class="nb-cite"><a href="#s8" data-nb-locator="§4.1, Evaluation of the best policy">8</a></sup></p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>A training curve averages training episodes, and PPO plays those with moves sampled from its policy, so the curve scores that sampling policy. A trained agent is judged by its frozen greedy policy instead, played in a separate evaluation environment, seed by seed, between baselines. On <code>SlipperyGrid</code> the sampled policies of five seeds were worth 1.36 to 1.43 and their greedy policies 1.51 to 1.61, against 1.36 for the hand-drawn policy and &minus;10.90 for random moves. Two seeds stopped one arrow short of optimal. Ten evaluation episodes, with a standard error of 2.7, could not show which two, and 10,000 still ranked one of them above an optimal seed.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="https://stable-baselines3.readthedocs.io/en/v2.9.2/guide/rl_tips.html#how-to-evaluate-an-rl-algorithm">Stable-Baselines3, How to evaluate an RL algorithm</a>: the library's advice on a separate test environment, 5 to 20 evaluation episodes and greedy moves, with its warning about the training curve.</dd>
+          <dt>02</dt>
+          <dd><a href="https://arxiv.org/abs/1709.06560">Henderson et al., Deep Reinforcement Learning that Matters</a>: &ldquo;Random Seeds and Trials&rdquo; (pp. 3&ndash;5) splits ten TRPO seeds into two sets of five, and &ldquo;Online View vs. Policy Optimization&rdquo; (p. 6) separates the two questions.</dd>
+          <dt>03</dt>
+          <dd><a href="https://arxiv.org/abs/1709.06009">Machado et al., Revisiting the Arcade Learning Environment</a>: §4.1 and §4.2 make the case for reporting the last training episodes and explain why the best evaluation during training is biased.</dd>
+          <dt>04</dt>
+          <dd><a href="https://stable-baselines3.readthedocs.io/en/v2.9.2/guide/callbacks.html#evalcallback">Stable-Baselines3, EvalCallback</a>: how the library scores a policy on a separate environment while training runs.</dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/base_class.py">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/common/base_class.py</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/monitor.py">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/common/monitor.py</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2; rollout/ep_rew_mean is logged at L291, and learn alternates collect_rollouts and train at L324-L337." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/on_policy_algorithm.py#L291">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/common/on_policy_algorithm.py</a></li>
+          <li id="s4"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2; line numbers are the tag's own." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/distributions.py">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/common/distributions.py</a></li>
+          <li id="s5"><a data-nb-source data-nb-kind="primary" data-nb-note="Version 2.9.2 uploaded 2026-10-26; requires gymnasium &gt;=0.29.1,&lt;2.0 and torch &gt;=2.8,&lt;3.0." href="https://pypi.org/project/stable-baselines3/2.9.2/">PyPI &middot; stable-baselines3 2.9.2</a></li>
+          <li id="s6"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/ppo/ppo.py#L80-L108">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/ppo/ppo.py</a></li>
+          <li id="s7"><a data-nb-source data-nb-kind="primary" href="https://stable-baselines3.readthedocs.io/en/v2.9.2/guide/algos.html#reproducibility">DLR-RM &middot; Stable-Baselines3 2.9.2 documentation, RL Algorithms: Reproducibility</a></li>
+          <li id="s8"><a data-nb-source data-nb-kind="primary" data-nb-note="Journal of Artificial Intelligence Research 61, 523-562, 2018. Sections and quotations checked in the authors' version, arXiv:1709.06009 v2." href="https://www.jair.org/index.php/jair/article/view/11182">Machado, Bellemare, Talvitie, Veness, Hausknecht and Bowling &middot; Revisiting the Arcade Learning Environment: Evaluation Protocols and Open Problems for General Agents, 2018</a></li>
+          <li id="s9"><a data-nb-source data-nb-kind="primary" data-nb-note="Proceedings of the AAAI Conference on Artificial Intelligence 32(1), 2018. Page numbers are those of arXiv v3." href="https://arxiv.org/abs/1709.06560">Henderson, Islam, Bachman, Pineau, Precup and Meger &middot; Deep Reinforcement Learning that Matters, 2018</a></li>
+          <li id="s10"><a data-nb-source data-nb-kind="primary" href="https://stable-baselines3.readthedocs.io/en/v2.9.2/guide/rl_tips.html#how-to-evaluate-an-rl-algorithm">DLR-RM &middot; Stable-Baselines3 2.9.2 documentation, Reinforcement Learning Tips and Tricks</a></li>
+          <li id="s11"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/evaluation.py">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/common/evaluation.py</a></li>
+          <li id="s12"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/dqn/dqn.py">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/dqn/dqn.py</a></li>
+          <li id="s13"><a data-nb-source data-nb-kind="primary" data-nb-note="The file at tag v2.9.2; class EvalCallback, L342-L532." href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/callbacks.py#L342-L532">DLR-RM &middot; Stable-Baselines3 2.9.2 source, stable_baselines3/common/callbacks.py</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
