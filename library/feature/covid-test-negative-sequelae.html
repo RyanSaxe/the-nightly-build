@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enrolling everyone at a PCR test cuts the second-year outcomes attributed to COVID from 369 to zero · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "covid-test-negative-sequelae",
+        "template": "article",
+        "title": "Enrolling everyone at a PCR test cuts the second-year outcomes attributed to COVID from 369 to zero",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-11",
+        "tags": ["long-covid", "epidemiology", "study-design", "selection-bias"],
+        "sources": 10,
+        "words": 1189,
+        "reading_minutes": 5,
+        "dek": "Against people never diagnosed with COVID, Stanford's analysis of US insurance claims makes a negative PCR test look nearly as harmful as infection in the first four months.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">
+          Enrolling everyone at a PCR test cuts the second-year outcomes
+          attributed to COVID from 369 to zero
+        </h1>
+        <p class="nb-dekline">Against people never diagnosed with COVID, Stanford's analysis of US insurance claims makes a negative PCR test look nearly as harmful as infection in the first four months.</p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-11-11</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One design's long tail grows while the other's reaches zero</h2>
+        <p>
+          In PNAS on 27 October, Hamed Nilforoshan and colleagues at Stanford
+          tested 614 outcomes for a link to COVID-19 in the insurance claims
+          of 244.7 million US patients, running two study designs on the same
+          records. An outcome counted as attributable at a relative risk of at
+          least 1.1, significant after Bonferroni correction. The test-based
+          control design found 43 such outcomes one to four months after
+          infection, 5 at five to twelve months and none in the second year.
+          The unrestricted control design found 262, 286 and
+          369.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="covid-test-negative-sequelae/chart-1.png"
+            alt="Line chart of outcomes attributable to COVID-19, out of 614, in three follow-up windows. The unrestricted control design rises from 262 at days 30 to 119, to 286 at days 120 to 359, to 369 at days 360 to 719. The test-based control design falls from 43 to 5 to 0."
+          />
+          <figcaption>
+            Fig. 1 · Attributable outcomes by days after enrollment. Data: PNAS
+            Abstract and Fig. 1B.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The unrestricted design is the authors' replica of the one used in
+          Veterans Affairs (VA) cohort studies.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Its cases are everyone with a
+          COVID-19 diagnosis code, compared with people who have no such
+          diagnosis, tested or not. The test-based design enrolls people at
+          their first PCR test claim, and those diagnosed within 7 days are
+          the cases. So the designs differ in their cases (10.1 million
+          against 2.8 million) and their enrollment date as well as their
+          comparison group.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="negative-test-exposure" id="negative-test-exposure">
+        <h2>A negative test behaves like an exposure</h2>
+        <p>
+          COVID-19 cannot cause cerebral palsy in an adult. Yet COVID cases
+          had a rising number of cerebral palsy claims in the months
+          before their diagnosis, and so did people whose first PCR test came
+          back negative, while the unrestricted comparison group stayed
+          flat.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          A diagnosis or a test follows a visit to care, often for something
+          else, and that visit sets the enrollment date. Nobody in the
+          unrestricted comparison group had to make one. Before reweighting,
+          those controls averaged 31.56 visits over four years against 54.0
+          for cases.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          Both designs reweight controls to match cases on four years of
+          history. If the unrestricted design still measures contact with
+          care, then 27.3 million people whose first PCR test was negative,
+          and who were never diagnosed, should look about as harmed as COVID
+          cases against its comparison group. Over days 30 to 119 they come
+          within 0.2 percentage points.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <svg
+            viewBox="0 0 400 300"
+            role="img"
+            aria-label="Diagram of three comparisons. Unrestricted design: COVID diagnosis cases against people with no COVID diagnosis, 82.7 percent of outcomes with relative risk at least 1.1. Placebo: negative-tested people against the same comparison group, 82.5 percent. Test-based design: people diagnosed within 7 days of a first PCR test against people whose first test showed no COVID, 8.8 percent."
+            style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto"
+          >
+            <text x="70" y="14" text-anchor="middle" style="font: 600 11px var(--sans); fill: var(--ink-soft)">Cases</text>
+            <text x="230" y="14" text-anchor="middle" style="font: 600 11px var(--sans); fill: var(--ink-soft)">Comparison group</text>
+            <text x="353" y="14" text-anchor="middle" style="font: 600 11px var(--sans); fill: var(--ink-soft)">RR ≥ 1.1</text>
+
+            <!-- Row 1: unrestricted -->
+            <text x="4" y="42" style="font: 600 11px var(--sans); fill: var(--ink)">Unrestricted control design</text>
+            <rect x="4" y="48" width="132" height="40" rx="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 1.5" />
+            <text x="70" y="64" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">COVID diagnosis code</text>
+            <text x="70" y="79" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">enrolled at diagnosis</text>
+            <text x="148" y="72" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">vs</text>
+            <rect x="160" y="48" width="140" height="40" rx="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 1.5" />
+            <text x="230" y="64" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">No COVID diagnosis</text>
+            <text x="230" y="79" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">tested or not</text>
+            <rect x="310" y="52" width="86" height="9" style="fill: var(--line)" />
+            <rect x="310" y="52" width="71.1" height="9" style="fill: var(--chart-4)" />
+            <text x="353" y="82" text-anchor="middle" style="font: 600 16px var(--sans); fill: var(--ink)">82.7%</text>
+            <text x="4" y="105" style="font: 10px var(--sans); fill: var(--ink-soft)">Cases arrive through a care visit; controls need none.</text>
+            <text x="4" y="117" style="font: 10px var(--sans); fill: var(--chart-4)">Estimate pushed up.</text>
+
+            <!-- Row 2: placebo -->
+            <text x="4" y="142" style="font: 600 11px var(--sans); fill: var(--ink)">Placebo: negative-tested people as cases</text>
+            <rect x="4" y="148" width="132" height="40" rx="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 1.5" />
+            <text x="70" y="164" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">First PCR test negative</text>
+            <text x="70" y="179" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">never diagnosed</text>
+            <text x="148" y="172" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">vs</text>
+            <rect x="160" y="148" width="140" height="40" rx="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 1.5" />
+            <text x="230" y="164" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">No COVID diagnosis</text>
+            <text x="230" y="179" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">the same group</text>
+            <rect x="310" y="152" width="86" height="9" style="fill: var(--line)" />
+            <rect x="310" y="152" width="70.95" height="9" style="fill: var(--chart-4)" />
+            <text x="353" y="182" text-anchor="middle" style="font: 600 16px var(--sans); fill: var(--ink)">82.5%</text>
+
+            <!-- Row 3: test-based -->
+            <text x="4" y="210" style="font: 600 11px var(--sans); fill: var(--ink)">Test-based control design</text>
+            <rect x="4" y="216" width="132" height="40" rx="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 1.5" />
+            <text x="70" y="232" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">COVID within 7 days</text>
+            <text x="70" y="247" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">of first PCR test</text>
+            <text x="148" y="240" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">vs</text>
+            <rect x="160" y="216" width="140" height="40" rx="4" style="fill: var(--panel); stroke: var(--chart-3); stroke-width: 1.5" />
+            <text x="230" y="232" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">First PCR test, no COVID</text>
+            <text x="230" y="247" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">within 7 days</text>
+            <rect x="310" y="220" width="86" height="9" style="fill: var(--line)" />
+            <rect x="310" y="220" width="7.57" height="9" style="fill: var(--chart-3)" />
+            <text x="353" y="250" text-anchor="middle" style="font: 600 16px var(--sans); fill: var(--ink)">8.8%</text>
+            <text x="4" y="273" style="font: 10px var(--sans); fill: var(--ink-soft)">Controls include later infections and people tested for</text>
+            <text x="4" y="285" style="font: 10px var(--sans); fill: var(--ink-soft)">other illness. <tspan style="fill: var(--chart-3)">Estimate pulled toward the null.</tspan></text>
+          </svg>
+          <figcaption>
+            Fig. 2 · Share of 614 outcomes with relative risk at least 1.1,
+            days 30–119, no significance filter (SI Fig. S5). Bias directions:
+            the paper's Discussion.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The unrestricted design also flagged 53.1% of 49 negative-control
+          outcomes, conditions COVID-19 should not cause, including a 76%
+          excess of injuries from lightning, drowning and
+          electrocution.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="toward-the-null" id="toward-the-null">
+        <h2>Test-negative controls pull the estimate toward the null</h2>
+        <p>
+          Ziyad Al-Aly, who led the VA studies, made the case against
+          test-negative controls in 2023, about the Maccabi study in Israel:
+          "When you test people, you're testing against people who are sick."
+          Such a design, he said, "makes it look like COVID-positive people
+          have a resolution of symptoms."<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+        <p>
+          The PNAS paper concedes the mechanism. Two of its 49
+          negative controls ran significantly below 1, which the authors put
+          down to collider bias from selecting on a test that infection and
+          other illness both prompt. Its controls also caught COVID-19 later,
+          a second bias in the same direction.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <div class="nb-stat-strip">
+          <div class="nb-stat">
+            <span class="nb-stat-n">4.2%</span
+            ><span class="nb-stat-l">Controls positive by day 119</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">10.1%</span
+            ><span class="nb-stat-l">By day 359</span>
+          </div>
+          <div class="nb-stat">
+            <span class="nb-stat-n">20.2%</span
+            ><span class="nb-stat-l">By two years</span>
+          </div>
+        </div>
+        <p>
+          Any comparison group defined by a negative test carries this
+          contamination, which pulls the difference "towards the null," as a
+          2026 methods review led by Daniel Ayoubkhani
+          notes.<sup class="nb-cite"><a href="#s4">4</a></sup>
+          The VA comparison group carries it too, from unrecorded
+          infections.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          The test-based design also misses effects below a relative risk of
+          1.1, and claims miss fatigue or cognitive symptoms that never get a
+          billing code.<sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s6">6</a></sup>
+          Its authors say it "may modestly underestimate some effects" and
+          give no figure for how much.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="negative-control-check" id="negative-control-check">
+        <h2>The VA cohorts passed the negative-control check the claims replica failed</h2>
+        <table class="nb-table">
+          <caption>
+            Comparison groups and the direction each pushes the
+            estimate.<sup class="nb-cite"><a href="#s7">7</a></sup><sup class="nb-cite"><a href="#s5">5</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s9">9</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s1">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Study</th>
+              <th class="txt">Comparison group</th>
+              <th class="txt">Pushes estimate</th>
+              <th class="txt">Later findings</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">VA cohorts, 2021 and 2023</td>
+              <td class="txt">VA users without a positive test</td>
+              <td class="txt">Up from care-seeking, per PNAS; down from missed infections; negative controls null</td>
+              <td class="txt">24 of 77 conditions raised at two years (non-hospitalized)</td>
+            </tr>
+            <tr>
+              <td class="txt">Maccabi, BMJ 2023</td>
+              <td class="txt">Test-negative members</td>
+              <td class="txt">Toward the null</td>
+              <td class="txt">5 outcomes raised at days 181–360</td>
+            </tr>
+            <tr>
+              <td class="txt">RECOVER, JAMA 2023</td>
+              <td class="txt">Uninfected, indexed to a negative test</td>
+              <td class="txt">Not measured; volunteers tested per protocol</td>
+              <td class="txt">37 of 44 symptoms at adjusted odds ratio ≥ 1.5</td>
+            </tr>
+            <tr>
+              <td class="txt">PNAS replica</td>
+              <td class="txt">No COVID diagnosis, tested or not</td>
+              <td class="txt">Up; 53.1% of negative controls flagged</td>
+              <td class="txt">369 outcomes in year two</td>
+            </tr>
+            <tr>
+              <td class="txt">PNAS test-based</td>
+              <td class="txt">First PCR test, no COVID</td>
+              <td class="txt">Toward the null; 2 of 49 negative controls below 1</td>
+              <td class="txt">5 at days 120–359, 0 in year two</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          On these claims, the unrestricted design gives placebo cases the
+          profile of real ones and flags 53.1% of its negative controls, so
+          most of its 369 second-year outcomes come from the comparison group.
+          That result belongs to the replica. It required one claim in 2019,
+          where the VA cohorts required earlier VA visits. The VA negative controls came back null, with neoplasms and
+          accidental injuries each at a hazard ratio of 1.03 over six
+          months.<sup class="nb-cite"><a href="#s7">7</a></sup><sup class="nb-cite"><a href="#s1">1</a></sup>
+          Test-anchored designs still find later effects. In Maccabi, cognitive
+          impairment had a hazard ratio of 1.69 at days
+          181–360.<sup class="nb-cite"><a href="#s8">8</a></sup> The
+          test-based design's own five middle-window outcomes are myopathy,
+          hair loss, pulmonary embolism, acute pulmonary embolism and
+          respiratory failure.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          No researcher outside the team has commented publicly yet. CIDRAP's
+          report quotes only the authors.<sup class="nb-cite"><a href="#s10">10</a></sup>
+          The authors write that their study "does not indicate that symptoms beyond
+          one year are not genuine but that their attributability to COVID-19
+          is uncertain."<sup class="nb-cite"><a href="#s1">1</a></sup>
+          On this evidence, a year-two effect measured against an unrestricted
+          comparison group needs a negative-control result beside it before
+          anyone reads it as an effect of the virus.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Abstract; Results; Discussion, limitations paragraphs; Methods M1–M3; Figs. 1B, 2, 3"
+              data-nb-note="DOI 10.1073/pnas.2604414123; online 27 October 2026, issue of 3 November 2026; open-access copy at PMC"
+              href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13732191/"
+              >PNAS · Nilforoshan et al., Revised estimates of long COVID symptoms (2026)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="SI Appendix 01: Extended Methods S2; Tables S1–S2; Figs. S1, S5"
+              data-nb-note="Supplementary Materials of the PMC article, file pnas.2604414123.sapp.pdf"
+              href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13732191/#supplementary-material1"
+              >PNAS · Nilforoshan et al., SI Appendix (2026)</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="Section &quot;The problem with test-negative designs&quot;"
+              data-nb-note="Van Beusekom, 12 January 2023; quotes Ziyad Al-Aly on the Maccabi study"
+              href="https://www.cidrap.umn.edu/covid-19/study-says-most-long-covid-symptoms-resolve-1-year-after-mild-cases-experts-not-so-sure"
+              >CIDRAP News · Experts on the Maccabi study (2023)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Section on control groups; table rows on test-negative controls"
+              data-nb-note="Considerations for epidemiological studies investigating emerging post-acute infection syndromes: Long Covid as a case study"
+              href="https://doi.org/10.1016/j.eclinm.2026.103833"
+              >eClinicalMedicine · Ayoubkhani et al. (2026)</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Results at 2 years; Discussion, limitations"
+              href="https://doi.org/10.1038/s41591-023-02521-2"
+              >Nature Medicine · Bowe, Xie, Al-Aly (2023)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Body, on fatigue and cognitive symptoms missing from claims"
+              data-nb-note="Stanford University news release of 28 October 2026, EurekAlert! copy"
+              href="https://www.eurekalert.org/news-releases/1149648"
+              >Stanford University · Long COVID study release (2026)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Results, non-hospitalized section; Methods, negative outcome and exposure controls"
+              href="https://www.nature.com/articles/s41586-021-03553-9"
+              >Nature · Al-Aly, Xie, Bowe (2021)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Abstract, Results and Conclusions"
+              href="https://doi.org/10.1136/bmj-2022-072529"
+              >BMJ · Mizrahi et al., Maccabi cohort (2023)</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Abstract, Results; Table 1; Methods, index dates"
+              href="https://doi.org/10.1001/jama.2023.8823"
+              >JAMA · Thaweethai et al., RECOVER adults (2023)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="Paragraphs 2–8"
+              data-nb-note="Bergeson, 9 November 2026"
+              href="https://www.cidrap.umn.edu/covid-19/new-study-links-covid-fewer-long-term-health-problems"
+              >CIDRAP News · Report on the Stanford study (2026)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
