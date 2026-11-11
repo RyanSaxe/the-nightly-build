@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TD(0) no longer converges to the best fit once states share weights · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "semi-gradient-td",
+        "template": "lesson",
+        "title": "TD(0) no longer converges to the best fit once states share weights",
+        "mode": "open",
+        "order": 12,
+        "date": "2026-11-11",
+        "tags": ["function-approximation", "semi-gradient", "state-aggregation", "temporal-difference", "prediction"],
+        "sources": 3,
+        "words": 4385,
+        "reading_minutes": 19,
+        "dek": "Gradient Monte Carlo finds the closest fit that 10 shared weights allow on a 1000-state walk, and semi-gradient TD, which ignores the weights inside its own target, settles on one with 4.6 times as much value error.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">TD(0) no longer converges to the best fit once states share weights</h1>
+        <p class="nb-dekline">Gradient Monte Carlo finds the closest fit that 10 shared weights allow on a 1000-state walk, and semi-gradient TD, which ignores the weights inside its own target, settles on one with 4.6 times as much value error.</p>
+        <div class="nb-byline">
+          <span>19 min read</span><span>2026-11-11</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>A table gives each state its own estimate, and an update changes only the entry for the state the agent just left. On a random walk with 1000 states, the agent visits state 1 about once every 82 episodes, so that entry barely moves.</p>
+        <p>Function approximation computes every estimate from a short vector of weights, so one update moves many estimates. Learning becomes stochastic gradient descent on squared error, with the Monte Carlo return or the TD(0) target in place of the true value. TD's version is called semi-gradient, because it ignores how its target depends on the weights. You derive both updates from one objective, then solve the 1000-state walk exactly for where each one settles and check the answers against runs.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="../reinforcement-learning/learning-values-from-samples.html">An agent can learn what each state is worth without knowing the rules</a>: Monte Carlo and TD(0) prediction, the TD error, and the result that an episode's TD errors add up to Monte Carlo's correction.</dd>
+          <dt>02</dt>
+          <dd><a href="../reinforcement-learning/n-step-returns.html">Four-step TD learns a 19-state random walk faster than TD(0) or Monte Carlo</a>: the random walk this lesson stretches to 1000 states, and why Monte Carlo's noisy returns need a small step size.</dd>
+          <dt>03</dt>
+          <dd><a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>: the Bellman equation as a linear system, solved directly for the exact values used here.</dd>
+          <dt>04</dt>
+          <dd><a href="http://incompleteideas.net/book/RLbook2020.pdf#page=219">Sutton and Barto, Sections 9.1 to 9.3</a>: the value-error objective and both updates (pp. 197-203) in the field's standard notation.</dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>One move updates a hundred estimates</h2>
+        <p>The random walk in the <a href="../reinforcement-learning/n-step-returns.html#orientation">n-step lesson</a> had 19 states. Sutton and Barto's Example 9.1 stretches it to 1000.<sup class="nb-cite"><a href="#s1" data-nb-locator="Example 9.1, p. 203" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=225">1</a></sup> Every episode starts in state 500, and each move jumps to one of the 100 states on either side, all 200 jumps equally likely. A jump past state 1 ends the episode with reward −1, a jump past state 1000 ends it with +1, and every other move pays 0. There is no discount, so a return is the episode's outcome.</p>
+        <p>State aggregation lets a rarely visited state, such as state 1, learn from its neighbours' visits. It splits the states into groups and gives each group one number, called a weight, which is the estimate of every state in the group.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, state aggregation, p. 203" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=225">1</a></sup> With Sutton and Barto's 10 groups of 100, states 1–100 get 2.4 visits per episode, and each one updates state 1's estimate.</p>
+        <p>Fig. 1 follows one TD(0) move. Suppose the weight for states 201–300 is −0.47 and the weight for 301–400 is −0.28. The agent jumps from state 250 to state 320 with reward 0, so TD(0)'s target is 0 + (−0.28). With a step size of 0.1, the weight for 201–300 moves a tenth of the way to the target, to −0.451, and so do the estimates of all 100 states from 201 to 300.</p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 172" role="img" aria-label="The 1000 states drawn as 10 groups of 100, with an end on each side worth −1 and +1. Every episode starts at state 500, and a move jumps up to 100 states either way. An arrow shows a move from state 250 to state 320. The group 201–300 is shaded: its one weight is updated, and every state in it reads that weight. The group 301–400 is outlined: TD's target reads its weight as the estimate of state 320." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto"><defs><marker id="nb-sg-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--chart-1)"/></marker></defs><rect x="40.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="72.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="104.0" y="62" width="32" height="28" style="fill:var(--chart-1);fill-opacity:0.35;stroke:var(--chart-1);stroke-width:1"/><rect x="136.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="168.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="200.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="232.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="264.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="296.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="328.0" y="62" width="32" height="28" style="fill:var(--panel);fill-opacity:1;stroke:var(--ink-soft);stroke-width:1"/><rect x="137.5" y="63.5" width="29" height="25" style="fill:none;stroke:var(--chart-2);stroke-width:2.5"/><rect x="8" y="62" width="26" height="28" rx="4" style="fill:none;stroke:var(--ink-soft);stroke-width:1;stroke-dasharray:3 2"/><text x="21.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);">−1</text><rect x="366" y="62" width="26" height="28" rx="4" style="fill:none;stroke:var(--ink-soft);stroke-width:1;stroke-dasharray:3 2"/><text x="379.0" y="80.0" text-anchor="middle" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink);">+1</text><text x="40.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">1</text><text x="72.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">100</text><text x="104.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">200</text><text x="136.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">300</text><text x="168.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">400</text><text x="200.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">500</text><text x="232.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">600</text><text x="264.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">700</text><text x="296.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">800</text><text x="328.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">900</text><text x="360.0" y="104.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">1000</text><text x="200.0" y="117.0" text-anchor="middle" style="font-family:var(--sans);font-size:9.5px;fill:var(--ink-soft);">state</text><path d="M 194.8 50 L 204.8 50 L 199.8 59 z" style="fill:var(--ink)"/><text x="199.8" y="45.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);">start: 500</text><line x1="167.8" y1="24.0" x2="231.8" y2="24.0" style="stroke:var(--ink-soft);stroke-width:1;"/><line x1="167.8" y1="20.0" x2="167.8" y2="28.0" style="stroke:var(--ink-soft);stroke-width:1;"/><line x1="231.8" y1="20.0" x2="231.8" y2="28.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="199.8" y="15.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">one move from 500: up to 100 states either way</text><path d="M 119.8 60 Q 131.0 28 142.2 59" style="fill:none;stroke:var(--chart-1);stroke-width:1.6" marker-end="url(#nb-sg-arrow)"/><text x="115.8" y="42.0" text-anchor="end" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);">250 → 320</text><line x1="152.0" y1="109.0" x2="152.0" y2="124.0" style="stroke:var(--chart-2);stroke-width:1.2;"/><text x="148.0" y="136.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);">read by TD's target: v̂(320, w)</text><line x1="119.8" y1="109.0" x2="119.8" y2="152.0" style="stroke:var(--chart-1);stroke-width:1.2;"/><text x="113.8" y="164.0" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);">updated: the one weight that states 201–300 share</text></svg>
+          <figcaption>Fig. 1 · Ten groups of 100 states with one weight each. In the move from state 250 to 320, TD's target reads the outlined group's weight and the update changes the shaded group's. The drawing is schematic.</figcaption>
+        </figure>
+        <p>In general, the estimate is a function v̂(s, w) of a weight vector w with far fewer components than there are states.<sup class="nb-cite"><a href="#s1" data-nb-locator="Chapter 9 introduction, p. 197" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=219">1</a></sup> Most of the theory covers linear functions,<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, p. 205" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=227">1</a></sup> where each state s has a feature vector x(s) and the estimate is an inner product.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\hat v(s, w) = \htmlClass{nb-mc1}{w}^{\top} \htmlClass{nb-mc2}{x(s)} = \sum_{i=1}^{d} w_i \, x_i(s)</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">w</span><span>the d weights, one per group here</span></li>
+            <li><span class="nb-math-term nb-mc2">x(s)</span><span>the feature vector of state s</span></li>
+          </ul>
+          <figcaption>A linear value function, Sutton and Barto's equation 9.8.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, equation 9.8, p. 205" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=227">1</a></sup></figcaption>
+        </figure>
+        <p>State aggregation is linear, with x(s) equal to 1 in the component of s's group and 0 elsewhere.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, p. 203, and Example 9.2, p. 208" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=230">1</a></sup> A table is the case of one group per state. For any linear estimate, the gradient with respect to the weights is ∇v̂(s, w) = x(s).<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, p. 205" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=227">1</a></sup></p>
+      </section>
+
+      <section data-nb-section="gradient-monte-carlo" id="gradient-monte-carlo">
+        <h2>Monte Carlo's update is a gradient step on the value error</h2>
+        <p>Ten weights can't match 1000 <a href="../reinforcement-learning/environments-and-the-rl-problem.html#value">true values</a>, so an objective has to say which states' errors count most. Sutton and Barto weight each state's squared error by a distribution μ and call the sum the mean squared value error, VE.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.2, equation 9.1, p. 199" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=221">1</a></sup></p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\mathrm{VE}(w) = \sum_{s} \htmlClass{nb-mc1}{\mu(s)} \bigl[ \htmlClass{nb-mc2}{v_\pi(s) - \hat v(s, w)} \bigr]^2</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">\mu(s)</span><span>how much the error at s counts, with the μ(s) summing to 1</span></li>
+            <li><span class="nb-math-term nb-mc2">v_\pi(s) - \hat v(s, w)</span><span>the error at s</span></li>
+          </ul>
+          <figcaption>The mean squared value error, equation 9.1.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.2, equation 9.1, p. 199" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=221">1</a></sup></figcaption>
+        </figure>
+        <p>The usual μ is the fraction of time steps the agent spends in each state while following the policy. Sutton and Barto call it the <a href="../reinforcement-learning/sarsa-and-q-learning.html#off-policy">on-policy</a> distribution.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.2, p. 199" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=221">1</a></sup> In an episodic task it comes from η(s), the expected number of visits to s per episode.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{gathered} \eta(s) = \htmlClass{nb-mc1}{h(s)} + \sum_{\bar s} \eta(\bar s)\, \htmlClass{nb-mc2}{p(s \mid \bar s)} \\ \mu(s) = \frac{\eta(s)}{\sum_{s'} \eta(s')} \end{gathered}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">h(s)</span><span>the probability that an episode starts in s, 1 for state 500</span></li>
+            <li><span class="nb-math-term nb-mc2">p(s \mid \bar s)</span><span>the probability that a move from s̄ lands in s</span></li>
+          </ul>
+          <figcaption>Equations 9.2 and 9.3: a visit to s starts an episode or follows a move into s.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.2, boxed equations 9.2 and 9.3, p. 199" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=221">1</a></sup> <code>exact.py</code> solves the first like the <a href="../reinforcement-learning/environments-and-the-rl-problem.html#computing">direct solve</a> for values.</figcaption>
+        </figure>
+        <p>In Fig. 2, the agent spends 1.37% of its time steps in state 500, where every episode starts. From the states one jump away, μ falls almost linearly to 0.0147% at each end.<sup class="nb-cite"><a href="#s1" data-nb-locator="Example 9.1, discussion of Figure 9.1, p. 204" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=226">1</a></sup></p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 190" role="img" aria-label="Area plot of the share of time steps spent in each of the 1000 states, on a scale up to 0.2%. It peaks at the states next to 500, about 0.17%, and falls almost linearly to about 0.015% at states 1 and 1000. State 500 itself is a spike off the scale, at 1.37%. Dotted lines mark the boundaries of the 10 groups." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto"><line x1="52.0" y1="150.0" x2="388.0" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="153.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">0%</text><line x1="52.0" y1="118.0" x2="388.0" y2="118.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="121.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">0.05%</text><line x1="52.0" y1="86.0" x2="388.0" y2="86.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="89.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">0.1%</text><line x1="52.0" y1="54.0" x2="388.0" y2="54.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="57.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">0.15%</text><line x1="52.0" y1="22.0" x2="388.0" y2="22.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="25.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">0.2%</text><line x1="52.0" y1="150.0" x2="52.0" y2="154.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="52.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">1</text><line x1="118.9" y1="150.0" x2="118.9" y2="154.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="118.9" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">200</text><line x1="186.2" y1="150.0" x2="186.2" y2="154.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="186.2" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">400</text><line x1="253.5" y1="150.0" x2="253.5" y2="154.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="253.5" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">600</text><line x1="320.7" y1="150.0" x2="320.7" y2="154.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="320.7" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">800</text><line x1="388.0" y1="150.0" x2="388.0" y2="154.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="388.0" y="165.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">1000</text><line x1="52.0" y1="150.0" x2="388.0" y2="150.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="220.0" y="179.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);">state</text><text transform="rotate(-90 12 86.0)" x="12.0" y="86.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);">share of time steps, μ(s)</text><line x1="85.5" y1="22.0" x2="85.5" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><line x1="119.1" y1="22.0" x2="119.1" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><line x1="152.7" y1="22.0" x2="152.7" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><line x1="186.4" y1="22.0" x2="186.4" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><line x1="220.0" y1="22.0" x2="220.0" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><line x1="253.6" y1="22.0" x2="253.6" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><line x1="287.3" y1="22.0" x2="287.3" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><line x1="320.9" y1="22.0" x2="320.9" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><line x1="354.5" y1="22.0" x2="354.5" y2="150.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-dasharray:2 3;stroke-opacity:0.5"/><path d="M 52.0 150 L 52.0 140.6 L 53.0 140.1 L 54.0 139.7 L 55.0 139.2 L 56.0 138.7 L 57.0 138.2 L 58.1 137.7 L 59.1 137.2 L 60.1 136.7 L 61.1 136.2 L 62.1 135.6 L 63.1 135.1 L 64.1 134.5 L 65.1 133.9 L 66.1 133.3 L 67.1 132.8 L 68.1 132.1 L 69.2 131.5 L 70.2 130.9 L 71.2 130.3 L 72.2 129.6 L 73.2 129.0 L 74.2 128.3 L 75.2 127.6 L 76.2 127.0 L 77.2 126.3 L 78.2 125.6 L 79.2 124.8 L 80.3 124.1 L 81.3 123.4 L 82.3 122.6 L 83.3 121.9 L 84.3 121.1 L 85.3 120.3 L 86.3 119.6 L 87.3 119.0 L 88.3 118.3 L 89.3 117.7 L 90.3 117.0 L 91.4 116.4 L 92.4 115.7 L 93.4 115.0 L 94.4 114.4 L 95.4 113.7 L 96.4 113.0 L 97.4 112.3 L 98.4 111.7 L 99.4 111.0 L 100.4 110.3 L 101.4 109.6 L 102.5 108.9 L 103.5 108.3 L 104.5 107.6 L 105.5 106.9 L 106.5 106.2 L 107.5 105.5 L 108.5 104.8 L 109.5 104.1 L 110.5 103.5 L 111.5 102.8 L 112.5 102.1 L 113.5 101.4 L 114.6 100.7 L 115.6 100.0 L 116.6 99.3 L 117.6 98.7 L 118.6 98.0 L 119.6 97.3 L 120.6 96.6 L 121.6 95.9 L 122.6 95.3 L 123.6 94.6 L 124.6 93.9 L 125.7 93.2 L 126.7 92.5 L 127.7 91.8 L 128.7 91.2 L 129.7 90.5 L 130.7 89.8 L 131.7 89.1 L 132.7 88.4 L 133.7 87.7 L 134.7 87.0 L 135.7 86.4 L 136.8 85.7 L 137.8 85.0 L 138.8 84.3 L 139.8 83.6 L 140.8 82.9 L 141.8 82.3 L 142.8 81.6 L 143.8 80.9 L 144.8 80.2 L 145.8 79.6 L 146.8 78.9 L 147.9 78.2 L 148.9 77.5 L 149.9 76.9 L 150.9 76.2 L 151.9 75.5 L 152.9 74.8 L 153.9 74.1 L 154.9 73.4 L 155.9 72.7 L 156.9 72.0 L 157.9 71.3 L 159.0 70.6 L 160.0 69.9 L 161.0 69.2 L 162.0 68.5 L 163.0 67.8 L 164.0 67.1 L 165.0 66.4 L 166.0 65.8 L 167.0 65.1 L 168.0 64.4 L 169.0 63.8 L 170.1 63.1 L 171.1 62.5 L 172.1 61.8 L 173.1 61.2 L 174.1 60.6 L 175.1 59.9 L 176.1 59.3 L 177.1 58.7 L 178.1 58.1 L 179.1 57.5 L 180.1 56.9 L 181.2 56.3 L 182.2 55.8 L 183.2 55.2 L 184.2 54.7 L 185.2 54.1 L 185.9 53.8 L 186.2 49.8 L 186.5 49.6 L 187.2 49.2 L 188.2 48.7 L 189.2 48.2 L 190.2 47.7 L 191.2 47.3 L 192.3 46.8 L 193.3 46.3 L 194.3 45.9 L 195.3 45.5 L 196.3 45.1 L 197.3 44.7 L 198.3 44.3 L 199.3 43.9 L 200.3 43.5 L 201.3 43.2 L 202.3 42.9 L 203.4 42.5 L 204.4 42.2 L 205.4 42.0 L 206.4 41.7 L 207.4 41.4 L 208.4 41.2 L 209.4 41.0 L 210.4 40.8 L 211.4 40.6 L 212.4 40.4 L 213.4 40.2 L 214.5 40.1 L 215.5 39.9 L 216.5 39.8 L 217.5 39.7 L 218.5 39.6 L 219.5 39.6 L 219.5 150 z" style="fill:var(--chart-1);fill-opacity:0.3;stroke:none"/><path d="M 52.0 140.6 L 53.0 140.1 L 54.0 139.7 L 55.0 139.2 L 56.0 138.7 L 57.0 138.2 L 58.1 137.7 L 59.1 137.2 L 60.1 136.7 L 61.1 136.2 L 62.1 135.6 L 63.1 135.1 L 64.1 134.5 L 65.1 133.9 L 66.1 133.3 L 67.1 132.8 L 68.1 132.1 L 69.2 131.5 L 70.2 130.9 L 71.2 130.3 L 72.2 129.6 L 73.2 129.0 L 74.2 128.3 L 75.2 127.6 L 76.2 127.0 L 77.2 126.3 L 78.2 125.6 L 79.2 124.8 L 80.3 124.1 L 81.3 123.4 L 82.3 122.6 L 83.3 121.9 L 84.3 121.1 L 85.3 120.3 L 86.3 119.6 L 87.3 119.0 L 88.3 118.3 L 89.3 117.7 L 90.3 117.0 L 91.4 116.4 L 92.4 115.7 L 93.4 115.0 L 94.4 114.4 L 95.4 113.7 L 96.4 113.0 L 97.4 112.3 L 98.4 111.7 L 99.4 111.0 L 100.4 110.3 L 101.4 109.6 L 102.5 108.9 L 103.5 108.3 L 104.5 107.6 L 105.5 106.9 L 106.5 106.2 L 107.5 105.5 L 108.5 104.8 L 109.5 104.1 L 110.5 103.5 L 111.5 102.8 L 112.5 102.1 L 113.5 101.4 L 114.6 100.7 L 115.6 100.0 L 116.6 99.3 L 117.6 98.7 L 118.6 98.0 L 119.6 97.3 L 120.6 96.6 L 121.6 95.9 L 122.6 95.3 L 123.6 94.6 L 124.6 93.9 L 125.7 93.2 L 126.7 92.5 L 127.7 91.8 L 128.7 91.2 L 129.7 90.5 L 130.7 89.8 L 131.7 89.1 L 132.7 88.4 L 133.7 87.7 L 134.7 87.0 L 135.7 86.4 L 136.8 85.7 L 137.8 85.0 L 138.8 84.3 L 139.8 83.6 L 140.8 82.9 L 141.8 82.3 L 142.8 81.6 L 143.8 80.9 L 144.8 80.2 L 145.8 79.6 L 146.8 78.9 L 147.9 78.2 L 148.9 77.5 L 149.9 76.9 L 150.9 76.2 L 151.9 75.5 L 152.9 74.8 L 153.9 74.1 L 154.9 73.4 L 155.9 72.7 L 156.9 72.0 L 157.9 71.3 L 159.0 70.6 L 160.0 69.9 L 161.0 69.2 L 162.0 68.5 L 163.0 67.8 L 164.0 67.1 L 165.0 66.4 L 166.0 65.8 L 167.0 65.1 L 168.0 64.4 L 169.0 63.8 L 170.1 63.1 L 171.1 62.5 L 172.1 61.8 L 173.1 61.2 L 174.1 60.6 L 175.1 59.9 L 176.1 59.3 L 177.1 58.7 L 178.1 58.1 L 179.1 57.5 L 180.1 56.9 L 181.2 56.3 L 182.2 55.8 L 183.2 55.2 L 184.2 54.7 L 185.2 54.1 L 185.9 53.8 L 186.2 49.8 L 186.5 49.6 L 187.2 49.2 L 188.2 48.7 L 189.2 48.2 L 190.2 47.7 L 191.2 47.3 L 192.3 46.8 L 193.3 46.3 L 194.3 45.9 L 195.3 45.5 L 196.3 45.1 L 197.3 44.7 L 198.3 44.3 L 199.3 43.9 L 200.3 43.5 L 201.3 43.2 L 202.3 42.9 L 203.4 42.5 L 204.4 42.2 L 205.4 42.0 L 206.4 41.7 L 207.4 41.4 L 208.4 41.2 L 209.4 41.0 L 210.4 40.8 L 211.4 40.6 L 212.4 40.4 L 213.4 40.2 L 214.5 40.1 L 215.5 39.9 L 216.5 39.8 L 217.5 39.7 L 218.5 39.6 L 219.5 39.6" style="fill:none;stroke:var(--chart-1);stroke-width:1.4"/><path d="M 220.2 150 L 220.2 39.6 L 220.5 39.6 L 221.5 39.6 L 222.5 39.7 L 223.5 39.8 L 224.5 40.0 L 225.5 40.1 L 226.6 40.3 L 227.6 40.4 L 228.6 40.6 L 229.6 40.8 L 230.6 41.0 L 231.6 41.3 L 232.6 41.5 L 233.6 41.8 L 234.6 42.0 L 235.6 42.3 L 236.6 42.6 L 237.7 43.0 L 238.7 43.3 L 239.7 43.6 L 240.7 44.0 L 241.7 44.4 L 242.7 44.8 L 243.7 45.2 L 244.7 45.6 L 245.7 46.0 L 246.7 46.4 L 247.7 46.9 L 248.8 47.4 L 249.8 47.9 L 250.8 48.3 L 251.8 48.9 L 252.8 49.4 L 253.1 49.5 L 253.5 49.7 L 253.8 53.7 L 254.8 54.2 L 255.8 54.8 L 256.8 55.4 L 257.8 55.9 L 258.8 56.5 L 259.9 57.1 L 260.9 57.7 L 261.9 58.3 L 262.9 58.9 L 263.9 59.5 L 264.9 60.1 L 265.9 60.7 L 266.9 61.3 L 267.9 62.0 L 268.9 62.6 L 269.9 63.3 L 271.0 63.9 L 272.0 64.6 L 273.0 65.2 L 274.0 65.9 L 275.0 66.6 L 276.0 67.3 L 277.0 68.0 L 278.0 68.6 L 279.0 69.3 L 280.0 70.0 L 281.0 70.7 L 282.1 71.4 L 283.1 72.1 L 284.1 72.8 L 285.1 73.6 L 286.1 74.3 L 287.1 75.0 L 288.1 75.7 L 289.1 76.3 L 290.1 77.0 L 291.1 77.7 L 292.1 78.3 L 293.2 79.0 L 294.2 79.7 L 295.2 80.4 L 296.2 81.0 L 297.2 81.7 L 298.2 82.4 L 299.2 83.1 L 300.2 83.8 L 301.2 84.4 L 302.2 85.1 L 303.2 85.8 L 304.3 86.5 L 305.3 87.2 L 306.3 87.8 L 307.3 88.5 L 308.3 89.2 L 309.3 89.9 L 310.3 90.6 L 311.3 91.3 L 312.3 92.0 L 313.3 92.6 L 314.3 93.3 L 315.4 94.0 L 316.4 94.7 L 317.4 95.4 L 318.4 96.0 L 319.4 96.7 L 320.4 97.4 L 321.4 98.1 L 322.4 98.8 L 323.4 99.4 L 324.4 100.1 L 325.4 100.8 L 326.5 101.5 L 327.5 102.2 L 328.5 102.9 L 329.5 103.5 L 330.5 104.2 L 331.5 104.9 L 332.5 105.6 L 333.5 106.3 L 334.5 107.0 L 335.5 107.7 L 336.5 108.3 L 337.5 109.0 L 338.6 109.7 L 339.6 110.4 L 340.6 111.1 L 341.6 111.7 L 342.6 112.4 L 343.6 113.1 L 344.6 113.8 L 345.6 114.4 L 346.6 115.1 L 347.6 115.8 L 348.6 116.4 L 349.7 117.1 L 350.7 117.7 L 351.7 118.4 L 352.7 119.1 L 353.7 119.7 L 354.7 120.4 L 355.7 121.2 L 356.7 121.9 L 357.7 122.7 L 358.7 123.4 L 359.7 124.2 L 360.8 124.9 L 361.8 125.6 L 362.8 126.3 L 363.8 127.0 L 364.8 127.7 L 365.8 128.4 L 366.8 129.0 L 367.8 129.7 L 368.8 130.3 L 369.8 130.9 L 370.8 131.6 L 371.9 132.2 L 372.9 132.8 L 373.9 133.4 L 374.9 134.0 L 375.9 134.5 L 376.9 135.1 L 377.9 135.6 L 378.9 136.2 L 379.9 136.7 L 380.9 137.2 L 381.9 137.7 L 383.0 138.2 L 384.0 138.7 L 385.0 139.2 L 386.0 139.7 L 387.0 140.1 L 388.0 140.6 L 388.0 150 z" style="fill:var(--chart-1);fill-opacity:0.3;stroke:none"/><path d="M 220.2 39.6 L 220.5 39.6 L 221.5 39.6 L 222.5 39.7 L 223.5 39.8 L 224.5 40.0 L 225.5 40.1 L 226.6 40.3 L 227.6 40.4 L 228.6 40.6 L 229.6 40.8 L 230.6 41.0 L 231.6 41.3 L 232.6 41.5 L 233.6 41.8 L 234.6 42.0 L 235.6 42.3 L 236.6 42.6 L 237.7 43.0 L 238.7 43.3 L 239.7 43.6 L 240.7 44.0 L 241.7 44.4 L 242.7 44.8 L 243.7 45.2 L 244.7 45.6 L 245.7 46.0 L 246.7 46.4 L 247.7 46.9 L 248.8 47.4 L 249.8 47.9 L 250.8 48.3 L 251.8 48.9 L 252.8 49.4 L 253.1 49.5 L 253.5 49.7 L 253.8 53.7 L 254.8 54.2 L 255.8 54.8 L 256.8 55.4 L 257.8 55.9 L 258.8 56.5 L 259.9 57.1 L 260.9 57.7 L 261.9 58.3 L 262.9 58.9 L 263.9 59.5 L 264.9 60.1 L 265.9 60.7 L 266.9 61.3 L 267.9 62.0 L 268.9 62.6 L 269.9 63.3 L 271.0 63.9 L 272.0 64.6 L 273.0 65.2 L 274.0 65.9 L 275.0 66.6 L 276.0 67.3 L 277.0 68.0 L 278.0 68.6 L 279.0 69.3 L 280.0 70.0 L 281.0 70.7 L 282.1 71.4 L 283.1 72.1 L 284.1 72.8 L 285.1 73.6 L 286.1 74.3 L 287.1 75.0 L 288.1 75.7 L 289.1 76.3 L 290.1 77.0 L 291.1 77.7 L 292.1 78.3 L 293.2 79.0 L 294.2 79.7 L 295.2 80.4 L 296.2 81.0 L 297.2 81.7 L 298.2 82.4 L 299.2 83.1 L 300.2 83.8 L 301.2 84.4 L 302.2 85.1 L 303.2 85.8 L 304.3 86.5 L 305.3 87.2 L 306.3 87.8 L 307.3 88.5 L 308.3 89.2 L 309.3 89.9 L 310.3 90.6 L 311.3 91.3 L 312.3 92.0 L 313.3 92.6 L 314.3 93.3 L 315.4 94.0 L 316.4 94.7 L 317.4 95.4 L 318.4 96.0 L 319.4 96.7 L 320.4 97.4 L 321.4 98.1 L 322.4 98.8 L 323.4 99.4 L 324.4 100.1 L 325.4 100.8 L 326.5 101.5 L 327.5 102.2 L 328.5 102.9 L 329.5 103.5 L 330.5 104.2 L 331.5 104.9 L 332.5 105.6 L 333.5 106.3 L 334.5 107.0 L 335.5 107.7 L 336.5 108.3 L 337.5 109.0 L 338.6 109.7 L 339.6 110.4 L 340.6 111.1 L 341.6 111.7 L 342.6 112.4 L 343.6 113.1 L 344.6 113.8 L 345.6 114.4 L 346.6 115.1 L 347.6 115.8 L 348.6 116.4 L 349.7 117.1 L 350.7 117.7 L 351.7 118.4 L 352.7 119.1 L 353.7 119.7 L 354.7 120.4 L 355.7 121.2 L 356.7 121.9 L 357.7 122.7 L 358.7 123.4 L 359.7 124.2 L 360.8 124.9 L 361.8 125.6 L 362.8 126.3 L 363.8 127.0 L 364.8 127.7 L 365.8 128.4 L 366.8 129.0 L 367.8 129.7 L 368.8 130.3 L 369.8 130.9 L 370.8 131.6 L 371.9 132.2 L 372.9 132.8 L 373.9 133.4 L 374.9 134.0 L 375.9 134.5 L 376.9 135.1 L 377.9 135.6 L 378.9 136.2 L 379.9 136.7 L 380.9 137.2 L 381.9 137.7 L 383.0 138.2 L 384.0 138.7 L 385.0 139.2 L 386.0 139.7 L 387.0 140.1 L 388.0 140.6" style="fill:none;stroke:var(--chart-1);stroke-width:1.4"/><line x1="219.8" y1="150.0" x2="219.8" y2="14.0" style="stroke:var(--chart-1);stroke-width:1.6;"/><path d="M 215.8 19 l 8 -3 M 215.8 23 l 8 -3" style="stroke:var(--ink-soft);stroke-width:1"/><text x="225.8" y="15.0" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink);">state 500: 1.37%, off the scale</text><text x="240.0" y="33.6" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink);">state 501: 0.17%</text><text x="61.8" y="76.4" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink);">state 1: 0.0147%</text><line x1="54.4" y1="80.4" x2="52.3" y2="138.6" style="stroke:var(--ink);stroke-width:0.8;"/></svg>
+          <figcaption>Fig. 2 · The walk's on-policy distribution, with dotted lines between groups. Values from <code>exact.py</code>.</figcaption>
+        </figure>
+        <p>If the agent were told v<sub>π</sub>(S<sub>t</sub>) for each state it visits, stochastic gradient descent would step down the gradient of that state's squared error.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, equations 9.4 and 9.5, p. 201" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=223">1</a></sup></p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} w_{t+1} &amp;= w_t - \tfrac12 \alpha \nabla \bigl[ v_\pi(S_t) - \hat v(S_t, w_t) \bigr]^2 \\ &amp;= w_t + \alpha \bigl[ v_\pi(S_t) - \hat v(S_t, w_t) \bigr] \\ &amp;\qquad \cdot \nabla \hat v(S_t, w_t) \end{aligned}</div>
+          <figcaption>Equations 9.4 and 9.5. The second line holds because v<sub>π</sub>(S<sub>t</sub>) doesn't depend on w.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, equations 9.4 and 9.5, p. 201" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=223">1</a></sup></figcaption>
+        </figure>
+        <p>States arrive in proportion to μ, so on average these steps follow VE's gradient. The agent doesn't have v<sub>π</sub>(S<sub>t</sub>), but it has the return G<sub>t</sub>, whose average from S<sub>t</sub> is v<sub>π</sub>(S<sub>t</sub>). Putting G<sub>t</sub> in its place leaves the average step unchanged, and the result is gradient Monte Carlo.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, equation 9.7 and the Gradient Monte Carlo box, p. 202" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=224">1</a></sup></p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">w \leftarrow w + \alpha \bigl[ G_t - \hat v(S_t, w) \bigr] \nabla \hat v(S_t, w)</div>
+          <figcaption>Gradient Monte Carlo, applied for each time t after the episode ends.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, Gradient Monte Carlo box, p. 202" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=224">1</a></sup> With a table it is every-visit <a href="../reinforcement-learning/learning-values-from-samples.html#monte-carlo">Monte Carlo</a> with a constant step.</figcaption>
+        </figure>
+        <p>With step sizes that shrink under the <a href="../reinforcement-learning/learning-values-from-samples.html#training-runs">usual conditions</a>, gradient Monte Carlo converges to a local minimum of VE. With linear features the only minimum is the best fit the features allow, which we call w<sub>MC</sub>.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, p. 202, and Section 9.4, p. 205" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=227">1</a></sup> Setting VE's gradient to zero makes each aggregated weight a μ-weighted average of its group's true values.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">w_{\mathrm{MC},\, g} = \frac{\sum_{s \in g} \mu(s)\, v_\pi(s)}{\sum_{s \in g} \mu(s)}</div>
+          <figcaption>The weight of group g at the minimum of VE.</figcaption>
+        </figure>
+        <p>Inside states 1–100, μ(100) is more than three times μ(1), so the weight leans toward state 100's higher value. It is −0.830, against a plain average of −0.846.<sup class="nb-cite"><a href="#s1" data-nb-locator="Example 9.1, discussion of Figure 9.1, p. 204" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=226">1</a></sup></p>
+      </section>
+
+      <section data-nb-section="semi-gradient" id="semi-gradient">
+        <h2>TD's target depends on the weights it updates</h2>
+        <p>TD(0)'s target, R<sub>t+1</sub> + γv̂(S<sub>t+1</sub>, w), reads the weights. The step from equation 9.4 to 9.5 assumed a target that doesn't depend on w.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, p. 202" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=224">1</a></sup> Differentiating the squared <a href="../reinforcement-learning/learning-values-from-samples.html#temporal-difference">TD error</a> with the target included gives two terms.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">-\tfrac{1}{2} \nabla \delta_t^2 = \delta_t \bigl[ \htmlClass{nb-mc1}{\nabla \hat v(S_t, w)} \htmlClass{nb-mc2}{{} - \gamma \nabla \hat v(S_{t+1}, w)} \bigr]</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">\nabla \hat v(S_t, w)</span><span>the gradient through the estimate, which semi-gradient TD keeps</span></li>
+            <li><span class="nb-math-term nb-mc2">-\gamma \nabla \hat v(S_{t+1}, w)</span><span>the gradient through the target, which it drops</span></li>
+          </ul>
+          <figcaption>The full gradient of the squared TD error, δ<sub>t</sub> = R<sub>t+1</sub> + γv̂(S<sub>t+1</sub>, w) − v̂(S<sub>t</sub>, w).</figcaption>
+        </figure>
+        <p>Semi-gradient TD(0) keeps the first term and drops the second. Such methods "take into account the effect of changing the weight vector w<sub>t</sub> on the estimate, but ignore its effect on the target," and Sutton and Barto say that they are not instances of true gradient descent.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, p. 202" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=224">1</a></sup></p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} w &amp;\leftarrow w + \alpha \, \delta_t \, \nabla \hat v(S_t, w) \\ \delta_t &amp;= R_{t+1} + \gamma \hat v(S_{t+1}, w) - \hat v(S_t, w) \end{aligned}</div>
+          <figcaption>Semi-gradient TD(0), applied after every move, with a terminal state's estimate fixed at 0.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.3, Semi-gradient TD(0) box, p. 203" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=225">1</a></sup> With a table it is TD(0).</figcaption>
+        </figure>
+        <p>In Fig. 1's move, δ = 0.19. The full gradient would also lower the weight for 301–400 by 0.019, pulling the target toward the estimate. Semi-gradient TD only raises the weight for 201–300.</p>
+        <p><code>walk1000.py</code> holds the walk and both updates. Each update changes one weight, because an aggregated estimate's gradient is 1 in one component. <code>semi_gradient_td</code> reads a finished episode move by move, which matches running it during the episode because the walk ignores the weights.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">walk1000.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = []
+# ///
+"""Sutton and Barto's 1000-state random walk, learned with groups of states.
+
+States 1 to 1000 lie in a row, and every episode starts in state 500. Each move
+jumps to one of the 100 states on either side, all 200 jumps equally likely. A
+jump past state 1 ends the episode with reward -1, a jump past state 1000 ends it
+with +1, and every other move pays 0. There is no discount. With 10 groups,
+states 1-100 share weight 0, states 101-200 share weight 1, and so on.
+"""
+N, START = 1000, 500
+JUMPS = [k for k in range(-100, 101) if k != 0]
+
+
+def move(rng, s):
+    """One move from state s. Returns (S', R), with S' = None when the episode ends."""
+    s += rng.choice(JUMPS)
+    if s &lt; 1:
+        return None, -1.0
+    if s &gt; N:
+        return None, 1.0
+    return s, 0.0
+
+
+def episode(rng):
+    """One episode from state 500, as a list of (S_t, R_{t+1})."""
+    steps, s = [], START
+    while s is not None:
+        s_next, r = move(rng, s)
+        steps.append((s, r))
+        s = s_next
+    return steps
+
+
+def group(s, groups=10):
+    """The group of state s. The estimate of s is v̂(s, w) = w[group(s)]."""
+    return (s - 1) * groups // N
+
+
+def gradient_mc(w, alpha, steps):
+    """After the episode, move the weight of each visited state toward its return."""
+    G = 0.0
+    for s, r in reversed(steps):
+        G += r  # G_t = R_{t+1} + G_{t+1}, with no discount
+        g = group(s)  # the gradient of v̂(s, w) is 1 at g and 0 elsewhere
+        w[g] += alpha * (G - w[g])
+
+
+def semi_gradient_td(w, alpha, steps, v=None):
+    """After each move, move the weight of S_t toward R_{t+1} + v̂(S_{t+1}, w)."""
+    for t, (s, r) in enumerate(steps):
+        if t + 1 == len(steps):
+            next_value = 0.0  # the episode is over: v̂(terminal, w) = 0
+        elif v is not None:
+            next_value = v[steps[t + 1][0] - 1]  # removal test: the true value instead
+        else:
+            next_value = w[group(steps[t + 1][0])]
+        g = group(s)
+        w[g] += alpha * (r + next_value - w[g])</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="fixed-point" id="fixed-point">
+        <h2>Linear TD settles where every group's TD error averages zero</h2>
+        <p>With linear features, the average semi-gradient step has a closed form.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, equations 9.10 and 9.11, pp. 205-206" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=227">1</a></sup></p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{gathered} \mathbb{E}[w_{t+1} \mid w_t] = w_t + \alpha (b - A w_t) \\ b = \mathbb{E}[R_{t+1} x_t] \\ A = \mathbb{E}\bigl[ x_t (x_t - \gamma x_{t+1})^{\top} \bigr] \end{gathered}</div>
+          <figcaption>Equations 9.10 and 9.11, with x<sub>t</sub> = x(S<sub>t</sub>), S<sub>t</sub> drawn from μ, and a terminal state's feature vector 0.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, equations 9.10 and 9.11, pp. 205-206" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=228">1</a></sup></figcaption>
+        </figure>
+        <p>Where b − Aw = 0, the weights stop moving on average. Sutton and Barto call that point the TD fixed point, w<sub>TD</sub> = A<sup>−1</sup>b, and linear semi-gradient TD(0) converges to it.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, equation 9.12, p. 206" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=228">1</a></sup> Tsitsiklis and Van Roy proved the convergence, and bounded the error, for discounted tasks that never end.<sup class="nb-cite"><a href="#s2" data-nb-locator="Abstract, p. 674, and Theorem 1, Section IV, p. 679" data-nb-url="https://web.mit.edu/jnt/www/Papers/J063-97-bvr-td.pdf#page=6">2</a></sup> For tasks that end, like the walk, they point to Bertsekas and Tsitsiklis's 1996 book.<sup class="nb-cite"><a href="#s2" data-nb-locator="Section I, p. 675, on absorbing Markov chains, and reference [16], p. 690" data-nb-url="https://web.mit.edu/jnt/www/Papers/J063-97-bvr-td.pdf#page=2">2</a></sup></p>
+        <p>Written as sums over states, b − Aw = 0 and the condition for the best fit differ only in the error inside.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} \text{Monte Carlo:} \quad &amp; \sum_s \mu(s) \, \htmlClass{nb-mc1}{\varepsilon_w(s)} \, x(s) = 0 \\ \text{TD:} \quad &amp; \sum_s \mu(s) \, \htmlClass{nb-mc2}{\bar\delta_w(s)} \, x(s) = 0 \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">\varepsilon_w(s)</span><span>the value error at s, v<sub>π</sub>(s) − v̂(s, w)</span></li>
+            <li><span class="nb-math-term nb-mc2">\bar\delta_w(s)</span><span>the expected TD error of a move from s, r(s) + γ Σ<sub>s′</sub> p(s′ | s) v̂(s′, w) − v̂(s, w), with r(s) the move's expected reward</span></li>
+          </ul>
+          <figcaption>The first is VE's gradient set to zero, solved by w<sub>MC</sub>. The second is b − Aw = 0, solved by w<sub>TD</sub>.</figcaption>
+        </figure>
+        <p>With state aggregation, x(s) picks out a group. Monte Carlo's weights make the μ-weighted value error average zero in every group, and TD's make the μ-weighted TD error average zero in every group. A TD error compares an estimate with the reward and the estimate one move later, never with v<sub>π</sub>. So a staircase can balance its own TD errors and still sit away from the true values.</p>
+        <p><code>exact.py</code> solves for v<sub>π</sub>, η and both sets of weights.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">exact.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["numpy"]
+# ///
+"""Exact values, visits and both linear solutions for the 1000-state walk.
+
+Arrays over states use index s - 1 for state s.
+"""
+import argparse
+
+import numpy as np
+
+from walk1000 import JUMPS, N, START, group
+
+
+def solve(groups=10, start=START):
+    """Return v_pi, eta, mu, the features X, and the weights w_MC and w_TD."""
+    P, r = np.zeros((N, N)), np.zeros(N)  # moves between states; expected reward
+    for s in range(1, N + 1):
+        for k in JUMPS:
+            if 1 &lt;= s + k &lt;= N:
+                P[s - 1, s + k - 1] += 1 / len(JUMPS)
+            else:
+                r[s - 1] += (1.0 if s + k &gt; N else -1.0) / len(JUMPS)
+    I = np.eye(N)
+    v = np.linalg.solve(I - P, r)  # the Bellman equation v = r + P v
+    h = np.zeros(N)
+    h[start - 1] = 1.0
+    eta = np.linalg.solve(I - P.T, h)  # expected visits per episode
+    mu = eta / eta.sum()
+    X = np.zeros((N, groups))  # row s - 1 is the feature vector x(s)
+    X[np.arange(N), [group(s, groups) for s in range(1, N + 1)]] = 1.0
+    D = np.diag(mu)
+    w_mc = np.linalg.solve(X.T @ D @ X, X.T @ D @ v)  # where the gradient of VE is 0
+    A = X.T @ D @ (I - P) @ X  # E[x_t (x_t - x_{t+1})^T], with no discount
+    b = X.T @ D @ r  # E[R_{t+1} x_t]
+    w_td = np.linalg.solve(A, b)  # where the expected TD update is 0
+    return v, eta, mu, X, w_mc, w_td
+
+
+def ve(w, v, mu, X):
+    """The mean squared value error of weights w."""
+    return float(mu @ (v - X @ np.asarray(w)) ** 2)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--groups", type=int, default=10)
+    parser.add_argument("--start", type=int, default=START)
+    args = parser.parse_args()
+    v, eta, mu, X, w_mc, w_td = solve(args.groups, args.start)
+    print(f"visits per episode to state 1 {eta[0]:.4f} (one per {1 / eta[0]:.0f} episodes),"
+          f" to states 1-100 {eta[:100].sum():.2f}")
+    print(f"mu(1) {mu[0]:.4%}  mu(100) {mu[99]:.4%}  mu(501) {mu[500]:.4%}"
+          f"  mu(500) {mu[499]:.4%}")
+    if args.groups == 10:
+        print("\nstates     mean v_pi     w_MC     w_TD")
+        for g in range(10):
+            ix = slice(100 * g, 100 * g + 100)
+            print(f"{100 * g + 1:4d}-{100 * g + 100:&lt;4d} {v[ix].mean():+10.4f}"
+                  f" {w_mc[g]:+8.4f} {w_td[g]:+8.4f}")
+    mc, td = ve(w_mc, v, mu, X), ve(w_td, v, mu, X)
+    ratio = f"  ratio {td / mc:.2f}" if mc &gt; 1e-12 else ""  # one group per state: both 0
+    print(f"VE(w_MC) {mc:.5f}  VE(w_TD) {td:.5f}{ratio}")
+    g = group(args.start, args.groups)
+    print(f"start {args.start}: v_pi {v[args.start - 1]:+.4f}, its group's w_TD"
+          f" {w_td[g]:+.4f} and w_MC {w_mc[g]:+.4f}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run exact.py</span><span>text</span></div>
+          <pre><code data-language="text">visits per episode to state 1 0.0122 (one per 82 episodes), to states 1-100 2.42
+mu(1) 0.0147%  mu(100) 0.0463%  mu(501) 0.1726%  mu(500) 1.3692%
+
+states     mean v_pi     w_MC     w_TD
+   1-100     -0.8456  -0.8301  -0.6932
+ 101-200     -0.6603  -0.6516  -0.4805
+ 201-300     -0.4717  -0.4661  -0.3033
+ 301-400     -0.2830  -0.2791  -0.1458
+ 401-500     -0.0943  -0.0867  -0.0009
+ 501-600     +0.0943  +0.0928  +0.1224
+ 601-700     +0.2830  +0.2791  +0.2497
+ 701-800     +0.4717  +0.4661  +0.3881
+ 801-900     +0.6603  +0.6516  +0.5437
+ 901-1000    +0.8456  +0.8301  +0.7305
+VE(w_MC) 0.00296  VE(w_TD) 0.01363  ratio 4.61
+start 500: v_pi -0.0009, its group's w_TD -0.0009 and w_MC -0.0867</code></pre>
+        </figure>
+        <p>TD's staircase is flatter. Its outer weights sit at −0.693 and +0.731, inside Monte Carlo's ±0.830, and its VE is 4.61 times Monte Carlo's, 0.01363 against 0.00296.</p>
+        <p>For discounted tasks that never end, Sutton and Barto bound how far the TD fixed point can be from the best fit, crediting Tsitsiklis and Van Roy's analysis.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, equation 9.14, p. 207, and p. 208" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=229">1</a></sup></p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\mathrm{VE}(w_{\mathrm{TD}}) \le \frac{1}{1 - \gamma} \min_w \mathrm{VE}(w)</div>
+          <figcaption>Equation 9.14, proven for the continuing case.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, equation 9.14, p. 207" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=229">1</a></sup></figcaption>
+        </figure>
+        <p>With γ = 0.9, the bound allows 10 times the smallest VE. The walk has no discount and it ends, so 1/(1 − γ) has no finite value here. For episodic tasks, Sutton and Barto point to a different bound in Bertsekas and Tsitsiklis's book.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, p. 208" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=230">1</a></sup> They weigh TD's larger error against the lower variance of its targets, which often lets TD learn faster.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, p. 207" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=229">1</a></sup></p>
+        <p>The guarantees assume that states are updated in proportion to the on-policy distribution. Under other distributions, bootstrapping methods can diverge, which a later lesson takes up.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 9.4, p. 208" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=230">1</a></sup></p>
+      </section>
+
+      <section data-nb-section="start-state" id="start-state">
+        <h2>The TD fixed point gets the start state's value exactly</h2>
+        <p>In <code>exact.py</code>'s output, TD's weight for 401–500 is −0.0009, close enough to 0 to pass for rounding. It is v<sub>π</sub>(500), the start state's value. Adding TD's condition over all ten groups removes the features, since each state is in exactly one group. Multiplied by the expected episode length, the sum that remains is the expected total of one episode's TD errors. With no discount and fixed weights, those TD errors <a href="../reinforcement-learning/learning-values-from-samples.html#temporal-difference">add up to</a> G<sub>0</sub> − v̂(S<sub>0</sub>, w).</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} \sum_s \eta(s)\, \bar\delta_w(s) &amp;= \mathbb{E}\Bigl[ \sum_{t=0}^{T-1} \delta_t \Bigr] \\ &amp;= v_\pi(500) - \hat v(500, w) \end{aligned}</div>
+          <figcaption>At w<sub>TD</sub> this sum is 0.</figcaption>
+        </figure>
+        <p>So the TD fixed point gets the start state's value exactly, under any grouping. On the walk, the start-state condition holds TD's weight for 401–500 at about 0, where Monte Carlo's is −0.087. In Sutton and Barto's Figure 9.2, too, TD's steps for 401–500 and 501–600 straddle zero unevenly.<sup class="nb-cite"><a href="#s1" data-nb-locator="Example 9.2, Figure 9.2 left, p. 208" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=230">1</a></sup> With <code>--start 250</code>, TD's weight for 201–300 becomes v<sub>π</sub>(250), −0.4727, and its other weights shift down.</p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run exact.py --start 250</span><span>text</span></div>
+          <pre><code data-language="text">visits per episode to state 1 0.0180 (one per 56 episodes), to states 1-100 3.56
+mu(1) 0.0279%  mu(100) 0.0879%  mu(501) 0.1277%  mu(500) 0.1280%
+
+states     mean v_pi     w_MC     w_TD
+   1-100     -0.8456  -0.8300  -0.7676
+ 101-200     -0.6603  -0.6516  -0.6066
+ 201-300     -0.4717  -0.4700  -0.4727
+ 301-400     -0.2830  -0.2854  -0.3437
+ 401-500     -0.0943  -0.0971  -0.2081
+ 501-600     +0.0943  +0.0911  -0.0644
+ 601-700     +0.2830  +0.2789  +0.0895
+ 701-800     +0.4717  +0.4661  +0.2573
+ 801-900     +0.6603  +0.6516  +0.4462
+ 901-1000    +0.8456  +0.8301  +0.6730
+VE(w_MC) 0.00284  VE(w_TD) 0.01693  ratio 5.97
+start 250: v_pi -0.4727, its group's w_TD -0.4727 and w_MC -0.4700</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="runs" id="runs">
+        <h2>Runs of both methods end on their own exact staircases</h2>
+        <p><code>runs.py</code> trains both methods on the same 100,000 episodes with constant step sizes. Monte Carlo uses 2 × 10<sup>−5</sup>, from Sutton and Barto's Figure 9.1,<sup class="nb-cite"><a href="#s1" data-nb-locator="Example 9.1, p. 203" data-nb-url="http://incompleteideas.net/book/RLbook2020.pdf#page=225">1</a></sup> and TD uses 2 × 10<sup>−4</sup>, from a commented-out run in Sutton's code for Figure 9.2.<sup class="nb-cite"><a href="#s3" data-nb-locator="commented-out invocation, lines 156-157: (learning-curve-nstep 0.0002 1 100000)" data-nb-url="http://incompleteideas.net/book/code/aggreg-walknew.lisp">3</a></sup> A <a href="../reinforcement-learning/learning-values-from-samples.html#training-runs">constant step</a> never stops moving the weights, so a run can only end near its method's exact weights.</p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 272" role="img" aria-label="Line chart over states 1 to 1000, values from −1 to +1. The true value is a dashed, nearly straight line from near −1 at state 1 to near +1 at state 1000. Monte Carlo's exact staircase follows it closely, with one step per group of 100 states. TD's exact staircase is flatter: above the true value on the left, below it on the right, and its step for states 401–500 sits at about 0, on the true value of state 500, which is marked. Circles and diamonds mark each run's final weights; each sits on its own method's exact step." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto"><line x1="52.0" y1="236.0" x2="388.0" y2="236.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="239.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">−1</text><line x1="52.0" y1="181.0" x2="388.0" y2="181.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="184.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">−0.5</text><line x1="52.0" y1="126.0" x2="388.0" y2="126.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="129.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">0</text><line x1="52.0" y1="71.0" x2="388.0" y2="71.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="74.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">0.5</text><line x1="52.0" y1="16.0" x2="388.0" y2="16.0" style="stroke:var(--ink-soft);stroke-width:0.6;stroke-opacity:0.35"/><text x="47.0" y="19.5" text-anchor="end" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">+1</text><line x1="52.0" y1="236.0" x2="52.0" y2="240.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="52.0" y="251.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">1</text><line x1="119.0" y1="236.0" x2="119.0" y2="240.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="119.0" y="251.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">200</text><line x1="186.2" y1="236.0" x2="186.2" y2="240.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="186.2" y="251.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">400</text><line x1="253.4" y1="236.0" x2="253.4" y2="240.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="253.4" y="251.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">600</text><line x1="320.6" y1="236.0" x2="320.6" y2="240.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="320.6" y="251.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">800</text><line x1="387.8" y1="236.0" x2="387.8" y2="240.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="387.8" y="251.0" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft);">1000</text><line x1="52.0" y1="236.0" x2="388.0" y2="236.0" style="stroke:var(--ink-soft);stroke-width:1;"/><text x="220.0" y="265.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);">state</text><text transform="rotate(-90 12 126.0)" x="12.0" y="126.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft);">value</text><path d="M 52.2 227.4 L 53.2 227.0 L 54.2 226.6 L 55.2 226.2 L 56.2 225.7 L 57.2 225.3 L 58.2 224.8 L 59.2 224.3 L 60.2 223.9 L 61.2 223.4 L 62.2 222.9 L 63.3 222.4 L 64.3 221.9 L 65.3 221.3 L 66.3 220.8 L 67.3 220.3 L 68.3 219.7 L 69.3 219.2 L 70.3 218.6 L 71.3 218.0 L 72.3 217.4 L 73.3 216.8 L 74.3 216.2 L 75.4 215.6 L 76.4 215.0 L 77.4 214.4 L 78.4 213.7 L 79.4 213.1 L 80.4 212.4 L 81.4 211.7 L 82.4 211.1 L 83.4 210.4 L 84.4 209.7 L 85.4 209.0 L 86.4 208.3 L 87.4 207.7 L 88.5 207.1 L 89.5 206.5 L 90.5 205.9 L 91.5 205.3 L 92.5 204.7 L 93.5 204.1 L 94.5 203.5 L 95.5 202.9 L 96.5 202.3 L 97.5 201.7 L 98.5 201.1 L 99.5 200.4 L 100.6 199.8 L 101.6 199.2 L 102.6 198.6 L 103.6 197.9 L 104.6 197.3 L 105.6 196.7 L 106.6 196.1 L 107.6 195.4 L 108.6 194.8 L 109.6 194.2 L 110.6 193.6 L 111.6 192.9 L 112.6 192.3 L 113.7 191.7 L 114.7 191.1 L 115.7 190.4 L 116.7 189.8 L 117.7 189.2 L 118.7 188.6 L 119.7 188.0 L 120.7 187.3 L 121.7 186.7 L 122.7 186.1 L 123.7 185.5 L 124.7 184.8 L 125.8 184.2 L 126.8 183.6 L 127.8 183.0 L 128.8 182.4 L 129.8 181.7 L 130.8 181.1 L 131.8 180.5 L 132.8 179.9 L 133.8 179.2 L 134.8 178.6 L 135.8 178.0 L 136.8 177.4 L 137.8 176.8 L 138.9 176.1 L 139.9 175.5 L 140.9 174.9 L 141.9 174.3 L 142.9 173.6 L 143.9 173.0 L 144.9 172.4 L 145.9 171.8 L 146.9 171.1 L 147.9 170.5 L 148.9 169.9 L 149.9 169.3 L 151.0 168.7 L 152.0 168.0 L 153.0 167.4 L 154.0 166.8 L 155.0 166.2 L 156.0 165.5 L 157.0 164.9 L 158.0 164.3 L 159.0 163.7 L 160.0 163.1 L 161.0 162.4 L 162.0 161.8 L 163.0 161.2 L 164.1 160.6 L 165.1 159.9 L 166.1 159.3 L 167.1 158.7 L 168.1 158.1 L 169.1 157.4 L 170.1 156.8 L 171.1 156.2 L 172.1 155.6 L 173.1 155.0 L 174.1 154.3 L 175.1 153.7 L 176.2 153.1 L 177.2 152.5 L 178.2 151.8 L 179.2 151.2 L 180.2 150.6 L 181.2 150.0 L 182.2 149.4 L 183.2 148.7 L 184.2 148.1 L 185.2 147.5 L 186.2 146.9 L 187.2 146.2 L 188.2 145.6 L 189.3 145.0 L 190.3 144.4 L 191.3 143.7 L 192.3 143.1 L 193.3 142.5 L 194.3 141.9 L 195.3 141.3 L 196.3 140.6 L 197.3 140.0 L 198.3 139.4 L 199.3 138.8 L 200.3 138.1 L 201.4 137.5 L 202.4 136.9 L 203.4 136.3 L 204.4 135.7 L 205.4 135.0 L 206.4 134.4 L 207.4 133.8 L 208.4 133.2 L 209.4 132.5 L 210.4 131.9 L 211.4 131.3 L 212.4 130.7 L 213.4 130.0 L 214.5 129.4 L 215.5 128.8 L 216.5 128.2 L 217.5 127.6 L 218.5 126.9 L 219.5 126.3 L 220.5 125.7 L 221.5 125.1 L 222.5 124.4 L 223.5 123.8 L 224.5 123.2 L 225.5 122.6 L 226.6 122.0 L 227.6 121.3 L 228.6 120.7 L 229.6 120.1 L 230.6 119.5 L 231.6 118.8 L 232.6 118.2 L 233.6 117.6 L 234.6 117.0 L 235.6 116.3 L 236.6 115.7 L 237.6 115.1 L 238.6 114.5 L 239.7 113.9 L 240.7 113.2 L 241.7 112.6 L 242.7 112.0 L 243.7 111.4 L 244.7 110.7 L 245.7 110.1 L 246.7 109.5 L 247.7 108.9 L 248.7 108.3 L 249.7 107.6 L 250.7 107.0 L 251.8 106.4 L 252.8 105.8 L 253.8 105.1 L 254.8 104.5 L 255.8 103.9 L 256.8 103.3 L 257.8 102.6 L 258.8 102.0 L 259.8 101.4 L 260.8 100.8 L 261.8 100.2 L 262.8 99.5 L 263.8 98.9 L 264.9 98.3 L 265.9 97.7 L 266.9 97.0 L 267.9 96.4 L 268.9 95.8 L 269.9 95.2 L 270.9 94.6 L 271.9 93.9 L 272.9 93.3 L 273.9 92.7 L 274.9 92.1 L 275.9 91.4 L 277.0 90.8 L 278.0 90.2 L 279.0 89.6 L 280.0 88.9 L 281.0 88.3 L 282.0 87.7 L 283.0 87.1 L 284.0 86.5 L 285.0 85.8 L 286.0 85.2 L 287.0 84.6 L 288.0 84.0 L 289.0 83.3 L 290.1 82.7 L 291.1 82.1 L 292.1 81.5 L 293.1 80.9 L 294.1 80.2 L 295.1 79.6 L 296.1 79.0 L 297.1 78.4 L 298.1 77.7 L 299.1 77.1 L 300.1 76.5 L 301.1 75.9 L 302.2 75.2 L 303.2 74.6 L 304.2 74.0 L 305.2 73.4 L 306.2 72.8 L 307.2 72.1 L 308.2 71.5 L 309.2 70.9 L 310.2 70.3 L 311.2 69.6 L 312.2 69.0 L 313.2 68.4 L 314.2 67.8 L 315.3 67.2 L 316.3 66.5 L 317.3 65.9 L 318.3 65.3 L 319.3 64.7 L 320.3 64.0 L 321.3 63.4 L 322.3 62.8 L 323.3 62.2 L 324.3 61.6 L 325.3 60.9 L 326.3 60.3 L 327.4 59.7 L 328.4 59.1 L 329.4 58.4 L 330.4 57.8 L 331.4 57.2 L 332.4 56.6 L 333.4 55.9 L 334.4 55.3 L 335.4 54.7 L 336.4 54.1 L 337.4 53.4 L 338.4 52.8 L 339.4 52.2 L 340.5 51.6 L 341.5 50.9 L 342.5 50.3 L 343.5 49.7 L 344.5 49.1 L 345.5 48.5 L 346.5 47.9 L 347.5 47.3 L 348.5 46.7 L 349.5 46.1 L 350.5 45.5 L 351.5 44.9 L 352.6 44.3 L 353.6 43.7 L 354.6 43.0 L 355.6 42.3 L 356.6 41.6 L 357.6 40.9 L 358.6 40.3 L 359.6 39.6 L 360.6 38.9 L 361.6 38.3 L 362.6 37.6 L 363.6 37.0 L 364.6 36.4 L 365.7 35.8 L 366.7 35.2 L 367.7 34.6 L 368.7 34.0 L 369.7 33.4 L 370.7 32.8 L 371.7 32.3 L 372.7 31.7 L 373.7 31.2 L 374.7 30.7 L 375.7 30.1 L 376.7 29.6 L 377.8 29.1 L 378.8 28.6 L 379.8 28.1 L 380.8 27.7 L 381.8 27.2 L 382.8 26.7 L 383.8 26.3 L 384.8 25.8 L 385.8 25.4 L 386.8 25.0 L 387.8 24.6" style="fill:none;stroke:var(--ink);stroke-width:1.3;stroke-dasharray:5 3"/><path d="M 52.0 217.3 L 85.6 217.3 L 85.6 197.7 L 119.2 197.7 L 119.2 177.3 L 152.8 177.3 L 152.8 156.7 L 186.4 156.7 L 186.4 135.5 L 220.0 135.5 L 220.0 115.8 L 253.6 115.8 L 253.6 95.3 L 287.2 95.3 L 287.2 74.7 L 320.8 74.7 L 320.8 54.3 L 354.4 54.3 L 354.4 34.7 L 388.0 34.7" style="fill:none;stroke:var(--chart-1);stroke-width:2.2"/><path d="M 52.0 202.3 L 85.6 202.3 L 85.6 178.9 L 119.2 178.9 L 119.2 159.4 L 152.8 159.4 L 152.8 142.0 L 186.4 142.0 L 186.4 126.1 L 220.0 126.1 L 220.0 112.5 L 253.6 112.5 L 253.6 98.5 L 287.2 98.5 L 287.2 83.3 L 320.8 83.3 L 320.8 66.2 L 354.4 66.2 L 354.4 45.6 L 388.0 45.6" style="fill:none;stroke:var(--chart-2);stroke-width:2.2"/><circle cx="68.8" cy="216.5" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="65.8" y="199.3" width="6" height="6" transform="rotate(45 68.8 202.3)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="102.4" cy="198.3" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="99.4" y="176.1" width="6" height="6" transform="rotate(45 102.4 179.1)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="136.0" cy="178.4" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="133.0" y="156.9" width="6" height="6" transform="rotate(45 136.0 159.9)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="169.6" cy="156.8" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="166.6" y="139.9" width="6" height="6" transform="rotate(45 169.6 142.9)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="203.2" cy="134.9" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="200.2" y="123.9" width="6" height="6" transform="rotate(45 203.2 126.9)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="236.8" cy="114.9" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="233.8" y="110.2" width="6" height="6" transform="rotate(45 236.8 113.2)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="270.4" cy="94.3" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="267.4" y="96.2" width="6" height="6" transform="rotate(45 270.4 99.2)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="304.0" cy="75.0" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="301.0" y="80.9" width="6" height="6" transform="rotate(45 304.0 83.9)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="337.6" cy="54.9" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="334.6" y="64.0" width="6" height="6" transform="rotate(45 337.6 67.0)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="371.2" cy="35.6" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><rect x="368.2" y="43.2" width="6" height="6" transform="rotate(45 371.2 46.2)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><circle cx="219.8" cy="126.1" r="3.6" style="fill:var(--ink)"/><line x1="222.8" y1="130.1" x2="240.0" y2="165.6" style="stroke:var(--ink);stroke-width:0.8;"/><text x="241.7" y="169.6" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink);">v<tspan baseline-shift="sub" font-size="8px">π</tspan>(500): TD's step for 401–500</text><text x="241.7" y="182.6" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink);">passes through it</text><line x1="62.0" y1="26.0" x2="84.0" y2="26.0" style="stroke:var(--ink);stroke-width:1.3;stroke-dasharray:5 3"/><text x="90.0" y="29.5" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);">true value v<tspan baseline-shift="sub" font-size="8px">π</tspan></text><line x1="62.0" y1="43.0" x2="84.0" y2="43.0" style="stroke:var(--chart-1);stroke-width:2.2;"/><circle cx="73" cy="43" r="3.2" style="fill:var(--panel);stroke:var(--chart-1);stroke-width:1.5"/><text x="90.0" y="46.5" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);">Monte Carlo: exact w<tspan baseline-shift="sub" font-size="8px">MC</tspan>, run</text><line x1="62.0" y1="60.0" x2="84.0" y2="60.0" style="stroke:var(--chart-2);stroke-width:2.2;"/><rect x="70" y="57" width="6" height="6" transform="rotate(45 73 60)" style="fill:var(--panel);stroke:var(--chart-2);stroke-width:1.5"/><text x="90.0" y="63.5" text-anchor="start" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);">TD: exact w<tspan baseline-shift="sub" font-size="8px">TD</tspan>, run</text></svg>
+          <figcaption>Fig. 3 · The exact staircases and the true values, with each run's final weights. The dot marks v<sub>π</sub>(500). Values from <code>exact.py</code> and <code>runs.py</code>.</figcaption>
+        </figure>
+        <p>Each run ends on its own method's staircase, and runs with five more seeds do too. The TD run's VE is 0.013, and the Monte Carlo run's is 0.003.</p>
+        <p><code>runs.py --true-next</code> removes the cause of the difference. TD's target reads v<sub>π</sub>(S<sub>t+1</sub>) in place of the staircase's v̂(S<sub>t+1</sub>, w), so it averages to v<sub>π</sub>(S<sub>t</sub>) as the return does. The run then ends on Monte Carlo's staircase, with a VE of 0.0030.</p>
+        <details>
+          <summary><code>runs.py</code>, complete, and its two outputs</summary>
+          <p><code>runs.py</code> imports <code>walk1000.py</code> and <code>exact.py</code> from the same folder, and each run takes about 6 seconds.</p>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">runs.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["numpy"]
+# ///
+"""Gradient Monte Carlo and semi-gradient TD(0) with 10 groups on the walk.
+
+Both methods learn from the same 100,000 episodes, each with a constant step
+size, and the script compares their final weights with the exact solutions.
+"""
+import argparse
+import random
+
+from exact import solve, ve
+from walk1000 import episode, gradient_mc, semi_gradient_td
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--true-next", action="store_true",
+                        help="TD's target uses v_pi(S') in place of v̂(S', w)")
+    args = parser.parse_args()
+    v, _, mu, X, w_mc, w_td = solve()
+    rng = random.Random(args.seed)
+    mc, td = [0.0] * 10, [0.0] * 10
+    for _ in range(100_000):
+        steps = episode(rng)
+        gradient_mc(mc, 2e-5, steps)
+        semi_gradient_td(td, 2e-4, steps, v if args.true_next else None)
+    print(f"seed {args.seed}" + (", TD reads v_pi(S')" if args.true_next else ""))
+    print("states      exact w_MC   MC run   exact w_TD   TD run")
+    for g in range(10):
+        print(f"{100 * g + 1:4d}-{100 * g + 100:&lt;4d} {w_mc[g]:+11.3f} {mc[g]:+8.3f}"
+              f" {w_td[g]:+12.3f} {td[g]:+8.3f}")
+    print(f"VE          {ve(w_mc, v, mu, X):11.4f} {ve(mc, v, mu, X):8.4f}"
+          f" {ve(w_td, v, mu, X):12.4f} {ve(td, v, mu, X):8.4f}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+          </figure>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">output of uv run runs.py</span><span>text</span></div>
+            <pre><code data-language="text">seed 0
+states      exact w_MC   MC run   exact w_TD   TD run
+   1-100       -0.830   -0.823       -0.693   -0.694
+ 101-200       -0.652   -0.657       -0.481   -0.483
+ 201-300       -0.466   -0.476       -0.303   -0.308
+ 301-400       -0.279   -0.280       -0.146   -0.154
+ 401-500       -0.087   -0.081       -0.001   -0.008
+ 501-600       +0.093   +0.101       +0.122   +0.116
+ 601-700       +0.279   +0.288       +0.250   +0.244
+ 701-800       +0.466   +0.464       +0.388   +0.383
+ 801-900       +0.652   +0.646       +0.544   +0.536
+ 901-1000      +0.830   +0.822       +0.731   +0.725
+VE               0.0030   0.0030       0.0136   0.0131</code></pre>
+          </figure>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">output of uv run runs.py --true-next</span><span>text</span></div>
+            <pre><code data-language="text">seed 0, TD reads v_pi(S')
+states      exact w_MC   MC run   exact w_TD   TD run
+   1-100       -0.830   -0.823       -0.693   -0.830
+ 101-200       -0.652   -0.657       -0.481   -0.653
+ 201-300       -0.466   -0.476       -0.303   -0.466
+ 301-400       -0.279   -0.280       -0.146   -0.281
+ 401-500       -0.087   -0.081       -0.001   -0.088
+ 501-600       +0.093   +0.101       +0.122   +0.094
+ 601-700       +0.279   +0.288       +0.250   +0.279
+ 701-800       +0.466   +0.464       +0.388   +0.467
+ 801-900       +0.652   +0.646       +0.544   +0.651
+ 901-1000      +0.830   +0.822       +0.731   +0.828
+VE               0.0030   0.0030       0.0136   0.0030</code></pre>
+          </figure>
+        </details>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>1. States A and B share one weight. Every episode starts in A, moves to B with reward 1, then ends with reward 0, with no discount. Find μ, w<sub>MC</sub> and w<sub>TD</sub>, compare their VE, and check the start state.</p>
+          <details>
+            <summary>Answer</summary>
+            <p>v<sub>π</sub>(A) = 1 and v<sub>π</sub>(B) = 0. Each state is visited once per episode, so μ(A) = μ(B) = ½ and w<sub>MC</sub> = 0.5. TD's condition is ½(1 + w − w) + ½(0 + 0 − w) = 0, so w<sub>TD</sub> = 1. VE is 0.25 at w<sub>MC</sub> and 0.5 at w<sub>TD</sub>. TD's estimate of A is 1, exactly v<sub>π</sub>(A).</p>
+          </details>
+          <p>2. Give every state its own group. What does semi-gradient TD(0) become, and where do both methods settle?</p>
+          <details>
+            <summary>Answer</summary>
+            <p>Each x(s) has its single 1 in component s, so v̂(s, w) = w<sub>s</sub> is a table and the update is <a href="../reinforcement-learning/learning-values-from-samples.html#temporal-difference">TD(0)</a>. TD's condition then holds state by state, r(s) + Σ<sub>s′</sub> p(s′ | s) w<sub>s′</sub> = w<sub>s</sub>, the <a href="../reinforcement-learning/environments-and-the-rl-problem.html#computing">Bellman equation</a>, solved by v<sub>π</sub>. Monte Carlo's one-state averages are v<sub>π</sub> too, and <code>uv run exact.py --groups 1000</code> prints VE 0 for both.</p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>When estimates come from weights, learning is stochastic gradient descent on the μ-weighted squared value error, with a sampled target in place of the true value. The return doesn't depend on the weights, so gradient Monte Carlo follows VE's gradient on average and, with linear features, finds the best fit. TD(0)'s target reads the weights, and the semi-gradient update ignores that dependence. Linear TD then settles where each group's μ-weighted TD error averages zero. A TD error checks an estimate against the reward and the next estimate, not against v<sub>π</sub>, so that point can sit away from the true values. On the 1000-state walk its VE was 4.6 times the best fit's, though it got the start state's value exactly.</p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd><a href="http://incompleteideas.net/book/RLbook2020.pdf#page=228">Sutton and Barto, Proof of Convergence of Linear TD(0)</a>: the boxed argument on pp. 206-207 that on-policy weighting makes A positive definite in continuing tasks, so the average update is stable.</dd>
+          <dt>02</dt>
+          <dd><a href="https://web.mit.edu/jnt/www/Papers/J063-97-bvr-td.pdf#page=3">Tsitsiklis and Van Roy, An Analysis of Temporal-Difference Learning with Function Approximation</a>: Section III (pp. 676-678) describes the TD fixed point as a projection and shows why sampling states from another distribution can break convergence. Theorem 1 (p. 679) states the result.</dd>
+          <dt>03</dt>
+          <dd><a href="https://web.mit.edu/dimitrib/www/dpchapter.pdf">Bertsekas, Approximate Dynamic Programming, Section 6.6</a>: the same analysis for episodic tasks weighted by visits per episode, the setting of the 1000-state walk, and why the TD(0) bound changes there (pp. 458-462).</dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1"><a data-nb-source data-nb-kind="primary" data-nb-note="The authors' free copy of the 2020 printing, also served at http://incompleteideas.net/book/RLbook2020.pdf. Page numbers are the printed ones; the PDF page is the printed page plus 22." href="https://incompleteideas.net/book/RLbook2020.pdf">MIT Press &middot; Richard S. Sutton and Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd edition, 2018</a></li>
+          <li id="s2"><a data-nb-source data-nb-kind="primary" data-nb-note="IEEE Transactions on Automatic Control 42(5):674-690, May 1997. Read in the free copy on the first author's MIT page, web.mit.edu/jnt/www/Papers/J063-97-bvr-td.pdf, whose PDF page is the journal page minus 673." href="https://doi.org/10.1109/9.580874">IEEE &middot; John N. Tsitsiklis and Benjamin Van Roy, An Analysis of Temporal-Difference Learning with Function Approximation, 1997</a></li>
+          <li id="s3"><a data-nb-source data-nb-kind="primary" data-nb-note="Listed on the book's code page, incompleteideas.net/book/code/code2nd.html, under Chapter 9 as State Aggregation on the 1000-state Random Walk, Figures 9.1, 9.2, and 9.5. Readers can open the file at http://incompleteideas.net/book/code/aggreg-walknew.lisp. It uses old Mac line endings; line numbers count lines after converting them." href="https://incompleteideas.net/book/code/aggreg-walknew.lisp">Richard S. Sutton &middot; Lisp code for Example 9.1 and Figures 9.1 and 9.2, aggreg-walknew.lisp</a></li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
