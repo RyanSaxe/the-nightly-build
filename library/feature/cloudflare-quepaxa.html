@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuePaxa trades Raft's election stall for a minute of slower decisions · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "cloudflare-quepaxa",
+        "template": "article",
+        "title": "QuePaxa trades Raft's election stall for a minute of slower decisions",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-13",
+        "tags": ["distributed-systems", "consensus", "cloudflare"],
+        "sources": 8,
+        "words": 1190,
+        "reading_minutes": 5,
+        "dek": "In Cloudflare's evaluation of its experimental Meerkat service, a failed leader cut the decision rate to about 65% of normal, while a Raft cluster commits nothing until its election timeout fires.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">QuePaxa trades Raft's election stall for a minute of slower decisions</h1>
+        <p class="nb-dekline">In Cloudflare's evaluation of its experimental Meerkat service, a failed leader cut the decision rate to about 65% of normal, while a Raft cluster commits nothing until its election timeout fires.</p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-11-13</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A leader fails and the log keeps moving</h2>
+        <p>
+          At 15:00:32 UTC the leader of a QuePaxa cluster failed, and the
+          cluster went on deciding. Over the next 53 seconds its decision rate
+          stepped down to about 65% of normal, and it recovered once the
+          leader was replaced at 15:01:25.<sup class="nb-cite"><a href="#s1">1</a></sup> A Raft cluster that loses its
+          leader commits nothing until it elects a new one, roughly an election
+          timeout later.<sup class="nb-cite"><a href="#s2">2</a></sup> QuePaxa gives up that stall and pays with a
+          stretch of slower deciding.
+        </p>
+        <p>
+          The run comes from Cloudflare's evaluation of Meerkat, "an
+          experimental distributed consensus service" for its internal global
+          control plane.<sup class="nb-cite"><a href="#s1">1</a></sup> Its July introduction says "Meerkat is not
+          deployed to production".<sup class="nb-cite"><a href="#s3">3</a></sup> QuePaxa comes from a SOSP 2023 paper by
+          Tennage and six co-authors.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="election-timeout" id="election-timeout">
+        <h2>The case for an election timeout</h2>
+        <p>
+          Raft's designers state the cost: "When the leader crashes, the
+          system will be unavailable for roughly the election timeout; we
+          would like this to represent only a small fraction of overall
+          time." They keep it so by setting the timeout orders of magnitude
+          below server MTBFs of "several months or more".<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          Cloudflare's motivation is a 2020 outage. A partially failed
+          switch caused repeated split elections in a three-node etcd cluster,
+          which "made the cluster read-only until the faulty switch
+          recovered", six minutes later. The 6 hours 33 minutes of API and
+          dashboard impact came from a database failover that this set
+          off.<sup class="nb-cite"><a href="#s5">5</a></sup> The November post folds both into "six hours".<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Howard and Abraham then showed that Raft with PreVote and
+          CheckQuorum keeps a stable leader under partial connectivity.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          etcd has enabled PreVote by default since v3.5.0 (June 2021) and
+          always sets CheckQuorum.<sup class="nb-cite"><a href="#s7">7</a></sup> Neither fix removes the election
+          timeout after a leader crash.
+        </p>
+        <p>
+          That timeout cannot shrink to fit the network. In the QuePaxa
+          paper's test, the authors' own Raft and Multi-Paxos lost throughput,
+          then liveness, once the timeout neared the round-trip time.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>
+            Election-timeout rules by source. The QuePaxa row quotes §7.5,
+            whose text its Fig. 9 plot contradicts in places.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s1">1</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Who</th>
+              <th class="txt">Rule or finding</th>
+              <th class="txt">What it rests on</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="nb-table-token">Raft paper</span></td>
+              <td class="txt">150–300 ms recommended</td>
+              <td class="txt">Five servers, ~15 ms broadcast time</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">etcd docs</span></td>
+              <td class="txt">At least 10× RTT; default 1,000 ms</td>
+              <td class="txt">Operating guidance</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">Cloudflare</span></td>
+              <td class="txt">"Commonly" 5 to 10× RTT</td>
+              <td class="txt">Uncited</td>
+            </tr>
+            <tr>
+              <td><span class="nb-table-token">QuePaxa paper</span></td>
+              <td class="txt">25k cmd/s above 330 ms (about 1.8× RTT); "fail to stabilize" below 200 ms</td>
+              <td class="txt">Authors' Raft and Multi-Paxos, 180 ms average RTT</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          At the QuePaxa paper's 180 ms round trip, etcd's rule implies a stall of at
+          least 1.8 seconds, a derived figure nobody has
+          measured.
+        </p>
+      </section>
+
+      <section data-nb-section="quepaxa-round" id="quepaxa-round">
+        <h2>One round trip for the leader, three for anyone else</h2>
+        <p>
+          QuePaxa decides each log slot in rounds of four phases, each one
+          round trip between a proposer and a majority of recorders, the
+          replicas that hold proposals. In round 1 the leader's proposal
+          carries top priority, and if it reaches a quorum first it is decided
+          in phase 0, the fast path. Any proposer can decide in phase 2. A
+          round that decides nothing carries its best proposal forward. Later
+          rounds have no leader, and each decides with probability at least
+          1/2 even in the paper's worst case.<sup class="nb-cite"><a href="#s4">4</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <svg
+            viewBox="0 0 400 324"
+            role="img"
+            aria-label="Diagram of one QuePaxa round. Phase 0 propose, phase 1 spread, phase 2 check and decide, phase 3 carry forward. The leader can decide after phase 0 in one round trip; any proposer can decide after phase 2 in three round trips; phase 3 leads to a leaderless next round. Below, a timeline after a leader failure: the leader proposes at once and fails, proposer 2 waits one hedging delay and proposes, proposer 3 waits two delays, sees progress and stays idle. A Raft follower waits a full election timeout before electing a new leader."
+            style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto; font-family: var(--sans)"
+          >
+            <defs>
+              <marker id="qp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" style="fill: var(--ink-soft)" />
+              </marker>
+            </defs>
+            <text x="6" y="16" style="fill: var(--ink); font-size: 12px; font-weight: 600">One QuePaxa round</text>
+            <rect x="6" y="28" width="84" height="44" rx="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2" />
+            <text x="48" y="46" text-anchor="middle" style="fill: var(--ink); font-size: 11px; font-weight: 600">Phase 0</text>
+            <text x="48" y="61" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">propose</text>
+            <rect x="104" y="28" width="84" height="44" rx="4" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1" />
+            <text x="146" y="46" text-anchor="middle" style="fill: var(--ink); font-size: 11px; font-weight: 600">Phase 1</text>
+            <text x="146" y="61" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">spread</text>
+            <rect x="202" y="28" width="84" height="44" rx="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2" />
+            <text x="244" y="46" text-anchor="middle" style="fill: var(--ink); font-size: 11px; font-weight: 600">Phase 2</text>
+            <text x="244" y="61" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">check, decide</text>
+            <rect x="300" y="28" width="84" height="44" rx="4" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1" />
+            <text x="342" y="46" text-anchor="middle" style="fill: var(--ink); font-size: 11px; font-weight: 600">Phase 3</text>
+            <text x="342" y="61" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">carry forward</text>
+            <line x1="90" y1="50" x2="102" y2="50" marker-end="url(#qp-arrow)" style="stroke: var(--ink-soft); stroke-width: 1.2" />
+            <line x1="188" y1="50" x2="200" y2="50" marker-end="url(#qp-arrow)" style="stroke: var(--ink-soft); stroke-width: 1.2" />
+            <line x1="286" y1="50" x2="298" y2="50" marker-end="url(#qp-arrow)" style="stroke: var(--ink-soft); stroke-width: 1.2" />
+            <line x1="48" y1="72" x2="48" y2="96" marker-end="url(#qp-arrow)" style="stroke: var(--chart-1); stroke-width: 1.5" />
+            <rect x="6" y="98" width="150" height="36" rx="18" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 1.5" />
+            <text x="81" y="113" text-anchor="middle" style="fill: var(--ink); font-size: 10.5px; font-weight: 600">Leader decides</text>
+            <text x="81" y="127" text-anchor="middle" style="fill: var(--chart-1); font-size: 10px">fast path · 1 round trip</text>
+            <line x1="244" y1="72" x2="244" y2="96" marker-end="url(#qp-arrow)" style="stroke: var(--chart-2); stroke-width: 1.5" />
+            <rect x="172" y="98" width="144" height="36" rx="18" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 1.5" />
+            <text x="244" y="113" text-anchor="middle" style="fill: var(--ink); font-size: 10.5px; font-weight: 600">Any proposer decides</text>
+            <text x="244" y="127" text-anchor="middle" style="fill: var(--chart-2); font-size: 10px">slow path · 3 round trips</text>
+            <line x1="342" y1="72" x2="342" y2="96" marker-end="url(#qp-arrow)" style="stroke: var(--ink-soft); stroke-width: 1.2" />
+            <text x="358" y="108" text-anchor="middle" style="fill: var(--ink); font-size: 10px; font-weight: 600">next round</text>
+            <text x="358" y="121" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">no leader,</text>
+            <text x="358" y="134" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">decides with</text>
+            <text x="358" y="147" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">p ≥ 1/2</text>
+
+            <line x1="6" y1="164" x2="394" y2="164" style="stroke: var(--line); stroke-width: 1" />
+            <text x="6" y="182" style="fill: var(--ink); font-size: 12px; font-weight: 600">After the leader fails</text>
+            <line x1="112" y1="198" x2="112" y2="312" style="stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 3 3" />
+            <text x="112" y="194" text-anchor="middle" style="fill: var(--ink-soft); font-size: 9.5px">0</text>
+            <line x1="190" y1="198" x2="190" y2="272" style="stroke: var(--line); stroke-width: 1" />
+            <text x="190" y="194" text-anchor="middle" style="fill: var(--ink-soft); font-size: 9.5px">δ</text>
+            <line x1="268" y1="198" x2="268" y2="272" style="stroke: var(--line); stroke-width: 1" />
+            <text x="268" y="194" text-anchor="middle" style="fill: var(--ink-soft); font-size: 9.5px">2δ</text>
+
+            <text x="6" y="212" style="fill: var(--ink); font-size: 10px">Leader, delay 0</text>
+            <rect x="112" y="204" width="34" height="10" rx="2" style="fill: var(--chart-1)" />
+            <text x="152" y="213" style="fill: var(--chart-4); font-size: 11px; font-weight: 600">✕</text>
+            <text x="166" y="213" style="fill: var(--ink-soft); font-size: 10px">fails</text>
+
+            <text x="6" y="240" style="fill: var(--ink); font-size: 10px">Proposer 2, delay δ</text>
+            <line x1="112" y1="237" x2="188" y2="237" style="stroke: var(--ink-soft); stroke-width: 1.2; stroke-dasharray: 2 3" />
+            <text x="118" y="231" style="fill: var(--ink-soft); font-size: 9px">no progress</text>
+            <rect x="190" y="232" width="110" height="10" rx="2" style="fill: var(--chart-2)" />
+            <text x="306" y="241" style="fill: var(--ink); font-size: 10px">decides</text>
+
+            <text x="6" y="266" style="fill: var(--ink); font-size: 10px">Proposer 3, delay 2δ</text>
+            <line x1="112" y1="263" x2="266" y2="263" style="stroke: var(--ink-soft); stroke-width: 1.2; stroke-dasharray: 2 3" />
+            <text x="274" y="266" style="fill: var(--ink-soft); font-size: 10px">sees progress, idle</text>
+
+            <text x="6" y="302" style="fill: var(--ink); font-size: 10px">Raft follower</text>
+            <line x1="112" y1="299" x2="330" y2="299" style="stroke: var(--chart-4); stroke-width: 1.2; stroke-dasharray: 2 3" />
+            <text x="221" y="292" text-anchor="middle" style="fill: var(--chart-4); font-size: 9.5px">election timeout: nobody proposes</text>
+            <rect x="332" y="294" width="58" height="10" rx="2" style="fill: var(--chart-3)" />
+            <text x="361" y="318" text-anchor="middle" style="fill: var(--ink-soft); font-size: 9.5px">elects, proposes</text>
+          </svg>
+          <figcaption>
+            Fig. 1 · A QuePaxa round and its hedged proposers beside a Raft
+            follower. Schematic; time is not to scale.<sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s2">2</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The hedging delay replaces the timeout. The leader proposes at once,
+          the second proposer after a delay δ, the third after 2δ, each only if
+          it has seen no progress. Set the delay too small and consensus stays
+          live, "the only costs being redundant proposer effort and lower
+          fast-path success probability".<sup class="nb-cite"><a href="#s4">4</a></sup> Cloudflare says upwards of 95%
+          of Meerkat's decisions come from the leader in phase 0.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="two-shapes" id="two-shapes">
+        <h2>Two shapes of one failure</h2>
+        <figure class="nb-figure">
+          <img
+            src="cloudflare-quepaxa/cloudflare-leader-failure.png"
+            alt="Cloudflare's two-panel chart from 14:58 to 15:09 UTC. Top: relative decision rate, flat near 100% until a leader failure marked at 15:00:32, stepping down to about 65% by 15:01:15, then recovering after the leader is replaced at 15:01:25 and reaching about 100% by 15:02:40; a dotted reference line sits at 33%. Bottom: share of decisions by phase, almost all phase 0 except a spike to nearly all phase 2 around the replacement."
+          />
+          <figcaption>
+            Fig. 2 · Cloudflare's chart of its Meerkat leader-failure run:
+            relative decision rate (top), share of decisions by phase
+            (bottom).<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          By the replacement, nearly all decisions came from phase 2 and the
+          rate had bottomed near 65%. The dotted 33% line is Cloudflare's
+          limit, reasoned from three round trips in place of one: "down to at
+          most a third of the usual rate".<sup class="nb-cite"><a href="#s1">1</a></sup> The measured low was about
+          twice that, and the post does not say why. It also gives no cluster
+          size, round-trip time, load, hedge delay, averaging window or kind
+          of failure.
+        </p>
+        <figure class="nb-figure">
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem">
+          <svg
+            viewBox="0 0 400 210"
+            role="img"
+            aria-label="Schematic of a Raft leader crash: decision rate at 100%, falling to zero when the leader crashes and staying at zero for roughly the election timeout, then commits resume under the new leader."
+            style="flex: 1 1 18rem; min-width: 0; height: auto; font-family: var(--sans)"
+          >
+            <text x="8" y="18" style="fill: var(--ink); font-size: 13px; font-weight: 600">Raft</text>
+            <line x1="40" y1="180" x2="392" y2="180" style="stroke: var(--line); stroke-width: 1" />
+            <line x1="40" y1="60" x2="392" y2="60" style="stroke: var(--hair); stroke-width: 1" />
+            <text x="34" y="64" text-anchor="end" style="fill: var(--ink-soft); font-size: 10px">100%</text>
+            <text x="34" y="184" text-anchor="end" style="fill: var(--ink-soft); font-size: 10px">0</text>
+            <text x="216" y="200" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">time →</text>
+            <polyline points="40,60 120,60 120,179 240,179 240,60 392,60" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5" />
+            <line x1="120" y1="36" x2="120" y2="180" style="stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 3 3" />
+            <text x="116" y="44" text-anchor="end" style="fill: var(--ink-soft); font-size: 10px">leader crashes</text>
+            <text x="180" y="112" text-anchor="middle" style="fill: var(--ink); font-size: 10.5px; font-weight: 600">no commits for</text>
+            <text x="180" y="126" text-anchor="middle" style="fill: var(--ink); font-size: 10.5px; font-weight: 600">≈ election timeout</text>
+            <text x="180" y="144" text-anchor="middle" style="fill: var(--ink-soft); font-size: 9.5px">etcd: ≥ 10× RTT</text>
+            <text x="316" y="80" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">new leader commits</text>
+          </svg>
+          <svg
+            viewBox="0 0 400 210"
+            role="img"
+            aria-label="Schematic of a QuePaxa leader failure: decision rate at 100%, a brief gap of 303 to 473 milliseconds measured in the QuePaxa paper, then a decline to about 65% over the 53 seconds before replacement in Cloudflare's evaluation, above a dotted 33% line that Cloudflare derives from round-trip counts, then a return to 100% when the leader is replaced."
+            style="flex: 1 1 18rem; min-width: 0; height: auto; font-family: var(--sans)"
+          >
+            <text x="8" y="18" style="fill: var(--ink); font-size: 13px; font-weight: 600">QuePaxa</text>
+            <line x1="40" y1="180" x2="392" y2="180" style="stroke: var(--line); stroke-width: 1" />
+            <line x1="40" y1="60" x2="392" y2="60" style="stroke: var(--hair); stroke-width: 1" />
+            <line x1="40" y1="140" x2="392" y2="140" style="stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 1 3" />
+            <text x="34" y="64" text-anchor="end" style="fill: var(--ink-soft); font-size: 10px">100%</text>
+            <text x="34" y="144" text-anchor="end" style="fill: var(--ink-soft); font-size: 10px">33%</text>
+            <text x="34" y="184" text-anchor="end" style="fill: var(--ink-soft); font-size: 10px">0</text>
+            <text x="216" y="200" text-anchor="middle" style="fill: var(--ink-soft); font-size: 10px">time →</text>
+            <polyline points="40,60 120,60 120,179 128,179 128,67 190,67 190,73 240,73 240,98 300,102 330,72 360,60 392,60" style="fill: none; stroke: var(--chart-2); stroke-width: 2.5" />
+            <line x1="120" y1="36" x2="120" y2="180" style="stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 3 3" />
+            <text x="116" y="44" text-anchor="end" style="fill: var(--ink-soft); font-size: 10px">leader fails</text>
+            <line x1="300" y1="36" x2="300" y2="180" style="stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 3 3" />
+            <text x="304" y="44" style="fill: var(--ink-soft); font-size: 10px">leader replaced</text>
+            <text x="214" y="114" text-anchor="middle" style="fill: var(--ink); font-size: 10.5px; font-weight: 600">falls to ≈ 65% over 53 s</text>
+            <text x="214" y="127" text-anchor="middle" style="fill: var(--ink-soft); font-size: 9.5px">Cloudflare's evaluation</text>
+            <text x="134" y="160" style="fill: var(--ink); font-size: 10px; font-weight: 600">gap: 303–473 ms</text>
+            <text x="134" y="173" style="fill: var(--ink-soft); font-size: 9.5px">QuePaxa paper, 180 ms RTT</text>
+            <text x="388" y="154" text-anchor="end" style="fill: var(--ink-soft); font-size: 9.5px">Cloudflare's</text>
+            <text x="388" y="166" text-anchor="end" style="fill: var(--ink-soft); font-size: 9.5px">derived limit</text>
+          </svg>
+        </div>
+        <figcaption>
+          Fig. 3 · Two failure shapes, drawn by this paper from separate
+          sources and not to scale.<sup class="nb-cite"><a href="#s2">2</a></sup><sup class="nb-cite"><a href="#s8">8</a></sup><sup class="nb-cite"><a href="#s4">4</a></sup><sup class="nb-cite"><a href="#s1">1</a></sup>
+        </figcaption>
+        </figure>
+        <p>
+          Setting the shapes side by side is this paper's inference, and
+          nobody has measured Raft in Cloudflare's setting. The QuePaxa panel
+          also joins two events. The QuePaxa paper's 303 to 473 ms runs from a leader
+          crash to the first progress by any proposer, on five replicas with a
+          180 ms round trip.<sup class="nb-cite"><a href="#s4">4</a></sup> Cloudflare's 53 seconds runs from failure
+          to replacement, and Cloudflare publishes no crash-to-first-decision
+          gap.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Either protocol must still replace a failed leader. Raft holds every
+          write until then, and cutting the timeout to shorten the wait risks
+          the liveness failure the QuePaxa paper measured below 200 ms. QuePaxa lets
+          another proposer decide in the meantime, so replacement time sets
+          how long the cluster runs slower, and a hedging delay set too short
+          costs bandwidth, not liveness.<sup class="nb-cite"><a href="#s4">4</a></sup> In Cloudflare's one published
+          run, the decision rate fell no lower than about 65%, and Cloudflare
+          reports that the system never halted.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="sections “The challenges of consensus at a global scale”, “When fault detection is slow”, “How QuePaxa works under the hood” and “How QuePaxa makes Meerkat possible” (chart, caption, 95%, “at most a third”)"
+              href="https://blog.cloudflare.com/choosing-quepaxa/"
+              >Cloudflare · Leite, Halley and Larisch, “Choosing QuePaxa, an unusual consensus algorithm” (11 November 2026)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§5.2 (p. 310); §5.6 (pp. 313–314); §8.3 and Fig. 14 (p. 317)"
+              data-nb-url="https://www.usenix.org/system/files/conference/atc14/atc14-paper-ongaro.pdf"
+              href="https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro"
+              >USENIX ATC 2014 · Ongaro and Ousterhout, “In Search of an Understandable Consensus Algorithm”</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="opening section; “What's next”"
+              href="https://blog.cloudflare.com/meerkat-introduction/"
+              >Cloudflare · Larisch, Halley and Leite, “Introducing Meerkat- an experiment in global consensus”</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§3.3 and §3.5 (p. 4); §4.1.3 (p. 6); §4.2.5, §5.1, §5.2 (p. 9); §7.1 (p. 11); §7.5 and Fig. 9 (p. 13); page numbers from the bford.info PDF"
+              data-nb-url="https://bford.info/pub/os/quepaxa/quepaxa.pdf"
+              href="https://doi.org/10.1145/3600006.3613150"
+              >SOSP 2023 · Tennage, Băsescu, Kokoris-Kogias, Syta, Jovanovic, Estrada-Galiñanes and Ford, “QuePaxa: Escaping the Tyranny of Timeouts in Consensus”</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="timeline entries 14:43 UTC, 14:44 UTC and 14:45 UTC; summary of impact"
+              href="https://blog.cloudflare.com/a-byzantine-failure-in-the-real-world/"
+              >Cloudflare · Lianza and Snook, “A Byzantine failure in the real world” (27 November 2020)</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="the three numbered questions, ending “Does Raft with PreVote and CheckQuorum guarantee liveness?”"
+              href="https://decentralizedthoughts.github.io/2020-12-12-raft-liveness-full-omission/"
+              >Decentralized Thoughts · Howard and Abraham, “Raft does not Guarantee Liveness in the face of Network Faults” (12 December 2020)</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="v3.5.0 entry, “Turned on --pre-vote by default”"
+              data-nb-note="CheckQuorum is set to true in etcd's server bootstrap (server/etcdserver/bootstrap.go, lines 576–577 at commit 1b969e2); the option is documented in etcd-io/raft raft.go, lines 224–231 at commit 99f9ffb."
+              href="https://github.com/etcd-io/etcd/blob/main/CHANGELOG/CHANGELOG-3.5.md"
+              >etcd · CHANGELOG-3.5 and server source</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="section “Time parameters”"
+              href="https://etcd.io/docs/v3.5/tuning/"
+              >etcd · “Tuning”, v3.5 docs</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
