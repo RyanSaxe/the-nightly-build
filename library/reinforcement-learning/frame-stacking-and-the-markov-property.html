@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Q-learning values a rolling ball's cell by how often each speed reaches it · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "frame-stacking-and-the-markov-property",
+        "template": "lesson",
+        "title": "Q-learning values a rolling ball's cell by how often each speed reaches it",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-14",
+        "tags": ["markov-property", "partial-observability", "frame-stacking", "q-learning", "gymnasium", "environment-design"],
+        "sources": 6,
+        "words": 4664,
+        "reading_minutes": 20,
+        "dek": "Gymnasium's two-frame stack gives Q-learning's table the speed that one cell leaves out, and the agent then hits all 12 pitches at every exploration rate tried.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Q-learning values a rolling ball's cell by how often each speed reaches it</h1>
+        <p class="nb-dekline">Gymnasium's two-frame stack gives Q-learning's table the speed that one cell leaves out, and the agent then hits all 12 pitches at every exploration rate tried.</p>
+        <div class="nb-byline">
+          <span>20 min read</span><span>2026-11-14</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          An environment often reports only part of its state, such as where a
+          ball is but not how fast it moves. A table of action values keyed on
+          that observation gives one entry to situations that need different
+          moves. The Markov property, so far asked of states, can be asked of
+          observations: the next observation and reward should depend only on
+          the current observation and action. Giving the agent its last few
+          observations as one observation, called frame stacking, restores the
+          property when those observations fix the missing part. DQN, a deep
+          Q-learning agent for Atari games, takes its four most recent frames as
+          one input because, its authors write, one screen can't tell many
+          game states apart.<sup class="nb-cite"><a href="#s1" data-nb-locator="Methods, Preprocessing and Algorithm, PDF p. 6">1</a></sup>
+          Here you predict from visit counts what Q-learning learns when a
+          ball's speed is hidden, and why exploration changes it.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>:
+            the Markov property, asked here of observations.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            Q-learning's update, and why its estimates rest at the optimal action
+            values whatever policy makes the moves.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/semi-gradient-td.html">TD(0) no longer converges to the best fit once states share weights</a>:
+            η(s), the expected visits to a state per episode, and the
+            visit-weighted average that Monte Carlo finds for a group of states.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/epsilon-greedy-exploration.html">ε-greedy control settles for the best policy that keeps exploring</a>:
+            the ε-greedy policy, whose exploration sets the shares here.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="../reinforcement-learning/checking-a-custom-environment.html">Gymnasium's environment checker passes a grid with a backward slip</a>:
+            the environment contract and <code>check_env</code>, run here on a
+            new environment.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>At cell 2, the right move depends on a speed the agent can't see</h2>
+        <p>
+          Pitch is a small environment built for this lesson (Fig. 1). A ball
+          rolls along a track of ten cells toward the agent at cell 0. It starts
+          in one of cells 4 to 9 at a speed of 1 or 2 cells per step, and each
+          of these 12 pitches is equally likely. Each step the agent waits or
+          swings, and it gets
+          one swing. A swing hits if the ball reaches cell 0 during that step,
+          which pays 1. A miss or a ball that gets past pays 0, and any of the
+          three ends the episode. The observation is the ball's cell.
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 246" role="img" aria-label="Pitch drawn twice. A track of ten cells, 0 to 9, with the agent at cell 0 and the starting cells 4 to 9 shaded. In the top row a ball at cell 2 came from cell 3, so its speed is 1 and its next cell is 1. In the bottom row a ball at cell 2 came from cell 4, so its speed is 2 and it reaches cell 0 this step. One frame shows 2 in both rows. Two frames show (3, 2) and (4, 2)." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="pa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill: var(--ink-soft)"/></marker></defs>
+<text x="278.0" y="14.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">starting cells</text>
+<line x1="178" y1="19" x2="378" y2="19" style="stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="40" y="52" width="34" height="24" style="fill: var(--bg); stroke: var(--line)"/>
+<text x="57.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">0</text>
+<rect x="74" y="52" width="34" height="24" style="fill: var(--bg); stroke: var(--line)"/>
+<text x="91.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">1</text>
+<rect x="108" y="52" width="34" height="24" style="fill: var(--bg); stroke: var(--line)"/>
+<text x="125.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">2</text>
+<rect x="142" y="52" width="34" height="24" style="fill: var(--bg); stroke: var(--line)"/>
+<text x="159.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">3</text>
+<rect x="176" y="52" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="193.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">4</text>
+<rect x="210" y="52" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="227.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">5</text>
+<rect x="244" y="52" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="261.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">6</text>
+<rect x="278" y="52" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="295.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">7</text>
+<rect x="312" y="52" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="329.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">8</text>
+<rect x="346" y="52" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="363.0" y="89.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">9</text>
+<rect x="54.0" y="55" width="6" height="18" rx="2" style="fill: var(--chart-3)"/>
+<circle cx="159.0" cy="64.0" r="7" style="fill: none; stroke: var(--chart-1); stroke-width: 1.5; stroke-dasharray: 2 2"/>
+<circle cx="125.0" cy="64.0" r="7" style="fill: var(--chart-1)"/>
+<path d="M155.0 50 Q143.0 36 131.0 50" style="fill: none; stroke: var(--ink-soft); stroke-width: 1.3" marker-end="url(#pa)"/>
+<path d="M119.0 96 Q108.0 106 95.0 96" style="fill: none; stroke: var(--chart-1); stroke-width: 1.3; stroke-dasharray: 3 2" marker-end="url(#pa)"/>
+<text x="380.0" y="46.0" text-anchor="end" style="font-family: var(--sans); fill: var(--ink); font-size: 12px; font-weight: 600">speed 1</text>
+<text x="380.0" y="108.0" text-anchor="end" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">came from cell 3 · best move: wait</text>
+<rect x="40" y="152" width="34" height="24" style="fill: var(--bg); stroke: var(--line)"/>
+<text x="57.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">0</text>
+<rect x="74" y="152" width="34" height="24" style="fill: var(--bg); stroke: var(--line)"/>
+<text x="91.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">1</text>
+<rect x="108" y="152" width="34" height="24" style="fill: var(--bg); stroke: var(--line)"/>
+<text x="125.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">2</text>
+<rect x="142" y="152" width="34" height="24" style="fill: var(--bg); stroke: var(--line)"/>
+<text x="159.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">3</text>
+<rect x="176" y="152" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="193.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">4</text>
+<rect x="210" y="152" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="227.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">5</text>
+<rect x="244" y="152" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="261.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">6</text>
+<rect x="278" y="152" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="295.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">7</text>
+<rect x="312" y="152" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="329.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">8</text>
+<rect x="346" y="152" width="34" height="24" style="fill: var(--chart-5); fill-opacity: 0.16; stroke: var(--line)"/>
+<text x="363.0" y="189.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--faint); font-size: 10px">9</text>
+<rect x="54.0" y="155" width="6" height="18" rx="2" style="fill: var(--chart-3)"/>
+<circle cx="193.0" cy="164.0" r="7" style="fill: none; stroke: var(--chart-1); stroke-width: 1.5; stroke-dasharray: 2 2"/>
+<circle cx="125.0" cy="164.0" r="7" style="fill: var(--chart-1)"/>
+<path d="M189.0 150 Q160.0 136 131.0 150" style="fill: none; stroke: var(--ink-soft); stroke-width: 1.3" marker-end="url(#pa)"/>
+<path d="M119.0 196 Q90.0 206 61.0 196"style="fill: none; stroke: var(--chart-1); stroke-width: 1.3; stroke-dasharray: 3 2" marker-end="url(#pa)"/>
+<text x="380.0" y="146.0" text-anchor="end" style="font-family: var(--sans); fill: var(--ink); font-size: 12px; font-weight: 600">speed 2</text>
+<text x="380.0" y="208.0" text-anchor="end" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">came from cell 4 · best move: swing</text>
+<text x="38.0" y="46.0" text-anchor="start" style="font-family: var(--sans); fill: var(--chart-3); font-size: 11px">agent</text>
+<rect x="40" y="216" width="340" height="26" rx="4" style="fill: var(--panel); stroke: var(--line)"/>
+<text x="210.0" y="233.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px">one frame: 2 in both · two frames: (3, 2) and (4, 2)</text>
+</svg>
+          <figcaption>
+            Fig. 1 · Pitch with the ball at cell 2, drawn once for each cell it
+            can have come from. The dashed circle marks the previous cell and
+            the dashed arrow where the ball goes next. Drawn from pitch.py.
+          </figcaption>
+        </figure>
+        <p>
+          Suppose the ball is at cell 2. If it came from cell 3, its speed is 1,
+          and a wait brings it to cell 1, where a swing hits. If it came from
+          cell 4, its speed is 2 and it reaches cell 0 during this step, so only
+          a swing now hits. The two balls need opposite moves, and both show 2.
+        </p>
+        <p>
+          Call the cell and the speed together the hidden state. Hidden states
+          that give the same observation are aliased, after Whitehead and
+          Ballard's term perceptual aliasing.<sup class="nb-cite"><a href="#s2">2</a></sup>
+          The hidden state has the
+          <a href="../reinforcement-learning/environments-and-the-rl-problem.html">Markov property</a>.
+          The cell doesn't, because what follows a wait at cell 2 depends on the
+          cell before it.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;\Pr\{O_{t+1}, R_{t+1} \mid O_t, A_t\} \\ &amp;\quad = \Pr\{O_{t+1}, R_{t+1} \mid \htmlClass{nb-mc1}{H_t}, A_t\} \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">H_t = O_0, A_0, \ldots, A_{t-1}, O_t</span><span>the history: every observation and action of the episode so far</span></li>
+          </ul>
+          <figcaption>
+            An observation is Markov when the whole history predicts the next
+            observation and reward no better than the observation alone. Sutton
+            and Barto give the test for a state built from the history as their
+            equation (17.8).<sup class="nb-cite"><a href="#s3" data-nb-locator="Section 3.1, p. 49; Section 17.3, equation 17.8, p. 466">3</a></sup>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="one-frame" id="one-frame">
+        <h2>A table keyed on the ball's cell</h2>
+        <p>
+          pitch.py holds the environment. Run on its own, it checks Pitch with
+          check_env and prints two frame stacks used later.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">pitch.py · complete</span><span>python</span>
+          </div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Pitch: a ball rolls toward the agent, who gets one swing at it.
+
+The track has cells 0 to 9, and the agent stands at cell 0. Each episode the
+ball starts in one of cells 4 to 9 with a speed of 1 or 2 cells per step, all
+12 pairs equally likely, and rolls toward cell 0. The observation is the ball's
+cell, which leaves out its speed. Each step the agent waits (action 0) or
+swings (action 1). A swing hits if the ball reaches cell 0 during that step,
+and a hit pays 1. Any other swing misses, and a ball that reaches cell 0 while
+the agent waits gets past. Both pay 0, and both end the episode.
+"""
+import gymnasium as gym
+from gymnasium.utils.env_checker import check_env
+from gymnasium.wrappers import FrameStackObservation
+
+WAIT, SWING = 0, 1
+STARTS, SPEEDS = (4, 5, 6, 7, 8, 9), (1, 2)
+
+
+class Pitch(gym.Env):
+    observation_space = gym.spaces.Discrete(10)
+    action_space = gym.spaces.Discrete(2)
+
+    def __init__(self, starts=STARTS):
+        self.starts = starts
+
+    def reset(self, *, seed=None, options=None):
+        """options={"cell": c, "speed": v} fixes the start; otherwise it is random."""
+        super().reset(seed=seed)
+        if options:
+            self.cell, self.speed = options["cell"], options["speed"]
+        else:
+            self.cell = int(self.np_random.choice(self.starts))
+            self.speed = int(self.np_random.choice(SPEEDS))
+        return self.cell, {}
+
+    def step(self, action):
+        arrives = self.cell &lt;= self.speed  # the ball reaches cell 0 this step
+        if action == SWING:
+            return self.cell, float(arrives), True, False, {}
+        if arrives:  # the ball gets past
+            return 0, 0.0, True, False, {}
+        self.cell -= self.speed
+        return self.cell, 0.0, False, False, {}
+
+
+if __name__ == "__main__":
+    check_env(Pitch(), skip_render_check=True)  # Pitch draws nothing
+    for padding in ("reset", "zero"):
+        env = FrameStackObservation(Pitch(), 2, padding_type=padding)
+        first, _ = env.reset(options={"cell": 6, "speed": 2})
+        second, *_ = env.step(WAIT)
+        print(f"padding_type={padding!r}: first stack {first}, then {second}")</code></pre>
+        </figure>
+        <p>
+          qlearn.py is
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">Q-learning</a>
+          with its table keyed on whatever the environment returns, a cell or a
+          stack of cells. An episode lasts at most nine steps, so the update
+          doesn't discount. With rewards of 1 and 0, the optimal value q*(s, a)
+          is then the chance of a hit when the agent takes a in hidden state s
+          and plays the best moves after. Each estimate's step size is
+          N(x, a)<sup>−0.7</sup>, with N counting its updates.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">qlearn.py · complete</span><span>python</span>
+          </div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Tabular Q-learning keyed on whatever the environment observes.
+
+key() turns an observation, a single cell or a stack of cells, into a table
+entry. There is no discount, since every Pitch episode ends within nine steps.
+Each estimate's step size is N(x, a)^-0.7, where N(x, a) counts its updates.
+"""
+from collections import defaultdict
+
+import numpy as np
+
+
+def key(obs):
+    return tuple(int(o) for o in obs) if np.ndim(obs) else int(obs)
+
+
+def q_learning(env, episodes, eps, seed):
+    rng = np.random.default_rng(seed)
+    Q = defaultdict(lambda: np.zeros(2))  # one row of two estimates per entry
+    N = defaultdict(lambda: np.zeros(2))
+    obs, _ = env.reset(seed=seed)
+    for episode in range(episodes):
+        if episode:
+            obs, _ = env.reset()
+        x, done = key(obs), False
+        while not done:
+            explore = rng.random() &lt; eps
+            a = int(rng.integers(2)) if explore else int(Q[x].argmax())
+            obs, r, terminated, truncated, _ = env.step(a)
+            x_next = key(obs)
+            target = r if terminated else r + Q[x_next].max()
+            N[x][a] += 1
+            Q[x][a] += N[x][a] ** -0.7 * (target - Q[x][a])
+            x, done = x_next, terminated or truncated
+    return Q</code></pre>
+        </figure>
+        <p>
+          runs.py trains 20 agents, seeds 0 to 19, for 20,000 episodes at
+          ε = 0.1. It prints the share of the 12 pitches their greedy moves hit
+          and their mean estimates at cells 2 and 3, beside columns the next
+          section derives. It needs pitch.py and qlearn.py in its folder and
+          takes up to 30 seconds per setting on one CPU core.
+        </p>
+        <details>
+          <summary>runs.py, complete, and its output with one frame</summary>
+          <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">runs.py · complete</span><span>python</span>
+          </div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning on Pitch with one frame or a stack of two, against the fixed
+point that Singh, Jaakkola and Jordan's equation (4) gives for it.
+
+uv run runs.py --frames 1      one frame at eps 0.1, seeds 0-19
+  --frames 2                   a stack of the last two cells
+  --eps 0.1 0.3 0.5            several exploration rates, one block each
+  --starts 5 7 9               balls start only in these cells
+"""
+import argparse
+from collections import defaultdict
+
+import numpy as np
+from gymnasium.wrappers import FrameStackObservation
+
+from pitch import SPEEDS, STARTS, Pitch
+from qlearn import key, q_learning
+
+EPISODES, SEEDS = 20_000, range(20)
+
+
+def observe(cells, t, frames):
+    """The entry at step t: the cell, or the last two cells, with the first
+    stack padded by repeating the start cell, as Gymnasium's default does."""
+    return cells[t] if frames == 1 else (cells[max(t - 1, 0)], cells[t])
+
+
+def exact(frames, eps, starts):
+    """Equation (4) for Pitch. The agent waits at every cell from 3 up, and
+    exploration swings there with probability eps / 2, so a ball reaches the
+    t-th cell it visits with probability (1 - eps / 2) ** t. Cell 1's weights
+    skip the move at cell 2, harmlessly, as every ball at cell 1 wants a swing.
+    Each entry averages its target over the (cell, speed) pairs behind it."""
+    rows = defaultdict(list)  # entry -&gt; [(weight, swing hits, next entry)]
+    for start in starts:
+        for speed in SPEEDS:
+            cells = list(range(start, 0, -speed))  # the cells the ball visits
+            for t, cell in enumerate(cells):
+                last = t == len(cells) - 1  # a wait here lets the ball past
+                nxt = None if last else observe(cells, t + 1, frames)
+                rows[observe(cells, t, frames)].append(
+                    ((1 - eps / 2) ** t, float(cell &lt;= speed), nxt))
+    Q = {x: np.zeros(2) for x in rows}
+    for _ in range(10):  # each sweep fixes the entries one more step out
+        for x, visits in rows.items():
+            w = np.array([weight for weight, _, _ in visits])
+            wait = [0.0 if n is None else Q[n].max() for _, _, n in visits]
+            swing = [hit for _, hit, _ in visits]
+            Q[x] = np.array([w @ wait, w @ swing]) / w.sum()
+    return Q
+
+
+def hit_rate(Q, env):
+    """The share of the starting pairs that the greedy moves hit."""
+    hits = []
+    for start in env.unwrapped.starts:
+        for speed in SPEEDS:
+            obs, _ = env.reset(options={"cell": start, "speed": speed})
+            done = False
+            while not done:
+                a = int(Q[key(obs)].argmax())
+                obs, r, terminated, truncated, _ = env.step(a)
+                done = terminated or truncated
+            hits.append(r)
+    return np.mean(hits)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--frames", type=int, choices=(1, 2), default=1)
+    parser.add_argument("--eps", type=float, nargs="+", default=[0.1])
+    parser.add_argument("--starts", type=int, nargs="+", default=list(STARTS))
+    args = parser.parse_args()
+
+    def make():
+        env = Pitch(args.starts)
+        return env if args.frames == 1 else FrameStackObservation(env, 2)
+
+    for eps in args.eps:
+        tables = [q_learning(make(), EPISODES, eps, seed) for seed in SEEDS]
+        rates = [hit_rate(Q, make()) for Q in tables]
+        fixed = exact(args.frames, eps, args.starts)
+        print(f"{args.frames} frame(s), eps {eps}, starts {args.starts}: "
+              f"{len(SEEDS)} runs of {EPISODES:,} episodes")
+        print(f"  share of pitches the greedy moves hit: mean {np.mean(rates):.2f},"
+              f" lowest run {min(rates):.2f}")
+        print("  entry, mean estimate over the runs, and equation (4)")
+        print(f"  {'':10s}{'wait':&gt;8s}{'eq. 4':&gt;8s}{'swing':&gt;8s}{'eq. 4':&gt;8s}")
+        for x in sorted(fixed):
+            if (x[-1] if args.frames == 2 else x) in (2, 3):
+                run = np.mean([Q[x] for Q in tables], axis=0)
+                print(f"  {str(x):10s}{run[0]:8.2f}{fixed[x][0]:8.2f}"
+                      f"{run[1]:8.2f}{fixed[x][1]:8.2f}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+        </figure>
+          <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run runs.py --frames 1</span><span>text</span>
+          </div>
+          <pre><code data-language="text">1 frame(s), eps 0.1, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 0.75, lowest run 0.75
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  2             0.64    0.64    0.36    0.36
+  3             0.76    0.76    0.00    0.00</code></pre>
+        </figure>
+        </details>
+        <p>
+          Every agent hits 9 of the 12 pitches. At cell 2 the agents put a wait
+          at 0.64 and a swing at 0.36, so they wait, and the fast balls from
+          cells 4, 6 and 8 get past. Neither number is a ball's value. A wait is
+          worth 1 to the slow ball and 0 to the fast one, and a swing the
+          reverse.
+        </p>
+      </section>
+
+      <section data-nb-section="averages" id="averages">
+        <h2>Each entry averages over the hidden states behind it</h2>
+        <p>
+          Each Q-learning update moves an estimate part of the way toward its
+          target. As in the <a href="../reinforcement-learning/sarsa-and-q-learning.html">sarsa lesson</a>,
+          the estimates stop drifting when each equals its target's average.
+          Here that average runs over the visits to entry X in which the agent
+          takes a. They come from the hidden states s that give X, written
+          s → X. Per episode the
+          agent visits s an expected η<sub>π</sub>(s) times, the count from the
+          <a href="../reinforcement-learning/semi-gradient-td.html">semi-gradient lesson</a>,
+          and takes a with probability π(a | X), which is the same for every s
+          behind X and cancels. From s, the
+          target averages to the expected reward plus the next entry's
+          discounted largest estimate.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} Q(X, a) &amp;= \sum_{s \to X} \htmlClass{nb-mc1}{w_\pi(s \mid X)} \Bigl[\, R(s, a) \\ &amp;\quad + \gamma \sum_{X'} P(X' \mid s, a) \htmlClass{nb-mc3}{\max_{a'} Q(X', a')} \Bigr] \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">w_\pi(s \mid X) = \frac{\eta_\pi(s)}{\sum_{s' \to X} \eta_\pi(s')}</span><span>the share of visits to X made in hidden state s</span></li>
+            <li><span class="nb-math-term nb-mc3">\max_{a'} Q(X', a')</span><span>the next entry, itself a mix over every visit to X′</span></li>
+          </ul>
+          <figcaption>
+            Where Q-learning's estimates rest on aliased observations. Singh,
+            Jaakkola and Jordan prove that Q-learning converges here under a
+            fixed behavior policy that tries every move, their equation (4) with
+            occupancy probabilities as the shares.<sup class="nb-cite"><a href="#s4" data-nb-locator="Section 5.1, Theorem 2 and equation 4, PDF p. 5">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The shares come from π. A policy that visits the hidden states behind
+          X in other proportions changes the entry for X, though the environment
+          is the same. With one hidden state per observation, π drops out.
+          Singh, Jaakkola and Jordan's proof holds the behavior policy fixed,
+          while an ε-greedy agent's policy moves with its estimates.<sup class="nb-cite"><a href="#s4" data-nb-locator="Section 5.1, Theorem 2, PDF p. 5">4</a></sup>
+          In Pitch the shares at cells 2 and 3 depend only on moves from cell 3
+          up, where a swing always misses and the greedy move is a wait from
+          the first episode. The runs therefore test equation (4) at shares
+          that ε alone sets.
+        </p>
+        <p>
+          The shares count which starts reach a cell. With ε near 0,
+          all six slow balls reach cell 2, and so do the fast balls from even
+          cells, while those from 5, 7 and 9 jump from cell 3 to cell 1. Cell 1
+          is worth 1 to every ball, since a swing there always hits, so a wait at
+          cell 2 gets (6 × 1 + 3 × 0)/9 = 2/3 and a swing 1/3.
+        </p>
+        <p>
+          The runs learned 0.64, not 2/3, because exploration also sets the
+          shares. A slow ball takes twice as many steps to reach cell 2, and it
+          survives each one with probability 1 − ε/2, the chance of no
+          exploratory swing. At ε = 0.1 the extra steps cut the slow share to
+          0.64. The
+          function <code>exact</code> in runs.py applies these weights to every
+          entry, and its column matches the runs.
+        </p>
+        <p>
+          Singh, Jaakkola and Jordan define an observation's value as the
+          share-weighted average of its hidden states' values, which Monte
+          Carlo's averaged returns reach and equation (4) in general does
+          not.<sup class="nb-cite"><a href="#s4" data-nb-locator="Section 4, equation 2, PDF p. 4; footnote 2, PDF p. 5">4</a></sup>
+          At cell 3 a wait is worth 1 to every ball, since the greedy moves
+          after it, a wait at cell 2 and a swing at cell 1, hit both speeds. Its
+          entry is 0.76, because a slow ball's target is cell 2's wait estimate,
+          0.64, which also counts the fast balls from cells 4, 6 and 8 that
+          never pass cell 3. With starts only in cells 5, 7 and 9, no fast ball
+          reaches cell 2, and the entry rises to 1.00, though cell 3 still
+          holds both speeds.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run runs.py --frames 1 --starts 5 7 9</span><span>text</span>
+          </div>
+          <pre><code data-language="text">1 frame(s), eps 0.1, starts [5, 7, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 1.00, lowest run 1.00
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  2             1.00    1.00    0.00    0.00
+  3             1.00    1.00    0.00    0.00</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="stacking" id="stacking">
+        <h2>The last two cells give the speed</h2>
+        <p>
+          The speed is the earlier of two consecutive cells minus the later.
+          Feeding the agent its last k observations as one observation is frame
+          stacking, a version of what Sutton and Barto call the kth-order
+          history, updated by shifting the newest observation in and the oldest
+          out.<sup class="nb-cite"><a href="#s3" data-nb-locator="Section 17.3, p. 468">3</a></sup>
+          Their version keeps the actions in between as well. The library
+          wrappers keep only observations, which in Pitch loses nothing, since a swing
+          ends the episode and every earlier action is a wait. Where earlier
+          actions change the hidden part in ways the frames don't show, the
+          stack needs them.
+        </p>
+        <p>
+          Gymnasium's <code>FrameStackObservation</code> keeps the last
+          <code>stack_size</code> observations, oldest first.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          The function <code>key</code> in qlearn.py makes each stack a table
+          entry. Stable-Baselines3's <code>VecFrameStack</code>, which stacks
+          frames for its agents, accepts only Box and Dict spaces, so it can't
+          wrap Pitch's cells.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          At an episode's first step Gymnasium's wrapper pads the stack by
+          repeating the one real observation, or with zeros when
+          <code>padding_type="zero"</code>.<sup class="nb-cite"><a href="#s5">5</a></sup>
+          pitch.py printed both for a ball that starts in cell 6 at speed 2.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run pitch.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">padding_type='reset': first stack [6 6], then [6 4]
+padding_type='zero': first stack [0 6], then [6 4]</code></pre>
+        </figure>
+        <p>
+          The padded stack [6 6] shows a ball that hasn't moved, and both speeds
+          produce it, so two frames fix the speed only from the second step.
+          <code>VecFrameStack</code> pads with zeros, so its first stack is
+          aliased too.<sup class="nb-cite"><a href="#s6">6</a></sup>
+          Pitch's starts make the first step harmless. Every ball starts at
+          cell 4 or farther, so not even a fast ball reaches cell 0 on the first
+          step. A wait is worth 1 to every hidden state behind a first stack,
+          and so is the entry, their average. The first problem shows what a
+          nearer start costs.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run runs.py --frames 2</span><span>text</span>
+          </div>
+          <pre><code data-language="text">2 frame(s), eps 0.1, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 1.00, lowest run 1.00
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  (3, 2)        1.00    1.00    0.00    0.00
+  (4, 2)        0.00    0.00    1.00    1.00
+  (4, 3)        1.00    1.00    0.00    0.00
+  (5, 3)        1.00    1.00    0.00    0.00</code></pre>
+        </figure>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 214" role="img" aria-label="Bars for the mean estimates at cell 2 after 20,000 episodes with epsilon 0.1. The one-frame entry for cell 2 holds 0.64 for wait and 0.36 for swing. The two-frame entry (3, 2) holds 1.00 for wait and 0.00 for swing. The two-frame entry (4, 2) holds 0.00 for wait and 1.00 for swing." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto" xmlns="http://www.w3.org/2000/svg">
+<text x="75.0" y="18.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px; font-weight: 600">one frame</text>
+<text x="75.0" y="34.0" text-anchor="middle" style="font-family: var(--mono); fill: var(--ink-soft); font-size: 12px">2</text>
+<rect x="38" y="104.2" width="30" height="67.8" style="fill: var(--chart-1)"/>
+<text x="53.0" y="99.2" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px">0.64</text>
+<text x="53.0" y="188.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 12px">wait</text>
+<rect x="82" y="133.8" width="30" height="38.2" style="fill: var(--chart-2)"/>
+<text x="97.0" y="128.8" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px">0.36</text>
+<text x="97.0" y="188.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 12px">swing</text>
+<line x1="30" y1="172" x2="120" y2="172" style="stroke: var(--ink); stroke-width: 1"/>
+<text x="75.0" y="206.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">slow and fast, mixed</text>
+<text x="205.0" y="18.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px; font-weight: 600">two frames</text>
+<text x="205.0" y="34.0" text-anchor="middle" style="font-family: var(--mono); fill: var(--ink-soft); font-size: 12px">(3, 2)</text>
+<rect x="168" y="66.0" width="30" height="106.0" style="fill: var(--chart-1)"/>
+<text x="183.0" y="61.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px">1.00</text>
+<text x="183.0" y="188.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 12px">wait</text>
+<rect x="212" y="172.0" width="30" height="0.0" style="fill: var(--chart-2)"/>
+<text x="227.0" y="167.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px">0.00</text>
+<text x="227.0" y="188.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 12px">swing</text>
+<line x1="160" y1="172" x2="250" y2="172" style="stroke: var(--ink); stroke-width: 1"/>
+<text x="205.0" y="206.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">the slow ball</text>
+<text x="330.0" y="18.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px; font-weight: 600">two frames</text>
+<text x="330.0" y="34.0" text-anchor="middle" style="font-family: var(--mono); fill: var(--ink-soft); font-size: 12px">(4, 2)</text>
+<rect x="293" y="172.0" width="30" height="0.0" style="fill: var(--chart-1)"/>
+<text x="308.0" y="167.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px">0.00</text>
+<text x="308.0" y="188.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 12px">wait</text>
+<rect x="337" y="66.0" width="30" height="106.0" style="fill: var(--chart-2)"/>
+<text x="352.0" y="61.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink); font-size: 12px">1.00</text>
+<text x="352.0" y="188.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 12px">swing</text>
+<line x1="285" y1="172" x2="375" y2="172" style="stroke: var(--ink); stroke-width: 1"/>
+<text x="330.0" y="206.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">the fast ball</text>
+<line x1="140" y1="12" x2="140" y2="206" style="stroke: var(--line); stroke-dasharray: 3 3"/>
+</svg>
+          <figcaption>
+            Fig. 2 · What the agents learned at cell 2, as mean estimates of 20
+            runs at ε = 0.1. From runs.py.
+          </figcaption>
+        </figure>
+        <p>
+          Every two-frame agent hits all 12 pitches. Its entries hold each
+          ball's own values (Fig. 2), and both cell-3 entries are worth 1. The
+          stack is the only change from the
+          one-frame runs, so the hidden speed accounts for all three misses.
+        </p>
+      </section>
+
+      <section data-nb-section="exploration" id="exploration">
+        <h2>Exploration changes what one frame is worth</h2>
+        <p>
+          In the sarsa lesson, π dropped out of Q-learning's averaged target.
+          Equation (4) brings it back through the shares. Passing
+          <code>--eps 0.1 0.3 0.5 0.7 0.9</code> repeats both sets of runs at
+          five rates (Fig. 3).
+        </p>
+        <details>
+          <summary>The output of the runs at five rates</summary>
+          <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run runs.py --frames 1 --eps 0.1 0.3 0.5 0.7 0.9</span><span>text</span>
+          </div>
+          <pre><code data-language="text">1 frame(s), eps 0.1, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 0.75, lowest run 0.75
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  2             0.64    0.64    0.36    0.36
+  3             0.76    0.76    0.00    0.00
+1 frame(s), eps 0.3, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 0.75, lowest run 0.75
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  2             0.58    0.58    0.43    0.42
+  3             0.74    0.74    0.00    0.00
+1 frame(s), eps 0.5, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 0.74, lowest run 0.50
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  2             0.52    0.52    0.48    0.48
+  3             0.72    0.72    0.00    0.00
+1 frame(s), eps 0.7, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 0.50, lowest run 0.50
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  2             0.45    0.45    0.54    0.55
+  3             0.74    0.75    0.00    0.00
+1 frame(s), eps 0.9, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 0.50, lowest run 0.50
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  2             0.40    0.39    0.62    0.61
+  3             0.79    0.79    0.00    0.00</code></pre>
+        </figure>
+          <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run runs.py --frames 2 --eps 0.1 0.3 0.5 0.7 0.9</span><span>text</span>
+          </div>
+          <pre><code data-language="text">2 frame(s), eps 0.1, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 1.00, lowest run 1.00
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  (3, 2)        1.00    1.00    0.00    0.00
+  (4, 2)        0.00    0.00    1.00    1.00
+  (4, 3)        1.00    1.00    0.00    0.00
+  (5, 3)        1.00    1.00    0.00    0.00
+2 frame(s), eps 0.3, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 1.00, lowest run 1.00
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  (3, 2)        1.00    1.00    0.00    0.00
+  (4, 2)        0.00    0.00    1.00    1.00
+  (4, 3)        1.00    1.00    0.00    0.00
+  (5, 3)        1.00    1.00    0.00    0.00
+2 frame(s), eps 0.5, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 1.00, lowest run 1.00
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  (3, 2)        1.00    1.00    0.00    0.00
+  (4, 2)        0.00    0.00    1.00    1.00
+  (4, 3)        1.00    1.00    0.00    0.00
+  (5, 3)        1.00    1.00    0.00    0.00
+2 frame(s), eps 0.7, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 1.00, lowest run 1.00
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  (3, 2)        1.00    1.00    0.00    0.00
+  (4, 2)        0.00    0.00    1.00    1.00
+  (4, 3)        1.00    1.00    0.00    0.00
+  (5, 3)        1.00    1.00    0.00    0.00
+2 frame(s), eps 0.9, starts [4, 5, 6, 7, 8, 9]: 20 runs of 20,000 episodes
+  share of pitches the greedy moves hit: mean 1.00, lowest run 1.00
+  entry, mean estimate over the runs, and equation (4)
+                wait   eq. 4   swing   eq. 4
+  (3, 2)        1.00    1.00    0.00    0.00
+  (4, 2)        0.00    0.00    1.00    1.00
+  (4, 3)        1.00    1.00    0.00    0.00
+  (5, 3)        1.00    1.00    0.00    0.00</code></pre>
+        </figure>
+        </details>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 250" role="img" aria-label="Line chart of the estimates at cell 2 against the exploration rate epsilon from 0 to 0.9. With one frame, the estimate for wait falls from 0.67 at epsilon 0 to 0.39 at 0.9, and the estimate for swing rises from 0.33 to 0.61. They cross at epsilon 0.55. Dots for the runs at 0.1, 0.3, 0.5, 0.7 and 0.9 sit on the lines. With two frames, the estimate for the right move at (3, 2) and at (4, 2) stays at 1 at every rate." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto" xmlns="http://www.w3.org/2000/svg">
+<line x1="48" y1="206.0" x2="382" y2="206.0" style="stroke: var(--hair)"/>
+<text x="42.0" y="210.0" text-anchor="end" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">0</text>
+<line x1="48" y1="120.0" x2="382" y2="120.0" style="stroke: var(--hair)"/>
+<text x="42.0" y="124.0" text-anchor="end" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">0.5</text>
+<line x1="48" y1="34.0" x2="382" y2="34.0" style="stroke: var(--hair)"/>
+<text x="42.0" y="38.0" text-anchor="end" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">1</text>
+<line x1="48.0" y1="206" x2="48.0" y2="210" style="stroke: var(--ink)"/>
+<text x="48.0" y="223.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">0</text>
+<line x1="159.3" y1="206" x2="159.3" y2="210" style="stroke: var(--ink)"/>
+<text x="159.3" y="223.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">0.3</text>
+<line x1="270.7" y1="206" x2="270.7" y2="210" style="stroke: var(--ink)"/>
+<text x="270.7" y="223.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">0.6</text>
+<line x1="382.0" y1="206" x2="382.0" y2="210" style="stroke: var(--ink)"/>
+<text x="382.0" y="223.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">0.9</text>
+<line x1="48" y1="206" x2="382" y2="206" style="stroke: var(--ink)"/>
+<text x="215.0" y="240.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 12px">exploration rate ε</text>
+<text transform="rotate(-90 14 120.0)" x="14.0" y="120.0" text-anchor="middle" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 12px">estimate at cell 2</text>
+<line x1="252.5" y1="42.0" x2="252.5" y2="206" style="stroke: var(--ink-soft); stroke-dasharray: 2 3"/>
+<text x="246.5" y="178.5" text-anchor="end" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">one frame waits</text>
+<text x="258.5" y="178.5" text-anchor="start" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">swings</text>
+<text x="258.5" y="200.0" text-anchor="start" style="font-family: var(--sans); fill: var(--ink-soft); font-size: 11px">ε = 0.55</text>
+<line x1="48" y1="34.0" x2="382" y2="34.0" style="stroke: var(--chart-4); stroke-width: 2; stroke-dasharray: 6 3"/>
+<text x="52.0" y="28.0" text-anchor="start" style="font-family: var(--sans); fill: var(--chart-4); font-size: 11px">two frames: the right move at (3, 2) and (4, 2)</text>
+<polyline points="48.0,91.3 66.6,93.8 85.1,96.2 103.7,98.7 122.2,101.3 140.8,103.9 159.3,106.5 177.9,109.2 196.4,111.8 215.0,114.5 233.6,117.2 252.1,119.9 270.7,122.6 289.2,125.4 307.8,128.1 326.3,130.8 344.9,133.5 363.4,136.1 382.0,138.8" style="fill: none; stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="85.1" cy="95.9" r="3.5" style="fill: var(--bg); stroke: var(--chart-1); stroke-width: 1.8"/>
+<circle cx="159.3" cy="106.2" r="3.5" style="fill: var(--bg); stroke: var(--chart-1); stroke-width: 1.8"/>
+<circle cx="233.6" cy="116.6" r="3.5" style="fill: var(--bg); stroke: var(--chart-1); stroke-width: 1.8"/>
+<circle cx="307.8" cy="128.6" r="3.5" style="fill: var(--bg); stroke: var(--chart-1); stroke-width: 1.8"/>
+<circle cx="382.0" cy="137.2" r="3.5" style="fill: var(--bg); stroke: var(--chart-1); stroke-width: 1.8"/>
+<text x="52.0" y="83.3" text-anchor="start" style="font-family: var(--sans); fill: var(--chart-1); font-size: 11px">one frame, wait</text>
+<polyline points="48.0,148.7 66.6,146.2 85.1,143.8 103.7,141.3 122.2,138.7 140.8,136.1 159.3,133.5 177.9,130.8 196.4,128.2 215.0,125.5 233.6,122.8 252.1,120.1 270.7,117.4 289.2,114.6 307.8,111.9 326.3,109.2 344.9,106.5 363.4,103.9 382.0,101.2" style="fill: none; stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="85.1" cy="144.1" r="3.5" style="fill: var(--bg); stroke: var(--chart-2); stroke-width: 1.8"/>
+<circle cx="159.3" cy="132.0" r="3.5" style="fill: var(--bg); stroke: var(--chart-2); stroke-width: 1.8"/>
+<circle cx="233.6" cy="123.4" r="3.5" style="fill: var(--bg); stroke: var(--chart-2); stroke-width: 1.8"/>
+<circle cx="307.8" cy="113.1" r="3.5" style="fill: var(--bg); stroke: var(--chart-2); stroke-width: 1.8"/>
+<circle cx="382.0" cy="99.4" r="3.5" style="fill: var(--bg); stroke: var(--chart-2); stroke-width: 1.8"/>
+<text x="52.0" y="164.7" text-anchor="start" style="font-family: var(--sans); fill: var(--chart-2); font-size: 11px">one frame, swing</text>
+</svg>
+          <figcaption>
+            Fig. 3 · The estimates at cell 2 against ε. Lines are equation (4)
+            for one frame and dots the means of 20 runs. The dashed line is the
+            two-frame estimate for the right move at (3, 2) and at (4, 2). From
+            runs.py.
+          </figcaption>
+        </figure>
+        <p>
+          A higher ε ends more slow balls before cell 2, so the one-frame
+          estimate for a wait there falls and the one for a swing rises.
+          Equation (4) has them cross at ε = 0.55, and at ε = 0.5 some runs
+          already swing. From ε = 0.7 every run swings at cell 2 and loses all
+          six slow balls, hitting 6 of 12. The two-frame estimates stay at 1 and
+          0, and those agents hit every pitch at every rate.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. Add cell 2 to Pitch's starting cells, so that 14 pitches are
+            equally likely. Which hidden states share the two-frame agent's first
+            stack [2 2], what does equation (4) give for its entry, and what
+            share of pitches can the agent hit? Would
+            <code>padding_type="zero"</code> help?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              The slow and the fast ball that start in cell 2 share it. The
+              slow ball needs a wait and the fast ball a swing. Each is visited
+              once, at the first step, so the shares are equal and the entry is
+              0.5 for each move. Either move misses
+              one of the two, so the agent hits 13 of 14 pitches, 0.93. Zero
+              padding gives [0 2], which the same two balls produce, so it
+              doesn't help.
+            </p>
+          </details>
+          <p>
+            2. Give each ball a hidden acceleration of 0 or 1 too, so that after
+            each step its speed grows by that amount. How many frames make the
+            observation Markov, and from which step of an episode?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Three. Two frames give how far the ball last rolled but not how
+              far it rolls next, so [5 3] can go on to cell 1 or to cell 0.
+              Three frames give two distances, whose difference is the
+              acceleration. The stack holds
+              three real cells only from the third observation, so the starts
+              would have to make the first two decisions the same for every
+              ball.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A table keyed on an observation that hides part of the state gives
+          one entry to every hidden state behind it. Q-learning's entry rests at
+          the average of their targets, weighted by how often the policy visits
+          each, so in Pitch exploration moves the entry for cell 2 and, past
+          ε = 0.55, flips the agent's move there. Stacking the last two cells
+          gives the speed, which restores the Markov property from the second
+          step on, and Pitch's starts make the first step harmless. Q-learning
+          then hits all 12 pitches at every ε tried.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://web.eecs.umich.edu/~baveja/Papers/ML94.pdf">Singh, Jaakkola and Jordan, Learning Without State-Estimation in Partially Observable Markovian Decision Processes</a>:
+            Figure 2 (PDF p. 5) is a six-state example in which TD(0) values two
+            observations equally though their true values differ. Section 5.1
+            says why the policy followed during learning changes the answer.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="http://incompleteideas.net/book/RLbook2020.pdf">Sutton and Barto, Section 17.3</a>:
+            pp. 464–468 build a state from the history, give the one-step test
+            (17.8) for a Markov state, and define the kth-order history, which a
+            frame stack keeps without the actions.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf">Mnih et al., Human-level control through deep reinforcement learning</a>:
+            the Methods paragraphs Preprocessing and Algorithm, where the stack
+            preprocesses the frame-and-action sequence that the algorithm treats
+            as the state.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1507.06527">Hausknecht and Stone, Deep Recurrent Q-Learning for Partially Observable MDPs</a>:
+            the Flickering Atari section (p. 3), where a recurrent network given
+            one frame at a time matches a ten-frame stack and copes better when
+            observation quality changes at evaluation.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="https://github.com/DLR-RM/rl-baselines3-zoo/blob/v2.9.2/rl_zoo3/wrappers.py">RL Baselines3 Zoo, MaskVelocityWrapper</a>:
+            CartPole, MountainCar, Pendulum and LunarLander with their
+            velocities zeroed, a
+            Box-observation exercise for VecFrameStack and an off-the-shelf
+            agent.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Methods, Preprocessing and Algorithm, PDF p. 6"
+              data-nb-note="Nature 518, 529-533, doi:10.1038/nature14236; PDF hosted by DeepMind"
+              href="https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf"
+              >Nature · Volodymyr Mnih, Koray Kavukcuoglu, David Silver et al., Human-level control through deep reinforcement learning, 2015</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Abstract"
+              href="https://link.springer.com/article/10.1007/BF00058926"
+              >Machine Learning · Steven D. Whitehead and Dana H. Ballard, Learning to perceive and act by trial and error, 1991</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Section 3.1, p. 49; Section 17.3, pp. 464-468, equation 17.8 on p. 466 and the kth-order history on p. 468"
+              data-nb-note="The authors' free copy of the second printing (2020), also served at http://incompleteideas.net/book/RLbook2020.pdf. Page numbers are the printed ones."
+              href="https://incompleteideas.net/book/RLbook2020.pdf"
+              >MIT Press · Richard S. Sutton and Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd edition, 2018</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Section 4, equation 2, PDF p. 4; Figure 2, footnote 2 and Section 5.1, Theorem 2 and equation 4, PDF p. 5"
+              data-nb-note="Proceedings of the Eleventh International Conference on Machine Learning, pp. 284-292; copy on Satinder Singh's site"
+              href="https://web.eecs.umich.edu/~baveja/Papers/ML94.pdf"
+              >ICML · Satinder P. Singh, Tommi Jaakkola and Michael I. Jordan, Learning Without State-Estimation in Partially Observable Markovian Decision Processes, 1994</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="FrameStackObservation: stack_size, padding_type, and the reset and zero padding examples"
+              href="https://gymnasium.farama.org/v1.4.0/api/wrappers/observation_wrappers/#gymnasium.wrappers.FrameStackObservation"
+              >Farama Foundation · Gymnasium 1.4.0 documentation, Observation Wrappers</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="VecFrameStack and StackedObservations, with the StackedObservations source page linked there: Box and Dict spaces only, and a stack that starts as zeros"
+              href="https://stable-baselines3.readthedocs.io/en/v2.9.2/guide/vec_envs.html#vecframestack"
+              >Stable-Baselines3 · Stable-Baselines3 2.9.2 documentation, Vectorized Environments</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
