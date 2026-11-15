@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deciding ten times as often leaves Q-learning a tenth of the gap between two pushes · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "action-frequency",
+        "template": "lesson",
+        "title": "Deciding ten times as often leaves Q-learning a tenth of the gap between two pushes",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-15",
+        "tags": ["action-repeat", "frame-skip", "action-gap", "q-learning", "gymnasium", "environment-design"],
+        "sources": 7,
+        "words": 4996,
+        "reading_minutes": 22,
+        "dek": "Tabular Q-learning picks the right push in 71% of a docking cart's safe start cells at 0.01 s steps, and in 94% when Gymnasium's RepeatAction holds each push for ten steps, mainly because the gap widens tenfold.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Deciding ten times as often leaves Q-learning a tenth of the gap between two pushes</h1>
+        <p class="nb-dekline">Tabular Q-learning picks the right push in 71% of a docking cart's safe start cells at 0.01 s steps, and in 94% when Gymnasium's RepeatAction holds each push for ten steps, mainly because the gap widens tenfold.</p>
+        <div class="nb-byline">
+          <span>22 min read</span><span>2026-11-15</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          How often an agent acts is a choice the environment's designer makes.
+          In a simulated system it is the length dt of each step. A shorter
+          step gives finer control, and it also makes the actions harder to
+          tell apart. Holding an action for dt seconds moves the system a
+          distance proportional to dt. So the action values of two actions in
+          one state differ by an amount proportional to dt, called the action
+          gap. Q-learning has to see that gap through estimates whose error
+          doesn't shrink with dt. Holding each action for several steps, called
+          action repeat or frame skip, widens it again. Working through a cart
+          pushed toward a dock, you predict the gap at any step length from the
+          dynamics, set the discount per step from a horizon in seconds, and
+          test which of RepeatAction's effects helps Q-learning.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            Q-learning's update, which qcells.py runs on a table of cells.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">Q-learning values a rolling ball's cell by how often each speed reaches it</a>:
+            why position and speed together are Markov, and why a table entry
+            averages over the states behind it.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/termination-and-truncation.html">Q-learning that treats its time limit as terminal learns the values of a different grid</a>:
+            the target that still bootstraps when Dock's 20 s limit cuts an
+            episode.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/environments-and-the-rl-problem.html">The value of a state is an average you can solve for</a>:
+            the discounted return, whose discount this lesson sets per second.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A wrong first push costs a tenth as much when it lasts a tenth as long</h2>
+        <p>
+          This lesson rebuilds Dock, the cart from the lesson on
+          <a href="../reinforcement-learning/observation-scale.html">observation scale</a>,
+          so that the length dt of a step can change (Fig. 1). The track now
+          runs 1 m, from a back end at x = 0 to the dock at x = 1. The state is
+          the cart's position x and its speed v. Each step the agent pushes
+          left or right, which accelerates the cart at 1 m/s² for dt seconds.
+          Dock computes the motion within a step exactly, so every dt runs the
+          same physics. Each step pays minus its length in seconds, and docking
+          at any speed ends the episode. Rolling off the back end ends it too
+          and pays −2 more. Each step is discounted by
+          e<sup>−dt/τ</sup> with τ = 1 s, a horizon of 1 s at every dt.
+        </p>
+        <p>
+          Pushing right is the best move in every state. It docks the cart
+          soonest, and a cart that will roll off anyway rolls off later, when
+          the −2 is discounted more.
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 78" role="img" aria-label="Dock: a cart on a one-metre track between the back end at x = 0 and the dock at x = 1, pushed left or right at 1 metre per second squared" style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="40.0" y1="44.0" x2="360.0" y2="44.0" style="stroke: var(--ink); stroke-width: 2" />
+<line x1="40.0" y1="44.0" x2="40.0" y2="60.0" style="stroke: var(--ink); stroke-width: 2" />
+<text x="40.0" y="74.0" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">back end, x = 0: rolling off pays −2</text>
+<rect x="360.0" y="22" width="6" height="22" style="fill: var(--ink)" />
+<text x="366.0" y="60.0" text-anchor="end" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">dock, x = 1</text>
+<rect x="187.0" y="29" width="26" height="11" rx="2" style="fill: var(--chart-2)" />
+<circle cx="193.0" cy="41.5" r="2.5" style="fill: var(--ink)" />
+<circle cx="207.0" cy="41.5" r="2.5" style="fill: var(--ink)" />
+<text x="200.0" y="60.0" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">x = 0.5, v = 0</text>
+<line x1="182.0" y1="34.5" x2="148.0" y2="34.5" style="stroke: var(--ink-soft); stroke-width: 1.5" />
+<path d="M148.0 34.5 l6 -3.5 v7 z" style="fill: var(--ink-soft)" />
+<text x="144.0" y="30.0" text-anchor="end" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">push left</text>
+<line x1="218.0" y1="34.5" x2="252.0" y2="34.5" style="stroke: var(--ink-soft); stroke-width: 1.5" />
+<path d="M252.0 34.5 l-6 -3.5 v7 z" style="fill: var(--ink-soft)" />
+<text x="256.0" y="30.0" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">push right</text>
+<text x="200.0" y="12.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">each push accelerates the cart by 1 m/s² for one step</text>
+</svg>
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem">
+<svg viewBox="0 0 200 172" role="img" aria-label="Position against time from rest at x = 0.5 with dt = 0.1 s: right first docks at 1.000 s, left first at 1.210 s" style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="36.0" y="14.0" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink); font-weight: 600">dt = 0.1 s</text>
+<rect x="36.0" y="26" width="11.8" height="114" style="fill: var(--line); fill-opacity: 0.7" />
+<line x1="36.0" y1="140.0" x2="190.0" y2="140.0" style="stroke: var(--line); stroke-width: 1" />
+<line x1="36.0" y1="26.0" x2="36.0" y2="140.0" style="stroke: var(--line); stroke-width: 1" />
+<line x1="36.0" y1="140.0" x2="36.0" y2="143.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="36.0" y="153.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0</text>
+<line x1="95.2" y1="140.0" x2="95.2" y2="143.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="95.2" y="153.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.5</text>
+<line x1="154.5" y1="140.0" x2="154.5" y2="143.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="154.5" y="153.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<line x1="33.0" y1="140.0" x2="36.0" y2="140.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="31.0" y="143.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.4</text>
+<line x1="33.0" y1="83.0" x2="36.0" y2="83.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="31.0" y="86.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.7</text>
+<line x1="33.0" y1="26.0" x2="36.0" y2="26.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="31.0" y="29.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<text x="113.0" y="166.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">time (s)</text>
+<text transform="rotate(-90 10 83.0)" x="10.0" y="83.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft); writing-mode: initial">position x (m)</text>
+<line x1="36.0" y1="26.0" x2="190.0" y2="26.0" style="stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 3 3" />
+<path d="M36.0 121.0 L36.6 121.0 L37.2 121.0 L37.8 121.0 L38.4 121.0 L39.0 120.9 L39.6 120.9 L40.1 120.9 L40.7 120.8 L41.3 120.8 L41.9 120.8 L42.5 120.7 L43.1 120.7 L43.7 120.6 L44.3 120.5 L44.9 120.5 L45.5 120.4 L46.1 120.3 L46.7 120.2 L47.3 120.1 L47.8 120.0 L48.4 120.0 L49.0 119.9 L49.6 119.7 L50.2 119.6 L50.8 119.5 L51.4 119.4 L52.0 119.3 L52.6 119.1 L53.2 119.0 L53.8 118.9 L54.4 118.7 L55.0 118.6 L55.5 118.4 L56.1 118.3 L56.7 118.1 L57.3 117.9 L57.9 117.7 L58.5 117.6 L59.1 117.4 L59.7 117.2 L60.3 117.0 L60.9 116.8 L61.5 116.6 L62.1 116.4 L62.7 116.2 L63.2 116.0 L63.8 115.8 L64.4 115.5 L65.0 115.3 L65.6 115.1 L66.2 114.8 L66.8 114.6 L67.4 114.3 L68.0 114.1 L68.6 113.8 L69.2 113.6 L69.8 113.3 L70.4 113.0 L70.9 112.7 L71.5 112.4 L72.1 112.2 L72.7 111.9 L73.3 111.6 L73.9 111.3 L74.5 111.0 L75.1 110.7 L75.7 110.3 L76.3 110.0 L76.9 109.7 L77.5 109.4 L78.1 109.0 L78.6 108.7 L79.2 108.3 L79.8 108.0 L80.4 107.6 L81.0 107.3 L81.6 106.9 L82.2 106.6 L82.8 106.2 L83.4 105.8 L84.0 105.4 L84.6 105.0 L85.2 104.6 L85.8 104.2 L86.3 103.8 L86.9 103.4 L87.5 103.0 L88.1 102.6 L88.7 102.2 L89.3 101.8 L89.9 101.3 L90.5 100.9 L91.1 100.5 L91.7 100.0 L92.3 99.6 L92.9 99.1 L93.5 98.7 L94.0 98.2 L94.6 97.7 L95.2 97.2 L95.8 96.8 L96.4 96.3 L97.0 95.8 L97.6 95.3 L98.2 94.8 L98.8 94.3 L99.4 93.8 L100.0 93.3 L100.6 92.8 L101.2 92.3 L101.7 91.7 L102.3 91.2 L102.9 90.7 L103.5 90.1 L104.1 89.6 L104.7 89.0 L105.3 88.5 L105.9 87.9 L106.5 87.4 L107.1 86.8 L107.7 86.2 L108.3 85.7 L108.9 85.1 L109.4 84.5 L110.0 83.9 L110.6 83.3 L111.2 82.7 L111.8 82.1 L112.4 81.5 L113.0 80.9 L113.6 80.2 L114.2 79.6 L114.8 79.0 L115.4 78.4 L116.0 77.7 L116.6 77.1 L117.1 76.4 L117.7 75.8 L118.3 75.1 L118.9 74.5 L119.5 73.8 L120.1 73.1 L120.7 72.4 L121.3 71.8 L121.9 71.1 L122.5 70.4 L123.1 69.7 L123.7 69.0 L124.3 68.3 L124.8 67.6 L125.4 66.8 L126.0 66.1 L126.6 65.4 L127.2 64.7 L127.8 63.9 L128.4 63.2 L129.0 62.5 L129.6 61.7 L130.2 61.0 L130.8 60.2 L131.4 59.4 L132.0 58.7 L132.5 57.9 L133.1 57.1 L133.7 56.3 L134.3 55.6 L134.9 54.8 L135.5 54.0 L136.1 53.2 L136.7 52.4 L137.3 51.6 L137.9 50.7 L138.5 49.9 L139.1 49.1 L139.7 48.3 L140.2 47.4 L140.8 46.6 L141.4 45.8 L142.0 44.9 L142.6 44.1 L143.2 43.2 L143.8 42.3 L144.4 41.5 L145.0 40.6 L145.6 39.7 L146.2 38.8 L146.8 37.9 L147.4 37.1 L147.9 36.2 L148.5 35.3 L149.1 34.4 L149.7 33.4 L150.3 32.5 L150.9 31.6 L151.5 30.7 L152.1 29.8 L152.7 28.8 L153.3 27.9 L153.9 26.9 L154.5 26.0" style="fill: none; stroke: var(--chart-2); stroke-width: 2; stroke-linejoin: round" />
+<circle cx="154.5" cy="26.0" r="3.5" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"><title>right first: docks at 1.000 s</title></circle>
+<path d="M36.0 121.0 L36.7 121.0 L37.4 121.0 L38.1 121.0 L38.9 121.1 L39.6 121.1 L40.3 121.1 L41.0 121.2 L41.7 121.2 L42.4 121.3 L43.2 121.3 L43.9 121.4 L44.6 121.5 L45.3 121.6 L46.0 121.7 L46.7 121.8 L47.5 121.9 L48.2 122.0 L48.9 122.1 L49.6 122.2 L50.3 122.3 L51.0 122.4 L51.8 122.5 L52.5 122.5 L53.2 122.6 L53.9 122.7 L54.6 122.7 L55.3 122.8 L56.1 122.8 L56.8 122.8 L57.5 122.9 L58.2 122.9 L58.9 122.9 L59.6 122.9 L60.4 122.9 L61.1 122.9 L61.8 122.9 L62.5 122.8 L63.2 122.8 L63.9 122.8 L64.7 122.7 L65.4 122.7 L66.1 122.6 L66.8 122.6 L67.5 122.5 L68.2 122.4 L69.0 122.3 L69.7 122.2 L70.4 122.1 L71.1 122.0 L71.8 121.9 L72.5 121.8 L73.3 121.7 L74.0 121.5 L74.7 121.4 L75.4 121.2 L76.1 121.1 L76.8 120.9 L77.6 120.7 L78.3 120.6 L79.0 120.4 L79.7 120.2 L80.4 120.0 L81.1 119.8 L81.9 119.6 L82.6 119.4 L83.3 119.1 L84.0 118.9 L84.7 118.7 L85.4 118.4 L86.2 118.2 L86.9 117.9 L87.6 117.6 L88.3 117.4 L89.0 117.1 L89.7 116.8 L90.5 116.5 L91.2 116.2 L91.9 115.9 L92.6 115.6 L93.3 115.2 L94.0 114.9 L94.8 114.6 L95.5 114.2 L96.2 113.9 L96.9 113.5 L97.6 113.2 L98.3 112.8 L99.1 112.4 L99.8 112.0 L100.5 111.6 L101.2 111.2 L101.9 110.8 L102.6 110.4 L103.4 110.0 L104.1 109.6 L104.8 109.1 L105.5 108.7 L106.2 108.2 L106.9 107.8 L107.7 107.3 L108.4 106.9 L109.1 106.4 L109.8 105.9 L110.5 105.4 L111.2 104.9 L112.0 104.4 L112.7 103.9 L113.4 103.4 L114.1 102.8 L114.8 102.3 L115.5 101.8 L116.3 101.2 L117.0 100.7 L117.7 100.1 L118.4 99.6 L119.1 99.0 L119.8 98.4 L120.6 97.8 L121.3 97.2 L122.0 96.6 L122.7 96.0 L123.4 95.4 L124.1 94.8 L124.9 94.1 L125.6 93.5 L126.3 92.9 L127.0 92.2 L127.7 91.6 L128.4 90.9 L129.2 90.2 L129.9 89.5 L130.6 88.9 L131.3 88.2 L132.0 87.5 L132.7 86.8 L133.5 86.1 L134.2 85.3 L134.9 84.6 L135.6 83.9 L136.3 83.1 L137.0 82.4 L137.8 81.6 L138.5 80.9 L139.2 80.1 L139.9 79.3 L140.6 78.5 L141.3 77.8 L142.1 77.0 L142.8 76.2 L143.5 75.4 L144.2 74.5 L144.9 73.7 L145.6 72.9 L146.4 72.0 L147.1 71.2 L147.8 70.3 L148.5 69.5 L149.2 68.6 L149.9 67.8 L150.7 66.9 L151.4 66.0 L152.1 65.1 L152.8 64.2 L153.5 63.3 L154.2 62.4 L155.0 61.5 L155.7 60.5 L156.4 59.6 L157.1 58.6 L157.8 57.7 L158.5 56.7 L159.3 55.8 L160.0 54.8 L160.7 53.8 L161.4 52.8 L162.1 51.9 L162.8 50.9 L163.6 49.9 L164.3 48.8 L165.0 47.8 L165.7 46.8 L166.4 45.8 L167.1 44.7 L167.9 43.7 L168.6 42.6 L169.3 41.6 L170.0 40.5 L170.7 39.4 L171.4 38.3 L172.2 37.3 L172.9 36.2 L173.6 35.1 L174.3 34.0 L175.0 32.8 L175.7 31.7 L176.5 30.6 L177.2 29.5 L177.9 28.3 L178.6 27.2 L179.3 26.0" style="fill: none; stroke: var(--chart-1); stroke-width: 2; stroke-linejoin: round" />
+<circle cx="179.3" cy="26.0" r="3.5" style="fill: var(--chart-1); stroke: var(--panel); stroke-width: 1.5"><title>left first: docks at 1.210 s</title></circle>
+<text x="181.3" y="19.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">0.21 s later</text>
+<text x="85.8" y="94.4" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">right first</text>
+<text x="128.4" y="121.0" text-anchor="start" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">left first</text>
+<text x="50.8" y="134.0" text-anchor="start" style="font-family: var(--sans); font-size: 8px; fill: var(--ink-soft)">first step</text>
+</svg>
+<svg viewBox="0 0 200 172" role="img" aria-label="Position against time from rest at x = 0.5 with dt = 0.01 s: right first docks at 1.000 s, left first at 1.020 s" style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="36.0" y="14.0" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink); font-weight: 600">dt = 0.01 s</text>
+<rect x="36.0" y="26" width="1.2" height="114" style="fill: var(--line); fill-opacity: 0.7" />
+<line x1="36.0" y1="140.0" x2="190.0" y2="140.0" style="stroke: var(--line); stroke-width: 1" />
+<line x1="36.0" y1="26.0" x2="36.0" y2="140.0" style="stroke: var(--line); stroke-width: 1" />
+<line x1="36.0" y1="140.0" x2="36.0" y2="143.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="36.0" y="153.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0</text>
+<line x1="95.2" y1="140.0" x2="95.2" y2="143.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="95.2" y="153.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.5</text>
+<line x1="154.5" y1="140.0" x2="154.5" y2="143.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="154.5" y="153.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<line x1="33.0" y1="140.0" x2="36.0" y2="140.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="31.0" y="143.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.4</text>
+<line x1="33.0" y1="83.0" x2="36.0" y2="83.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="31.0" y="86.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.7</text>
+<line x1="33.0" y1="26.0" x2="36.0" y2="26.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="31.0" y="29.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<text x="113.0" y="166.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">time (s)</text>
+<text transform="rotate(-90 10 83.0)" x="10.0" y="83.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft); writing-mode: initial">position x (m)</text>
+<line x1="36.0" y1="26.0" x2="190.0" y2="26.0" style="stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 3 3" />
+<path d="M36.0 121.0 L36.6 121.0 L37.2 121.0 L37.8 121.0 L38.4 121.0 L39.0 120.9 L39.6 120.9 L40.1 120.9 L40.7 120.8 L41.3 120.8 L41.9 120.8 L42.5 120.7 L43.1 120.7 L43.7 120.6 L44.3 120.5 L44.9 120.5 L45.5 120.4 L46.1 120.3 L46.7 120.2 L47.3 120.1 L47.8 120.0 L48.4 120.0 L49.0 119.9 L49.6 119.7 L50.2 119.6 L50.8 119.5 L51.4 119.4 L52.0 119.3 L52.6 119.1 L53.2 119.0 L53.8 118.9 L54.4 118.7 L55.0 118.6 L55.5 118.4 L56.1 118.3 L56.7 118.1 L57.3 117.9 L57.9 117.7 L58.5 117.6 L59.1 117.4 L59.7 117.2 L60.3 117.0 L60.9 116.8 L61.5 116.6 L62.1 116.4 L62.7 116.2 L63.2 116.0 L63.8 115.8 L64.4 115.5 L65.0 115.3 L65.6 115.1 L66.2 114.8 L66.8 114.6 L67.4 114.3 L68.0 114.1 L68.6 113.8 L69.2 113.6 L69.8 113.3 L70.4 113.0 L70.9 112.7 L71.5 112.4 L72.1 112.2 L72.7 111.9 L73.3 111.6 L73.9 111.3 L74.5 111.0 L75.1 110.7 L75.7 110.3 L76.3 110.0 L76.9 109.7 L77.5 109.4 L78.1 109.0 L78.6 108.7 L79.2 108.3 L79.8 108.0 L80.4 107.6 L81.0 107.3 L81.6 106.9 L82.2 106.6 L82.8 106.2 L83.4 105.8 L84.0 105.4 L84.6 105.0 L85.2 104.6 L85.8 104.2 L86.3 103.8 L86.9 103.4 L87.5 103.0 L88.1 102.6 L88.7 102.2 L89.3 101.8 L89.9 101.3 L90.5 100.9 L91.1 100.5 L91.7 100.0 L92.3 99.6 L92.9 99.1 L93.5 98.7 L94.0 98.2 L94.6 97.7 L95.2 97.2 L95.8 96.8 L96.4 96.3 L97.0 95.8 L97.6 95.3 L98.2 94.8 L98.8 94.3 L99.4 93.8 L100.0 93.3 L100.6 92.8 L101.2 92.3 L101.7 91.7 L102.3 91.2 L102.9 90.7 L103.5 90.1 L104.1 89.6 L104.7 89.0 L105.3 88.5 L105.9 87.9 L106.5 87.4 L107.1 86.8 L107.7 86.2 L108.3 85.7 L108.9 85.1 L109.4 84.5 L110.0 83.9 L110.6 83.3 L111.2 82.7 L111.8 82.1 L112.4 81.5 L113.0 80.9 L113.6 80.2 L114.2 79.6 L114.8 79.0 L115.4 78.4 L116.0 77.7 L116.6 77.1 L117.1 76.4 L117.7 75.8 L118.3 75.1 L118.9 74.4 L119.5 73.8 L120.1 73.1 L120.7 72.4 L121.3 71.8 L121.9 71.1 L122.5 70.4 L123.1 69.7 L123.7 69.0 L124.3 68.3 L124.8 67.6 L125.4 66.8 L126.0 66.1 L126.6 65.4 L127.2 64.7 L127.8 63.9 L128.4 63.2 L129.0 62.5 L129.6 61.7 L130.2 61.0 L130.8 60.2 L131.4 59.4 L132.0 58.7 L132.5 57.9 L133.1 57.1 L133.7 56.3 L134.3 55.6 L134.9 54.8 L135.5 54.0 L136.1 53.2 L136.7 52.4 L137.3 51.6 L137.9 50.7 L138.5 49.9 L139.1 49.1 L139.7 48.3 L140.2 47.4 L140.8 46.6 L141.4 45.8 L142.0 44.9 L142.6 44.0 L143.2 43.2 L143.8 42.3 L144.4 41.5 L145.0 40.6 L145.6 39.7 L146.2 38.8 L146.8 37.9 L147.4 37.1 L147.9 36.2 L148.5 35.3 L149.1 34.4 L149.7 33.4 L150.3 32.5 L150.9 31.6 L151.5 30.7 L152.1 29.8 L152.7 28.8 L153.3 27.9 L153.9 26.9 L154.5 26.0" style="fill: none; stroke: var(--chart-2); stroke-width: 2; stroke-linejoin: round" />
+<circle cx="154.5" cy="26.0" r="3.5" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"><title>right first: docks at 1.000 s</title></circle>
+<path d="M36.0 121.0 L36.6 121.0 L37.2 121.0 L37.8 121.0 L38.4 121.0 L39.0 121.0 L39.6 121.0 L40.2 121.0 L40.8 121.0 L41.4 121.0 L42.0 120.9 L42.6 120.9 L43.3 120.9 L43.9 120.8 L44.5 120.8 L45.1 120.7 L45.7 120.7 L46.3 120.6 L46.9 120.5 L47.5 120.5 L48.1 120.4 L48.7 120.3 L49.3 120.2 L49.9 120.1 L50.5 120.0 L51.1 119.9 L51.7 119.8 L52.3 119.7 L52.9 119.6 L53.5 119.5 L54.1 119.3 L54.7 119.2 L55.3 119.1 L55.9 118.9 L56.5 118.8 L57.1 118.6 L57.8 118.5 L58.4 118.3 L59.0 118.1 L59.6 118.0 L60.2 117.8 L60.8 117.6 L61.4 117.4 L62.0 117.2 L62.6 117.0 L63.2 116.8 L63.8 116.6 L64.4 116.4 L65.0 116.2 L65.6 116.0 L66.2 115.8 L66.8 115.5 L67.4 115.3 L68.0 115.1 L68.6 114.8 L69.2 114.6 L69.8 114.3 L70.4 114.1 L71.0 113.8 L71.6 113.5 L72.3 113.2 L72.9 113.0 L73.5 112.7 L74.1 112.4 L74.7 112.1 L75.3 111.8 L75.9 111.5 L76.5 111.2 L77.1 110.9 L77.7 110.6 L78.3 110.2 L78.9 109.9 L79.5 109.6 L80.1 109.2 L80.7 108.9 L81.3 108.5 L81.9 108.2 L82.5 107.8 L83.1 107.5 L83.7 107.1 L84.3 106.7 L84.9 106.3 L85.5 106.0 L86.1 105.6 L86.8 105.2 L87.4 104.8 L88.0 104.4 L88.6 104.0 L89.2 103.5 L89.8 103.1 L90.4 102.7 L91.0 102.3 L91.6 101.8 L92.2 101.4 L92.8 101.0 L93.4 100.5 L94.0 100.1 L94.6 99.6 L95.2 99.1 L95.8 98.7 L96.4 98.2 L97.0 97.7 L97.6 97.2 L98.2 96.8 L98.8 96.3 L99.4 95.8 L100.0 95.3 L100.7 94.8 L101.3 94.2 L101.9 93.7 L102.5 93.2 L103.1 92.7 L103.7 92.2 L104.3 91.6 L104.9 91.1 L105.5 90.5 L106.1 90.0 L106.7 89.4 L107.3 88.9 L107.9 88.3 L108.5 87.7 L109.1 87.1 L109.7 86.6 L110.3 86.0 L110.9 85.4 L111.5 84.8 L112.1 84.2 L112.7 83.6 L113.3 83.0 L113.9 82.4 L114.5 81.7 L115.2 81.1 L115.8 80.5 L116.4 79.8 L117.0 79.2 L117.6 78.6 L118.2 77.9 L118.8 77.2 L119.4 76.6 L120.0 75.9 L120.6 75.3 L121.2 74.6 L121.8 73.9 L122.4 73.2 L123.0 72.5 L123.6 71.8 L124.2 71.1 L124.8 70.4 L125.4 69.7 L126.0 69.0 L126.6 68.3 L127.2 67.6 L127.8 66.8 L128.4 66.1 L129.0 65.4 L129.7 64.6 L130.3 63.9 L130.9 63.1 L131.5 62.3 L132.1 61.6 L132.7 60.8 L133.3 60.0 L133.9 59.3 L134.5 58.5 L135.1 57.7 L135.7 56.9 L136.3 56.1 L136.9 55.3 L137.5 54.5 L138.1 53.7 L138.7 52.9 L139.3 52.0 L139.9 51.2 L140.5 50.4 L141.1 49.5 L141.7 48.7 L142.3 47.8 L142.9 47.0 L143.5 46.1 L144.2 45.3 L144.8 44.4 L145.4 43.5 L146.0 42.6 L146.6 41.8 L147.2 40.9 L147.8 40.0 L148.4 39.1 L149.0 38.2 L149.6 37.3 L150.2 36.4 L150.8 35.4 L151.4 34.5 L152.0 33.6 L152.6 32.7 L153.2 31.7 L153.8 30.8 L154.4 29.8 L155.0 28.9 L155.6 27.9 L156.2 27.0 L156.8 26.0" style="fill: none; stroke: var(--chart-1); stroke-width: 2; stroke-linejoin: round" />
+<circle cx="156.8" cy="26.0" r="3.5" style="fill: var(--chart-1); stroke: var(--panel); stroke-width: 1.5"><title>left first: docks at 1.020 s</title></circle>
+<text x="158.8" y="19.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">0.02 s later</text>
+<text x="85.8" y="94.4" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">right first</text>
+<text x="128.4" y="121.0" text-anchor="start" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">left first</text>
+<text x="40.2" y="134.0" text-anchor="start" style="font-family: var(--sans); font-size: 8px; fill: var(--ink-soft)">first step</text>
+</svg>
+</div>
+          <figcaption>
+            Fig. 1 · Dock, and the cart's position after each first move from
+            rest at x = 0.5. The shaded band is the first step, the only step in
+            which the two runs push differently. Docking times as gap.py prints
+            them.
+          </figcaption>
+        </figure>
+        <p>
+          Put the cart at rest at x = 0.5 and compare two first moves. Pushing
+          right throughout docks it at 1.000 s. A left push for the first step
+          leaves the cart 2·dt m/s slower than a right push would, so it docks
+          0.21 s later when dt = 0.1 and 0.02 s later when dt = 0.01.
+        </p>
+        <p>
+          The return falls with the delay. At dt = 0.1 the two first moves
+          return −0.664 and −0.737, which are 0.073 apart. At dt = 0.01 they
+          return −0.635 and −0.643, only 0.0074 apart. The state's value barely
+          moved, while the difference between the moves fell tenfold. To choose
+          the better push at dt = 0.01, an agent has to estimate two returns
+          near −0.64 well enough to separate values 0.0074 apart.
+        </p>
+      </section>
+
+      <section data-nb-section="action-values-differ-by-o-dt" id="action-values-differ-by-o-dt">
+        <h2>Every action's value differs from the state's value by O(dt)</h2>
+        <p>
+          The same tenfold drop happens in any system whose state moves
+          continuously and whose value changes smoothly. Tallec, Blier and
+          Ollivier prove it as their Theorem 2, an argument they credit to
+          Baird.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          Write the system as ds/dt = f(s, a) with a reward rate r(s, a) per
+          second, and fix a deterministic policy π with values V and Q. One step
+          holds the action a for dt. It moves the state to
+          s′ = s + f(s, a)·dt + o(dt), pays r(s, a)·dt, and discounts what
+          follows by γ = e<sup>−dt/τ</sup>.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The discount comes from τ, a horizon in seconds. A reward of 1 per
+          second forever returns dt/(1 − e<sup>−dt/τ</sup>), which tends to τ as
+          dt shrinks. The horizon in steps, 1/(1 − γ), grows as τ/dt. Doya's
+          formulation of continuous-time reinforcement learning uses the same
+          discount, with τ as its time constant.<sup class="nb-cite"><a href="#s2">2</a></sup> A discount held
+          fixed per step would shrink the horizon in seconds along with dt.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} Q(s, a) &amp;= r(s, a)\, dt + \gamma\, V(s') \\ V(s') &amp;= V(s) + \htmlClass{nb-mc1}{\nabla V(s) \cdot f(s, a)}\, dt + o(dt) \\ \gamma &amp;= 1 - dt / \tau + O(dt^2) \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\nabla V(s) \cdot f(s, a)</span
+              ><span>how fast V changes in the direction the action moves the state</span>
+            </li>
+          </ul>
+          <figcaption>
+            One step of the Bellman equation for π, with V(s′) expanded to
+            first order. The expansion needs V to be differentiable with bounded
+            derivatives.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>Substitute the second and third lines into the first and keep the terms of first order in dt.</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} Q(s, a) &amp;= V(s) + o(dt) \\ &amp;\quad + dt\, \htmlClass{nb-mc2}{\bigl[\, r(s, a) + \nabla V(s) \cdot f(s, a)} \\ &amp;\qquad \htmlClass{nb-mc2}{- V(s) / \tau \,\bigr]} \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc2">[\;\cdots\;]</span
+              ><span>a rate per second, which stays bounded as dt shrinks</span>
+            </li>
+          </ul>
+          <figcaption>
+            Every action's value is V(s) plus a term proportional to dt.
+          </figcaption>
+        </figure>
+        <p>
+          The bracket stays bounded as dt shrinks, so Q(s, a) − V(s) = O(dt) for
+          every action, and in the limit the first action stops mattering. Tallec
+          et al. conclude that there is no continuous-time Q-learning.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          With two actions, the difference between their values in one state is
+          the action gap.<sup class="nb-cite"><a href="#s3">3</a></sup> Subtracting the line for one action
+          from the line for the other cancels V/τ.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;Q(s, a_1) - Q(s, a_2) \\ &amp;\quad = dt\, \bigl[\, r(s, a_1) - r(s, a_2) \\ &amp;\qquad + \nabla V(s) \cdot \bigl( f(s, a_1) - f(s, a_2) \bigr) \bigr] + o(dt) \end{aligned}</div>
+          <figcaption>The action gap, to first order in dt.</figcaption>
+        </figure>
+        <p>
+          In Dock, s = (x, v) and f(s, a) = (v, a), with a = ±u and u = 1 m/s².
+          Both pushes pay −1 per second, so only the speed component differs,
+          by 2u.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">Q(s, \text{right}) - Q(s, \text{left}) = 2u\, dt\, \htmlClass{nb-mc3}{\frac{\partial V}{\partial v}} + o(dt)</div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc3">\partial V / \partial v</span
+              ><span>how much return each extra m/s of speed is worth</span>
+            </li>
+          </ul>
+          <figcaption>Dock's action gap.</figcaption>
+        </figure>
+        <p>
+          Under the policy that always pushes right, a cart that docks does so
+          after T = (w − v)/u seconds, where w = √(v² + 2u(1 − x)) is its speed on
+          arrival, and V = −τ(1 − e<sup>−T/τ</sup>). At (0.5, 0), T = 1 s and
+          ∂V/∂v = e<sup>−1</sup> ≈ 0.37 per m/s, so the gap is 0.736·dt. That
+          policy is optimal, so its gap is the one Q-learning has to learn.
+        </p>
+        <p>
+          gap.py measures the gap. Dock is deterministic, so one rollout per
+          first move gives each action value exactly. Run on its own, dock.py
+          passes Gymnasium's
+          <a href="../reinforcement-learning/checking-a-custom-environment.html">environment checker</a>.
+        </p>
+        <details>
+          <summary>dock.py and gap.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">dock.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Dock: a cart on a 1 m track, pushed left or right, has to reach the dock.
+
+The state is the cart's position x in metres and its speed v in m/s. Each
+step the agent pushes left (action 0) or right (action 1) with an
+acceleration of 1 m/s^2, held for dt seconds. Motion inside a step is exact,
+so every dt gives the same physics. Each step pays minus its length in
+seconds, so the return counts the seconds until the episode ends. Reaching
+the dock at x = 1 ends it. Rolling off the back end at x = 0 ends it too and
+pays -2 more. Episodes are truncated after 20 s.
+"""
+import math
+
+import gymnasium as gym
+import numpy as np
+from gymnasium.utils.env_checker import check_env
+
+LEFT, RIGHT = 0, 1
+PUSH, T_MAX = 1.0, 20.0  # m/s^2 and seconds
+
+
+def hit(x, v, a, wall, dt):
+    """The first time in (0, dt] at which x + v s + a s^2 / 2 reaches wall."""
+    disc = v * v - 2 * a * (x - wall)
+    if disc &lt; 0:
+        return None
+    root = math.sqrt(disc)
+    late = dt + 1e-12  # rounding can put a hit at dt just past it
+    times = [s for s in ((-v - root) / a, (-v + root) / a) if 0 &lt; s &lt;= late]
+    return min(times, default=None)
+
+
+class Dock(gym.Env):
+    action_space = gym.spaces.Discrete(2)
+    observation_space = gym.spaces.Box(np.array([0.0, -4.0]),
+                                       np.array([1.0, 4.0]), dtype=np.float64)
+
+    def __init__(self, dt=0.01):
+        self.dt = dt
+
+    def reset(self, *, seed=None, options=None):
+        """options={"x": x, "v": v} fixes the start; otherwise it is random."""
+        super().reset(seed=seed)
+        if options:
+            self.x, self.v = options["x"], options["v"]
+        else:
+            self.x = self.np_random.uniform(0.0, 1.0)
+            self.v = self.np_random.uniform(-1.0, 1.0)
+        self.t = 0.0
+        return np.array([self.x, self.v]), {}
+
+    def step(self, action):
+        a = PUSH if action == RIGHT else -PUSH
+        ends = [(s, wall) for wall in (0.0, 1.0)
+                if (s := hit(self.x, self.v, a, wall, self.dt)) is not None]
+        if ends:  # the cart reaches the dock or the back end inside this step
+            s, wall = min(ends)
+            self.x, self.v, self.t = wall, self.v + a * s, self.t + s
+            reward = -s - (2.0 if wall == 0.0 else 0.0)
+            return np.array([self.x, self.v]), reward, True, False, {}
+        self.x += self.v * self.dt + 0.5 * a * self.dt**2
+        self.v += a * self.dt
+        self.t += self.dt
+        truncated = self.t &gt;= T_MAX - 1e-9
+        return np.array([self.x, self.v]), -self.dt, False, truncated, {}
+
+
+if __name__ == "__main__":
+    check_env(Dock(), skip_render_check=True)  # Dock draws nothing
+    print("check_env passed")</code></pre>
+            <figcaption class="nb-code-cap">The Dock environment.</figcaption>
+          </figure>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">gap.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""The action gap of pushing right in Dock, measured exactly at each dt.
+
+Q(s, a) is the return from s when the agent pushes a for one decision and
+then pushes right until the episode ends. Dock is deterministic, so one
+rollout gives it exactly. A decision lasting h seconds is discounted by
+exp(-h / TAU), so the horizon is TAU seconds at every dt.
+"""
+import math
+
+from gymnasium.wrappers import RepeatAction
+
+from dock import LEFT, PUSH, RIGHT, Dock
+
+TAU = 1.0  # seconds
+SMOOTH = {"x": 0.5, "v": 0.0}  # the cart at rest, half a metre from the dock
+# Pushing right from BRINK stops the cart 0.5 mm before the back end.
+BRINK = {"x": 0.2, "v": -math.sqrt(2 * PUSH * (0.2 - 0.0005))}
+
+
+def q(dt, repeat, start, first):
+    """The return of pushing `first` for one decision, then right, and the
+    seconds until the episode ends."""
+    env = Dock(dt) if repeat == 1 else RepeatAction(Dock(dt), repeat)
+    gamma = math.exp(-dt * repeat / TAU)
+    env.reset(options=start)
+    G, weight, a, done = 0.0, 1.0, first, False
+    while not done:
+        _, r, terminated, truncated, _ = env.step(a)
+        G, weight, a = G + weight * r, weight * gamma, RIGHT
+        done = terminated or truncated
+    return G, env.unwrapped.t
+
+
+def gap(dt, start, repeat=1):
+    return q(dt, repeat, start, RIGHT)[0] - q(dt, repeat, start, LEFT)[0]
+
+
+def derived(h, start):
+    """The first-order gap 2 u h dV/dv, with V = -TAU (1 - exp(-T / TAU))
+    for pushing right. T is the time to the dock and w the speed there."""
+    x, v = start["x"], start["v"]
+    w = math.sqrt(v * v + 2 * PUSH * (1 - x))
+    T = (w - v) / PUSH
+    dV_dv = math.exp(-T / TAU) * (1 - v / w) / PUSH
+    return 2 * PUSH * h * dV_dv
+
+
+if __name__ == "__main__":
+    print(f"{'from (0.5, 0)':14s}{'dt':&gt;6s}{'return':&gt;9s}{'docks at (s)':&gt;14s}")
+    for dt in (0.1, 0.01):
+        for name, first in (("right first", RIGHT), ("left first", LEFT)):
+            G, t = q(dt, 1, SMOOTH, first)
+            print(f"{name:14s}{dt:6g}{G:9.3f}{t:14.3f}")
+    print()
+    print(f"{'dt':&gt;7s}{'repeat':&gt;7s}{'gap at (0.5, 0)':&gt;17s}{'derived':&gt;9s}"
+          f"{'gap / h':&gt;9s}{'gap at brink':&gt;14s}{'derived':&gt;10s}")
+    for dt, repeat in [(0.1, 1), (0.03, 1), (0.01, 1), (0.003, 1), (0.001, 1),
+                       (0.0001, 1), (0.01, 10)]:
+        h = dt * repeat  # seconds per decision
+        g = gap(dt, SMOOTH, repeat)
+        print(f"{dt:7.4f}{repeat:7d}{g:17.5f}{derived(h, SMOOTH):9.5f}{g / h:9.3f}"
+              f"{gap(dt, BRINK, repeat):14.5f}{derived(h, BRINK):10.5f}")</code></pre>
+            <figcaption class="nb-code-cap">
+              Exact action values of the first move, and the derived gap.
+            </figcaption>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run gap.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">from (0.5, 0)     dt   return  docks at (s)
+right first      0.1   -0.664         1.000
+left first       0.1   -0.737         1.210
+right first     0.01   -0.635         1.000
+left first      0.01   -0.643         1.020
+
+     dt repeat  gap at (0.5, 0)  derived  gap / h  gap at brink   derived
+ 0.1000      1          0.07307  0.07358    0.731       0.84695   0.03742
+ 0.0300      1          0.02206  0.02207    0.735       0.81498   0.01123
+ 0.0100      1          0.00736  0.00736    0.736       0.74273   0.00374
+ 0.0030      1          0.00221  0.00221    0.736       0.70354   0.00112
+ 0.0010      1          0.00074  0.00074    0.736       0.68153   0.00037
+ 0.0001      1          0.00007  0.00007    0.736       0.00004   0.00004
+ 0.0100     10          0.07307  0.07358    0.731       0.84695   0.03742</code></pre>
+        </figure>
+        <p>
+          At (0.5, 0) the gap divided by the decision's length h stays between
+          0.731 and 0.736 from dt = 0.1 down to 0.0001, against the derived
+          0.736 (Fig. 2).
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 268" role="img" aria-label="Log-log plot of the action gap against the decision length. At the state (0.5, 0) the gap falls in proportion to h along the derived line. At the brink state it stays between 0.68 and 0.85 down to h = 0.001 and drops onto its own derived line at h = 0.0001" style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="62.0" y1="18.0" x2="62.0" y2="220.0" style="stroke: var(--hair); stroke-width: 1" />
+<text x="62.0" y="234.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">10<tspan dy='-4' style='font-size: 7px'>-4</tspan></text>
+<line x1="170.7" y1="18.0" x2="170.7" y2="220.0" style="stroke: var(--hair); stroke-width: 1" />
+<text x="170.7" y="234.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">10<tspan dy='-4' style='font-size: 7px'>-3</tspan></text>
+<line x1="279.3" y1="18.0" x2="279.3" y2="220.0" style="stroke: var(--hair); stroke-width: 1" />
+<text x="279.3" y="234.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">10<tspan dy='-4' style='font-size: 7px'>-2</tspan></text>
+<line x1="388.0" y1="18.0" x2="388.0" y2="220.0" style="stroke: var(--hair); stroke-width: 1" />
+<text x="388.0" y="234.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.1</text>
+<line x1="62.0" y1="220.0" x2="388.0" y2="220.0" style="stroke: var(--hair); stroke-width: 1" />
+<text x="56.0" y="223.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">10<tspan dy='-4' style='font-size: 7px'>-5</tspan></text>
+<line x1="62.0" y1="179.6" x2="388.0" y2="179.6" style="stroke: var(--hair); stroke-width: 1" />
+<text x="56.0" y="182.6" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">10<tspan dy='-4' style='font-size: 7px'>-4</tspan></text>
+<line x1="62.0" y1="139.2" x2="388.0" y2="139.2" style="stroke: var(--hair); stroke-width: 1" />
+<text x="56.0" y="142.2" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">10<tspan dy='-4' style='font-size: 7px'>-3</tspan></text>
+<line x1="62.0" y1="98.8" x2="388.0" y2="98.8" style="stroke: var(--hair); stroke-width: 1" />
+<text x="56.0" y="101.8" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">10<tspan dy='-4' style='font-size: 7px'>-2</tspan></text>
+<line x1="62.0" y1="58.4" x2="388.0" y2="58.4" style="stroke: var(--hair); stroke-width: 1" />
+<text x="56.0" y="61.4" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.1</text>
+<line x1="62.0" y1="18.0" x2="388.0" y2="18.0" style="stroke: var(--hair); stroke-width: 1" />
+<text x="56.0" y="21.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<line x1="62.0" y1="220.0" x2="388.0" y2="220.0" style="stroke: var(--line); stroke-width: 1" />
+<line x1="62.0" y1="18.0" x2="62.0" y2="220.0" style="stroke: var(--line); stroke-width: 1" />
+<text x="225.0" y="252.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">seconds per decision, h (log scale)</text>
+<text transform="rotate(-90 14 119.0)" x="14" y="119.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">gap, Q(right) − Q(left) (log scale)</text>
+<path d="M62.0 185.0 L388.0 63.8" style="fill: none; stroke: var(--chart-2); stroke-width: 1.5; stroke-linejoin: round; stroke-dasharray: 4 3" />
+<path d="M62.0 196.8 L388.0 75.6" style="fill: none; stroke: var(--chart-4); stroke-width: 1.5; stroke-linejoin: round; stroke-dasharray: 4 3" />
+<circle cx="388.0" cy="63.9" r="4" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"><title>(0.5, 0), h = 0.1 s: gap 0.07307</title></circle>
+<circle cx="331.2" cy="84.9" r="4" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"><title>(0.5, 0), h = 0.03 s: gap 0.02206</title></circle>
+<circle cx="279.3" cy="104.2" r="4" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"><title>(0.5, 0), h = 0.01 s: gap 0.00736</title></circle>
+<circle cx="222.5" cy="125.3" r="4" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"><title>(0.5, 0), h = 0.003 s: gap 0.00221</title></circle>
+<circle cx="170.7" cy="144.6" r="4" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"><title>(0.5, 0), h = 0.001 s: gap 0.00074</title></circle>
+<circle cx="62.0" cy="185.0" r="4" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"><title>(0.5, 0), h = 0.0001 s: gap 0.00007</title></circle>
+<circle cx="388.0" cy="20.9" r="4" style="fill: var(--chart-4); stroke: var(--panel); stroke-width: 1.5"><title>brink, h = 0.1 s: gap 0.84695</title></circle>
+<circle cx="331.2" cy="21.6" r="4" style="fill: var(--chart-4); stroke: var(--panel); stroke-width: 1.5"><title>brink, h = 0.03 s: gap 0.81498</title></circle>
+<circle cx="279.3" cy="23.2" r="4" style="fill: var(--chart-4); stroke: var(--panel); stroke-width: 1.5"><title>brink, h = 0.01 s: gap 0.74273</title></circle>
+<circle cx="222.5" cy="24.2" r="4" style="fill: var(--chart-4); stroke: var(--panel); stroke-width: 1.5"><title>brink, h = 0.003 s: gap 0.70354</title></circle>
+<circle cx="170.7" cy="24.7" r="4" style="fill: var(--chart-4); stroke: var(--panel); stroke-width: 1.5"><title>brink, h = 0.001 s: gap 0.68153</title></circle>
+<circle cx="62.0" cy="196.8" r="4" style="fill: var(--chart-4); stroke: var(--panel); stroke-width: 1.5"><title>brink, h = 0.0001 s: gap 0.00004</title></circle>
+<text x="236.1" y="42.3" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">at the brink state</text>
+<text x="113.8" y="141.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">at (0.5, 0)</text>
+<text x="385.6" y="188.6" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">dashed: derived, 2u·h·∂V/∂v</text>
+</svg>
+          <figcaption>
+            Fig. 2 · The gap between pushing right and pushing left against the
+            decision's length h, at the cart at rest at x = 0.5 and at the brink
+            state. Both axes are logarithmic. Dashed lines are each state's
+            derived gap. From gap.py.
+          </figcaption>
+        </figure>
+        <p>
+          The expansion needs V to be smooth, and Dock's V jumps along one
+          curve. A cart moving left with v² &gt; 2ux rolls off even if it
+          pushes right, and the edge of that region is the brink. The second
+          state in gap.py lies so close to it that pushing right stops the cart
+          0.5 mm from the back end. Down to dt = 0.001, one left push carries it
+          across, so its gap stays between 0.68 and 0.85. At dt = 0.0001 the
+          push is too short, and the gap falls onto its derived line. At any dt, the states whose stopping point lies within
+          about 2|v|·dt of the back end keep a gap like this, and that band
+          narrows with dt. Tallec et al. meet the same kind of jump in pendulum
+          swing-up and say their analysis holds only almost everywhere.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="estimates-vary-more-than-the-gap" id="estimates-vary-more-than-the-gap">
+        <h2>At dt = 0.01, Q-learning's estimates vary more than the gap</h2>
+        <p>
+          Now let Q-learning find the gap. qcells.py runs the
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">Q-learning</a>
+          update on a table with one row per cell of 0.1 m by 0.2 m/s. Position
+          and speed together are Markov, as the
+          <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">frame-stacking lesson</a>
+          required of an observation, but a cell holds many states, so each
+          entry averages over the states behind it. The target still
+          bootstraps when Dock's 20 s limit
+          <a href="../reinforcement-learning/termination-and-truncation.html">truncates</a>
+          an episode.
+        </p>
+        <p>
+          Each decision of h seconds is discounted by e<sup>−h/τ</sup>, so the
+          horizon stays at 1 s. The step size is a constant 0.3 in every run,
+          since one that shrank with each entry's update count would shrink
+          sooner when decisions come more often.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">qcells.py · complete</span><span>python</span>
+          </div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Tabular Q-learning on Dock, with the state binned into cells.
+
+The table has one row per cell of 0.1 m by 0.2 m/s, for speeds from -2 to
+2 m/s. Each decision lasts h seconds and is discounted by exp(-h / tau), so
+the horizon is tau seconds whatever h is. The step size is a constant ALPHA.
+"""
+import math
+
+import numpy as np
+
+NX, NV = 10, 20
+ALPHA, EPS, SECONDS = 0.3, 0.1, 2000
+
+
+def cell(obs):
+    x, v = obs
+    return min(int(x * NX), NX - 1), min(max(int((v + 2) * NV / 4), 0), NV - 1)
+
+
+def q_learning(env, h, tau, seed, explore_repeat=1):
+    """Learn from SECONDS of simulated time. Each block of explore_repeat
+    decisions either follows the estimates or, with probability EPS, holds
+    one random move throughout."""
+    rng = np.random.default_rng(seed)
+    gamma = math.exp(-h / tau)
+    Q = np.zeros((NX, NV, 2))
+    obs, _ = env.reset(seed=seed)
+    for n in range(round(SECONDS / h)):
+        if n % explore_repeat == 0:
+            explore, held = rng.random() &lt; EPS, int(rng.integers(2))
+        c = cell(obs)
+        a = held if explore else int(Q[c].argmax())
+        obs, r, terminated, truncated, _ = env.step(a)
+        target = r if terminated else r + gamma * Q[cell(obs)].max()
+        Q[c][a] += ALPHA * (target - Q[c][a])
+        if terminated or truncated:
+            obs, _ = env.reset()
+    return Q</code></pre>
+          <figcaption class="nb-code-cap">
+            Tabular Q-learning on Dock's cells. With
+            <code>explore_repeat=1</code> it is ε-greedy with ε = 0.1.
+          </figcaption>
+        </figure>
+        <p>
+          runs.py trains 10 agents, seeds 0 to 9, each for 2,000 s of simulated
+          time. It reports the share of the 86 safe start cells, those with
+          |v| ≤ 1 and no state past the brink, whose greedy move is right. It
+          also checks whether each greedy cart docks from 12 fixed starts, and
+          how much one estimate varies across runs. It needs dock.py and
+          qcells.py in its folder, and each call took under 30 seconds here.
+        </p>
+        <details>
+          <summary>runs.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">runs.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning on Dock for 2,000 simulated seconds per run, seeds 0 to 9.
+
+uv run runs.py                  a decision every dt = 0.01 s
+    --repeat 10                 RepeatAction holds every move for 10 steps
+    --explore-repeat 10         holds only the random moves for 10 steps
+    --tau 0.1                   a horizon of 0.1 s in place of 1 s
+    --seeds 10 11 12            other seeds
+"""
+import argparse
+
+import numpy as np
+from gymnasium.wrappers import RepeatAction
+
+from dock import RIGHT, Dock
+from qcells import NX, SECONDS, cell, q_learning
+
+# Start cells (|v| &lt;= 1) in which pushing right saves every state.
+SAFE = [(i, j) for i in range(NX) for j in range(5, 15)
+        if j &gt;= 10 or (j * 0.2 - 2) ** 2 &lt; 2 * i / NX]
+STARTS = [{"x": x, "v": v} for x in (0.2, 0.4, 0.6, 0.8) for v in (-0.5, 0, 0.5)]
+
+
+def docks_from_every_start(Q, env):
+    for start in STARTS:
+        obs, _ = env.reset(options=start)
+        terminated = truncated = False
+        while not (terminated or truncated):
+            obs, _, terminated, truncated, _ = env.step(int(Q[cell(obs)].argmax()))
+        if obs[0] &lt; 1:  # rolled off the back end or ran out of time
+            return False
+    return True
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dt", type=float, default=0.01)
+    parser.add_argument("--repeat", type=int, default=1)
+    parser.add_argument("--explore-repeat", type=int, default=1)
+    parser.add_argument("--tau", type=float, default=1.0)
+    parser.add_argument("--seeds", type=int, nargs="+", default=list(range(10)))
+    args = parser.parse_args()
+
+    def make():
+        env = Dock(args.dt)
+        return env if args.repeat == 1 else RepeatAction(env, args.repeat)
+
+    h = args.dt * args.repeat  # seconds per decision
+    tables = [q_learning(make(), h, args.tau, seed, args.explore_repeat)
+              for seed in args.seeds]
+    right = [np.mean([Q[c].argmax() == RIGHT for c in SAFE]) for Q in tables]
+    docked = sum(docks_from_every_start(Q, make()) for Q in tables)
+    spread = np.median([np.std([Q[c][RIGHT] for Q in tables]) for c in SAFE])
+    print(f"dt {args.dt} s, repeat {args.repeat}, explore-repeat "
+          f"{args.explore_repeat}, tau {args.tau} s: {len(tables)} runs of "
+          f"{SECONDS:,} s")
+    print(f"  share of {len(SAFE)} safe start cells pushing right: mean "
+          f"{np.mean(right):.2f}, lowest run {min(right):.2f}")
+    print(f"  runs whose greedy cart docks from all {len(STARTS)} starts: "
+          f"{docked} of {len(tables)}")
+    print(f"  spread of Q(cell, right) across runs, median over safe cells: "
+          f"{spread:.3f}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run runs.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">dt 0.01 s, repeat 1, explore-repeat 1, tau 1.0 s: 10 runs of 2,000 s
+  share of 86 safe start cells pushing right: mean 0.71, lowest run 0.62
+  runs whose greedy cart docks from all 12 starts: 3 of 10
+  spread of Q(cell, right) across runs, median over safe cells: 0.047</code></pre>
+        </figure>
+        <p>
+          At dt = 0.01 the agents push right in 71% of the safe cells, and only
+          3 of 10 dock from every start. Across runs a typical estimate varies
+          by about 0.05, six times the 0.0074 gap at (0.5, 0). Tallec et al.
+          place Q-learning's failure here: once an estimate's error is much
+          larger than O(dt), the error decides which action ranks
+          first.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="repeataction-widens-the-gap" id="repeataction-widens-the-gap">
+        <h2>RepeatAction holds each push for ten steps and widens the gap tenfold</h2>
+        <p>
+          Action repeat holds each chosen action for k
+          steps, so a decision lasts h = k·dt. Gymnasium 1.3.0 added it as the
+          wrapper RepeatAction. The wrapper steps the environment k times, adds
+          the rewards without discounting, returns the last observation, and
+          stops early if the episode ends.<sup class="nb-cite"><a href="#s4">4</a></sup> Ten Dock steps of
+          0.01 s pay the same −0.1 as one step of 0.1 s. So the last row of
+          gap.py's gap table, RepeatAction(Dock(0.01), 10), matches the
+          dt = 0.1 row, and the gap at (0.5, 0) is 0.073 again.
+        </p>
+        <p>
+          <code>uv run runs.py --repeat 10</code> wraps Dock(0.01) the same
+          way, with the same physics and the same budget of 2,000 s.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run runs.py --repeat 10</span><span>text</span>
+          </div>
+          <pre><code data-language="text">dt 0.01 s, repeat 10, explore-repeat 1, tau 1.0 s: 10 runs of 2,000 s
+  share of 86 safe start cells pushing right: mean 0.94, lowest run 0.90
+  runs whose greedy cart docks from all 12 starts: 10 of 10
+  spread of Q(cell, right) across runs, median over safe cells: 0.013</code></pre>
+        </figure>
+        <p>
+          The agents now push right in 94% of the safe cells, and all 10 dock
+          from every start (Fig. 3). A typical estimate varies by 0.013, under a
+          fifth of the 0.073 gap. With a decision every 0.01 s the spread was
+          0.047, so the shorter decision left the estimates no more precise and
+          the gap ten times smaller.
+        </p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem">
+<svg viewBox="0 0 220 232" role="img" aria-label="Cells of the table shaded by how many of 10 runs at dt 0.01 push right: many cells are pale, with runs split between the moves" style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="40.0" y="14.0" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink); font-weight: 600">a decision every 0.01 s</text>
+<rect x="40" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.16; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.09; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.16; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.12; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<path d="M40.0 111.0 L40.9 119.5 L41.7 123.0 L42.5 125.7 L43.4 128.0 L44.2 130.0 L45.1 131.8 L46.0 133.5 L46.8 135.0 L47.6 136.5 L48.5 137.9 L49.4 139.2 L50.2 140.4 L51.0 141.6 L51.9 142.8 L52.8 143.9 L53.6 145.0 L54.5 146.0 L55.3 147.1 L56.1 148.1 L57.0 149.0 L57.8 150.0 L58.7 150.9 L59.5 151.8 L60.4 152.6 L61.2 153.5 L62.1 154.3 L63.0 155.2 L63.8 156.0 L64.7 156.8 L65.5 157.6 L66.3 158.3 L67.2 159.1 L68.0 159.8 L68.9 160.6 L69.8 161.3 L70.6 162.0 L71.5 162.7 L72.3 163.4 L73.2 164.1 L74.0 164.8 L74.8 165.4 L75.7 166.1 L76.5 166.7 L77.4 167.4 L78.2 168.0 L79.1 168.6 L79.9 169.3 L80.8 169.9 L81.7 170.5 L82.5 171.1 L83.3 171.7 L84.2 172.3 L85.1 172.9 L85.9 173.5 L86.8 174.0 L87.6 174.6 L88.4 175.2 L89.3 175.7 L90.2 176.3 L91.0 176.8 L91.8 177.4 L92.7 177.9 L93.5 178.5 L94.4 179.0 L95.2 179.5 L96.1 180.1 L97.0 180.6 L97.8 181.1 L98.7 181.6 L99.5 182.1 L100.3 182.6 L101.2 183.1 L102.0 183.6 L102.9 184.1 L103.8 184.6 L104.6 185.1 L105.5 185.6 L106.3 186.1 L107.2 186.5 L108.0 187.0 L108.9 187.5 L109.7 188.0 L110.5 188.4 L111.4 188.9 L112.2 189.4 L113.1 189.8 L114.0 190.3 L114.8 190.7 L115.7 191.2 L116.5 191.6 L117.4 192.1 L118.2 192.5 L119.0 193.0 L119.9 193.4 L120.8 193.8 L121.6 194.3 L122.5 194.7 L123.3 195.1 L124.2 195.6 L125.0 196.0" style="fill: none; stroke: var(--chart-4); stroke-width: 2; stroke-linejoin: round" />
+<text x="40.0" y="208.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0</text>
+<text x="125.0" y="208.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.5</text>
+<text x="210.0" y="208.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<text x="36.0" y="199.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">-1</text>
+<text x="36.0" y="114.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0</text>
+<text x="36.0" y="29.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<text x="125.0" y="221.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">position x (m)</text>
+<text transform="rotate(-90 12 111.0)" x="12" y="111.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">speed v (m/s)</text>
+</svg>
+<svg viewBox="0 0 220 232" role="img" aria-label="The same cells for runs with repeat 10: most cells are dark, with all 10 runs pushing right" style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="40.0" y="14.0" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink); font-weight: 600">repeat 10: every 0.1 s</text>
+<rect x="40" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="40" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="57" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="74" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="91" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="108" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="125" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="142" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.16; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="159" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.16; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="176" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="179" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.12; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="162" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="145" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.53; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="128" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="111" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="94" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="77" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="60" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="43" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.83; stroke: var(--panel); stroke-width: 1.5" />
+<rect x="193" y="26" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--panel); stroke-width: 1.5" />
+<path d="M40.0 111.0 L40.9 119.5 L41.7 123.0 L42.5 125.7 L43.4 128.0 L44.2 130.0 L45.1 131.8 L46.0 133.5 L46.8 135.0 L47.6 136.5 L48.5 137.9 L49.4 139.2 L50.2 140.4 L51.0 141.6 L51.9 142.8 L52.8 143.9 L53.6 145.0 L54.5 146.0 L55.3 147.1 L56.1 148.1 L57.0 149.0 L57.8 150.0 L58.7 150.9 L59.5 151.8 L60.4 152.6 L61.2 153.5 L62.1 154.3 L63.0 155.2 L63.8 156.0 L64.7 156.8 L65.5 157.6 L66.3 158.3 L67.2 159.1 L68.0 159.8 L68.9 160.6 L69.8 161.3 L70.6 162.0 L71.5 162.7 L72.3 163.4 L73.2 164.1 L74.0 164.8 L74.8 165.4 L75.7 166.1 L76.5 166.7 L77.4 167.4 L78.2 168.0 L79.1 168.6 L79.9 169.3 L80.8 169.9 L81.7 170.5 L82.5 171.1 L83.3 171.7 L84.2 172.3 L85.1 172.9 L85.9 173.5 L86.8 174.0 L87.6 174.6 L88.4 175.2 L89.3 175.7 L90.2 176.3 L91.0 176.8 L91.8 177.4 L92.7 177.9 L93.5 178.5 L94.4 179.0 L95.2 179.5 L96.1 180.1 L97.0 180.6 L97.8 181.1 L98.7 181.6 L99.5 182.1 L100.3 182.6 L101.2 183.1 L102.0 183.6 L102.9 184.1 L103.8 184.6 L104.6 185.1 L105.5 185.6 L106.3 186.1 L107.2 186.5 L108.0 187.0 L108.9 187.5 L109.7 188.0 L110.5 188.4 L111.4 188.9 L112.2 189.4 L113.1 189.8 L114.0 190.3 L114.8 190.7 L115.7 191.2 L116.5 191.6 L117.4 192.1 L118.2 192.5 L119.0 193.0 L119.9 193.4 L120.8 193.8 L121.6 194.3 L122.5 194.7 L123.3 195.1 L124.2 195.6 L125.0 196.0" style="fill: none; stroke: var(--chart-4); stroke-width: 2; stroke-linejoin: round" />
+<text x="40.0" y="208.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0</text>
+<text x="125.0" y="208.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.5</text>
+<text x="210.0" y="208.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<text x="36.0" y="199.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">-1</text>
+<text x="36.0" y="114.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0</text>
+<text x="36.0" y="29.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1</text>
+<text x="125.0" y="221.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">position x (m)</text>
+<text transform="rotate(-90 12 111.0)" x="12" y="111.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">speed v (m/s)</text>
+</svg>
+</div>
+<svg viewBox="0 0 260 44" role="img" aria-label="Legend: cell shade from pale, 0 of 10 runs push right, to dark, 10 of 10" style="display: block; width: 100%; max-width: 20rem; margin: 0.5rem auto 0; height: auto">
+<text x="130.0" y="12.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">runs of 10 whose greedy move is right</text>
+<rect x="22" y="20" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.08; stroke: var(--line); stroke-width: 1" />
+<text x="42.0" y="33.0" text-anchor="start" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">0</text>
+<rect x="60" y="20" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.12; stroke: var(--line); stroke-width: 1" />
+<text x="80.0" y="33.0" text-anchor="start" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">2</text>
+<rect x="98" y="20" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 1" />
+<text x="118.0" y="33.0" text-anchor="start" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">4</text>
+<rect x="136" y="20" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.41; stroke: var(--line); stroke-width: 1" />
+<text x="156.0" y="33.0" text-anchor="start" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">6</text>
+<rect x="174" y="20" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 0.67; stroke: var(--line); stroke-width: 1" />
+<text x="194.0" y="33.0" text-anchor="start" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">8</text>
+<rect x="212" y="20" width="17" height="17" style="fill: var(--chart-2); fill-opacity: 1.00; stroke: var(--line); stroke-width: 1" />
+<text x="232.0" y="33.0" text-anchor="start" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">10</text>
+</svg>
+          <figcaption>
+            Fig. 3 · How many of the 10 runs push right in each start cell at
+            dt = 0.01, deciding every step and holding each push for 10 steps.
+            Right is correct everywhere. Below the red curve, the brink, the
+            cart rolls off whatever it does. From runs.py's runs.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="most-of-the-gain-comes-from-the-gap" id="most-of-the-gain-comes-from-the-gap">
+        <h2>Most of repeat's gain in Dock comes from the wider gap</h2>
+        <p>
+          Repeat changes two other things. A random move now lasts 0.1 s, and
+          Tallec et al. prove that as dt shrinks, ε-greedy's random moves
+          average out, so the agent follows one deterministic path and explores
+          little.<sup class="nb-cite"><a href="#s1">1</a></sup> The 1 s horizon also spans 10 decisions instead
+          of 100. Kalyanakrishnan et al. bound what errors in the estimates
+          cost by a term that falls as the horizon in decisions
+          shortens.<sup class="nb-cite"><a href="#s5">5</a></sup> Two flags each give the agent one of these
+          effects while every greedy move still lasts 0.01 s.
+          <code>--explore-repeat 10</code> holds only the random moves for 10
+          steps, a fixed-length form of Dabney, Ostrovski and Barreto's
+          εz-greedy, which holds each random move for a random
+          duration.<sup class="nb-cite"><a href="#s6">6</a></sup> <code>--tau 0.1</code> gives each 0.01 s step
+          the discount of a 0.1 s decision without repeating anything.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run runs.py --explore-repeat 10, then --tau 0.1</span><span>text</span>
+          </div>
+          <pre><code data-language="text">dt 0.01 s, repeat 1, explore-repeat 10, tau 1.0 s: 10 runs of 2,000 s
+  share of 86 safe start cells pushing right: mean 0.79, lowest run 0.72
+  runs whose greedy cart docks from all 12 starts: 2 of 10
+  spread of Q(cell, right) across runs, median over safe cells: 0.035
+dt 0.01 s, repeat 1, explore-repeat 1, tau 0.1 s: 10 runs of 2,000 s
+  share of 86 safe start cells pushing right: mean 0.70, lowest run 0.62
+  runs whose greedy cart docks from all 12 starts: 2 of 10
+  spread of Q(cell, right) across runs, median over safe cells: 0.002</code></pre>
+        </figure>
+        <p>
+          Holding the random moves raises the share to 0.79, but only 2 runs
+          dock from every start. The shorter discount leaves the share at 0.70.
+          That arm can't fully separate the horizon from the gap, because a
+          0.1 s horizon also flattens V far from the dock and so, by the
+          derivation, shrinks the gap further. Neither arm comes near repeat's
+          0.94 or its 10 runs that dock from every start, so in Dock most of
+          repeat's gain comes from the wider gap.
+        </p>
+        <p>
+          A held push can't respond until its decision ends, so a long repeat
+          costs control. Pushing right is always best in Dock, so holding it
+          costs nothing here, and problem 1 asks what it costs when the best
+          move changes.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. Suppose the dock accepts the cart only below 0.5 m/s, and a
+            faster arrival pays −2 like the back end. Is pushing right still
+            best everywhere? Where does V gain a new jump, and what does holding
+            each push for 0.5 s cost there?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              No. A fast cart near the dock has to push left to brake. V jumps
+              along the curve v² = 0.25 + 2u(1 − x), beyond which even braking
+              all the way arrives faster than 0.5 m/s. The curve meets the dock
+              at v = 0.5, so this jump sits next to the goal. The gap there
+              stays finite as dt shrinks, as at the brink. The fastest safe
+              approach starts braking just before the curve. With a decision
+              every 0.5 s, braking can start only at a decision, so the cart
+              must start up to 0.5 s early and docks later.
+            </p>
+          </details>
+          <p>
+            2. DQN repeats each action for 4 frames of a 60 Hz emulator, which
+            its authors chose to save computation. It discounts by γ = 0.99 per
+            decision.<sup class="nb-cite"><a href="#s7">7</a></sup> Its repeat of 4 is a separate
+            setting from its stack of 4 frames. What horizon τ in seconds does
+            that give, with the
+            <a href="../reinforcement-learning/environments-and-the-rl-problem.html">discount</a>
+            set per step as in this lesson? What discount per frame keeps that
+            τ if the agent decides on every frame?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              A decision lasts h = 4/60 s, and γ = e<sup>−h/τ</sup> gives
+              τ = −h/ln 0.99 ≈ 6.6 s, which is 100 decisions. Deciding every
+              frame cuts h to a quarter, so the discount per frame is
+              0.99<sup>1/4</sup> ≈ 0.9975: four frames together must discount
+              by 0.99.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Deciding more often shrinks the differences the agent has to detect.
+          An action held for h seconds changes a smooth system's state, and so
+          its value, by O(h). Two actions' values in one state therefore differ
+          by O(h), while the error in a learned estimate doesn't shrink with h.
+          In Dock at h = 0.01 s,
+          Q-learning's estimates varied by six times the gap, and its greedy
+          push was right in 71% of the safe cells. Holding each push for ten
+          steps widened the gap tenfold and raised that share to 94%. Holding
+          only the random moves, or shortening the horizon, did much less, so
+          most of the help came from the wider gap.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://proceedings.mlr.press/v97/tallec19a.html">Tallec, Blier and Ollivier, Making Deep Q-learning Methods Robust to Time Discretization</a>:
+            §3 holds the theorem derived here, and §4.2 shows why ε-greedy
+            explores little at short steps. Their fix in §4 learns the rescaled
+            gap (Q − V)/dt directly.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2102.03718">Kalyanakrishnan et al., An Analysis of Frame-skipping in Reinforcement Learning</a>:
+            Theorem 6 bounds a repeated policy's loss by a cost that grows with
+            the repeat and an estimation term that shrinks with the horizon.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://proceedings.mlr.press/v119/metelli20a.html">Metelli et al., Control Frequency Adaptation via Action Persistence in Batch Reinforcement Learning</a>:
+            Table 1 gives the best persistence for eight tasks, and on Cartpole
+            holding each action for 8 steps instead of 4 loses all control.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2006.01782">Dabney, Ostrovski and Barreto, Temporally-Extended ε-Greedy Exploration</a>:
+            Figure 1 shows ε-greedy dithering near the start of an open grid
+            while held random moves spread out, the effect
+            <code>--explore-repeat</code> isolates.
+          </dd>
+        </dl>
+      </section>
+
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§3.1 eqs. 4–5 (p. 6098); §3.2 Theorem 2, eqs. 11–18 (p. 6099); §4.1 (p. 6099); §4.2 Theorem 4 (p. 6100); §6 (pp. 6102–6103); supplement Theorem 2, eqs. 34–39"
+              href="https://proceedings.mlr.press/v97/tallec19a/tallec19a.pdf"
+              >PMLR · Corentin Tallec, Léonard Blier and Yann Ollivier, Making Deep Q-learning Methods Robust to Time Discretization, 2019</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§2, eq. 4; §3.2, the paragraph after eq. 15"
+              href="https://doi.org/10.1162/089976600300015961"
+              >Neural Computation · Kenji Doya, Reinforcement Learning in Continuous Time and Space, 2000</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§1 Introduction (p. 1)"
+              href="https://arxiv.org/abs/1512.04860"
+              >AAAI · Marc G. Bellemare, Georg Ostrovski, Arthur Guez, Philip S. Thomas and Rémi Munos, Increasing the Action Gap: New Operators for Reinforcement Learning, 2016</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="RepeatAction entry, including its change log (v1.3.0)"
+              href="https://gymnasium.farama.org/v1.4.0/api/wrappers/action_wrappers/"
+              >Farama Foundation · Gymnasium 1.4.0 documentation, Action Wrappers</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Theorem 6 and the paragraph after it (p. 5); §6.1 (p. 7)"
+              href="https://arxiv.org/abs/2102.03718"
+              >arXiv · Shivaram Kalyanakrishnan, Siddharth Aravindan, Vishwajeet Bagdawat et al., An Analysis of Frame-skipping in Reinforcement Learning, 2021</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Abstract; §4.2 (pp. 5–6)"
+              href="https://arxiv.org/abs/2006.01782"
+              >arXiv · Will Dabney, Georg Ostrovski and André Barreto, Temporally-Extended ε-Greedy Exploration, 2020</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Methods, Training details (frame skipping); Extended Data Table 1"
+              data-nb-url="https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf"
+              href="https://www.nature.com/articles/nature14236"
+              >Nature · Volodymyr Mnih, Koray Kavukcuoglu, David Silver et al., Human-level control through deep reinforcement learning, 2015</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
