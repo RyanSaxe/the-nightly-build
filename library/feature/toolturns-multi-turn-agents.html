@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>In ToolTurns, an agent’s failures cluster within a dialogue · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "toolturns-multi-turn-agents",
+        "template": "article",
+        "title": "In ToolTurns, an agent’s failures cluster within a dialogue",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-16",
+        "tags": ["benchmarks", "tool-use", "agent-evaluation"],
+        "sources": 5,
+        "words": 1197,
+        "reading_minutes": 5,
+        "dek": "All nine models complete 5.8 to 8.4 points more of their three-request dialogues than independent requests would predict, and all score lower on follow-ups than on the opening request.",
+        "harness": "Claude Code (cloud session)",
+        "model": "Claude Sonnet"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">In ToolTurns, an agent’s failures cluster within a dialogue</h1>
+        <p class="nb-dekline">
+          All nine models complete 5.8 to 8.4 points more of their three-request dialogues than independent requests would predict, and all score lower on follow-ups than on the opening request.
+        </p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-11-16</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A dialogue counts only if all three requests pass</h2>
+        <p>
+          The best of nine models on the ToolTurns tool-use benchmark passes 69.6% of individual
+          requests and completes 39.8% of whole dialogues. Three
+          independent passes at 69.6% would complete only about 34%, a
+          calculation the paper makes for that one model.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3, paragraph after Table 3">1</a></sup>
+          Against the product of each model’s three per-request rates, all nine
+          complete 5.8 to 8.4 points more, so passes and failures cluster
+          within a dialogue.
+        </p>
+        <p>
+          ToolTurns is a preprint by Gholami, King and Flanigan,
+          submitted 11 November. Each of its 2,620 problems yields one
+          dialogue (Figure 1), and each agent was run once, with no confidence
+          intervals.<sup class="nb-cite"><a href="#s1" data-nb-locator="Abstract; section 3; Tables 3 and 4">1</a></sup> Their checker-fixer, which rewrites flawed simulated-user turns, cut detected defects, but they did not test whether it changes agent scores.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.2; Appendix B.3.2">1</a></sup>
+          The tau2-bench authors audited their own gpt-4.1 user simulator by
+          hand and recorded error rates of 40% in retail and 47% in airline,
+          with 12% and 13% critical, meaning they prevent task completion.<sup class="nb-cite"><a href="#s2" data-nb-locator="Section 4.3, Table 2">2</a></sup> That is another simulator on other tasks.
+        </p>
+        <figure class="nb-figure">
+          <svg viewBox="0 0 400 228" role="img" aria-label="Diagram of one ToolTurns dialogue. An opening request is followed by two follow-ups written by a simulated user. A judge scores each request pass or fail. The dialogue counts as completed only if all three pass." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<defs><marker id="nb-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill: var(--ink-soft)"/></marker></defs>
+<text x="200" y="16" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft); font-weight: 400" >A simulated user (Qwen3-32B) writes the follow-ups</text>
+<rect x="14" y="28" width="108" height="52" rx="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 1.5"/>
+<text x="68" y="50" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >Opening request</text>
+<text x="68" y="67" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >underspecified</text>
+<line x1="68" y1="80" x2="68" y2="98" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#nb-arr)"/>
+<rect x="14" y="100" width="108" height="30" rx="4" style="fill: var(--wash); stroke: var(--line); stroke-width: 1"/>
+<text x="68" y="119" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink); font-weight: 400" >judge: pass / fail</text>
+<line x1="68" y1="130" x2="68" y2="150" style="stroke: var(--ink-soft); stroke-width: 1.5"/>
+<rect x="146" y="28" width="108" height="52" rx="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 1.5"/>
+<text x="200" y="50" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >Follow-up 1</text>
+<text x="200" y="67" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >depends on context</text>
+<line x1="200" y1="80" x2="200" y2="98" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#nb-arr)"/>
+<rect x="146" y="100" width="108" height="30" rx="4" style="fill: var(--wash); stroke: var(--line); stroke-width: 1"/>
+<text x="200" y="119" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink); font-weight: 400" >judge: pass / fail</text>
+<line x1="200" y1="130" x2="200" y2="150" style="stroke: var(--ink-soft); stroke-width: 1.5"/>
+<rect x="278" y="28" width="108" height="52" rx="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 1.5"/>
+<text x="332" y="50" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >Follow-up 2</text>
+<text x="332" y="67" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >depends on context</text>
+<line x1="332" y1="80" x2="332" y2="98" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#nb-arr)"/>
+<rect x="278" y="100" width="108" height="30" rx="4" style="fill: var(--wash); stroke: var(--line); stroke-width: 1"/>
+<text x="332" y="119" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink); font-weight: 400" >judge: pass / fail</text>
+<line x1="332" y1="130" x2="332" y2="150" style="stroke: var(--ink-soft); stroke-width: 1.5"/>
+<line x1="122" y1="54" x2="144" y2="54" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#nb-arr)"/>
+<line x1="254" y1="54" x2="276" y2="54" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#nb-arr)"/>
+<line x1="68" y1="150" x2="332" y2="150" style="stroke: var(--ink-soft); stroke-width: 1.5"/>
+<line x1="200" y1="150" x2="200" y2="166" style="stroke: var(--ink-soft); stroke-width: 1.5" marker-end="url(#nb-arr)"/>
+<rect x="80" y="168" width="240" height="30" rx="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<text x="200" y="187" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >Completed only if all three pass</text>
+<text x="200" y="218" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >Tool responses: a cache, or simulated by Qwen3-32B</text>
+</svg>
+          <figcaption>
+            Fig. 1 · One ToolTurns dialogue.<sup class="nb-cite"><a href="#s1" data-nb-locator="Sections 3.2 to 3.4; Appendix C">1</a></sup>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="follow-ups" id="follow-ups">
+        <h2>Every model passes fewer follow-ups than opening requests</h2>
+        <p>
+          Success averages 67.9% on the opening request and 59.4% on the two
+          follow-ups (my arithmetic from Table 4).<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3, Table 4">1</a></sup> 
+        </p>
+        <figure class="nb-figure">
+          <svg viewBox="0 0 400 294" role="img" aria-label="Dot plot of success rate at the opening request, follow-up 1 and follow-up 2 for nine models. Every model is lower on the follow-ups than on the opening request, from 1.9 points lower on average for GPT-5.4-mini to 15.0 for GPT-OSS-120B." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<circle cx="109" cy="14" r="4.5" style="fill: var(--chart-2)"/>
+<text x="118" y="18" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >Opening</text>
+<rect x="176" y="9.5" width="9" height="9" style="fill: none; stroke: var(--chart-1); stroke-width: 2"/>
+<text x="190" y="18" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >Follow-up 1</text>
+<path d="M274 19.5 l5 -10 l5 10 z" style="fill: var(--chart-3)"/>
+<text x="288" y="18" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >Follow-up 2</text>
+<line x1="144.0" y1="36" x2="144.0" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="144.0" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >50%</text>
+<line x1="224.0" y1="36" x2="224.0" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="224.0" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >60%</text>
+<line x1="304.0" y1="36" x2="304.0" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="304.0" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >70%</text>
+<line x1="384.0" y1="36" x2="384.0" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="384.0" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >80%</text>
+<text x="96" y="54" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Opus 4.8</text>
+<line x1="267.2" y1="50" x2="341.6" y2="50" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="262.7" y="45.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M287.8 54.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="341.6" cy="50" r="4.5" style="fill: var(--chart-2)"/>
+<text x="96" y="78" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GLM-5.2</text>
+<line x1="262.4" y1="74" x2="336.8" y2="74" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="257.9" y="69.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M257.4 78.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="336.8" cy="74" r="4.5" style="fill: var(--chart-2)"/>
+<text x="96" y="102" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Gemma 4</text>
+<line x1="252.0" y1="98" x2="332.0" y2="98" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="263.5" y="93.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M247.0 102.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="332.0" cy="98" r="4.5" style="fill: var(--chart-2)"/>
+<text x="96" y="126" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-4.1-mini</text>
+<line x1="240.0" y1="122" x2="285.6" y2="122" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="250.7" y="117.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M235.0 126.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="285.6" cy="122" r="4.5" style="fill: var(--chart-2)"/>
+<text x="96" y="150" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Qwen3.5-397B</text>
+<line x1="204.0" y1="146" x2="284.8" y2="146" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="201.9" y="141.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M199.0 150.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="284.8" cy="146" r="4.5" style="fill: var(--chart-2)"/>
+<text x="96" y="174" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Qwen3.6-27B</text>
+<line x1="201.6" y1="170" x2="270.4" y2="170" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="197.1" y="165.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M219.8 174.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="270.4" cy="170" r="4.5" style="fill: var(--chart-2)"/>
+<text x="96" y="198" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-5.4-mini</text>
+<line x1="188.0" y1="194" x2="204.8" y2="194" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="186.7" y="189.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M183.0 198.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="204.8" cy="194" r="4.5" style="fill: var(--chart-2)"/>
+<text x="96" y="222" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-4o-mini</text>
+<line x1="146.4" y1="218" x2="265.6" y2="218" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="185.1" y="213.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M141.4 222.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="265.6" cy="218" r="4.5" style="fill: var(--chart-2)"/>
+<text x="96" y="246" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-OSS-120B†</text>
+<line x1="136.0" y1="242" x2="265.6" y2="242" style="stroke: var(--faint); stroke-width: 1.5"/>
+<rect x="151.5" y="237.5" width="9" height="9" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<path d="M131.0 246.5 l5 -9.5 l5 9.5 z" style="fill: var(--chart-3)"/>
+<circle cx="265.6" cy="242" r="4.5" style="fill: var(--chart-2)"/>
+<text x="244.0" y="288" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >Success rate by position in the dialogue (%)</text>
+</svg>
+          <figcaption>
+            Fig. 2 · Success rate at each position, models in order of dialogue
+            completion. † GPT-OSS-120B answers in plain text instead of calling
+            finish in 56.1% of dialogues, and is also the judge model.<sup class="nb-cite"><a href="#s1" data-nb-locator="Table 3, footnote; Appendix F.4, Table 11">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The paper says the decline does not isolate a cost of carrying context. Its
+          judge sees one request’s slice, so figures retrieved a request
+          earlier can be scored as fabricated, and no run poses the follow-ups
+          as first requests.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3, after Table 4; Appendix F.3">1</a></sup> Laban et al. built that
+          control for text tasks: spreading instructions over turns cost 15
+          models 39% on average, while the same information in one turn kept
+          95.1% of the single-turn score, so the loss came from the turns.<sup class="nb-cite"><a href="#s3" data-nb-locator="Section 6.1">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="independence" id="independence">
+        <h2>Completion runs above what independent requests predict</h2>
+        <p>
+          If the three requests passed or failed independently, a dialogue
+          would complete at the product of the three position rates. For Opus
+          4.8 that is 74.7% × 65.4% × 68.6% = 33.5%, against 39.8% observed.
+          Figure 3 shows all nine above their products. At 2,620
+          dialogues the sampling error on a rate near 40% is about one point
+          (my arithmetic).
+        </p>
+        <figure class="nb-figure">
+          <svg viewBox="0 0 400 294" role="img" aria-label="Dot plot of the dialogue completion each model would reach if its three request outcomes were independent, against the completion it reached. All nine models are above the independent prediction, by 5.8 to 8.4 points." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<path d="M109 8 l5.5 6 l-5.5 6 l-5.5 -6 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<text x="120" y="18" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >Independent prediction</text>
+<circle cx="276" cy="14" r="4.8" style="fill: var(--chart-1)"/>
+<text x="285" y="18" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >Observed</text>
+<line x1="104.0" y1="36" x2="104.0" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="104.0" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >0%</text>
+<line x1="159.1" y1="36" x2="159.1" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="159.1" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >10%</text>
+<line x1="214.2" y1="36" x2="214.2" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="214.2" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >20%</text>
+<line x1="269.3" y1="36" x2="269.3" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="269.3" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >30%</text>
+<line x1="324.4" y1="36" x2="324.4" y2="254" style="stroke: var(--line); stroke-width: 1"/>
+<text x="324.4" y="270" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >40%</text>
+<text x="96" y="54" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Opus 4.8</text>
+<line x1="288.7" y1="50" x2="323.3" y2="50" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M288.7 44.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="323.3" cy="50" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="54" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+6.3</text>
+<text x="96" y="78" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GLM-5.2</text>
+<line x1="275.5" y1="74" x2="311.8" y2="74" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M275.5 68.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="311.8" cy="74" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="78" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+6.6</text>
+<text x="96" y="102" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Gemma 4</text>
+<line x1="272.5" y1="98" x2="304.6" y2="98" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M272.5 92.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="304.6" cy="98" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="102" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+5.8</text>
+<text x="96" y="126" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-4.1-mini</text>
+<line x1="251.8" y1="122" x2="290.8" y2="122" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M251.8 116.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="290.8" cy="122" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="126" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+7.1</text>
+<text x="96" y="150" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Qwen3.5-397B</text>
+<line x1="227.8" y1="146" x2="265.5" y2="146" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M227.8 140.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="265.5" cy="146" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="150" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+6.8</text>
+<text x="96" y="174" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Qwen3.6-27B</text>
+<line x1="228.7" y1="170" x2="263.8" y2="170" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M228.7 164.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="263.8" cy="170" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="174" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+6.4</text>
+<text x="96" y="198" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-5.4-mini</text>
+<line x1="202.5" y1="194" x2="247.3" y2="194" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M202.5 188.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="247.3" cy="194" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="198" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+8.1</text>
+<text x="96" y="222" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-4o-mini</text>
+<line x1="204.7" y1="218" x2="242.3" y2="218" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M204.7 212.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="242.3" cy="218" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="222" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+6.8</text>
+<text x="96" y="246" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-OSS-120B†</text>
+<line x1="194.7" y1="242" x2="241.2" y2="242" style="stroke: var(--chart-1); stroke-width: 3; stroke-opacity: 0.55"/>
+<path d="M194.7 236.5 l5.5 5.5 l-5.5 5.5 l-5.5 -5.5 z" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="241.2" cy="242" r="4.8" style="fill: var(--chart-1)"/>
+<text x="362" y="246" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600" >+8.4</text>
+<text x="228.0" y="288" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); font-weight: 400" >Share of dialogues completed, all three requests passed (%)</text>
+<text x="362" y="36" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft); font-weight: 400" >points</text>
+</svg>
+          <figcaption>
+            Fig. 3 · Observed dialogue completion against the product of each
+            model’s three position rates. Computed from Tables 3 and 4. † See Figure 2.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3, Tables 3 and 4">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The tables hold only marginal rates, so they cannot say why. The
+          authors offer two causes and test neither: “some problems are simply
+          harder, or an agent that establishes the right tool and context
+          early tends to keep succeeding.”<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3">1</a></sup> Laban et al. found carry-over in text
+          tasks, where models that take a wrong turn “get lost and do not
+          recover”.<sup class="nb-cite"><a href="#s3" data-nb-locator="Abstract">3</a></sup> Repeated trials of a tau-bench task share no
+          context. A gpt-4o agent at about 61% per retail trial still passes
+          all eight about 25% of the time,<sup class="nb-cite"><a href="#s4" data-nb-locator="Section 1, paragraph beginning “Our experiments reveal”; Section 5.1, Figure 4">4</a></sup> against 1.9% for independent
+          trials (0.61<sup>8</sup>, my arithmetic). Neither shows which operates here.
+        </p>
+      </section>
+
+      <section data-nb-section="rubric-rank" id="rubric-rank">
+        <h2>GPT-5.4-mini leads the rubric and trails on task success</h2>
+        <p>
+          The paper scores each dialogue on a weighted five-aspect
+          rubric. It ranks GPT-5.4-mini first and Opus 4.8 second. Task
+          success ranks Opus first and GPT-5.4-mini eighth.
+        </p>
+        <figure class="nb-figure">
+          <svg viewBox="0 0 400 294" role="img" aria-label="Slope chart of each model's rank by weighted rubric score against its rank by task success. GPT-5.4-mini is first by rubric and eighth by task success; GLM-5.2 is seventh by rubric and second by task success; GPT-OSS-120B is sixth and ninth." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<text x="150" y="18" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft); font-weight: 600" >Rubric rank</text>
+<text x="250" y="18" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink-soft); font-weight: 600" >Task-success rank</text>
+<line x1="158" y1="260" x2="242" y2="208" style="stroke: var(--faint); stroke-width: 1.5"/>
+<line x1="158" y1="130" x2="242" y2="130" style="stroke: var(--faint); stroke-width: 1.5"/>
+<line x1="158" y1="78" x2="242" y2="52" style="stroke: var(--faint); stroke-width: 1.5"/>
+<line x1="158" y1="234" x2="242" y2="182" style="stroke: var(--faint); stroke-width: 1.5"/>
+<line x1="158" y1="156" x2="242" y2="156" style="stroke: var(--faint); stroke-width: 1.5"/>
+<line x1="158" y1="104" x2="242" y2="104" style="stroke: var(--faint); stroke-width: 1.5"/>
+<line x1="158" y1="52" x2="242" y2="234" style="stroke: var(--chart-4); stroke-width: 3.2"/>
+<line x1="158" y1="182" x2="242" y2="260" style="stroke: var(--chart-5); stroke-width: 2.4"/>
+<line x1="158" y1="208" x2="242" y2="78" style="stroke: var(--chart-2); stroke-width: 2.4"/>
+<circle cx="158" cy="260" r="3.6" style="fill: var(--faint)"/>
+<circle cx="242" cy="208" r="3.6" style="fill: var(--faint)"/>
+<text x="148" y="264" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >9</text>
+<text x="134" y="264" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-4o-mini</text>
+<text x="252" y="212" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >7</text>
+<text x="266" y="212" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-4o-mini</text>
+<circle cx="158" cy="130" r="3.6" style="fill: var(--faint)"/>
+<circle cx="242" cy="130" r="3.6" style="fill: var(--faint)"/>
+<text x="148" y="134" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >4</text>
+<text x="134" y="134" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-4.1-mini</text>
+<text x="252" y="134" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >4</text>
+<text x="266" y="134" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >GPT-4.1-mini</text>
+<circle cx="158" cy="78" r="3.6" style="fill: var(--faint)"/>
+<circle cx="242" cy="52" r="3.6" style="fill: var(--faint)"/>
+<text x="148" y="82" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >2</text>
+<text x="134" y="82" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Opus 4.8</text>
+<text x="252" y="56" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >1</text>
+<text x="266" y="56" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Opus 4.8</text>
+<circle cx="158" cy="234" r="3.6" style="fill: var(--faint)"/>
+<circle cx="242" cy="182" r="3.6" style="fill: var(--faint)"/>
+<text x="148" y="238" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >8</text>
+<text x="134" y="238" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Qwen3.5-397B</text>
+<text x="252" y="186" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >6</text>
+<text x="266" y="186" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Qwen3.5-397B</text>
+<circle cx="158" cy="156" r="3.6" style="fill: var(--faint)"/>
+<circle cx="242" cy="156" r="3.6" style="fill: var(--faint)"/>
+<text x="148" y="160" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >5</text>
+<text x="134" y="160" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Qwen3.6-27B</text>
+<text x="252" y="160" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >5</text>
+<text x="266" y="160" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Qwen3.6-27B</text>
+<circle cx="158" cy="104" r="3.6" style="fill: var(--faint)"/>
+<circle cx="242" cy="104" r="3.6" style="fill: var(--faint)"/>
+<text x="148" y="108" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >3</text>
+<text x="134" y="108" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Gemma 4</text>
+<text x="252" y="108" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >3</text>
+<text x="266" y="108" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 400" >Gemma 4</text>
+<circle cx="158" cy="52" r="3.6" style="fill: var(--chart-4)"/>
+<circle cx="242" cy="234" r="3.6" style="fill: var(--chart-4)"/>
+<text x="148" y="56" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-4); font-weight: 600" >1</text>
+<text x="134" y="56" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-4); font-weight: 600" >GPT-5.4-mini</text>
+<text x="252" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-4); font-weight: 600" >8</text>
+<text x="266" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-4); font-weight: 600" >GPT-5.4-mini</text>
+<circle cx="158" cy="182" r="3.6" style="fill: var(--chart-5)"/>
+<circle cx="242" cy="260" r="3.6" style="fill: var(--chart-5)"/>
+<text x="148" y="186" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-5); font-weight: 600" >6</text>
+<text x="134" y="186" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-5); font-weight: 600" >GPT-OSS-120B†</text>
+<text x="252" y="264" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-5); font-weight: 600" >9</text>
+<text x="266" y="264" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-5); font-weight: 600" >GPT-OSS-120B†</text>
+<circle cx="158" cy="208" r="3.6" style="fill: var(--chart-2)"/>
+<circle cx="242" cy="78" r="3.6" style="fill: var(--chart-2)"/>
+<text x="148" y="212" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-2); font-weight: 600" >7</text>
+<text x="134" y="212" text-anchor="end" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-2); font-weight: 600" >GLM-5.2</text>
+<text x="252" y="82" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-2); font-weight: 600" >2</text>
+<text x="266" y="82" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--chart-2); font-weight: 600" >GLM-5.2</text>
+</svg>
+          <figcaption>
+            Fig. 4 · Rank by weighted rubric score and by task success, from
+            Table 3. † See Figure 2.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3, Table 3">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The paper reports a Spearman correlation of 0.23 between the two
+          orderings.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3">1</a></sup> Without GPT-5.4-mini it is 0.64 over the other eight. At nine models, 0.23 has a two-sided permutation p-value of 0.55, so it is not distinguishable from zero (my
+          computations from Table 3).
+          The paper traces GPT-5.4-mini’s rubric lead to efficiency and
+          consistency, which reward few, coherent calls even when the answer
+          is wrong, and it makes the fewest calls.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3, paragraph beginning “Rubric quality and task success”; Appendix F.4, Table 11">1</a></sup> 
+        </p>
+      </section>
+
+      <section data-nb-section="opening-rate-cubed" id="opening-rate-cubed">
+        <h2>Cubing the opening rate comes close because two effects offset</h2>
+        <p>
+          An evaluator who measures only the opening request and cubes it lands
+          within 3.3 points of observed completion for eight of the nine
+          models (Table 1). The ninth, GPT-5.4-mini, is 6.9 points low.
+        </p>
+        <table class="nb-table">
+          <caption>
+            Table 1 · Opening rate cubed against observed completion (%), and the
+            two factors between them. Computed from Tables 3 and 4.<sup class="nb-cite"><a href="#s1" data-nb-locator="Section 4.1.3, Tables 3 and 4">1</a></sup>
+          </caption>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Cubed</th>
+              <th>Observed</th>
+              <th>Follow-up factor</th>
+              <th>Clustering factor</th>
+            </tr>
+          </thead>
+          <tbody>
+<tr><td><span class="nb-table-token">Opus 4.8</span></td><td>41.7</td><td>39.8</td><td>0.80</td><td>1.19</td></tr>
+<tr><td><span class="nb-table-token">GLM-5.2</span></td><td>40.7</td><td>37.7</td><td>0.76</td><td>1.21</td></tr>
+<tr><td><span class="nb-table-token">Gemma 4</span></td><td>39.7</td><td>36.4</td><td>0.77</td><td>1.19</td></tr>
+<tr><td><span class="nb-table-token">GPT-4.1-mini</span></td><td>31.0</td><td>33.9</td><td>0.86</td><td>1.26</td></tr>
+<tr><td><span class="nb-table-token">Qwen3.5-397B</span></td><td>30.9</td><td>29.3</td><td>0.73</td><td>1.30</td></tr>
+<tr><td><span class="nb-table-token">Qwen3.6-27B</span></td><td>28.5</td><td>29.0</td><td>0.79</td><td>1.28</td></tr>
+<tr><td><span class="nb-table-token">GPT-5.4-mini</span></td><td>19.1</td><td>26.0</td><td>0.94</td><td>1.45</td></tr>
+<tr><td><span class="nb-table-token">GPT-4o-mini</span></td><td>27.7</td><td>25.1</td><td>0.66</td><td>1.37</td></tr>
+<tr><td><span class="nb-table-token">GPT-OSS-120B†</span></td><td>27.7</td><td>24.9</td><td>0.59</td><td>1.51</td></tr>
+          </tbody>
+        </table>
+        <p>
+          The follow-up factor (the two follow-up rates multiplied, over the
+          opening rate squared) runs from 0.59 to 0.94, pulling completion under the cube. The clustering factor
+          (observed completion over the independent product) runs from 1.19 to
+          1.51, pushing it back up. Each nearly undoes the other in most rows.
+        </p>
+        <p>
+          BFCL, the Berkeley
+          Function-Calling Leaderboard, scores a multi-turn entry correct only
+          if it passes every turn, the same rule as all-three-pass.<sup class="nb-cite"><a href="#s5" data-nb-locator="Blog, Evaluation Metrics">5</a></sup> It
+          publishes no per-turn rates, so it cannot test clustering. Its
+          single-turn scores say little about the all-turns score. Among the
+          75 leaderboard entries with at least 80% single-turn accuracy,
+          multi-turn accuracy runs from 0.4% to 77.4% (my computation from the leaderboard data of 16
+          November; the tasks differ).<sup class="nb-cite"><a href="#s5" data-nb-locator="Leaderboard data file, columns Non-Live AST Acc and Multi Turn Acc">5</a></sup> Claude Opus 4.5 scores 68.4% with native function
+          calling and 16.1% in prompt mode, at single-turn accuracies of 88.6%
+          and 89.7%, a sensitivity to protocol like GPT-OSS-120B’s
+          plain-text answers.
+        </p>
+        <p>
+          An opening-request score sees neither the follow-up decline nor the
+          clustering. To estimate dialogue completion, score each follow-up in
+          its dialogue and the dialogue as one unit.
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2611.14925"
+              >Gholami, King and Flanigan · ToolTurns (arXiv 2611.14925v1)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2506.07982"
+              >Barres, Dong, Ray, Si and Narasimhan · tau2-Bench</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2505.06120"
+              >Laban, Hayashi, Zhou and Neville · LLMs Get Lost In Multi-Turn Conversation</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2406.12045"
+              >Yao, Shinn, Razavi and Narasimhan · tau-bench</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html"
+              data-nb-url="https://gorilla.cs.berkeley.edu/leaderboard.html"
+              >Mao, Yan, Ji and colleagues · BFCL v3 multi-turn</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
