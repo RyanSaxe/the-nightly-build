@@ -1,0 +1,1639 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The best number of torque levels for balancing a pendulum rises with the learning budget · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "action-discretization",
+        "template": "lesson",
+        "title": "The best number of torque levels for balancing a pendulum rises with the learning budget",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-16",
+        "tags": ["action-discretization", "action-space", "pendulum", "q-learning", "dynamic-programming", "environment-design"],
+        "sources": 4,
+        "words": 4639,
+        "reading_minutes": 20,
+        "dek": "On Gymnasium's pendulum with torque a thousand times dearer, Q-learning does best with 3 levels after 60,000 steps and 9 after 600,000, since each added level is one more estimate per cell.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">The best number of torque levels for balancing a pendulum rises with the learning budget</h1>
+        <p class="nb-dekline">On Gymnasium's pendulum with torque a thousand times dearer, Q-learning does best with 3 levels after 60,000 steps and 9 after 600,000, since each added level is one more estimate per cell.</p>
+        <div class="nb-byline">
+          <span>20 min read</span><span>2026-11-16</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A Q-learning table needs a finite list of actions, and many
+          environments offer a continuous one, such as a torque anywhere
+          between −2 and 2. Offering the agent k evenly spaced torques is a
+          trade. More levels bring the best policy over them closer to what
+          any torque could do. They also give every row of the table more
+          action values to estimate from the same experience. Choosing the
+          levels is action discretization, and k is its one setting. On a
+          pendulum balanced near upright, you will bound the first effect
+          from the torque cost and the spacing alone. You will then measure
+          the second with Q-learning at three budgets, and test whether the
+          fine sets fall behind for lack of updates or for how they explore.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>:
+            value iteration, whose sweep ceiling.py runs backward from the
+            end of the episode.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            the update learn.py runs on a table of cells.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">Q-learning values a rolling ball's cell by how often each speed reaches it</a>:
+            why a table row averages over the states in its cell.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/termination-and-truncation.html">Q-learning that treats its time limit as terminal learns the values of a different grid</a>:
+            why the target still bootstraps at Pendulum-v1's 200-step limit.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>With only full torque, holding the rod still means pushing both ways</h2>
+        <p>
+          Gymnasium's Pendulum-v1 is a rod on a pivot (Fig. 1). Its state is
+          the angle θ from upright and the turning speed θ̇. The agent
+          observes cos θ, sin θ and θ̇, and each step it applies a torque u
+          between −2 and 2 for 0.05 s.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          Gravity adds 15 sin θ to the acceleration and the torque adds 3u,
+          so full torque can hold the rod still only within 23.6° of upright.
+          Episodes are cut off after 200 steps.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} \dot\theta_{t+1} &amp;= \mathrm{clip}\bigl(\dot\theta_t + (15 \sin\theta_t + 3 u_t)\cdot 0.05,\; -8,\; 8\bigr) \\ \theta_{t+1} &amp;= \theta_t + 0.05\, \dot\theta_{t+1} \end{aligned}</div>
+          <figcaption>Pendulum-v1's step with its constants filled in.<sup class="nb-cite"><a href="#s1">1</a></sup></figcaption>
+        </figure>
+        <figure class="nb-math">
+          <div class="nb-math-eq">r_t = -\bigl(\theta_t^2 + 0.1\, \dot\theta_t^2 + \htmlClass{nb-mc1}{0.001\, u_t^2}\bigr)</div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">0.001\, u_t^2</span
+              ><span>the torque cost, which this lesson raises to 1.0·u²</span>
+            </li>
+          </ul>
+          <figcaption>
+            Pendulum-v1's reward, which wraps θ into [−π, π] first.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          We change two things, both through Gymnasium's own Pendulum-v1. A
+          wrapper charges 1.0·u² for torque, a thousand times the
+          environment's 0.001·u². Every episode starts within 0.3 rad of
+          upright and turns at most 0.5 rad/s, through the reset options
+          Pendulum-v1 already takes.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          The dearer torque is what makes the number of levels matter, as the
+          next section derives. The near-upright starts keep every episode in
+          the small region the learner's table covers, since a table a laptop
+          can fill learns the full swing-up nowhere near its ceiling. The agent picks from
+          k evenly spaced torques from −2 to 2, both ends included.
+        </p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center">
+<svg viewBox="0 0 150 172" role="img" aria-label="The pendulum tilted 0.25 radians from upright. The angle is measured from upright, positive counter-clockwise. Gravity pulls the tilt larger, and the torque turns the rod about the pivot." style="flex: 1 1 9rem; max-width: 12rem; min-width: 0; height: auto">
+<line x1="75.0" y1="120.0" x2="75.0" y2="32.0" style="stroke: var(--ink-soft); stroke-width: 1; stroke-dasharray: 3 3" />
+<text x="79.0" y="30.0" text-anchor="start" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">upright, θ = 0</text>
+<line x1="75" y1="120" x2="55.7" y2="44.4" style="stroke: var(--ink); stroke-width: 4; stroke-linecap: round" />
+<circle cx="75.0" cy="120.0" r="4" style="fill: var(--ink)" />
+<circle cx="55.7" cy="44.4" r="7" style="fill: var(--chart-2)" />
+<path d="M75.0 68.0 A 52 52 0 0 0 62.1 69.6" style="fill: none; stroke: var(--ink-soft); stroke-width: 1" />
+<text x="70.0" y="84.3" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">θ</text>
+<line x1="39.7" y1="40.4" x2="39.7" y2="66.4" style="stroke: var(--ink-soft); stroke-width: 1.3" />
+<path d="M39.7 71.4 l-3.5 -6 h7 z" style="fill: var(--ink-soft)" />
+<text x="34.7" y="56.4" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">gravity</text>
+<path d="M90.0 125.5 A 16 16 0 0 1 60.0 125.5" style="fill: none; stroke: var(--chart-1); stroke-width: 1.5" />
+<path d="M90.0 125.5 l4 -6 l2.5 7.5 z" style="fill: var(--chart-1)" />
+<text x="75.0" y="152.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">torque u, −2 to 2</text>
+<text x="75.0" y="165.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">(+ turns counter-clockwise)</text>
+</svg>
+<svg viewBox="0 0 260 172" role="img" aria-label="Angle and torque over the first 2 seconds from a 0.25 radian tilt. With 65 levels the torque starts at −2 and eases toward zero. With 3 levels it pushes at −2, coasts at 0 and kicks at −2 again when the rod drifts. With 2 levels it alternates between −2 and 2 every step." style="flex: 2 1 18rem; min-width: 0; max-width: 26rem; height: auto">
+<line x1="34.0" y1="61.5" x2="244.0" y2="61.5" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="30.0" y="64.5" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.0</text>
+<line x1="34.0" y1="44.5" x2="244.0" y2="44.5" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="30.0" y="47.5" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.1</text>
+<line x1="34.0" y1="27.6" x2="244.0" y2="27.6" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="30.0" y="30.6" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.2</text>
+<text x="34.0" y="8.0" text-anchor="start" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">angle θ (rad)</text>
+<line x1="34.0" y1="147.5" x2="244.0" y2="147.5" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="30.0" y="150.5" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">-2</text>
+<line x1="34.0" y1="123.0" x2="244.0" y2="123.0" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="30.0" y="126.0" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0</text>
+<line x1="34.0" y1="98.5" x2="244.0" y2="98.5" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="30.0" y="101.5" text-anchor="end" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">+2</text>
+<text x="34.0" y="90.0" text-anchor="start" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">torque u</text>
+<text x="34.0" y="164.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.0 s</text>
+<text x="86.5" y="164.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">0.5 s</text>
+<text x="139.0" y="164.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1.0 s</text>
+<text x="191.5" y="164.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">1.5 s</text>
+<text x="244.0" y="164.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">2.0 s</text>
+<path d="M34.0 19.1 L39.2 20.1 L44.5 22.0 L49.8 25.1 L55.0 29.3 L60.2 34.9 L65.5 37.0 L70.8 40.7 L76.0 41.0 L81.2 43.2 L86.5 47.2 L91.8 48.1 L97.0 51.0 L102.2 51.0 L107.5 53.2 L112.8 52.5 L118.0 54.0 L123.2 52.7 L128.5 53.6 L133.8 56.8 L139.0 57.3 L144.2 60.1 L149.5 60.3 L154.8 57.9 L160.0 58.0 L165.2 60.4 L170.5 60.3 L175.8 62.7 L181.0 62.6 L186.2 65.0 L191.5 65.1 L196.8 62.7 L202.0 62.9 L207.2 60.6 L212.5 60.9 L217.8 58.6 L223.0 58.7 L228.2 61.2 L233.5 61.2 L238.8 58.6 L244.0 58.5" style="fill: none; stroke: var(--chart-3); stroke-width: 1.1; stroke-linejoin: round" />
+<path d="M34.0 147.5 L39.2 147.5 L39.2 147.5 L44.5 147.5 L44.5 147.5 L49.8 147.5 L49.8 147.5 L55.0 147.5 L55.0 147.5 L60.2 147.5 L60.2 98.5 L65.5 98.5 L65.5 147.5 L70.8 147.5 L70.8 98.5 L76.0 98.5 L76.0 147.5 L81.2 147.5 L81.2 147.5 L86.5 147.5 L86.5 98.5 L91.8 98.5 L91.8 147.5 L97.0 147.5 L97.0 98.5 L102.2 98.5 L102.2 147.5 L107.5 147.5 L107.5 98.5 L112.8 98.5 L112.8 147.5 L118.0 147.5 L118.0 98.5 L123.2 98.5 L123.2 147.5 L128.5 147.5 L128.5 147.5 L133.8 147.5 L133.8 98.5 L139.0 98.5 L139.0 147.5 L144.2 147.5 L144.2 98.5 L149.5 98.5 L149.5 98.5 L154.8 98.5 L154.8 147.5 L160.0 147.5 L160.0 147.5 L165.2 147.5 L165.2 98.5 L170.5 98.5 L170.5 147.5 L175.8 147.5 L175.8 98.5 L181.0 98.5 L181.0 147.5 L186.2 147.5 L186.2 98.5 L191.5 98.5 L191.5 98.5 L196.8 98.5 L196.8 147.5 L202.0 147.5 L202.0 98.5 L207.2 98.5 L207.2 147.5 L212.5 147.5 L212.5 98.5 L217.8 98.5 L217.8 147.5 L223.0 147.5 L223.0 147.5 L228.2 147.5 L228.2 98.5 L233.5 98.5 L233.5 98.5 L238.8 98.5 L238.8 147.5 L244.0 147.5" style="fill: none; stroke: var(--chart-3); stroke-width: 1.1; stroke-linejoin: round" />
+<path d="M34.0 19.1 L39.2 20.1 L44.5 22.0 L49.8 25.1 L55.0 29.3 L60.2 34.9 L65.5 39.5 L70.8 43.3 L76.0 46.4 L81.2 48.9 L86.5 51.0 L91.8 52.7 L97.0 54.0 L102.2 55.0 L107.5 55.9 L112.8 56.4 L118.0 56.9 L123.2 57.1 L128.5 57.2 L133.8 57.1 L139.0 56.8 L144.2 56.3 L149.5 55.7 L154.8 54.9 L160.0 53.7 L165.2 54.9 L170.5 55.8 L175.8 56.5 L181.0 57.0 L186.2 57.3 L191.5 57.5 L196.8 57.5 L202.0 57.4 L207.2 57.1 L212.5 56.6 L217.8 56.0 L223.0 55.1 L228.2 54.1 L233.5 55.2 L238.8 56.2 L244.0 56.9" style="fill: none; stroke: var(--chart-2); stroke-width: 1.8; stroke-linejoin: round" />
+<path d="M34.0 147.5 L39.2 147.5 L39.2 147.5 L44.5 147.5 L44.5 147.5 L49.8 147.5 L49.8 147.5 L55.0 147.5 L55.0 147.5 L60.2 147.5 L60.2 123.0 L65.5 123.0 L65.5 123.0 L70.8 123.0 L70.8 123.0 L76.0 123.0 L76.0 123.0 L81.2 123.0 L81.2 123.0 L86.5 123.0 L86.5 123.0 L91.8 123.0 L91.8 123.0 L97.0 123.0 L97.0 123.0 L102.2 123.0 L102.2 123.0 L107.5 123.0 L107.5 123.0 L112.8 123.0 L112.8 123.0 L118.0 123.0 L118.0 123.0 L123.2 123.0 L123.2 123.0 L128.5 123.0 L128.5 123.0 L133.8 123.0 L133.8 123.0 L139.0 123.0 L139.0 123.0 L144.2 123.0 L144.2 123.0 L149.5 123.0 L149.5 123.0 L154.8 123.0 L154.8 123.0 L160.0 123.0 L160.0 147.5 L165.2 147.5 L165.2 123.0 L170.5 123.0 L170.5 123.0 L175.8 123.0 L175.8 123.0 L181.0 123.0 L181.0 123.0 L186.2 123.0 L186.2 123.0 L191.5 123.0 L191.5 123.0 L196.8 123.0 L196.8 123.0 L202.0 123.0 L202.0 123.0 L207.2 123.0 L207.2 123.0 L212.5 123.0 L212.5 123.0 L217.8 123.0 L217.8 123.0 L223.0 123.0 L223.0 123.0 L228.2 123.0 L228.2 147.5 L233.5 147.5 L233.5 123.0 L238.8 123.0 L238.8 123.0 L244.0 123.0" style="fill: none; stroke: var(--chart-2); stroke-width: 1.8; stroke-linejoin: round" />
+<path d="M34.0 19.1 L39.2 20.1 L44.5 22.0 L49.8 24.6 L55.0 27.6 L60.2 30.6 L65.5 33.6 L70.8 36.5 L76.0 39.3 L81.2 41.9 L86.5 44.3 L91.8 46.5 L97.0 48.4 L102.2 50.2 L107.5 51.7 L112.8 53.1 L118.0 54.3 L123.2 55.3 L128.5 56.1 L133.8 56.9 L139.0 57.5 L144.2 58.0 L149.5 58.4 L154.8 58.8 L160.0 59.2 L165.2 59.6 L170.5 59.9 L175.8 60.1 L181.0 60.2 L186.2 60.2 L191.5 60.2 L196.8 60.2 L202.0 60.2 L207.2 60.2 L212.5 60.3 L217.8 60.2 L223.0 60.3 L228.2 60.2 L233.5 60.3 L238.8 60.3 L244.0 60.3" style="fill: none; stroke: var(--chart-1); stroke-width: 1.8; stroke-linejoin: round" />
+<path d="M34.0 147.5 L39.2 147.5 L39.2 147.5 L44.5 147.5 L44.5 142.9 L49.8 142.9 L49.8 139.9 L55.0 139.9 L55.0 136.0 L60.2 136.0 L60.2 133.7 L65.5 133.7 L65.5 132.2 L70.8 132.2 L70.8 130.7 L76.0 130.7 L76.0 129.1 L81.2 129.1 L81.2 128.4 L86.5 128.4 L86.5 126.8 L91.8 126.8 L91.8 126.1 L97.0 126.1 L97.0 126.1 L102.2 126.1 L102.2 125.3 L107.5 125.3 L107.5 124.5 L112.8 124.5 L112.8 124.5 L118.0 124.5 L118.0 123.8 L123.2 123.8 L123.2 123.8 L128.5 123.8 L128.5 124.5 L133.8 124.5 L133.8 123.0 L139.0 123.0 L139.0 123.0 L144.2 123.0 L144.2 123.8 L149.5 123.8 L149.5 123.8 L154.8 123.8 L154.8 123.8 L160.0 123.8 L160.0 123.8 L165.2 123.8 L165.2 123.0 L170.5 123.0 L170.5 123.0 L175.8 123.0 L175.8 122.2 L181.0 122.2 L181.0 123.0 L186.2 123.0 L186.2 123.0 L191.5 123.0 L191.5 123.8 L196.8 123.8 L196.8 123.0 L202.0 123.0 L202.0 123.8 L207.2 123.8 L207.2 123.8 L212.5 123.8 L212.5 123.0 L217.8 123.0 L217.8 123.8 L223.0 123.8 L223.0 123.0 L228.2 123.0 L228.2 123.8 L233.5 123.8 L233.5 123.8 L238.8 123.8 L238.8 123.0 L244.0 123.0" style="fill: none; stroke: var(--chart-1); stroke-width: 1.8; stroke-linejoin: round" />
+<line x1="154.0" y1="22.0" x2="168.0" y2="22.0" style="stroke: var(--chart-1); stroke-width: 2" />
+<text x="172.0" y="25.5" text-anchor="start" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">65 levels</text>
+<line x1="154.0" y1="35.0" x2="168.0" y2="35.0" style="stroke: var(--chart-2); stroke-width: 2" />
+<text x="172.0" y="38.5" text-anchor="start" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">3 levels</text>
+<line x1="154.0" y1="48.0" x2="168.0" y2="48.0" style="stroke: var(--chart-3); stroke-width: 2" />
+<text x="172.0" y="51.5" text-anchor="start" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">2 levels</text>
+</svg>
+</div>
+          <figcaption>
+            Fig. 1 · Pendulum-v1's rod, and the best first 2 s from a 0.25 rad
+            tilt with 65, 3 and 2 torque levels, as ceiling.py's solve plays
+            them under the dearer torque.
+          </figcaption>
+        </figure>
+        <p>
+          Start the rod tilted 0.25 rad, at rest. With 65 levels the best
+          policy pushes back at −2 for two steps, then eases the torque toward
+          zero as the rod comes up. Its episode returns −17.0. With three
+          levels it can only push or coast. It pushes at
+          −2 for five steps, coasts at 0, and kicks at −2 again whenever the
+          rod drifts, for −61.0. With two levels it can't coast at all. To keep
+          the rod up it alternates −2 and 2, step after step, and every step
+          pays 4 for torque. That is 800 over the episode, and the solve
+          returns −801.3.
+        </p>
+      </section>
+
+      <section data-nb-section="alternation" id="alternation">
+        <h2>Alternating between neighbouring levels costs at most C(Δ/2)² a step</h2>
+        <p>
+          In Fig. 1 the levels cost return only where the best torque lies
+          between two of them. To see how that cost grows with the spacing,
+          write C for the torque-cost coefficient, 1.0 here. Follow the best
+          policy with any torque allowed, and let u* be the torque it applies
+          at one step. Evenly spaced levels have spacing Δ = 4/(k − 1), so u*
+          lies between two neighbouring levels, a below and a + Δ above.
+        </p>
+        <p>
+          A policy over the levels can match u* on average by alternating
+          between those two. It applies a + Δ a fraction p = (u* − a)/Δ of the
+          time and a otherwise, each step picking whichever brings the running
+          total of its torque errors back toward zero. Torque enters the step
+          linearly, so the rod follows the best policy's path with a small
+          wobble. Fig. 1 shows this twice: two levels alternate evenly around
+          u* = 0, and three levels mostly coast at 0 with a rare kick at −2.
+          The torque cost does not average out, because it is a square.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;C\bigl[(1-p)\,a^2 + p\,(a + \Delta)^2\bigr] \\ &amp;\quad = C\, u^{*2} + \htmlClass{nb-mc1}{C\,(u^* - a)(a + \Delta - u^*)} \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">C\,(u^* - a)(a + \Delta - u^*)</span
+              ><span>the extra torque cost: zero when u* is a level, and largest, C(Δ/2)², when u* sits midway</span>
+            </li>
+          </ul>
+          <figcaption>The average torque cost of one step of the alternation, with p = (u* − a)/Δ.</figcaption>
+        </figure>
+        <p>
+          A best torque of exactly ±2 costs nothing extra, since both ends are
+          in every set. The wobble costs little. The running total of torque
+          errors stays within Δ/2, so the speed stays within about 0.15·Δ/2 of
+          the best path's. The reward's 0.1·θ̇² term charges at most about
+          0.002·(Δ/2)² a step for that. The best policy over the levels does at
+          least as well as the alternation, so over 200 steps
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\text{shortfall}(k) \le 200\, C \Bigl(\frac{\Delta}{2}\Bigr)^2 = \frac{800\, C}{(k-1)^2}</div>
+          <figcaption>To leading order, leaving out the wobble.</figcaption>
+        </figure>
+        <p>
+          The bound is reached when the best torque sits midway between two
+          levels for the whole episode. That is the two-level case of Fig. 1:
+          at the top u* = 0, midway between −2 and 2, and the alternation is
+          the back-and-forth, with the bound's 800. Each halving of the spacing
+          cuts the bound to a quarter. With Pendulum-v1's C = 0.001 the extra
+          torque costs at most 0.8 per episode even for two levels, and the
+          wobble about as much again. Seyde and colleagues show why two levels
+          suffice when the action enters the dynamics linearly, as torque does
+          here, and costs nothing. The best action then sits at one limit or
+          the other wherever it changes the return to first order. Where it
+          doesn't, as while the rod is held still, switching quickly between
+          the limits does the same job.<sup class="nb-cite"><a href="#s3">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="ceiling" id="ceiling">
+        <h2>Solving backward from the last step gives each set's ceiling</h2>
+        <p>
+          The bound needs no solve, but the true shortfall needs the best
+          policy over each set.
+          <a href="../reinforcement-learning/finding-optimal-policies.html">Value iteration</a>'s
+          sweep finds it. Start from
+          V<sub>200</sub> = 0 and back up one step at a time, with no discount.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} V_{200}(s) &amp;= 0 \\ V_t(s) &amp;= \max_{u \in \text{levels}} \bigl[\, r(s, u) + V_{t+1}\bigl(s'(u)\bigr) \bigr] \end{aligned}</div>
+          <figcaption>After 200 sweeps, V<sub>0</sub> is the best 200-step return over the levels.</figcaption>
+        </figure>
+        <p>
+          The state is continuous, so ceiling.py keeps each V<sub>t</sub> on a
+          grid of 361 angles by 321 speeds and reads the value of a next state
+          off the four grid points around it. It then plays the policy that
+          picks each step's level by those values, in Pendulum-v1's exact
+          dynamics, from 1000 starts drawn the way the episodes start. These
+          are returns the levels really reach, so they can only understate a
+          set's ceiling. Running pendulum.py on its own checks its copy of the
+          dynamics against env.step. The solve took under a minute here.
+        </p>
+        <details>
+          <summary>pendulum.py and ceiling.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">pendulum.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Gymnasium's Pendulum-v1 with a dearer torque, and the torque levels.
+
+Pendulum-v1 charges 0.001 u^2 per step for a torque u. TorqueCost charges
+COST u^2 instead and changes nothing else. NEAR is the reset option that
+starts each episode within 0.3 rad of upright, turning at most 0.5 rad/s.
+levels(k) gives k evenly spaced torques from -2 to 2, both ends included.
+physics() is Pendulum-v1's step() written for arrays of states, so a solver
+can move many states at once. Run on its own, this file checks physics()
+against env.step; the difference left is float32 rounding in Pendulum-v1.
+"""
+import gymnasium as gym
+import numpy as np
+
+COST = 1.0  # per unit of torque squared; Pendulum-v1 charges 0.001
+NEAR = {"x_init": 0.3, "y_init": 0.5}  # reset options: start near upright
+# 1000 fixed starts drawn the way reset(options=NEAR) draws them, for scoring
+STARTS = np.random.default_rng(12345).uniform([-0.3, -0.5], [0.3, 0.5], (1000, 2))
+
+
+class TorqueCost(gym.Wrapper):
+    def __init__(self, env, cost=COST):
+        super().__init__(env)
+        self.cost = cost
+
+    def step(self, action):
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        u = float(np.clip(action, -2.0, 2.0)[0])
+        reward -= (self.cost - 0.001) * u * u
+        return obs, reward, terminated, truncated, info
+
+
+def make(cost=COST):
+    return TorqueCost(gym.make("Pendulum-v1"), cost)
+
+
+def levels(k):
+    return np.linspace(-2.0, 2.0, k)
+
+
+def physics(theta, theta_dot, u, cost=COST):
+    """One step from arrays of states, as pendulum.py's step() takes it."""
+    upright = (theta + np.pi) % (2 * np.pi) - np.pi  # angle from upright
+    reward = -(upright**2 + 0.1 * theta_dot**2 + cost * u**2)
+    theta_dot = np.clip(theta_dot + (15.0 * np.sin(theta) + 3.0 * u) * 0.05, -8.0, 8.0)
+    return theta + theta_dot * 0.05, theta_dot, reward
+
+
+if __name__ == "__main__":
+    env, rng, worst = make(), np.random.default_rng(0), 0.0
+    for _ in range(1000):
+        env.reset(seed=int(rng.integers(1 &lt;&lt; 30)))
+        theta, theta_dot = env.unwrapped.state
+        u = rng.choice(levels(17))
+        _, reward, _, _, _ = env.step(np.array([u], dtype=np.float32))
+        th, td, r = physics(theta, theta_dot, u)
+        worst = max(worst, *np.abs(env.unwrapped.state - (th, td)), abs(reward - r))
+    print(f"largest difference from env.step in 1000 steps: {worst:.1e}")</code></pre>
+            <figcaption class="nb-code-cap">
+              The dearer Pendulum-v1, the torque levels, and the dynamics for arrays.
+            </figcaption>
+          </figure>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">ceiling.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""The best 200-step return a policy over k torque levels can reach.
+
+Values live on a grid of (theta, theta_dot) points. The value of a state between
+grid points is read off the four points around it. Starting from zero, each
+backward sweep sets a point's value to its best reward plus the value of where
+that level sends it, with no discount, so 200 sweeps give the best 200-step
+return. The policy that picks the best level at each step by those values is
+then run from 1000 fixed starts near upright, and its average return is the
+ceiling. It is also run from the tilted start of Fig. 1.
+
+    uv run ceiling.py                 torque cost 1.0
+    uv run ceiling.py --cost 0.001    Pendulum-v1's own torque cost
+"""
+import argparse
+
+import numpy as np
+
+from pendulum import COST, STARTS, levels, physics
+
+STEPS, N_THETA, N_DOT = 200, 361, 321
+thetas = np.linspace(-np.pi, np.pi, N_THETA, endpoint=False)
+dots = np.linspace(-8.0, 8.0, N_DOT)
+TH, TD = (a.ravel() for a in np.meshgrid(thetas, dots, indexing="ij"))
+
+
+def corners(theta, theta_dot):
+    """Flat indices of the four grid points around each state, and their weights."""
+    x = ((theta + np.pi) % (2 * np.pi)) / (2 * np.pi) * N_THETA
+    y = np.clip((theta_dot + 8.0) / 16.0 * (N_DOT - 1), 0, N_DOT - 1 - 1e-9)
+    i, j = np.floor(x).astype(int), np.floor(y).astype(int)
+    fx, fy = x - i, y - j
+    i0, i1 = i % N_THETA, (i + 1) % N_THETA  # the angle wraps around
+    index = np.stack([i0 * N_DOT + j, i1 * N_DOT + j, i0 * N_DOT + j + 1, i1 * N_DOT + j + 1])
+    weight = np.stack([(1 - fx) * (1 - fy), fx * (1 - fy), (1 - fx) * fy, fx * fy])
+    return index, weight
+
+
+def value_at(V, theta, theta_dot):
+    index, weight = corners(theta, theta_dot)
+    return (weight * V[index]).sum(0)
+
+
+def solve(torques, cost):
+    """V[t] holds the best return over the last STEPS - t steps."""
+    moves = [(corners(*physics(TH, TD, u, cost)[:2]), physics(TH, TD, u, cost)[2])
+             for u in torques]
+    V = [np.zeros(TH.size) for _ in range(STEPS + 1)]
+    for t in range(STEPS - 1, -1, -1):
+        V[t] = np.max([r + (w * V[t + 1][i]).sum(0) for (i, w), r in moves], axis=0)
+    return V
+
+
+def ceiling(torques, cost, starts):
+    """Returns from each start of the policy that looks one step ahead."""
+    V, (theta, theta_dot) = solve(torques, cost), starts.T.copy()
+    total = np.zeros(len(starts))
+    for t in range(STEPS):
+        ahead = [r + value_at(V[t + 1], th, td)
+                 for th, td, r in (physics(theta, theta_dot, u, cost) for u in torques)]
+        u = torques[np.argmax(ahead, axis=0)]
+        theta, theta_dot, r = physics(theta, theta_dot, u, cost)
+        total += r
+    return total
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cost", type=float, default=COST)
+    args = parser.parse_args()
+    starts = np.vstack([(0.25, 0.0), STARTS])  # the tilted start first
+    fine = ceiling(levels(65), args.cost, starts)
+    print(f"torque cost {args.cost}: best 200-step return, and shortfall against 65 levels")
+    print(f"{'levels':&gt;6}{'spacing':&gt;9}{'tilted start':&gt;14}{'1000 starts':&gt;13}"
+          f"{'shortfall':&gt;11}{'bound':&gt;8}")
+    for k in (2, 3, 5, 9, 17, 65):
+        returns = fine if k == 65 else ceiling(levels(k), args.cost, starts)
+        bound = STEPS * args.cost * (2 / (k - 1)) ** 2
+        print(f"{k:6d}{4 / (k - 1):9.2f}{returns[0]:14.1f}{returns[1:].mean():13.1f}"
+              f"{(fine - returns)[1:].mean():11.2f}{bound:8.1f}")</code></pre>
+            <figcaption class="nb-code-cap">
+              The backward solve for each set of levels, and the returns its policy reaches.
+            </figcaption>
+          </figure>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">output of uv run pendulum.py</span><span>text</span>
+            </div>
+            <pre><code data-language="text">largest difference from env.step in 1000 steps: 1.9e-10</code></pre>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run ceiling.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">torque cost 1.0: best 200-step return, and shortfall against 65 levels
+levels  spacing  tilted start  1000 starts  shortfall   bound
+     2     4.00        -801.3       -801.0     791.49   800.0
+     3     2.00         -61.0        -54.5      44.96   200.0
+     5     1.00         -27.7        -21.1      11.56    50.0
+     9     0.50         -19.3        -12.5       2.94    12.5
+    17     0.25         -18.7        -11.2       1.65     3.1
+    65     0.06         -17.0         -9.6       0.00     0.2</code></pre>
+        </figure>
+        <p>
+          Every shortfall sits under the bound. Two levels come within 9 of it,
+          because they push back and forth all episode. From 3 to 5 to 9
+          levels the shortfall falls by about four at each halving of the
+          spacing, from 45 to 11.6 to 2.9, as the bound's (Δ/2)² predicts.
+          Seventeen levels fall short by 1.65, more than a fourfold drop would
+          leave, but there the shortfall is down to the size of the solve's
+          grid error. For 3 to 9 levels the bound runs about four times the
+          shortfall, because the best torque sits midway between levels only
+          during the catch.
+        </p>
+      </section>
+
+      <section data-nb-section="learning" id="learning">
+        <h2>Q-learning's best set moves to finer levels as the budget grows</h2>
+        <p>
+          Now let an agent learn. learn.py runs
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">Q-learning</a>
+          on the dearer pendulum through Gymnasium's API. Its table has one row
+          per cell of a 15 × 15 grid over angles within 0.6 rad of upright and
+          speeds within 2 rad/s, and one column per level. Each row
+          <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">averages over the states</a>
+          in its cell. The step size is 0.3, the
+          <a href="../reinforcement-learning/epsilon-greedy-exploration.html">exploration rate ε</a>
+          is 0.1, and the discount is
+          0.95, a horizon of about 20 steps. Pendulum-v1 never terminates, so
+          the target bootstraps at every step, including the
+          <a href="../reinforcement-learning/termination-and-truncation.html">truncated</a>
+          200th. After 60,000, 200,000 and 600,000 steps, each run's greedy
+          policy is scored from ceiling.py's 1000 starts. Each set gets five
+          seeds, and a call took about two minutes on four cores here.
+        </p>
+        <details>
+          <summary>learn.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">learn.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning on the dearer pendulum with k torque levels, five seeds each.
+
+The table has one row per cell of a 15 x 15 grid over angles within 0.6 rad
+of upright and speeds within 2 rad/s. A state off the grid takes the nearest
+edge cell. Every estimate starts at zero. After each budget of steps, the
+run's greedy policy is scored from the same 1000 starts as ceiling.py.
+
+    uv run learn.py                  every set of levels gets the same steps
+    uv run learn.py --explore-ends   random moves pick only -2 or 2
+    uv run learn.py --per-level      30,000 steps per level, so 17 levels get 510,000
+    uv run learn.py --seeds 5 6 7 8 9
+"""
+import argparse
+import math
+from concurrent.futures import ProcessPoolExecutor
+
+import numpy as np
+
+from pendulum import NEAR, STARTS, levels, make, physics
+
+N, MAX_ANGLE, MAX_SPEED = 15, 0.6, 2.0  # cells per side, and the grid's reach
+ALPHA, EPS, GAMMA = 0.3, 0.1, 0.95
+KS, BUDGETS = (2, 3, 5, 9, 17), (60_000, 200_000, 600_000)
+
+
+def cell(angle, speed):
+    angle = (angle + math.pi) % (2 * math.pi) - math.pi
+    i = min(max(int((angle + MAX_ANGLE) / (2 * MAX_ANGLE) * N), 0), N - 1)
+    j = min(max(int((speed + MAX_SPEED) / (2 * MAX_SPEED) * N), 0), N - 1)
+    return i * N + j
+
+
+def score(Q, torques):
+    """Average 200-step return of the greedy policy from the fixed starts."""
+    theta, theta_dot = STARTS.T.copy()
+    total = np.zeros(len(STARTS))
+    for _ in range(200):
+        a = [Q[cell(th, td)].argmax() for th, td in zip(theta, theta_dot)]
+        theta, theta_dot, r = physics(theta, theta_dot, torques[a])
+        total += r
+    return total.mean()
+
+
+def run(k, seed, budgets, explore_ends):
+    env, rng, torques = make(), np.random.default_rng(seed), levels(k)
+    actions = [np.array([u], dtype=np.float32) for u in torques]
+    Q, scores = np.zeros((N * N, k)), []
+    obs, _ = env.reset(seed=seed, options=NEAR)
+    x = cell(math.atan2(obs[1], obs[0]), obs[2])
+    for n in range(1, max(budgets) + 1):
+        if rng.random() &lt; EPS:
+            a = (k - 1) * int(rng.integers(2)) if explore_ends else int(rng.integers(k))
+        else:
+            a = int(Q[x].argmax())
+        obs, r, terminated, truncated, _ = env.step(actions[a])
+        x_next = cell(math.atan2(obs[1], obs[0]), obs[2])
+        target = r if terminated else r + GAMMA * Q[x_next].max()
+        Q[x, a] += ALPHA * (target - Q[x, a])
+        x = x_next
+        if terminated or truncated:
+            obs, _ = env.reset(options=NEAR)
+            x = cell(math.atan2(obs[1], obs[0]), obs[2])
+        if n in budgets:
+            scores.append(score(Q, torques))
+    return scores
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--explore-ends", action="store_true")
+    parser.add_argument("--per-level", action="store_true")
+    parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
+    args = parser.parse_args()
+    jobs = [(k, seed, [30_000 * k] if args.per_level else BUDGETS, args.explore_ends)
+            for k in KS for seed in args.seeds]
+    with ProcessPoolExecutor() as pool:
+        scores = np.array(list(pool.map(run, *zip(*jobs)))).reshape(len(KS), len(args.seeds), -1)
+    names = ["30,000 per level"] if args.per_level else [f"{b:,}" for b in BUDGETS]
+    print(f"seeds {args.seeds}, random moves {'-2 or 2' if args.explore_ends else 'any level'}")
+    print("average return of the greedy policy after each budget of steps, mean (sd) over seeds")
+    print(f"{'levels':&gt;6}" + "".join(f"{name:&gt;18}" for name in names))
+    for k, row in zip(KS, scores):
+        print(f"{k:6d}" + "".join(f"{m:12.0f} ({s:3.0f})" for m, s in zip(row.mean(0), row.std(0))))
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+            <figcaption class="nb-code-cap">
+              Tabular Q-learning over k torque levels, scored at three budgets.
+              It needs pendulum.py in its folder.
+            </figcaption>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run learn.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">seeds [0, 1, 2, 3, 4], random moves any level
+average return of the greedy policy after each budget of steps, mean (sd) over seeds
+levels            60,000           200,000           600,000
+     2        -828 ( 21)        -802 (  0)        -802 (  0)
+     3        -219 ( 46)        -183 ( 40)        -179 ( 43)
+     5        -345 (147)         -68 (  5)         -71 ( 11)
+     9       -1038 (324)        -101 ( 46)         -59 ( 27)
+    17       -1288 (277)        -666 (291)        -101 ( 32)</code></pre>
+        </figure>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 262" role="img" aria-label="Cost per episode against the number of torque levels, on log scales. The solve's ceiling falls steadily with more levels. Q-learning's cost is lowest at 3 levels after 60,000 steps, at 5 after 200,000 and at 9 after 600,000." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="50.0" y1="196.4" x2="294.0" y2="196.4" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="45.0" y="200.4" text-anchor="end" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">10</text>
+<line x1="50.0" y1="159.0" x2="294.0" y2="159.0" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="45.0" y="163.0" text-anchor="end" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">30</text>
+<line x1="50.0" y1="118.0" x2="294.0" y2="118.0" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="45.0" y="122.0" text-anchor="end" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">100</text>
+<line x1="50.0" y1="80.6" x2="294.0" y2="80.6" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="45.0" y="84.6" text-anchor="end" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">300</text>
+<line x1="50.0" y1="39.6" x2="294.0" y2="39.6" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="45.0" y="43.6" text-anchor="end" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">1,000</text>
+<line x1="50.0" y1="220.0" x2="50.0" y2="223.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="50.0" y="236.0" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">2</text>
+<line x1="111.0" y1="220.0" x2="111.0" y2="223.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="111.0" y="236.0" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">3</text>
+<line x1="172.0" y1="220.0" x2="172.0" y2="223.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="172.0" y="236.0" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">5</text>
+<line x1="233.0" y1="220.0" x2="233.0" y2="223.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="233.0" y="236.0" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">9</text>
+<line x1="294.0" y1="220.0" x2="294.0" y2="223.0" style="stroke: var(--ink-soft); stroke-width: 1" />
+<text x="294.0" y="236.0" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">17</text>
+<text x="172.0" y="256.0" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">torque levels k (spacing halves at each step right)</text>
+<text x="12.0" y="118.0" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)" transform="rotate(-90 12 118.0)">cost per episode, −return (log)</text>
+<path d="M50.0 47.2 L111.0 138.7 L172.0 171.0 L233.0 188.8 L294.0 192.5" style="fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 4 3; stroke-linejoin: round" />
+<circle cx="50.0" cy="47.2" r="2.2" style="fill: var(--ink)" />
+<circle cx="111.0" cy="138.7" r="2.2" style="fill: var(--ink)" />
+<circle cx="172.0" cy="171.0" r="2.2" style="fill: var(--ink)" />
+<circle cx="233.0" cy="188.8" r="2.2" style="fill: var(--ink)" />
+<circle cx="294.0" cy="192.5" r="2.2" style="fill: var(--ink)" />
+<path d="M50.0 46.0 L111.0 91.3 L172.0 75.8 L233.0 38.3 L294.0 31.0" style="fill: none; stroke: var(--chart-1); stroke-width: 1.8; stroke-linejoin: round" />
+<circle cx="50.0" cy="46.0" r="3" style="fill: var(--chart-1)" />
+<circle cx="111.0" cy="91.3" r="3" style="fill: var(--chart-1)" />
+<circle cx="172.0" cy="75.8" r="3" style="fill: var(--chart-1)" />
+<circle cx="233.0" cy="38.3" r="3" style="fill: var(--chart-1)" />
+<circle cx="294.0" cy="31.0" r="3" style="fill: var(--chart-1)" />
+<circle cx="111.0" cy="91.3" r="6.5" style="fill: none; stroke: var(--chart-1); stroke-width: 1.5" />
+<path d="M50.0 47.1 L111.0 97.4 L172.0 131.1 L233.0 117.7 L294.0 53.4" style="fill: none; stroke: var(--chart-2); stroke-width: 1.8; stroke-linejoin: round" />
+<circle cx="50.0" cy="47.1" r="3" style="fill: var(--chart-2)" />
+<circle cx="111.0" cy="97.4" r="3" style="fill: var(--chart-2)" />
+<circle cx="172.0" cy="131.1" r="3" style="fill: var(--chart-2)" />
+<circle cx="233.0" cy="117.7" r="3" style="fill: var(--chart-2)" />
+<circle cx="294.0" cy="53.4" r="3" style="fill: var(--chart-2)" />
+<circle cx="172.0" cy="131.1" r="6.5" style="fill: none; stroke: var(--chart-2); stroke-width: 1.5" />
+<path d="M50.0 47.1 L111.0 98.2 L172.0 129.7 L233.0 136.0 L294.0 117.7" style="fill: none; stroke: var(--chart-3); stroke-width: 1.8; stroke-linejoin: round" />
+<circle cx="50.0" cy="47.1" r="3" style="fill: var(--chart-3)" />
+<circle cx="111.0" cy="98.2" r="3" style="fill: var(--chart-3)" />
+<circle cx="172.0" cy="129.7" r="3" style="fill: var(--chart-3)" />
+<circle cx="233.0" cy="136.0" r="3" style="fill: var(--chart-3)" />
+<circle cx="294.0" cy="117.7" r="3" style="fill: var(--chart-3)" />
+<circle cx="233.0" cy="136.0" r="6.5" style="fill: none; stroke: var(--chart-3); stroke-width: 1.5" />
+<line x1="304.0" y1="22.0" x2="318.0" y2="22.0" style="stroke: var(--chart-1); stroke-width: 2" />
+<text x="322.0" y="26.0" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink)">60,000 steps</text>
+<line x1="304.0" y1="40.0" x2="318.0" y2="40.0" style="stroke: var(--chart-2); stroke-width: 2" />
+<text x="322.0" y="44.0" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink)">200,000 steps</text>
+<line x1="304.0" y1="58.0" x2="318.0" y2="58.0" style="stroke: var(--chart-3); stroke-width: 2" />
+<text x="322.0" y="62.0" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink)">600,000 steps</text>
+<line x1="304.0" y1="76.0" x2="318.0" y2="76.0" style="stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 4 3" />
+<text x="322.0" y="80.0" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink)">ceiling</text>
+<circle cx="311.0" cy="94.0" r="5.5" style="fill: none; stroke: var(--ink-soft); stroke-width: 1.3" />
+<text x="322.0" y="98.0" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink)">best learned</text>
+</svg>
+          <figcaption>
+            Fig. 2 · Cost per episode (minus the return) against the number of
+            levels, both on logarithmic scales, so each step right halves the
+            spacing. Dashed: ceiling.py's ceiling. Solid: learn.py's mean over
+            five seeds at each budget, with the best set ringed.
+          </figcaption>
+        </figure>
+        <p>
+          The best set changes with the budget: three levels after 60,000
+          steps, five after 200,000, nine after 600,000 (Fig. 2). Five other
+          seeds, 5 to 9, pick the same three sets. At 600,000 steps nine levels
+          beat five by less than the spread between seeds, though, so the
+          third pick is the least certain. Two levels sit at their ceiling of
+          about −802 from 200,000 steps on. The agent has found the
+          back-and-forth, and no budget can do better with ±2. Seventeen levels
+          have the highest ceiling and come last at 60,000 steps, at −1288,
+          behind even two levels.
+        </p>
+      </section>
+
+      <section data-nb-section="updates-per-level" id="updates-per-level">
+        <h2>Equal steps per level remove most of the fine sets' deficit</h2>
+        <p>
+          Count the estimates. With 225 rows, seventeen levels make 3,825
+          <a href="../reinforcement-learning/finding-optimal-policies.html">action values</a>
+          and three levels make 675. After 60,000 steps that is
+          16 updates per action value on average with seventeen levels, and 89
+          with three. Fig. 3 shows what the difference leaves after 200,000
+          steps.
+        </p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center">
+<svg viewBox="0 0 150 168" role="img" aria-label="the solve, 65 levels: torque chosen in each of the 15 by 15 cells, angle across and speed up" style="flex: 1 1 9rem; min-width: 0; max-width: 11rem; height: auto">
+<text x="82.0" y="11.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink); font-weight: 600">the solve, 65 levels</text>
+<rect x="22.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="106.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="74.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.84; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="98.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="82.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.76; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.55; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.28; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="106.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.97; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.71; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.31; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="90.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.65; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.42; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.63; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.84; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.44; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.95; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.55; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.28; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.5; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.76; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.97; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.71; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.34; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.84; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.87; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.65; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.42; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="74.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.42; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.65; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.87; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.84; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.34; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.71; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.97; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.76; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.5; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.28; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.55; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.95; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.44; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.84; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.63; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.42; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.65; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="58.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="34.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.31; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.71; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.97; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="26.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.28; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.55; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.76; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="66.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="50.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="34.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.84; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="74.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.18; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.23; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="26.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--line); stroke-width: 0.5" />
+<text x="22.0" y="149.0" text-anchor="start" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">−0.6</text>
+<text x="142.0" y="149.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">0.6</text>
+<text x="82.0" y="149.0" text-anchor="middle" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">angle (rad)</text>
+<text x="19.0" y="24.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">2</text>
+<text x="19.0" y="138.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">−2</text>
+<text x="8.0" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)" transform="rotate(-90 8 78.0)">speed</text>
+</svg>
+<svg viewBox="0 0 150 168" role="img" aria-label="learned, 5 levels: torque chosen in each of the 15 by 15 cells, angle across and speed up" style="flex: 1 1 9rem; min-width: 0; max-width: 11rem; height: auto">
+<text x="82.0" y="11.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink); font-weight: 600">learned, 5 levels</text>
+<rect x="22.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="98.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="90.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="66.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="50.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="34.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="106.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="74.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="66.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="58.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="50.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="26.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="82.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="58.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="26.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="58.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="58.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="50.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="26.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="66.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="58.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="106.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="82.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="74.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="90.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="82.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="98.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="90.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="26.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="26.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="50.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="58.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="34.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="106.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="50.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="90.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="74.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<text x="22.0" y="149.0" text-anchor="start" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">−0.6</text>
+<text x="142.0" y="149.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">0.6</text>
+<text x="82.0" y="149.0" text-anchor="middle" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">angle (rad)</text>
+<text x="19.0" y="24.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">2</text>
+<text x="19.0" y="138.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">−2</text>
+<text x="8.0" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)" transform="rotate(-90 8 78.0)">speed</text>
+</svg>
+<svg viewBox="0 0 150 168" role="img" aria-label="learned, 17 levels: torque chosen in each of the 15 by 15 cells, angle across and speed up" style="flex: 1 1 9rem; min-width: 0; max-width: 11rem; height: auto">
+<text x="82.0" y="11.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink); font-weight: 600">learned, 17 levels</text>
+<rect x="22.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="50.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="22.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="130.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="30.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="38.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="122.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="90.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="34.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="46.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="58.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="34.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="26.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="54.0" y="18.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="62.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="50.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="70.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="78.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="86.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="94.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="102.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="114.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="90.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="110.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="106.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="42.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="34.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="118.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="82.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.89; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="126.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="130.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="122.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="114.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.68; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="106.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="98.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="90.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="82.0" width="8.0" height="8.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="74.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="66.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.79; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="58.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="50.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.26; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="42.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="34.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="26.0" width="8.0" height="8.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<rect x="134.0" y="18.0" width="8.0" height="8.0" style="fill: var(--chart-2); fill-opacity: 0.47; stroke: var(--line); stroke-width: 0.5" />
+<text x="22.0" y="149.0" text-anchor="start" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">−0.6</text>
+<text x="142.0" y="149.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">0.6</text>
+<text x="82.0" y="149.0" text-anchor="middle" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">angle (rad)</text>
+<text x="19.0" y="24.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">2</text>
+<text x="19.0" y="138.0" text-anchor="end" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)">−2</text>
+<text x="8.0" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 8.5px; fill: var(--ink-soft)" transform="rotate(-90 8 78.0)">speed</text>
+</svg>
+</div>
+<svg viewBox="0 0 300 30" role="img" aria-label="Colour key: blue cells push with negative torque and red cells with positive torque, darker for larger torque, blank for zero" style="display: block; width: 100%; max-width: 24rem; margin: 0.4rem auto 0; height: auto">
+<rect x="20.0" y="4.0" width="22.0" height="10.0" style="fill: var(--chart-2); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<text x="31.0" y="27.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">-2</text>
+<rect x="50.0" y="4.0" width="22.0" height="10.0" style="fill: var(--chart-2); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<text x="61.0" y="27.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">-1</text>
+<rect x="80.0" y="4.0" width="22.0" height="10.0" style="fill: var(--chart-2); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<text x="91.0" y="27.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">-0.5</text>
+<rect x="110.0" y="4.0" width="22.0" height="10.0" style="fill: var(--panel); stroke: var(--line); stroke-width: 0.5" />
+<text x="121.0" y="27.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">0</text>
+<rect x="140.0" y="4.0" width="22.0" height="10.0" style="fill: var(--chart-4); fill-opacity: 0.36; stroke: var(--line); stroke-width: 0.5" />
+<text x="151.0" y="27.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">+0.5</text>
+<rect x="170.0" y="4.0" width="22.0" height="10.0" style="fill: var(--chart-4); fill-opacity: 0.57; stroke: var(--line); stroke-width: 0.5" />
+<text x="181.0" y="27.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">+1</text>
+<rect x="200.0" y="4.0" width="22.0" height="10.0" style="fill: var(--chart-4); fill-opacity: 1.0; stroke: var(--line); stroke-width: 0.5" />
+<text x="211.0" y="27.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">+2</text>
+<text x="232.0" y="13.0" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink)">torque u</text>
+</svg>
+          <figcaption>
+            Fig. 3 · The torque each table cell picks: the solve's best with 65
+            levels at the cell's centre, and the greedy level of learn.py's
+            seed-0 runs after 200,000 steps. That is about 178 updates per
+            action value with 5 levels and 52 with 17.
+          </figcaption>
+        </figure>
+        <p>
+          Five levels have learned the solve's diagonal band near the centre,
+          where every episode starts. Seventeen levels show little of it.
+          More levels also change how the agent explores. A random move from
+          two levels always pushes at full torque. Seyde and colleagues find
+          that such exploration covers more of the state space, because every
+          random action has full magnitude.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          If that drove the result, the fine sets would catch up once their
+          random moves pushed as hard. The flag <code>--explore-ends</code>
+          restricts every set's random moves to −2 and 2, which every set has.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run learn.py --explore-ends</span><span>text</span>
+          </div>
+          <pre><code data-language="text">seeds [0, 1, 2, 3, 4], random moves -2 or 2
+average return of the greedy policy after each budget of steps, mean (sd) over seeds
+levels            60,000           200,000           600,000
+     2        -828 ( 21)        -802 (  0)        -802 (  0)
+     3        -206 ( 44)        -207 (  7)        -173 ( 39)
+     5        -424 (398)         -66 (  6)         -65 (  2)
+     9       -1129 (110)         -73 ( 32)         -42 (  7)
+    17       -1279 (210)        -591 (139)         -65 ( 23)</code></pre>
+        </figure>
+        <p>
+          At 60,000 steps the fine sets' deficit survives intact: seventeen
+          levels score −1279. At the larger budgets full-torque random moves
+          help nine and seventeen levels somewhat, so exploration explains part
+          of the later gaps but none of the early one. The removal test for
+          updates gives every set the same steps per level instead. The flag
+          <code>--per-level</code> runs 30,000 steps per level, 60,000 for two
+          levels and 510,000 for seventeen.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run learn.py --per-level</span><span>text</span>
+          </div>
+          <pre><code data-language="text">seeds [0, 1, 2, 3, 4], random moves any level
+average return of the greedy policy after each budget of steps, mean (sd) over seeds
+levels  30,000 per level
+     2        -828 ( 21)
+     3        -211 ( 61)
+     5         -67 (  7)
+     9         -60 ( 14)
+    17        -119 (111)</code></pre>
+        </figure>
+        <p>
+          With equal steps per level, nine levels match five, and seventeen
+          levels rise from −1288 at 60,000 steps to −119. They stay behind nine, and their
+          spread of 111 comes mostly from one run that still drops the rod. Most of the fine
+          sets' deficit at a fixed budget is the lack of updates per action
+          value.
+        </p>
+        <p>
+          Steps per level turn a budget into a prediction. A set of k levels
+          after N steps has as many updates per action value as a set of k′
+          levels after N·k′/k steps. A finer set wins when the ceiling it adds,
+          which the solve or the bound gives before any run, exceeds what it
+          loses by learning from fewer updates. Nine levels add 8.6 to five
+          levels' ceiling. At 200,000 steps they have the updates per action
+          value that five levels had at 111,000, when five levels were still
+          far from done, so nine levels lose. At 600,000 steps they have what
+          five had at 333,000, after five had stopped improving, and the 8.6
+          decides it.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. Gymnasium's DiscretizeAction wrapper offers the centres of k
+            equal bins, which never reach ±2 and for even k leave out
+            zero.<sup class="nb-cite"><a href="#s4">4</a></sup> With two bins
+            that is −1 and 1. On the dearer pendulum, what does holding the rod
+            upright cost per episode with them, against −2 and 2? From which
+            starts can they hold the rod at all?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              At the top u* = 0 sits midway between −1 and 1, so alternating
+              pays an extra 1·1² = 1 a step, about 200 an episode. That is the
+              bound with Δ/2 = 1, and a quarter of what −2 and 2 pay. But a torque of 1 holds the
+              rod still only where 15·|sin θ| ≤ 3, within 11.5° (0.2 rad) of
+              upright. A start tilted further falls unless it is already
+              turning back toward upright, and a fall costs far more than 200.
+              The wrapper's sets trade reach against spacing.
+            </p>
+          </details>
+          <p>
+            2. When the best torque sits exactly on a level, how much less is
+            the next level worth? Compare 3 and 17 levels at C = 1, and say
+            what the lesson on
+            <a href="../reinforcement-learning/action-frequency.html">action frequency</a>
+            implies for estimates that must rank them.
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              The action value's slope in u is zero at u*, so the neighbour, Δ
+              away, is worth less by a constant times Δ². The torque term alone
+              gives C·Δ², 4 with three levels (Δ = 2) and 0.0625 with seventeen
+              (Δ = 0.25), and near the top steering the pushed rod back adds
+              more of the same form. The action gap between neighbours shrinks
+              64-fold, while the noise in a learned estimate doesn't. As with
+              short time steps, the agent needs far more updates to rank
+              neighbouring levels correctly. Ranking them wrong also costs only
+              that small gap.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Discretizing a continuous action trades a ceiling against
+          experience. Alternating between the two levels either side of the
+          best torque pays at most C(Δ/2)² a step in extra torque, so evenly
+          spaced levels with spacing Δ fall short of continuous torque by at
+          most about 200·C(Δ/2)² over an episode. The solve's shortfall
+          falls about fourfold per halving of the spacing. Each added
+          level is also one more action value per cell to learn from the same
+          steps. On the dearer pendulum Q-learning did best with 3 levels after
+          60,000 steps, 5 after 200,000 and 9 after 600,000. Equal steps per
+          level removed most of the fine sets' early deficit, and full-torque
+          exploration removed none of it.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2111.02552">Seyde et al., Is Bang-Bang Control All You Need?</a>:
+            Sec. 3 shows why the extreme actions suffice without an action
+            cost, and Sec. 5.4.2 with Fig. 8 shows a pendulum where a squared
+            torque cost breaks that.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2210.12566">Seyde et al., Solving Continuous Control via Q-learning</a>:
+            App. A uses the same endpoint-including levels, and Sec. 5.2.1
+            finds 3 and 21 levels per dimension both competitive for a deep
+            Q-learner.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://proceedings.neurips.cc/paper/2004/hash/b75bd27b5a48a1b48987a18d831f6336-Abstract.html">Kleinberg, Nearly Tight Bounds for the Continuum-Armed Bandit Problem</a>:
+            Sec. 3 solves the one-step version of this trade, with about the
+            cube root of the number of trials as the best number of evenly
+            spaced actions.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1901.10500">Tang and Agrawal, Discretizing Continuous Action Space for On-Policy Optimization</a>:
+            Sec. 3 and App. B Fig. 5(b) measure the same trade for
+            policy-gradient methods, which later lessons teach, best between 7
+            and 15 levels.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="lines 102–108 (constants), 117–124 (spaces), 126–147 (step), 149–167 (reset and its x_init, y_init options); docstring lines 57–70"
+              href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/envs/classic_control/pendulum.py"
+              >Farama Foundation · Gymnasium 1.4.0, gymnasium/envs/classic_control/pendulum.py</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="lines 48–52, the Pendulum-v1 registration with max_episode_steps=200"
+              href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/envs/__init__.py"
+              >Farama Foundation · Gymnasium 1.4.0, gymnasium/envs/__init__.py</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Sec. 3 (pp. 3–4); Sec. 5.4.1 (p. 7)"
+              href="https://arxiv.org/abs/2111.02552"
+              >NeurIPS · Tim Seyde, Igor Gilitschenski, Wilko Schwarting, Bartolomeo Stellato, Martin Riedmiller, Markus Wulfmeier and Daniela Rus, Is Bang-Bang Control All You Need? Solving Continuous Control with Bernoulli Policies, 2021</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="class DiscretizeAction, lines 201–348; bin centres, lines 303–310"
+              href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/wrappers/transform_action.py"
+              >Farama Foundation · Gymnasium 1.4.0, gymnasium/wrappers/transform_action.py</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
