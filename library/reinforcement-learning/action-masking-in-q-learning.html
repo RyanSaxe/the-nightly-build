@@ -1,0 +1,1438 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Illegal moves that Q-learning never makes still set its values in the Tower of Hanoi · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "action-masking-in-q-learning",
+        "template": "lesson",
+        "title": "Illegal moves that Q-learning never makes still set its values in the Tower of Hanoi",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-17",
+        "tags": ["action-masking", "action-space", "q-learning", "tower-of-hanoi", "gymnasium", "environment-design"],
+        "sources": 6,
+        "words": 4382,
+        "reading_minutes": 19,
+        "dek": "When only the choice is masked, those moves' estimates stay at 0 inside the target's max, and every legal estimate more than eight moves from the four-disk puzzle's goal settles at −1.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Illegal moves that Q-learning never makes still set its values in the Tower of Hanoi</h1>
+        <p class="nb-dekline">When only the choice is masked, those moves' estimates stay at 0 inside the target's max, and every legal estimate more than eight moves from the four-disk puzzle's goal settles at −1.</p>
+        <div class="nb-byline">
+          <span>19 min read</span><span>2026-11-17</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A disk in the Tower of Hanoi may never rest on a smaller disk, so
+          the moves an agent may make change with every move it makes. A
+          Q-learning table, though,
+          has a column for every action in every state. The ε-greedy policy
+          was already written for A(s), the set of actions available in state
+          s. Q-learning needs that set in two places: when the agent chooses
+          a move, and when its target takes the largest estimate in the next
+          state. Supplying A(s) from the environment as a vector of 1s and 0s
+          is called action masking. On a four-disk puzzle you will watch an
+          agent that masks only its choice fail, and derive from one equation
+          exactly where its estimates settle instead.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            Q-learning's target, and the argument that finds where its
+            estimates rest.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/epsilon-greedy-exploration.html">ε-greedy control settles for the best policy that keeps exploring</a>:
+            the ε-greedy policy over A(s), which the masked choice below
+            follows.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/termination-and-truncation.html">Q-learning that treats its time limit as terminal learns the values of a different grid</a>:
+            reset, step, TimeLimit, and the target that stops only at
+            terminated.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/checking-a-custom-environment.html">Gymnasium's environment checker passes a grid with a backward slip</a>:
+            check_env, whose random steps the puzzle's environment has to
+            accept.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>:
+            the Bellman optimality equation and value iteration, which grade
+            every run here.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Four of the start's six estimates are never updated</h2>
+        <p>
+          The puzzle starts with four disks stacked on peg 0, largest at the
+          bottom. A move lifts the top disk of one peg onto another peg, and
+          a disk may never sit on a smaller one. The task is to rebuild the
+          stack on peg 2, which takes at least 15 moves. We give the agent
+          six actions, one for each ordered pair of pegs, written 0 → 1 for a
+          move from peg 0 to peg 1. At the start only the smallest disk is free, so A(s) holds two
+          moves, 0 → 1 and 0 → 2. Once the smallest disk sits on peg 1, it
+          holds three (Fig. 1).
+        </p>
+        <p>
+          Suppose the agent masks its choice: every move it makes is legal,
+          whether it moves greedily or at random. Q-learning updates only the
+          estimate of the move just made, so the estimate of an illegal move
+          is never updated. It keeps its initial value, 0.
+        </p>
+        <p>
+          Now take one update. The agent is in state 1, with the smallest
+          disk on peg 1, and a random move returns that disk to peg 0, which
+          is the start again. Every move pays −1 except the one that
+          completes the stack, which pays +10, and the discount is the
+          course's 0.9. Suppose every legal estimate already equals its
+          optimal action value: −5.42 for 0 → 1 at the start, −5.88 for 0 → 2,
+          and −5.88 for the move just made. The start's other four estimates
+          are still 0.
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 226" role="img" aria-label="Left, state 1: the smallest disk on peg 1 and the other three on peg 0. An arrow for the move from peg 1 to peg 0, paying minus 1, with estimate minus 5.88, leads to the start, all four disks on peg 0. Below, the start state's six estimates: minus 5.42 for peg 0 to peg 1, minus 5.88 for peg 0 to peg 2, and 0 for the four illegal moves, which were never updated. The largest legal estimate, minus 5.42, is outlined for the masked target, and the four zeros are outlined together for the target over all six." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="10" y1="84" x2="160" y2="84" style="stroke:var(--ink-soft);stroke-width:1.6"/>
+<line x1="35" y1="28" x2="35" y2="84" style="stroke:var(--ink-soft);stroke-width:1.6"/>
+<text x="35.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">peg 0</text>
+<line x1="85" y1="28" x2="85" y2="84" style="stroke:var(--ink-soft);stroke-width:1.6"/>
+<text x="85.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">peg 1</text>
+<line x1="135" y1="28" x2="135" y2="84" style="stroke:var(--ink-soft);stroke-width:1.6"/>
+<text x="135.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">peg 2</text>
+<rect x="16.0" y="74.0" width="38" height="9" rx="2" style="fill:var(--chart-1);fill-opacity:0.85;stroke:var(--ink);stroke-width:0.6"/>
+<rect x="20.0" y="64.0" width="30" height="9" rx="2" style="fill:var(--chart-1);fill-opacity:0.85;stroke:var(--ink);stroke-width:0.6"/>
+<rect x="24.0" y="54.0" width="22" height="9" rx="2" style="fill:var(--chart-1);fill-opacity:0.85;stroke:var(--ink);stroke-width:0.6"/>
+<rect x="78.0" y="74.0" width="14" height="9" rx="2" style="fill:var(--chart-1);fill-opacity:0.85;stroke:var(--ink);stroke-width:0.6"/>
+<text x="85.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);font-weight:600">state 1</text>
+<line x1="240" y1="84" x2="390" y2="84" style="stroke:var(--ink-soft);stroke-width:1.6"/>
+<line x1="265" y1="28" x2="265" y2="84" style="stroke:var(--ink-soft);stroke-width:1.6"/>
+<text x="265.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">peg 0</text>
+<line x1="315" y1="28" x2="315" y2="84" style="stroke:var(--ink-soft);stroke-width:1.6"/>
+<text x="315.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">peg 1</text>
+<line x1="365" y1="28" x2="365" y2="84" style="stroke:var(--ink-soft);stroke-width:1.6"/>
+<text x="365.0" y="98.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">peg 2</text>
+<rect x="246.0" y="74.0" width="38" height="9" rx="2" style="fill:var(--chart-1);fill-opacity:0.85;stroke:var(--ink);stroke-width:0.6"/>
+<rect x="250.0" y="64.0" width="30" height="9" rx="2" style="fill:var(--chart-1);fill-opacity:0.85;stroke:var(--ink);stroke-width:0.6"/>
+<rect x="254.0" y="54.0" width="22" height="9" rx="2" style="fill:var(--chart-1);fill-opacity:0.85;stroke:var(--ink);stroke-width:0.6"/>
+<rect x="258.0" y="44.0" width="14" height="9" rx="2" style="fill:var(--chart-1);fill-opacity:0.85;stroke:var(--ink);stroke-width:0.6"/>
+<text x="315.0" y="16.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);font-weight:600">state 0, the start</text>
+<line x1="166" y1="62" x2="232" y2="62" style="stroke:var(--ink);stroke-width:1.6"/>
+<path d="M232 62 l-7 -4 v8 z" style="fill:var(--ink)"/>
+<text x="199.0" y="53.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">peg 1 → peg 0</text>
+<text x="199.0" y="78.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">reward −1</text>
+<text x="199.0" y="96.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">estimate −5.88</text>
+<text x="200.0" y="118.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);font-weight:600">state 0’s six estimates, by move</text>
+<text x="55.0" y="134.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0 → 1</text>
+<rect x="29" y="140" width="52" height="26" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--line);stroke-width:0.8"/>
+<text x="55.0" y="157.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">−5.42</text>
+<text x="113.0" y="134.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0 → 2</text>
+<rect x="87" y="140" width="52" height="26" style="fill:var(--chart-4);fill-opacity:0.834;stroke:var(--line);stroke-width:0.8"/>
+<text x="113.0" y="157.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">−5.88</text>
+<text x="171.0" y="134.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">1 → 0</text>
+<rect x="145" y="140" width="52" height="26" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:0.8;stroke-dasharray:3 2"/>
+<text x="171.0" y="157.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0</text>
+<text x="229.0" y="134.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">1 → 2</text>
+<rect x="203" y="140" width="52" height="26" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:0.8;stroke-dasharray:3 2"/>
+<text x="229.0" y="157.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0</text>
+<text x="287.0" y="134.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">2 → 0</text>
+<rect x="261" y="140" width="52" height="26" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:0.8;stroke-dasharray:3 2"/>
+<text x="287.0" y="157.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0</text>
+<text x="345.0" y="134.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">2 → 1</text>
+<rect x="319" y="140" width="52" height="26" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:0.8;stroke-dasharray:3 2"/>
+<text x="345.0" y="157.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0</text>
+<text x="232.0" y="184.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">illegal: never updated</text>
+<rect x="26.5" y="137.5" width="57" height="31" rx="3" style="fill:none;stroke:var(--chart-2);stroke-width:2.2"/>
+<rect x="142.5" y="137.5" width="231" height="31" rx="3" style="fill:none;stroke:var(--chart-5);stroke-width:2.2"/>
+<line x1="55.0" y1="169" x2="55.0" y2="202" style="stroke:var(--chart-2);stroke-width:1.4"/>
+<text x="37.0" y="216.0" text-anchor="start" style="font-family:var(--sans);font-size:11px;fill:var(--chart-2);font-weight:600">max over legal moves</text>
+<line x1="340.0" y1="169" x2="340.0" y2="202" style="stroke:var(--chart-5);stroke-width:1.4"/>
+<text x="340.0" y="216.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-5);font-weight:600">max over all six</text>
+</svg>
+          <figcaption>
+            Fig. 1 · The update for moving the smallest disk from peg 1 back
+            to peg 0, a move whose estimate is −5.88. Each outline marks what
+            one version of the target reads at the start.
+          </figcaption>
+        </figure>
+        <p>
+          Q-learning's target adds the reward to 0.9 times the largest
+          estimate in the next state. Over the legal moves, the target is
+          −1 + 0.9 × (−5.42) = −5.88, so the estimate stays where it is. Over
+          all six, it is −1 + 0.9 × 0 = −1. With a step size of 0.5, that
+          second target raises the estimate of the move just made from
+          −5.88 to −3.44 in one update.
+        </p>
+        <p>
+          Every state of the puzzle has three or four illegal moves, so a
+          target over all six can read a 0 anywhere. To see what those zeros
+          do to a whole table, the agent needs the puzzle as an environment
+          that reports its legal moves.
+        </p>
+      </section>
+
+      <section data-nb-section="environment" id="environment">
+        <h2>The environment sends a fresh mask with every observation</h2>
+        <p>
+          <code>hanoi.py</code> puts the puzzle behind Gymnasium's reset and
+          step, the interface from the lesson on
+          <a href="../reinforcement-learning/termination-and-truncation.html">termination and truncation</a>.
+          A state is one integer from 0 to 80, whose base-3 digit k is the
+          peg of disk k, counting from the smallest. The start is state 0,
+          and the goal, every disk on peg 2, is state 80. reset starts each
+          episode in a random state other than the goal, so that learning
+          reaches every legal pair outside the goal. The function legal
+          builds the mask:
+          six int8 entries, 1 for each move that lifts a disk onto an empty
+          peg or a larger disk. Of the puzzle's 486 state-move pairs, 240 are
+          legal.
+        </p>
+        <p>
+          reset and step return the mask in info under the key
+          <code>"action_mask"</code>. Gymnasium's Taxi environment, in which
+          a taxi carries a passenger across a grid, uses the same key and
+          type.<sup class="nb-cite"><a href="#s1">1</a></sup> MaskablePPO,
+          an off-the-shelf agent a later lesson trains, calls a method named
+          <code>action_masks()</code>
+          instead,<sup class="nb-cite"><a href="#s2">2</a></sup> and
+          PettingZoo's multi-agent games put the mask in the
+          observation.<sup class="nb-cite"><a href="#s3">3</a></sup>
+          <code>hanoi.py</code> has that method too, and it returns the mask
+          as booleans.
+        </p>
+        <p>
+          The
+          <a href="../reinforcement-learning/checking-a-custom-environment.html">environment checker</a>,
+          check_env, steps with random actions drawn without a
+          mask,<sup class="nb-cite"><a href="#s4">4</a></sup> so step has to
+          accept an illegal move. Here an illegal move leaves every disk where
+          it is and pays −1. An agent that masks its choice never makes such a move, so this
+          rule matters only to check_env and to agents that ignore the mask.
+        </p>
+        <p>
+          The demo at the bottom of <code>hanoi.py</code> runs check_env and
+          then reads the mask at the start. An action is a move's position
+          in <code>MOVES</code>, so the start's two legal moves are actions 0
+          and 1, and <code>sample(mask=...)</code> draws uniformly between
+          them.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">hanoi.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""The Tower of Hanoi with four disks, as a Gymnasium environment whose
+legal moves change with the state. A mask of the legal moves comes with
+every observation, in info["action_mask"], and from action_masks().
+"""
+import gymnasium as gym
+import numpy as np
+
+DISKS = 4
+N = 3**DISKS  # a state s: digit k of s in base 3 is the peg of disk k
+GOAL = N - 1  # every disk on peg 2
+MOVES = [(0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1)]  # (from, to)
+
+
+def tops(s):
+    """The smallest disk on each peg, or DISKS for an empty peg."""
+    top = [DISKS] * 3
+    for k in reversed(range(DISKS)):  # largest first, so the smallest wins
+        top[s // 3**k % 3] = k
+    return top
+
+
+def legal(s):
+    """A new int8 array, 1 for each move that takes a disk from a nonempty
+    peg to an empty peg or onto a larger disk, and 0 for the others."""
+    top = tops(s)
+    return np.array([top[a] &lt; top[b] for a, b in MOVES], dtype=np.int8)
+
+
+def after(s, m):
+    """The state after legal move m: its peg's top disk changes peg."""
+    a, b = MOVES[m]
+    return s + (b - a) * 3 ** tops(s)[a]
+
+
+class Hanoi(gym.Env):
+    """An episode starts in a random state other than the goal, or in
+    options["start"], and terminates when all four disks are on peg 2.
+    Each move pays -1, and the move that completes the tower pays +10."""
+
+    def __init__(self):
+        self.observation_space = gym.spaces.Discrete(N)
+        self.action_space = gym.spaces.Discrete(len(MOVES))
+
+    def action_masks(self):
+        """The same mask as booleans, under the name MaskablePPO calls."""
+        return legal(self.s).astype(bool)
+
+    def reset(self, *, seed=None, options=None):
+        super().reset(seed=seed)
+        start = (options or {}).get("start")
+        self.s = int(self.np_random.integers(GOAL) if start is None else start)
+        return self.s, {"action_mask": legal(self.s)}
+
+    def step(self, action):
+        if legal(self.s)[action]:
+            self.s = after(self.s, action)
+        # An illegal move leaves every disk where it is and pays -1.
+        terminated = self.s == GOAL
+        reward = 10.0 if terminated else -1.0
+        return self.s, reward, terminated, False, {"action_mask": legal(self.s)}
+
+
+if __name__ == "__main__":
+    import re
+    import warnings
+
+    from gymnasium.utils.env_checker import check_env
+
+    env = Hanoi()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        check_env(env)  # raises if any of its assertions fails
+    print("check_env passed")
+    for w in caught:
+        print("  ", re.sub(r"\x1b\[\d+m", "", str(w.message))[:66] + "...")
+    pairs = sum(legal(s).sum() for s in range(N))
+    print(f"{N} states, {N * len(MOVES)} state-move pairs, {pairs} legal")
+    s, info = env.reset(seed=0, options={"start": 0})
+    print("reset:", s, info)
+    print("action_masks():", env.action_masks())
+    env.action_space.seed(0)
+    mask = info["action_mask"]
+    print("sample(mask=...):", [int(env.action_space.sample(mask=mask))
+                                for _ in range(8)])
+    print("step(4), illegal:", env.step(4))
+    print("step(0), legal:  ", env.step(0))</code></pre>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run hanoi.py</span><span>text</span></div>
+          <pre><code data-language="text">check_env passed
+   WARN: Not able to test alternative render modes due to the environ...
+81 states, 486 state-move pairs, 240 legal
+reset: 0 {'action_mask': array([1, 1, 0, 0, 0, 0], dtype=int8)}
+action_masks(): [ True  True False False False False]
+sample(mask=...): [1, 1, 1, 0, 0, 0, 0, 0]
+step(4), illegal: (0, -1.0, False, False, {'action_mask': array([1, 1, 0, 0, 0, 0], dtype=int8)})
+step(0), legal:   (1, -1.0, False, False, {'action_mask': array([0, 1, 1, 1, 0, 0], dtype=int8)})</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="choice-only" id="choice-only">
+        <h2>With only its choice masked, the agent loops beside the start</h2>
+        <p>
+          <code>masked_q.py</code> is Q-learning with the mask read from
+          info, and both kinds of choice use it. A random move comes from
+          <code>sample(mask=...)</code>, which gives each legal move ε/|A(s)|,
+          the floor of the
+          <a href="../reinforcement-learning/epsilon-greedy-exploration.html">ε-greedy policy</a>.
+          A greedy move takes the largest legal estimate. np.argmax over the
+          legal estimates returns a position among them, not a move, so the
+          function greedy maps it back.
+        </p>
+        <p>
+          The two agents differ only in the target. With
+          <code>target="legal"</code>, the max runs over the next state's
+          legal moves, read from the mask that the same step returned.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} y_t &amp;= R_{t+1} + \gamma\,(1 - \text{terminated}) \\ &amp;\qquad \times \max_{a \in \htmlClass{nb-mc1}{\mathcal{A}(S_{t+1})}} Q(S_{t+1}, a) \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">\mathcal{A}(S_{t+1})</span><span>the legal moves in the next state: the 1s of the mask that step returns with it</span></li>
+          </ul>
+          <figcaption>
+            Q-learning's target with its max masked. Truncation still
+            bootstraps, as in the lesson on termination and truncation.
+          </figcaption>
+        </figure>
+        <p>
+          Gymnasium's tutorial on masking in Taxi masks the same two
+          places.<sup class="nb-cite"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          With <code>target="all"</code>, <code>masked_q.py</code> takes the
+          max over all six estimates. Both agents use a constant step size
+          of 0.5. The lesson on SARSA and Q-learning shrank its step sizes to
+          average out the grid's random slips. No move or reward in this
+          puzzle is random, so a constant step is enough.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">masked_q.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning that reads its legal moves from info["action_mask"].
+
+The choice is always masked: random moves come from sample(mask=...) and
+greedy moves from the legal estimates only. With target="legal" the max in
+the target is masked too. With target="all" it runs over all six estimates.
+"""
+import numpy as np
+
+GAMMA, EPS, ALPHA = 0.9, 0.2, 0.5
+
+
+def greedy(Q, s, mask):
+    """The legal move with the largest estimate. np.argmax over the legal
+    estimates returns a position among them, so map it back to a move."""
+    legal = np.flatnonzero(mask)
+    return int(legal[np.argmax(Q[s, legal])])
+
+
+def q_learning(env, episodes, seed, target="legal", init=0.0):
+    """eps-greedy Q-learning over the legal moves, with every estimate
+    starting at init and a constant step size ALPHA."""
+    Q = np.full((env.observation_space.n, env.action_space.n), float(init))
+    rng = np.random.default_rng((seed, 1))
+    env.action_space.seed(seed)  # sample(mask=...) draws from this generator
+    for k in range(episodes):
+        s, info = env.reset(seed=seed if k == 0 else None)
+        while True:
+            mask = info["action_mask"]
+            # Place 1, the choice: random moves and greedy moves are legal.
+            if rng.random() &lt; EPS:
+                a = int(env.action_space.sample(mask=mask))
+            else:
+                a = greedy(Q, s, mask)
+            s_next, reward, terminated, truncated, info = env.step(a)
+            row = Q[s_next]
+            if target == "legal":  # place 2: the next state's legal moves
+                row = row[info["action_mask"] == 1]
+            future = 0.0 if terminated else row.max()
+            Q[s, a] += ALPHA * (reward + GAMMA * future - Q[s, a])
+            if terminated or truncated:
+                break
+            s = s_next
+    return Q</code></pre>
+        </figure>
+        <p>
+          <code>leak.py</code> runs each agent five times for 5000 episodes,
+          under a TimeLimit of 100 moves. It grades the legal estimates
+          against q<sub>*</sub>, which it finds by value iteration over the
+          legal moves. Then it runs each greedy agent from every start.
+          <code>uv run leak.py</code> needs <code>hanoi.py</code> and
+          <code>masked_q.py</code> in the same folder. It takes under a
+          minute on the machine used here.
+        </p>
+        <details>
+          <summary><code>leak.py</code>, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">leak.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Print the numbers on the page after hanoi.py's: the exact values, the
+resting point of the target over all six moves, and Q-learning with each
+target from initial estimates of 0 and -10, five seeds each."""
+import numpy as np
+from gymnasium.wrappers import TimeLimit
+from hanoi import GOAL, N, Hanoi, after, legal
+from masked_q import GAMMA, greedy, q_learning
+
+EPISODES, SEEDS, LIMIT = 5000, range(5), 100
+MASK = np.array([legal(s) for s in range(N)]) == 1
+NEXT = np.array([[after(s, m) if MASK[s, m] else s for m in range(6)]
+                 for s in range(N)])
+REWARD = np.where(NEXT == GOAL, 10.0, -1.0)
+# The goal's moves are never made or read, since it ends the episode.
+LIVE = MASK &amp; (np.arange(N) != GOAL)[:, None]  # the legal pairs graded
+
+
+def resting_point(frozen=None):
+    """Value iteration over the legal moves. Given frozen, every state with
+    an illegal move also offers a move worth exactly frozen, which is what
+    the target over all six reads from each never-updated estimate."""
+    Q = np.zeros((N, 6))
+    for _ in range(500):
+        V = np.where(MASK, Q, -np.inf).max(axis=1)
+        if frozen is not None:
+            V = np.where(MASK.all(axis=1), V, np.maximum(V, frozen))
+        Q = np.where(NEXT == GOAL, REWARD, REWARD + GAMMA * V[NEXT])
+    return Q
+
+
+def fewest_moves():
+    """Breadth-first search out from the goal. Every move can be undone,
+    so this gives each state's fewest moves to the goal."""
+    fewest, frontier = {GOAL: 0}, [GOAL]
+    while frontier:
+        reached = []
+        for s in frontier:
+            for t in map(int, NEXT[s][MASK[s]]):
+                if t not in fewest:
+                    fewest[t] = fewest[s] + 1
+                    reached.append(t)
+        frontier = reached
+    return np.array([fewest[s] for s in range(N)])
+
+
+def moves_from(Q, s, rng=None, cap=100):
+    """Moves the greedy agent takes from s to the goal, or cap if it has
+    not arrived. With rng, ties between estimates are broken at random."""
+    for t in range(cap):
+        if s == GOAL:
+            return t
+        if rng is None:
+            m = greedy(Q, s, MASK[s])
+        else:
+            best = MASK[s] &amp; (Q[s] == Q[s][MASK[s]].max())
+            m = rng.choice(np.flatnonzero(best))
+        s = after(s, m)
+    return cap
+
+
+def runs(init, target, rest, fewest):
+    """Print the row of averages over the seeds, and return the tables."""
+    tables, rows = [], []
+    for seed in SEEDS:
+        env = TimeLimit(Hanoi(), max_episode_steps=LIMIT)
+        Q = q_learning(env, EPISODES, seed, target, init)
+        rng = np.random.default_rng(seed)
+        tables.append(Q)
+        rows.append([np.abs(Q - EXACT)[LIVE].mean(),
+                     np.abs(Q - rest)[LIVE].mean(),
+                     moves_from(Q, 0) == fewest[0],
+                     sum(moves_from(Q, s) == fewest[s] for s in range(GOAL)),
+                     np.mean([moves_from(Q, 0, rng, 10_000)
+                              for _ in range(200)])])
+    e, r, start, best, tied = np.mean(rows, axis=0)
+    print(f"{init:4.0f}  {target:6s}{e:10.3f}{r:12.3f}"
+          f"{start * len(SEEDS):5.0f} of {len(SEEDS)}{best:8.1f}{tied:8.1f}")
+    return tables
+
+
+EXACT = resting_point()
+
+if __name__ == "__main__":
+    rest, fewest = resting_point(frozen=0.0), fewest_moves()
+    V = lambda Q: np.where(MASK, Q, -np.inf).max(axis=1)
+    print("fewest moves  states  exact value  resting point of the")
+    print("to the goal               v*       target over all six")
+    for d in range(1, fewest.max() + 1):
+        at = fewest == d
+        print(f"{d:7d}{at.sum():10d}{V(EXACT)[at].mean():12.2f}"
+              f"{V(rest)[at].mean():14.2f}")
+    print(f"\n{len(SEEDS)} runs per row, {EPISODES} episodes of at most "
+          f"{LIMIT} moves; error, fewest and random average over the runs\n"
+          f"error: mean |Q - x| over {LIVE.sum()} legal pairs outside the goal,\n"
+          "       for x = q* and for x = the resting point of the row's target\n"
+          "start: runs whose greedy agent takes the fewest moves from 0\n"
+          f"fewest: starts, of {GOAL}, from which it takes the fewest moves\n"
+          "random: its moves from state 0 with ties broken at random")
+    print("init  target  error q*  error rest     start  fewest  random")
+    runs(0, "legal", EXACT, fewest)
+    runs(0, "all", rest, fewest)
+    a, b = runs(-10, "legal", EXACT, fewest), runs(-10, "all", EXACT, fewest)
+    gap = max(np.abs(x - y).max() for x, y in zip(a, b))
+    print(f"init -10: largest |difference| between the two targets' tables: "
+          f"{gap}")</code></pre>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run leak.py</span><span>text</span></div>
+          <pre><code data-language="text">fewest moves  states  exact value  resting point of the
+to the goal               v*       target over all six
+      1         2       10.00         10.00
+      2         2        8.00          8.00
+      3         4        6.20          6.20
+      4         2        4.58          4.58
+      5         4        3.12          3.12
+      6         4        1.81          1.81
+      7         8        0.63          0.63
+      8         2       -0.43         -0.43
+      9         4       -1.39         -1.00
+     10         4       -2.25         -1.00
+     11         8       -3.03         -1.00
+     12         4       -3.72         -1.00
+     13         8       -4.35         -1.00
+     14         8       -4.92         -1.00
+     15        16       -5.42         -1.00
+
+5 runs per row, 5000 episodes of at most 100 moves; error, fewest and random average over the runs
+error: mean |Q - x| over 238 legal pairs outside the goal,
+       for x = q* and for x = the resting point of the row's target
+start: runs whose greedy agent takes the fewest moves from 0
+fewest: starts, of 80, from which it takes the fewest moves
+random: its moves from state 0 with ties broken at random
+init  target  error q*  error rest     start  fewest  random
+   0  legal      0.009       0.009    5 of 5    80.0    15.0
+   0  all        2.405       0.002    0 of 5    29.0   149.3
+ -10  legal      0.325       0.325    5 of 5    70.4    15.0
+ -10  all        0.325       0.325    5 of 5    70.4    15.0
+init -10: largest |difference| between the two targets' tables: 0.0</code></pre>
+        </figure>
+        <p>
+          Masked in both places, Q-learning ends within 0.01 of
+          q<sub>*</sub> on average over the 238 legal pairs outside the goal.
+          In all five runs its greedy agent takes the fewest moves from all
+          80 starts, including the 15-move solution from the start. Masked
+          only in its choice,
+          it ends 2.4 from q<sub>*</sub>,
+          and its greedy agent never finishes from the start. After two
+          moves it shuttles the smallest disk between pegs 0 and 1 for as
+          long as it may move (Fig. 2).
+        </p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center">
+<svg viewBox="0 0 220 210" role="img" aria-label="The 81 states of the four-disk puzzle drawn as a triangle of triangles, with the start at the bottom left and the goal at the bottom right, shaded by the agent's largest legal estimate. With the masked target the shading runs from deep red at the start to deep green near the goal, and the greedy path runs straight along the bottom edge." style="flex: 1 1 15rem; min-width: 0; max-width: 17rem; height: auto">
+<line x1="15.5" y1="173.7" x2="28.1" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="15.5" y1="173.7" x2="21.8" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="28.1" y1="173.7" x2="40.7" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="28.1" y1="173.7" x2="21.8" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="21.8" y1="162.8" x2="28.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="151.9" x2="34.4" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="151.9" x2="28.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="151.9" x2="47.0" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="34.4" y1="140.9" x2="40.7" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="34.4" y1="140.9" x2="28.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="162.8" x2="40.7" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="162.8" x2="53.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="173.7" x2="53.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="53.3" y1="173.7" x2="65.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="140.9" x2="78.5" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="140.9" x2="91.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="140.9" x2="78.5" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="151.9" x2="72.2" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="151.9" x2="91.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="151.9" x2="97.4" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="173.7" x2="103.7" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="173.7" x2="97.4" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="173.7" x2="78.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="173.7" x2="116.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="173.7" x2="97.4" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="173.7" x2="72.2" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="173.7" x2="65.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="72.2" y1="162.8" x2="65.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="130.0" x2="72.2" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="130.0" x2="65.9" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="72.2" y1="119.1" x2="65.9" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="72.2" y1="119.1" x2="65.9" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="65.9" y1="130.0" x2="53.3" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="119.1" x2="40.7" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="119.1" x2="53.3" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="119.1" x2="53.3" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="130.0" x2="53.3" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="53.3" y1="108.2" x2="65.9" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="53.3" y1="108.2" x2="59.6" y2="97.3" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="65.9" y1="108.2" x2="59.6" y2="97.3" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="59.6" y1="97.3" x2="65.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="86.4" x2="147.8" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="86.4" x2="141.5" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="86.4" x2="160.4" y2="97.3" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="75.5" x2="141.5" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="75.5" x2="141.5" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="86.4" x2="128.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="75.5" x2="116.3" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="75.5" x2="128.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="75.5" x2="128.9" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="86.4" x2="103.7" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="86.4" x2="128.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="128.9" y1="64.6" x2="141.5" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="128.9" y1="64.6" x2="135.2" y2="53.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="64.6" x2="135.2" y2="53.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="135.2" y1="53.6" x2="128.9" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="42.7" x2="103.7" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="42.7" x2="97.4" y2="31.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="42.7" x2="84.8" y2="53.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="42.7" x2="116.3" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="42.7" x2="97.4" y2="31.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="97.4" y1="31.8" x2="103.7" y2="20.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="20.9" x2="110.0" y2="10.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="20.9" x2="103.7" y2="20.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="20.9" x2="122.6" y2="31.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="110.0" y1="10.0" x2="103.7" y2="20.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="31.8" x2="116.3" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="31.8" x2="128.9" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="42.7" x2="128.9" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="53.6" x2="78.5" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="53.6" x2="91.1" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="64.6" x2="72.2" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="64.6" x2="91.1" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="64.6" x2="97.4" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="86.4" x2="103.7" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="86.4" x2="97.4" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="86.4" x2="78.5" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="86.4" x2="97.4" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="86.4" x2="72.2" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="86.4" x2="65.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="72.2" y1="75.5" x2="65.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="160.4" y1="97.3" x2="154.1" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="160.4" y1="97.3" x2="166.7" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="108.2" x2="147.8" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="108.2" x2="166.7" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="108.2" x2="173.0" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="130.0" x2="179.3" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="130.0" x2="173.0" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="130.0" x2="154.1" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="179.3" y1="130.0" x2="185.6" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="179.3" y1="130.0" x2="173.0" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="130.0" x2="147.8" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="130.0" x2="141.5" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="119.1" x2="141.5" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="130.0" x2="135.2" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="173.7" x2="147.8" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="173.7" x2="141.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="173.7" x2="166.7" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="162.8" x2="141.5" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="162.8" x2="141.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="173.7" x2="128.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="162.8" x2="116.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="162.8" x2="128.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="162.8" x2="128.9" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="173.7" x2="128.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="128.9" y1="151.9" x2="141.5" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="128.9" y1="151.9" x2="135.2" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="151.9" x2="135.2" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="173.7" x2="179.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="173.7" x2="173.0" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="179.3" y1="173.7" x2="191.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="179.3" y1="173.7" x2="173.0" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="173.0" y1="162.8" x2="179.3" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="191.9" y1="151.9" x2="185.6" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="191.9" y1="151.9" x2="179.3" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="191.9" y1="151.9" x2="198.2" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="185.6" y1="140.9" x2="179.3" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="198.2" y1="162.8" x2="191.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="198.2" y1="162.8" x2="204.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="191.9" y1="173.7" x2="204.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<polyline points="15.5,173.7 28.1,173.7 40.7,173.7 53.3,173.7 65.9,173.7 78.5,173.7 91.1,173.7 103.7,173.7 116.3,173.7 128.9,173.7 141.5,173.7 154.1,173.7 166.7,173.7 179.3,173.7 191.9,173.7 204.5,173.7" style="fill:none;stroke:var(--ink);stroke-width:2.6;stroke-linejoin:round"/>
+<circle cx="15.5" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="15.5" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="28.1" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="28.1" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.704;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="21.8" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="21.8" cy="162.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="40.7" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="40.7" cy="151.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.704;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="34.4" cy="140.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="34.4" cy="140.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="28.1" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="28.1" cy="151.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="47.0" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="47.0" cy="162.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.627;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="40.7" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="40.7" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.627;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="53.3" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="53.3" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.543;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="84.8" cy="140.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="84.8" cy="140.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.449;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="151.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.449;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="151.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.344;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.228;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="103.7" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="103.7" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.099;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="97.4" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="97.4" cy="162.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.228;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.344;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="72.2" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="72.2" cy="162.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.449;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="65.9" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="65.9" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.449;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="130.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.543;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="72.2" cy="119.1" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="72.2" cy="119.1" r="3.5" style="fill:var(--chart-4);fill-opacity:0.627;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="65.9" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="65.9" cy="130.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.627;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="47.0" cy="119.1" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="47.0" cy="119.1" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="40.7" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="40.7" cy="130.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="53.3" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="53.3" cy="130.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.704;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="53.3" cy="108.2" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="53.3" cy="108.2" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="65.9" cy="108.2" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="65.9" cy="108.2" r="3.5" style="fill:var(--chart-4);fill-opacity:0.704;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="59.6" cy="97.3" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="59.6" cy="97.3" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="154.1" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="154.1" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.099;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="147.8" cy="75.5" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="147.8" cy="75.5" r="3.5" style="fill:var(--chart-4);fill-opacity:0.228;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.228;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="122.6" cy="75.5" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="122.6" cy="75.5" r="3.5" style="fill:var(--chart-4);fill-opacity:0.449;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="116.3" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="116.3" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.449;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.344;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="64.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="64.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.449;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="64.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="64.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.344;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="135.2" cy="53.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="135.2" cy="53.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.449;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="42.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="42.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="103.7" cy="42.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="103.7" cy="42.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.704;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="97.4" cy="31.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="97.4" cy="31.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="116.3" cy="20.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="116.3" cy="20.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.704;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="110.0" cy="10.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="110.0" cy="10.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="103.7" cy="20.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="103.7" cy="20.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="122.6" cy="31.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="122.6" cy="31.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.627;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="116.3" cy="42.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="116.3" cy="42.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.627;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="42.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="42.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.543;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="84.8" cy="53.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="84.8" cy="53.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="64.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="64.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="64.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="64.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.704;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.627;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="103.7" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="103.7" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.543;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="97.4" cy="75.5" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="97.4" cy="75.5" r="3.5" style="fill:var(--chart-4);fill-opacity:0.627;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.704;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="72.2" cy="75.5" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="72.2" cy="75.5" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="65.9" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="65.9" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.772;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="160.4" cy="97.3" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="160.4" cy="97.3" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="154.1" cy="108.2" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="154.1" cy="108.2" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="166.7" cy="108.2" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="166.7" cy="108.2" r="3.5" style="fill:var(--chart-3);fill-opacity:0.284;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="166.7" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="166.7" cy="130.0" r="3.5" style="fill:var(--chart-3);fill-opacity:0.461;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="179.3" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="179.3" cy="130.0" r="3.5" style="fill:var(--chart-3);fill-opacity:0.658;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="173.0" cy="119.1" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="173.0" cy="119.1" r="3.5" style="fill:var(--chart-3);fill-opacity:0.461;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="154.1" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="154.1" cy="130.0" r="3.5" style="fill:var(--chart-3);fill-opacity:0.284;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="147.8" cy="119.1" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="147.8" cy="119.1" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="130.0" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="154.1" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="154.1" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.658;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="147.8" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="147.8" cy="162.8" r="3.5" style="fill:var(--chart-3);fill-opacity:0.461;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.461;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="122.6" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="122.6" cy="162.8" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="116.3" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="116.3" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.284;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="151.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="151.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.284;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="135.2" cy="140.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="135.2" cy="140.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="166.7" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="166.7" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="179.3" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="179.3" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="173.0" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="173.0" cy="162.8" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="191.9" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="191.9" cy="151.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="185.6" cy="140.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="185.6" cy="140.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="179.3" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="179.3" cy="151.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="198.2" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="198.2" cy="162.8" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="191.9" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="191.9" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="204.5" cy="173.7" r="4.2" style="fill:var(--ink);stroke:var(--ink);stroke-width:0.6"/>
+<text x="11.5" y="190.7" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">start</text>
+<text x="206.5" y="190.7" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">goal</text>
+<text x="110.0" y="206.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);font-weight:600">target over legal moves</text>
+</svg>
+<svg viewBox="0 0 220 210" role="img" aria-label="The same graph for the agent whose target runs over all six estimates. Every state far from the goal is the same pale red, and the greedy path leaves the start, then loops between two states near it." style="flex: 1 1 15rem; min-width: 0; max-width: 17rem; height: auto">
+<line x1="15.5" y1="173.7" x2="28.1" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="15.5" y1="173.7" x2="21.8" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="28.1" y1="173.7" x2="40.7" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="28.1" y1="173.7" x2="21.8" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="21.8" y1="162.8" x2="28.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="151.9" x2="34.4" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="151.9" x2="28.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="151.9" x2="47.0" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="34.4" y1="140.9" x2="40.7" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="34.4" y1="140.9" x2="28.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="162.8" x2="40.7" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="162.8" x2="53.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="173.7" x2="53.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="53.3" y1="173.7" x2="65.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="140.9" x2="78.5" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="140.9" x2="91.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="140.9" x2="78.5" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="151.9" x2="72.2" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="151.9" x2="91.1" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="151.9" x2="97.4" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="173.7" x2="103.7" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="173.7" x2="97.4" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="173.7" x2="78.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="173.7" x2="116.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="173.7" x2="97.4" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="173.7" x2="72.2" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="173.7" x2="65.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="72.2" y1="162.8" x2="65.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="130.0" x2="72.2" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="130.0" x2="65.9" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="72.2" y1="119.1" x2="65.9" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="72.2" y1="119.1" x2="65.9" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="65.9" y1="130.0" x2="53.3" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="119.1" x2="40.7" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="119.1" x2="53.3" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="47.0" y1="119.1" x2="53.3" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="40.7" y1="130.0" x2="53.3" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="53.3" y1="108.2" x2="65.9" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="53.3" y1="108.2" x2="59.6" y2="97.3" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="65.9" y1="108.2" x2="59.6" y2="97.3" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="59.6" y1="97.3" x2="65.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="86.4" x2="147.8" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="86.4" x2="141.5" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="86.4" x2="160.4" y2="97.3" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="75.5" x2="141.5" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="75.5" x2="141.5" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="86.4" x2="128.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="75.5" x2="116.3" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="75.5" x2="128.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="75.5" x2="128.9" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="86.4" x2="103.7" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="86.4" x2="128.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="128.9" y1="64.6" x2="141.5" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="128.9" y1="64.6" x2="135.2" y2="53.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="64.6" x2="135.2" y2="53.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="135.2" y1="53.6" x2="128.9" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="42.7" x2="103.7" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="42.7" x2="97.4" y2="31.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="42.7" x2="84.8" y2="53.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="42.7" x2="116.3" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="42.7" x2="97.4" y2="31.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="97.4" y1="31.8" x2="103.7" y2="20.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="20.9" x2="110.0" y2="10.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="20.9" x2="103.7" y2="20.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="20.9" x2="122.6" y2="31.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="110.0" y1="10.0" x2="103.7" y2="20.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="31.8" x2="116.3" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="31.8" x2="128.9" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="42.7" x2="128.9" y2="42.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="53.6" x2="78.5" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="84.8" y1="53.6" x2="91.1" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="64.6" x2="72.2" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="64.6" x2="91.1" y2="64.6" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="64.6" x2="97.4" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="86.4" x2="103.7" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="86.4" x2="97.4" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="91.1" y1="86.4" x2="78.5" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="103.7" y1="86.4" x2="97.4" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="86.4" x2="72.2" y2="75.5" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="78.5" y1="86.4" x2="65.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="72.2" y1="75.5" x2="65.9" y2="86.4" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="160.4" y1="97.3" x2="154.1" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="160.4" y1="97.3" x2="166.7" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="108.2" x2="147.8" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="108.2" x2="166.7" y2="108.2" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="108.2" x2="173.0" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="130.0" x2="179.3" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="130.0" x2="173.0" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="130.0" x2="154.1" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="179.3" y1="130.0" x2="185.6" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="179.3" y1="130.0" x2="173.0" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="130.0" x2="147.8" y2="119.1" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="130.0" x2="141.5" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="119.1" x2="141.5" y2="130.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="130.0" x2="135.2" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="173.7" x2="147.8" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="173.7" x2="141.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="154.1" y1="173.7" x2="166.7" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="162.8" x2="141.5" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="147.8" y1="162.8" x2="141.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="173.7" x2="128.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="162.8" x2="116.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="162.8" x2="128.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="122.6" y1="162.8" x2="128.9" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="116.3" y1="173.7" x2="128.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="128.9" y1="151.9" x2="141.5" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="128.9" y1="151.9" x2="135.2" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="141.5" y1="151.9" x2="135.2" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="173.7" x2="179.3" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="166.7" y1="173.7" x2="173.0" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="179.3" y1="173.7" x2="191.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="179.3" y1="173.7" x2="173.0" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="173.0" y1="162.8" x2="179.3" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="191.9" y1="151.9" x2="185.6" y2="140.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="191.9" y1="151.9" x2="179.3" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="191.9" y1="151.9" x2="198.2" y2="162.8" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="185.6" y1="140.9" x2="179.3" y2="151.9" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="198.2" y1="162.8" x2="191.9" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="198.2" y1="162.8" x2="204.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<line x1="191.9" y1="173.7" x2="204.5" y2="173.7" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.55"/>
+<polyline points="15.5,173.7 28.1,173.7 40.7,173.7" style="fill:none;stroke:var(--ink);stroke-width:2.6;stroke-linejoin:round"/>
+<line x1="40.7" y1="173.7" x2="47.0" y2="162.8" style="stroke:var(--chart-5);stroke-width:3.2;stroke-linecap:round"/>
+<circle cx="15.5" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="15.5" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="28.1" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="28.1" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="21.8" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="21.8" cy="162.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="40.7" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="40.7" cy="151.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="34.4" cy="140.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="34.4" cy="140.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="28.1" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="28.1" cy="151.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="47.0" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="47.0" cy="162.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="40.7" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="40.7" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="53.3" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="53.3" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="84.8" cy="140.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="84.8" cy="140.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="151.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="151.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="103.7" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="103.7" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.099;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="97.4" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="97.4" cy="162.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="72.2" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="72.2" cy="162.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="65.9" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="65.9" cy="173.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="130.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="72.2" cy="119.1" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="72.2" cy="119.1" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="65.9" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="65.9" cy="130.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="47.0" cy="119.1" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="47.0" cy="119.1" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="40.7" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="40.7" cy="130.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="53.3" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="53.3" cy="130.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="53.3" cy="108.2" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="53.3" cy="108.2" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="65.9" cy="108.2" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="65.9" cy="108.2" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="59.6" cy="97.3" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="59.6" cy="97.3" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="154.1" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="154.1" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.099;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="147.8" cy="75.5" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="147.8" cy="75.5" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="122.6" cy="75.5" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="122.6" cy="75.5" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="116.3" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="116.3" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="64.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="64.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="64.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="64.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="135.2" cy="53.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="135.2" cy="53.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="42.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="42.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="103.7" cy="42.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="103.7" cy="42.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="97.4" cy="31.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="97.4" cy="31.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="116.3" cy="20.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="116.3" cy="20.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="110.0" cy="10.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="110.0" cy="10.0" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="103.7" cy="20.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="103.7" cy="20.9" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="122.6" cy="31.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="122.6" cy="31.8" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="116.3" cy="42.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="116.3" cy="42.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="42.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="42.7" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="84.8" cy="53.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="84.8" cy="53.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="64.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="64.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="64.6" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="64.6" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="91.1" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="91.1" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="103.7" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="103.7" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="97.4" cy="75.5" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="97.4" cy="75.5" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="78.5" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="78.5" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="72.2" cy="75.5" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="72.2" cy="75.5" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="65.9" cy="86.4" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="65.9" cy="86.4" r="3.5" style="fill:var(--chart-4);fill-opacity:0.175;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="160.4" cy="97.3" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="160.4" cy="97.3" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="154.1" cy="108.2" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="154.1" cy="108.2" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="166.7" cy="108.2" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="166.7" cy="108.2" r="3.5" style="fill:var(--chart-3);fill-opacity:0.284;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="166.7" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="166.7" cy="130.0" r="3.5" style="fill:var(--chart-3);fill-opacity:0.461;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="179.3" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="179.3" cy="130.0" r="3.5" style="fill:var(--chart-3);fill-opacity:0.658;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="173.0" cy="119.1" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="173.0" cy="119.1" r="3.5" style="fill:var(--chart-3);fill-opacity:0.461;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="154.1" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="154.1" cy="130.0" r="3.5" style="fill:var(--chart-3);fill-opacity:0.284;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="147.8" cy="119.1" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="147.8" cy="119.1" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="130.0" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="130.0" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="154.1" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="154.1" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.658;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="147.8" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="147.8" cy="162.8" r="3.5" style="fill:var(--chart-3);fill-opacity:0.461;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.461;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="122.6" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="122.6" cy="162.8" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="116.3" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="116.3" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.284;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="128.9" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="128.9" cy="151.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="141.5" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="141.5" cy="151.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.284;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="135.2" cy="140.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="135.2" cy="140.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.125;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="166.7" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="166.7" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="179.3" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="179.3" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="173.0" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="173.0" cy="162.8" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="191.9" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="191.9" cy="151.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="185.6" cy="140.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="185.6" cy="140.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="179.3" cy="151.9" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="179.3" cy="151.9" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="198.2" cy="162.8" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="198.2" cy="162.8" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="191.9" cy="173.7" r="3.5" style="fill:var(--panel);stroke:none"/>
+<circle cx="191.9" cy="173.7" r="3.5" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--ink-soft);stroke-width:0.5"/>
+<circle cx="204.5" cy="173.7" r="4.2" style="fill:var(--ink);stroke:var(--ink);stroke-width:0.6"/>
+<text x="11.5" y="190.7" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">start</text>
+<text x="206.5" y="190.7" text-anchor="middle" style="font-family:var(--sans);font-size:10px;fill:var(--ink-soft)">goal</text>
+<line x1="45.9" y1="170.2" x2="57.9" y2="182.7" style="stroke:var(--chart-5);stroke-width:1"/>
+<text x="52.9" y="190.7" text-anchor="start" style="font-family:var(--sans);font-size:10px;fill:var(--chart-5);font-weight:600">loops here</text>
+<text x="110.0" y="206.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink);font-weight:600">target over all six</text>
+</svg>
+</div>
+<svg viewBox="0 0 360 30" role="img" aria-label="Legend: green shading for estimates above 0, red below, deepest at 6 or more either way; the black dot is the goal." style="display: block; width: 100%; max-width: 24rem; margin: 0.4rem auto 0; height: auto">
+<rect x="8" y="9" width="14" height="14" style="fill:var(--chart-4);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/>
+<text x="27.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">−6 or less</text>
+<rect x="103" y="9" width="14" height="14" style="fill:var(--chart-3);fill-opacity:0.040;stroke:var(--line);stroke-width:0.8"/>
+<text x="122.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">0</text>
+<rect x="144" y="9" width="14" height="14" style="fill:var(--chart-3);fill-opacity:0.850;stroke:var(--line);stroke-width:0.8"/>
+<text x="163.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">+6 or more</text>
+<line x1="244" y1="16" x2="262" y2="16" style="stroke:var(--ink);stroke-width:2.6"/>
+<text x="267.0" y="20.0" text-anchor="start" style="font-family:var(--sans);font-size:11.5px;fill:var(--ink-soft)">greedy path</text>
+</svg>
+          <figcaption>
+            Fig. 2 · The largest legal estimate in each state after 5000
+            episodes, from run 0 of each agent in leak.py. Each dot is one
+            arrangement of the four disks, and a line joins two arrangements
+            one legal move apart, so a corner has two lines and every other
+            dot three. The thick line is the greedy path from the start.
+          </figcaption>
+        </figure>
+        <p>
+          In every state nine or more moves
+          from the goal, each legal estimate settles at −1, so all of that
+          state's moves look equally good. np.argmax breaks a tie toward the
+          first legal move in <code>MOVES</code>. That is 0 → 1 at the start
+          and 0 → 2 next, both best moves, and after that 1 → 0 and 0 → 1
+          over and over.
+          With ties broken at random the agent wanders instead, and it
+          needs about 150 moves on average to reach the goal from the start.
+          Within eight moves of the goal it takes the fewest moves from all 28
+          starts, and a tie breaks its way at one more, 29 of 80.
+        </p>
+      </section>
+
+      <section data-nb-section="resting-point" id="resting-point">
+        <h2>A never-updated estimate acts as a move that ends the episode</h2>
+        <p>
+          Why −1, and why only from nine moves out? As in the argument for
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">SARSA and Q-learning</a>,
+          the estimates stop moving when each one equals its target, here
+          with no average to take. Write Q<sub>0</sub>
+          for the value every illegal estimate keeps. Every state has an illegal
+          move, so the agent whose target runs over all six can rest only
+          where each legal pair satisfies the equation below.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} Q(s, a) &amp;= r(s, a) + \gamma \max\Bigl\{ \htmlClass{nb-mc2}{Q_0}, \\ &amp;\qquad \max_{a' \in \mathcal{A}(s')} Q(s', a') \Bigr\} \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc2">Q_0</span><span>the value every never-updated estimate keeps, 0 here</span></li>
+            <li><span class="nb-math-term">s'</span><span>the state the move leads to. For a move into the goal the right side is r(s, a) = 10 alone.</span></li>
+          </ul>
+          <figcaption>Where the agent that masks only its choice can rest.</figcaption>
+        </figure>
+        <p>
+          This is the
+          <a href="../reinforcement-learning/finding-optimal-policies.html">Bellman optimality equation</a>
+          for action values on a changed puzzle, one where every state also
+          offers a move that ends the episode and pays Q<sub>0</sub>. A
+          designer gets that puzzle by making step end the episode on an
+          illegal move and pay Q<sub>0</sub>, in place of the no-op.
+          Q<sub>0</sub> is the same in every table, so the max stays a
+          non-expansion, as in value iteration: |max(Q<sub>0</sub>, x) −
+          max(Q<sub>0</sub>, y)| is never more than |x − y|. So the right
+          side still shrinks the largest
+          difference between two sets of estimates by a factor of γ, and the
+          equation has one solution, which leak.py finds by value iteration.
+          The agent
+          never makes the extra move. Its target still values each next
+          state as if the agent could stop there and collect Q<sub>0</sub>.
+        </p>
+        <p>
+          The first lines of the output give the solution, grouped by the
+          fewest moves to the goal. With Q<sub>0</sub> = 0 inside every max,
+          no target short of the goal can fall below −1 + 0.9 × 0 = −1. Out
+          to eight moves the solution still matches v<sub>*</sub>. Each of
+          those states has a move into the goal or to a state worth at least
+          0.63, more than Q<sub>0</sub>, so its best target is already above
+          −1. From nine moves out every next state is worth
+          less than 0, so Q<sub>0</sub> wins every max and every legal move's
+          target is exactly −1. The five runs with the target over all six
+          end 0.002 from this resting point on average. For the masked target the resting point is
+          q<sub>*</sub> itself, so its rows give the same error twice. A
+          never-updated estimate changes the values exactly
+          where it beats the next state's best legal value.
+        </p>
+        <p>
+          So the never-updated estimates do no harm when Q<sub>0</sub> sits
+          below every value the estimates can take, even in a target over all
+          six. Paying −1 forever is
+          worth −1/(1 − 0.9) = −10. If every estimate starts at −10, each
+          target is at least −1 + 0.9 × (−10) = −10, so no legal estimate
+          ever falls below the never-updated ones. The last rows of the
+          output test this, changing only the initial estimates. The target over all six then picks the same value as the
+          masked target at every update, and the two agents' tables are
+          identical. Masking the target remains the fix, since picking a
+          low enough start needs a lower bound on every value in advance. After 5000
+          episodes both agents that start at −10 are also still 0.33 from
+          q<sub>*</sub>, and they take the fewest moves from about 70 of the
+          80 starts. With more episodes both reach all 80.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. An agent ignores the mask on <code>hanoi.py</code>. It explores
+            all six moves, so its illegal moves are the no-ops of step, and
+            its target takes the max over all six. Where do its estimates
+            rest?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Every move it makes gets updated, so no estimate stays at its
+              initial value. A no-op from s settles at −1 + 0.9 v<sub>*</sub>(s),
+              the value of a wasted move. That is below v<sub>*</sub>(s)
+              whenever v<sub>*</sub>(s) is above −10, as every value here is,
+              so the max over all six lands on a legal move and the agent
+              learns q<sub>*</sub>.
+            </p>
+          </details>
+          <p>
+            2. A designer makes every illegal move end the episode with reward
+            0, and the agent ignores the mask. What does its greedy agent do
+            at the start, and from which states does it do the same?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              An ending move's target is its reward, so each illegal estimate
+              settles at exactly 0. The legal estimates then satisfy the
+              equation above with Q<sub>0</sub> = 0, and they settle where the
+              agent that masked only its choice settled. At the start both
+              legal estimates are −1, so the greedy agent makes an illegal move
+              and ends the episode at once. It does the same wherever the best
+              legal estimate is below 0, in the 54 states eight or more moves
+              from the goal.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          In the four-disk Tower of Hanoi, Q-learning that masked only its
+          choice settled every legal estimate nine or more moves from the
+          goal at −1, and its greedy agent looped beside the start. Masking its target as well, it solved
+          the puzzle in 15 moves. A move the agent never makes keeps its
+          initial estimate, and a max over all actions still reads it. The
+          target then values each next state as if the agent could end the
+          episode there and collect that estimate, which changes every value where
+          the estimate beats the next state's best legal value. When legality
+          depends on the state, mask both places: the choice, random or
+          greedy, and the max over the next state's moves.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://gymnasium.farama.org/main/tutorials/training_agents/action_masking_taxi/">Gymnasium, Action Masking in the Taxi Environment</a>:
+            both places masked in working code. Read the main-branch version,
+            since the 1.4.0 version skips the update on the step that ends an
+            episode.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1809.02121">Zahavy et al., Learn What Not to Learn</a>:
+            Definition 3 and Proposition 1 (p. 6) define Q-learning that
+            masks both places and prove it converges, and Algorithm 1 (p. 7)
+            carries both into a neural-network Q-learner.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2006.14171">Huang and Ontañón, A Closer Look at Invalid Action Masking in Policy Gradient Algorithms</a>:
+            the same question for policy-gradient methods, which later
+            lessons teach. Table 2 (p. 5) sets masking against a penalty for
+            illegal moves.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="class docstring, lines 37–38; ## Information, lines 130–141; action_mask(), lines 417–436"
+              href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/envs/toy_text/taxi.py"
+              >Farama Foundation · Gymnasium 1.4.0 source, gymnasium/envs/toy_text/taxi.py</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="EXPECTED_METHOD_NAME and get_action_masks, lines 5–19"
+              href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/common/maskable/utils.py"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 source, sb3_contrib/common/maskable/utils.py</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="section Action Masking"
+              href="https://pettingzoo.farama.org/api/aec/"
+              >Farama Foundation · PettingZoo documentation, AEC API</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="check_step_determinism, lines 204–235; check_returned_data_not_reused, lines 273–303; the passive step check, line 478"
+              href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/utils/env_checker.py"
+              >Farama Foundation · Gymnasium 1.4.0 source, gymnasium/utils/env_checker.py</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Discrete.sample, lines 127–196"
+              href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/spaces/discrete.py"
+              >Farama Foundation · Gymnasium 1.4.0 source, gymnasium/spaces/discrete.py</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="introduction, How Action Masking Works"
+              href="https://gymnasium.farama.org/tutorials/training_agents/action_masking_taxi/"
+              >Farama Foundation · Gymnasium 1.4.0 documentation, Action Masking in the Taxi Environment</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
