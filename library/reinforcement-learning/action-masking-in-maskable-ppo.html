@@ -1,0 +1,1096 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MaskablePPO's network never learns which moves are illegal · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "action-masking-in-maskable-ppo",
+        "template": "lesson",
+        "title": "MaskablePPO's network never learns which moves are illegal",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-18",
+        "tags": ["action-masking", "maskable-ppo", "sb3-contrib", "stable-baselines3", "tower-of-hanoi", "evaluation", "environment-design"],
+        "sources": 13,
+        "words": 3690,
+        "reading_minutes": 16,
+        "dek": "Five MaskablePPO agents that average 10 moves per episode on the four-disk Tower of Hanoi need 34 to 63 once Stable-Baselines3's evaluate_policy plays them without the mask.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">MaskablePPO's network never learns which moves are illegal</h1>
+        <p class="nb-dekline">
+          Five MaskablePPO agents that average 10 moves per episode on the
+          four-disk Tower of Hanoi need 34 to 63 once Stable-Baselines3's
+          evaluate_policy plays them without the mask.
+        </p>
+        <div class="nb-byline">
+          <span>16 min read</span><span>2026-11-18</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          In every state of the Tower of Hanoi, three or four of the six moves
+          are illegal, yet the policy network of an off-the-shelf agent such
+          as PPO gives all six a probability. In Q-learning the mask, A(s)
+          written as 1s and 0s, had to reach the choice and the target by
+          hand. MaskablePPO, the PPO of the sb3-contrib package, applies it to
+          the policy itself. Before every training move it asks the
+          environment for the mask and samples from the legal moves alone, which Huang and
+          Ontañón call invalid action masking. Its network never has to learn
+          which moves are illegal, so the agent needs the mask wherever it
+          chooses a move. You will train MaskablePPO on <code>hanoi.py</code>
+          beside a PPO agent that pays for its illegal moves, then find the
+          evaluation calls that leave the mask out without a warning.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/action-masking-in-q-learning.html">Illegal moves that Q-learning never makes still set its values in the Tower of Hanoi</a>:
+            <code>hanoi.py</code>, its <code>action_masks()</code> method, and
+            the no-op an illegal move makes.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/training-an-off-the-shelf-agent.html">PPO's greedy arrows outscore the sampled moves its training curve averages</a>:
+            PPO as a library call, its greedy policy, and baselines played in
+            a separate evaluation environment.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/checking-a-custom-environment.html">Gymnasium's environment checker passes a grid with a backward slip</a>:
+            check_env, which steps with random moves that ignore the mask.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://sb3-contrib.readthedocs.io/en/v2.9.2/modules/ppo_mask.html">sb3-contrib 2.9.2, Maskable PPO</a>:
+            the library's own page, with a loop that passes the mask to
+            predict by hand.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Seed 0's trained network rates an illegal first move most probable</h2>
+        <p>
+          We train MaskablePPO on <code>hanoi.py</code> with seed 0 and a
+          budget of 50,000 steps, then read its policy network at the start, where all four
+          disks sit on peg 0. MaskablePPO is the PPO of sb3-contrib, a
+          companion package to Stable-Baselines3, with masking added and
+          nothing else changed.<sup class="nb-cite"><a href="#s1" data-nb-locator="docs/modules/ppo_mask.md, lines 9–10">1</a></sup>
+          With the
+          <a href="../reinforcement-learning/action-masking-in-q-learning.html">mask</a>,
+          its
+          <a href="../reinforcement-learning/training-an-off-the-shelf-agent.html">greedy agent</a>
+          solves the puzzle from the start in 15 moves, the fewest possible.
+        </p>
+        <p>
+          The network alone gives each of the six moves a probability, legal
+          or not (Fig. 1). At the start only 0 → 1 and 0 → 2 are legal. The
+          move the network rates most probable, at 0.657, is 1 → 0, which
+          would lift a disk off the empty peg 1.
+        </p>
+        <p>
+          In training, MaskablePPO never makes that move, because it applies
+          the mask before it samples. It replaces the logit of every illegal move with
+          −10<sup>8</sup>, so the softmax gives those moves probability
+          0.<sup class="nb-cite"><a href="#s2" data-nb-locator="MaskableCategorical.apply_masking, lines 59 and 61">2</a></sup>
+          The two legal moves keep their probabilities relative to each other.
+          0 → 1 had 0.296 and 0 → 2 had 0.002, together 0.298, so with the
+          mask they have 0.994 and 0.006.
+        </p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center">
+<svg viewBox="0 0 252 172" role="img" aria-label="Six bars for the start's moves without the mask: 0.30 for 0 to 1 and 0.00 for 0 to 2, both legal; 0.66 for 1 to 0, 0.02 for 1 to 2, 0.00 for 2 to 0 and 0.02 for 2 to 1, all illegal. The tallest bar is the illegal move 1 to 0." style="flex: 1 1 18rem; min-width: 0; max-width: 21rem; height: auto">
+<text x="126" y="14" text-anchor="middle" style="font-family:var(--sans);font-size:12px;font-weight:600;fill:var(--ink)">the network alone</text>
+<line x1="30" y1="132.0" x2="242.0" y2="132.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.9"/>
+<text x="26" y="135.8" text-anchor="end" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0</text>
+<line x1="30" y1="82.0" x2="242.0" y2="82.0" style="stroke:var(--ink-soft);stroke-width:0.5;stroke-opacity:0.35"/>
+<text x="26" y="85.8" text-anchor="end" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0.5</text>
+<line x1="30" y1="32.0" x2="242.0" y2="32.0" style="stroke:var(--ink-soft);stroke-width:0.5;stroke-opacity:0.35"/>
+<text x="26" y="35.8" text-anchor="end" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">1</text>
+<rect x="34.0" y="102.4" width="24" height="29.6" style="fill:var(--chart-2);stroke:none"/>
+<text x="46.0" y="98.4" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0.30</text>
+<text x="46.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0 → 1</text>
+<rect x="70.0" y="131.8" width="24" height="0.2" style="fill:var(--chart-2);stroke:none"/>
+<text x="82.0" y="127.8" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0.00</text>
+<text x="82.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0 → 2</text>
+<rect x="106.0" y="66.3" width="24" height="65.7" style="fill:var(--chart-4);stroke:none"/>
+<text x="118.0" y="62.3" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0.66</text>
+<text x="118.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">1 → 0</text>
+<rect x="142.0" y="130.0" width="24" height="2.0" style="fill:var(--chart-4);stroke:none"/>
+<text x="154.0" y="126.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0.02</text>
+<text x="154.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">1 → 2</text>
+<rect x="178.0" y="131.8" width="24" height="0.2" style="fill:var(--chart-4);stroke:none"/>
+<text x="190.0" y="127.8" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0.00</text>
+<text x="190.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">2 → 0</text>
+<rect x="214.0" y="129.6" width="24" height="2.4" style="fill:var(--chart-4);stroke:none"/>
+<text x="226.0" y="125.6" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0.02</text>
+<text x="226.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">2 → 1</text>
+<path d="M34.0 154.0v4H94.0v-4" style="fill:none;stroke:var(--chart-2);stroke-width:1.2"/>
+<text x="64.0" y="170.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-2)">legal</text>
+<path d="M106.0 154.0v4H238.0v-4" style="fill:none;stroke:var(--chart-4);stroke-width:1.2"/>
+<text x="172.0" y="170.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-4)">illegal</text>
+</svg>
+<svg viewBox="0 0 252 172" role="img" aria-label="The same six moves with the mask: 0.99 for 0 to 1 and 0.01 for 0 to 2, and 0 for each of the four illegal moves." style="flex: 1 1 18rem; min-width: 0; max-width: 21rem; height: auto">
+<text x="126" y="14" text-anchor="middle" style="font-family:var(--sans);font-size:12px;font-weight:600;fill:var(--ink)">with the mask</text>
+<line x1="30" y1="132.0" x2="242.0" y2="132.0" style="stroke:var(--ink-soft);stroke-width:0.9;stroke-opacity:0.9"/>
+<text x="26" y="135.8" text-anchor="end" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0</text>
+<line x1="30" y1="82.0" x2="242.0" y2="82.0" style="stroke:var(--ink-soft);stroke-width:0.5;stroke-opacity:0.35"/>
+<text x="26" y="85.8" text-anchor="end" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0.5</text>
+<line x1="30" y1="32.0" x2="242.0" y2="32.0" style="stroke:var(--ink-soft);stroke-width:0.5;stroke-opacity:0.35"/>
+<text x="26" y="35.8" text-anchor="end" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">1</text>
+<rect x="34.0" y="32.6" width="24" height="99.4" style="fill:var(--chart-2);stroke:none"/>
+<text x="46.0" y="28.6" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0.99</text>
+<text x="46.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0 → 1</text>
+<rect x="70.0" y="131.4" width="24" height="0.6" style="fill:var(--chart-2);stroke:none"/>
+<text x="82.0" y="127.4" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0.01</text>
+<text x="82.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">0 → 2</text>
+<text x="118.0" y="128.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0</text>
+<text x="118.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">1 → 0</text>
+<text x="154.0" y="128.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0</text>
+<text x="154.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">1 → 2</text>
+<text x="190.0" y="128.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0</text>
+<text x="190.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">2 → 0</text>
+<text x="226.0" y="128.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink)">0</text>
+<text x="226.0" y="146.0" text-anchor="middle" style="font-family:var(--sans);font-size:10.5px;fill:var(--ink-soft)">2 → 1</text>
+<path d="M34.0 154.0v4H94.0v-4" style="fill:none;stroke:var(--chart-2);stroke-width:1.2"/>
+<text x="64.0" y="170.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-2)">legal</text>
+<path d="M106.0 154.0v4H238.0v-4" style="fill:none;stroke:var(--chart-4);stroke-width:1.2"/>
+<text x="172.0" y="170.0" text-anchor="middle" style="font-family:var(--sans);font-size:11px;fill:var(--chart-4)">illegal</text>
+</svg>
+</div>
+          <figcaption>
+            Fig. 1 · The six probabilities seed 0's network gives the start
+            after 51,200 training steps, without and with the mask. From the
+            output of <code>maskable.py</code> below.
+          </figcaption>
+        </figure>
+        <p>
+          In any state, the masked policy is the network's distribution
+          conditioned on a legal move.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\pi_{\text{mask}}(a \mid s) = \frac{\htmlClass{nb-mc1}{m_a(s)}\, \htmlClass{nb-mc2}{\pi(a \mid s)}}{\htmlClass{nb-mc3}{\sum_{b} m_b(s)\, \pi(b \mid s)}}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">m_a(s)</span><span>the mask's entry for move a in state s: 1 if a is legal there, 0 if not</span></li>
+            <li><span class="nb-math-term nb-mc2">\pi(a \mid s)</span><span>the probability the network alone gives move a</span></li>
+            <li><span class="nb-math-term nb-mc3">\sum_{b} m_b(s)\, \pi(b \mid s)</span><span>the legal moves' total, 0.298 at the start</span></li>
+          </ul>
+          <figcaption>
+            The policy MaskablePPO samples from. Setting each illegal logit
+            to −10<sup>8</sup> before the softmax gives the same probabilities,
+            and <code>maskable.py</code> finds the two within 10<sup>−9</sup>
+            of each other at the start.
+          </figcaption>
+        </figure>
+        <p>
+          After training, the agent's greedy move at the start depends on
+          whether the caller passes the mask. With no mask, predict returns
+          1 → 0. With the mask, it returns 0 → 1, the first move of the
+          15-move solution.
+        </p>
+      </section>
+
+      <section data-nb-section="legal-logits" id="legal-logits">
+        <h2>MaskablePPO's training depends only on legal moves' logits</h2>
+        <p>
+          <code>hanoi.py</code>, from the lesson on
+          <a href="../reinforcement-learning/action-masking-in-q-learning.html">action masking in Q-learning</a>,
+          already has the method MaskablePPO calls. MaskablePPO looks for
+          exactly the name <code>action_masks</code>, and it never reads
+          <code>info["action_mask"]</code>.<sup class="nb-cite"><a href="#s3" data-nb-locator="EXPECTED_METHOD_NAME, line 5; get_action_masks, lines 8–19">3</a></sup>
+          Before each training step it calls that method and passes the mask
+          to the network with the observation.<sup class="nb-cite"><a href="#s4" data-nb-locator="collect_rollouts, lines 226–233">4</a></sup>
+          It finds the method through every wrapper around the environment,
+          here a
+          <a href="../reinforcement-learning/termination-and-truncation.html">TimeLimit</a>
+          of 100 moves and a wrapper that counts illegal moves.<sup class="nb-cite"><a href="#s5" data-nb-locator="Wrapper.get_wrapper_attr, lines 427–444">5</a></sup>
+          If the environment is vectorized, a container that steps several
+          copies at once, MaskablePPO asks each copy for its own
+          mask.<sup class="nb-cite"><a href="#s3" data-nb-locator="get_action_masks, lines 16–17">3</a></sup>
+        </p>
+        <p>
+          MaskablePPO stores each mask with its step and applies the stored
+          mask again when it updates the
+          network.<sup class="nb-cite"><a href="#s4" data-nb-locator="rollout_buffer.add, lines 262–270; train, lines 339–343">4</a></sup>
+          At a state where a move is illegal, the update sees that move's
+          logit only after it has become −10<sup>8</sup>, so no gradient
+          reaches the logit from that state. The logit still changes, because
+          the same weights compute the logits of every state. No part of
+          training depends on its value where the move is illegal, so the
+          network never learns which moves are illegal. A later lesson on
+          masking in policy gradients shows
+          why a gradient taken through the masked distribution is still a
+          policy gradient.
+        </p>
+        <p>
+          An environment without the method stops training at once, since
+          <code>learn</code> raises a
+          ValueError.<sup class="nb-cite"><a href="#s4" data-nb-locator="collect_rollouts, lines 216–217">4</a></sup>
+          sb3-contrib's ActionMasker wrapper adds the method, given a function
+          that returns the mask for the environment's current
+          state.<sup class="nb-cite"><a href="#s6" data-nb-locator="ActionMasker, lines 7–32">6</a></sup>
+          The 2.9.2 documentation says MaskablePPO behaves like PPO unless
+          the environment is wrapped with
+          ActionMasker,<sup class="nb-cite"><a href="#s1" data-nb-locator="docs/modules/ppo_mask.md, lines 117–120">1</a></sup>
+          but the code does so only under
+          <code>learn(..., use_masking=False)</code>.
+        </p>
+        <p>
+          <code>maskable.py</code> trains either agent with the course's
+          discount, 0.9, and every other setting at its default, as in the
+          lesson on
+          <a href="../reinforcement-learning/training-an-off-the-shelf-agent.html">training an off-the-shelf agent</a>.
+          <code>learn(50_000)</code> then runs 25 batches of 2,048 steps,
+          51,200 in
+          all.<sup class="nb-cite"><a href="#s4" data-nb-locator="constructor defaults, lines 76–102">4</a></sup>
+          The listing needs <code>hanoi.py</code> in the same folder, and its
+          dependency block adds sb3-contrib 2.9.2, the current release, to
+          agent.py's.<sup class="nb-cite"><a href="#s7" data-nb-locator="Release history; info.requires_dist">7</a></sup>
+          Its demo trains seed 0 and prints the numbers behind Fig. 1 and
+          Fig. 2 in about a minute.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">maskable.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "sb3-contrib==2.9.2", "stable-baselines3==2.9.2", "torch==2.14.1"]
+#
+# [[tool.uv.index]]
+# name = "pytorch-cpu"
+# url = "https://download.pytorch.org/whl/cpu"
+# explicit = true
+#
+# [tool.uv.sources]
+# torch = { index = "pytorch-cpu", marker = "sys_platform == 'linux'" }
+# ///
+"""MaskablePPO from sb3-contrib and PPO from SB3, trained on the four-disk
+Tower of Hanoi. MaskablePPO reads the mask from hanoi.py's action_masks()."""
+
+import gymnasium as gym
+import numpy as np
+import torch
+from gymnasium.wrappers import TimeLimit
+from hanoi import GOAL, MOVES, N, Hanoi, legal
+from sb3_contrib import MaskablePPO
+from sb3_contrib.common.maskable.utils import get_action_masks
+from stable_baselines3 import PPO
+
+MASK = np.array([legal(s) for s in range(N)]) == 1  # MASK[s]: legal moves in s
+GAMMA, LIMIT, STEPS = 0.9, 100, 50_000
+torch.set_num_threads(1)  # so a seed's run does not depend on the core count
+
+
+class Illegal(gym.Wrapper):
+    """Counts the illegal moves that reach step."""
+
+    def __init__(self, env):
+        super().__init__(env)
+        self.count = 0
+
+    def step(self, action):
+        self.count += int(not MASK[self.unwrapped.s, action])
+        return self.env.step(action)
+
+
+def train(cls, seed, steps=STEPS):
+    """MaskablePPO or PPO, with the course's discount and every other setting
+    at its default. Returns the model and its illegal moves in training."""
+    env = Illegal(TimeLimit(Hanoi(), max_episode_steps=LIMIT))
+    model = cls("MlpPolicy", env, gamma=GAMMA, seed=seed)
+    model.learn(total_timesteps=steps)
+    return model, env.count
+
+
+def move_probs(model, masks=None):
+    """probs[s, a], the probability the policy gives move a in state s,
+    with masks applied only if they are passed."""
+    obs, _ = model.policy.obs_to_tensor(np.arange(N))
+    kwargs = {} if masks is None else {"action_masks": masks}
+    with torch.no_grad():
+        dist = model.policy.get_distribution(obs, **kwargs)
+    return dist.distribution.probs.numpy()
+
+
+def episode(model, start, masked):
+    """One greedy episode from start: its moves, its illegal moves, and
+    whether the time limit cut it."""
+    env = Illegal(TimeLimit(Hanoi(), max_episode_steps=LIMIT))
+    s, _ = env.reset(options={"start": start})
+    for t in range(1, LIMIT + 1):
+        kwargs = {"action_masks": get_action_masks(env)} if masked else {}
+        a = model.predict(s, deterministic=True, **kwargs)[0]
+        s, _, terminated, truncated, _ = env.step(a)
+        if terminated or truncated:
+            return t, env.count, truncated
+
+
+if __name__ == "__main__":
+    model, illegal = train(MaskablePPO, seed=0)
+    print(f"MaskablePPO, seed 0: {model.num_timesteps:,} training steps, "
+          f"{illegal} of them illegal")
+    unmasked, masked = move_probs(model)[0], move_probs(model, MASK)[0]
+    print("the start's moves   " + "".join(f"{a} → {b}".rjust(8) for a, b in MOVES))
+    print("legal               " + "".join(f"{str(m):&gt;8s}" for m in MASK[0]))
+    print("probability, no mask" + "".join(f"{p:8.3f}" for p in unmasked))
+    print("probability, mask   " + "".join(f"{p:8.3f}" for p in masked))
+    renorm = np.where(MASK[0], unmasked, 0) / unmasked[MASK[0]].sum()
+    print(f"largest |mask - no mask renormalized over legal moves|: "
+          f"{abs(masked - renorm).max():.0e}")
+    print("predict(0, deterministic=True):", model.predict(0, deterministic=True)[0])
+    print("predict(0, deterministic=True, action_masks=MASK[0]):",
+          model.predict(0, deterministic=True, action_masks=MASK[0])[0])
+    for masked in (True, False):
+        moves, wrong, cut = episode(model, 0, masked)
+        print(f"greedy episode from the start, {'with' if masked else 'no'} mask: "
+              f"{moves} moves, {wrong} illegal, cut by the time limit: {cut}")
+    top = move_probs(model).argmax(axis=1)
+    print("states whose most probable move is illegal:",
+          sum(not MASK[s, top[s]] for s in range(GOAL)), "of", GOAL)
+    print("starts whose greedy episode with no mask is cut by the time limit:",
+          sum(episode(model, s, False)[2] for s in range(GOAL)), "of", GOAL)</code></pre>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run maskable.py</span><span>text</span></div>
+          <pre><code data-language="text">MaskablePPO, seed 0: 51,200 training steps, 0 of them illegal
+the start's moves      0 → 1   0 → 2   1 → 0   1 → 2   2 → 0   2 → 1
+legal                   True    True   False   False   False   False
+probability, no mask   0.296   0.002   0.657   0.020   0.002   0.024
+probability, mask      0.994   0.006   0.000   0.000   0.000   0.000
+largest |mask - no mask renormalized over legal moves|: 1e-09
+predict(0, deterministic=True): 2
+predict(0, deterministic=True, action_masks=MASK[0]): 0
+greedy episode from the start, with mask: 15 moves, 0 illegal, cut by the time limit: False
+greedy episode from the start, no mask: 100 moves, 100 illegal, cut by the time limit: True
+states whose most probable move is illegal: 10 of 80
+starts whose greedy episode with no mask is cut by the time limit: 33 of 80</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="no-op-cost" id="no-op-cost">
+        <h2>Without a mask, PPO spends three training moves in ten on no-ops</h2>
+        <p>
+          An agent that ignores the mask needs a rule for what an illegal move
+          does, and the environment sets it. The
+          <a href="../reinforcement-learning/checking-a-custom-environment.html">environment checker</a>
+          steps with random moves that ignore the
+          mask,<sup class="nb-cite"><a href="#s1" data-nb-locator="docs/modules/ppo_mask.md, lines 92–96">1</a></sup>
+          so <code>hanoi.py</code>'s step accepts an illegal move, leaves
+          every disk where it is and pays −1, a no-op. SB3's plain PPO learns
+          about illegal moves only from that wasted move. MaskablePPO never
+          triggers the rule: <code>maskable.py</code> counts 0 illegal moves
+          in 51,200 training steps.
+        </p>
+        <p>
+          <code>compare.py</code>, below, trains both agents with seeds 0 to
+          4. Each greedy policy then plays the same 100 episodes in a
+          separate evaluation environment, whose seed training never uses,
+          and is scored by its moves per episode, at most 100. Random legal
+          moves need 87.5. The scripted policy, the textbook recursion that
+          moves the largest misplaced disk once every smaller disk is out of
+          its way, needs 9.9.
+        </p>
+        <table class="nb-table">
+          <caption>Table&nbsp;1 · PPO's illegal share of training moves, and each agent's greedy moves per evaluation episode, after 51,200 training steps. From the output of <code>compare.py</code>.</caption>
+          <thead>
+            <tr><th>Seed</th><th>PPO, illegal share of training</th><th>PPO, moves per episode</th><th>MaskablePPO, moves per episode</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td>0.28</td><td>11.0</td><td>9.9</td></tr>
+            <tr><td>1</td><td>0.31</td><td>10.0</td><td>10.0</td></tr>
+            <tr><td>2</td><td>0.31</td><td>9.9</td><td>9.9</td></tr>
+            <tr><td>3</td><td>0.30</td><td>10.0</td><td>9.9</td></tr>
+            <tr><td>4</td><td>0.32</td><td>12.9</td><td>9.9</td></tr>
+          </tbody>
+        </table>
+        <p>
+          PPO sends 28 to 32 of every 100 training moves to step as illegal
+          no-ops, and MaskablePPO sends none (Table 1). PPO learns the puzzle
+          anyway. Its greedy agents need 9.9 to
+          12.9 moves per episode, and MaskablePPO's need 9.9 to 10.0, within
+          0.1 of the scripted policy.
+        </p>
+        <p>
+          Legal moves are common in Hanoi. A random move there is legal about
+          half the time, since 240 of the 486 state-move pairs are legal. Huang and Ontañón compared masking with a reward penalty
+          for invalid actions in µRTS, a real-time strategy
+          game.<sup class="nb-cite"><a href="#s8" data-nb-locator="p. 4, Strategies to Handle Invalid Actions">8</a></sup>
+          A unit to command, picked at random from the 16 cells of the 4×4
+          map, was valid with probability 0.125, and on that map a penalty of −0.01
+          matched masking's return of 40.
+          On the larger maps, where that probability fell as low as 0.0034,
+          every penalty they tried ended at 1 or below while masking still
+          reached
+          40.<sup class="nb-cite"><a href="#s8" data-nb-locator="p. 4, Strategies to Handle Invalid Actions; p. 5, Table 2">8</a></sup>
+        </p>
+        <details>
+          <summary><code>compare.py</code>, complete, and its output</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">compare.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "sb3-contrib==2.9.2", "stable-baselines3==2.9.2", "torch==2.14.1"]
+#
+# [[tool.uv.index]]
+# name = "pytorch-cpu"
+# url = "https://download.pytorch.org/whl/cpu"
+# explicit = true
+#
+# [tool.uv.sources]
+# torch = { index = "pytorch-cpu", marker = "sys_platform == 'linux'" }
+# ///
+"""Print the numbers in Table 1. PPO and MaskablePPO train with five seeds,
+and every policy plays the same 100 greedy episodes in a separate evaluation
+environment, scored by its moves per episode."""
+
+import sys
+from concurrent.futures import ProcessPoolExecutor
+
+import numpy as np
+from gymnasium.wrappers import TimeLimit
+from hanoi import DISKS, GOAL, MOVES, Hanoi
+from maskable import LIMIT, MASK, move_probs, train
+from sb3_contrib import MaskablePPO
+from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_eval
+from stable_baselines3 import PPO
+from stable_baselines3.common.evaluation import evaluate_policy
+
+FIRST = int(sys.argv[1]) if len(sys.argv) &gt; 1 else 0
+SEEDS, EPISODES = range(FIRST, FIRST + 5), 100
+
+
+def scripted(s):
+    """The textbook recursion. The largest disk off its target peg goes there
+    once every smaller disk is on the third peg, which becomes their target."""
+    move, target = None, 2
+    for k in reversed(range(DISKS)):
+        peg = s // 3**k % 3
+        if peg != target:
+            move, target = MOVES.index((peg, target)), 3 - peg - target
+    return move
+
+
+class Baseline:
+    """A policy evaluate_policy can play, since it only calls predict."""
+
+    def __init__(self, choose):
+        self.choose, self.rng = choose, np.random.default_rng(0)
+
+    def predict(self, obs, **kwargs):
+        return np.array([self.choose(int(s), self.rng) for s in obs]), None
+
+
+def moves(model, evaluate=evaluate_policy):
+    """Moves per episode over EPISODES greedy episodes of at most LIMIT
+    moves, from the starts the evaluation environment draws."""
+    env = TimeLimit(Hanoi(), max_episode_steps=LIMIT)
+    env.reset(seed=1000)  # a seed training never uses
+    # warn=False silences only a notice that no Monitor wrapper is present.
+    _, lengths = evaluate(model, env, EPISODES, return_episode_rewards=True,
+                          warn=False)
+    return np.mean(lengths)
+
+
+def row(seed):
+    """One seed's numbers: PPO's share of illegal training moves, moves per
+    episode, and the probability each network alone gives illegal moves."""
+    ppo, ppo_illegal = train(PPO, seed)
+    mppo, _ = train(MaskablePPO, seed)
+    illegal_p = [(move_probs(m) * ~MASK)[:GOAL].sum(axis=1).mean()
+                 for m in (ppo, mppo)]
+    return (ppo_illegal / ppo.num_timesteps, moves(ppo),
+            moves(mppo, masked_eval), moves(mppo), *illegal_p)
+
+
+if __name__ == "__main__":
+    random_legal = Baseline(lambda s, rng: rng.choice(np.flatnonzero(MASK[s])))
+    print(f"moves per episode: random legal moves {moves(random_legal):.1f}, "
+          f"scripted {moves(Baseline(lambda s, rng: scripted(s))):.1f}")
+    print("      PPO                 MaskablePPO          probability the network")
+    print("      share of  moves     moves per episode    alone gives illegal moves")
+    print("seed  training  per       with      with no    PPO   MaskablePPO")
+    print("      illegal   episode   mask      mask")
+    with ProcessPoolExecutor() as pool:  # one seed per process
+        for seed, r in zip(SEEDS, pool.map(row, SEEDS)):
+            print(f"{seed:4d}{r[0]:10.2f}{r[1]:10.1f}{r[2]:10.1f}{r[3]:11.1f}"
+                  f"{r[4]:8.2f}{r[5]:10.2f}")</code></pre>
+          </figure>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">output of uv run compare.py</span><span>text</span></div>
+            <pre><code data-language="text">moves per episode: random legal moves 87.5, scripted 9.9
+      PPO                 MaskablePPO          probability the network
+      share of  moves     moves per episode    alone gives illegal moves
+seed  training  per       with      with no    PPO   MaskablePPO
+      illegal   episode   mask      mask
+   0      0.28      11.0       9.9       40.4    0.02      0.30
+   1      0.31      10.0      10.0       45.5    0.03      0.35
+   2      0.31       9.9       9.9       62.9    0.02      0.30
+   3      0.30      10.0       9.9       34.2    0.03      0.33
+   4      0.32      12.9       9.9       35.9    0.03      0.31</code></pre>
+          </figure>
+        </details>
+        <p>
+          <code>uv run compare.py</code> needs <code>hanoi.py</code> and
+          <code>maskable.py</code> in its folder, and it trains one seed per
+          process. It took about three minutes on the four cores used here.
+        </p>
+      </section>
+
+      <section data-nb-section="evaluation-without-mask" id="evaluation-without-mask">
+        <h2>SB3's evaluate_policy runs the network without its mask</h2>
+        <p>
+          Training is the one place MaskablePPO fetches the mask on its own.
+          predict applies a mask only when the caller passes
+          <code>action_masks</code>,<sup class="nb-cite"><a href="#s9" data-nb-locator="predict, lines 269–323; get_distribution, lines 355–368">9</a></sup>
+          and SB3's evaluate_policy, from the lesson on training an
+          off-the-shelf agent, calls predict without
+          one.<sup class="nb-cite"><a href="#s10" data-nb-locator="evaluate_policy, lines 12–22 and 92–97">10</a></sup>
+          Neither warns. sb3-contrib's own evaluate_policy, in
+          <code>sb3_contrib.common.maskable.evaluation</code>, asks the
+          environment for a fresh mask before every
+          move.<sup class="nb-cite"><a href="#s11" data-nb-locator="evaluate_policy, lines 94–102">11</a></sup>
+          Its documentation says to use that one, and notes that "use of
+          masks is manual and optional outside of
+          learning".<sup class="nb-cite"><a href="#s1" data-nb-locator="docs/modules/ppo_mask.md, lines 46–49 and 124–126">1</a></sup>
+        </p>
+        <table class="nb-table">
+          <caption>Table&nbsp;2 · MaskablePPO's moves per evaluation episode through sb3-contrib's evaluate_policy (mask) and SB3's (no mask), and the probability each network alone gives illegal moves, averaged over the 80 states outside the goal. From the output of <code>compare.py</code>.</caption>
+          <thead>
+            <tr><th>Seed</th><th>MaskablePPO, mask</th><th>MaskablePPO, no mask</th><th>Illegal probability, PPO</th><th>Illegal probability, MaskablePPO</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td>9.9</td><td>40.4</td><td>0.02</td><td>0.30</td></tr>
+            <tr><td>1</td><td>10.0</td><td>45.5</td><td>0.03</td><td>0.35</td></tr>
+            <tr><td>2</td><td>9.9</td><td>62.9</td><td>0.02</td><td>0.30</td></tr>
+            <tr><td>3</td><td>9.9</td><td>34.2</td><td>0.03</td><td>0.33</td></tr>
+            <tr><td>4</td><td>9.9</td><td>35.9</td><td>0.03</td><td>0.31</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Through SB3's evaluate_policy, the five MaskablePPO agents need 34
+          to 63 moves per episode, against 10 through sb3-contrib's (Table 2).
+          At a state whose most probable move is illegal, the deterministic
+          agent makes the no-op, stays where it is, and chooses the same move
+          again until the time limit cuts the episode. Seed 0's network has 10
+          such states, the start among them, and its greedy episodes from 33
+          of the 80 starts end at the limit (Fig. 2).
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 361" role="img" aria-label="The 81 arrangements of the four disks drawn as a triangle of triangles, with the start at the bottom left, the goal at the bottom right, and a line joining two arrangements one legal move apart. Ten arrangements are red squares, among them the start: there the network’s most probable move is illegal. Twenty-three more are shaded red circles, starts from which the greedy agent without the mask reaches a square and stays. The other 47 are open circles. A blue line runs along the bottom edge from the start to the goal, the 15-move path the agent takes with the mask." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="26.0" y1="327.4" x2="49.2" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="26.0" y1="327.4" x2="37.6" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="49.2" y1="327.4" x2="72.4" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="49.2" y1="327.4" x2="37.6" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="37.6" y1="307.3" x2="49.2" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="72.4" y1="287.2" x2="60.8" y2="267.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="72.4" y1="287.2" x2="49.2" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="72.4" y1="287.2" x2="84.0" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="60.8" y1="267.1" x2="72.4" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="60.8" y1="267.1" x2="49.2" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="84.0" y1="307.3" x2="72.4" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="84.0" y1="307.3" x2="95.6" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="72.4" y1="327.4" x2="95.6" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="95.6" y1="327.4" x2="118.8" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="153.6" y1="267.1" x2="142.0" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="153.6" y1="267.1" x2="165.2" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="153.6" y1="267.1" x2="142.0" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="287.2" x2="130.4" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="287.2" x2="165.2" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="287.2" x2="176.8" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="327.4" x2="188.4" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="327.4" x2="176.8" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="327.4" x2="142.0" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="188.4" y1="327.4" x2="211.6" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="188.4" y1="327.4" x2="176.8" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="327.4" x2="130.4" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="327.4" x2="118.8" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="130.4" y1="307.3" x2="118.8" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="247.0" x2="130.4" y2="226.9" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="247.0" x2="118.8" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="130.4" y1="226.9" x2="118.8" y2="206.8" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="130.4" y1="226.9" x2="118.8" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="118.8" y1="247.0" x2="95.6" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="84.0" y1="226.9" x2="72.4" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="84.0" y1="226.9" x2="95.6" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="84.0" y1="226.9" x2="95.6" y2="206.8" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="72.4" y1="247.0" x2="95.6" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="95.6" y1="206.8" x2="118.8" y2="206.8" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="95.6" y1="206.8" x2="107.2" y2="186.7" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="118.8" y1="206.8" x2="107.2" y2="186.7" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="107.2" y1="186.7" x2="118.8" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="166.6" x2="269.6" y2="146.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="166.6" x2="258.0" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="166.6" x2="292.8" y2="186.7" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="269.6" y1="146.6" x2="258.0" y2="126.5" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="269.6" y1="146.6" x2="258.0" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="258.0" y1="166.6" x2="234.8" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="223.2" y1="146.6" x2="211.6" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="223.2" y1="146.6" x2="234.8" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="223.2" y1="146.6" x2="234.8" y2="126.5" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="211.6" y1="166.6" x2="188.4" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="211.6" y1="166.6" x2="234.8" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="234.8" y1="126.5" x2="258.0" y2="126.5" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="234.8" y1="126.5" x2="246.4" y2="106.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="258.0" y1="126.5" x2="246.4" y2="106.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="246.4" y1="106.4" x2="234.8" y2="86.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="86.3" x2="188.4" y2="86.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="86.3" x2="176.8" y2="66.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="86.3" x2="153.6" y2="106.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="188.4" y1="86.3" x2="211.6" y2="86.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="188.4" y1="86.3" x2="176.8" y2="66.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="176.8" y1="66.2" x2="188.4" y2="46.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="211.6" y1="46.1" x2="200.0" y2="26.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="211.6" y1="46.1" x2="188.4" y2="46.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="211.6" y1="46.1" x2="223.2" y2="66.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="200.0" y1="26.0" x2="188.4" y2="46.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="223.2" y1="66.2" x2="211.6" y2="86.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="223.2" y1="66.2" x2="234.8" y2="86.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="211.6" y1="86.3" x2="234.8" y2="86.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="153.6" y1="106.4" x2="142.0" y2="126.5" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="153.6" y1="106.4" x2="165.2" y2="126.5" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="126.5" x2="130.4" y2="146.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="126.5" x2="165.2" y2="126.5" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="126.5" x2="176.8" y2="146.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="166.6" x2="188.4" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="166.6" x2="176.8" y2="146.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="165.2" y1="166.6" x2="142.0" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="188.4" y1="166.6" x2="176.8" y2="146.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="166.6" x2="130.4" y2="146.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="142.0" y1="166.6" x2="118.8" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="130.4" y1="146.6" x2="118.8" y2="166.6" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="292.8" y1="186.7" x2="281.2" y2="206.8" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="292.8" y1="186.7" x2="304.4" y2="206.8" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="206.8" x2="269.6" y2="226.9" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="206.8" x2="304.4" y2="206.8" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="304.4" y1="206.8" x2="316.0" y2="226.9" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="304.4" y1="247.0" x2="327.6" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="304.4" y1="247.0" x2="316.0" y2="226.9" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="304.4" y1="247.0" x2="281.2" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="327.6" y1="247.0" x2="339.2" y2="267.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="327.6" y1="247.0" x2="316.0" y2="226.9" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="247.0" x2="269.6" y2="226.9" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="247.0" x2="258.0" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="269.6" y1="226.9" x2="258.0" y2="247.0" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="258.0" y1="247.0" x2="246.4" y2="267.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="327.4" x2="269.6" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="327.4" x2="258.0" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="281.2" y1="327.4" x2="304.4" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="269.6" y1="307.3" x2="258.0" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="269.6" y1="307.3" x2="258.0" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="258.0" y1="327.4" x2="234.8" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="223.2" y1="307.3" x2="211.6" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="223.2" y1="307.3" x2="234.8" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="223.2" y1="307.3" x2="234.8" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="211.6" y1="327.4" x2="234.8" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="234.8" y1="287.2" x2="258.0" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="234.8" y1="287.2" x2="246.4" y2="267.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="258.0" y1="287.2" x2="246.4" y2="267.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="304.4" y1="327.4" x2="327.6" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="304.4" y1="327.4" x2="316.0" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="327.6" y1="327.4" x2="350.8" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="327.6" y1="327.4" x2="316.0" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="316.0" y1="307.3" x2="327.6" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="350.8" y1="287.2" x2="339.2" y2="267.1" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="350.8" y1="287.2" x2="327.6" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="350.8" y1="287.2" x2="362.4" y2="307.3" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="339.2" y1="267.1" x2="327.6" y2="287.2" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="362.4" y1="307.3" x2="350.8" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="362.4" y1="307.3" x2="374.0" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<line x1="350.8" y1="327.4" x2="374.0" y2="327.4" style="stroke:var(--ink-soft);stroke-width:1;stroke-opacity:0.5"/>
+<polyline points="26.0,327.4 49.2,327.4 72.4,327.4 95.6,327.4 118.8,327.4 142.0,327.4 165.2,327.4 188.4,327.4 211.6,327.4 234.8,327.4 258.0,327.4 281.2,327.4 304.4,327.4 327.6,327.4 350.8,327.4 374.0,327.4" style="fill:none;stroke:var(--chart-2);stroke-width:3.2;stroke-linejoin:round;stroke-opacity:0.85"/>
+<rect x="19.8" y="321.2" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="49.2" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="37.6" cy="307.3" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="72.4" cy="287.2" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="60.8" cy="267.1" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="49.2" cy="287.2" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="84.0" cy="307.3" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="72.4" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="95.6" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="153.6" cy="267.1" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="142.0" cy="287.2" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="165.2" cy="287.2" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="165.2" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="188.4" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="176.8" cy="307.3" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="142.0" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="130.4" cy="307.3" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="118.8" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="142.0" cy="247.0" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="130.4" cy="226.9" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="118.8" cy="247.0" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="84.0" cy="226.9" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="72.4" cy="247.0" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="95.6" cy="247.0" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<rect x="89.4" y="200.6" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="118.8" cy="206.8" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<rect x="101.0" y="180.5" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="281.2" cy="166.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="281.2" cy="166.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="269.6" cy="146.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="269.6" cy="146.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="258.0" cy="166.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="258.0" cy="166.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="223.2" cy="146.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="223.2" cy="146.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="211.6" cy="166.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="211.6" cy="166.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="234.8" cy="166.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="234.8" cy="166.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="234.8" cy="126.5" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="234.8" cy="126.5" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="258.0" cy="126.5" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="258.0" cy="126.5" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="246.4" cy="106.4" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="246.4" cy="106.4" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="165.2" cy="86.3" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="165.2" cy="86.3" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="188.4" cy="86.3" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="188.4" cy="86.3" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="176.8" cy="66.2" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="176.8" cy="66.2" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="211.6" cy="46.1" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="211.6" cy="46.1" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="200.0" cy="26.0" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="200.0" cy="26.0" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<rect x="182.2" y="39.9" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="223.2" cy="66.2" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="223.2" cy="66.2" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="211.6" cy="86.3" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="211.6" cy="86.3" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<rect x="228.6" y="80.1" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="153.6" cy="106.4" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="153.6" cy="106.4" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="142.0" cy="126.5" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="142.0" cy="126.5" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<rect x="159.0" y="120.3" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="165.2" cy="166.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="165.2" cy="166.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="188.4" cy="166.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="188.4" cy="166.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="176.8" cy="146.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="176.8" cy="146.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="142.0" cy="166.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="142.0" cy="166.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<circle cx="130.4" cy="146.6" r="6.2" style="fill:var(--panel);stroke:none"/>
+<circle cx="130.4" cy="146.6" r="6.2" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<rect x="112.6" y="160.4" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<rect x="286.6" y="180.5" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="281.2" cy="206.8" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="304.4" cy="206.8" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="304.4" cy="247.0" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="327.6" cy="247.0" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="316.0" cy="226.9" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="281.2" cy="247.0" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<rect x="263.4" y="220.7" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="258.0" cy="247.0" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="281.2" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="269.6" cy="307.3" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="258.0" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="223.2" cy="307.3" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="211.6" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="234.8" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="234.8" cy="287.2" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="258.0" cy="287.2" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="246.4" cy="267.1" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="304.4" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="327.6" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<rect x="309.8" y="301.1" width="12.4" height="12.4" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<circle cx="350.8" cy="287.2" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="339.2" cy="267.1" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="327.6" cy="287.2" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="362.4" cy="307.3" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="350.8" cy="327.4" r="6.2" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<circle cx="374.0" cy="327.4" r="6.2" style="fill:var(--ink);stroke:none"/>
+<text x="26.0" y="349.4" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink)">start</text>
+<text x="374.0" y="349.4" text-anchor="middle" style="font-family:var(--sans);font-size:12px;fill:var(--ink)">goal</text>
+</svg>
+<svg viewBox="0 0 400 46" role="img" aria-label="Legend: red square, most probable move illegal; shaded red circle, cut by the time limit without the mask; open circle, reaches the goal without the mask; blue line, greedy path with the mask; black dot, the goal." style="display: block; width: 100%; max-width: 34rem; margin: 0.4rem auto 0; height: auto">
+<rect x="8" y="8" width="12" height="12" style="fill:var(--chart-4);stroke:var(--ink);stroke-width:0.8"/>
+<text x="30" y="18" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">most probable move illegal</text>
+<circle cx="211" cy="14" r="6" style="fill:var(--chart-4);fill-opacity:0.4;stroke:var(--chart-4);stroke-width:1"/>
+<text x="227" y="18" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">cut at 100 moves, no mask</text>
+<circle cx="14" cy="36" r="6" style="fill:var(--panel);stroke:var(--ink-soft);stroke-width:1"/>
+<text x="30" y="40" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">reaches the goal, no mask</text>
+<line x1="203" y1="36" x2="221" y2="36" style="stroke:var(--chart-2);stroke-width:3.2;stroke-opacity:0.85"/>
+<text x="227" y="40" style="font-family:var(--sans);font-size:12px;fill:var(--ink-soft)">greedy path with the mask</text>
+</svg>
+          <figcaption>
+            Fig. 2 · Seed 0's MaskablePPO agent with no mask. Each dot is one
+            arrangement of the four disks, and a line joins two arrangements
+            one legal move apart. Squares mark states whose most probable move
+            is illegal, and every filled mark is a start whose greedy episode
+            the time limit cuts. Drawn from seed 0's network as
+            <code>maskable.py</code> trains it, whose output prints the two
+            counts, 10 and 33.
+          </figcaption>
+        </figure>
+        <p>
+          If these failures come from training that never sampled an illegal
+          move, PPO should not have them, since each illegal move it sampled
+          cost it a wasted move. Its network gives illegal moves 0.02 to 0.03
+          of its probability, against 0.30 to 0.35 for MaskablePPO's
+          (Table 2), and it needs 9.9 to 12.9 moves per episode with no mask
+          (Table 1). Seeds 5 to 9, from <code>uv run compare.py 5</code>, end
+          the same way.
+        </p>
+        <table class="nb-table">
+          <caption>Table&nbsp;3 · The mask each call gives a trained MaskablePPO agent, in sb3-contrib 2.9.2 and Stable-Baselines3 2.9.2.<sup class="nb-cite"><a href="#s4" data-nb-locator="learn, lines 428–453; predict, lines 286–307">4</a></sup><sup class="nb-cite"><a href="#s11" data-nb-locator="lines 94–109">11</a></sup><sup class="nb-cite"><a href="#s10" data-nb-locator="lines 92–97">10</a></sup><sup class="nb-cite"><a href="#s12" data-nb-locator="MaskableEvalCallback, lines 34–36 and 56–67">12</a></sup><sup class="nb-cite"><a href="#s13" data-nb-locator="EvalCallback._on_step, lines 465–474">13</a></sup></caption>
+          <thead>
+            <tr><th>Package</th><th>Call</th><th class="txt">Mask</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>sb3-contrib</td><td><code>model.learn</code></td><td class="txt">fetched before every move</td></tr>
+            <tr><td>sb3-contrib</td><td><code>model.predict</code></td><td class="txt">the <code>action_masks</code> argument, or none</td></tr>
+            <tr><td>sb3-contrib</td><td><code>evaluate_policy</code></td><td class="txt">fetched before every move</td></tr>
+            <tr><td>sb3-contrib</td><td><code>MaskableEvalCallback</code></td><td class="txt">fetched before every move</td></tr>
+            <tr><td>SB3</td><td><code>evaluate_policy</code></td><td class="txt">none</td></tr>
+            <tr><td>SB3</td><td><code>EvalCallback</code></td><td class="txt">none</td></tr>
+          </tbody>
+        </table>
+        <p>
+          In a loop of your own, pass the mask at every call, as episode in
+          <code>maskable.py</code> does:
+          <code>model.predict(obs, action_masks=get_action_masks(env))</code>.
+          get_action_masks, from <code>sb3_contrib.common.maskable.utils</code>,
+          finds <code>action_masks()</code> through wrappers and on every copy
+          of a vectorized
+          environment.<sup class="nb-cite"><a href="#s3" data-nb-locator="get_action_masks, lines 8–19">3</a></sup>
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. Run seed 0's agent with no mask and
+            <code>deterministic=False</code>, so that predict samples from the
+            network's six probabilities. Which legal move does it make from a
+            state, and with what probability? How many no-ops does it make
+            first at the start, on average?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              A no-op leaves the state as it was, so the next draw comes from
+              the same six probabilities. The first legal move drawn is a with
+              probability π(a | s) divided by the legal moves' total, which is
+              π<sub>mask</sub>(a | s) from the equation above. The agent
+              follows the masked policy and makes no-ops on the way. Each draw
+              is illegal with probability q, the illegal moves' total, so the
+              number of no-ops before a legal move has mean q / (1 − q). At the
+              start q = 0.657 + 0.020 + 0.002 + 0.024 = 0.703, which gives
+              about 2.4 no-ops, each paying −1 and using one of the episode's
+              100 moves.
+            </p>
+          </details>
+          <p>
+            2. In the lesson on
+            <a href="../reinforcement-learning/action-masking-in-q-learning.html">action masking in Q-learning</a>,
+            the estimates of moves the agent never made changed its other
+            estimates. MaskablePPO's illegal logits get no gradient either.
+            Why do they not change its training, and where do they do harm?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Q-learning's target read each never-updated estimate during
+              training, through its max over all six moves. MaskablePPO reads
+              an illegal logit nowhere in training. It samples from the masked
+              distribution, and its update applies the stored mask, so in both
+              the logit is −10<sup>8</sup> and its move has probability 0. The
+              illegal logits do harm only where something reads the network
+              without the mask, as SB3's evaluate_policy does.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          MaskablePPO calls the environment's <code>action_masks()</code>
+          before every training move, sets each illegal logit to
+          −10<sup>8</sup>, and samples from the legal moves alone. Its update
+          applies the stored masks, so its network never learns which moves
+          are illegal. On the four-disk Tower of Hanoi, five such
+          networks still gave illegal moves about 0.3 of their probability.
+          PPO without a mask learned the puzzle too, while spending about three
+          training moves in ten on no-ops, and its networks gave illegal moves
+          0.02 to 0.03. Run through SB3's evaluate_policy, which passes no
+          mask, the masked agents needed 34 to 63 moves per episode instead
+          of 10. Every call that chooses a move after training has to pass the
+          mask.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2006.14171v3">Huang and Ontañón, A Closer Look at Invalid Action Masking in Policy Gradient Algorithms</a>:
+            "Strategies to Handle Invalid Actions" (p. 4) and Table 2 (p. 5)
+            set masking against a reward penalty as the map grows, and the
+            table's "masking removed" rows score an agent trained with the
+            mask and evaluated without it.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/ppo_mask/ppo_mask.py">sb3-contrib 2.9.2 source, ppo_mask.py</a>:
+            collect_rollouts (lines 181–284), where MaskablePPO fetches each
+            training move's mask, samples under it, and stores it for the
+            update.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="docs/modules/ppo_mask.md at tag v2.9.2, lines 9–10, 46–49, 92–96, 117–126"
+              href="https://sb3-contrib.readthedocs.io/en/v2.9.2/modules/ppo_mask.html"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 documentation, Maskable PPO</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="MaskableCategorical.apply_masking, lines 46–70; HUGE_NEG, line 59"
+              href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/common/maskable/distributions.py"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 source, sb3_contrib/common/maskable/distributions.py</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="EXPECTED_METHOD_NAME, line 5; get_action_masks, lines 8–19"
+              href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/common/maskable/utils.py"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 source, sb3_contrib/common/maskable/utils.py</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="constructor defaults, lines 76–102; collect_rollouts, lines 216–270; predict, lines 286–307; train, lines 339–343; learn, lines 428–453"
+              href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/ppo_mask/ppo_mask.py"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 source, sb3_contrib/ppo_mask/ppo_mask.py</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Env.get_wrapper_attr, lines 286–288; Wrapper.get_wrapper_attr, lines 427–444"
+              href="https://github.com/Farama-Foundation/Gymnasium/blob/v1.4.0/gymnasium/core.py"
+              >Farama Foundation · Gymnasium 1.4.0 source, gymnasium/core.py</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="ActionMasker, lines 7–32"
+              href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/common/wrappers/action_masker.py"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 source, sb3_contrib/common/wrappers/action_masker.py</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Release history; JSON info.version and info.requires_dist"
+              href="https://pypi.org/project/sb3-contrib/2.9.2/"
+              >PyPI · sb3-contrib 2.9.2</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="arXiv v3: p. 4, Strategies to Handle Invalid Actions; p. 5, Table 2; pp. 5–6, Evaluation Results"
+              href="https://arxiv.org/abs/2006.14171v3"
+              >Huang and Ontañón · A Closer Look at Invalid Action Masking in Policy Gradient Algorithms, FLAIRS-35, 2022</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="MaskableActorCriticPolicy.predict, lines 269–323; get_distribution, lines 355–368"
+              href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/common/maskable/policies.py"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 source, sb3_contrib/common/maskable/policies.py</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="evaluate_policy, lines 12–22 and 92–97"
+              href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/evaluation.py"
+              >DLR-RM · Stable-Baselines3 2.9.2 source, stable_baselines3/common/evaluation.py</a
+            >
+          </li>
+          <li id="s11">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="evaluate_policy, lines 14–25 and 94–109"
+              href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/common/maskable/evaluation.py"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 source, sb3_contrib/common/maskable/evaluation.py</a
+            >
+          </li>
+          <li id="s12">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="MaskableEvalCallback, lines 10–36 and 56–67"
+              href="https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/blob/v2.9.2/sb3_contrib/common/maskable/callbacks.py"
+              >Stable-Baselines Team · sb3-contrib 2.9.2 source, sb3_contrib/common/maskable/callbacks.py</a
+            >
+          </li>
+          <li id="s13">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="import of evaluate_policy, line 24; EvalCallback._on_step, lines 465–474"
+              href="https://github.com/DLR-RM/stable-baselines3/blob/v2.9.2/stable_baselines3/common/callbacks.py"
+              >DLR-RM · Stable-Baselines3 2.9.2 source, stable_baselines3/common/callbacks.py</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
