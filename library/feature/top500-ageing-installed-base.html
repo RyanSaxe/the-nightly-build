@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A slow entry bar keeps old supercomputers on the TOP500 · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "top500-ageing-installed-base",
+        "template": "article",
+        "title": "A slow entry bar keeps old supercomputers on the TOP500",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-20",
+        "tags": ["supercomputing", "top500", "hpc"],
+        "sources": 8,
+        "words": 1177,
+        "reading_minutes": 5,
+        "dek": "The HPL score needed to reach No. 500 has risen 5–25% a year since 2020, against 30–69% in 2011–2019, so more than half the machines that entered in 2020 and 2021 were still listed five years later.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">A slow entry bar keeps old supercomputers on the TOP500</h1>
+        <p class="nb-dekline">The HPL score needed to reach No. 500 has risen 5–25% a year since 2020, against 30–69% in 2011–2019, so more than half the machines that entered in 2020 and 2021 were still listed five years later.</p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-11-20</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Machines now stay listed for years</h2>
+        <p>
+          Half the entries on the November 2026 TOP500 first appeared on the
+          list three or more years earlier, and 138 of the 500 first appeared
+          five or more years earlier. In every November list from 2012 to 2019,
+          the median entry was six months to a year old.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Every list file since June 2012, column “First Appearance”"
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          The cause visible in the files is the entry bar, the HPL result of
+          the system at No. 500. It rose 30–69% a year from 2011 to 2019 and
+          5–25% a year since 2020, and a bar that rises slowly leaves old
+          machines above it. Counts are from TOP500’s list files as of 20
+          November 2026.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Column “Rmax [TFlop/s]”, entry ranked 500, November lists 2010–2026"
+              >1</a
+            ></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="age-by-first-appearance" id="age-by-first-appearance">
+        <h2>How old the list is, counted by First Appearance</h2>
+        <p>
+          Each file since June 2012 carries a First Appearance column holding
+          the edition on which an entry was first listed. TOP500 publishes no
+          definition of the field. Its field descriptions define only Year, as “Year of
+          installation/last major update”.<sup class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Field list, paragraph beginning “To keep the list as compact as possible”"
+              >2</a
+            ></sup
+          >
+          In the files, First Appearance survives upgrades and re-entry, and
+          resets only under a new System ID. Age here is the current edition minus First
+          Appearance, in six-month editions. The Year field, which upgrades do
+          reset, gives nearly the same tail: 139 entries five or more years old
+          in November 2026, against 138.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="November 2026 file, columns “First Appearance”, “Year”, “System ID”"
+              >1</a
+            ></sup
+          >
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="top500-ageing-installed-base/chart-1.png"
+            alt="Stacked bars for each TOP500 list from June 2012 to November 2026, counting entries first listed three to five years earlier and five or more years earlier. The bars stay below 110 through 2020, then climb to 261 in November 2024 and 256 in November 2026. The five-year-plus band grows from 45 in November 2021 to 138 in November 2026."
+          />
+          <figcaption>
+            Fig. 1 · Entries by time since First Appearance. Above the dotted
+            line, the median entry is three or more years old. TOP500 list
+            files.<sup
+              class="nb-cite"
+              ><a href="#s1">1</a></sup
+            >
+          </figcaption>
+        </figure>
+        <p>
+          The brown band is the five-year tail. It stays under 40 entries
+          through 2019, and November 2021, with 45, was already the oldest
+          list to that date. The median reached six editions in November 2024
+          and has read five or six since, but the five-year tail kept growing:
+          92, 113, 106, 117 and then 138. Of the 138, 71 entered in June or
+          November 2021 and crossed the five-year line this year.<sup
+            class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+        <p>
+          The old machines are small. The 138 have a median rank of 313 and
+          hold 9.0% of total Rmax, and the highest placed is Fugaku at No. 9.
+          Entries first listed within the last two years still hold 61.5% of
+          total Rmax, a little under the 62.0–69.4% of every November list from
+          2016 to 2025. Most of the old machines sit in the bottom half.<sup class="nb-cite"
+            ><a href="#s1">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="slower-entry-bar" id="slower-entry-bar">
+        <h2>A slower entry bar lets machines stay</h2>
+        <p>
+          The list always holds 500 entries, so each newcomer pushes one entry
+          off the bottom. A machine’s Rmax rarely changes once it is listed,
+          so it leaves when the bar rises past it. A machine that enters at
+          <em>m</em> times the bar, with the bar growing <em>g</em> a year,
+          stays about ln <em>m</em> / ln(1 + <em>g</em>) years.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          A machine that enters at twice the bar lasts 1.5 years at 60% a year,
+          the pace of 2016 to 2018, and 6.4 years at 11.4%, the pace of the
+          last two November lists. Figure 2 draws both cases on the real bar.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="top500-ageing-installed-base/chart-2.png"
+            alt="Line chart on a log scale of the Rmax of the No. 500 entry from June 2012 to November 2026, rising from 0.06 to 2.87 PFlop/s and flattening after 2019. A dashed line at twice the November 2016 bar is overtaken by June 2018. A dashed line at twice the November 2021 bar is still above the bar in November 2026."
+          />
+          <figcaption>
+            Fig. 2 · Rmax of the No. 500 entry, log scale. Dashed lines are
+            hypothetical machines entering at twice the bar in November 2016
+            and November 2021. TOP500 list files.<sup class="nb-cite"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          On a log scale a steady growth rate is a straight line, and this one
+          bends after 2019. Of each cohort of
+          machines outside China that entered between June 2012 and November
+          2017, 3–17% were still listed five years later. Of the 2020 and 2021
+          cohorts, 52–72% were. Counting Chinese entries too, 126 of the 230
+          machines that entered in 2020 and 2021 were still listed five years
+          later.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Files June 2012 to November 2026; entries grouped by “First Appearance” and tracked ten editions on"
+              >1</a
+            ></sup
+          >
+        </p>
+        <p>
+          Total Rmax grew 25–67% a year from 2020 to 2026 while the bar rose
+          5–25%, so the growth went to entries far above No. 500. The files do not say why the bar
+          slowed.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="newcomers-outside-china" id="newcomers-outside-china">
+        <h2>Newcomers outside China held flat until November</h2>
+        <p>
+          TOP500’s release led with newcomers: “Just 27
+          systems are new, the lowest number ever recorded by a wide
+          margin.”<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Lead paragraph, under the headline"
+              >3</a
+            ></sup
+          >
+          The downloaded file holds 28, as does the live list, which includes
+          TACC’s Horizon at No. 24.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Rank 24">4</a></sup
+          >
+          The counts here use the file. Either is the lowest since the column
+          began in 2012. The previous low was 39, in June 2022.
+        </p>
+        <figure class="nb-figure">
+          <img
+            src="top500-ageing-installed-base/chart-3.png"
+            alt="Stacked bars of newcomers per TOP500 list from June 2012 to November 2026, split into China and outside China. Chinese newcomers are large from 2015 to 2020 and near zero from 2022. Newcomers outside China fall to 25 and 31 in 2020, hold between 39 and 54 from June 2022 to June 2026, and fall to 27 in November 2026."
+          />
+          <figcaption>
+            Fig. 3 · First-time entries on each list, by country. TOP500 list
+            files; the release gives 27 for November 2026.<sup class="nb-cite"
+              ><a href="#s1">1</a></sup
+            ><sup class="nb-cite"><a href="#s3">3</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The blue segments are Chinese entries: 33 to 103 newcomers a list
+          from November 2015 to June 2020, and 0 to 2 a list since June 2022,
+          as China’s entries fell from 228 in November 2019 to 18. Much of the
+          drop from the 2010s is that withdrawal. Outside China, November
+          2026’s 27 newcomers sit beside the 25 and 31 of 2020.<sup
+            class="nb-cite"
+            ><a href="#s1" data-nb-locator="Column “Country”">1</a></sup
+          >
+        </p>
+        <p>
+          Timothy Prickett Morgan of The Next Platform reads the dip as timing,
+          with Nvidia’s Rubin and AMD’s MI400 parts due in 2027. He writes
+          that “the stall is more about roadmap timing” than a move to the
+          cloud, and expects “about two dozen extra machines” over the next
+          lists to make up the drop.<sup class="nb-cite"
+            ><a
+              href="#s5"
+              data-nb-locator="Paragraphs 3–6, “But don’t freak out just yet” to “We will see as the June 2027…”"
+              >5</a
+            ></sup
+          >
+          A machine installed after 1 November could not be on this list at
+          all.<sup class="nb-cite"
+            ><a href="#s6" data-nb-locator="“Deadlines” paragraph">6</a></sup
+          >
+          Before 2022 the dips did rebound: November 2014’s 68 was followed by
+          89, 136 and 154, and November 2020’s 44 by 58 and 70. Since June 2022,
+          newcomers held between 39 and 54 for nine lists before
+          this one.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+        <p>
+          The release offers another reason: “This suggests that growth has
+          indeed shifted toward AI factories, and from capability systems to
+          capacity systems.”<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="Section “Where the New Hardware Is Going”"
+              >3</a
+            ></sup
+          >
+          It rests that on Epoch AI estimates, whose 2.5-times-a-year growth
+          counts quarterly additions of AI chips in H100-equivalents of 8-bit
+          peak capacity.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Lead paragraph and “Analysis” section"
+              >7</a
+            ></sup
+          ><sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="Section “Compute”">8</a></sup
+          >
+          HPL Rmax is measured 64-bit throughput, so the two rates cannot be
+          compared. A list of submitted machines cannot show where unsubmitted
+          hardware went.
+        </p>
+        <p>
+          June 2027 will test the timing reading. If it is right, newcomers
+          return to the 2022–2026 range. The list aged through those
+          years. The bar rose 5–17% a year, a pace at which a machine entering at twice the bar stays more
+          than four years.<sup class="nb-cite"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.top500.org/lists/top500/2026/11/download/TOP500_202611.xlsx"
+              >TOP500 · List file, November 2026 (TOP500_202611.xlsx), with the
+              files for every list since June 1993 at the same path</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://top500.org/project/top500_description/"
+              >TOP500 · TOP500 Description</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.top500.org/news/top500-leadership-holds-steady-new-system-turnover-falls-historic-low/"
+              >TOP500 · TOP500 Leadership Holds Steady as New System Turnover
+              Falls to Historic Low (16 November 2026)</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.top500.org/lists/top500/list/2026/11/"
+              >TOP500 · November 2026 list</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.nextplatform.com/hpc/2026/11/16/supercomputer-installs-take-a-dive-in-the-second-half-of-2026/5310221"
+              >The Next Platform · Timothy Prickett Morgan, Supercomputer
+              Installs Take A Dive In The Second Half Of 2026</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://www.top500.org/project/call-for-participation/"
+              >TOP500 · Call for Participation</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://epoch.ai/data-insights/ai-computing-capacity-additions-doubling"
+              >Epoch AI · Isabel Juniewicz and Josh You, New global AI computing
+              capacity is doubling every 9 months (29 October 2026)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://epoch.ai/blog/introducing-the-ai-chip-sales-data-explorer"
+              >Epoch AI · Introducing the AI Chip Sales data explorer (update of
+              13 January 2026)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
