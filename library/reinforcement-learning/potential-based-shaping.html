@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A progress reward paid as a change in potential leaves the optimal policy alone · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "potential-based-shaping",
+        "template": "lesson",
+        "title": "A progress reward paid as a change in potential leaves the optimal policy alone",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-20",
+        "tags": ["potential-based-shaping", "reward-shaping", "reward-design", "value-iteration", "q-learning", "time-limits", "environment-design"],
+        "sources": 4,
+        "words": 4450,
+        "reading_minutes": 19,
+        "dek": "Value iteration's arrows on the race do not move, and Q-learning under a 10-move time limit learns them only if the cell where the limit cuts each episode keeps its potential.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">A progress reward paid as a change in potential leaves the optimal policy alone</h1>
+        <p class="nb-dekline">Value iteration's arrows on the race do not move, and Q-learning under a 10-move time limit learns them only if the cell where the limit cuts each episode keeps its potential.</p>
+        <div class="nb-byline">
+          <span>19 min read</span><span>2026-11-20</span>
+        </div>
+      </header>
+
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          In the race from specification gaming, a checkpoint that paid on
+          every forward crossing made an endless loop optimal at γ = 0.99.
+          Without the checkpoint, the agent has no reward before its first
+          finish. A progress reward that also charges for lost progress can
+          avoid the loop. Give each state a
+          potential Φ and add γΦ(s′) − Φ(s) to the reward of each move from s
+          to s′. Over an episode these shaping rewards sum to the last state's
+          discounted potential minus the first state's. If the last state's
+          potential is 0, or the episode never ends, every policy's value from
+          a state shifts by the same amount and the optimal policy stays. Ng,
+          Harada and Russell called this potential-based shaping. From that
+          sum you can tell whether a progress reward keeps the optimal policy,
+          and what potential it needs where an episode terminates and where a
+          time limit cuts it.
+        </p>
+<div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/specification-gaming.html">Looping through a checkpoint worth 1 beats a finish worth 10 at a discount of 0.99</a>:
+            the race, <code>race.py</code>, which the code below imports, and
+            the loop this lesson removes.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>:
+            value iteration and the Bellman optimality backup, which solve the
+            shaped race exactly.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            Q-learning, and why its estimates settle at q<sub>*</sub> whatever
+            policy makes the moves.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/termination-and-truncation.html">Q-learning that treats its time limit as terminal learns the values of a different grid</a>:
+            TimeLimit, and why a target still bootstraps from the cell where a
+            time limit cuts the episode.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="http://incompleteideas.net/book/RLbook2020.pdf#page=501">Sutton and Barto, Reinforcement Learning: An Introduction</a>:
+            the remarks on Section 17.4 (p. 479) separate shaping in Skinner's
+            sense, which changes the task as the agent learns, from the
+            potential-based shaping of this lesson.
+          </dd>
+        </dl>
+      
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>The loop and the finish both collect 6 in shaping</h2>
+        <p>
+          Take the race from
+          <a href="../reinforcement-learning/specification-gaming.html">specification gaming</a>
+          at γ = 0.99. Keep its finish, which pays 10 and ends the episode, and
+          remove the checkpoint that made looping optimal. In its place, give each cell a potential Φ equal to minus the
+          moves left to the finish: −7 in cell 0, −1 in cell 6 and 0 at the
+          finish. Each move from s to s′ now also pays γΦ(s′) − Φ(s), a
+          shaping reward on top of the race's own.
+        </p>
+        <p>
+          A move forward from cell 1 pays 0.99 × (−5) − (−6) = 1.05, close to
+          the old checkpoint's 1. The move back now costs something. From cell
+          2 to cell 1 it pays 0.99 × (−6) − (−5) = −0.94, so the agent hands
+          back most of what it collected (Fig. 1).
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 202" role="img" aria-label="The eight cells of the race, each labeled with its potential, minus the moves left: from minus 7 in cell 0 to 0 at the finish. Arrows over the cells show what each forward move pays in shaping, 1.06 falling to 1.00. Arrows under them show what each move back pays, minus 0.93 to minus 0.98, and staying in cell 0 pays 0.07. The lap from cell 1 to cell 2 and back is highlighted: it collects plus 0.12. A thousand laps from cell 1 collect 6.00 in shaping, the same as the route straight to the finish." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<rect x="20" y="50" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="42.5" y="63" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">cell 0</text>
+<text x="42.5" y="83" text-anchor="middle" style="font-family: var(--sans); font-size: 13px; fill: var(--ink); font-weight: 600">−7</text>
+<rect x="65" y="50" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="87.5" y="63" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">cell 1</text>
+<text x="87.5" y="83" text-anchor="middle" style="font-family: var(--sans); font-size: 13px; fill: var(--ink); font-weight: 600">−6</text>
+<rect x="110" y="50" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="132.5" y="63" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">cell 2</text>
+<text x="132.5" y="83" text-anchor="middle" style="font-family: var(--sans); font-size: 13px; fill: var(--ink); font-weight: 600">−5</text>
+<rect x="155" y="50" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="177.5" y="63" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">cell 3</text>
+<text x="177.5" y="83" text-anchor="middle" style="font-family: var(--sans); font-size: 13px; fill: var(--ink); font-weight: 600">−4</text>
+<rect x="200" y="50" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="222.5" y="63" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">cell 4</text>
+<text x="222.5" y="83" text-anchor="middle" style="font-family: var(--sans); font-size: 13px; fill: var(--ink); font-weight: 600">−3</text>
+<rect x="245" y="50" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="267.5" y="63" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">cell 5</text>
+<text x="267.5" y="83" text-anchor="middle" style="font-family: var(--sans); font-size: 13px; fill: var(--ink); font-weight: 600">−2</text>
+<rect x="290" y="50" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="312.5" y="63" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">cell 6</text>
+<text x="312.5" y="83" text-anchor="middle" style="font-family: var(--sans); font-size: 13px; fill: var(--ink); font-weight: 600">−1</text>
+<rect x="335" y="50" width="45" height="50" style="fill: var(--chart-6); fill-opacity: 0.18; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="357.5" y="63" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">finish</text>
+<text x="357.5" y="83" text-anchor="middle" style="font-family: var(--sans); font-size: 13px; fill: var(--ink); font-weight: 600">0</text>
+<text x="357.5" y="96" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">+10</text>
+<line x1="52" y1="40" x2="71" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="78,40 70,35 70,45" style="fill: var(--chart-2)"/>
+<text x="65" y="30" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">1.06</text>
+<line x1="78" y1="112" x2="59" y2="112" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="52,112 60,107 60,117" style="fill: var(--chart-4)"/>
+<text x="65" y="128" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">−0.93</text>
+<line x1="97" y1="40" x2="116" y2="40" style="stroke: var(--chart-1); stroke-width: 2.5"/><polygon points="123,40 115,35 115,45" style="fill: var(--chart-1)"/>
+<text x="110" y="30" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--chart-1); font-weight: 600">1.05</text>
+<line x1="123" y1="112" x2="104" y2="112" style="stroke: var(--chart-1); stroke-width: 2.5"/><polygon points="97,112 105,107 105,117" style="fill: var(--chart-1)"/>
+<text x="110" y="128" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--chart-1); font-weight: 600">−0.94</text>
+<line x1="142" y1="40" x2="161" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="168,40 160,35 160,45" style="fill: var(--chart-2)"/>
+<text x="155" y="30" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">1.04</text>
+<line x1="168" y1="112" x2="149" y2="112" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="142,112 150,107 150,117" style="fill: var(--chart-4)"/>
+<text x="155" y="128" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">−0.95</text>
+<line x1="187" y1="40" x2="206" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="213,40 205,35 205,45" style="fill: var(--chart-2)"/>
+<text x="200" y="30" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">1.03</text>
+<line x1="213" y1="112" x2="194" y2="112" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="187,112 195,107 195,117" style="fill: var(--chart-4)"/>
+<text x="200" y="128" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">−0.96</text>
+<line x1="232" y1="40" x2="251" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="258,40 250,35 250,45" style="fill: var(--chart-2)"/>
+<text x="245" y="30" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">1.02</text>
+<line x1="258" y1="112" x2="239" y2="112" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="232,112 240,107 240,117" style="fill: var(--chart-4)"/>
+<text x="245" y="128" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">−0.97</text>
+<line x1="277" y1="40" x2="296" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="303,40 295,35 295,45" style="fill: var(--chart-2)"/>
+<text x="290" y="30" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">1.01</text>
+<line x1="303" y1="112" x2="284" y2="112" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="277,112 285,107 285,117" style="fill: var(--chart-4)"/>
+<text x="290" y="128" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">−0.98</text>
+<line x1="322" y1="40" x2="341" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="348,40 340,35 340,45" style="fill: var(--chart-2)"/>
+<text x="335" y="30" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">1.00</text>
+<path d="M 26 101 C 26 122, 46 122, 46 106" style="fill: none; stroke: var(--chart-4); stroke-width: 2"/>
+<polygon points="46,101 41,110 51,110" style="fill: var(--chart-4)"/>
+<text x="36" y="133" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink)">0.07</text>
+<text x="20" y="156" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--chart-1); font-weight: 600">one lap from cell 1: 1.05 + 0.99 × (−0.94) = +0.12</text>
+<text x="20" y="176" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">1,000 laps from cell 1: +6.00</text>
+<text x="20" y="194" text-anchor="start" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">straight from cell 1 to the finish: +6.00</text>
+</svg>
+          <figcaption>
+            Fig. 1 · Each cell's potential and each move's shaping reward at
+            γ = 0.99, forward over the cells and back under them. The
+            highlighted lap is the old loop. From the output of
+            <code>shaping.py</code> below.
+          </figcaption>
+        </figure>
+        <p>
+          One lap of the old loop from cell 1 collects
+          1.05 + 0.99 × (−0.94) = 0.12 in discounted shaping, so the loop seems
+          to pay still. But the laps form a geometric series in γ², whose sum
+          is 0.1194/(1 − 0.99²) = 6.00. The route
+          straight from cell 1 to the finish also collects 6.00 in shaping,
+          besides the finish's 10.
+        </p>
+        <p>
+          Both routes collect 6, which is minus cell 1's potential. Shaping
+          adds the same amount to looping and to finishing, so finishing stays
+          ahead by what the finish alone was worth.
+        </p>
+      </section>
+
+      <section data-nb-section="cancellation" id="cancellation">
+        <h2>The shaping rewards of an episode cancel in pairs</h2>
+        <p>
+          The two sums agree for a reason that holds on every route. Ng, Harada
+          and Russell call a shaping reward of this form
+          potential-based.<sup class="nb-cite"><a href="#s1" data-nb-locator="§3, p. 281, Eq. 2 and Theorem 1">1</a></sup>
+          Writing out the shaping rewards of an episode S<sub>0</sub>,
+          S<sub>1</sub>, …, S<sub>N</sub>, each discounted as it enters the
+          return, shows all but two of its potentials cancelling.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} &amp;\sum_{t=0}^{N-1} \gamma^t \bigl(\gamma\Phi(S_{t+1}) - \Phi(S_t)\bigr) \\ &amp;\quad = -\Phi(S_0) \\ &amp;\qquad + \gamma\Phi(S_1) - \gamma\Phi(S_1) \\ &amp;\qquad + \gamma^2\Phi(S_2) - \gamma^2\Phi(S_2) + \cdots \\ &amp;\qquad + \gamma^N\Phi(S_N) \\ &amp;\quad = \gamma^N\Phi(S_N) - \Phi(S_0) \end{aligned}</div>
+          <figcaption>The discounted shaping rewards of an episode, regrouped by state.</figcaption>
+        </figure>
+        <p>
+          The move into each middle state S<sub>t</sub> adds
+          γ<sup>t</sup>Φ(S<sub>t</sub>), and the move out of it subtracts the
+          same amount. Only the first and last potentials survive. Adding the
+          sum to G<sub>0</sub>, the return under the race's own reward, gives
+          the shaped return.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">G'_0 = \htmlClass{nb-mc1}{G_0} - \htmlClass{nb-mc2}{\Phi(S_0)} + \htmlClass{nb-mc3}{\gamma^N \Phi(S_N)}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term nb-mc1">G_0</span><span>the return under the race's own reward</span></li>
+            <li><span class="nb-math-term nb-mc2">\Phi(S_0)</span><span>the first state's potential, the same for every policy that starts there</span></li>
+            <li><span class="nb-math-term nb-mc3">\gamma^N \Phi(S_N)</span><span>the discounted potential of the state where the return stops</span></li>
+          </ul>
+          <figcaption>The shaped return of an episode that stops at S<sub>N</sub>, which Grześ prints as his Eq. 3.<sup class="nb-cite"><a href="#s2" data-nb-locator="§4.1, p. 567, Eq. 3">2</a></sup></figcaption>
+        </figure>
+        <p>
+          On the race the last term is always 0. An episode that finishes
+          stops at the finish, whose potential is 0. One that never finishes
+          has no last state, and γ<sup>N</sup>Φ(S<sub>N</sub>) shrinks to 0
+          because every potential lies between −7 and 0. So every shaped
+          return is the unshaped return minus Φ(S<sub>0</sub>). A
+          <a href="../reinforcement-learning/environments-and-the-rl-problem.html">value</a>
+          is an average of returns, and an action value only fixes the first
+          move, so for every policy π:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">v'_\pi(s) = v_\pi(s) - \Phi(s), \qquad q'_\pi(s, a) = q_\pi(s, a) - \Phi(s)</div>
+          <figcaption>Values under the shaped reward when the last term vanishes.</figcaption>
+        </figure>
+        <p>
+          The shift depends on neither π nor the move, so the best policy and
+          the greedy move in each cell stay the same. That is Ng, Harada and
+          Russell's theorem: under potential-based shaping, every optimal
+          policy of the shaped task is optimal in the original, and the
+          reverse.<sup class="nb-cite"><a href="#s1" data-nb-locator="§3, p. 281, Theorem 1">1</a></sup>
+          They prove it through the Bellman optimality equation, and they state
+          the identity for every policy only in a remark, without
+          proof.<sup class="nb-cite"><a href="#s1" data-nb-locator="p. 282, proof of Theorem 1 and Remark 1">1</a></sup>
+          The cancellation proves it wherever the last term vanishes.
+        </p>
+        <p>
+          A lap starts and stops in one cell, so its shaping is
+          <span class="nb-math-in">-(1 - \gamma^n)\,\Phi(s)</span> for n moves
+          from s. That is positive on the race, where every potential before
+          the finish is negative. At γ = 1, where Ng and colleagues first argue
+          for a difference of potentials, every lap's shaping is 0.<sup class="nb-cite"><a href="#s1" data-nb-locator="§3, p. 281, the paragraph before Theorem 1">1</a></sup>
+          At 0.99 it is not, but an endless loop is one more episode whose own
+          return is 0, so its shaped return is −Φ(S<sub>0</sub>), the same
+          shift as every other episode's.
+        </p>
+      </section>
+
+      <section data-nb-section="loop-returns" id="loop-returns">
+        <h2>Without the charge for moving back, the loop returns</h2>
+        <p>
+          <code>shaping.py</code> checks the derivation with value iteration.
+          <code>shaped_rule</code> adds the shaping reward to the reward of
+          <code>rule</code> from <code>race.py</code> with the checkpoint at
+          0, and <code>solve</code> sweeps the
+          <a href="../reinforcement-learning/finding-optimal-policies.html">Bellman optimality backup</a>
+          over it. The flag <code>charge_back=False</code> pays shaping on
+          forward moves only, so the shaping rewards no longer cancel in
+          pairs. <code>Shaped</code>, a Gymnasium wrapper for the
+          next run, adds the shaping reward to each step.
+          <code>uv run shaping.py</code> needs <code>race.py</code> in the
+          same folder and runs in under a second.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">shaping.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""The race with its checkpoint replaced by a potential-based progress reward.
+
+A cell's potential PHI is minus the number of moves left to the finish, so the
+finish, where the episode ends, has potential 0. On top of the race's reward, a
+move from cell to nxt pays GAMMA * PHI[nxt] - PHI[cell]. The checkpoint pays 0,
+so the only other reward is the finish's 10.
+"""
+import gymnasium as gym
+import numpy as np
+from race import BACK, FORWARD, LAST, N, rule
+
+GAMMA = 0.99
+PHI = np.arange(N) - LAST  # -7 in cell 0, rising to 0 at the finish
+
+
+def shaping(cell, nxt):
+    """The shaping reward for a move from cell to nxt."""
+    return GAMMA * PHI[nxt] - PHI[cell]
+
+
+def shaped_rule(cell, action, charge_back=True):
+    """rule() with the checkpoint at 0 and the shaping reward added.
+    charge_back=False pays the shaping reward on forward moves only."""
+    nxt, reward, terminated = rule(cell, action, checkpoint=0.0)
+    if charge_back or action == FORWARD:
+        reward += shaping(cell, nxt)
+    return nxt, reward, terminated
+
+
+def solve(step):
+    """q*[cell, move] for the race whose moves step(cell, action) describes,
+    by sweeping the Bellman optimality backup until it stops changing."""
+    out = [[step(c, a) for a in (BACK, FORWARD)] for c in range(N)]
+    nxt, rew, done = (np.array([[o[i] for o in row] for row in out])
+                      for i in range(3))
+    v = np.zeros(N)
+    while True:
+        q = rew + GAMMA * ~done * v[nxt]
+        new = np.where(np.arange(N) == LAST, 0.0, q.max(axis=1))
+        if np.abs(new - v).max() &lt; 1e-12:
+            return q
+        v = new
+
+
+class Shaped(gym.Wrapper):
+    """Adds the shaping reward to each step of a race episode. With
+    zero_at_cut=True, a step that a time limit cuts uses potential 0 for the
+    cell it lands in, as if the episode had terminated there."""
+
+    def __init__(self, env, zero_at_cut=False):
+        super().__init__(env)
+        self.zero_at_cut = zero_at_cut
+
+    def reset(self, **kwargs):
+        self.cell, info = self.env.reset(**kwargs)
+        return self.cell, info
+
+    def step(self, action):
+        nxt, reward, terminated, truncated, info = self.env.step(action)
+        phi_next = 0.0 if self.zero_at_cut and truncated else PHI[nxt]
+        reward += GAMMA * phi_next - PHI[self.cell]
+        self.cell = nxt
+        return nxt, reward, terminated, truncated, info
+
+
+def shaping_along(cells):
+    """The discounted sum of the shaping rewards along a route of cells."""
+    moves = zip(cells, cells[1:])
+    return sum(GAMMA**t * shaping(a, b) for t, (a, b) in enumerate(moves))
+
+
+if __name__ == "__main__":
+    print(f"gamma {GAMMA}; potential of cells 0 to 7:", *PHI)
+    print("shaping paid by a move from cells 0 to 6")
+    print("  forward", " ".join(f"{shaping(c, c + 1):6.2f}" for c in range(LAST)))
+    print("  back   ", " ".join(f"{shaping(c, max(c - 1, 0)):6.2f}"
+                                for c in range(LAST)))
+    print("shaping collected from cell 1, discounted:")
+    print(f"  one lap 1 -&gt; 2 -&gt; 1        {shaping_along([1, 2, 1]):+.4f}")
+    print(f"  1,000 laps                 {shaping_along([1, 2] * 1000 + [1]):+.4f}")
+    print(f"  the route to the finish    {shaping_along(list(range(1, N))):+.4f}")
+    finish_only = solve(lambda c, a: rule(c, a, checkpoint=0.0))
+    rows = {"finish only": finish_only,
+            "finish + shaping": solve(shaped_rule),
+            "finish + shaping, nothing charged back":
+                solve(lambda c, a: shaped_rule(c, a, charge_back=False))}
+    for name, q in rows.items():
+        print(name)
+        print("  move", " ".join(f"{'&lt;-' if a == BACK else '-&gt;':&gt;6s}"
+                                 for a in q[:LAST].argmax(axis=1)))
+        print("  v*  ", " ".join(f"{x:6.2f}" for x in q[:LAST].max(axis=1)))
+    print("largest |q* - (finish-only q* - PHI)| over cells 0 to 6 and moves")
+    for name, q in list(rows.items())[1:]:
+        gap = np.abs(q - (finish_only - PHI[:, None]))[:LAST].max()
+        print(f"  {name:40s} {gap:.2g}")</code></pre>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run shaping.py</span><span>text</span></div>
+          <pre><code data-language="text">gamma 0.99; potential of cells 0 to 7: -7 -6 -5 -4 -3 -2 -1 0
+shaping paid by a move from cells 0 to 6
+  forward   1.06   1.05   1.04   1.03   1.02   1.01   1.00
+  back      0.07  -0.93  -0.94  -0.95  -0.96  -0.97  -0.98
+shaping collected from cell 1, discounted:
+  one lap 1 -&gt; 2 -&gt; 1        +0.1194
+  1,000 laps                 +6.0000
+  the route to the finish    +6.0000
+finish only
+  move     -&gt;     -&gt;     -&gt;     -&gt;     -&gt;     -&gt;     -&gt;
+  v*     9.41   9.51   9.61   9.70   9.80   9.90  10.00
+finish + shaping
+  move     -&gt;     -&gt;     -&gt;     -&gt;     -&gt;     -&gt;     -&gt;
+  v*    16.41  15.51  14.61  13.70  12.80  11.90  11.00
+finish + shaping, nothing charged back
+  move     -&gt;     -&gt;     -&gt;     -&gt;     -&gt;     -&gt;     &lt;-
+  v*    53.36  52.83  52.31  51.78  51.27  50.75  50.25
+largest |q* - (finish-only q* - PHI)| over cells 0 to 6 and moves
+  finish + shaping                         3.6e-15
+  finish + shaping, nothing charged back   39</code></pre>
+        </figure>
+        <p>
+          With the charge, the optimal moves are the finish-only race's, all
+          forward, and each value is the finish-only value minus the cell's
+          potential, to within 4 × 10<sup>−15</sup> (Fig. 2). Cell 0 rises by
+          its 7 moves left, from 9.41 to 16.41.
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 290" role="img" aria-label="Three rows of the race with each cell's optimal move and value at a discount of 0.99. Finish only: every move forward, values from 9.41 in cell 0 to 10.00 in cell 6. Finish plus shaping: every move forward, values from 16.41 to 11.00, each the finish-only value plus the cell's moves left. Finish plus shaping with nothing charged for moving back: cells 0 to 5 forward and cell 6 back, values near 50, so the agent crosses between cells 5 and 6 and never finishes." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<text x="20" y="16" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600">finish only</text>
+<rect x="20" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="42.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">0</text>
+<line x1="31.5" y1="40" x2="48.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="55.5,40 47.5,35 47.5,45" style="fill: var(--chart-2)"/>
+<text x="42.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">9.41</text>
+<rect x="65" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="87.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">1</text>
+<line x1="76.5" y1="40" x2="93.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="100.5,40 92.5,35 92.5,45" style="fill: var(--chart-2)"/>
+<text x="87.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">9.51</text>
+<rect x="110" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="132.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">2</text>
+<line x1="121.5" y1="40" x2="138.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="145.5,40 137.5,35 137.5,45" style="fill: var(--chart-2)"/>
+<text x="132.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">9.61</text>
+<rect x="155" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="177.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">3</text>
+<line x1="166.5" y1="40" x2="183.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="190.5,40 182.5,35 182.5,45" style="fill: var(--chart-2)"/>
+<text x="177.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">9.70</text>
+<rect x="200" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="222.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">4</text>
+<line x1="211.5" y1="40" x2="228.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="235.5,40 227.5,35 227.5,45" style="fill: var(--chart-2)"/>
+<text x="222.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">9.80</text>
+<rect x="245" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="267.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">5</text>
+<line x1="256.5" y1="40" x2="273.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="280.5,40 272.5,35 272.5,45" style="fill: var(--chart-2)"/>
+<text x="267.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">9.90</text>
+<rect x="290" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="312.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">6</text>
+<line x1="301.5" y1="40" x2="318.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="325.5,40 317.5,35 317.5,45" style="fill: var(--chart-2)"/>
+<text x="312.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">10.00</text>
+<rect x="335" y="24" width="45" height="50" style="fill: var(--chart-6); fill-opacity: 0.18; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="357.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">7</text>
+<text x="357.5" y="44" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">finish</text>
+<text x="357.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">+10</text>
+<text x="20" y="112" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600">finish + shaping</text>
+<rect x="20" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="42.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">0</text>
+<line x1="31.5" y1="136" x2="48.5" y2="136" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="55.5,136 47.5,131 47.5,141" style="fill: var(--chart-2)"/>
+<text x="42.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">16.41</text>
+<rect x="65" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="87.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">1</text>
+<line x1="76.5" y1="136" x2="93.5" y2="136" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="100.5,136 92.5,131 92.5,141" style="fill: var(--chart-2)"/>
+<text x="87.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">15.51</text>
+<rect x="110" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="132.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">2</text>
+<line x1="121.5" y1="136" x2="138.5" y2="136" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="145.5,136 137.5,131 137.5,141" style="fill: var(--chart-2)"/>
+<text x="132.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">14.61</text>
+<rect x="155" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="177.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">3</text>
+<line x1="166.5" y1="136" x2="183.5" y2="136" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="190.5,136 182.5,131 182.5,141" style="fill: var(--chart-2)"/>
+<text x="177.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">13.70</text>
+<rect x="200" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="222.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">4</text>
+<line x1="211.5" y1="136" x2="228.5" y2="136" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="235.5,136 227.5,131 227.5,141" style="fill: var(--chart-2)"/>
+<text x="222.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">12.80</text>
+<rect x="245" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="267.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">5</text>
+<line x1="256.5" y1="136" x2="273.5" y2="136" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="280.5,136 272.5,131 272.5,141" style="fill: var(--chart-2)"/>
+<text x="267.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">11.90</text>
+<rect x="290" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="312.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">6</text>
+<line x1="301.5" y1="136" x2="318.5" y2="136" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="325.5,136 317.5,131 317.5,141" style="fill: var(--chart-2)"/>
+<text x="312.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">11.00</text>
+<rect x="335" y="120" width="45" height="50" style="fill: var(--chart-6); fill-opacity: 0.18; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="357.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">7</text>
+<text x="357.5" y="140" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">finish</text>
+<text x="357.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">+10</text>
+<text x="20" y="208" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600">finish + shaping, nothing charged back</text>
+<rect x="20" y="216" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="42.5" y="280" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">0</text>
+<line x1="31.5" y1="232" x2="48.5" y2="232" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="55.5,232 47.5,227 47.5,237" style="fill: var(--chart-2)"/>
+<text x="42.5" y="256" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">53.36</text>
+<rect x="65" y="216" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="87.5" y="280" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">1</text>
+<line x1="76.5" y1="232" x2="93.5" y2="232" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="100.5,232 92.5,227 92.5,237" style="fill: var(--chart-2)"/>
+<text x="87.5" y="256" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">52.83</text>
+<rect x="110" y="216" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="132.5" y="280" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">2</text>
+<line x1="121.5" y1="232" x2="138.5" y2="232" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="145.5,232 137.5,227 137.5,237" style="fill: var(--chart-2)"/>
+<text x="132.5" y="256" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">52.31</text>
+<rect x="155" y="216" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="177.5" y="280" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">3</text>
+<line x1="166.5" y1="232" x2="183.5" y2="232" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="190.5,232 182.5,227 182.5,237" style="fill: var(--chart-2)"/>
+<text x="177.5" y="256" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">51.78</text>
+<rect x="200" y="216" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="222.5" y="280" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">4</text>
+<line x1="211.5" y1="232" x2="228.5" y2="232" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="235.5,232 227.5,227 227.5,237" style="fill: var(--chart-2)"/>
+<text x="222.5" y="256" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">51.27</text>
+<rect x="245" y="216" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="267.5" y="280" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">5</text>
+<line x1="256.5" y1="232" x2="273.5" y2="232" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="280.5,232 272.5,227 272.5,237" style="fill: var(--chart-2)"/>
+<text x="267.5" y="256" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">50.75</text>
+<rect x="290" y="216" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="312.5" y="280" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">6</text>
+<line x1="323.5" y1="232" x2="306.5" y2="232" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="299.5,232 307.5,227 307.5,237" style="fill: var(--chart-4)"/>
+<text x="312.5" y="256" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">50.25</text>
+<rect x="335" y="216" width="45" height="50" style="fill: var(--chart-6); fill-opacity: 0.18; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="357.5" y="280" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">7</text>
+<text x="357.5" y="236" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">finish</text>
+<text x="357.5" y="256" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">+10</text>
+</svg>
+          <figcaption>
+            Fig. 2 · Each cell's optimal move and value v<sub>*</sub> at
+            γ = 0.99, by value iteration, under three rewards. Blue arrows
+            point toward the finish and red arrows back. From the output of
+            <code>shaping.py</code>.
+          </figcaption>
+        </figure>
+        <p>
+          Without the charge, the agent never finishes. A forward move still
+          pays about 1 and a move back costs nothing, so the agent goes
+          forward to cell 6 and then crosses between cells 5 and 6 forever,
+          one move short of the finish.
+        </p>
+        <p>
+          Ng and colleagues also prove a converse: a shaping reward that is
+          not potential-based changes the optimal policy of some task, though
+          they note this says little when the task's rules are
+          known.<sup class="nb-cite"><a href="#s1" data-nb-locator="Theorem 1, p. 281; p. 282; Appendix A, pp. 286–287">1</a></sup>
+          On the race the forward-only reward is one such reward, and Problem
+          1 below finds another.
+        </p>
+      </section>
+
+      <section data-nb-section="cut-potential" id="cut-potential">
+        <h2>The cut cell keeps its potential when the target bootstraps</h2>
+        <p>
+          The last term vanished because the finish has potential 0. A
+          potential c there would add γ<sup>N</sup>c to every episode that
+          finishes on move N, an amount that depends on when the agent
+          finishes and whether it does (Problem 2). The term vanishes in both
+          kinds of task that Ng and colleagues' theorem covers. Their
+          undiscounted tasks end in one absorbing state, whose potential can be
+          shifted to 0, and their discounted tasks never end.<sup class="nb-cite"><a href="#s1" data-nb-locator="§2.1, pp. 279–280; p. 282">1</a></sup>
+          For a discounted task that ends, like the race, Grześ shows that
+          every terminal state needs potential 0.<sup class="nb-cite"><a href="#s2" data-nb-locator="§4.1, pp. 567–568">2</a></sup>
+        </p>
+        <p>
+          A time limit ends an episode differently.
+          <a href="../reinforcement-learning/termination-and-truncation.html">Termination and truncation</a>
+          showed that a cell where TimeLimit cuts an episode keeps its value,
+          so the target bootstraps from it. The cut episode's shaping rewards
+          still sum to γ<sup>T</sup>Φ(S<sub>T</sub>) − Φ(S<sub>0</sub>), and
+          Φ(S<sub>T</sub>) is not 0. Grześ, and Müller and Kudenko after him,
+          require potential 0 in a state where an episode is cut after a
+          fixed number of steps.<sup class="nb-cite"><a href="#s2" data-nb-locator="§4.1, pp. 567–568; §6, p. 572">2</a></sup><sup class="nb-cite"><a href="#s3" data-nb-locator="§3, p. 2">3</a></sup>
+          Both treat the cut as a termination, with nothing after it.
+        </p>
+        <p>
+          With bootstrapping, the agent adds γ<sup>T</sup> times its value
+          for the cut cell, which under shaping is v<sub>π</sub>(S<sub>T</sub>)
+          − Φ(S<sub>T</sub>). Split the return at the cut, as that lesson did,
+          and the cut cell's potential appears twice.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} G'_{0:T} + \gamma^T v'_\pi(S_T) &amp;= G_{0:T} - \Phi(S_0) + \htmlClass{nb-mc1}{\gamma^T \Phi(S_T)} \\ &amp;\quad + \gamma^T v_\pi(S_T) - \htmlClass{nb-mc1}{\gamma^T \Phi(S_T)} \\ &amp;= G_{0:T} + \gamma^T v_\pi(S_T) - \Phi(S_0) \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term">G'_{0:T},\ G_{0:T}</span><span>the discounted rewards up to the cut, with and without shaping</span></li>
+            <li><span class="nb-math-term nb-mc1">\gamma^T \Phi(S_T)</span><span>the cut cell's potential, once from the shaping rewards and once inside the shaped value</span></li>
+          </ul>
+          <figcaption>A cut episode's shaping rewards plus the bootstrapped value of the cut cell.</figcaption>
+        </figure>
+        <p>
+          The two γ<sup>T</sup>Φ(S<sub>T</sub>) terms cancel, leaving that
+          lesson's unshaped target minus Φ(S<sub>0</sub>), the same shift as
+          before. An agent that bootstraps through the cut therefore needs
+          the cut cell's ordinary potential. Setting it to 0 drops the first
+          term and leaves −γ<sup>T</sup>Φ(S<sub>T</sub>) uncancelled. With Φ
+          equal to minus the moves left, each cut then pays an extra 0.99
+          times the cut cell's moves left.
+        </p>
+      </section>
+
+      <section data-nb-section="zeroed-cut" id="zeroed-cut">
+        <h2>Zeroing the cut cell's potential pays the agent to stay back</h2>
+        <p>
+          <code>limit.py</code> tests the cut rule with
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">Q-learning</a>
+          under a 10-move limit. The limit cuts a quarter of the episodes even
+          in runs that learn to finish, since each episode starts in a random
+          cell and half its moves are random. The other settings are those of
+          <code>learn.py</code> in specification gaming: ε = 0.5, a constant
+          step size of 0.1, 2,000 episodes and five runs per row. Each run is
+          graded against the finish-only race's q<sub>*</sub>, minus Φ when
+          shaped. The flag <code>zero_at_cut</code> sets the cut cell's
+          potential to 0.
+          <code>limit.py</code> needs <code>race.py</code> and
+          <code>shaping.py</code> in the same folder and runs in about a
+          second.
+        </p>
+        <details>
+          <summary><code>limit.py</code>, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">limit.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning on the race under a 10-move time limit: without shaping, with
+shaping that keeps the cut cell's potential, and with shaping that sets it to
+0. Each run is graded against the finish-only race's q*, shifted by PHI."""
+import numpy as np
+from gymnasium.wrappers import TimeLimit
+from race import BACK, LAST, Race, rule
+from shaping import GAMMA, PHI, Shaped, solve
+
+EPS, ALPHA = 0.5, 0.1  # exploration rate and constant step size
+EPISODES, LIMIT, SEEDS = 2000, 10, range(5)
+
+
+def q_learning(env, seed):
+    """eps-greedy Q-learning with a constant step size. The target
+    bootstraps unless the episode terminated, so a time-limit cut still
+    bootstraps. Also returns the share of episodes the limit cut."""
+    Q = np.zeros((env.observation_space.n, env.action_space.n))
+    rng = np.random.default_rng((seed, 1))
+    cut = 0
+    for k in range(EPISODES):
+        s, info = env.reset(seed=seed if k == 0 else None)
+        while True:
+            a = int(rng.integers(2)) if rng.random() &lt; EPS else int(Q[s].argmax())
+            s_next, reward, terminated, truncated, info = env.step(a)
+            target = reward + GAMMA * (not terminated) * Q[s_next].max()
+            Q[s, a] += ALPHA * (target - Q[s, a])
+            if terminated or truncated:
+                cut += truncated and not terminated
+                break
+            s = s_next
+    return Q, cut / EPISODES
+
+
+def finishes_from_start(env, Q):
+    """Does the greedy agent started in cell 0 cross the finish line?"""
+    s, info = env.reset(options={"start": 0})
+    while True:
+        s, reward, terminated, truncated, info = env.step(int(Q[s].argmax()))
+        if terminated or truncated:
+            return terminated
+
+
+def race(shaped, zero_at_cut):
+    """The finish-only race under the time limit. Shaped wraps TimeLimit, so
+    the shaping sees the truncated flag that the limit sets."""
+    env = TimeLimit(Race(checkpoint=0.0), max_episode_steps=LIMIT)
+    return Shaped(env, zero_at_cut) if shaped else env
+
+
+q_star = solve(lambda c, a: rule(c, a, checkpoint=0.0))[:LAST]
+versions = {"no shaping": (False, False),  # name: (shaped, zero_at_cut)
+            "PHI kept at cut": (True, False),
+            "PHI 0 at cut": (True, True)}
+results = {}
+for name, (shaped, zero_at_cut) in versions.items():
+    goal = q_star - PHI[:LAST, None] if shaped else q_star
+    runs = []
+    for seed in SEEDS:
+        env = race(shaped, zero_at_cut)
+        Q, cut = q_learning(env, seed)
+        runs.append((np.abs(Q[:LAST] - goal).max(), cut,
+                     finishes_from_start(env, Q), Q[:LAST].max(axis=1),
+                     Q[:LAST].argmax(axis=1) != BACK))
+    results[name] = [np.array(column) for column in zip(*runs)]
+
+print(f"eps {EPS}, step size {ALPHA}, {EPISODES} episodes of at most {LIMIT} "
+      f"moves, {len(SEEDS)} runs per row")
+print("                 largest  episodes  finished")
+print("                 |error|       cut    from 0")
+for name, (error, cut, done, best, forward) in results.items():
+    print(f"{name:16s} {error.max():7.3f} {cut.mean():9.2f} "
+          f"{done.sum():5d} of {len(SEEDS)}")
+print("cells 0 to 6: each cell's largest estimate, mean of the runs")
+for name, (error, cut, done, best, forward) in results.items():
+    print(f"{name:16s}" + " ".join(f"{x:7.2f}" for x in best.mean(axis=0)))
+print("cells 0 to 6: runs whose greedy move is forward")
+for name, (error, cut, done, best, forward) in results.items():
+    print(f"{name:16s}" + " ".join(f"{x:7d}" for x in forward.sum(axis=0)))
+print("largest |error|: worst run, against q* without shaping and q* - PHI with it")</code></pre>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run limit.py</span><span>text</span></div>
+          <pre><code data-language="text">eps 0.5, step size 0.1, 2000 episodes of at most 10 moves, 5 runs per row
+                 largest  episodes  finished
+                 |error|       cut    from 0
+no shaping         0.000      0.27     5 of 5
+PHI kept at cut    0.000      0.25     5 of 5
+PHI 0 at cut      95.818      0.86     0 of 5
+cells 0 to 6: each cell's largest estimate, mean of the runs
+no shaping         9.41    9.51    9.61    9.70    9.80    9.90   10.00
+PHI kept at cut   16.41   15.51   14.61   13.70   12.80   11.90   11.00
+PHI 0 at cut     109.10  107.52  106.41  104.92  102.29   99.53   97.01
+cells 0 to 6: runs whose greedy move is forward
+no shaping            5       5       5       5       5       5       5
+PHI kept at cut       5       5       5       5       5       5       5
+PHI 0 at cut          2       0       0       0       0       0       0
+largest |error|: worst run, against q* without shaping and q* - PHI with it</code></pre>
+        </figure>
+        <p>
+          With the potential kept, every run ends within 0.001 of
+          q<sub>*</sub> − Φ, and every greedy agent started in cell 0
+          finishes. With the potential set to 0, no greedy agent finishes. Cells 1 to 6
+          point back in all five runs, and the mean estimates run from 97 to
+          109, against 16.41 for the best policy from cell 0 (Fig. 3).
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 194" role="img" aria-label="Two rows of the race with Q-learning's greedy move and each cell's largest estimate, mean of five runs, under a 10-move time limit. With the potential kept at the cut, every move points forward and the estimates run from 16.41 in cell 0 to 11.00 in cell 6, the shaped optimal values. With the potential set to 0 at the cut, cells 1 to 6 point back in every run, cell 0 points back in three runs and forward in two, and the estimates run from 109.10 down to 97.01." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<text x="20" y="16" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600">potential kept at the cut</text>
+<rect x="20" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="42.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">0</text>
+<line x1="31.5" y1="40" x2="48.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="55.5,40 47.5,35 47.5,45" style="fill: var(--chart-2)"/>
+<text x="42.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">16.41</text>
+<rect x="65" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="87.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">1</text>
+<line x1="76.5" y1="40" x2="93.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="100.5,40 92.5,35 92.5,45" style="fill: var(--chart-2)"/>
+<text x="87.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">15.51</text>
+<rect x="110" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="132.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">2</text>
+<line x1="121.5" y1="40" x2="138.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="145.5,40 137.5,35 137.5,45" style="fill: var(--chart-2)"/>
+<text x="132.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">14.61</text>
+<rect x="155" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="177.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">3</text>
+<line x1="166.5" y1="40" x2="183.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="190.5,40 182.5,35 182.5,45" style="fill: var(--chart-2)"/>
+<text x="177.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">13.70</text>
+<rect x="200" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="222.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">4</text>
+<line x1="211.5" y1="40" x2="228.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="235.5,40 227.5,35 227.5,45" style="fill: var(--chart-2)"/>
+<text x="222.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">12.80</text>
+<rect x="245" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="267.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">5</text>
+<line x1="256.5" y1="40" x2="273.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="280.5,40 272.5,35 272.5,45" style="fill: var(--chart-2)"/>
+<text x="267.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">11.90</text>
+<rect x="290" y="24" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="312.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">6</text>
+<line x1="301.5" y1="40" x2="318.5" y2="40" style="stroke: var(--chart-2); stroke-width: 2.5"/><polygon points="325.5,40 317.5,35 317.5,45" style="fill: var(--chart-2)"/>
+<text x="312.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">11.00</text>
+<rect x="335" y="24" width="45" height="50" style="fill: var(--chart-6); fill-opacity: 0.18; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="357.5" y="88" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">7</text>
+<text x="357.5" y="44" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">finish</text>
+<text x="357.5" y="64" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">+10</text>
+<text x="20" y="112" text-anchor="start" style="font-family: var(--sans); font-size: 12px; fill: var(--ink); font-weight: 600">potential 0 at the cut</text>
+<rect x="20" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="42.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">0</text>
+<line x1="33.5" y1="136" x2="51.5" y2="136" style="stroke: var(--ink-soft); stroke-width: 2.5"/>
+<polygon points="56.5,136 49.5,131 49.5,141" style="fill: var(--ink-soft)"/>
+<polygon points="28.5,136 35.5,131 35.5,141" style="fill: var(--ink-soft)"/>
+<text x="42.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">109.10</text>
+<rect x="65" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="87.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">1</text>
+<line x1="98.5" y1="136" x2="81.5" y2="136" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="74.5,136 82.5,131 82.5,141" style="fill: var(--chart-4)"/>
+<text x="87.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">107.52</text>
+<rect x="110" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="132.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">2</text>
+<line x1="143.5" y1="136" x2="126.5" y2="136" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="119.5,136 127.5,131 127.5,141" style="fill: var(--chart-4)"/>
+<text x="132.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">106.41</text>
+<rect x="155" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="177.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">3</text>
+<line x1="188.5" y1="136" x2="171.5" y2="136" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="164.5,136 172.5,131 172.5,141" style="fill: var(--chart-4)"/>
+<text x="177.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">104.92</text>
+<rect x="200" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="222.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">4</text>
+<line x1="233.5" y1="136" x2="216.5" y2="136" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="209.5,136 217.5,131 217.5,141" style="fill: var(--chart-4)"/>
+<text x="222.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">102.29</text>
+<rect x="245" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="267.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">5</text>
+<line x1="278.5" y1="136" x2="261.5" y2="136" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="254.5,136 262.5,131 262.5,141" style="fill: var(--chart-4)"/>
+<text x="267.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">99.53</text>
+<rect x="290" y="120" width="45" height="50" style="fill: var(--panel); stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="312.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">6</text>
+<line x1="323.5" y1="136" x2="306.5" y2="136" style="stroke: var(--chart-4); stroke-width: 2.5"/><polygon points="299.5,136 307.5,131 307.5,141" style="fill: var(--chart-4)"/>
+<text x="312.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">97.01</text>
+<rect x="335" y="120" width="45" height="50" style="fill: var(--chart-6); fill-opacity: 0.18; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="357.5" y="184" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">7</text>
+<text x="357.5" y="140" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">finish</text>
+<text x="357.5" y="160" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink)">+10</text>
+</svg>
+          <figcaption>
+            Fig. 3 · Q-learning's greedy move and each cell's largest estimate,
+            mean of five runs, under a 10-move limit. With the potential 0 at
+            the cut, the grey arrow marks cell 0's move, back in three runs and
+            forward in two. From the output of <code>limit.py</code>.
+          </figcaption>
+        </figure>
+        <p>
+          A cut in cell 0 now pays an extra 6.93, more than two thirds of the finish.
+          An agent that stays near the start runs every episode to the limit,
+          and 86% of episodes end in a cut. Since the target bootstraps through each
+          cut, an estimate adds up the payments of all later cuts and climbs
+          past any return the race can pay. Under a limit long enough that a
+          trained agent is almost never cut, the two rules ended at nearly the
+          same estimates in our checks.
+        </p>
+      </section>
+
+      <section data-nb-section="starting-table" id="starting-table">
+        <h2>Shaped Q-learning is Q-learning started from Φ</h2>
+        <p>
+          The kept-potential runs land on q<sub>*</sub> − Φ for a reason
+          Wiewiora proved for tabular Q-learning.<sup class="nb-cite"><a href="#s4" data-nb-locator="§2, p. 206">4</a></sup>
+          Tabular Q-learning that receives the shaping rewards from a starting
+          table Q<sub>0</sub> makes the same updates as unshaped Q-learning
+          from Q<sub>0</sub> + Φ, given the same experience. Under ε-greedy
+          the two also choose their moves alike.<sup class="nb-cite"><a href="#s4" data-nb-locator="§2, pp. 206–207, Theorems 1 and 2">4</a></sup>
+          Unshaped Q-learning settles at q<sub>*</sub> when it bootstraps
+          through cuts, so the shaped agent settles at q<sub>*</sub> − Φ.
+        </p>
+        <p>
+          Shaping a tabular Q-learning agent therefore changes only its
+          starting table, here minus the moves left, which lies below every
+          optimal value on the race. The guarantee says nothing about how fast
+          the agent gets there. Wiewiora, drawing on Koenig and
+          Simmons, warns that an agent whose table starts below the optimal
+          values can need learning time exponential in the size of the state
+          and action spaces before it first finds the goal.<sup class="nb-cite"><a href="#s4" data-nb-locator="§3, p. 208">4</a></sup>
+          The runs here did not measure speed.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. The pay-once checkpoint in
+            <a href="../reinforcement-learning/specification-gaming.html">specification gaming</a>
+            pays 1 on the first crossing from cell 1 to cell 2 and records the
+            payment in the state. Is it potential-based? At γ = 0.99, from
+            which unpaid cells does the optimal agent turn back?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              No. Staying in cell 0 pays 0, which forces Φ(0) = 0, and each
+              move along the lane that pays 0 then forces the next cell's
+              potential to 0, in both copies of the lane. The crossing would
+              then pay 0, not 1.
+            </p>
+            <p>
+              From an unpaid cell j of 2 or more, turning back collects 1 on
+              move j and finishes 5 moves later, worth
+              <span class="nb-math-in">\gamma^{j-1} + 10\gamma^{j+4}</span>,
+              against <span class="nb-math-in">10\gamma^{6-j}</span> for going
+              on. Turning back wins for j = 2 to 5 and loses at 6, by 9.995 to
+              10, and <code>value_iteration(0.99, once=True)</code> in
+              <code>race.py</code> gives the same moves.
+            </p>
+          </details>
+          <p>
+            2. Give the finish a potential c in place of 0 and keep every other
+            potential. For which c does the optimal agent at γ = 0.99 stop
+            finishing?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              From cell s, finishing on move N has shaped return
+              <span class="nb-math-in">10\gamma^{N-1} - \Phi(s) + \gamma^N c</span>,
+              and never finishing has −Φ(s). Finishing wins when
+              <span class="nb-math-in">\gamma^N (10/\gamma + c) &gt; 0</span>,
+              so for c &gt; −10/γ ≈ −10.1 the agent finishes, and as soon as it
+              can. Below that, every finishing route loses to never
+              finishing.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A shaping reward γΦ(s′) − Φ(s) telescopes. An episode's shaped return
+          is its return minus the first state's potential, plus γ<sup>N</sup>
+          times the potential where the return stops. When that term
+          vanishes, every policy's value shifts by −Φ(s) and the optimal policy
+          stays. On the race, with Φ equal to minus the moves left, the
+          optimal moves match the finish-only race's, and paying for progress
+          without charging for lost progress brings the loop back. A
+          bootstrapped return does not stop at a time-limit cut, so the cut
+          cell keeps its potential. Setting it to 0 stopped every Q-learning
+          run under a 10-move limit from finishing.
+        </p>
+<div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://people.eecs.berkeley.edu/~russell/papers/icml99-shaping.pdf">Ng, Harada and Russell, Policy Invariance Under Reward Transformations</a>:
+            Section 3 (pp. 281–282) for Theorem 1 and its proof through the
+            Bellman optimality equation, and Appendix A (pp. 286–287) for the
+            three-state task behind the converse.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://www.ifaamas.org/Proceedings/aamas2017/pdfs/p565.pdf">Grześ, Reward Shaping in Episodic Reinforcement Learning</a>:
+            Section 4.1 (pp. 567–568) for the shaped return of an episode that
+            stops and the two-ending example. Section 5 reaches the same rule
+            for terminal potentials through linear programming.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://www.jair.org/index.php/jair/article/view/10338">Wiewiora, Potential-Based Shaping and Q-Value Initialization are Equivalent</a>:
+            a four-page proof that the two agents' TD errors match update by
+            update, and Section 3 on why a starting table, and so a potential,
+            can slow learning.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://www.ifaamas.org/Proceedings/aamas2012/papers/2C_3.pdf">Devlin and Kudenko, Dynamic Potential-Based Reward Shaping</a>:
+            Section 3.1 (p. 435) keeps the guarantee for a potential that
+            changes during training, and Section 3.2 (p. 436) shows that the
+            starting-table equivalence is then lost.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2502.01307">Müller and Kudenko, Improving the Effectiveness of Potential-Based Reward Shaping in Reinforcement Learning</a>:
+            how the offset of a potential against the starting estimates
+            decides whether shaping speeds learning. Section 6.2.1 (p. 6) has
+            runs that got stuck returning to a cell where an earlier episode
+            was cut.
+          </dd>
+          <dt>06</dt>
+          <dd>
+            <a href="https://mlanthology.org/icml/1998/randlv1998icml-learning/">Randløv and Alstrøm, Learning to Drive a Bicycle Using Reinforcement Learning and Shaping</a>:
+            Section 4 (pp. 467–468) describes a first reward that paid for
+            heading toward the goal and charged nothing for heading away, the
+            circles of 20 to 50 meters radius it produced, and the reward that
+            replaced it.
+          </dd>
+        </dl>
+      
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§2.1, pp. 279–280 (absorbing state); §3, p. 281 (cycle argument, Eq. 2, Theorem 1); p. 282 (scope of the converse, proof, Remark 1); Appendix A, pp. 286–287"
+              data-nb-note="The authors' PDF prints no page numbers. Pages assume PDF page 1 is p. 278 of the proceedings range 278–287 given by the ML Anthology record."
+              href="https://people.eecs.berkeley.edu/~russell/papers/icml99-shaping.pdf"
+              >ICML 1999 · Andrew Y. Ng, Daishi Harada and Stuart Russell, Policy Invariance Under Reward Transformations: Theory and Application to Reward Shaping</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§4.1, pp. 567–568 (Fig. 1, Eq. 3, terminal and time-limit potentials); §6, pp. 571–572"
+              href="https://www.ifaamas.org/Proceedings/aamas2017/pdfs/p565.pdf"
+              >AAMAS 2017 · Marek Grześ, Reward Shaping in Episodic Reinforcement Learning</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§3, p. 2 (potential 0 at terminal states and before a truncation)"
+              href="https://arxiv.org/abs/2502.01307"
+              >arXiv · Henrik Müller and Daniel Kudenko, Improving the Effectiveness of Potential-Based Reward Shaping in Reinforcement Learning, 2025</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§2, pp. 206–207 (Theorems 1 and 2, scope); §3, p. 208 (learning speed)"
+              href="https://www.jair.org/index.php/jair/article/view/10338"
+              >Journal of Artificial Intelligence Research · Eric Wiewiora, Potential-Based Shaping and Q-Value Initialization are Equivalent, 2003</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
