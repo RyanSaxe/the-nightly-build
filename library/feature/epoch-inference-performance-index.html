@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Epoch averages GB300 leads of 8× to 217× over the H100 into 25× · Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "epoch-inference-performance-index",
+        "template": "article",
+        "title": "Epoch averages GB300 leads of 8× to 217× over the H100 into 25×",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-21",
+        "tags": ["ai-hardware", "inference"],
+        "sources": 10,
+        "words": 1193,
+        "reading_minutes": 5,
+        "dek": "Jason Li, who built Epoch's inference index, has matched it to measured throughput for one model on a GB300 and published no such check for an H100.",
+        "harness": "Claude Code",
+        "model": "claude-sonnet"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">
+          Epoch averages GB300 leads of 8× to 217× over the H100 into 25×
+        </h1>
+        <p class="nb-dekline">
+          Jason Li, who built Epoch's inference index, has matched it to
+          measured throughput for one model on a GB300 and published no such
+          check for an H100.
+        </p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-11-21</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Concurrency at a set speed, averaged over four models</h2>
+        <p>
+          Epoch AI's Inference Performance Index (IPI), by Jason Li, says an
+          Nvidia GB300 delivers about 25 times an H100's inference capacity per chip on
+          agentic workloads, with only 2.5 times the 8-bit FLOP/s.<sup
+            class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Opening paragraphs"
+              >1</a
+            ></sup
+          >
+          Recomputed from Li's per-model scores, the GB300's lead runs from 8×
+          on one of the index's four models to 217× on another, so FLOP/s
+          undercount it on all four.<sup
+            class="nb-cite"
+            ><a
+              href="#s2"
+              data-nb-locator="Score table, columns only_0 to only_3"
+              >2</a
+            ></sup
+          >
+          The 25 is one way to average those four ratios. A geometric mean of
+          the same scores gives 59. Li's check of the index against measured
+          throughput has no H100 in it.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="What the comparison establishes; Other hardware and model checks"
+              >3</a
+            ></sup
+          >
+        </p>
+        <p>
+          For each chip and model, Nvidia's AISimulate gives the highest
+          concurrency per chip at every required output speed from 50 to 400
+          tokens per second per request, with 262,144 cached tokens of context
+          and prefill chips provisioned to keep up.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="How we calculate the IPI"
+              >1</a
+            ></sup
+          >
+          The result is a speed-of-light estimate, with no discount for software.<sup class="nb-cite"
+            ><a href="#s4" data-nb-locator="Key choices and why">4</a></sup
+          >
+          Concurrency falls as the required speed rises. The curve's area on a
+          log speed axis, divided by the GB300's area for the same model, is
+          the score, and the IPI is the plain average of four scores.<sup class="nb-cite"
+            ><a
+              href="#s1"
+              data-nb-locator="Combining the model comparisons"
+              >1</a
+            ></sup
+          >
+        </p>
+
+        <figure class="nb-figure">
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem">
+            <svg
+              viewBox="0 0 400 290"
+              role="img"
+              aria-label="Left panel: two illustrative curves of concurrent requests per chip falling as required output speed rises on a log axis from 50 to 400 tokens per second, with a larger shaded area under the GB300 curve than under the H100 curve."
+              style="flex: 1 1 18rem; min-width: 0; height: auto"
+            >
+              <text x="55" y="22" font-size="14" font-weight="600" style="fill: var(--ink); font-family: var(--sans)">The area</text>
+              <line x1="55" y1="40" x2="55" y2="225" style="stroke: var(--ink-soft)" stroke-width="1.5" />
+              <line x1="55" y1="225" x2="385" y2="225" style="stroke: var(--ink-soft)" stroke-width="1.5" />
+              <path d="M70,60 C170,70 270,120 370,200 L370,225 L70,225 Z" style="fill: var(--chart-1)" fill-opacity="0.28" />
+              <path d="M70,60 C170,70 270,120 370,200" fill="none" style="stroke: var(--chart-1)" stroke-width="2.5" />
+              <path d="M70,175 C170,185 270,205 370,218 L370,225 L70,225 Z" style="fill: var(--chart-2)" fill-opacity="0.45" />
+              <path d="M70,175 C170,185 270,205 370,218" fill="none" style="stroke: var(--chart-2)" stroke-width="2.5" />
+              <text x="82" y="140" font-size="12" style="fill: var(--ink); font-family: var(--sans)">GB300 NVL72: area = 1</text>
+              <text x="80" y="214" font-size="12" style="fill: var(--ink); font-family: var(--sans)">H100: area = score</text>
+              <g font-size="11" text-anchor="middle" style="fill: var(--ink-soft); font-family: var(--sans)">
+                <text x="70" y="241">50</text>
+                <text x="170" y="241">100</text>
+                <text x="270" y="241">200</text>
+                <text x="370" y="241">400</text>
+                <text x="220" y="260">required speed, tokens/s per request (log)</text>
+                <text transform="translate(16 132) rotate(-90)">concurrent requests per chip</text>
+              </g>
+            </svg>
+            <svg
+              viewBox="0 0 400 290"
+              role="img"
+              aria-label="Right panel: bars of the H100's four scores relative to the GB300, 0.125 for Qwen3-Coder, 0.023 for GLM-5.2, 0.006 for Kimi K3 and 0.005 for the MAI proxy, with a dashed line at their mean of 0.040."
+              style="flex: 1 1 18rem; min-width: 0; height: auto"
+            >
+              <text x="55" y="22" font-size="14" font-weight="600" style="fill: var(--ink); font-family: var(--sans)">The mean</text>
+              <line x1="55" y1="40" x2="55" y2="225" style="stroke: var(--ink-soft)" stroke-width="1.5" />
+              <line x1="55" y1="225" x2="385" y2="225" style="stroke: var(--ink-soft)" stroke-width="1.5" />
+              <rect x="65" y="73" width="50" height="152" style="fill: var(--chart-2)" />
+              <rect x="135" y="197.5" width="50" height="27.5" style="fill: var(--chart-1)" />
+              <rect x="205" y="217.3" width="50" height="7.7" style="fill: var(--chart-1)" />
+              <rect x="275" y="219.4" width="50" height="5.6" style="fill: var(--chart-1)" />
+              <line x1="55" y1="176.8" x2="340" y2="176.8" stroke-dasharray="6 4" stroke-width="2" style="stroke: var(--ink)" />
+              <g font-size="11" text-anchor="middle" style="fill: var(--ink); font-family: var(--sans)">
+                <text x="90" y="67">0.125</text>
+                <text x="160" y="192">0.023</text>
+                <text x="230" y="212">0.006</text>
+                <text x="300" y="214">0.005</text>
+              </g>
+              <g font-size="11" text-anchor="start" style="fill: var(--ink); font-family: var(--sans)">
+                <text x="346" y="172">mean</text>
+                <text x="346" y="185">0.040</text>
+              </g>
+              <g font-size="11" text-anchor="middle" style="fill: var(--ink-soft); font-family: var(--sans)">
+                <text x="90" y="241">Qwen3-Coder</text>
+                <text x="160" y="241">GLM-5.2</text>
+                <text x="230" y="241">Kimi K3</text>
+                <text x="300" y="241">MAI proxy</text>
+                <text transform="translate(16 132) rotate(-90)">H100 score, GB300 = 1</text>
+              </g>
+            </svg>
+          </div>
+          <figcaption>
+            Fig. 1 · How a score is made. Left, illustrative curves. Right, the
+            H100's four scores to scale, with Qwen3-Coder at 79 percent of
+            their sum.<sup
+              class="nb-cite"
+              ><a href="#s1" data-nb-locator="How we calculate the IPI">1</a></sup
+            ><sup class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Score matrix, row H100 SXM · FP8 · 400G"
+                >2</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="harmonic-mean" id="harmonic-mean">
+        <h2>A harmonic mean of four ratios</h2>
+        <p>
+          The H100's scores are 0.125 on Qwen3-Coder 480B, 0.023 on GLM-5.2,
+          0.006 on Kimi K3 and 0.005 on a proxy for MAI-Base-2.<sup
+            class="nb-cite"
+            ><a href="#s2" data-nb-locator="Model-basket sensitivity">2</a></sup
+          >
+          Their mean is 0.0397, and one divided by that is the 25. Averaging
+          scores with the GB300 in the denominator is the same as taking the
+          harmonic mean of the GB300-to-H100 ratios, here 8.0, 44, 159 and 217.
+          A harmonic mean stays near its smallest member, which is Qwen's.
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="epoch-inference-performance-index/chart-1.png"
+            alt="Bar chart on a log axis of the GB300's lead over the H100 on each model: 8.0 times on Qwen3-Coder 480B, 44 on GLM-5.2, 159 on Kimi K3 and 217 on the MAI-Base-2 proxy. Horizontal lines mark the 8-bit FLOP/s ratio of 2.5, the index's arithmetic mean of scores at 25.2 and the geometric mean at 59.1."
+          />
+          <figcaption>
+            Fig. 2 · GB300 NVL72 over H100 per chip, by model, on a log axis.
+            Ratios are one divided by Li's per-model scores; the FLOP/s
+            ratio is dense FP8.<sup class="nb-cite"
+              ><a
+                href="#s2"
+                data-nb-locator="Score matrix, columns only_0 to only_3"
+                >2</a
+              ></sup
+            ><sup class="nb-cite"
+              ><a
+                href="#s5"
+                data-nb-locator="Row H100 SXM5 80GB and GB300, FP8 performance (FLOP/s)"
+                >5</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          In a footnote, Epoch's report says an arithmetic mean "preserves a
+          chip's contribution on models it serves well," while a geometric mean
+          "penalizes uneven performance more strongly, substantially lowering
+          Hopper's scores," in exchange for comparisons that do not depend on
+          the reference chip.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Footnote 8">1</a></sup
+          >
+          Across Li's 28 named scenarios, leaving aside those that keep one
+          model or one speed, the ratio runs from 19.5 with the proxy left out
+          to 89.5 with Qwen left out.<sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Scenario columns, without_0 to without_3"
+              >2</a
+            ></sup
+          >
+          The published 25 sits near the bottom of that range.
+        </p>
+        <p>
+          Li matched GB300 Kimi K3 throughput from SemiAnalysis's InferenceX
+          benchmark to within 11.6 percent over five points, but only after
+          halving the modelled throughput. At undiscounted speed-of-light the
+          gap is 256.3 percent, and other chip and model pairs differ by 40 to
+          344 percent.<sup class="nb-cite"
+            ><a
+              href="#s3"
+              data-nb-locator="The five-point table; Other hardware and model checks"
+              >3</a
+            ></sup
+          >
+          The validation has no H100 row, and Li writes that 12 percent is
+          "not a universal 12% error bar on the index." He lists a check on
+          Qwen, which supplies 79 percent of the H100's score, as work still to
+          do.<sup class="nb-cite"
+            ><a href="#s3" data-nb-locator="What the comparison establishes; The five-point result, worked through (next evidence)"
+              >3</a
+            ></sup
+          >
+          On DeepSeek R1 at 8k input and 1k output tokens in FP8, InferenceX
+          measured the GB300 at 11.8, 25.5
+          and 35.9 times an H100 per chip at 45, 71 and 97 tokens per second per
+          user.<sup class="nb-cite"
+            ><a
+              href="#s6"
+              data-nb-locator="Table, Throughput (tok/s/chip)"
+              data-nb-note="Figures read from the page's per-chip throughput table; the ratios are computed from them."
+              >6</a
+            ></sup
+          >
+          Epoch's 25 falls inside that range, and the target speed moves the
+          ratio threefold.
+        </p>
+      </section>
+
+      <section data-nb-section="chip-and-rack" id="chip-and-rack">
+        <h2>13.6× from the chip, 1.85× from the rack</h2>
+        <p>
+          On Epoch's scores the 25 factors into two steps. An H100 to a B300 in an
+          eight-GPU HGX node is 13.6×. The same GPU in a 72-GPU GB300 NVL72
+          rack adds 1.85×, which the report credits to the larger scale-up
+          domain.<sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Interpreting the IPI">1</a></sup
+          ><sup class="nb-cite"
+            ><a href="#s2" data-nb-locator="Score matrix, rows H100, B300, GB300"
+              >2</a
+            ></sup
+          >
+        </p>
+
+        <table class="nb-table">
+          <caption>
+            Index ratios against per-GPU datasheet ratios.<sup class="nb-cite"
+              ><a href="#s2" data-nb-locator="Score matrix">2</a></sup
+            ><sup class="nb-cite"
+              ><a
+                href="#s5"
+                data-nb-locator="Columns FP8 performance, Memory bandwidth, Memory"
+                >5</a
+              ></sup
+            >
+          </caption>
+          <thead>
+            <tr>
+              <th class="txt">Step</th>
+              <th>Index</th>
+              <th>FP8 FLOP/s</th>
+              <th>HBM bandwidth</th>
+              <th>HBM capacity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt">H100 to B300 HGX</td>
+              <td>13.6×</td>
+              <td>2.27×</td>
+              <td>2.31×</td>
+              <td>3.6×</td>
+            </tr>
+            <tr>
+              <td class="txt">B300 HGX to GB300 NVL72</td>
+              <td>1.85×</td>
+              <td>1.11×</td>
+              <td>1.03×</td>
+              <td>1.0×</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          In the first step the datasheet ratios run from 2.3 to 3.6 and the
+          index credits 13.6. Epoch does not attribute the difference, and none
+          of these sources separates bandwidth from capacity from number format.
+          SemiAnalysis reports "up to" 100× for the GB300 in FP4 and 65× in
+          FP8, both against an FP8 H100, so FP4 adds about 1.5× if both maxima
+          come from one operating point.<sup class="nb-cite"
+            ><a href="#s7" data-nb-locator="Key Observations and Results"
+              >7</a
+            ></sup
+          >
+          The index models the H100, H200 and TPU v7 in FP8 and requests FP4 or
+          an FP4 proxy for its other 20 profiles, and Epoch says it has not established that the
+          precisions preserve equal model quality.<sup class="nb-cite"
+            ><a
+              href="#s8"
+              data-nb-locator="Workload and model assumptions"
+              >8</a
+            ></sup
+          ><sup class="nb-cite"
+            ><a href="#s1" data-nb-locator="Notes">1</a></sup
+          >
+        </p>
+      </section>
+
+      <section data-nb-section="capacity-series" id="capacity-series">
+        <h2>The capacity series tracks what was bought</h2>
+        <p>
+          Epoch's Data Insight of 18 November applies the scores to chips sold
+          to date. Capacity in index units grew 4.6× between Q2 2025 and Q2
+          2026, against 2.6× for peak 8-bit compute.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="Opening paragraph">9</a></sup
+          >
+          Both reproduce from the published CSV at 4.58× and 2.59×, and their
+          ratio is the 77 percent rise in capacity per unit of compute.<sup
+            class="nb-cite"
+            ><a href="#s10" data-nb-locator="Total columns, Q2 2025 and Q2 2026"
+              >10</a
+            ></sup
+          >
+          The index fixes each chip's score, so no chip in the series gets
+          faster: Blackwell Ultra carries 0.323 GB300 units per H100 of FP8
+          compute in every quarter. What changes is the stock. Blackwell Ultra
+          went from 4.5 to 30.6 percent of peak compute, Google's TPU v7 from
+          zero to 9.0, and Hopper fell from 34.1 to 13.7.<sup class="nb-cite"
+            ><a href="#s10" data-nb-locator="Peak 8-bit compute by family">10</a></sup
+          >
+        </p>
+
+        <figure class="nb-figure">
+          <img
+            src="epoch-inference-performance-index/chart-2.png"
+            alt="Waterfall chart of capacity per H100 of peak compute rising from 0.119 in Q2 2025 to 0.211 in Q2 2026. Blackwell Ultra mix adds 0.084 and TPU v7 mix adds 0.029; Blackwell mix and Hopper mix each subtract 0.011, other families' mix subtracts 0.004, and score drift inside pooled families adds 0.004."
+          />
+          <figcaption>
+            Fig. 3 · Change in capacity per H100 of peak 8-bit compute, split
+            into mix effects and score drift by a midpoint rule, from Epoch's
+            capacity CSV.<sup
+              class="nb-cite"
+              ><a href="#s10" data-nb-locator="Family columns, GB300e and H100e"
+                >10</a
+              ></sup
+            >
+          </figcaption>
+        </figure>
+
+        <p>
+          Split by family, 95 percent of the rise from 0.119 to 0.211 is mix and
+          5 percent is score drift inside families that pool several chips. Holding every family at its Q2 2025 score under
+          the Q2 2026 mix gives 4.50× where the series has 4.58×.<sup
+            class="nb-cite"
+            ><a href="#s10" data-nb-locator="Family columns">10</a></sup
+          >
+          The Data Insight stresses Blackwell and Blackwell Ultra, 74 percent of added capacity.<sup class="nb-cite"
+            ><a href="#s9" data-nb-locator="Analysis">9</a></sup
+          >
+          TPU v7 is 17.4 percent of it, about what Blackwell B200 and GB200
+          add together.<sup class="nb-cite"
+            ><a href="#s10" data-nb-locator="Difference of Q2 2026 and Q2 2025 columns"
+              >10</a
+            ></sup
+          >
+        </p>
+        <p>
+          The 4.6× therefore measures which chips were bought, scored by the
+          index. Its 4.2 to 5.1× interval covers shipments and hardware mix
+          only.<sup
+            class="nb-cite"
+            ><a href="#s9" data-nb-locator="Uncertainty">9</a></sup
+          >
+          Li assigns the scores themselves no confidence interval.<sup class="nb-cite"
+            ><a href="#s8" data-nb-locator="What the evidence supports">8</a></sup
+          >
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://epoch.ai/publications/inference-performance-index"
+              >Epoch AI · Inference Performance Index (9 November 2026)</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/jasonlizhengjian/inference-performance-index/blob/master/docs/research/methodology-sensitivity/README.md"
+              >Jason Li · IPI methodology sensitivity study</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/jasonlizhengjian/inference-performance-index/blob/master/docs/research/inferencex-validation/README.md"
+              >Jason Li · IPI against InferenceX observations</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://epoch.ai/data/machine-learning-hardware-documentation/methodology"
+              >Epoch AI · IPI version 1 documentation</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://epoch.ai/data/machine-learning-hardware"
+              >Epoch AI · Machine Learning Hardware database</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://inferencex.semianalysis.com/compare/deepseek-r1-gb300-vs-h100"
+              >SemiAnalysis · InferenceX, DeepSeek R1 GB300 vs H100</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://newsletter.semianalysis.com/p/inferencex-v2-nvidia-blackwell-vs"
+              >SemiAnalysis · InferenceX v2 (16 February 2026)</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://github.com/jasonlizhengjian/inference-performance-index/blob/master/docs/METHODOLOGY.md"
+              >Jason Li · IPI v1 methodology</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://epoch.ai/data-insights/agentic-inference-capacity-growth"
+              >Epoch AI · Agentic inference capacity growth (18 November 2026)</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://epoch.ai/data/charts/agentic-inference-capacity-growth/agentic_inference_capacity_by_chip_family_quarterly.csv"
+              >Epoch AI · Capacity by chip family, quarterly (CSV)</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
