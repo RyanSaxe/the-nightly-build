@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A courier paid for every move never delivers · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "reward-scale",
+        "template": "lesson",
+        "title": "A courier paid for every move never delivers",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-21",
+        "tags": ["reward-scale", "reward-clipping", "reward-normalization", "reward-design", "value-iteration", "q-learning", "environment-design"],
+        "sources": 8,
+        "words": 4388,
+        "reading_minutes": 19,
+        "dek": "On a seven-by-four delivery grid, paying in cents keeps every optimal route, and clipping rewards to [−1, 1] sends the courier from its depot to the near drop-off.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">A courier paid for every move never delivers</h1>
+        <p class="nb-dekline">On a seven-by-four delivery grid, paying in cents keeps every optimal route, and clipping rewards to [−1, 1] sends the courier from its depot to the near drop-off.</p>
+        <div class="nb-byline">
+          <span>19 min read</span><span>2026-11-21</span>
+        </div>
+      </header>
+
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Before a courier agent trains, its rewards may be rewritten for the
+          learner's sake: paid in cents instead of dollars, clipped to
+          [−1, 1], shifted by a constant on every move, or divided by a running
+          statistic. The optimal policy is the one whose value is largest in
+          every state, so the question is whether a change can reorder the
+          policies' values. Multiplying every reward by a positive number
+          multiplies every return by it, and the order stays. Clipping changes
+          the ratios between rewards. Adding a constant adds an amount that
+          grows with the episode's length, which differs from policy to
+          policy wherever episodes can end. Ng, Harada and Russell named this
+          question policy invariance under reward transformations. Two short
+          derivations will let you take a reward wrapper and say whether it
+          can change the optimal policy of the environment it wraps.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>:
+            value iteration and the Bellman optimality backup, which solve
+            every version of the courier exactly.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            Q-learning, and why its estimates settle at the q<sub>*</sub> of
+            whatever reward it receives.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/termination-and-truncation.html">Q-learning that treats its time limit as terminal learns the values of a different grid</a>:
+            TimeLimit, and why the target still bootstraps when the limit
+            cuts an episode before the courier delivers.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/potential-based-shaping.html">A progress reward paid as a change in potential leaves the optimal policy alone</a>:
+            the telescoping sum of shaping rewards, and why the guarantee
+            needs potential 0 where an episode ends.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="http://incompleteideas.net/book/RLbook2020.pdf#page=83">Sutton and Barto, Exercises 3.15 and 3.16</a>:
+            the two questions about an added constant that this lesson
+            answers, posed on p. 61 without a printed answer.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>A fee ten times as large is worth five more moves</h2>
+        <p>
+          A courier works a grid of 7 columns and 4 rows. It starts at
+          the depot, on the left edge one row from the top, and moves up,
+          right, down or left. A move into the edge leaves it where it was.
+          Two cells are drop-offs, and a move into either ends the episode.
+          The near one, two moves from the depot, pays 1. The far one, in the
+          top right corner seven moves away, pays 10. Every other move pays
+          −1, a common charge for asking an agent to be quick.<sup class="nb-cite"><a href="#s1" data-nb-locator="§3.2, p. 53">1</a></sup>
+          Read the rewards as dollars: a fee for each delivery and a dollar
+          of fuel for each move. The discount is γ = 0.95 throughout.
+        </p>
+        <p>
+          From the depot, the near route is one fuel charge and then the
+          fee, worth −1 + 0.95 × 1 = −0.05. The far route is six charges and
+          then a fee discounted by 0.95⁶, worth −5.30 + 7.35 = 2.05. The far
+          drop-off wins by 2.10, so the optimal courier spends five more
+          moves for the larger fee. Value iteration finds the optimal move in
+          every cell (Fig. 1).
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 362 252" role="img" aria-label="The courier's 7 by 4 grid under the dollar reward. The depot is on the left edge, one row from the top. The near drop-off, paying 1, is one row below and one column right of the depot; the far drop-off, paying 10, is in the top right corner. Every cell is shaded blue for delivering far except three cells beside and below the near drop-off, shaded amber for delivering near. From the depot the arrow points up, toward the top row and the far drop-off." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<text x="20" y="20" text-anchor="start" style="font-family: var(--sans); font-size: 12px; font-weight: 600; fill: var(--ink)">dollars: each move −1</text>
+<rect x="20" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="34" y1="55" x2="47" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="54,55 47,60 47,50" style="fill: var(--ink)"/>
+<rect x="66" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="80" y1="55" x2="93" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="100,55 93,60 93,50" style="fill: var(--ink)"/>
+<rect x="112" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="126" y1="55" x2="139" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="146,55 139,60 139,50" style="fill: var(--ink)"/>
+<rect x="158" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="172" y1="55" x2="185" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="192,55 185,60 185,50" style="fill: var(--ink)"/>
+<rect x="204" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="218" y1="55" x2="231" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="238,55 231,60 231,50" style="fill: var(--ink)"/>
+<rect x="250" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="264" y1="55" x2="277" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="284,55 277,60 277,50" style="fill: var(--ink)"/>
+<rect x="296" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.55; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="319" y="54" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">far</text>
+<text x="319" y="70" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">+10</text>
+<rect x="20" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="43" y1="105" x2="43" y2="92" style="stroke: var(--ink); stroke-width: 2"/><polygon points="43,85 48,92 38,92" style="fill: var(--ink)"/>
+<text x="43" y="118" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; font-weight: 400; fill: var(--ink-soft)">depot</text>
+<rect x="66" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="89" y1="110" x2="89" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="89,90 94,97 84,97" style="fill: var(--ink)"/>
+<rect x="112" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="135" y1="110" x2="135" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,90 140,97 130,97" style="fill: var(--ink)"/>
+<rect x="158" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="181" y1="110" x2="181" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="181,90 186,97 176,97" style="fill: var(--ink)"/>
+<rect x="204" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="227" y1="110" x2="227" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="227,90 232,97 222,97" style="fill: var(--ink)"/>
+<rect x="250" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="110" x2="273" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,90 278,97 268,97" style="fill: var(--ink)"/>
+<rect x="296" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="110" x2="319" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,90 324,97 314,97" style="fill: var(--ink)"/>
+<rect x="20" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="34" y1="147" x2="47" y2="147" style="stroke: var(--ink); stroke-width: 2"/><polygon points="54,147 47,152 47,142" style="fill: var(--ink)"/>
+<rect x="66" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.55; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="89" y="146" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">near</text>
+<text x="89" y="162" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">+1</text>
+<rect x="112" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="135" y1="156" x2="135" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,136 140,143 130,143" style="fill: var(--ink)"/>
+<rect x="158" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="181" y1="156" x2="181" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="181,136 186,143 176,143" style="fill: var(--ink)"/>
+<rect x="204" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="227" y1="156" x2="227" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="227,136 232,143 222,143" style="fill: var(--ink)"/>
+<rect x="250" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="156" x2="273" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,136 278,143 268,143" style="fill: var(--ink)"/>
+<rect x="296" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="156" x2="319" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,136 324,143 314,143" style="fill: var(--ink)"/>
+<rect x="20" y="172" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="43" y1="202" x2="43" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="43,182 48,189 38,189" style="fill: var(--ink)"/>
+<rect x="66" y="172" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="89" y1="202" x2="89" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="89,182 94,189 84,189" style="fill: var(--ink)"/>
+<rect x="112" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="135" y1="202" x2="135" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,182 140,189 130,189" style="fill: var(--ink)"/>
+<rect x="158" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="181" y1="202" x2="181" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="181,182 186,189 176,189" style="fill: var(--ink)"/>
+<rect x="204" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="227" y1="202" x2="227" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="227,182 232,189 222,189" style="fill: var(--ink)"/>
+<rect x="250" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="202" x2="273" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,182 278,189 268,189" style="fill: var(--ink)"/>
+<rect x="296" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="202" x2="319" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,182 324,189 314,189" style="fill: var(--ink)"/>
+<rect x="20" y="228" width="12" height="12" style="fill: var(--chart-1); fill-opacity: 0.4; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="37" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 11px; font-weight: 400; fill: var(--ink)">delivers near</text>
+<rect x="133.60000000000002" y="228" width="12" height="12" style="fill: var(--chart-2); fill-opacity: 0.4; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="150.6" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 11px; font-weight: 400; fill: var(--ink)">delivers far</text>
+</svg>
+          <figcaption>
+            Fig. 1 · Where the optimal courier delivers from each cell under
+            the dollar reward at γ = 0.95, by value iteration. Each arrow is
+            the cell's optimal move, and where two moves tie it shows the
+            first of up, right, down and left. From the output of
+            <code>courier.py</code>.
+          </figcaption>
+        </figure>
+        <p>
+          Three cells in the bottom left corner deliver near. From the cell
+          left of the near drop-off, the near fee is one move away and worth
+          1, while the far drop-off is eight moves away and worth 0.95.
+        </p>
+        <p>
+          In <code>courier.py</code>, <code>rule</code> returns the next
+          cell, the reward and whether the episode terminated.
+          <code>Courier</code> wraps it in Gymnasium's reset and step, and
+          <code>value_iteration</code> sweeps the
+          <a href="../reinforcement-learning/finding-optimal-policies.html">Bellman optimality backup</a>
+          over the same function. Each entry of <code>REWARDS</code> is a
+          reward version, a function applied to every reward.
+          <code>uv run courier.py</code> prints what each choice is worth
+          from the depot under each version, in under a second.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">courier.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""A courier on a 7 x 4 grid, solved exactly under five versions of its reward.
+
+A move into the near drop-off pays NEAR_FEE, a move into the far drop-off pays
+FAR_FEE, and either ends the episode. Every other move pays STEP, including a
+move into the edge, which leaves the courier where it was. A reward version is
+a function applied to every reward the courier receives.
+"""
+import gymnasium as gym
+import numpy as np
+
+W, H, GAMMA = 7, 4, 0.95
+DEPOT, NEAR, FAR = 7, 15, 6  # cell = 7 * row + column, with row 0 at the top
+NEAR_FEE, FAR_FEE, STEP = 1.0, 10.0, -1.0
+MOVES = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # up, right, down, left
+REWARDS = {  # name: the function applied to every reward
+    "dollars": lambda r: r,
+    "cents": lambda r: 100 * r,
+    "clipped": lambda r: np.clip(r, -1, 1),
+    "fuel-free": lambda r: r + 1,
+    "hourly": lambda r: r + 2,
+}
+LIVE = [s for s in range(W * H) if s not in (NEAR, FAR)]
+
+
+def rule(cell, action):
+    """Next cell, reward and terminated, before any reward version applies."""
+    row = min(max(cell // W + MOVES[action][0], 0), H - 1)
+    col = min(max(cell % W + MOVES[action][1], 0), W - 1)
+    nxt = W * row + col
+    if nxt in (NEAR, FAR):
+        return nxt, NEAR_FEE if nxt == NEAR else FAR_FEE, True
+    return nxt, STEP, False
+
+
+class Courier(gym.Env):
+    """Observations are cells 0 to 27, actions are up, right, down and left.
+    An episode starts in options["start"], or else in a random live cell."""
+    observation_space = gym.spaces.Discrete(W * H)
+    action_space = gym.spaces.Discrete(4)
+
+    def reset(self, *, seed=None, options=None):
+        super().reset(seed=seed)
+        self.cell = (options or {}).get("start")
+        if self.cell is None:
+            self.cell = LIVE[self.np_random.integers(len(LIVE))]
+        return self.cell, {}
+
+    def step(self, action):
+        self.cell, reward, terminated = rule(self.cell, action)
+        return self.cell, reward, terminated, False, {}
+
+
+def value_iteration(version, tol=1e-12):
+    """q*[cell, move] under one reward version, by sweeping the Bellman
+    optimality backup over rule() until no value moves by more than tol."""
+    out = [[rule(s, a) for a in range(4)] for s in range(W * H)]
+    nxt, rew, done = (np.array([[o[i] for o in row] for row in out])
+                      for i in range(3))
+    rew, v = REWARDS[version](rew), np.zeros(W * H)
+    while True:
+        q = rew + GAMMA * ~done * v[nxt]
+        new = q.max(axis=1)
+        new[[NEAR, FAR]] = 0.0
+        if np.abs(new - v).max() &lt; tol:
+            return q
+        v = new
+
+
+def delivers(q, cell, limit=100):
+    """Where q's greedy moves take the courier from cell: n, f, or - for never."""
+    for _ in range(limit):
+        if cell in (NEAR, FAR):
+            return "n" if cell == NEAR else "f"
+        cell = rule(cell, int(q[cell].argmax()))[0]
+    return "-"
+
+
+def route(version, moves, fee):
+    """The return of a shortest route to a drop-off: moves - 1 steps, a fee."""
+    f = REWARDS[version]
+    return (sum(GAMMA**t * f(STEP) for t in range(moves - 1))
+            + GAMMA ** (moves - 1) * f(fee))
+
+
+if __name__ == "__main__":
+    q = {name: value_iteration(name) for name in REWARDS}
+    print(f"gamma {GAMMA}; the depot is 2 moves from near and 7 from far")
+    print("reward     near route  far route  never delivering  v*(depot)")
+    for name, f in REWARDS.items():
+        print(f"{name:10s} {route(name, 2, NEAR_FEE):10.2f} "
+              f"{route(name, 7, FAR_FEE):10.2f} {f(STEP) / (1 - GAMMA):16.2f} "
+              f"{q[name][DEPOT].max():10.2f}")
+    print("cents against dollars: same greedy move in every cell:",
+          np.array_equal(q["cents"][LIVE].argmax(1), q["dollars"][LIVE].argmax(1)))
+    print("  largest |q*(cents) - 100 q*(dollars)|:",
+          f"{np.abs(q['cents'] - 100 * q['dollars']).max():.0e}")
+    print("each cell's greedy move, and where it delivers: n near, f far, - never")
+    for name in ("dollars", "clipped", "fuel-free", "hourly"):
+        print(f"  {name}")
+        for row in range(H):
+            print("   ", " ".join({NEAR: " N", FAR: " F"}.get(
+                s, "^&gt;v&lt;"[q[name][s].argmax()] + delivers(q[name], s))
+                for s in range(W * row, W * row + W)))</code></pre>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run courier.py</span><span>text</span></div>
+          <pre><code data-language="text">gamma 0.95; the depot is 2 moves from near and 7 from far
+reward     near route  far route  never delivering  v*(depot)
+dollars         -0.05       2.05           -20.00       2.05
+cents           -5.00     205.28         -2000.00     205.28
+clipped         -0.05      -4.56           -20.00      -0.05
+fuel-free        1.90       8.09             0.00       8.09
+hourly           3.85      14.12            20.00      20.00
+cents against dollars: same greedy move in every cell: True
+  largest |q*(cents) - 100 q*(dollars)|: 1e-13
+each cell's greedy move, and where it delivers: n near, f far, - never
+  dollars
+    &gt;f &gt;f &gt;f &gt;f &gt;f &gt;f  F
+    ^f ^f ^f ^f ^f ^f ^f
+    &gt;n  N ^f ^f ^f ^f ^f
+    ^n ^n ^f ^f ^f ^f ^f
+  clipped
+    &gt;n vn vn &gt;f &gt;f &gt;f  F
+    &gt;n vn vn vn ^f ^f ^f
+    &gt;n  N &lt;n &lt;n &lt;n ^f ^f
+    ^n ^n ^n ^n ^n ^f ^f
+  fuel-free
+    &gt;f &gt;f &gt;f &gt;f &gt;f &gt;f  F
+    ^f ^f ^f ^f ^f ^f ^f
+    ^f  N ^f ^f ^f ^f ^f
+    ^f &gt;f ^f ^f ^f ^f ^f
+  hourly
+    ^- ^- ^- ^- ^- ^-  F
+    ^- ^- ^- ^- ^- ^- &gt;-
+    ^-  N ^- ^- ^- ^- ^-
+    ^- &gt;- ^- ^- ^- ^- ^-</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="cents" id="cents">
+        <h2>Paying in cents multiplies every value by 100</h2>
+        <p>
+          Now pay the courier in cents. Every reward is multiplied by 100, so
+          a move costs 100 and the fees are 100 and 1,000. In the cents row
+          of the output, every value from the depot is 100 times the dollar
+          row's, and every cell keeps its greedy move.
+        </p>
+        <p>
+          To see why, multiply every reward by a number k. A return weights
+          each reward by a power of γ and adds them up, so k comes out of the
+          sum.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">G'_t = \sum_{j=0}^{\infty} \gamma^j \, \htmlClass{nb-mc1}{k} R_{t+j+1} = \htmlClass{nb-mc1}{k}\, G_t</div>
+          <figcaption>The return under rewards multiplied by k. An episode that ends adds zeros after its last reward, so the same line covers it.</figcaption>
+        </figure>
+        <p>
+          A <a href="../reinforcement-learning/environments-and-the-rl-problem.html">value</a>
+          is an average of returns, so v′<sub>π</sub>(s) = k v<sub>π</sub>(s)
+          for every policy π and every state s. When k &gt; 0, multiplying
+          both sides of v<sub>π</sub>(s) &gt; v<sub>π′</sub>(s) by k keeps
+          the inequality. A policy whose value is largest in every state
+          under one reward is largest under the other, so the two rewards
+          have the same optimal policies, with v′<sub>*</sub> = k v<sub>*</sub>
+          and q′<sub>*</sub> = k q<sub>*</sub>. The greedy move in a cell has
+          the largest q<sub>*</sub>, and multiplying the cell's four action
+          values by the same positive k leaves the largest one largest. A
+          negative k reverses every inequality and makes the worst policy
+          optimal. With k = 0 every policy is optimal.
+        </p>
+        <p>
+          Ng, Harada and Russell state the result in a footnote: beyond their
+          shaping theorem, the only change with the same kind of guarantee is
+          to rescale rewards by a fixed positive factor.<sup class="nb-cite"><a href="#s2" data-nb-locator="footnote 3, PDF p. 3">2</a></sup>
+          The derivation is about the expected discounted return, the
+          objective of every lesson so far. Under the entropy-regularized
+          objective of soft actor-critic, which a later stage teaches, the
+          reward's scale changes the learned policy.<sup class="nb-cite"><a href="#s3" data-nb-locator="§5.2, paragraph “Reward scale.”, p. 7">3</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="clipped-fee" id="clipped-fee">
+        <h2>Clipped at 1, the far fee no longer pays for its extra moves</h2>
+        <p>
+          Clipping to [−1, 1] replaces each reward with the nearest number
+          in that range. On the courier it changes one number. The far fee of
+          10 becomes 1, while the fuel charge of −1 and the near fee of 1 are
+          already in range. From the depot, the far route is now worth
+          −5.30 + 0.95⁶ × 1 = −4.56, and the near route is still worth −0.05.
+          With equal fees, the nearer drop-off wins. Sixteen of the 26 cells
+          now deliver near, every cell that is fewer moves from the near
+          drop-off than from the far one (Fig. 2).
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 362 252" role="img" aria-label="The same grid with rewards clipped to between minus 1 and 1, so both drop-offs pay 1. Every cell closer to the near drop-off now delivers near, 16 of the 26 cells, including the depot, whose arrow now points right toward the near drop-off. Thirteen cells that delivered far under the dollar reward are outlined because they now deliver near; the ten cells nearest the far drop-off still deliver far." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<text x="20" y="20" text-anchor="start" style="font-family: var(--sans); font-size: 12px; font-weight: 600; fill: var(--ink)">clipped to [−1, 1]: each move −1</text>
+<rect x="20" y="34" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="22.5" y="36.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="34" y1="55" x2="47" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="54,55 47,60 47,50" style="fill: var(--ink)"/>
+<rect x="66" y="34" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="68.5" y="36.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="89" y1="46" x2="89" y2="59" style="stroke: var(--ink); stroke-width: 2"/><polygon points="89,66 84,59 94,59" style="fill: var(--ink)"/>
+<rect x="112" y="34" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="114.5" y="36.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="135" y1="46" x2="135" y2="59" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,66 130,59 140,59" style="fill: var(--ink)"/>
+<rect x="158" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="172" y1="55" x2="185" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="192,55 185,60 185,50" style="fill: var(--ink)"/>
+<rect x="204" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="218" y1="55" x2="231" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="238,55 231,60 231,50" style="fill: var(--ink)"/>
+<rect x="250" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="264" y1="55" x2="277" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="284,55 277,60 277,50" style="fill: var(--ink)"/>
+<rect x="296" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.55; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="319" y="54" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">far</text>
+<text x="319" y="70" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">+1</text>
+<rect x="20" y="80" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="22.5" y="82.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="34" y1="96" x2="47" y2="96" style="stroke: var(--ink); stroke-width: 2"/><polygon points="54,96 47,101 47,91" style="fill: var(--ink)"/>
+<text x="43" y="118" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; font-weight: 400; fill: var(--ink-soft)">depot</text>
+<rect x="66" y="80" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="68.5" y="82.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="89" y1="92" x2="89" y2="105" style="stroke: var(--ink); stroke-width: 2"/><polygon points="89,112 84,105 94,105" style="fill: var(--ink)"/>
+<rect x="112" y="80" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="114.5" y="82.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="135" y1="92" x2="135" y2="105" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,112 130,105 140,105" style="fill: var(--ink)"/>
+<rect x="158" y="80" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="160.5" y="82.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="181" y1="92" x2="181" y2="105" style="stroke: var(--ink); stroke-width: 2"/><polygon points="181,112 176,105 186,105" style="fill: var(--ink)"/>
+<rect x="204" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="227" y1="110" x2="227" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="227,90 232,97 222,97" style="fill: var(--ink)"/>
+<rect x="250" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="110" x2="273" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,90 278,97 268,97" style="fill: var(--ink)"/>
+<rect x="296" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="110" x2="319" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,90 324,97 314,97" style="fill: var(--ink)"/>
+<rect x="20" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="34" y1="147" x2="47" y2="147" style="stroke: var(--ink); stroke-width: 2"/><polygon points="54,147 47,152 47,142" style="fill: var(--ink)"/>
+<rect x="66" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.55; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="89" y="146" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">near</text>
+<text x="89" y="162" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">+1</text>
+<rect x="112" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="114.5" y="128.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="144" y1="147" x2="131" y2="147" style="stroke: var(--ink); stroke-width: 2"/><polygon points="124,147 131,142 131,152" style="fill: var(--ink)"/>
+<rect x="158" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="160.5" y="128.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="190" y1="147" x2="177" y2="147" style="stroke: var(--ink); stroke-width: 2"/><polygon points="170,147 177,142 177,152" style="fill: var(--ink)"/>
+<rect x="204" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="206.5" y="128.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="236" y1="147" x2="223" y2="147" style="stroke: var(--ink); stroke-width: 2"/><polygon points="216,147 223,142 223,152" style="fill: var(--ink)"/>
+<rect x="250" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="156" x2="273" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,136 278,143 268,143" style="fill: var(--ink)"/>
+<rect x="296" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="156" x2="319" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,136 324,143 314,143" style="fill: var(--ink)"/>
+<rect x="20" y="172" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="43" y1="202" x2="43" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="43,182 48,189 38,189" style="fill: var(--ink)"/>
+<rect x="66" y="172" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="89" y1="202" x2="89" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="89,182 94,189 84,189" style="fill: var(--ink)"/>
+<rect x="112" y="172" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="114.5" y="174.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="135" y1="202" x2="135" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,182 140,189 130,189" style="fill: var(--ink)"/>
+<rect x="158" y="172" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="160.5" y="174.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="181" y1="202" x2="181" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="181,182 186,189 176,189" style="fill: var(--ink)"/>
+<rect x="204" y="172" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="206.5" y="174.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="227" y1="202" x2="227" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="227,182 232,189 222,189" style="fill: var(--ink)"/>
+<rect x="250" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="202" x2="273" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,182 278,189 268,189" style="fill: var(--ink)"/>
+<rect x="296" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="202" x2="319" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,182 324,189 314,189" style="fill: var(--ink)"/>
+<rect x="20" y="228" width="12" height="12" style="fill: var(--chart-1); fill-opacity: 0.4; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="37" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 11px; font-weight: 400; fill: var(--ink)">delivers near</text>
+<rect x="133.60000000000002" y="228" width="12" height="12" style="fill: var(--chart-2); fill-opacity: 0.4; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="150.6" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 11px; font-weight: 400; fill: var(--ink)">delivers far</text>
+<rect x="241.00000000000003" y="228" width="12" height="12" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<text x="258" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 11px; font-weight: 400; fill: var(--ink)">changed</text>
+</svg>
+          <figcaption>
+            Fig. 2 · Where the optimal courier delivers with every reward
+            clipped to [−1, 1], which makes both fees 1. Outlined cells
+            deliver somewhere other than in Fig. 1. From the output of
+            <code>courier.py</code>.
+          </figcaption>
+        </figure>
+        <p>
+          The scaling derivation needed one k for every reward. Clipping
+          multiplies the far fee by 1/10 and every other reward by 1, so the
+          ratios between rewards change, and with them the order of the
+          routes. A clip that touches no reward changes nothing, so whether a
+          clip moves the optimal policy depends on the task (Problem 1).
+        </p>
+        <p>
+          DQN, the network version of Q-learning that a later stage builds,
+          clipped Atari rewards to [−1, 1] during training, to make one
+          learning rate easier to use across 49 games. Its authors state the
+          cost: the agent cannot tell rewards of different size apart.<sup class="nb-cite"><a href="#s4" data-nb-locator="Methods, “Training details”, paragraph 1">4</a></sup>
+          Stable-Baselines3's <code>ClipRewardEnv</code> for Atari takes the
+          reward's sign instead.<sup class="nb-cite"><a href="#s5" data-nb-locator="ClipRewardEnv and its reward method">5</a></sup>
+          The two agree on Atari's whole-number score changes and part on a
+          reward such as 0.3, which clipping keeps and the sign turns into 1.
+        </p>
+      </section>
+
+      <section data-nb-section="added-constant" id="added-constant">
+        <h2>A constant added to every reward pays longer trips more</h2>
+        <p>
+          Now add a constant c to every reward, the fees included. Sutton and
+          Barto ask what this does in a task that never ends and in an
+          episodic task such as a maze, and print no answer.<sup class="nb-cite"><a href="#s1" data-nb-locator="Exercises 3.15 and 3.16, p. 61">1</a></sup>
+          Take an episode that terminates after N moves. The shift adds c to
+          each of its N rewards, with the powers of γ those rewards carry.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">G'_0 = \sum_{t=0}^{N-1} \gamma^t \bigl(R_{t+1} + c\bigr) = G_0 + \htmlClass{nb-mc1}{c\,\frac{1 - \gamma^{N}}{1 - \gamma}}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term">N</span><span>the moves until the episode terminates, infinite if it never does</span></li>
+            <li><span class="nb-math-term nb-mc1">c\,\frac{1 - \gamma^{N}}{1 - \gamma}</span><span>what the shift adds, a geometric sum that grows with N when c &gt; 0 and reaches c/(1 − γ) when the episode never ends</span></li>
+          </ul>
+          <figcaption>The return of an N-move episode with c added to every reward.</figcaption>
+        </figure>
+        <p>
+          In a continuing task, one with no terminal state, N is infinite
+          under every policy, and every return gains the same c/(1 − γ). Every
+          value rises by that amount and no policy's rank moves, which
+          answers the first exercise. In an episodic task the amount depends
+          on N, and N depends on the policy. With c &gt; 0, a policy whose
+          episodes last longer gains more, and one whose episodes never end
+          gains the most. That answers the second exercise: a constant can
+          change the optimal policy whenever episodes can end.
+        </p>
+        <p>
+          On the courier, c = 1 makes fuel free. A move pays 0, and the fees
+          become 2 and 11. The two-move route from the depot gains
+          1 + 0.95 = 1.95 and the seven-move route about 6, so the far
+          drop-off's lead grows. The three cells that delivered near now
+          deliver far (Fig. 3, fuel-free panel). From the cell left of the
+          near drop-off, a fee of 2 one move away loses to a fee of 11 eight
+          moves away, since the longer trip no longer burns fuel.
+        </p>
+        <p>
+          With c = 2 the courier is paid by the hour. Every move pays +1,
+          and the fees become 3 and 12. Staying out of both drop-offs forever
+          is worth 1 + 0.95 + 0.95² + ⋯ = 1/(1 − 0.95) = 20, the kind of
+          geometric sum that priced the loop in
+          <a href="../reinforcement-learning/specification-gaming.html">specification gaming</a>.
+          Delivering far from the depot is worth 14.12, so the optimal
+          courier never delivers, from any cell (Fig. 3, hourly panel). Here
+          the discount has to be below 1. At γ = 1 staying out would have no
+          finite value, and value iteration would not converge.
+        </p>
+        <figure class="nb-figure">
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem">
+<svg viewBox="0 0 362 252" role="img" aria-label="The grid with 1 added to every reward, so a move pays 0, the near drop-off 2 and the far drop-off 11. Every cell delivers far. The three cells beside and below the near drop-off are outlined, because they delivered near under the dollar reward." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="20" y="20" text-anchor="start" style="font-family: var(--sans); font-size: 12px; font-weight: 600; fill: var(--ink)">fuel-free, +1 on every reward: each move 0</text>
+<rect x="20" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="34" y1="55" x2="47" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="54,55 47,60 47,50" style="fill: var(--ink)"/>
+<rect x="66" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="80" y1="55" x2="93" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="100,55 93,60 93,50" style="fill: var(--ink)"/>
+<rect x="112" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="126" y1="55" x2="139" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="146,55 139,60 139,50" style="fill: var(--ink)"/>
+<rect x="158" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="172" y1="55" x2="185" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="192,55 185,60 185,50" style="fill: var(--ink)"/>
+<rect x="204" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="218" y1="55" x2="231" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="238,55 231,60 231,50" style="fill: var(--ink)"/>
+<rect x="250" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="264" y1="55" x2="277" y2="55" style="stroke: var(--ink); stroke-width: 2"/><polygon points="284,55 277,60 277,50" style="fill: var(--ink)"/>
+<rect x="296" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.55; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="319" y="54" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">far</text>
+<text x="319" y="70" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">+11</text>
+<rect x="20" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="43" y1="105" x2="43" y2="92" style="stroke: var(--ink); stroke-width: 2"/><polygon points="43,85 48,92 38,92" style="fill: var(--ink)"/>
+<text x="43" y="118" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; font-weight: 400; fill: var(--ink-soft)">depot</text>
+<rect x="66" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="89" y1="110" x2="89" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="89,90 94,97 84,97" style="fill: var(--ink)"/>
+<rect x="112" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="135" y1="110" x2="135" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,90 140,97 130,97" style="fill: var(--ink)"/>
+<rect x="158" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="181" y1="110" x2="181" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="181,90 186,97 176,97" style="fill: var(--ink)"/>
+<rect x="204" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="227" y1="110" x2="227" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="227,90 232,97 222,97" style="fill: var(--ink)"/>
+<rect x="250" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="110" x2="273" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,90 278,97 268,97" style="fill: var(--ink)"/>
+<rect x="296" y="80" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="110" x2="319" y2="97" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,90 324,97 314,97" style="fill: var(--ink)"/>
+<rect x="20" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="22.5" y="128.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="43" y1="156" x2="43" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="43,136 48,143 38,143" style="fill: var(--ink)"/>
+<rect x="66" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.55; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="89" y="146" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">near</text>
+<text x="89" y="162" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">+2</text>
+<rect x="112" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="135" y1="156" x2="135" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,136 140,143 130,143" style="fill: var(--ink)"/>
+<rect x="158" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="181" y1="156" x2="181" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="181,136 186,143 176,143" style="fill: var(--ink)"/>
+<rect x="204" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="227" y1="156" x2="227" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="227,136 232,143 222,143" style="fill: var(--ink)"/>
+<rect x="250" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="156" x2="273" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,136 278,143 268,143" style="fill: var(--ink)"/>
+<rect x="296" y="126" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="156" x2="319" y2="143" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,136 324,143 314,143" style="fill: var(--ink)"/>
+<rect x="20" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="22.5" y="174.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="43" y1="202" x2="43" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="43,182 48,189 38,189" style="fill: var(--ink)"/>
+<rect x="66" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="68.5" y="174.5" width="41" height="41" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<line x1="80" y1="193" x2="93" y2="193" style="stroke: var(--ink); stroke-width: 2"/><polygon points="100,193 93,198 93,188" style="fill: var(--ink)"/>
+<rect x="112" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="135" y1="202" x2="135" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="135,182 140,189 130,189" style="fill: var(--ink)"/>
+<rect x="158" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="181" y1="202" x2="181" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="181,182 186,189 176,189" style="fill: var(--ink)"/>
+<rect x="204" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="227" y1="202" x2="227" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="227,182 232,189 222,189" style="fill: var(--ink)"/>
+<rect x="250" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="273" y1="202" x2="273" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="273,182 278,189 268,189" style="fill: var(--ink)"/>
+<rect x="296" y="172" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.2; stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="319" y1="202" x2="319" y2="189" style="stroke: var(--ink); stroke-width: 2"/><polygon points="319,182 324,189 314,189" style="fill: var(--ink)"/>
+<rect x="20" y="228" width="12" height="12" style="fill: var(--chart-2); fill-opacity: 0.4; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="37" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 11px; font-weight: 400; fill: var(--ink)">delivers far</text>
+<rect x="127.4" y="228" width="12" height="12" style="fill: none; stroke: var(--chart-4); stroke-width: 2.5"/>
+<text x="144.4" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 11px; font-weight: 400; fill: var(--ink)">changed</text>
+</svg>
+<svg viewBox="0 0 362 252" role="img" aria-label="The grid with 2 added to every reward, so a move pays plus 1, the near drop-off 3 and the far drop-off 12. Every cell is shaded grey: the optimal courier never delivers from any cell." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="20" y="20" text-anchor="start" style="font-family: var(--sans); font-size: 12px; font-weight: 600; fill: var(--ink)">hourly, +2 on every reward: each move +1</text>
+<rect x="20" y="34" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="66" y="34" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="112" y="34" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="158" y="34" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="204" y="34" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="250" y="34" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="296" y="34" width="46" height="46" style="fill: var(--chart-2); fill-opacity: 0.55; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="319" y="54" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">far</text>
+<text x="319" y="70" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">+12</text>
+<rect x="20" y="80" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="43" y="118" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; font-weight: 400; fill: var(--ink-soft)">depot</text>
+<rect x="66" y="80" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="112" y="80" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="158" y="80" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="204" y="80" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="250" y="80" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="296" y="80" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="20" y="126" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="66" y="126" width="46" height="46" style="fill: var(--chart-1); fill-opacity: 0.55; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="89" y="146" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">near</text>
+<text x="89" y="162" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; font-weight: 600; fill: var(--ink)">+3</text>
+<rect x="112" y="126" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="158" y="126" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="204" y="126" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="250" y="126" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="296" y="126" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="20" y="172" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="66" y="172" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="112" y="172" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="158" y="172" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="204" y="172" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="250" y="172" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="296" y="172" width="46" height="46" style="fill: var(--ink-soft); fill-opacity: 0.16; stroke: var(--ink-soft); stroke-width: 1"/>
+<rect x="20" y="228" width="12" height="12" style="fill: var(--ink-soft); fill-opacity: 0.32; stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="37" y="238" text-anchor="start" style="font-family: var(--sans); font-size: 11px; font-weight: 400; fill: var(--ink)">never delivers</text>
+</svg>
+          </div>
+          <figcaption>
+            Fig. 3 · Where the optimal courier delivers with a constant added
+            to every reward. Fuel-free, +1: moves cost nothing and every cell
+            delivers far. The outlined cells delivered near in Fig. 1.
+            Hourly, +2: moves pay 1 and no cell delivers. Every move that
+            keeps out of both drop-offs is optimal there, so the panel has no
+            arrows. From the output of <code>courier.py</code>.
+          </figcaption>
+        </figure>
+        <p>
+          Adding c is the shaping reward of the constant potential
+          Φ = −c/(1 − γ), since γΦ − Φ = c. The potential is the same at the
+          drop-offs, where
+          <a href="../reinforcement-learning/potential-based-shaping.html">potential-based shaping</a>
+          needed 0. The last term of the shaped return,
+          γ<sup>N</sup>Φ(S<sub>N</sub>), is then −γ<sup>N</sup>c/(1 − γ),
+          which depends on when the courier delivers and vanishes only for an
+          episode that never ends.
+        </p>
+      </section>
+
+      <section data-nb-section="q-learning" id="q-learning">
+        <h2>Q-learning finds each version's routes from rewards alone</h2>
+        <p>
+          Value iteration solved each version from its rules. A
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">Q-learning</a>
+          agent has only the rewards it receives, so we check that it ends on
+          the same routes. <code>learn.py</code> trains it on <code>Courier</code>
+          under each reward version, which Gymnasium's
+          <code>TransformReward</code> wrapper applies. A
+          <code>TimeLimit</code> of 100 moves cuts any episode that has not
+          delivered. The cut is a
+          <a href="../reinforcement-learning/termination-and-truncation.html">truncation</a>,
+          so the target still bootstraps there and aims at value iteration's
+          values. The agent is ε-greedy with ε = 0.5 and a constant step size
+          of 0.1, and each episode starts in a random cell. Each version gets
+          five runs of 20,000 episodes, graded against its own
+          q<sub>*</sub>. <code>learn.py</code> needs <code>courier.py</code>
+          in the same folder and runs in about 40 seconds.
+        </p>
+        <details>
+          <summary><code>learn.py</code>, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">learn.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning on the courier under each reward version, graded against value
+iteration's q* for the same version: does the greedy agent deliver where the
+optimal one does, from every cell?"""
+import numpy as np
+from gymnasium.wrappers import TimeLimit, TransformReward
+
+from courier import REWARDS, Courier, GAMMA, value_iteration, DEPOT, LIVE, delivers
+
+EPS, ALPHA = 0.5, 0.1  # exploration rate and constant step size
+EPISODES, LIMIT, SEEDS = 20_000, 100, range(5)
+
+
+def q_learning(env, seed):
+    """eps-greedy Q-learning from estimates of 0 with a constant step size.
+    The target bootstraps unless the episode terminated, so a time-limit cut
+    still bootstraps."""
+    Q = np.zeros((env.observation_space.n, env.action_space.n))
+    rng = np.random.default_rng((seed, 1))
+    for k in range(EPISODES):
+        s, info = env.reset(seed=seed if k == 0 else None)
+        while True:
+            a = int(rng.integers(4)) if rng.random() &lt; EPS else int(Q[s].argmax())
+            s_next, reward, terminated, truncated, info = env.step(a)
+            target = reward + GAMMA * (not terminated) * Q[s_next].max()
+            Q[s, a] += ALPHA * (target - Q[s, a])
+            if terminated or truncated:
+                break
+            s = s_next
+    return Q
+
+
+print(f"eps {EPS}, step size {ALPHA}, {EPISODES:,} episodes of at most {LIMIT} "
+      f"moves, {len(SEEDS)} runs per row")
+print("reward     from depot  same delivery  optimal moves  largest |Q - q*|")
+for name, f in REWARDS.items():
+    q_star = value_iteration(name)
+    rows, depot = [], ""
+    for seed in SEEDS:
+        env = TimeLimit(TransformReward(Courier(), f), max_episode_steps=LIMIT)
+        Q = q_learning(env, seed)
+        depot += delivers(Q, DEPOT)
+        same = all(delivers(Q, s) == delivers(q_star, s) for s in LIVE)
+        best = q_star[LIVE, Q[LIVE].argmax(axis=1)] &gt;= q_star[LIVE].max(1) - 1e-6
+        rows.append((same, best.all(), np.abs(Q - q_star)[LIVE].max()))
+    same, best, error = np.array(rows, dtype=float).T
+    print(f"{name:10s} {depot:&gt;10s} {same.sum():8.0f} of {len(SEEDS)} "
+          f"{best.sum():8.0f} of {len(SEEDS)} {error.max():17.3f}")
+print("from depot: where each run's greedy agent delivers (n near, f far, "
+      "- never)")
+print("same delivery: runs that deliver where q* does from all 26 cells")
+print("optimal moves: runs whose greedy move is optimal in all 26 cells")</code></pre>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run learn.py</span><span>text</span></div>
+          <pre><code data-language="text">eps 0.5, step size 0.1, 20,000 episodes of at most 100 moves, 5 runs per row
+reward     from depot  same delivery  optimal moves  largest |Q - q*|
+dollars         fffff        5 of 5        5 of 5             0.000
+cents           fffff        5 of 5        5 of 5             0.000
+clipped         nnnnn        5 of 5        5 of 5             0.000
+fuel-free       fffff        5 of 5        5 of 5             0.000
+hourly          -----        5 of 5        5 of 5             0.000
+from depot: where each run's greedy agent delivers (n near, f far, - never)
+same delivery: runs that deliver where q* does from all 26 cells
+optimal moves: runs whose greedy move is optimal in all 26 cells</code></pre>
+        </figure>
+        <p>
+          Every run delivers where value iteration says from all 26 cells,
+          and ends within 0.001 of its version's q<sub>*</sub>, so Figs. 1
+          to 3 also show where the learned agents deliver. The clipped and
+          dollar rows differ only in the far fee. Put it back at 10, and the
+          clipped agent's near delivery from the depot becomes the dollar
+          agent's far one. The hourly and fuel-free rows differ only in a
+          dollar per move. Take it off the hourly wage, and the agent that
+          never delivered now delivers from every cell.
+        </p>
+      </section>
+
+      <section data-nb-section="nonzero-start" id="nonzero-start">
+        <h2>Only a nonzero start lets Q-learning tell cents from dollars</h2>
+        <p>
+          Q-learning started from estimates of 0 makes the same choices in
+          cents as in dollars. If every estimate in the cents run is 100
+          times the dollar run's, so are its target and its update, and every
+          greedy choice is the same. Both runs start at 0 and use the same
+          seed, so that holds after every update. A learner can
+          tell cents from dollars only through a number that stays put when
+          the rewards are multiplied, such as a nonzero starting estimate.
+          Sutton and Barto call starting estimates of +5 wildly optimistic
+          for true values with mean 0 and variance 1.<sup class="nb-cite"><a href="#s1" data-nb-locator="§2.6, p. 34">1</a></sup>
+          Paid in cents, the same +5 would sit near the middle of the true
+          values.
+        </p>
+        <p>
+          A reward normalizer divides. By default, <code>VecNormalize</code>
+          in Stable-Baselines3 2.9.2 divides each reward by the standard
+          deviation of a running discounted sum of rewards and then clips the
+          result to ±10.<sup class="nb-cite"><a href="#s6" data-nb-locator="VecNormalize.__init__ (clip_reward=10.0), _update_reward and normalize_reward">6</a></sup>
+          The PPO code that Engstrom and colleagues studied divides the same
+          way, and neither subtracts a mean.<sup class="nb-cite"><a href="#s7" data-nb-locator="§3, list item 2, p. 3; Appendix A.2, Algorithm 1, p. 12">7</a></sup>
+          While its divisor holds still, a normalizer is a positive scale,
+          and its clip touches only a reward more than ten divisors large.
+          Subtracting the mean too would add a constant to every reward, the
+          kind of change that kept the hourly courier from delivering. In OpenAI
+          Baselines issue #538, unixpickle, one of its two assignees,
+          explains why the code does not subtract it: doing so
+          would change the environment. In his example, an agent whose
+          rewards are all 1 wants to live, and one whose rewards are all 0
+          does not care whether it lives or dies.<sup class="nb-cite"><a href="#s8" data-nb-locator="comment by unixpickle, 29 August 2018, part “Regarding 2)”">8</a></sup>
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. A second courier company uses the same grid and discount but
+            pays 0.2 at the near drop-off and 0.9 at the far one, and charges
+            0.01 for every other move. From the depot, where does the optimal courier
+            deliver under these rewards, under the rewards clipped to
+            [−1, 1], and under their signs?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Far, far and near. The far route is worth
+              <span class="nb-math-in">-0.01\,(1 - 0.95^6)/0.05 + 0.95^6 \times 0.9 = 0.61</span>
+              and the near route −0.01 + 0.95 × 0.2 = 0.18. Every reward
+              already lies in [−1, 1], so clipping changes nothing. The sign
+              turns the fees into 1 and the charge into −1, which is the
+              clipped courier of Fig. 2, and from the depot that courier
+              delivers near.
+            </p>
+          </details>
+          <p>
+            2. Keep the hourly courier's +2 on every move that does not
+            deliver. What should a delivery move pay so that the optimal
+            policy is the dollar courier's again?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Its dollar fee plus 2/(1 − 0.95) = 40, so 41 near and 50 far.
+              Give every cell that is not a drop-off the potential Φ = −40,
+              and the drop-offs 0. A move between two such cells then gains
+              0.95 × (−40) + 40 = 2, and a delivery gains 0 + 40 = 40, so the
+              change is that potential's shaping reward. By
+              <a href="../reinforcement-learning/potential-based-shaping.html">potential-based shaping</a>,
+              every return from a cell gains the same 40, whether the
+              courier delivers or not, so every optimal move is the dollar
+              courier's.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A change to the rewards keeps the optimal policy when it keeps the
+          order of every policy's values. Multiplying every reward by k &gt; 0
+          multiplies every return by k, so the courier paid in cents takes
+          its dollar routes. Clipping to [−1, 1] makes both fees 1 and sends the
+          courier at the depot to the near drop-off. Adding c to every reward
+          adds c(1 − γ<sup>N</sup>)/(1 − γ) to an N-move episode, which
+          differs between policies whenever episodes can end. At c = 2 the
+          courier never delivers. Q-learning learned every version's routes.
+          A normalizer that only divides is a positive scale until its
+          divisor moves or its clip cuts a reward.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://proceedings.neurips.cc/paper/2016/hash/5227b6aaf294f5f027273aebf16015f2-Abstract.html">van Hasselt, Guez, Hessel, Mnih and Silver, Learning values across many orders of magnitude</a>:
+            Section 1 argues that clipping makes an agent maximize how often
+            rewards arrive instead of their sum, and Section 4 (p. 7) reports
+            a clipped Ms. Pac-Man agent that values a ghost worth up to 1,600
+            no more than a pellet.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://ai.stanford.edu/~ang/papers/shaping-icml99.pdf">Ng, Harada and Russell, Policy Invariance Under Reward Transformations</a>:
+            footnote 3 states the scaling result, and Theorem 1's necessity
+            half shows that a shaping reward that is not potential-based
+            changes the optimal policy of some task.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://gymnasium.farama.org/v1.4.0/api/wrappers/reward_wrappers/">Gymnasium 1.4.0, reward wrappers</a>:
+            the <code>NormalizeReward</code> entry warns that its scaling is
+            wrong just after the wrapper is created or the policy changes,
+            the moving divisor this lesson set aside.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2005.12729">Engstrom and colleagues, Implementation Matters in Deep Policy Gradients</a>:
+            Figure 1 (p. 4) shows reward scaling changing PPO's results on
+            Humanoid-v2 and Walker2d-v2, a reason to treat a normalizer as
+            part of the algorithm.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="https://proceedings.mlr.press/v80/haarnoja18b.html">Haarnoja, Zhou, Abbeel and Levine, Soft Actor-Critic</a>:
+            the “Reward scale” paragraph of Section 5.2, for an objective
+            under which a reward's size sets how random the optimal policy
+            is.
+          </dd>
+        </dl>
+      </section>
+
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§2.6, p. 34 (initial estimates); §3.2, p. 53 (−1 per step); Exercises 3.15 and 3.16, p. 61"
+              data-nb-note="Read in the authors' free copy of the 2020 printing at incompleteideas.net/book/RLbook2020.pdf. Page numbers are the printed ones; the PDF page is the printed page plus 22."
+              href="https://mitpress.mit.edu/9780262039246/reinforcement-learning/"
+              >MIT Press · Richard S. Sutton and Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd edition, 2018</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="footnote 3, PDF p. 3; Theorem 1, PDF p. 4"
+              data-nb-note="The authors' PDF prints no page numbers; pages here are PDF pages."
+              href="https://ai.stanford.edu/~ang/papers/shaping-icml99.pdf"
+              >ICML 1999 · Andrew Y. Ng, Daishi Harada and Stuart Russell, Policy Invariance Under Reward Transformations: Theory and Application to Reward Shaping</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§5.2, paragraph “Reward scale.”, p. 7; Fig. 3(b)"
+              href="https://proceedings.mlr.press/v80/haarnoja18b.html"
+              >ICML 2018 · Haarnoja, Zhou, Abbeel and Levine, Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Methods, “Training details”, paragraph 1"
+              data-nb-note="doi:10.1038/nature14236. The nature.com page is paywalled; the Methods text was read in the typeset PDF that DeepMind distributes."
+              href="https://www.nature.com/articles/nature14236"
+              >Nature · Volodymyr Mnih and colleagues, Human-level control through deep reinforcement learning, 2015</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="ClipRewardEnv and its reward method"
+              href="https://stable-baselines3.readthedocs.io/en/v2.9.2/common/atari_wrappers.html"
+              >Stable-Baselines3 2.9.2 · Atari wrappers, ClipRewardEnv, documentation, 2026</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="VecNormalize.__init__ (clip_reward=10.0), _update_reward and normalize_reward"
+              data-nb-note="The rendered source of the 2.9.2 release. The Vectorized Environments guide documents the same signature."
+              href="https://stable-baselines3.readthedocs.io/en/v2.9.2/_modules/stable_baselines3/common/vec_env/vec_normalize.html"
+              >Stable-Baselines3 2.9.2 · VecNormalize, source of common/vec_env/vec_normalize.py, 2026</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              data-nb-locator="§3, list item 2, p. 3; Appendix A.2, Algorithm 1, p. 12"
+              data-nb-note="Describes the reward scaling in OpenAI Baselines' PPO from outside OpenAI. arXiv v1, marked as the ICLR 2020 paper."
+              href="https://arxiv.org/abs/2005.12729"
+              >ICLR 2020 · Engstrom, Ilyas, Santurkar, Tsipras, Janoos, Rudolph and Madry, Implementation Matters in Deep Policy Gradients: A Case Study on PPO and TRPO</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="comment by unixpickle, 29 August 2018, part “Regarding 2)”"
+              href="https://github.com/openai/baselines/issues/538"
+              >GitHub · OpenAI Baselines issue #538, Gamma in VecNormalize for rms updates, 2018</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
