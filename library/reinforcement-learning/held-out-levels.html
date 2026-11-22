@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Held-out levels catch a grid agent that memorized its training levels · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "held-out-levels",
+        "template": "lesson",
+        "title": "Held-out levels catch a grid agent that memorized its training levels",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-22",
+        "tags": ["generalization", "held-out-levels", "procedural-generation", "overfitting", "observation-design", "q-learning", "environment-design", "gymnasium"],
+        "sources": 6,
+        "words": 4136,
+        "reading_minutes": 18,
+        "dek": "A Q-learning agent that sees nearby walls and the goal's direction matches its training return on 500 new levels after training on 64, while a position-only agent closes the gap by failing its training levels.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Held-out levels catch a grid agent that memorized its training levels</h1>
+        <p class="nb-dekline">A Q-learning agent that sees nearby walls and the goal's direction matches its training return on 500 new levels after training on 64, while a position-only agent closes the gap by failing its training levels.</p>
+        <div class="nb-byline">
+          <span>18 min read</span><span>2026-11-22</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A Q-learning agent trained on one seven-by-seven grid reaches the
+          goal on it every time, by a shortest route. Its return there cannot
+          say whether it learned to find goals or learned this grid's route,
+          since both policies earn it. So the separate evaluation environment has to
+          hold new levels, drawn from the same generator with their seeds kept
+          out of training. The difference between the return on training
+          levels and on these held-out levels is called the generalization gap.
+          What the agent observes decides whether held-out return can rise to
+          meet a high training return. You will
+          key a Gymnasium environment's levels to seeds, split the seeds,
+          report both returns, and judge from an observation alone whether a
+          policy acting on it could solve levels it has not seen.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            Q-learning's update, which both agents here run on a table keyed
+            on what they observe.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/termination-and-truncation.html">Q-learning that treats its time limit as terminal learns the values of a different grid</a>:
+            the Gymnasium contract, reset's seed, and the TimeLimit truncation
+            that ends every episode here at 40 moves.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/training-an-off-the-shelf-agent.html">PPO's greedy arrows outscore the sampled moves its training curve averages</a>:
+            scoring a frozen greedy policy in a separate evaluation
+            environment, across several training seeds.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">Q-learning values a rolling ball's cell by how often each speed reaches it</a>:
+            what an observation leaves out, and the frame stack that the second
+            problem gives the position agent.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="../reinforcement-learning/checking-a-custom-environment.html">Gymnasium's environment checker passes a grid with a backward slip</a>:
+            check_env, run here on both of the new environment's observations.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>Both agents solve their one training level and few held-out ones</h2>
+        <p>
+          LevelGrid is a seven-by-seven grid built for this lesson. The agent
+          starts in the top-left cell, (0, 0) as (row, column), and moves up,
+          right, down or left. A move into a wall or the edge leaves it in
+          place. Reaching the goal pays 1 and ends the episode. Every other
+          move pays 0, and a time limit
+          <a href="../reinforcement-learning/termination-and-truncation.html">truncates</a>
+          the episode after 40 moves. A level's seed decides its goal and up to
+          six walls.
+        </p>
+        <p>
+          We train two
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">Q-learning</a>
+          agents on level 1000, the level whose seed is 1000, and they differ
+          only in what they observe. The position agent sees its row and column. The view agent
+          sees six numbers. The first four describe the cells up, right, down
+          and left of it, 1 for a wall or the edge and 0 for an open cell. The
+          last two say whether the goal is above, in the same row or below, and
+          to the left, in the same column or to the right. Each agent trains for 3,000 episodes with ε = 0.1, a step
+          size of 0.1 and γ = 0.9. Played greedily, both reach level 1000's
+          goal at (2, 6) by a shortest route (Fig. 1, first panel).
+        </p>
+        <p>
+          We score an episode by its undiscounted return, 1 if the agent
+          reaches the goal within 40 moves and 0 if not, so an average over
+          levels is the share solved. Then we play both agents on 500 held-out
+          levels, built from seeds that no training run uses. Over ten runs,
+          each trained on one level of its own, the position agents solve 0.04
+          of them and the view agents 0.05.
+        </p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem">
+<svg viewBox="0 0 294 340" role="img" aria-label="training level 1000, a 7 by 7 grid with cells given as (row, column) from (0, 0) at the top left, where the agent starts. Goal at (2, 6); walls at (0, 2), (1, 0), (3, 2), (4, 5), (6, 0), (6, 2). The position agent's path runs (0, 0) to (0, 1) to (1, 1) to (1, 2) to (1, 3) to (1, 4) to (2, 4) to (2, 5) to (2, 6), ending at the goal. The view agent's path runs (0, 0) to (0, 1) to (1, 1) to (1, 2) to (1, 3) to (1, 4) to (1, 5) to (1, 6) to (2, 6), ending at the goal." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="14" y="18" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">training level 1000</text>
+<rect x="14" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="30" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="68" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="106" width="38" height="38" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="144" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="182" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="258" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="258" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<text x="33.0" y="41.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">start</text>
+<polyline points="28,44 66,44 66,82 104,82 142,82 180,82 180,120 218,120 256,120" fill="none" style="stroke: var(--chart-1); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round"/>
+<circle cx="256" cy="120" r="5" style="fill: var(--chart-1); stroke: var(--panel); stroke-width: 1.5"/>
+<polyline points="38,54 76,54 76,92 114,92 152,92 190,92 228,92 266,92 266,130" fill="none" style="stroke: var(--chart-2); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round" stroke-dasharray="7 4"/>
+<circle cx="266" cy="130" r="5" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"/>
+<line x1="14" y1="316" x2="40" y2="316" style="stroke: var(--chart-1); stroke-width: 3"/>
+<text x="46" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">position</text>
+<line x1="114" y1="316" x2="140" y2="316" style="stroke: var(--chart-2); stroke-width: 3" stroke-dasharray="7 4"/>
+<text x="146" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">view</text>
+<rect x="214" y="309" width="13" height="13" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<text x="233" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">goal</text>
+</svg>
+<svg viewBox="0 0 294 340" role="img" aria-label="held-out level 100066, a 7 by 7 grid with cells given as (row, column) from (0, 0) at the top left, where the agent starts. Goal at (2, 4); walls at (0, 2), (0, 6), (3, 1), (5, 0), (5, 3), (5, 5). The position agent's path runs (0, 0) to (0, 1) to (1, 1) to (1, 2) to (1, 3) to (1, 4) to (2, 4), ending at the goal. The view agent's path runs (0, 0) to (0, 1) to (1, 1) to (1, 2) to (1, 3) to (1, 4) to (0, 4), where the 40-move limit stops it." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="14" y="18" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">held-out level 100066</text>
+<rect x="14" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="30" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="30" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="106" width="38" height="38" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="144" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="220" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="220" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="220" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<text x="33.0" y="41.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">start</text>
+<polyline points="28,44 66,44 66,82 104,82 142,82 180,82 180,120" fill="none" style="stroke: var(--chart-1); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round"/>
+<circle cx="180" cy="120" r="5" style="fill: var(--chart-1); stroke: var(--panel); stroke-width: 1.5"/>
+<polyline points="38,54 76,54 76,92 114,92 152,92 190,92 190,54" fill="none" style="stroke: var(--chart-2); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round" stroke-dasharray="7 4"/>
+<circle cx="190" cy="54" r="5" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"/>
+<line x1="14" y1="316" x2="40" y2="316" style="stroke: var(--chart-1); stroke-width: 3"/>
+<text x="46" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">position</text>
+<line x1="114" y1="316" x2="140" y2="316" style="stroke: var(--chart-2); stroke-width: 3" stroke-dasharray="7 4"/>
+<text x="146" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">view</text>
+<rect x="214" y="309" width="13" height="13" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<text x="233" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">goal</text>
+</svg>
+<svg viewBox="0 0 294 340" role="img" aria-label="held-out level 100005, a 7 by 7 grid with cells given as (row, column) from (0, 0) at the top left, where the agent starts. Goal at (5, 5); walls at (1, 3), (1, 6), (2, 1), (4, 4), (6, 2), (6, 6). The position agent's path runs (0, 0) to (0, 1) to (1, 1) to (1, 2), where the 40-move limit stops it. The view agent's path runs (0, 0) to (0, 1) to (0, 2) to (0, 3), where the 40-move limit stops it." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="14" y="18" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">held-out level 100005</text>
+<rect x="14" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="68" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="68" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="106" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="182" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="220" width="38" height="38" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="258" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="258" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<text x="33.0" y="41.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">start</text>
+<polyline points="28,44 66,44 66,82 104,82" fill="none" style="stroke: var(--chart-1); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round"/>
+<circle cx="104" cy="82" r="5" style="fill: var(--chart-1); stroke: var(--panel); stroke-width: 1.5"/>
+<polyline points="38,54 76,54 114,54 152,54" fill="none" style="stroke: var(--chart-2); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round" stroke-dasharray="7 4"/>
+<circle cx="152" cy="54" r="5" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"/>
+<line x1="14" y1="316" x2="40" y2="316" style="stroke: var(--chart-1); stroke-width: 3"/>
+<text x="46" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">position</text>
+<line x1="114" y1="316" x2="140" y2="316" style="stroke: var(--chart-2); stroke-width: 3" stroke-dasharray="7 4"/>
+<text x="146" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">view</text>
+<rect x="214" y="309" width="13" height="13" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<text x="233" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">goal</text>
+</svg>
+<svg viewBox="0 0 294 340" role="img" aria-label="held-out level 100008, a 7 by 7 grid with cells given as (row, column) from (0, 0) at the top left, where the agent starts. Goal at (6, 5); walls at (0, 2), (0, 6), (2, 0), (3, 3), (4, 0), (5, 3). The position agent's path runs (0, 0) to (0, 1) to (1, 1) to (1, 2) to (1, 3) to (1, 4) to (2, 4) to (2, 5) to (2, 6), then back and forth between (2, 6) and (1, 6), where the 40-move limit stops it. The view agent's path runs (0, 0) to (0, 1) to (1, 1) to (1, 2) to (1, 3) to (1, 4) to (1, 5), then back and forth between (1, 5) and (0, 5), where the 40-move limit stops it." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="14" y="18" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">held-out level 100008</text>
+<rect x="14" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="30" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="30" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="106" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="144" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="182" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="220" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="258" width="38" height="38" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<text x="33.0" y="41.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">start</text>
+<polyline points="28,44 66,44 66,82 104,82 142,82 180,82 180,120 218,120 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120 256,82 256,120" fill="none" style="stroke: var(--chart-1); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round"/>
+<circle cx="256" cy="120" r="5" style="fill: var(--chart-1); stroke: var(--panel); stroke-width: 1.5"/>
+<polyline points="38,54 76,54 76,92 114,92 152,92 190,92 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92 228,54 228,92" fill="none" style="stroke: var(--chart-2); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round" stroke-dasharray="7 4"/>
+<circle cx="228" cy="92" r="5" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"/>
+<line x1="14" y1="316" x2="40" y2="316" style="stroke: var(--chart-1); stroke-width: 3"/>
+<text x="46" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">position</text>
+<line x1="114" y1="316" x2="140" y2="316" style="stroke: var(--chart-2); stroke-width: 3" stroke-dasharray="7 4"/>
+<text x="146" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">view</text>
+<rect x="214" y="309" width="13" height="13" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<text x="233" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">goal</text>
+</svg>
+</div>
+          <figcaption>
+            Fig. 1 · Run 1's agents, trained on level 1000 alone, on that level
+            and on three held-out levels. A dot marks where each agent ends, at
+            the goal or at the 40-move limit. From <code>heldout.py</code>'s
+            <code>q_learning</code> with seed 1.
+          </figcaption>
+        </figure>
+        <p>
+          The position agent plays level 1000's route on every level. On level
+          100066 the goal happens to lie on that route. On level 100005 a wall
+          at (1, 3) blocks its fourth move, and since a blocked move leaves it
+          in place, it repeats that move until the limit. On level 100008 it
+          finishes the route at (2, 6), where level 1000's goal was, and moves
+          back and forth beside it.
+        </p>
+        <p>
+          The view agent stops at views it never met. On level 100005 it
+          reaches (0, 3), where the wall below and the open cell to the right
+          make a view that level 1000 never showed it. Its table has no entry
+          for that view, so all four estimates are 0 and argmax takes the first
+          move, up, into the edge. Both agents memorized level 1000, one as a
+          route and one as a table of that level's views, and only held-out
+          levels could show it.
+        </p>
+        <p>
+          Zhang and colleagues measured memorization at its extreme: agents reached
+          near-optimal training reward on small sets of mazes whose rewards
+          were randomized per level, where good test reward was impossible.<sup class="nb-cite"><a href="#s1" data-nb-locator="§3, “Memorization Capacity of Deep RL Agents”, pp. 5–6">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="generator" id="generator">
+        <h2>Each reset draws a level seed from a list the environment holds</h2>
+        <p>
+          <code>make_level</code> seeds a NumPy generator with a level's seed
+          and draws the goal and the walls from it, so a seed always gives the
+          same grid. Building levels with a program from seeds is called
+          procedural generation, and Cobbe and colleagues built each level of
+          their CoinRun game this way.<sup class="nb-cite"><a href="#s2" data-nb-locator="§3.1, p. 2">2</a></sup>
+        </p>
+        <p>
+          Which level an episode plays is a second random choice. LevelGrid
+          receives a list of level seeds when it is created, and each reset
+          draws one with the environment's own generator,
+          <code>self.np_random</code>. The same group's Procgen benchmark also
+          uses two generators: one picks a level seed from the range its
+          <code>start_level</code> and <code>num_levels</code> options set, and
+          the other builds the level.<sup class="nb-cite"><a href="#s3" data-nb-locator="README, “Environment Options”; src/game.cpp, Game::reset, L93–117">3</a></sup>
+          Run <i>k</i> trains on seeds 1000<i>k</i> to
+          1000<i>k</i> + <i>n</i> − 1 for <i>n</i> levels and is scored on
+          seeds 100000 to 100499. The lists share no seed, as in Zhang and
+          colleagues' split.<sup class="nb-cite"><a href="#s1" data-nb-locator="App. A.2, p. 15">1</a></sup>
+        </p>
+        <p>
+          Gymnasium advises seeding <code>reset</code> once, right after the
+          environment is created, not every episode,<sup class="nb-cite"><a href="#s4" data-nb-locator="Env.reset(), parameter seed">4</a></sup>
+          and Stable-Baselines3's vector environments reset each finished
+          episode without a seed.<sup class="nb-cite"><a href="#s5" data-nb-locator="“VecEnv API vs Gym API”; VecEnv.seed">5</a></sup>
+          With the list inside the environment, the one seed at the first reset
+          fixes every level a run plays, and an evaluation names a level
+          through reset's <code>options</code>.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">levels.py · complete</span><span>python</span></div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""LevelGrid: a 7 by 7 grid whose walls and goal come from a level seed.
+
+The agent starts in the top-left cell and moves up, right, down or left. A move
+into a wall or the edge leaves it where it is. Reaching the goal pays 1 and ends
+the episode; every other move pays 0. A level has a goal at least six moves from
+the start and up to six walls. No two walls touch, even at a corner, and none is
+in the goal's row or column, so from every cell some move toward the goal is open.
+"""
+import gymnasium as gym
+import numpy as np
+from gymnasium.utils.env_checker import check_env
+
+SIZE, WALLS, START = 7, 6, (0, 0)
+MOVES = ((-1, 0), (0, 1), (1, 0), (0, -1))  # up, right, down, left
+FAR = [(r, c) for r in range(SIZE) for c in range(SIZE) if r + c &gt;= 6]
+
+
+def make_level(level_seed):
+    """The level's walls and goal, from a generator seeded with level_seed."""
+    rng = np.random.default_rng(level_seed)
+    goal = FAR[rng.integers(len(FAR))]
+    walls = []
+    for i in rng.permutation(SIZE * SIZE):  # try the cells in a random order
+        r, c = divmod(int(i), SIZE)
+        if (r, c) == START or r == goal[0] or c == goal[1]:
+            continue
+        if len(walls) &lt; WALLS and all(
+                max(abs(r - wr), abs(c - wc)) &gt; 1 for wr, wc in walls):
+            walls.append((r, c))
+    return frozenset(walls), goal
+
+
+class LevelGrid(gym.Env):
+    """Each reset draws a level seed from `levels` with self.np_random, or plays
+    options["level"]. observe="position" shows the (row, column). observe="view"
+    shows 1 for a wall or the edge and 0 for an open cell, up, right, down and
+    left, then where the goal is by row (0 above, 1 same row, 2 below) and by
+    column (0 left, 1 same column, 2 right)."""
+
+    action_space = gym.spaces.Discrete(4)
+
+    def __init__(self, levels, observe):
+        self.levels, self.observe = list(levels), observe
+        sizes = [SIZE, SIZE] if observe == "position" else [2, 2, 2, 2, 3, 3]
+        self.observation_space = gym.spaces.MultiDiscrete(sizes)
+
+    def blocked(self, r, c):
+        return not (0 &lt;= r &lt; SIZE and 0 &lt;= c &lt; SIZE) or (r, c) in self.walls
+
+    def obs(self):
+        r, c = self.cell
+        if self.observe == "position":
+            return np.array([r, c])
+        walls = [int(self.blocked(r + dr, c + dc)) for dr, dc in MOVES]
+        return np.array(walls + list(np.sign(np.subtract(self.goal, self.cell)) + 1))
+
+    def reset(self, *, seed=None, options=None):
+        super().reset(seed=seed)  # seeds self.np_random if seed is given
+        if options and "level" in options:
+            self.level = options["level"]
+            assert self.level in self.levels, "not one of this env's levels"
+        else:
+            self.level = self.levels[self.np_random.integers(len(self.levels))]
+        self.walls, self.goal = make_level(self.level)
+        self.cell = START
+        return self.obs(), {"level": self.level}
+
+    def step(self, action):
+        r, c = self.cell[0] + MOVES[action][0], self.cell[1] + MOVES[action][1]
+        if not self.blocked(r, c):
+            self.cell = (r, c)
+        reached = self.cell == self.goal
+        return self.obs(), float(reached), reached, False, {"level": self.level}
+
+
+def toward_goal(view):
+    """A fixed rule on the view: a move toward the goal that no wall blocks,
+    trying the vertical move first."""
+    up, right, down, left, rows, cols = (int(v) for v in view)
+    for wanted, move, wall in ((rows == 0, 0, up), (rows == 2, 2, down),
+                               (cols == 2, 1, right), (cols == 0, 3, left)):
+        if wanted and not wall:
+            return move
+
+
+if __name__ == "__main__":
+    for observe in ("position", "view"):
+        check_env(LevelGrid(range(10), observe), skip_render_check=True)
+    for level in (1000, 100_008):
+        first = [LevelGrid([level], o).reset()[0] for o in ("position", "view")]
+        print(f"level {level}, goal {make_level(level)[1]}: "
+              f"first position {first[0]}, first view {first[1]}")
+    held_out, shortest = range(100_000, 100_500), 0
+    env = LevelGrid(held_out, "view")
+    for level in held_out:
+        obs, _ = env.reset(options={"level": level})
+        for moves in range(1, 41):
+            obs, reward, terminated, _, _ = env.step(toward_goal(obs))
+            if terminated:
+                break
+        shortest += terminated and moves == env.goal[0] + env.goal[1]
+    print(f"toward_goal reaches the goal by a shortest route on {shortest} "
+          f"of {len(held_out)} held-out levels")</code></pre>
+        </figure>
+        <p>
+          Run on its own, <code>levels.py</code> passes both observations
+          through
+          <a href="../reinforcement-learning/checking-a-custom-environment.html"><code>check_env</code></a>
+          and prints what the next section uses.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run levels.py</span><span>text</span></div>
+          <pre><code data-language="text">level 1000, goal (2, 6): first position [0 0], first view [1 0 1 1 2 2]
+level 100008, goal (6, 5): first position [0 0], first view [1 0 0 1 2 2]
+toward_goal reaches the goal by a shortest route on 500 of 500 held-out levels</code></pre>
+        </figure>
+        <p>
+          The position agent starts at [0 0] on both levels. The view agent
+          sees a wall below it on level 1000 and an open cell there on level
+          100008.
+        </p>
+      </section>
+
+      <section data-nb-section="one-route" id="one-route">
+        <h2>A policy of the position plays one route on every level</h2>
+        <p>
+          The position agent's failure follows from its observation. Its greedy
+          policy is one table from cells to moves, whatever the level. From
+          (0, 0) it makes the same first move on every level, and until a wall
+          stops it, it visits the same cells in the same order. So it solves a
+          held-out level exactly when that level's goal lies on its route
+          before any wall, a rule that predicts every held-out result of run 1's
+          position agent.
+        </p>
+        <p>
+          A stochastic policy follows no single route, but the same reasoning
+          bounds it. Take any policy π that acts on the current observation,
+          write J<sub>ℓ</sub>(π) for its expected return on level ℓ, and
+          𝔼<sub>ℓ</sub> for an average over levels from the generator.
+          Held-out levels estimate the left side.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} \htmlClass{nb-mc1}{\mathbb{E}_\ell\big[J_\ell(\pi)\big]} &amp;\le \htmlClass{nb-mc2}{\max_{\pi'} \mathbb{E}_\ell\big[J_\ell(\pi')\big]} \\ &amp;\le \htmlClass{nb-mc3}{\mathbb{E}_\ell\Big[\max_{\pi'} J_\ell(\pi')\Big]} \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li><span class="nb-math-term">\pi'</span><span>any policy of the same observation as π</span></li>
+            <li><span class="nb-math-term nb-mc1">\mathbb{E}_\ell\big[J_\ell(\pi)\big]</span><span>the trained policy's held-out return</span></li>
+            <li><span class="nb-math-term nb-mc2">\max_{\pi'} \mathbb{E}_\ell\big[J_\ell(\pi')\big]</span><span>the best return of one policy across the generator's levels</span></li>
+            <li><span class="nb-math-term nb-mc3">\mathbb{E}_\ell\Big[\max_{\pi'} J_\ell(\pi')\Big]</span><span>the return with a separate policy for each level</span></li>
+          </ul>
+          <figcaption>What a policy of one observation can earn on held-out levels.</figcaption>
+        </figure>
+        <p>
+          The first inequality holds because π is one of the policies in the
+          maximum, and the second because choosing for each level separately
+          does at least as well as one choice for all. The middle term depends
+          only on the generator and the observation. More training levels
+          change which π the agent ends with, but cannot lift its held-out
+          return above that term.
+        </p>
+        <p>
+          For the position, the right side is the best return each level
+          allows, because within one level the position is the whole state.
+          The middle and right terms are equal only if one table of moves is
+          optimal on almost every level. The inequalities hold for any return.
+          For the shortfall, take the discounted return the agents learn from,
+          under which optimal moves follow a shortest route. No table does that on two levels with goals at
+          (6, 0) and (0, 6), since both show [0 0] at the start, where one needs
+          down and the other right. No number of training levels closes that
+          difference.
+        </p>
+        <p>
+          The same test works on any observation: look for two levels that
+          show the same observation where they need different moves. For the
+          view, <code>toward_goal</code> shows there are none on these levels.
+          It moves toward the goal on whichever side is open, and it solves all
+          500 held-out levels by a shortest route. <code>make_level</code>
+          keeps walls apart and out of the goal's row and column so that such a
+          move always exists. In a maze with dead ends a policy of the current
+          view can loop. Cobbe and colleagues gave their maze agent an LSTM
+          network, “as memory is necessary for the agent to explore
+          optimally.”<sup class="nb-cite"><a href="#s2" data-nb-locator="§6, p. 6">2</a></sup>
+        </p>
+        <p>
+          The bound covers policies of the current observation. An agent that
+          remembered past positions could notice a failed move and learn the
+          walls within an episode, as a later stage's recurrent policies do.
+        </p>
+      </section>
+
+      <section data-nb-section="view-levels" id="view-levels">
+        <h2>With 64 training levels the view agent's held-out return meets its training return</h2>
+        <p>
+          How many training levels does the view agent need?
+          <code>heldout.py</code>
+          trains both agents on 1, 4, 16, 64 and 256 levels, ten runs per count
+          and 3,000 episodes whatever the count. It scores each run on its
+          training levels and on the 500 held-out levels, and prints the
+          generalization gap, training return minus held-out return (Fig. 2).
+        </p>
+        <details>
+          <summary><code>heldout.py</code>, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head"><span class="nb-code-file">heldout.py · complete</span><span>python</span></div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning on n LevelGrid levels, scored on those levels and on 500 held-out
+levels, for each observation and n = 1, 4, 16, 64 and 256.
+
+uv run heldout.py                  runs 0 to 9
+  --runs 10 11 12                  other runs: other training levels and seeds
+  --held-out 200000                the first of the 500 held-out level seeds
+Run k trains on level seeds 1000k to 1000k + n - 1 with seed k.
+"""
+import argparse
+
+import numpy as np
+from gymnasium.wrappers import TimeLimit
+from levels import LevelGrid, toward_goal
+
+GAMMA, EPS, ALPHA = 0.9, 0.1, 0.1  # discount, exploration rate, step size
+EPISODES, LIMIT, COUNTS = 3000, 40, (1, 4, 16, 64, 256)
+ZEROS = np.zeros(4)
+
+
+def key(obs):
+    return tuple(int(o) for o in obs)
+
+
+def q_learning(env, seed):
+    """eps-greedy Q-learning from estimates of 0, with ties broken at random.
+    Q holds an entry only for each observation the agent has updated."""
+    rng = np.random.default_rng(seed)
+    Q = {}
+    obs, _ = env.reset(seed=seed)  # the one seed: it fixes every level drawn
+    for episode in range(EPISODES):
+        if episode:
+            obs, _ = env.reset()
+        done = False
+        while not done:
+            x = key(obs)
+            q = Q.get(x, ZEROS)
+            best = np.flatnonzero(q == q.max())
+            a = rng.integers(4) if rng.random() &lt; EPS else rng.choice(best)
+            obs, r, terminated, truncated, _ = env.step(int(a))
+            target = r if terminated else r + GAMMA * Q.get(key(obs), ZEROS).max()
+            Q.setdefault(x, np.zeros(4))[a] += ALPHA * (target - q[a])
+            done = terminated or truncated
+    return Q
+
+
+def solved(Q, env, level, fill=False):
+    """One greedy episode: 1.0 if the agent reaches the goal within LIMIT
+    moves. An observation missing from Q has four zeros, so argmax picks up,
+    unless fill hands that observation to toward_goal."""
+    obs, _ = env.reset(options={"level": level})
+    while True:
+        x = key(obs)
+        a = toward_goal(obs) if fill and x not in Q else Q.get(x, ZEROS).argmax()
+        obs, r, terminated, truncated, _ = env.step(int(a))
+        if terminated or truncated:
+            return r
+
+
+def score(Q, levels, observe, fill=False):
+    """The return averaged over levels: the share of them the agent solves."""
+    env = TimeLimit(LevelGrid(levels, observe), max_episode_steps=LIMIT)
+    return np.mean([solved(Q, env, level, fill) for level in levels])
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--runs", type=int, nargs="+", default=list(range(10)))
+    parser.add_argument("--held-out", type=int, default=100_000)
+    args = parser.parse_args()
+    held_out = list(range(args.held_out, args.held_out + 500))
+    print(f"runs {args.runs[0]}-{args.runs[-1]}, {EPISODES:,} episodes each; "
+          f"held-out levels {held_out[0]}-{held_out[-1]}")
+    print("return: the share of levels solved within 40 moves, "
+          "as the mean of the runs [lowest, highest]")
+    print(f"{'':16s}{'training':&gt;20s}{'held-out':&gt;20s}{'gap':&gt;7s}"
+          f"{'held-out, missing':&gt;21s}")
+    print(f"{'observe   levels':16s}{'levels':&gt;20s}{'levels':&gt;20s}{'':7s}"
+          f"{'views to the rule':&gt;21s}")
+    for observe in ("position", "view"):
+        for n in COUNTS:
+            rows = []
+            for run in args.runs:
+                levels = list(range(1000 * run, 1000 * run + n))
+                env = TimeLimit(LevelGrid(levels, observe), max_episode_steps=LIMIT)
+                Q = q_learning(env, run)
+                rows.append([score(Q, levels, observe), score(Q, held_out, observe)])
+                if observe == "view":  # the removal test
+                    rows[-1].append(score(Q, held_out, observe, fill=True))
+            rows = np.array(rows)  # one row per run
+            cols = [f"{v.mean():.2f} [{v.min():.2f}, {v.max():.2f}]" for v in rows.T]
+            gap = rows[:, 0].mean() - rows[:, 1].mean()
+            print(f"{observe:10s}{n:6d}{cols[0]:&gt;20s}{cols[1]:&gt;20s}{gap:7.2f}"
+                  + (f"{cols[2]:&gt;21s}" if observe == "view" else ""))</code></pre>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head"><span class="nb-code-file">output of uv run heldout.py</span><span>text</span></div>
+          <pre><code data-language="text">runs 0-9, 3,000 episodes each; held-out levels 100000-100499
+return: the share of levels solved within 40 moves, as the mean of the runs [lowest, highest]
+                            training            held-out    gap    held-out, missing
+observe   levels              levels              levels           views to the rule
+position       1   1.00 [1.00, 1.00]   0.04 [0.01, 0.06]   0.96
+position       4   0.28 [0.00, 0.75]   0.04 [0.00, 0.07]   0.24
+position      16   0.14 [0.06, 0.25]   0.05 [0.02, 0.08]   0.09
+position      64   0.06 [0.00, 0.11]   0.04 [0.00, 0.09]   0.02
+position     256   0.05 [0.01, 0.07]   0.04 [0.01, 0.06]   0.01
+view           1   1.00 [1.00, 1.00]   0.05 [0.02, 0.11]   0.95    0.86 [0.26, 1.00]
+view           4   0.97 [0.75, 1.00]   0.48 [0.12, 0.93]   0.50    0.88 [0.64, 0.99]
+view          16   0.94 [0.56, 1.00]   0.86 [0.25, 0.98]   0.08    0.88 [0.30, 0.99]
+view          64   0.97 [0.80, 1.00]   0.97 [0.81, 1.00]   0.01    0.97 [0.81, 1.00]
+view         256   0.99 [0.97, 1.00]   0.99 [0.97, 1.00]   0.00    0.99 [0.97, 1.00]</code></pre>
+        </figure>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 270" role="img" aria-label="Return against the number of training levels, 1, 4, 16, 64 and 256, on a log scale, mean of ten runs with a bar from the lowest to the highest run. View agent on its training levels: 1.00, 0.97, 0.94, 0.97, 0.99; on held-out levels: 0.05, 0.48, 0.86, 0.97, 0.99. Position agent on its training levels: 1.00, 0.28, 0.14, 0.06, 0.05; on held-out levels: 0.04, 0.04, 0.05, 0.04, 0.04." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="52" y1="228.0" x2="388" y2="228.0" style="stroke: var(--line); stroke-width: 1"/>
+<text x="46" y="232.0" text-anchor="end" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">0</text>
+<line x1="52" y1="185.5" x2="388" y2="185.5" style="stroke: var(--line); stroke-width: 1"/>
+<text x="46" y="189.5" text-anchor="end" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">0.25</text>
+<line x1="52" y1="143.0" x2="388" y2="143.0" style="stroke: var(--line); stroke-width: 1"/>
+<text x="46" y="147.0" text-anchor="end" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">0.5</text>
+<line x1="52" y1="100.5" x2="388" y2="100.5" style="stroke: var(--line); stroke-width: 1"/>
+<text x="46" y="104.5" text-anchor="end" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">0.75</text>
+<line x1="52" y1="58.0" x2="388" y2="58.0" style="stroke: var(--line); stroke-width: 1"/>
+<text x="46" y="62.0" text-anchor="end" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">1</text>
+<text x="74.0" y="244" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">1</text>
+<text x="149.0" y="244" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">4</text>
+<text x="224.0" y="244" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">16</text>
+<text x="299.0" y="244" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">64</text>
+<text x="374.0" y="244" text-anchor="middle" style="font-family: var(--sans); font-size: 11px; fill: var(--ink-soft)">256</text>
+<text x="220.0" y="262" text-anchor="middle" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">training levels (log scale)</text>
+<text x="14" y="143.0" text-anchor="middle" transform="rotate(-90 14 143.0)" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">return</text>
+<line x1="71.0" y1="58.0" x2="71.0" y2="58.0" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="146.0" y1="100.5" x2="146.0" y2="58.0" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="221.0" y1="132.8" x2="221.0" y2="58.0" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="296.0" y1="92.0" x2="296.0" y2="58.0" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="371.0" y1="63.1" x2="371.0" y2="58.0" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<polyline points="71.0,58.0 146.0,63.1 221.0,68.2 296.0,63.1 371.0,59.7" fill="none" style="stroke: var(--chart-2); stroke-width: 2.5; stroke-linejoin: round"/>
+<circle cx="71.0" cy="58.0" r="4" style="fill: var(--chart-2); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="146.0" cy="63.1" r="4" style="fill: var(--chart-2); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="221.0" cy="68.2" r="4" style="fill: var(--chart-2); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="296.0" cy="63.1" r="4" style="fill: var(--chart-2); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="371.0" cy="59.7" r="4" style="fill: var(--chart-2); stroke: var(--chart-2); stroke-width: 2"/>
+<line x1="77.0" y1="224.6" x2="77.0" y2="209.3" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="152.0" y1="207.6" x2="152.0" y2="69.9" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="227.0" y1="185.5" x2="227.0" y2="61.4" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="302.0" y1="90.3" x2="302.0" y2="58.0" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="377.0" y1="63.1" x2="377.0" y2="58.0" style="stroke: var(--chart-2); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<polyline points="77.0,219.5 152.0,146.4 227.0,81.8 302.0,63.1 377.0,59.7" fill="none" style="stroke: var(--chart-2); stroke-width: 2.5; stroke-linejoin: round" stroke-dasharray="6 4"/>
+<circle cx="77.0" cy="219.5" r="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="152.0" cy="146.4" r="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="227.0" cy="81.8" r="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="302.0" cy="63.1" r="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="377.0" cy="59.7" r="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<line x1="71.0" y1="58.0" x2="71.0" y2="58.0" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="146.0" y1="228.0" x2="146.0" y2="100.5" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="221.0" y1="217.8" x2="221.0" y2="185.5" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="296.0" y1="228.0" x2="296.0" y2="209.3" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="371.0" y1="226.3" x2="371.0" y2="216.1" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<polyline points="71.0,58.0 146.0,180.4 221.0,204.2 296.0,217.8 371.0,219.5" fill="none" style="stroke: var(--chart-1); stroke-width: 2.5; stroke-linejoin: round"/>
+<circle cx="71.0" cy="58.0" r="4" style="fill: var(--chart-1); stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="146.0" cy="180.4" r="4" style="fill: var(--chart-1); stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="221.0" cy="204.2" r="4" style="fill: var(--chart-1); stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="296.0" cy="217.8" r="4" style="fill: var(--chart-1); stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="371.0" cy="219.5" r="4" style="fill: var(--chart-1); stroke: var(--chart-1); stroke-width: 2"/>
+<line x1="77.0" y1="226.3" x2="77.0" y2="217.8" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="152.0" y1="228.0" x2="152.0" y2="216.1" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="227.0" y1="224.6" x2="227.0" y2="214.4" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="302.0" y1="228.0" x2="302.0" y2="212.7" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<line x1="377.0" y1="226.3" x2="377.0" y2="217.8" style="stroke: var(--chart-1); stroke-width: 1.5; stroke-opacity: 0.45"/>
+<polyline points="77.0,221.2 152.0,221.2 227.0,219.5 302.0,221.2 377.0,221.2" fill="none" style="stroke: var(--chart-1); stroke-width: 2.5; stroke-linejoin: round" stroke-dasharray="6 4"/>
+<circle cx="77.0" cy="221.2" r="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="152.0" cy="221.2" r="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="227.0" cy="219.5" r="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="302.0" cy="221.2" r="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="377.0" cy="221.2" r="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<line x1="52" y1="12" x2="78" y2="12" style="stroke: var(--chart-2); stroke-width: 2.5"/>
+<circle cx="65" cy="12" r="4" style="fill: var(--chart-2); stroke: var(--chart-2); stroke-width: 2"/>
+<text x="86" y="16" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">view, training levels</text>
+<line x1="222" y1="12" x2="248" y2="12" style="stroke: var(--chart-2); stroke-width: 2.5" stroke-dasharray="6 4"/>
+<circle cx="235" cy="12" r="4" style="fill: var(--panel); stroke: var(--chart-2); stroke-width: 2"/>
+<text x="256" y="16" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">view, held-out levels</text>
+<line x1="52" y1="30" x2="78" y2="30" style="stroke: var(--chart-1); stroke-width: 2.5"/>
+<circle cx="65" cy="30" r="4" style="fill: var(--chart-1); stroke: var(--chart-1); stroke-width: 2"/>
+<text x="86" y="34" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">position, training levels</text>
+<line x1="222" y1="30" x2="248" y2="30" style="stroke: var(--chart-1); stroke-width: 2.5" stroke-dasharray="6 4"/>
+<circle cx="235" cy="30" r="4" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<text x="256" y="34" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">position, held-out levels</text>
+</svg>
+          <figcaption>
+            Fig. 2 · Mean return of runs 0 to 9 on their training levels and on
+            the 500 held-out levels, with bars from the lowest run to the
+            highest. From the output of <code>heldout.py</code>.
+          </figcaption>
+        </figure>
+        <p>
+          The view agent's held-out return rises from 0.05 at one level to
+          0.97 at 64, within 0.01 of its training return. Its table holds an
+          entry only for a view the agent has updated. One level shows it few
+          of the views that held-out levels contain, and each added level fills
+          in more. After 256 levels run 1's view agent takes a shortest route on
+          both levels of Fig. 3.
+        </p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem">
+<svg viewBox="0 0 294 340" role="img" aria-label="held-out level 100005, a 7 by 7 grid with cells given as (row, column) from (0, 0) at the top left, where the agent starts. Goal at (5, 5); walls at (1, 3), (1, 6), (2, 1), (4, 4), (6, 2), (6, 6). The position agent's path runs (0, 0) to (1, 0) to (2, 0), where the 40-move limit stops it. The view agent's path runs (0, 0) to (0, 1) to (0, 2) to (0, 3) to (0, 4) to (0, 5) to (1, 5) to (2, 5) to (3, 5) to (4, 5) to (5, 5), ending at the goal." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="14" y="18" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">held-out level 100005</text>
+<rect x="14" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="68" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="68" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="106" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="182" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="220" width="38" height="38" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="258" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="258" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<text x="33.0" y="41.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">start</text>
+<polyline points="28,44 28,82 28,120" fill="none" style="stroke: var(--chart-1); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round"/>
+<circle cx="28" cy="120" r="5" style="fill: var(--chart-1); stroke: var(--panel); stroke-width: 1.5"/>
+<polyline points="38,54 76,54 114,54 152,54 190,54 228,54 228,92 228,130 228,168 228,206 228,244" fill="none" style="stroke: var(--chart-2); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round" stroke-dasharray="7 4"/>
+<circle cx="228" cy="244" r="5" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"/>
+<line x1="14" y1="316" x2="40" y2="316" style="stroke: var(--chart-1); stroke-width: 3"/>
+<text x="46" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">position</text>
+<line x1="114" y1="316" x2="140" y2="316" style="stroke: var(--chart-2); stroke-width: 3" stroke-dasharray="7 4"/>
+<text x="146" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">view</text>
+<rect x="214" y="309" width="13" height="13" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<text x="233" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">goal</text>
+</svg>
+<svg viewBox="0 0 294 340" role="img" aria-label="held-out level 100008, a 7 by 7 grid with cells given as (row, column) from (0, 0) at the top left, where the agent starts. Goal at (6, 5); walls at (0, 2), (0, 6), (2, 0), (3, 3), (4, 0), (5, 3). The position agent's path runs (0, 0) to (1, 0), where the 40-move limit stops it. The view agent's path runs (0, 0) to (0, 1) to (1, 1) to (1, 2) to (1, 3) to (1, 4) to (1, 5) to (2, 5) to (3, 5) to (4, 5) to (5, 5) to (6, 5), ending at the goal." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="14" y="18" style="font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink)">held-out level 100008</text>
+<rect x="14" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="30" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="30" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="30" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="68" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="106" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="106" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="144" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="144" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="182" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="182" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="220" width="38" height="38" style="fill: var(--ink-soft); fill-opacity: 0.75; stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="220" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="14" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="52" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="90" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="128" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="166" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<rect x="204" y="258" width="38" height="38" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<rect x="242" y="258" width="38" height="38" style="fill: var(--panel); stroke: var(--line); stroke-width: 1"/>
+<text x="33.0" y="41.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">start</text>
+<polyline points="28,44 28,82" fill="none" style="stroke: var(--chart-1); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round"/>
+<circle cx="28" cy="82" r="5" style="fill: var(--chart-1); stroke: var(--panel); stroke-width: 1.5"/>
+<polyline points="38,54 76,54 76,92 114,92 152,92 190,92 228,92 228,130 228,168 228,206 228,244 228,282" fill="none" style="stroke: var(--chart-2); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round" stroke-dasharray="7 4"/>
+<circle cx="228" cy="282" r="5" style="fill: var(--chart-2); stroke: var(--panel); stroke-width: 1.5"/>
+<line x1="14" y1="316" x2="40" y2="316" style="stroke: var(--chart-1); stroke-width: 3"/>
+<text x="46" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">position</text>
+<line x1="114" y1="316" x2="140" y2="316" style="stroke: var(--chart-2); stroke-width: 3" stroke-dasharray="7 4"/>
+<text x="146" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">view</text>
+<rect x="214" y="309" width="13" height="13" style="fill: var(--chart-3); fill-opacity: 0.45; stroke: var(--line); stroke-width: 1"/>
+<text x="233" y="320" style="font-family: var(--sans); font-size: 12px; fill: var(--ink)">goal</text>
+</svg>
+</div>
+          <figcaption>
+            Fig. 3 · Run 1's agents after 256 training levels, on two held-out
+            levels of Fig. 1, drawn the same way.
+          </figcaption>
+        </figure>
+        <p>
+          The last column of the output is the removal test. It hands each view
+          missing from the table to <code>toward_goal</code>, leaves every
+          learned entry alone, and plays the held-out levels again. For agents
+          trained on one level, held-out return rises from 0.05 to 0.86, so
+          missing views cause most of the shortfall. The lowest run reaches
+          only 0.26, so there the entries it did learn, on its one level, also
+          lead it astray. By 64 levels, filling changes nothing.
+        </p>
+        <p>
+          A few runs at 16 and 64 levels fail some of their own training
+          levels, and their held-out return falls with them. Filling barely
+          lifts these runs, so entries they learned are at fault, for reasons
+          this lesson leaves untraced.
+        </p>
+      </section>
+
+      <section data-nb-section="training-return" id="training-return">
+        <h2>The position agent's gap closes because its training return falls</h2>
+        <p>
+          The position agent's held-out return stays near 0.04 at every count, while its training return
+          falls from 1.00 at one level to 0.05 at 256: one table of moves cannot
+          fit many training levels either. At 256 levels its gap is 0.01, as
+          small as the view agent's at 64, for an agent that solves almost
+          nothing.
+        </p>
+        <p>
+          Cobbe and colleagues treat the gap as the measurement, since “Train
+          and test levels are drawn from the same distribution, so the gap
+          between train and test performance determines the extent of
+          overfitting.”<sup class="nb-cite"><a href="#s2" data-nb-locator="§3.2, p. 3">2</a></sup>
+          Their own CoinRun gap with the Nature-CNN network shrinks from 32.66
+          points at 100 levels to 0.83 with unbounded levels, partly because
+          training success falls from 99.45% to 90.87%.<sup class="nb-cite"><a href="#s2" data-nb-locator="App. E, Table 1, p. 14">2</a></sup>
+          A random policy has a gap near zero.<sup class="nb-cite"><a href="#s6" data-nb-locator="§3.4, p. 211">6</a></sup>
+          So a gap shows generalization only when the training return beside
+          it is high.
+        </p>
+        <p>
+          The observation and the level count are necessary but do not decide
+          the gap alone. At 4,000 CoinRun levels Cobbe and colleagues
+          measured a gap of 11.83 points with the Nature-CNN and 1.83 with a
+          different network, the IMPALA-CNN.<sup class="nb-cite"><a href="#s2" data-nb-locator="§4, pp. 3–4; App. E, Table 1, p. 14">2</a></sup>
+          The next lesson varies an environment's physical parameters instead
+          of its layout, which is called domain randomization.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. A version of the view keeps the four wall flags and drops the
+            goal's direction. Can a policy that acts on it reach the goal by a
+            shortest route on every level, given enough training levels?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              No. Take two levels with no wall beside the start and goals at
+              (6, 0) and (0, 6). Both show the flags [1 0 0 1] at the start, but
+              the only shortest route to (6, 0) begins with down and the only
+              one to (0, 6) with right. A policy of the flags makes the same
+              choice on both, so by the bound no training set removes the
+              shortfall.
+            </p>
+          </details>
+          <p>
+            2. Give the position agent its last two positions as one
+            observation, the
+            <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">frame stack</a>
+            that gave Q-learning a rolling ball's speed. What does the stack
+            add, and does the bound still apply?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Two equal positions show that the last move was blocked, so a
+              policy of the stack can learn to turn after hitting a wall. That
+              is layout information, but only after a failed move, and nothing
+              about the goal. At the start every level shows [0 0] twice, so the
+              levels of Problem 1 still need different first moves from one
+              observation, and the bound applies.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          Return on training levels cannot show whether an agent learned the
+          task: position and view agents that solved their one training level
+          solved 0.04 and 0.05 of held-out levels. Return on held-out levels
+          from the same generator, with seeds kept out of training, can show
+          it when the training return is read beside it. No policy of the current observation beats the best
+          single policy for all levels. One table of positions cannot follow
+          every level's route, so the position agent's gap closed only as its
+          training return fell. The view supports one rule for every level, and
+          after 64 training levels the view agent's held-out return came within
+          0.01 of its training return.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1812.02341">Cobbe, Klimov, Hesse, Kim and Schulman, Quantifying Generalization in Reinforcement Learning</a>:
+            the CoinRun level-count experiment that this lesson repeats with a
+            Q-table. Appendix E prints every training and test score for its
+            nine training-set sizes.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1804.06893">Zhang, Vinyals, Munos and Bengio, A Study on Overfitting in Deep Reinforcement Learning</a>:
+            for drawn paths of one memorizing agent on its training and test
+            mazes, the nearest picture to Fig. 1, turn to Appendix C.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1912.01588">Cobbe, Hesse, Hilton and Schulman, Leveraging Procedural Generation to Benchmark Reinforcement Learning</a>:
+            the protocol, train on 200 or 500 levels and test on the full
+            distribution (§2.2), and the games that need memory once the view
+            shrinks (App. B.2).
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2111.09794">Kirk, Zhang, Grefenstette and Rocktäschel, A Survey of Zero-shot Generalisation in Deep Reinforcement Learning</a>:
+            if you want the formal setting, §3.3 makes each level a context of a
+            contextual MDP and §4.2 compares ways to split levels.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§3, “Memorization Capacity of Deep RL Agents”, pp. 5–6; App. A.2, p. 15"
+              data-nb-note="arXiv v2, 20 April 2018. Page numbers are those of the arXiv PDF."
+              href="https://arxiv.org/abs/1804.06893"
+              >arXiv · Zhang, Vinyals, Munos and Bengio, A Study on Overfitting in Deep Reinforcement Learning, 2018</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§3.1, p. 2; §3.2, p. 3; §4, pp. 3–4; §6, p. 6; App. E, Table 1, p. 14"
+              data-nb-note="ICML 2019, PMLR 97:1282–1289. Pages are those of arXiv v3, which includes the appendices that the proceedings text omits."
+              href="https://arxiv.org/abs/1812.02341"
+              >ICML 2019 · Cobbe, Klimov, Hesse, Kim and Schulman, Quantifying Generalization in Reinforcement Learning</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="README, “Environment Options”; src/game.cpp, Game::reset, L93–117; src/vecgame.cpp, L284–293"
+              data-nb-note="Read at commit 37b521dbb530f0734fd82f72d921f5e0e715c0d1."
+              href="https://github.com/openai/procgen/blob/37b521dbb530f0734fd82f72d921f5e0e715c0d1/procgen/src/game.cpp#L93-L117"
+              >GitHub · openai/procgen, README and source of Game::reset</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="Env.reset(), parameter seed"
+              href="https://gymnasium.farama.org/v1.4.0/api/env/#gymnasium.Env.reset"
+              >Farama Foundation · Gymnasium 1.4.0 documentation, Env.reset, 2026</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="“VecEnv API vs Gym API”; VecEnv.seed"
+              data-nb-note="DummyVecEnv.step_wait in the 2.9.2 source calls reset() without a seed when an episode ends (dummy_vec_env.py, L68–71)."
+              href="https://stable-baselines3.readthedocs.io/en/v2.9.2/guide/vec_envs.html"
+              >Stable-Baselines3 2.9.2 · Vectorized Environments, documentation, 2026</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§3.4, p. 211"
+              data-nb-note="Journal of Artificial Intelligence Research 76 (2023) 201–264. The arXiv copy, 2111.09794v6, carries the journal's page numbers."
+              href="https://www.jair.org/index.php/jair/article/view/14174"
+              >JAIR · Robert Kirk, Amy Zhang, Edward Grefenstette and Tim Rocktäschel, A Survey of Zero-shot Generalisation in Deep Reinforcement Learning, 2023</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
