@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gordon Bell winners compare a measured 105-minute FeMoco run with a quantum projection now cut to 2.5 hours &middot; Feature</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "feature",
+        "slug": "femoco-classical-exascale",
+        "template": "article",
+        "title": "Gordon Bell winners compare a measured 105-minute FeMoco run with a quantum projection now cut to 2.5 hours",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-23",
+        "tags": ["femoco", "quantum-chemistry", "gordon-bell", "supercomputing"],
+        "sources": 10,
+        "words": 1199,
+        "reading_minutes": 5,
+        "dek": "Their abstract’s “one-fifth” divides by an 8.6-hour estimate that its lead authors at Google Quantum AI replaced in May, and Garnet Chan’s Caltech group had posted a classical energy for the same 76-orbital model in January.",
+        "harness": "Claude Code",
+        "model": "claude-sonnet-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Feature</div>
+        <h1 class="nb-title">Gordon Bell winners compare a measured 105-minute FeMoco run with a quantum projection now cut to 2.5 hours</h1>
+        <p class="nb-dekline">Their abstract&rsquo;s &ldquo;one-fifth&rdquo; divides by an 8.6-hour estimate that its lead authors at Google Quantum AI replaced in May, and Garnet Chan&rsquo;s Caltech group had posted a classical energy for the same 76-orbital model in January.</p>
+        <div class="nb-byline">
+          <span>5 min read</span><span>2026-11-23</span>
+        </div>
+      </header>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>What the abstract&rsquo;s one-fifth divides by</h2>
+        <p>
+          The paper that won ACM&rsquo;s 2026 Gordon Bell Prize reports a FeMoco &ldquo;ground-state consensus&rdquo; on 1,280 LineShine supercomputer nodes in a &ldquo;measured end-to-end wall time of 105 minutes,&rdquo; &ldquo;approximately one-fifth of the best published 8.6-hour single-run projection for fault-tolerant quantum computing on the same active space.&rdquo;<sup class="nb-cite" data-nb-locator="abstract" data-nb-url="https://sc26.supercomputing.org/proceedings/papers/paper_pages/gb103.html"><a href="#s1">1</a></sup><sup class="nb-cite" data-nb-locator="whole article" data-nb-url="https://thequantuminsider.com/2026/11/20/10-member-team-drawn-from-chinese-institutions-wins-2026-gordon-bell-prize/"><a href="#s2">2</a></sup>
+          That sets a measurement against a projection, and the projection has moved. Guang Hao Low and colleagues at Google Quantum AI, authors of the 8.6 hours, now put the expected run time at 2.5 hours for the same active space.<sup class="nb-cite" data-nb-locator="Table XXVII, FeMoco-76o113e" data-nb-url="https://arxiv.org/abs/2605.30455"><a href="#s3">3</a></sup>
+          Huanchen Zhai, Garnet Chan and colleagues at Caltech had posted a classical energy for it in January, to about chemical accuracy (1 kcal/mol, or 1.6 millihartree).<sup class="nb-cite" data-nb-locator="abstract; ground-state estimate, pp. 9-11" data-nb-url="https://arxiv.org/abs/2601.04621"><a href="#s4">4</a></sup>
+        </p>
+        <p>
+          FeMoco is the iron-molybdenum cofactor of nitrogenase, the enzyme that converts N<sub>2</sub> to NH<sub>3</sub>.<sup class="nb-cite" data-nb-locator="Introduction, p. 1" data-nb-url="https://arxiv.org/abs/2601.04621"><a href="#s4">4</a></sup>
+          An active space is the set of electrons and orbitals a calculation treats explicitly. CAS(113e, 76o) is 113 electrons in 76 orbitals, beyond exact diagonalization. The abstract calls FeMoco the canonical &ldquo;killer app&rdquo; for fault-tolerant quantum computing in chemistry &ldquo;for nearly a decade&rdquo; and claims &ldquo;the first exascale classical solution&rdquo; of this active space.<sup class="nb-cite" data-nb-locator="abstract" data-nb-url="https://sc26.supercomputing.org/proceedings/papers/paper_pages/gb103.html"><a href="#s1">1</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="benchmark-started-at-54-orbitals" id="benchmark-started-at-54-orbitals">
+        <h2>A benchmark that started at 54 orbitals</h2>
+        <p>
+          Reiher and colleagues proposed FeMoco as a quantum target in a 2016 preprint, with 54 electrons in 54 orbitals. Their estimates ran from 12 days to 11 hours at 1 millihartree, depending on the logical qubits spent, and assumed &ldquo;that a good trial state for the ground state is available.&rdquo;<sup class="nb-cite" data-nb-locator="Table I, structure 1; Resource requirements" data-nb-url="https://arxiv.org/abs/1605.03590"><a href="#s5">5</a></sup>
+          Quantum phase estimation makes a projective measurement of the energy, so it needs a starting state that overlaps the true ground state.<sup class="nb-cite" data-nb-locator="Exponential speedup and societal impact" data-nb-url="https://quantumfrontiers.com/2026/03/12/the-femo-cofactor-and-classical-and-quantum-computing/"><a href="#s6">6</a></sup>
+        </p>
+        <p>
+          In 2019 Li et al., Chan among them, found that model classically easy, needing &ldquo;only modest resources.&rdquo;<sup class="nb-cite" data-nb-locator="Fig. 1 and the paragraph below it" data-nb-url="https://arxiv.org/abs/1809.10307"><a href="#s7">7</a></sup>
+          Chan puts it at a few hours on a laptop.<sup class="nb-cite" data-nb-locator="Which FeMo-cofactor model?" data-nb-url="https://quantumfrontiers.com/2026/03/12/the-femo-cofactor-and-classical-and-quantum-computing/"><a href="#s6">6</a></sup>
+          The same paper proposed the 76-orbital space,<sup class="nb-cite" data-nb-locator="Table I; last paragraphs" data-nb-url="https://arxiv.org/abs/1809.10307"><a href="#s7">7</a></sup> which became the common benchmark for quantum resource estimates.<sup class="nb-cite" data-nb-locator="Which FeMo-cofactor model?" data-nb-url="https://quantumfrontiers.com/2026/03/12/the-femo-cofactor-and-classical-and-quantum-computing/"><a href="#s6">6</a></sup>
+        </p>
+        <figure class="nb-figure">
+          <svg viewBox="0 0 400 326" role="img"
+  aria-label="Two-sided timeline of FeMoco estimates in date order, not to scale. Quantum run-time projections on the left, drawn as hollow diamonds for hardware that does not exist: Reiher et al. 2016, 54 orbitals, 12 days to 11 hours; Low et al. February 2025, 76 orbitals, 8.6 hours on 4.5 million qubits; Low et al. May 2026, 76 orbitals, 2.5 hours on 2.69 million qubits. Classical calculations on the right, drawn as filled circles: Li et al. 2019, the 54-orbital model classically easy and the 76-orbital space proposed; Zhai et al. January 2026, 76 orbitals, extrapolated to within 0.31 to 1.25 kcal/mol from 2.77 million core-hours; Shang et al. November 2026, 76 orbitals, 105 minutes on 1,280 nodes with accuracy not in the abstract."
+  style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+  <g font-family="var(--sans)" fill="var(--ink)">
+    <text x="186" y="14" font-size="10.5" font-weight="600" text-anchor="end">Quantum projections</text>
+    <text x="214" y="14" font-size="10.5" font-weight="600">Classical calculations</text>
+    <text x="186" y="27" font-size="9" fill="var(--ink-soft)" text-anchor="end">hollow: hardware does not exist</text>
+    <text x="214" y="27" font-size="9" fill="var(--ink-soft)">filled: calculation was run</text>
+  </g>
+  <line x1="200" y1="38" x2="200" y2="314" stroke="var(--line)" stroke-width="1" />
+  <g font-family="var(--sans)" fill="var(--ink)">
+    <path d="M200 56 l6 6 l-6 6 l-6 -6 z" fill="var(--panel)" stroke="var(--chart-1)" stroke-width="1.8" />
+    <text x="214" y="65" font-size="10" font-weight="600" fill="var(--ink-soft)">2016</text>
+    <text x="186" y="53" font-size="10.5" font-weight="600" text-anchor="end">Reiher et al. &middot; 54 orbitals</text>
+    <text x="186" y="65" font-size="10" text-anchor="end">12 days to 11 hours</text>
+    <text x="186" y="76" font-size="9" fill="var(--ink-soft)" text-anchor="end">1 mHa error, trial state assumed</text>
+    <circle cx="200" cy="108" r="5.5" fill="var(--chart-2)" />
+    <text x="186" y="111" font-size="10" font-weight="600" fill="var(--ink-soft)" text-anchor="end">2019</text>
+    <text x="214" y="99" font-size="10.5" font-weight="600">Li et al. &middot; 54 orbitals</text>
+    <text x="214" y="111" font-size="10">classically easy</text>
+    <text x="214" y="122" font-size="9" fill="var(--ink-soft)">76-orbital space proposed</text>
+    <path d="M200 148 l6 6 l-6 6 l-6 -6 z" fill="var(--panel)" stroke="var(--chart-1)" stroke-width="1.8" />
+    <text x="214" y="157" font-size="10" font-weight="600" fill="var(--ink-soft)">Feb 2025</text>
+    <text x="186" y="145" font-size="10.5" font-weight="600" text-anchor="end">Low et al. &middot; 76 orbitals</text>
+    <text x="186" y="157" font-size="10" text-anchor="end">8.6 hours, 4.5M qubits</text>
+    <text x="186" y="168" font-size="9" fill="var(--ink-soft)" text-anchor="end">perfect starting state assumed</text>
+    <circle cx="200" cy="200" r="5.5" fill="var(--chart-2)" />
+    <text x="186" y="203" font-size="10" font-weight="600" fill="var(--ink-soft)" text-anchor="end">Jan 2026</text>
+    <text x="214" y="191" font-size="10.5" font-weight="600">Zhai et al. &middot; 76 orbitals</text>
+    <text x="214" y="203" font-size="10">&plusmn;0.31 to &plusmn;1.25 kcal/mol</text>
+    <text x="214" y="214" font-size="9" fill="var(--ink-soft)">extrapolated, 2.77M core-hours</text>
+    <path d="M200 240 l6 6 l-6 6 l-6 -6 z" fill="var(--panel)" stroke="var(--chart-1)" stroke-width="1.8" />
+    <text x="214" y="249" font-size="10" font-weight="600" fill="var(--ink-soft)">May 2026</text>
+    <text x="186" y="237" font-size="10.5" font-weight="600" text-anchor="end">Low et al. &middot; 76 orbitals</text>
+    <text x="186" y="249" font-size="10" text-anchor="end">2.5 hours, 2.69M qubits</text>
+    <text x="186" y="260" font-size="9" fill="var(--ink-soft)" text-anchor="end">preprint, same error model</text>
+    <circle cx="200" cy="292" r="5.5" fill="var(--chart-2)" />
+    <text x="186" y="295" font-size="10" font-weight="600" fill="var(--ink-soft)" text-anchor="end">Nov 2026</text>
+    <text x="214" y="283" font-size="10.5" font-weight="600">Shang et al. &middot; 76 orbitals</text>
+    <text x="214" y="295" font-size="10">105 min on 1,280 nodes</text>
+    <text x="214" y="306" font-size="9" fill="var(--ink-soft)">accuracy not in the abstract</text>
+  </g>
+</svg>
+          <figcaption>
+            Fig. 1 &middot; FeMoco estimates in date order, not to scale.<sup class="nb-cite" data-nb-locator="Table I, structure 1" data-nb-url="https://arxiv.org/abs/1605.03590"><a href="#s5">5</a></sup><sup class="nb-cite" data-nb-locator="abstract and Fig. 1" data-nb-url="https://arxiv.org/abs/1809.10307"><a href="#s7">7</a></sup><sup class="nb-cite" data-nb-locator="Table I; resource paragraph" data-nb-url="https://arxiv.org/abs/2502.15882"><a href="#s8">8</a></sup><sup class="nb-cite" data-nb-locator="abstract; ground-state estimate, pp. 9-11" data-nb-url="https://arxiv.org/abs/2601.04621"><a href="#s4">4</a></sup><sup class="nb-cite" data-nb-locator="Table XXVII, FeMoco-76o113e" data-nb-url="https://arxiv.org/abs/2605.30455"><a href="#s3">3</a></sup><sup class="nb-cite" data-nb-locator="abstract" data-nb-url="https://sc26.supercomputing.org/proceedings/papers/paper_pages/gb103.html"><a href="#s1">1</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          In the left column, the 76-orbital projection fell from 8.6 hours to 2.5 in fifteen months under the same assumed error rate, cycle time and reaction time.<sup class="nb-cite" data-nb-locator="Sec. V, physical resources paragraph" data-nb-url="https://arxiv.org/abs/2502.15882"><a href="#s8">8</a></sup><sup class="nb-cite" data-nb-locator="Table XXVII; Sec. VI intro" data-nb-url="https://arxiv.org/abs/2605.30455"><a href="#s3">3</a></sup>
+          The 2025 paper had warned that magic state cultivation, which postdated its cost model, might make 8 hours &ldquo;a substantial overestimate.&rdquo;<sup class="nb-cite" data-nb-locator="Discussion, paragraph on cultivation" data-nb-url="https://arxiv.org/abs/2502.15882"><a href="#s8">8</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="measurement-projection-extrapolation" id="measurement-projection-extrapolation">
+        <h2>A measurement, a projection and an extrapolation</h2>
+        <p>
+          Divided by 105 minutes, 8.6 hours gives 4.9, the abstract&rsquo;s one-fifth, and 2.5 hours gives 1.4. Both ratios are this article&rsquo;s arithmetic, and each divides unlike things.
+        </p>
+        <figure class="nb-figure">
+          <svg viewBox="0 0 400 250" role="img"
+  aria-label="Three time figures for the same FeMoco active space on one hours axis, with what each covers. Low et al. February 2025: 8.6 hours projected, a dashed hollow bar, for phase estimation only on 4.5 million physical qubits that do not exist, assuming a perfect starting state. Low et al. May 2026: 2.5 hours expected run time projected, a dashed hollow bar, on 2.69 million qubits with the same assumption. Shang et al.: 105 minutes measured, a solid bar, on 1,280 of 22,680 LineShine nodes, with accuracy and the contents of the run not stated. Below the axis, Zhai et al. January 2026 report no wall time, only 2.77 million CPU core-hours and an extrapolated answer."
+  style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+  <g stroke="var(--hair)" stroke-width="0.8">
+    <line x1="10" y1="18" x2="10" y2="192" /><line x1="90" y1="18" x2="90" y2="192" />
+    <line x1="170" y1="18" x2="170" y2="192" /><line x1="250" y1="18" x2="250" y2="192" />
+    <line x1="330" y1="18" x2="330" y2="192" />
+  </g>
+  <g font-family="var(--sans)" font-size="9" fill="var(--ink-soft)" text-anchor="middle">
+    <text x="10" y="203">0</text><text x="90" y="203">2</text><text x="170" y="203">4</text>
+    <text x="250" y="203">6</text><text x="330" y="203">8 hours</text>
+  </g>
+  <g font-family="var(--sans)" fill="var(--ink)">
+    <text x="10" y="12" font-size="10.5" font-weight="600">Low et al., Feb 2025 &middot; projected</text>
+    <rect x="10" y="22" width="344" height="14" fill="var(--chart-1)" fill-opacity="0.16" stroke="var(--chart-1)" stroke-width="1.5" stroke-dasharray="4 3" />
+    <text x="360" y="33" font-size="10.5" font-weight="600">8.6 h</text>
+    <text x="10" y="49" font-size="9" fill="var(--ink-soft)">Phase estimation only, on 4.5M qubits that do not exist.</text>
+
+    <text x="10" y="72" font-size="10.5" font-weight="600">Low et al., May 2026 &middot; projected</text>
+    <rect x="10" y="82" width="100" height="14" fill="var(--chart-1)" fill-opacity="0.16" stroke="var(--chart-1)" stroke-width="1.5" stroke-dasharray="4 3" />
+    <text x="116" y="93" font-size="10.5" font-weight="600">2.5 h expected</text>
+    <text x="10" y="109" font-size="9" fill="var(--ink-soft)">Same active space and error model, on 2.69M qubits. Preprint.</text>
+
+    <text x="10" y="132" font-size="10.5" font-weight="600">Shang et al., SC26 abstract &middot; measured</text>
+    <rect x="10" y="142" width="70" height="14" fill="var(--chart-2)" />
+    <text x="86" y="153" font-size="10.5" font-weight="600">105 min</text>
+    <text x="10" y="169" font-size="9" fill="var(--ink-soft)">1,280 of 22,680 LineShine nodes, two Arm CPUs each.</text>
+    <text x="10" y="180" font-size="9" fill="var(--ink-soft)">Accuracy and contents of the run not stated.</text>
+
+    <text x="10" y="222" font-size="10.5" font-weight="600">Zhai et al., Jan 2026 &middot; extrapolated</text>
+    <text x="10" y="234" font-size="9" fill="var(--ink-soft)">No wall time. 2.77M CPU core-hours, then an extrapolated answer.</text>
+    <text x="10" y="245" font-size="9" fill="var(--ink-soft)">Its 46.3 s on Frontier is operations divided by peak rate, not a run.</text>
+  </g>
+</svg>
+          <figcaption>
+            Fig. 2 &middot; Time to solution for CAS(113e, 76o). Dashed hollow bars are projections, the solid bar is a measurement.<sup class="nb-cite" data-nb-locator="Sec. V, physical resources paragraph" data-nb-url="https://arxiv.org/abs/2502.15882"><a href="#s8">8</a></sup><sup class="nb-cite" data-nb-locator="Table XXVII, 2.50 h row" data-nb-url="https://arxiv.org/abs/2605.30455"><a href="#s3">3</a></sup><sup class="nb-cite" data-nb-locator="abstract" data-nb-url="https://sc26.supercomputing.org/proceedings/papers/paper_pages/gb103.html"><a href="#s1">1</a></sup><sup class="nb-cite" data-nb-locator="Sec. III, LineShine Supercomputer" data-nb-url="https://arxiv.org/abs/2609.27482"><a href="#s9">9</a></sup><sup class="nb-cite" data-nb-locator="Cost of classical methods and quantum advantage, pp. 11-12" data-nb-url="https://arxiv.org/abs/2601.04621"><a href="#s4">4</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          The prize run was measured on existing hardware, but the abstract gives no accuracy and does not say what the 105 minutes include, such as how many spin configurations it covers.<sup class="nb-cite" data-nb-locator="abstract" data-nb-url="https://sc26.supercomputing.org/proceedings/papers/paper_pages/gb103.html"><a href="#s1">1</a></sup>
+          Both Low et al. figures time phase estimation alone. The 2026 preprint &ldquo;ignore[s] the cost of preparing a good trial state,&rdquo; which it says &ldquo;should be strongly subdominant.&rdquo;<sup class="nb-cite" data-nb-locator="Sec. VI intro, near eq. 6.1" data-nb-url="https://arxiv.org/abs/2605.30455"><a href="#s3">3</a></sup>
+          The 2025 paper had put that preparation at about the same gate count as phase estimation.<sup class="nb-cite" data-nb-locator="Discussion, paragraph on state-preparation cost" data-nb-url="https://arxiv.org/abs/2502.15882"><a href="#s8">8</a></sup>
+          Zhai et al. are the reverse. They ran their calculations, but the answer is an extrapolation. Their only strict bound, a variational energy, sits 8.76 kcal/mol above it, and &ldquo;there is no formal theory of these extrapolations.&rdquo;<sup class="nb-cite" data-nb-locator="ground-state estimate, p. 10" data-nb-url="https://arxiv.org/abs/2601.04621"><a href="#s4">4</a></sup>
+          The 105 minutes is the only measured wall time in Fig. 2.
+        </p>
+      </section>
+
+      <section data-nb-section="what-the-105-minutes-establishes" id="what-the-105-minutes-establishes">
+        <h2>What the 105 minutes establishes</h2>
+        <p>
+          Chan wrote in March that FeMoco is &ldquo;overrepresented&rdquo; in the literature on quantum computing for chemistry, and that convincing evidence that chemically relevant problems meet the conditions for exponential quantum advantage &ldquo;has not yet been found.&rdquo; He is &ldquo;excited to see quantum computers applied to this problem,&rdquo; he adds, &ldquo;just not waiting for them to be built first.&rdquo;<sup class="nb-cite" data-nb-locator="Exponential speedup and societal impact; Quantum computers in chemistry Q&amp;A" data-nb-url="https://quantumfrontiers.com/2026/03/12/the-femo-cofactor-and-classical-and-quantum-computing/"><a href="#s6">6</a></sup>
+          He also grants what quantum algorithms offer that extrapolation does not.
+        </p>
+        <figure class="nb-quote-card">
+          <span class="nb-quote-mark" aria-hidden="true">&ldquo;</span>
+          <blockquote>
+            <p>
+              Quantum algorithms come with theoretical guarantees; for example, so long as the initial state is well prepared, we know the error in the energy that we measure from a quantum algorithm, which is more reliable than the classical estimates of error we obtain from extrapolations.
+            </p>
+          </blockquote>
+          <figcaption>
+            Garnet Chan &middot; Quantum Frontiers, 12 March 2026<sup class="nb-cite" data-nb-locator="Has the availability of a classical strategy changed your enthusiasm" data-nb-url="https://quantumfrontiers.com/2026/03/12/the-femo-cofactor-and-classical-and-quantum-computing/"><a href="#s6">6</a></sup>
+          </figcaption>
+        </figure>
+        <p>
+          Low and colleagues make the same point: &ldquo;quantum methods can provide accuracy guarantees that are missing when comparing heuristic classical methods and extrapolating.&rdquo;<sup class="nb-cite" data-nb-locator="Sec. I, paragraph on chemically accurate phase estimation" data-nb-url="https://arxiv.org/abs/2605.30455"><a href="#s3">3</a></sup>
+          Babbush and colleagues at Google Quantum AI wrote in November 2025 that &ldquo;no classical method has solved its electronic structure to the accuracy needed for definitive chemical insight,&rdquo; while calling the debate over exponential speedup &ldquo;unresolved.&rdquo;<sup class="nb-cite" data-nb-locator="section on the pragmatic perspective" data-nb-url="https://arxiv.org/abs/2511.09124"><a href="#s10">10</a></sup>
+          Both positions predate the prize.
+        </p>
+        <p>
+          What the prize adds is on the classical side of Fig. 1: a code sustaining 1.456 EFLOP/s in double precision on 20,480 of LineShine&rsquo;s 22,680 nodes, and a measured 105 minutes on 1,280 of them.<sup class="nb-cite" data-nb-locator="abstract" data-nb-url="https://sc26.supercomputing.org/proceedings/papers/paper_pages/gb103.html"><a href="#s1">1</a></sup><sup class="nb-cite" data-nb-locator="Sec. III, LineShine Supercomputer" data-nb-url="https://arxiv.org/abs/2609.27482"><a href="#s9">9</a></sup>
+          No single run on a fixed 76-orbital active space can show how cost grows as the active space grows, and that growth is what Chan&rsquo;s doubt about exponential advantage concerns.<sup class="nb-cite" data-nb-locator="Exponential speedup and societal impact" data-nb-url="https://quantumfrontiers.com/2026/03/12/the-femo-cofactor-and-classical-and-quantum-computing/"><a href="#s6">6</a></sup>
+        </p>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://sc26.supercomputing.org/proceedings/papers/paper_pages/gb103.html"
+              >SC26 &middot; Shang et al., prize paper abstract</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="secondary"
+              href="https://thequantuminsider.com/2026/11/20/10-member-team-drawn-from-chinese-institutions-wins-2026-gordon-bell-prize/"
+              >The Quantum Insider &middot; 2026 Gordon Bell Prize</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2605.30455"
+              >arXiv &middot; Low et al., May 2026</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2601.04621"
+              >arXiv &middot; Zhai et al., classical FeMo-cofactor estimate</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1605.03590"
+              >arXiv &middot; Reiher et al., 2016</a
+            >
+          </li>
+          <li id="s6">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://quantumfrontiers.com/2026/03/12/the-femo-cofactor-and-classical-and-quantum-computing/"
+              >Quantum Frontiers &middot; Chan, March 2026</a
+            >
+          </li>
+          <li id="s7">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/1809.10307"
+              >arXiv &middot; Li et al., 2019</a
+            >
+          </li>
+          <li id="s8">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2502.15882"
+              >arXiv &middot; Low et al., 2025</a
+            >
+          </li>
+          <li id="s9">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2609.27482"
+              >arXiv &middot; CerebroSim, LineShine description</a
+            >
+          </li>
+          <li id="s10">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              href="https://arxiv.org/abs/2511.09124"
+              >arXiv &middot; Babbush et al., Grand Challenge</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
