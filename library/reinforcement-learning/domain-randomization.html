@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A cart that can't see its load brakes for the heaviest one · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "domain-randomization",
+        "template": "lesson",
+        "title": "A cart that can't see its load brakes for the heaviest one",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-23",
+        "tags": ["domain-randomization", "q-learning", "value-iteration", "gymnasium"],
+        "sources": 5,
+        "words": 4467,
+        "reading_minutes": 19,
+        "dek": "Domain randomization over Dock's load costs the 1 kg cart 0.22 s, all of it from a dock buffer that stops heavier loads only at lower speeds.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">A cart that can't see its load brakes for the heaviest one</h1>
+        <p class="nb-dekline">
+          Domain randomization over Dock's load costs the 1 kg cart 0.22 s,
+          all of it from a dock buffer that stops heavier loads only at lower
+          speeds.
+        </p>
+        <div class="nb-byline">
+          <span>19 min read</span><span>2026-11-23</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A simulator's physical parameters are estimates, and a
+          policy tuned to one guess can fail at the real value. One
+          answer is to train on a range. Each reset draws the
+          parameter from the range and holds it for the episode, as
+          each reset drew a training level in the held-out levels
+          lesson. This is called domain randomization. If the
+          observation leaves the parameter out, a policy that acts on
+          it makes one choice per observation for the whole range, so
+          its best return is the middle term of that lesson's bound.
+          That policy gives up return at a value of the parameter only
+          where the best move depends on it. On a Dock with a random
+          load, you solve for that policy exactly, find which loads
+          pay and why, and check that Q-learning learns it.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/action-frequency.html">Deciding ten times as often leaves Q-learning a tenth of the gap between two pushes</a>:
+            Dock's rules and dock.py, which loads.py below imports.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/held-out-levels.html">Held-out levels catch a grid agent that memorized its training levels</a>:
+            the bound on any policy of one observation, here applied to loads
+            instead of levels.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">Q-learning values a rolling ball's cell by how often each speed reaches it</a>:
+            equation (4), the visit-weighted average a table entry holds, and
+            qlearn.py, which train.py runs unchanged.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            why Q-learning's estimates rest at the optimal action values, an
+            argument that uses the discount and is redone here without one.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>:
+            value iteration, which exact.py runs here with no discount.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>At one state, a light load and a heavy load need opposite pushes</h2>
+        <p>
+          LoadedDock is Dock, the cart from the
+          <a href="../reinforcement-learning/action-frequency.html">action-frequency lesson</a>,
+          carrying a load. Each reset draws the load's mass, 1, 2, 3 or 4 kg
+          with equal chances, and keeps it for the episode. The drive holds
+          every push at 1 m/s² whatever the load, so the mass never changes how
+          the cart moves. It matters at the dock, whose buffer stops the cart
+          only if its kinetic energy ½mv² is at most 0.5 J. That allows 1 m/s
+          for a 1 kg load and 0.5 m/s for a 4 kg load. A faster arrival
+          is a crash and pays −2 more, as rolling off the back end does.
+        </p>
+        <p>
+          Each decision now lasts 0.1 s, and every episode starts with
+          the cart at rest at x = 0.2. The return drops the discount,
+          so that every cost below reads in seconds. It is minus the
+          seconds until the episode ends, minus 2 for a crash or a
+          roll-off.
+        </p>
+        <p>
+          Take the 1 kg load first. Its best policy pushes right for
+          eleven decisions, reaching 1.1 m/s, then brakes by pushing
+          left for two and docks at 0.91 m/s after 1.29 s (Fig. 1).
+          The 4 kg load has to arrive at 0.5 m/s or less. Its best
+          policy pushes right for nine decisions and brakes for four,
+          then pushes once more and brakes again to dock at 0.49 m/s
+          after 1.51 s. Both paths reach x = 0.605 m at 0.9 m/s, and
+          there they part. The 1 kg load's best move there is to push,
+          and the 4 kg load's is to brake.
+        </p>
+        <figure class="nb-figure">
+          <svg viewBox="0 0 400 260" role="img" aria-label="Speed against position for the 1 kg and 4 kg loads' own best paths from rest at x = 0.2. Both push right to x = 0.605 m at 0.9 m/s. The 1 kg path pushes on to 1.1 m/s and docks at 0.91 m/s; the 4 kg path brakes there and docks at 0.49 m/s." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="46" y1="222" x2="318" y2="222" style="stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="46" y1="222" x2="46" y2="22" style="stroke: var(--ink-soft); stroke-width: 1"/>
+<line x1="46.0" y1="222" x2="46.0" y2="226" style="stroke: var(--ink-soft)"/>
+<text x="46.0" y="237" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">0.2</text>
+<line x1="114.0" y1="222" x2="114.0" y2="226" style="stroke: var(--ink-soft)"/>
+<text x="114.0" y="237" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">0.4</text>
+<line x1="182.0" y1="222" x2="182.0" y2="226" style="stroke: var(--ink-soft)"/>
+<text x="182.0" y="237" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">0.6</text>
+<line x1="250.0" y1="222" x2="250.0" y2="226" style="stroke: var(--ink-soft)"/>
+<text x="250.0" y="237" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">0.8</text>
+<line x1="318.0" y1="222" x2="318.0" y2="226" style="stroke: var(--ink-soft)"/>
+<text x="318.0" y="237" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">1</text>
+<line x1="42" y1="222.0" x2="46" y2="222.0" style="stroke: var(--ink-soft)"/>
+<text x="39" y="225.5" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">0</text>
+<line x1="42" y1="138.7" x2="46" y2="138.7" style="stroke: var(--ink-soft)"/>
+<text x="39" y="142.2" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">0.5</text>
+<line x1="42" y1="55.3" x2="46" y2="55.3" style="stroke: var(--ink-soft)"/>
+<text x="39" y="58.8" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">1</text>
+<text x="182.0" y="252" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">position x (m)</text>
+<text x="12" y="122.0" text-anchor="middle" transform="rotate(-90 12 122.0)" style="font: 11px var(--sans); fill: var(--ink)">speed v (m/s)</text>
+<line x1="318.0" y1="222" x2="318.0" y2="16" style="stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3"/>
+<text x="318.0" y="12" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">dock</text>
+<line x1="318.0" y1="55.3" x2="328.0" y2="55.3" style="stroke: var(--chart-1); stroke-width: 2.5"/>
+<text x="332.0" y="58.8" style="font: 10px var(--sans); fill: var(--ink)">1 kg: 1.00</text>
+<line x1="318.0" y1="138.7" x2="328.0" y2="138.7" style="stroke: var(--chart-2); stroke-width: 2.5"/>
+<text x="332.0" y="142.2" style="font: 10px var(--sans); fill: var(--ink)">4 kg: 0.50</text>
+<polyline points="46.0,222.0 46.0,219.9 46.1,217.8 46.2,215.8 46.4,213.7 46.7,211.6 47.0,209.5 47.3,207.4 47.7,205.3 48.2,203.2 48.7,201.2 49.2,199.1 49.8,197.0 50.5,194.9 51.2,192.8 52.0,190.8 52.8,188.7 53.7,186.6 54.6,184.5 55.6,182.4 56.6,180.3 57.7,178.2 58.9,176.2 60.1,174.1 61.3,172.0 62.6,169.9 64.0,167.8 65.4,165.8 66.8,163.7 68.3,161.6 69.9,159.5 71.5,157.4 73.2,155.3 74.9,153.2 76.7,151.2 78.5,149.1 80.4,147.0 82.4,144.9 84.4,142.8 86.4,140.8 88.5,138.7 90.7,136.6 92.9,134.5 95.1,132.4 97.4,130.3 99.8,128.2 102.2,126.2 104.7,124.1 107.2,122.0 109.8,119.9 112.4,117.8 115.1,115.8 117.8,113.7 120.6,111.6 123.5,109.5 126.4,107.4 129.3,105.3 132.3,103.2 135.4,101.2 138.5,99.1 141.6,97.0 144.8,94.9 148.1,92.8 151.4,90.8 154.8,88.7 158.2,86.6 161.7,84.5 165.2,82.4 168.8,80.3 172.5,78.2 176.2,76.2 179.9,74.1 183.7,72.0 187.5,74.1 191.2,76.2 194.9,78.2 198.6,80.3 202.2,82.4 205.7,84.5 209.2,86.6 212.6,88.7 216.0,90.8 219.3,92.8 222.6,94.9 225.8,97.0 228.9,99.1 232.0,101.2 235.1,103.2 238.1,105.3 241.0,107.4 243.9,109.5 246.8,111.6 249.6,113.7 252.3,115.8 255.0,117.8 257.6,119.9 260.2,122.0 262.7,124.1 265.2,126.2 267.6,128.2 270.0,130.3 272.3,132.4 274.5,134.5 276.7,136.6 278.9,138.7 281.1,136.6 283.3,134.5 285.5,132.4 287.8,130.3 290.2,128.2 292.6,126.2 295.1,124.1 297.6,122.0 300.1,124.1 302.6,126.2 305.0,128.2 307.4,130.3 309.7,132.4 311.9,134.5 314.1,136.6 316.3,138.7 316.5,138.9 316.7,139.1 316.9,139.3 317.2,139.5 317.4,139.7 317.6,139.9 317.8,140.1 318.0,140.4" style="fill: none; stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="47.7" cy="205.3" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="52.8" cy="188.7" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="61.3" cy="172.0" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="73.2" cy="155.3" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="88.5" cy="138.7" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="107.2" cy="122.0" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="129.3" cy="105.3" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="154.8" cy="88.7" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="183.7" cy="72.0" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="212.6" cy="88.7" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="238.1" cy="105.3" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="260.2" cy="122.0" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="278.9" cy="138.7" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="297.6" cy="122.0" r="2.2" style="fill: var(--chart-2)"/>
+<circle cx="316.3" cy="138.7" r="2.2" style="fill: var(--chart-2)"/>
+<polyline points="46.0,222.0 46.0,219.9 46.1,217.8 46.2,215.8 46.4,213.7 46.7,211.6 47.0,209.5 47.3,207.4 47.7,205.3 48.2,203.2 48.7,201.2 49.2,199.1 49.8,197.0 50.5,194.9 51.2,192.8 52.0,190.8 52.8,188.7 53.7,186.6 54.6,184.5 55.6,182.4 56.6,180.3 57.7,178.2 58.9,176.2 60.1,174.1 61.3,172.0 62.6,169.9 64.0,167.8 65.4,165.8 66.8,163.7 68.3,161.6 69.9,159.5 71.5,157.4 73.2,155.3 74.9,153.2 76.7,151.2 78.5,149.1 80.4,147.0 82.4,144.9 84.4,142.8 86.4,140.8 88.5,138.7 90.7,136.6 92.9,134.5 95.1,132.4 97.4,130.3 99.8,128.2 102.2,126.2 104.7,124.1 107.2,122.0 109.8,119.9 112.4,117.8 115.1,115.8 117.8,113.7 120.6,111.6 123.5,109.5 126.4,107.4 129.3,105.3 132.3,103.2 135.4,101.2 138.5,99.1 141.6,97.0 144.8,94.9 148.1,92.8 151.4,90.8 154.8,88.7 158.2,86.6 161.7,84.5 165.2,82.4 168.8,80.3 172.5,78.2 176.2,76.2 179.9,74.1 183.7,72.0 187.6,69.9 191.5,67.8 195.4,65.8 199.4,63.7 203.5,61.6 207.6,59.5 211.8,57.4 216.0,55.3 220.3,53.2 224.6,51.2 229.0,49.1 233.4,47.0 237.9,44.9 242.5,42.8 247.1,40.8 251.7,38.7 256.3,40.8 260.9,42.8 265.5,44.9 270.0,47.0 274.4,49.1 278.8,51.2 283.1,53.3 287.4,55.3 291.4,57.3 295.3,59.3 299.2,61.2 303.1,63.2 306.9,65.2 310.6,67.1 314.3,69.1 318.0,71.1" style="fill: none; stroke: var(--chart-1); stroke-width: 2"/>
+<circle cx="47.7" cy="205.3" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="52.8" cy="188.7" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="61.3" cy="172.0" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="73.2" cy="155.3" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="88.5" cy="138.7" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="107.2" cy="122.0" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="129.3" cy="105.3" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="154.8" cy="88.7" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="183.7" cy="72.0" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="216.0" cy="55.3" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="251.7" cy="38.7" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="287.4" cy="55.3" r="2.2" style="fill: var(--chart-1)"/>
+<circle cx="183.7" cy="72.0" r="6" style="fill: none; stroke: var(--ink); stroke-width: 1.2"/>
+<text x="174.7" y="63.0" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink)">x = 0.605, v = 0.9:</text>
+<text x="174.7" y="75.0" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink)">the paths part</text>
+<text x="52.8" y="27.0" style="font: 10px var(--sans); fill: var(--chart-1)">1 kg: docks at 1.29 s, 0.91 m/s</text>
+<text x="52.8" y="42.0" style="font: 10px var(--sans); fill: var(--chart-2)">4 kg: docks at 1.51 s, 0.49 m/s</text>
+<text x="332.0" y="97.0" style="font: 10px var(--sans); fill: var(--ink-soft)">limits</text>
+<text x="52.0" y="216.0" style="font: 10px var(--sans); fill: var(--ink-soft)">start, at rest</text>
+</svg>
+          <figcaption>
+            Fig. 1 · Speed against position on the 1 kg and 4 kg loads' best
+            paths, a dot per decision. Ticks on the dock line mark each load's
+            limit. From exact.py.
+          </figcaption>
+        </figure>
+        <p>
+          An agent that observes x and v sees the same state with
+          every load, so its policy makes one move there for all four.
+          A push leaves the cart at 1 m/s with 0.3 m to go. Braking
+          would need 0.33 m to reach the 3 kg load's limit of 0.58
+          m/s, so the 3 kg and 4 kg loads crash, an expected cost of
+          1. Braking and then following the 4 kg load's path costs no
+          load more than 0.22 s, since none docks sooner than the 1 kg
+          load's 1.29 s. Crashing only the 4 kg load would still cost
+          a quarter of 2, 0.5 on average. Both exceed 0.22 s, so the
+          policy brakes for the heaviest load.
+        </p>
+        <p>
+          loads.py builds LoadedDock on dock.py from the
+          action-frequency lesson. A push held for 0.1 s changes the
+          speed by 0.1 m/s and moves the cart a whole number of 5 mm
+          steps, so from a start on that grid every state stays on it.
+          The observation reports the exact state as two integers,
+          because qlearn.py's <code>key()</code> applies
+          <code>int()</code>, which would cut a float position to 0 or
+          1. With integers its table gets one entry per (x, v), with
+          nothing behind it but the load. Reset draws the mass with
+          <code>self.np_random</code>, so the seed of a run's first
+          reset fixes every load the run draws.<sup class="nb-cite"><a
+          href="#s1">1</a></sup>
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">loads.py · complete</span><span>python</span>
+          </div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""LoadedDock: Dock with a load whose mass is drawn at every reset.
+
+The drive holds each push at 1 m/s^2 whatever the load, so the mass never
+changes how the cart moves. It matters at the dock, whose buffer stops a cart
+only if its kinetic energy m v^2 / 2 is at most 0.5 J. A faster arrival is a
+crash, which pays -2 more, as rolling off the back end does. Undiscounted, the
+return is minus the seconds until the episode ends, minus 2 for a crash or a
+roll-off.
+
+Each decision lasts 0.1 s, and the cart starts at rest at x = 0.2 unless
+reset's options say otherwise. From a start on the grid of 5 mm by 0.1 m/s,
+every state the cart reaches is on the grid too, so the observation is the
+exact state as two integers: x in steps of 5 mm and v in steps of 0.1 m/s.
+With observe_mass=True a third integer gives the mass in kg.
+"""
+import gymnasium as gym
+import numpy as np
+from gymnasium.utils.env_checker import check_env
+
+from dock import Dock
+
+BUFFER, CRASH = 0.5, 2.0  # joules, and what a crash costs
+MASSES = (1, 2, 3, 4)  # kg, the training range
+
+
+class LoadedDock(Dock):
+    def __init__(self, masses=MASSES, observe_mass=False, limit=True):
+        super().__init__(dt=0.1)
+        self.masses, self.observe_mass, self.limit = masses, observe_mass, limit
+        low, high = [0, -40], [200, 40]
+        if observe_mass:
+            low, high = low + [0], high + [9]
+        self.observation_space = gym.spaces.Box(np.array(low), np.array(high),
+                                                dtype=np.int64)
+
+    def observe(self):
+        obs = [round(self.x / 0.005), round(self.v / 0.1)]
+        if self.observe_mass:
+            obs.append(self.mass)
+        return np.array(obs, dtype=np.int64)
+
+    def reset(self, *, seed=None, options=None):
+        """options may fix the start, {"x": x, "v": v}, and {"mass": m}."""
+        gym.Env.reset(self, seed=seed)  # seeds self.np_random if seed is given
+        options = options or {}
+        self.x, self.v = options.get("x", 0.2), options.get("v", 0.0)
+        if "mass" in options:
+            self.mass = options["mass"]
+        else:
+            self.mass = int(self.np_random.choice(self.masses))
+        self.t = 0.0
+        return self.observe(), {}
+
+    def step(self, action):
+        _, reward, terminated, truncated, _ = super().step(action)
+        energy = 0.5 * self.mass * self.v**2  # joules, on arrival
+        crash = self.limit and terminated and self.x == 1.0 and \
+            energy &gt; BUFFER + 1e-9  # rounding can lift an energy at the limit
+        return self.observe(), reward - CRASH * crash, terminated, truncated, {}
+
+
+if __name__ == "__main__":
+    for observe_mass in (False, True):
+        check_env(LoadedDock(observe_mass=observe_mass), skip_render_check=True)
+    print("check_env passed for both observations")</code></pre>
+          <figcaption class="nb-code-cap">
+            The LoadedDock environment. It needs dock.py in its folder. Run on
+            its own, it passes Gymnasium's environment checker, which tests the
+            API and not the cart's rules.
+          </figcaption>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run loads.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">check_env passed for both observations</code></pre>
+        </figure>
+        <p>
+          Tobin and colleagues named domain randomization while
+          training an object detector on randomized renders,<sup
+          class="nb-cite"><a href="#s2">2</a></sup> after EPOpt and
+          CAD2RL had trained RL policies in randomized simulators.<sup
+          class="nb-cite"><a href="#s3">3</a></sup><sup
+          class="nb-cite"><a href="#s4">4</a></sup> Peng and
+          colleagues drew a robot arm's dynamics parameters at the
+          start of each episode, as LoadedDock does, and transferred
+          the policy from simulation to the real arm.<sup
+          class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+      </section>
+
+      <section data-nb-section="averaged-dock" id="averaged-dock">
+        <h2>Averaging the dock's reward over the loads leaves one Dock to solve</h2>
+        <p>
+          A policy of (x, v) moves the cart the same way with every load, so
+          only the reward depends on the mass, and only on the move that
+          reaches the dock. Write r<sub>m</sub>(s, a) for the reward with load
+          m, J<sub>m</sub>(π) for policy π's expected return with that load,
+          and p(m) for the chance of drawing m. The paths π produces have the
+          same probabilities with every load, so the average over loads moves
+          inside the sum over the path.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \begin{aligned} \mathbb{E}_m\big[J_m(\pi)\big] &amp;= \mathbb{E}_\pi\Big[\sum_t \htmlClass{nb-mc1}{\bar r(S_t, A_t)}\Big] \\ \htmlClass{nb-mc1}{\bar r(s, a)} &amp;= \sum_m p(m)\, r_m(s, a) \end{aligned}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\bar r(s, a)</span><span>the
+              reward averaged over the loads. It differs from Dock's only on a
+              move that docks, where it subtracts 2 times the share of loads
+              that would crash</span>
+            </li>
+            <li>
+              <span class="nb-math-term">\mathbb{E}_\pi</span><span>an average
+              over the paths π produces</span>
+            </li>
+          </ul>
+          <figcaption>
+            A policy's return averaged over the loads.
+          </figcaption>
+        </figure>
+        <p>
+          The right side is π's return in one ordinary Dock whose
+          reward is r̄. Call it the averaged Dock. Arriving at 0.6 m/s
+          pays −1 there on top of the time, since the 3 kg and 4 kg
+          loads would crash. Both sides are equal for every π, so the
+          policy of (x, v) with the best return averaged over the four
+          loads is the averaged Dock's optimal policy.
+        </p>
+        <p>
+          The averaged Dock's best return is the middle term of the
+          bound from the <a
+          href="../reinforcement-learning/held-out-levels.html">held-out
+          levels lesson</a>, with loads in place of levels.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \begin{aligned} \mathbb{E}_m\big[J_m(\pi)\big] &amp;\le \htmlClass{nb-mc2}{\max_{\pi'} \mathbb{E}_m\big[J_m(\pi')\big]} \\ &amp;\le \htmlClass{nb-mc3}{\mathbb{E}_m\Big[\max_{\pi'} J_m(\pi')\Big]} \end{aligned}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc2">\max_{\pi'} \mathbb{E}_m\big[J_m(\pi')\big]</span><span>the
+              averaged Dock's best return</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc3">\mathbb{E}_m\Big[\max_{\pi'} J_m(\pi')\Big]</span><span>each
+              load's own best return, averaged over the loads</span>
+            </li>
+          </ul>
+          <figcaption>
+            The bound for policies π and π′ of (x, v).
+          </figcaption>
+        </figure>
+        <p>
+          A policy that also observes m can reach the right-hand term.
+          Its state (x, v, m) never changes its m, so its Dock splits
+          into one Dock per load, and its best policy plays each
+          load's own best. The cost of hiding the mass at load m is
+          that load's own best return minus the averaged Dock policy's
+          return. It is zero at every load exactly when a single
+          policy is optimal for each load separately.
+        </p>
+        <p>
+          exact.py finds that policy and each load's own by <a
+          href="../reinforcement-learning/finding-optimal-policies.html">value
+          iteration</a>. It needs dock.py and loads.py and runs in
+          about a second. Its list of the states the cart can reach is
+          finite, since building it ends, and <code>solve()</code>
+          sweeps until no value changes. It stops on every run, so its
+          values solve the Bellman optimality equation.
+        </p>
+        <p>
+          The <a
+          href="../reinforcement-learning/sarsa-and-q-learning.html">SARSA
+          and Q-learning lesson</a> showed that equation has one
+          solution because the backup shrinks gaps by γ. With no
+          discount that argument is gone. In any solution, a value
+          equals its best move's reward plus the next value. Every
+          move that doesn't end the episode pays −0.1, so values rise
+          by 0.1 along best moves and never return to a state. Among
+          finitely many states, the best moves must then end the
+          episode, so each value is one finished path's return. Adding
+          V(s) ≥ r + V(s′) along any other finished path puts the
+          value at or above that path's return. So the only solution
+          is the optimal values, and through Q(s, a) = r + V(s′) the
+          optimal action values.
+        </p>
+        <details>
+          <summary>exact.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">exact.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""The exact best policies on LoadedDock, by value iteration.
+
+A policy of (x, v) moves the cart the same way whatever the load, so only the
+reward of the move that reaches the dock depends on the mass. Averaging that
+reward over the masses gives one Dock, the averaged Dock, whose best policy is
+the policy of (x, v) with the best average return. Each mass's own best policy
+is the best policy of the Dock with that mass alone.
+
+uv run exact.py             start at rest at x = 0.2 m
+  --no-limit                the buffer stops a cart at any speed
+  --start 0.8 1.0           start at x = 0.8 m moving at 1.0 m/s
+"""
+import argparse
+
+import numpy as np
+
+from dock import LEFT, RIGHT
+from loads import BUFFER, MASSES, LoadedDock
+
+
+def lattice(env, start):
+    """Every state reachable from start, and for each state and move the next
+    state's index (-1 if the move ends the episode) and the reward per mass."""
+    obs, _ = env.reset(options=start)
+    index, states, nxt, reward = {tuple(obs): 0}, [start], [], []
+    for state in states:  # the list grows as new states turn up
+        nxt.append([])
+        reward.append([])
+        for a in (LEFT, RIGHT):
+            rewards = []
+            for m in MASSES:
+                env.reset(options={**state, "mass": m})
+                obs, r, terminated, _, _ = env.step(a)
+                rewards.append(r)
+            reward[-1].append(rewards)
+            if terminated:
+                nxt[-1].append(-1)
+                continue
+            if tuple(obs) not in index:
+                index[tuple(obs)] = len(states)
+                states.append({"x": env.x, "v": env.v})
+            nxt[-1].append(index[tuple(obs)])
+    return index, np.array(nxt), np.array(reward)  # reward[state, move, mass]
+
+
+def solve(nxt, reward):
+    """Action values by value iteration with no discount, sweeping until no
+    value changes."""
+    V = np.zeros(len(nxt))
+    while True:
+        Q = reward + np.where(nxt &gt;= 0, V[nxt], 0.0)
+        if np.array_equal(Q.max(axis=1), V):
+            return Q
+        V = Q.max(axis=1)
+
+
+def play(Q, index, env, start, mass):
+    """The greedy return, ties going to RIGHT, and the final speed."""
+    obs, _ = env.reset(options={**start, "mass": mass})
+    G, done = 0.0, False
+    while not done:
+        left, right = Q[index[tuple(obs)]]
+        obs, r, terminated, truncated, _ = env.step(RIGHT if right &gt;= left - 1e-9
+                                                    else LEFT)
+        G, done = G + r, terminated or truncated
+    return G, env.v
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--no-limit", action="store_true")
+    parser.add_argument("--start", type=float, nargs=2, default=[0.2, 0.0])
+    args = parser.parse_args()
+    env, start = LoadedDock(limit=not args.no_limit), dict(zip("xv", args.start))
+    index, nxt, reward = lattice(env, start)
+    averaged = solve(nxt, reward.mean(axis=2))
+    own = [solve(nxt, reward[:, :, i]) for i in range(len(MASSES))]
+    print(f"start x = {start['x']}, v = {start['v']}; masses {list(MASSES)} kg; "
+          f"buffer {'off' if args.no_limit else 'on'}")
+    print(f"{'':15s}{'own best policy':&gt;18s}{'averaged Dock':&gt;20s}")
+    print(f"{'mass  limit':15s}{'return':&gt;9s}{'speed':&gt;9s}"
+          f"{'return':&gt;10s}{'speed':&gt;10s}{'cost':&gt;7s}")
+    for i, m in enumerate(MASSES):
+        G, w = play(own[i], index, env, start, m)
+        G1, w1 = play(averaged, index, env, start, m)
+        limit = "none" if args.no_limit else f"{np.sqrt(2 * BUFFER / m):.2f} m/s"
+        print(f"{m:2d} kg {limit:&gt;8s}{G:8.2f}{w:9.2f}{G1:10.2f}{w1:10.2f}"
+              f"{G - G1:7.2f}")
+
+if __name__ == "__main__":
+    main()</code></pre>
+            <figcaption class="nb-code-cap">
+              Value iteration on the averaged Dock and on each load's own Dock.
+            </figcaption>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run exact.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">start x = 0.2, v = 0.0; masses [1, 2, 3, 4] kg; buffer on
+                  own best policy       averaged Dock
+mass  limit       return    speed    return     speed   cost
+ 1 kg 1.00 m/s   -1.29     0.91     -1.51      0.49   0.22
+ 2 kg 0.71 m/s   -1.37     0.63     -1.51      0.49   0.14
+ 3 kg 0.58 m/s   -1.43     0.57     -1.51      0.49   0.08
+ 4 kg 0.50 m/s   -1.51     0.49     -1.51      0.49   0.00</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="who-pays" id="who-pays">
+        <h2>The light loads pay for docking at the 4 kg load's speed</h2>
+        <p>
+          The averaged Dock's policy follows the 4 kg load's own path
+          and docks every load at 0.49 m/s after 1.51 s (Fig. 2). From
+          this start, the cost of hiding the mass grows toward the
+          light end of the range, from nothing at 4 kg to 0.22 s at 1
+          kg. A policy trained on the 1 kg load alone would do worse:
+          it arrives at 0.91 m/s and would crash every heavier load.
+        </p>
+        <figure class="nb-figure">
+          <svg viewBox="0 0 400 240" role="img" aria-label="Speed at the dock against the load's mass, 1 to 4 kg. The buffer's limit falls from 1 m/s at 1 kg to 0.5 m/s at 4 kg. Each load's own best policy arrives just under its limit. The averaged Dock's policy arrives at 0.49 m/s with every load, which docks the 1 kg load 0.22 s later than its own best, the 2 kg load 0.14 s later, the 3 kg load 0.08 s later and the 4 kg load no later." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="48" y1="200" x2="384" y2="200" style="stroke: var(--ink-soft)"/>
+<line x1="48" y1="200" x2="48" y2="24" style="stroke: var(--ink-soft)"/>
+<line x1="90.0" y1="200" x2="90.0" y2="204" style="stroke: var(--ink-soft)"/>
+<text x="90.0" y="215" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">1</text>
+<line x1="174.0" y1="200" x2="174.0" y2="204" style="stroke: var(--ink-soft)"/>
+<text x="174.0" y="215" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">2</text>
+<line x1="258.0" y1="200" x2="258.0" y2="204" style="stroke: var(--ink-soft)"/>
+<text x="258.0" y="215" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">3</text>
+<line x1="342.0" y1="200" x2="342.0" y2="204" style="stroke: var(--ink-soft)"/>
+<text x="342.0" y="215" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink-soft)">4</text>
+<line x1="44" y1="200.0" x2="48" y2="200.0" style="stroke: var(--ink-soft)"/>
+<text x="41" y="203.5" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">0</text>
+<line x1="44" y1="120.0" x2="48" y2="120.0" style="stroke: var(--ink-soft)"/>
+<text x="41" y="123.5" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">0.5</text>
+<line x1="44" y1="40.0" x2="48" y2="40.0" style="stroke: var(--ink-soft)"/>
+<text x="41" y="43.5" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">1</text>
+<text x="216.0" y="229" text-anchor="middle" style="font: 11px var(--sans); fill: var(--ink)">mass of the load (kg)</text>
+<text x="12" y="112.0" text-anchor="middle" transform="rotate(-90 12 112.0)" style="font: 11px var(--sans); fill: var(--ink)">speed at the dock (m/s)</text>
+<polyline points="77.4,26.5 82.6,32.4 87.8,37.9 93.0,42.8 98.2,47.3 103.4,51.4 108.6,55.2 113.8,58.7 119.0,62.0 124.2,65.1 129.4,68.0 134.6,70.7 139.8,73.2 145.0,75.6 150.2,77.9 155.3,80.0 160.5,82.0 165.7,84.0 170.9,85.8 176.1,87.6 181.3,89.3 186.5,90.9 191.7,92.4 196.9,93.9 202.1,95.3 207.3,96.6 212.5,98.0 217.7,99.2 222.9,100.4 228.1,101.6 233.3,102.7 238.5,103.8 243.7,104.9 248.9,105.9 254.1,106.9 259.3,107.9 264.5,108.8 269.7,109.7 274.9,110.6 280.1,111.4 285.3,112.2 290.5,113.1 295.7,113.8 300.9,114.6 306.1,115.3 311.2,116.1 316.4,116.8 321.6,117.5 326.8,118.1 332.0,118.8 337.2,119.4 342.4,120.1 347.6,120.7 352.8,121.3 358.0,121.8 363.2,122.4 368.4,123.0 373.6,123.5 378.8,124.1 384.0,124.6" style="fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 3"/>
+<line x1="90.0" y1="121.6" x2="342.0" y2="121.6" style="stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="90.0" cy="121.6" r="3.5" style="fill: var(--chart-2)"/>
+<circle cx="90.0" cy="55.1" r="3.5" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<line x1="90.0" y1="59.1" x2="90.0" y2="117.6" style="stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="90.0" y="137.6" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink)">+0.22 s</text>
+<circle cx="174.0" cy="121.6" r="3.5" style="fill: var(--chart-2)"/>
+<circle cx="174.0" cy="98.8" r="3.5" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<line x1="174.0" y1="102.8" x2="174.0" y2="117.6" style="stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="174.0" y="137.6" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink)">+0.14 s</text>
+<circle cx="258.0" cy="121.6" r="3.5" style="fill: var(--chart-2)"/>
+<circle cx="258.0" cy="109.5" r="3.5" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<line x1="258.0" y1="113.5" x2="258.0" y2="117.6" style="stroke: var(--ink-soft); stroke-width: 1"/>
+<text x="258.0" y="137.6" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink)">+0.08 s</text>
+<circle cx="342.0" cy="121.6" r="3.5" style="fill: var(--chart-2)"/>
+<circle cx="342.0" cy="121.6" r="3.5" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<text x="342.0" y="137.6" text-anchor="middle" style="font: 10px var(--sans); fill: var(--ink)">+0.00 s</text>
+<circle cx="165.6" cy="33.6" r="3.5" style="fill: var(--panel); stroke: var(--chart-1); stroke-width: 2"/>
+<text x="178.6" y="37.1" style="font: 10px var(--sans); fill: var(--ink)">each load's own best policy</text>
+<line x1="157.6" y1="47.2" x2="173.6" y2="47.2" style="stroke: var(--chart-2); stroke-width: 2"/>
+<circle cx="165.6" cy="47.2" r="3.5" style="fill: var(--chart-2)"/>
+<text x="178.6" y="50.7" style="font: 10px var(--sans); fill: var(--ink)">averaged Dock's policy</text>
+<line x1="157.6" y1="60.8" x2="173.6" y2="60.8" style="stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 3"/>
+<text x="178.6" y="64.3" style="font: 10px var(--sans); fill: var(--ink)">buffer's limit: faster arrivals crash</text>
+</svg>
+          <figcaption>
+            Fig. 2 · Speed at the dock under each load's own best policy and
+            under the averaged Dock's policy, and how much later the averaged
+            policy docks each load. From the output of exact.py.
+          </figcaption>
+        </figure>
+        <p>
+          As a check on the code, <code>uv run exact.py
+          --no-limit</code> removes the buffer's rule, the mass's only
+          effect. Every load's best policy then docks after 1.26 s,
+          and hiding the mass costs nothing.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run exact.py --no-limit</span><span>text</span>
+          </div>
+          <pre><code data-language="text">start x = 0.2, v = 0.0; masses [1, 2, 3, 4] kg; buffer off
+                  own best policy       averaged Dock
+mass  limit       return    speed    return     speed   cost
+ 1 kg     none   -1.26     1.26     -1.26      1.26   0.00
+ 2 kg     none   -1.26     1.26     -1.26      1.26   0.00
+ 3 kg     none   -1.26     1.26     -1.26      1.26   0.00
+ 4 kg     none   -1.26     1.26     -1.26      1.26   0.00</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="q-learning" id="q-learning">
+        <h2>Q-learning with a load drawn every episode ends on the averaged Dock's policy</h2>
+        <p>
+          An agent that learns from episodes never sees r̄. Each episode shows
+          it one load's reward. Equation (4) of the
+          <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">frame-stacking lesson</a>
+          says where its estimates rest anyway. Each entry Q(X, a) averages its
+          target over the hidden states behind the observation X, weighted by
+          each one's share of the visits to X. Behind each (x, v) here sit the
+          four states (x, v, m). The load doesn't change where the cart goes,
+          so under any policy every share is the draw's own ¼.
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">
+            \begin{aligned} Q(X, a) &amp;= \sum_m \htmlClass{nb-mc1}{p(m)} \Bigl[\, r_m(X, a) \\ &amp;\qquad + \max_{a'} Q(\htmlClass{nb-mc2}{X'}, a') \Bigr] \\ &amp;= \bar r(X, a) + \max_{a'} Q(X', a') \end{aligned}
+          </div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">p(m)</span><span>the share of
+              visits to X made with load m, the same under every policy</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">X'</span><span>the next
+              observation, the same with every load. The max term is left out
+              when the move ends the episode</span>
+            </li>
+          </ul>
+          <figcaption>
+            Equation (4) for the agent that can't see the mass, with no
+            discount.
+          </figcaption>
+        </figure>
+        <p>
+          The second line is the averaged Dock's Bellman optimality
+          equation, and no policy can move its shares, as ε moved the
+          slow balls' share in Pitch. To this agent LoadedDock is an
+          ordinary Dock with a random reward at the dock, so its
+          estimates can rest only at the averaged Dock's optimal
+          action values, the equation's one solution.
+        </p>
+        <p>
+          train.py runs <code>q_learning</code> from the frame-stacking
+          lesson's qlearn.py, unchanged: no discount, ε = 0.1, and a step size
+          of N(x, a)<sup>−0.7</sup>. The agent that can't see the mass trains
+          for 20,000 episodes. The agent that sees it has four times as many
+          entries, each visited with one load in four, so it trains for
+          80,000. train.py needs dock.py, qlearn.py, loads.py and exact.py, and
+          ten runs of each agent took about four minutes here.
+        </p>
+        <details>
+          <summary>train.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">train.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Q-learning on LoadedDock, with a mass from 1 to 4 kg drawn every episode.
+
+The agent that can't see the mass keeps one row of estimates per (x, v). The
+agent that sees it keeps one per (x, v, mass), four times as many, so it gets
+four times the episodes. Both are scored by their greedy moves and by their
+estimates where the light and heavy loads' best paths part, beside the exact
+action values that exact.py solves for.
+
+uv run train.py           runs 0 to 9
+  --runs 10 11 12         other runs
+"""
+import argparse
+
+import numpy as np
+
+from exact import lattice, solve
+from loads import MASSES, LoadedDock
+from qlearn import key, q_learning
+
+EPISODES, EPS = 20_000, 0.1  # times 4 when the mass is observed; exploration
+PARTING = {"x": 0.605, "v": 0.9}
+
+
+def greedy_return(Q, env, mass):
+    obs, _ = env.reset(options={"mass": mass})
+    G, done = 0.0, False
+    while not done:
+        obs, r, terminated, truncated, _ = env.step(int(Q[key(obs)].argmax()))
+        G, done = G + r, terminated or truncated
+    return G
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--runs", type=int, nargs="+", default=list(range(10)))
+    args = parser.parse_args()
+    solver = LoadedDock()
+    index, nxt, reward = lattice(solver, {"x": 0.2, "v": 0.0})
+    k = index[tuple(solver.reset(options=PARTING)[0])]
+    exact = {None: solve(nxt, reward.mean(axis=2))[k]}
+    exact.update({m: solve(nxt, reward[:, :, i])[k] for i, m in enumerate(MASSES)})
+    print(f"runs {args.runs[0]}-{args.runs[-1]}, masses {MASSES[0]}-{MASSES[-1]} "
+          f"kg drawn per episode, eps {EPS}")
+    for observe_mass in (False, True):
+        env = LoadedDock(observe_mass=observe_mass)
+        episodes = EPISODES * (len(MASSES) if observe_mass else 1)
+        tables = [q_learning(env, episodes, EPS, run) for run in args.runs]
+        print(f"mass {'observed' if observe_mass else 'hidden'}, {episodes:,} "
+              f"episodes: greedy return, mean of the runs [lowest, highest]")
+        for m in MASSES:
+            G = np.array([greedy_return(Q, env, m) for Q in tables])
+            print(f"  {m} kg {G.mean():9.2f} [{G.min():.2f}, {G.max():.2f}]")
+        print(f"  at x = {PARTING['x']}, v = {PARTING['v']}: mean estimates, "
+              f"exact.py's values, runs that brake")
+        print(f"{'':14s}{'brake':&gt;8s}{'exact':&gt;7s}{'push':&gt;8s}{'exact':&gt;7s}"
+              f"{'brake in':&gt;12s}")
+        for m in (MASSES if observe_mass else [None]):
+            obs, _ = env.reset(options={**PARTING, "mass": m or 1})
+            learned = np.array([Q[key(obs)] for Q in tables])
+            (left, right), brake = learned.mean(axis=0), (learned.argmax(1) == 0)
+            print(f"    {f'{m} kg' if m else 'any mass':10s}{left:8.2f}"
+                  f"{exact[m][0]:7.2f}{right:8.2f}{exact[m][1]:7.2f}"
+                  f"{brake.sum():6d} of {len(tables)}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+            <figcaption class="nb-code-cap">
+              Q-learning with the mass hidden and with it observed.
+            </figcaption>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run train.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">runs 0-9, masses 1-4 kg drawn per episode, eps 0.1
+mass hidden, 20,000 episodes: greedy return, mean of the runs [lowest, highest]
+  1 kg     -1.51 [-1.51, -1.51]
+  2 kg     -1.51 [-1.51, -1.51]
+  3 kg     -1.51 [-1.51, -1.51]
+  4 kg     -1.51 [-1.51, -1.51]
+  at x = 0.605, v = 0.9: mean estimates, exact.py's values, runs that brake
+                 brake  exact    push  exact    brake in
+    any mass     -0.61  -0.61   -1.51  -1.47    10 of 10
+mass observed, 80,000 episodes: greedy return, mean of the runs [lowest, highest]
+  1 kg     -1.29 [-1.29, -1.29]
+  2 kg     -1.37 [-1.37, -1.37]
+  3 kg     -1.43 [-1.43, -1.43]
+  4 kg     -1.51 [-1.51, -1.51]
+  at x = 0.605, v = 0.9: mean estimates, exact.py's values, runs that brake
+                 brake  exact    push  exact    brake in
+    1 kg         -0.44  -0.44   -0.39  -0.39     0 of 10
+    2 kg         -0.50  -0.50   -0.47  -0.47     0 of 10
+    3 kg         -0.53  -0.53   -2.36  -2.36    10 of 10
+    4 kg         -0.61  -0.61   -2.27  -2.36    10 of 10</code></pre>
+        </figure>
+        <p>
+          Every run of the agent that can't see the mass docks every
+          load after 1.51 s, the averaged Dock's policy. Every run of
+          the agent that sees it earns each load's own best return. At
+          x = 0.605 m and 0.9 m/s, every run ranks the two moves as
+          exact.py does (Fig. 3). Two estimates for pushing have not
+          reached exact.py's values in these runs: the hidden agent's
+          is 0.04 too low and the 4 kg entry's 0.09 too high. The runs
+          don't show why, and neither gap changes which move is
+          greedy.
+        </p>
+        <figure class="nb-figure">
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem">
+<svg viewBox="0 0 300 80" role="img" aria-label="Agent that can't see the mass: one entry at x = 0.605, v = 0.9, braking −0.61, pushing −1.51; its greedy move is to brake." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="0" y="14" style="font: 600 11px var(--sans); fill: var(--ink)">Mass hidden: one entry</text>
+<text x="0" y="47" style="font: 11px var(--sans); fill: var(--ink)">every load</text>
+<text x="112" y="43" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">brake</text>
+<rect x="118" y="32" width="36.6" height="14" style="fill: var(--chart-2); fill-opacity: 1"/>
+<text x="159.6" y="43" style="font: 10px var(--sans); fill: var(--ink)">−0.61</text>
+<text x="112" y="62" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">push</text>
+<rect x="118" y="51" width="90.6" height="14" style="fill: var(--chart-1); fill-opacity: 0.3"/>
+<text x="213.6" y="62" style="font: 10px var(--sans); fill: var(--ink)">−1.51</text>
+</svg>
+<svg viewBox="0 0 300 218" role="img" aria-label="Agent that sees the mass: 1 kg braking −0.44, pushing −0.39; 2 kg braking −0.50, pushing −0.47; 3 kg braking −0.53, pushing −2.36; 4 kg braking −0.61, pushing −2.27. The 1 kg and 2 kg entries push, the 3 kg and 4 kg entries brake." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="0" y="14" style="font: 600 11px var(--sans); fill: var(--ink)">Mass observed: one entry per load</text>
+<text x="0" y="47" style="font: 11px var(--sans); fill: var(--ink)">1 kg</text>
+<text x="112" y="43" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">brake</text>
+<rect x="118" y="32" width="26.4" height="14" style="fill: var(--chart-2); fill-opacity: 0.3"/>
+<text x="149.4" y="43" style="font: 10px var(--sans); fill: var(--ink)">−0.44</text>
+<text x="112" y="62" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">push</text>
+<rect x="118" y="51" width="23.4" height="14" style="fill: var(--chart-1); fill-opacity: 1"/>
+<text x="146.4" y="62" style="font: 10px var(--sans); fill: var(--ink)">−0.39</text>
+<text x="0" y="93" style="font: 11px var(--sans); fill: var(--ink)">2 kg</text>
+<text x="112" y="89" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">brake</text>
+<rect x="118" y="78" width="30.0" height="14" style="fill: var(--chart-2); fill-opacity: 0.3"/>
+<text x="153.0" y="89" style="font: 10px var(--sans); fill: var(--ink)">−0.50</text>
+<text x="112" y="108" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">push</text>
+<rect x="118" y="97" width="28.2" height="14" style="fill: var(--chart-1); fill-opacity: 1"/>
+<text x="151.2" y="108" style="font: 10px var(--sans); fill: var(--ink)">−0.47</text>
+<text x="0" y="139" style="font: 11px var(--sans); fill: var(--ink)">3 kg</text>
+<text x="112" y="135" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">brake</text>
+<rect x="118" y="124" width="31.8" height="14" style="fill: var(--chart-2); fill-opacity: 1"/>
+<text x="154.8" y="135" style="font: 10px var(--sans); fill: var(--ink)">−0.53</text>
+<text x="112" y="154" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">push</text>
+<rect x="118" y="143" width="141.6" height="14" style="fill: var(--chart-1); fill-opacity: 0.3"/>
+<text x="264.6" y="154" style="font: 10px var(--sans); fill: var(--ink)">−2.36</text>
+<text x="0" y="185" style="font: 11px var(--sans); fill: var(--ink)">4 kg</text>
+<text x="112" y="181" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">brake</text>
+<rect x="118" y="170" width="36.6" height="14" style="fill: var(--chart-2); fill-opacity: 1"/>
+<text x="159.6" y="181" style="font: 10px var(--sans); fill: var(--ink)">−0.61</text>
+<text x="112" y="200" text-anchor="end" style="font: 10px var(--sans); fill: var(--ink-soft)">push</text>
+<rect x="118" y="189" width="136.2" height="14" style="fill: var(--chart-1); fill-opacity: 0.3"/>
+<text x="259.2" y="200" style="font: 10px var(--sans); fill: var(--ink)">−2.27</text>
+</svg>
+</div>
+          <figcaption>
+            Fig. 3 · Learned estimates at x = 0.605 m and 0.9 m/s, as the mean
+            of ten runs. The darker bar in each pair is the entry's greedy move.
+            From the output of train.py.
+          </figcaption>
+        </figure>
+        <p>
+          The hidden agent's entry is not the average of the four
+          per-load entries. After either move it follows the averaged
+          Dock's policy with every load, so its value for braking,
+          −0.61, is the 4 kg load's, while each per-load entry follows
+          that load's own best. As the <a
+          href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">frame-stacking
+          lesson</a> found, equation (4) does not give the
+          share-weighted average of the hidden states' values.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. Start the cart at x = 0.8 m, moving toward the dock at 1 m/s.
+            Braking at every decision from there brings it in at about
+            0.77 m/s. Which loads can any policy dock, and which loads pay for
+            hiding the mass?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Only the 1 kg load. Braking all the way arrives above the 2 kg
+              load's limit of 0.71 m/s, so the heavier loads crash whatever the
+              agent does. The averaged Dock's policy brakes just enough for the
+              1 kg load, which loses nothing. With no discount, each doomed
+              load's own best is to crash as early as possible, so braking costs
+              each of them 0.03 s. Here the cost falls on the heavy end of the
+              range. <code>uv run exact.py --start 0.8 1.0</code> prints the
+              rows.
+            </p>
+          </details>
+          <p>
+            2. Suppose a push accelerated the cart by 1 m/s² divided by the
+            load's mass in kg, so that a 4 kg load speeds up a quarter as fast as
+            a 1 kg load. With the
+            mass hidden, would every share in equation (4) of the
+            <a href="../reinforcement-learning/frame-stacking-and-the-markov-property.html">frame-stacking lesson</a>
+            still be ¼?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              No. One push from rest leaves a 1 kg load at 0.1 m/s and a 4 kg
+              load at 0.025 m/s, so the loads pass through different states.
+              How often each load reaches a state then depends on the policy,
+              as in Pitch. The average over loads no longer moves inside the
+              sum over the path, so the argument for the averaged Dock fails,
+              and the speed itself carries information about the mass.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          When the observation leaves out a parameter drawn at every
+          reset, one policy has to serve every value of it. In
+          LoadedDock the load changes only the dock's reward, so the
+          best such policy is the optimum of one averaged Dock.
+          Q-learning finds it, because the load never changes which
+          states the cart visits. That policy loses return only where
+          the best move depends on the mass. Because the buffer stops
+          heavier loads only at lower speeds, every load braked for
+          the heaviest, costing the 1 kg load 0.22 s. Observing the
+          mass recovered each load's own best.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1710.06537">Peng, Andrychowicz, Zaremba and Abbeel, Sim-to-Real Transfer of Robotic Control with Dynamics Randomization</a>:
+            §IV.C lists the parameters drawn at each episode's start. Table II
+            compares recurrent and feedforward policies on the real arm.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1702.02453">Yu, Tan, Liu and Turk, Preparing for the Unknown: Learning a Universal Policy with Online System Identification</a>:
+            Fig. 2(b) plots return against the parameter for a policy given
+            the parameter and one trained without it, the comparison Fig. 2
+            makes for Dock.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2110.03239">Chen and colleagues, Understanding Domain Randomization for Sim-to-real Transfer</a>:
+            §4.2 defines domain randomization's best policy over a hidden,
+            randomly drawn MDP, and the discussion after Theorem 2 says why
+            that policy needs memory.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1703.06907">Tobin, Fong, Ray, Schneider, Zaremba and Abbeel, Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World</a>:
+            §III.A lists everything the renders randomize, and Fig. 5 shows
+            the detector degrading with fewer than 1,000 textures.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Env.reset and Env.np_random" href="https://gymnasium.farama.org/v1.4.0/api/env/#gymnasium.Env.reset">Farama Foundation · Gymnasium 1.4.0 documentation, Env.reset, 2026</a>
+          </li>
+          <li id="s2">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Abstract; §I; §III.A" href="https://arxiv.org/abs/1703.06907">arXiv · Josh Tobin, Rachel Fong, Alex Ray et al., Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World, 2017</a>
+          </li>
+          <li id="s3">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="§2; §4.1 and Fig. 1" href="https://arxiv.org/abs/1610.01283">arXiv · Aravind Rajeswaran, Sarvjeet Ghotra, Balaraman Ravindran and Sergey Levine, EPOpt: Learning Robust Neural Network Policies Using Model Ensembles, 2016</a>
+          </li>
+          <li id="s4">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="Abstract; §III.C; Appendix XI" href="https://arxiv.org/abs/1611.04201">arXiv · Fereshteh Sadeghi and Sergey Levine, CAD2RL: Real Single-Image Flight without a Single Real Image, 2016</a>
+          </li>
+          <li id="s5">
+            <a data-nb-source data-nb-kind="primary" data-nb-locator="§IV.C; §V.A and Table II" href="https://arxiv.org/abs/1710.06537">arXiv · Xue Bin Peng, Marcin Andrychowicz, Wojciech Zaremba and Pieter Abbeel, Sim-to-Real Transfer of Robotic Control with Dynamics Randomization, 2017</a>
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
