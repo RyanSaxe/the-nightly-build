@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Per-component Q-tables settle wrong only on the rover's steep ledge · Reinforcement Learning</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/theme.css" />
+    <link rel="stylesheet" href="../../assets/nb.css" />
+    <script defer src="../../assets/nb.js"></script>
+    <script type="application/json" id="nb-meta">
+      {
+        "protocol": "1.1",
+        "series": "reinforcement-learning",
+        "slug": "factored-action-spaces",
+        "template": "lesson",
+        "title": "Per-component Q-tables settle wrong only on the rover's steep ledge",
+        "mode": "open",
+        "order": null,
+        "date": "2026-11-27",
+        "tags": ["action-space", "factored-actions", "multidiscrete", "q-learning", "value-decomposition", "environment-design", "gymnasium"],
+        "sources": 5,
+        "words": 4665,
+        "reading_minutes": 20,
+        "dek": "Summing one table per component swaps a maximum over 729 joint actions for six maxima over three levels each, and the sum picks the optimum wherever no component's best level depends on the others.",
+        "harness": "Claude Code",
+        "model": "claude-opus-5-5"
+      }
+    </script>
+  </head>
+  <body class="nb-article">
+    <article class="nb-reading">
+      <header>
+        <div class="nb-eyebrow">Reinforcement Learning</div>
+        <h1 class="nb-title">Per-component Q-tables settle wrong only on the rover's steep ledge</h1>
+        <p class="nb-dekline">Summing one table per component swaps a maximum over 729 joint actions for six maxima over three levels each, and the sum picks the optimum wherever no component's best level depends on the others.</p>
+        <div class="nb-byline">
+          <span>20 min read</span><span>2026-11-27</span>
+        </div>
+      </header>
+
+      <section class="nb-bookend" data-nb-section="why" id="why">
+        <p class="nb-bookend-name">Why this matters</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          A Q-table keeps one value for every action in every state. When an
+          action has several components, such as how a rover drives and sets
+          each instrument, every combination of levels is a separate action,
+          and three levels for each of six components make 729. Writing the
+          action value as a sum of one term per component, a factored action
+          value, splits Q-learning's maximum into one maximum per component.
+          You will derive when components chosen one at a time make the best
+          combination. You will then train a joint and a factored Q-learner on
+          a rover whose action grows from one component to six, and find the
+          one ledge where the factored learner settles on a combination no
+          joint learner chooses.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Background</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="../reinforcement-learning/finding-optimal-policies.html">Two improvements find the best policy</a>:
+            value iteration, run here over every joint action to give Q*.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="../reinforcement-learning/sarsa-and-q-learning.html">Moving at random half the time, Q-learning still learns the optimal arrows</a>:
+            the Q-learning target both learners use, its convergence to Q*
+            whatever policy makes the moves, and the shrinking step
+            N(s, a)<sup>−0.7</sup>.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="../reinforcement-learning/semi-gradient-td.html">TD(0) no longer converges to the best fit once states share weights</a>:
+            the semi-gradient update that the factored learner applies.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="../reinforcement-learning/the-deadly-triad.html">A problem whose true values are all zero sends off-policy TD's weights to infinity</a>:
+            why no guarantee covers a sum trained off-policy.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="../reinforcement-learning/checking-a-custom-environment.html">Gymnasium's environment checker passes a grid with a backward slip</a>:
+            the checker that rover.py runs on the new environment.
+          </dd>
+        </dl>
+      </section>
+
+      <section data-nb-section="orientation" id="orientation">
+        <h2>In cell 3 the best pair is the best row with the best column</h2>
+        <p>
+          A rover drives along a track from cell 0 to a lander in cell 7,
+          where the episode ends (Fig. 1). Each step it sets three components.
+          The drive goes back, stops or goes forward one cell. The arm is
+          stowed, half out or extended, and the mast is down, half up or up.
+          Every step costs 1, and each instrument costs 1 for each level it
+          sits away from its best level in the current cell. On two ledges,
+          extending the arm while the mast is up tips the rover, for 45 more on
+          the steep ledge in cell 2 and 6 more on the shallow one in cell 5.
+          Every reward carries Gaussian noise of standard deviation 1.
+        </p>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 144" role="img" aria-label="The rover's track: cells 0 to 6 and the lander. Below each cell, the best arm and mast level. Cell 2 is the steep ledge, where tipping costs 45, and cell 5 the shallow ledge, where it costs 6." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<text x="71.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 0</text>
+<rect x="52" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="114.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 1</text>
+<rect x="95" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="157.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 2</text>
+<rect x="138" y="24" width="39" height="34" rx="3" style="fill: var(--chart-4); fill-opacity: 0.28; stroke: var(--line); stroke-width: 1" />
+<text x="157.5" y="38.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">steep</text>
+<text x="157.5" y="51.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">tip 45</text>
+<text x="200.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 3</text>
+<rect x="181" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="243.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 4</text>
+<rect x="224" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="286.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 5</text>
+<rect x="267" y="24" width="39" height="34" rx="3" style="fill: var(--chart-4); fill-opacity: 0.28; stroke: var(--line); stroke-width: 1" />
+<text x="286.5" y="38.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">shallow</text>
+<text x="286.5" y="51.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">tip 6</text>
+<text x="329.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 6</text>
+<rect x="310" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="372.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">lander</text>
+<rect x="353" y="24" width="39" height="34" rx="3" style="fill: var(--wash); stroke: var(--line); stroke-width: 1" />
+<text x="372.5" y="45.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">end</text>
+<text x="46.0" y="78.0" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">arm</text>
+<text x="71.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">stow</text>
+<text x="114.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<text x="157.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">ext</text>
+<text x="200.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">ext</text>
+<text x="243.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">stow</text>
+<text x="286.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">ext</text>
+<text x="329.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<text x="46.0" y="98.0" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">mast</text>
+<text x="71.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">up</text>
+<text x="114.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<text x="157.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">down</text>
+<text x="200.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">up</text>
+<text x="243.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<text x="286.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">down</text>
+<text x="329.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">up</text>
+<line x1="52" y1="122" x2="347" y2="122" style="stroke: var(--ink-soft); stroke-width: 1.2" />
+<path d="M347 118 L354 122 L347 126 Z" style="fill: var(--ink-soft)" />
+<text x="52.0" y="135.0" text-anchor="start" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">drive forward, one cell a step</text>
+</svg>
+          <figcaption>
+            Fig. 1 · The track and each cell's best arm and mast levels. From
+            rover.py.
+          </figcaption>
+        </figure>
+        <p>
+          In Gymnasium the action space is <code>MultiDiscrete([3, 3, 3])</code>,
+          the cartesian product of three Discrete
+          spaces.<sup class="nb-cite"><a href="#s1">1</a></sup> An
+          action such as [2, 2, 0] means forward, arm extended, mast down. A
+          Q-table over this space holds 3 × 3 × 3 = 27 values per cell.
+          Stable-Baselines3's DQN refuses the
+          space.<sup class="nb-cite"><a href="#s2">2</a></sup>
+        </p>
+        <p>
+          <a href="../reinforcement-learning/finding-optimal-policies.html">Value iteration</a>
+          over the 27 joint actions gives Q*, the optimal action values
+          (Fig. 2). Both learners below are tabular, so that each of their
+          choices can be checked against Q* cell by cell.
+        </p>
+        <figure class="nb-figure">
+<div style="display: flex; flex-wrap: wrap; gap: 1rem">
+<svg viewBox="0 0 230 172" role="img" aria-label="Q-star in cell 3 with the drive forward, rows arm and columns mast. Every entry is minus 3.44 plus an arm term and a mast term; the best entry, minus 3.44, is extended with the mast up." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="112.0" y="14.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink); font-weight: 600">cell 3, flat</text>
+<text x="112.0" y="29.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">rows: arm · columns: mast</text>
+<text x="68.0" y="42.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">down</text>
+<text x="112.0" y="42.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">half</text>
+<text x="156.0" y="42.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">up</text>
+<text x="42.0" y="63.5" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">stow</text>
+<rect x="46" y="46" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="68.0" y="63.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−7.44</text>
+<rect x="90" y="46" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="112.0" y="63.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−6.44</text>
+<rect x="134" y="46" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="156.0" y="63.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−5.44</text>
+<text x="42.0" y="91.5" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">half</text>
+<rect x="46" y="74" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="68.0" y="91.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−6.44</text>
+<rect x="90" y="74" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="112.0" y="91.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−5.44</text>
+<rect x="134" y="74" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="156.0" y="91.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−4.44</text>
+<text x="42.0" y="119.5" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">ext</text>
+<rect x="46" y="102" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="68.0" y="119.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−5.44</text>
+<rect x="90" y="102" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="112.0" y="119.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−4.44</text>
+<rect x="134" y="102" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<rect x="136" y="104" width="40" height="24" style="fill: none; stroke: var(--chart-2); stroke-width: 2" />
+<text x="156.0" y="119.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−3.44</text>
+<text x="208.0" y="42.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">arm term</text>
+<text x="208.0" y="63.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−2</text>
+<text x="208.0" y="91.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−1</text>
+<text x="208.0" y="119.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">0</text>
+<text x="68.0" y="146.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−2</text>
+<text x="112.0" y="146.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−1</text>
+<text x="156.0" y="146.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">0</text>
+<text x="112.0" y="161.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">mast term; base −3.44</text>
+</svg>
+<svg viewBox="0 0 230 150" role="img" aria-label="Q-star in cell 2 with the drive forward. Extended with the mast up is minus 51.1, 45 below the sum pattern. The best entry is extended with the mast down. Averaged with the mast down 28 visits in 30, the rows score minus 6.20, minus 5.20 and minus 5.70, so half beats extended." style="flex: 1 1 18rem; min-width: 0; height: auto">
+<text x="112.0" y="14.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink); font-weight: 600">cell 2, steep ledge</text>
+<text x="112.0" y="29.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">rows: arm · columns: mast</text>
+<text x="68.0" y="42.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">down</text>
+<text x="112.0" y="42.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">half</text>
+<text x="156.0" y="42.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">up</text>
+<text x="42.0" y="63.5" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">stow</text>
+<rect x="46" y="46" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="68.0" y="63.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−6.10</text>
+<rect x="90" y="46" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="112.0" y="63.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−7.10</text>
+<rect x="134" y="46" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="156.0" y="63.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−8.10</text>
+<text x="42.0" y="91.5" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">half</text>
+<rect x="46" y="74" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="68.0" y="91.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−5.10</text>
+<rect x="90" y="74" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="112.0" y="91.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−6.10</text>
+<rect x="134" y="74" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="156.0" y="91.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−7.10</text>
+<text x="42.0" y="119.5" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">ext</text>
+<rect x="46" y="102" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<rect x="48" y="104" width="40" height="24" style="fill: none; stroke: var(--chart-2); stroke-width: 2" />
+<text x="68.0" y="119.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−4.10</text>
+<rect x="90" y="102" width="44" height="28" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="112.0" y="119.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−5.10</text>
+<rect x="134" y="102" width="44" height="28" style="fill: var(--bad); fill-opacity: 0.25; stroke: var(--line); stroke-width: 1" />
+<text x="156.0" y="119.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−51.10</text>
+<text x="208.0" y="42.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">average</text>
+<text x="208.0" y="63.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−6.20</text>
+<text x="208.0" y="91.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−5.20</text>
+<text x="208.0" y="119.5" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink)">−5.70</text>
+</svg>
+</div>
+          <figcaption>
+            Fig. 2 · Q* in cells 3 and 2 with the drive forward, best entry
+            outlined and tipped entry shaded. Cell 2's average column weights
+            each row by how often ε = 0.1 sets the mast to each level. From
+            rover.py.
+          </figcaption>
+        </figure>
+        <p>
+          In cell 3 each entry is −3.44 plus an arm term and a mast term.
+          Extended is the best row whichever column you take, and up the best
+          column whichever row, so the best pair is the best row with the best
+          column. Cell 2 breaks the pattern in one entry. Its best pair is still extended with the mast down, but with
+          the mast up the best arm level is half.
+        </p>
+        <p>
+          rover.py builds the environment, runs
+          <a href="../reinforcement-learning/checking-a-custom-environment.html">Gymnasium's environment checker</a>
+          on it and prints Q* for both cells, in about a second.
+        </p>
+        <details>
+          <summary>rover.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">rover.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Rover: a track of eight cells whose action has D components.
+
+The rover starts in cell 0, and the episode ends when it reaches the lander
+in cell 7. Each step it picks one level for every component. Component 0
+drives: back, stop or forward one cell. Components 1 to D-1 are instruments
+with levels 0, 1 and 2: the arm (stowed, half, extended), the mast (down,
+half, up), then a drill, a lamp and a camera. Every step costs 1, and each
+instrument costs 1 for each level it sits away from its best level in the
+current cell. On the two ledges, extending the arm while the mast is up
+tips the rover and costs TIP[cell] more. Every reward carries Gaussian
+noise of standard deviation 1.
+"""
+import gymnasium as gym
+import numpy as np
+from gymnasium.spaces import Discrete, MultiDiscrete
+
+CELLS, LANDER, GAMMA = 8, 7, 0.9
+ARM, MAST = 1, 2              # component 0 is the drive
+EXTENDED = UP = 2             # the arm's top level and the mast's
+BEST = np.array([             # best level of each instrument in cells 0-6
+    [0, 1, 2, 2, 0, 2, 1],    # arm: extended for the samples in 2, 3 and 5
+    [2, 1, 0, 2, 1, 0, 2],    # mast: down on the ledges, cells 2 and 5
+    [1, 0, 2, 1, 2, 0, 1],    # drill
+    [2, 0, 1, 0, 2, 1, 0],    # lamp
+    [0, 2, 1, 1, 0, 2, 2],    # camera
+])
+TIP = {2: 45.0, 5: 6.0}      # what tipping costs on the steep and shallow ledge
+
+
+class Rover(gym.Env):
+    def __init__(self, components=3, ledges=True):
+        self.action_space = MultiDiscrete([3] * components)
+        self.observation_space = Discrete(CELLS)
+        self.tip = TIP if ledges else {}
+
+    def mean_reward(self, x, a):
+        """The reward's expected value for joint action a in cell x."""
+        r = -1.0 - np.abs(a[1:] - BEST[:len(a) - 1, x]).sum()
+        if x in self.tip and a[ARM] == EXTENDED and a[MAST] == UP:
+            r -= self.tip[x]
+        return r
+
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
+        self.x = 0
+        return self.x, {}
+
+    def step(self, action):
+        a = np.asarray(action)
+        r = self.mean_reward(self.x, a) + self.np_random.normal()
+        self.x = int(np.clip(self.x + a[0] - 1, 0, LANDER))
+        return self.x, r, self.x == LANDER, False, {}
+
+
+def solve(env):
+    """Value iteration over every joint action. Q[x, j] is Q* for cell x and
+    the joint action whose index is j = np.ravel_multi_index(a, nvec)."""
+    joint = np.array(list(np.ndindex(*env.action_space.nvec)))
+    R = np.array([[env.mean_reward(x, a) for a in joint]
+                  for x in range(LANDER)])
+    nxt = np.clip(np.arange(LANDER)[:, None] + joint[:, 0] - 1, 0, LANDER)
+    V = np.zeros(CELLS)
+    for _ in range(300):
+        Q = R + GAMMA * V[nxt]
+        V[:LANDER] = Q.max(axis=1)
+    return Q
+
+
+def not_a_sum(q):
+    """The largest gap between q, one cell's table over joint actions, and
+    the closest sum of one term per component (unweighted least squares)."""
+    fit = np.full(q.shape, q.mean())
+    for d in range(q.ndim):
+        others = tuple(e for e in range(q.ndim) if e != d)
+        fit = fit + q.mean(axis=others, keepdims=True) - q.mean()
+    return np.abs(q - fit).max()
+
+
+def main():
+    from gymnasium.utils.env_checker import check_env
+    env = Rover()
+    check_env(env, skip_render_check=True)
+    nvec = env.action_space.nvec
+    print(f"check_env passed; {env.action_space}: {np.prod(nvec)} joint "
+          f"actions, {nvec.sum()} table entries per cell")
+    Q = solve(env)
+    print("cell  best (drive, arm, mast)     V*  farthest from a sum")
+    for x in range(LANDER):
+        q = Q[x].reshape(nvec)
+        best = tuple(int(i) for i in np.unravel_index(q.argmax(), nvec))
+        print(f"{x:4d}  {str(best):22s}{q.max():7.2f}{not_a_sum(q):21.2f}")
+    for x in (3, 2):
+        print(f"Q* in cell {x}, drive forward; rows arm, columns mast")
+        print(Q[x].reshape(nvec)[2].round(2))
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+            <figcaption class="nb-code-cap">
+              The environment, value iteration, and each cell's gap from a sum.
+            </figcaption>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run rover.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">check_env passed; MultiDiscrete([3 3 3]): 27 joint actions, 9 table entries per cell
+cell  best (drive, arm, mast)     V*  farthest from a sum
+   0  (2, 0, 2)               -5.22                 0.00
+   1  (2, 1, 1)               -4.69                 0.00
+   2  (2, 2, 0)               -4.10                20.00
+   3  (2, 2, 2)               -3.44                 0.00
+   4  (2, 0, 1)               -2.71                 0.00
+   5  (2, 2, 0)               -1.90                 2.67
+   6  (2, 1, 2)               -1.00                 0.00
+Q* in cell 3, drive forward; rows arm, columns mast
+[[-7.44 -6.44 -5.44]
+ [-6.44 -5.44 -4.44]
+ [-5.44 -4.44 -3.44]]
+Q* in cell 2, drive forward; rows arm, columns mast
+[[ -6.1  -7.1  -8.1]
+ [ -5.1  -6.1  -7.1]
+ [ -4.1  -5.1 -51.1]]</code></pre>
+        </figure>
+      </section>
+
+      <section data-nb-section="sum-of-maxima" id="sum-of-maxima">
+        <h2>The maximum of a sum is the sum of the maxima</h2>
+        <p>
+          Cell 3 is a case of a general rule. Write the joint action as
+          a = (a<sub>1</sub>, …, a<sub>D</sub>), where component d takes one of
+          n<sub>d</sub> levels, and suppose the action values in state s add
+          up:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">Q(s, a) = \sum_{d=1}^{D} \htmlClass{nb-mc1}{Q_d(s, a_d)}</div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">Q_d(s, \cdot)</span
+              ><span>a table of n<sub>d</sub> entries for component d, which sees the whole state</span>
+            </li>
+          </ul>
+          <figcaption>An action value with one term per component.</figcaption>
+        </figure>
+        <p>Each term is at most the largest entry of its own table:</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">Q(s, a) = \sum_{d} Q_d(s, a_d) \;\le\; \sum_{d} \max_{b} Q_d(s, b)</div>
+          <figcaption>
+            Equality holds exactly when every a<sub>d</sub> is a largest entry
+            of its own table.
+          </figcaption>
+        </figure>
+        <p>
+          So the largest action value is the sum of the tables' largest
+          entries, and the tuples of per-component argmaxes are exactly the
+          actions that reach it. Finding one takes Σ n<sub>d</sub> comparisons
+          instead of Π n<sub>d</sub>. Storing the values takes Σ n<sub>d</sub>
+          entries per state instead of Π n<sub>d</sub>, 9 instead of 27 on the
+          rover and 18 instead of 729 with six components.
+        </p>
+        <p>The same split applies to Q-learning's target:</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">r + \gamma \max_{a'} Q(s', a') = r + \gamma \sum_{d} \max_{b} Q_d(s', b)</div>
+          <figcaption>The Q-learning target for a sum, one maximum per table.</figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="shared-td-error" id="shared-td-error">
+        <h2>Every table takes the same TD error</h2>
+        <p>
+          The factored learner stores one table per component and uses their
+          sum as its action value. After each step it computes one TD error
+          against the target above and adds the same correction to the entry
+          each table used:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} \htmlClass{nb-mc1}{\delta} &amp;= r + \gamma \sum_{d} \max_{b} Q_d(s', b) \\ &amp;\qquad - \sum_{d} Q_d(s, a_d) \\ Q_d(s, a_d) &amp;\leftarrow Q_d(s, a_d) + \htmlClass{nb-mc2}{\alpha}\, \delta \end{aligned}</div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">\delta</span
+              ><span>one TD error for the whole action</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\alpha</span
+              ><span>the step, the same for every table</span>
+            </li>
+          </ul>
+          <figcaption>The factored learner's update after the step (s, a, r, s′), for every component d.</figcaption>
+        </figure>
+        <p>
+          Its target is the
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">Q-learning target</a>
+          applied to the summed values, so both learners estimate the value of
+          acting greedily at s′. The update is
+          <a href="../reinforcement-learning/semi-gradient-td.html">semi-gradient</a>
+          Q-learning with one feature for each state, component and level: the
+          sum's gradient is 1 for the D entries in use and 0 elsewhere. Tang
+          and colleagues use this sum for one agent's factored
+          action,<sup class="nb-cite"><a href="#s3">3</a></sup> as
+          value-decomposition networks do for teams of
+          agents.<sup class="nb-cite"><a href="#s4">4</a></sup> Tavakoli and
+          colleagues' action branching instead fits each branch on its own to a
+          target that averages the branches' greedy
+          values.<sup class="nb-cite"><a href="#s5">5</a></sup>
+        </p>
+        <p>
+          One update moves the sum for the action taken by Dαδ, which stays
+          below δ with α = 0.1 and at most six components. Tabular
+          Q-learning over joint actions
+          <a href="../reinforcement-learning/sarsa-and-q-learning.html">converges to Q*</a>
+          if every pair keeps being updated and the steps shrink suitably. The
+          sum has no
+          such guarantee, since it combines function approximation,
+          bootstrapping and off-policy learning, the
+          <a href="../reinforcement-learning/the-deadly-triad.html">deadly triad</a>.
+          The runs below are the only evidence that it settles here.
+        </p>
+        <p>
+          In learn.py both learners let each component keep its greedy level,
+          except that with probability ε it takes a random level, independently
+          of the others.
+        </p>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">learn.py · complete</span><span>python</span>
+          </div>
+          <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""Two Q-learners for a MultiDiscrete action.
+
+Joint keeps one table over every joint action. Factored keeps one table per
+component, and its action value is the sum of one entry from each table.
+Both use the Q-learning target, take the same step alpha on every entry
+they update, and explore the same way.
+"""
+import numpy as np
+
+from rover import GAMMA
+
+
+def explore(greedy, nvec, eps, rng):
+    """Each component keeps its greedy level, except that with probability
+    eps, independently of the others, it takes a uniformly random level."""
+    a = greedy.copy()
+    coin = rng.random(len(nvec)) &lt; eps
+    a[coin] = rng.integers(nvec[coin])
+    return a
+
+
+class Joint:
+    def __init__(self, states, nvec):
+        self.nvec = nvec
+        self.Q = np.zeros((states, np.prod(nvec)))
+
+    def greedy(self, s):
+        return np.array(np.unravel_index(self.Q[s].argmax(), self.nvec))
+
+    def update(self, s, a, r, s_next, terminated, alpha):
+        j = np.ravel_multi_index(a, self.nvec)
+        target = r if terminated else r + GAMMA * self.Q[s_next].max()
+        self.Q[s, j] += alpha * (target - self.Q[s, j])
+
+
+class Factored:
+    def __init__(self, states, nvec):
+        self.nvec = nvec
+        self.Q = [np.zeros((states, n)) for n in nvec]
+
+    def greedy(self, s):
+        return np.array([q[s].argmax() for q in self.Q])
+
+    def update(self, s, a, r, s_next, terminated, alpha):
+        value = sum(q[s, level] for q, level in zip(self.Q, a))
+        best_next = sum(q[s_next].max() for q in self.Q)  # max of the sum
+        target = r if terminated else r + GAMMA * best_next
+        delta = target - value                            # one shared error
+        for q, level in zip(self.Q, a):
+            q[s, level] += alpha * delta                  # every table, alpha
+
+
+def train(agent, env, steps, rng, eps=0.1, alpha=0.1, every=0, watch=None):
+    """Run the agent for a number of steps. Every `every` steps, call
+    watch(step, agent), and stop early if it returns True."""
+    s, _ = env.reset(seed=int(rng.integers(2**31)))
+    for t in range(1, steps + 1):
+        a = explore(agent.greedy(s), agent.nvec, eps, rng)
+        s_next, r, terminated, truncated, _ = env.step(a)
+        agent.update(s, a, r, s_next, terminated, alpha)
+        s = env.reset()[0] if terminated or truncated else s_next
+        if every and t % every == 0 and watch(t, agent):
+            break
+    return agent</code></pre>
+          <figcaption class="nb-code-cap">
+            Both learners and the training loop.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section data-nb-section="averaged-levels" id="averaged-levels">
+        <h2>Each table ranks its levels by an average over the others</h2>
+        <p>
+          Where do the tables come to rest? Hold the exploration fixed: in state
+          s the agent tries level b of component e with probability
+          μ<sub>e</sub>(b), independently across components. Let y(s, a) be the
+          target's expected value with the next state's entries held fixed. The entry Q<sub>d</sub>(s, b) stops moving on average
+          when the TD error averages to zero over the steps that use level b:
+        </p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\sum_{\htmlClass{nb-mc1}{a_{-d}}} \htmlClass{nb-mc2}{\mu_{-d}(a_{-d})} \Bigl[\, y(s, b, a_{-d}) - \sum_{e} Q_e(s, a_e) \Bigr] = 0</div>
+          <ul class="nb-math-legend">
+            <li>
+              <span class="nb-math-term nb-mc1">a_{-d}</span
+              ><span>the levels of every component except d</span>
+            </li>
+            <li>
+              <span class="nb-math-term nb-mc2">\mu_{-d}(a_{-d})</span
+              ><span>how often the agent tries them, the product of the μ<sub>e</sub></span>
+            </li>
+          </ul>
+          <figcaption>The resting condition for level b of component d.</figcaption>
+        </figure>
+        <p>Solving for the entry gives</p>
+        <figure class="nb-math">
+          <div class="nb-math-eq">\begin{aligned} Q_d(s, b) &amp;= \mathbb{E}_{\mu}\bigl[\, y(s, A) \mid A_d = b \,\bigr] \\ &amp;\qquad - \sum_{e \ne d} \mathbb{E}_{\mu}\bigl[\, Q_e(s, A_e) \,\bigr] \end{aligned}</div>
+          <figcaption>The second term does not depend on b.</figcaption>
+        </figure>
+        <p>
+          Component d therefore ranks its levels by the expected target
+          averaged over the other components' levels, weighted by how often the
+          agent tries each.
+        </p>
+        <p>
+          The ranking gives a sufficient condition. If component d has a level
+          that is best whatever the other components do, every weighted average
+          keeps that level on top. If every component has such a level, their
+          tuple is the joint optimum, and the per-component argmaxes find it. A
+          sum, as in cell 3, is the simplest case.
+        </p>
+        <p>
+          Cell 2 fails the condition, because the arm's best level is half when
+          the mast is up. With ε = 0.1 the mast stays at its greedy level,
+          down, except when it explores, so it is up on 1 visit in 30. At those
+          rates the average column of Fig. 2 puts extended 0.5 behind half:
+          it saves 1 on the arm's cost and loses 45/30 = 1.5 to tipping. The
+          factored learner should therefore settle on forward, half and down,
+          which Q* puts 1 below the optimum and a joint learner never picks. In
+          cell 5 extended loses only 6/30 = 0.2 and stays 0.8 ahead. Q* is not
+          a sum there, and extended is not best with the mast up, yet the
+          per-component choice stays optimal.
+        </p>
+        <p>
+          The next cell depends on the drive alone, so the γV*(s′) part of
+          Q*(s, a) is a term in the drive, and Q* is a sum wherever the reward
+          is. rover.py's output shows a gap of
+          0.00 everywhere but the ledges. A ledge's estimate can change the
+          factored learner's choices in other cells only through that drive
+          term.
+        </p>
+      </section>
+
+      <section data-nb-section="six-components" id="six-components">
+        <h2>The joint learner needs over ten times the steps at six components and the same α</h2>
+        <p>
+          On flat ground, without the tipping penalty, Q* is a sum in every
+          cell, so both learners can end with the optimal action everywhere.
+          scale.py adds instruments one at a time, from the drive alone (D = 1)
+          to five instruments (D = 6), and counts each learner's steps until
+          its greedy action is optimal in all seven cells. It runs 10 seeds with
+          α = 0.1 and ε = 0.1, in about a minute.
+        </p>
+        <details>
+          <summary>scale.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">scale.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""How many steps each learner needs, on flat ground, before its greedy
+action is the optimal one in every cell, as instruments are added."""
+import numpy as np
+
+from learn import Factored, Joint, train
+from rover import CELLS, LANDER, Rover, solve
+
+SEEDS, EVERY, BUDGET = range(10), 500, 400_000
+
+
+def steps_to_learn(make, components, seed):
+    """Steps until the greedy action is optimal in every cell, checked
+    every EVERY steps against value iteration over joint actions."""
+    env = Rover(components, ledges=False)
+    nvec = env.action_space.nvec
+    best = solve(env).argmax(axis=1)
+    found = []
+
+    def watch(t, agent):
+        if all(np.ravel_multi_index(agent.greedy(x), nvec) == best[x]
+               for x in range(LANDER)):
+            found.append(t)
+            return True
+
+    train(make(CELLS, nvec), env, BUDGET, np.random.default_rng(seed),
+          every=EVERY, watch=watch)
+    return found[0] if found else np.nan
+
+
+def main():
+    print(f"steps until the greedy action is optimal in all {LANDER} cells, "
+          f"median (fastest-slowest) of {len(SEEDS)} seeds")
+    print(f"{'D':&gt;2}{'joint actions':&gt;15}{'table entries':&gt;15}"
+          f"{'joint learner':&gt;24}{'factored learner':&gt;24}")
+    for D in range(1, 7):
+        row = {}
+        for name, make in (("joint", Joint), ("factored", Factored)):
+            steps = [steps_to_learn(make, D, seed) for seed in SEEDS]
+            row[name] = (np.median(steps), min(steps), max(steps))
+        cells = [f"{m:,.0f} ({lo:,.0f}-{hi:,.0f})" for m, lo, hi in row.values()]
+        print(f"{D:2d}{3**D:15d}{3 * D:15d}{cells[0]:&gt;24}{cells[1]:&gt;24}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+            <figcaption class="nb-code-cap">
+              Steps each learner needs on flat ground as instruments are added.
+            </figcaption>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run scale.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">steps until the greedy action is optimal in all 7 cells, median (fastest-slowest) of 10 seeds
+ D  joint actions  table entries           joint learner        factored learner
+ 1              3              3     1,500 (1,000-2,000)     1,500 (1,000-2,000)
+ 2              9              6     2,750 (2,000-3,500)       1,000 (500-2,000)
+ 3             27              9     5,000 (4,000-6,000)       1,500 (500-2,000)
+ 4             81             12  11,000 (10,500-12,500)     2,500 (1,500-4,500)
+ 5            243             15  24,250 (23,000-28,000)     3,000 (2,000-7,000)
+ 6            729             18  61,000 (56,000-67,000)    4,250 (2,500-10,500)</code></pre>
+        </figure>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 252" role="img" aria-label="Steps until the greedy action is optimal in all seven cells, on a log scale, against the number of components from 1 to 6. The joint learner rises from 1,500 to 61,000 steps. The factored learner stays between 1,000 and 4,250. Bars show the fastest and slowest of ten seeds." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<line x1="58" y1="165.0" x2="330" y2="165.0" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="53.0" y="168.5" text-anchor="end" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">1,000</text>
+<line x1="58" y1="129.5" x2="330" y2="129.5" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="53.0" y="133.0" text-anchor="end" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">3,000</text>
+<line x1="58" y1="90.5" x2="330" y2="90.5" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="53.0" y="94.0" text-anchor="end" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">10,000</text>
+<line x1="58" y1="55.0" x2="330" y2="55.0" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="53.0" y="58.5" text-anchor="end" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">30,000</text>
+<line x1="58" y1="16.0" x2="330" y2="16.0" style="stroke: var(--line); stroke-width: 0.6" />
+<text x="53.0" y="19.5" text-anchor="end" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">100,000</text>
+<text x="58.0" y="219.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">1</text>
+<text x="112.4" y="219.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">2</text>
+<text x="166.8" y="219.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">3</text>
+<text x="221.2" y="219.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">4</text>
+<text x="275.6" y="219.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">5</text>
+<text x="330.0" y="219.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">6</text>
+<text x="194.0" y="235.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">components D (drive plus D − 1 instruments)</text>
+<text transform="rotate(-90 12 110.0)" x="12.0" y="110.0" text-anchor="middle" style="font-family: var(--sans); font-size: 10.5px; fill: var(--ink-soft)">steps to learn (log)</text>
+<path d="M58.0 151.9 L112.4 132.3 L166.8 113.0 L221.2 87.4 L275.6 61.9 L330.0 32.0" style="fill: none; stroke: var(--chart-1); stroke-width: 1.8; stroke-linejoin: round" />
+<line x1="58.0" y1="165.0" x2="58.0" y2="142.6" style="stroke: var(--chart-1); stroke-width: 1.2" />
+<circle cx="58.0" cy="151.9" r="3" style="fill: var(--chart-1)" />
+<line x1="112.4" y1="142.6" x2="112.4" y2="124.5" style="stroke: var(--chart-1); stroke-width: 1.2" />
+<circle cx="112.4" cy="132.3" r="3" style="fill: var(--chart-1)" />
+<line x1="166.8" y1="120.2" x2="166.8" y2="107.0" style="stroke: var(--chart-1); stroke-width: 1.2" />
+<circle cx="166.8" cy="113.0" r="3" style="fill: var(--chart-1)" />
+<line x1="221.2" y1="88.9" x2="221.2" y2="83.3" style="stroke: var(--chart-1); stroke-width: 1.2" />
+<circle cx="221.2" cy="87.4" r="3" style="fill: var(--chart-1)" />
+<line x1="275.6" y1="63.6" x2="275.6" y2="57.2" style="stroke: var(--chart-1); stroke-width: 1.2" />
+<circle cx="275.6" cy="61.9" r="3" style="fill: var(--chart-1)" />
+<line x1="330.0" y1="34.8" x2="330.0" y2="29.0" style="stroke: var(--chart-1); stroke-width: 1.2" />
+<circle cx="330.0" cy="32.0" r="3" style="fill: var(--chart-1)" />
+<text x="338.0" y="36.0" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--chart-1); font-weight: 600">joint</text>
+<text x="338.0" y="49.0" text-anchor="start" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">61,000</text>
+<path d="M58.0 151.9 L112.4 165.0 L166.8 151.9 L221.2 135.4 L275.6 129.5 L330.0 118.2" style="fill: none; stroke: var(--chart-2); stroke-width: 1.8; stroke-linejoin: round" />
+<line x1="58.0" y1="165.0" x2="58.0" y2="142.6" style="stroke: var(--chart-2); stroke-width: 1.2" />
+<circle cx="58.0" cy="151.9" r="3" style="fill: var(--chart-2)" />
+<line x1="112.4" y1="187.5" x2="112.4" y2="142.6" style="stroke: var(--chart-2); stroke-width: 1.2" />
+<circle cx="112.4" cy="165.0" r="3" style="fill: var(--chart-2)" />
+<line x1="166.8" y1="187.5" x2="166.8" y2="142.6" style="stroke: var(--chart-2); stroke-width: 1.2" />
+<circle cx="166.8" cy="151.9" r="3" style="fill: var(--chart-2)" />
+<line x1="221.2" y1="151.9" x2="221.2" y2="116.4" style="stroke: var(--chart-2); stroke-width: 1.2" />
+<circle cx="221.2" cy="135.4" r="3" style="fill: var(--chart-2)" />
+<line x1="275.6" y1="142.6" x2="275.6" y2="102.1" style="stroke: var(--chart-2); stroke-width: 1.2" />
+<circle cx="275.6" cy="129.5" r="3" style="fill: var(--chart-2)" />
+<line x1="330.0" y1="135.4" x2="330.0" y2="88.9" style="stroke: var(--chart-2); stroke-width: 1.2" />
+<circle cx="330.0" cy="118.2" r="3" style="fill: var(--chart-2)" />
+<text x="338.0" y="122.2" text-anchor="start" style="font-family: var(--sans); font-size: 10.5px; fill: var(--chart-2); font-weight: 600">factored</text>
+<text x="338.0" y="135.2" text-anchor="start" style="font-family: var(--sans); font-size: 10px; fill: var(--ink-soft)">4,250</text>
+</svg>
+          <figcaption>
+            Fig. 3 · Steps to an optimal greedy action in all seven cells, log
+            scale. Points are medians of 10 seeds and bars span all ten. From
+            scale.py.
+          </figcaption>
+        </figure>
+        <p>
+          The joint learner's steps grew 1.8 to 2.5 times with each added
+          component, and the factored learner's far more slowly, to 61,000
+          against 4,250 at six. With the drive alone the two learners make the
+          same updates. Beyond one component, each joint value changes only on
+          steps that take its joint action, while each factored entry changes
+          on every step that uses its level. From four components up, the
+          slowest factored run beat the fastest joint run, on these seeds and
+          on ten fresh ones.
+        </p>
+        <p>
+          A stronger joint learner narrows the gap. In a check with steps that
+          shrink as N(s, a)<sup>−0.7</sup>, the SARSA and Q-learning lesson's
+          rule, it kept pace up to four components and still needed more than
+          twice the factored learner's steps at six.
+        </p>
+      </section>
+
+      <section data-nb-section="steep-ledge" id="steep-ledge">
+        <h2>On the steep ledge alone, the factored learner's arm settles at half</h2>
+        <p>
+          ledges.py trains each learner with the drive, the arm and the mast
+          for 100,000 steps on 20 seeds. A constant step keeps every estimate
+          wandering around its resting point, so ledges.py reads each learner's
+          choice off its tables averaged over the second half. Its
+          <code>--flat</code> flag removes the tipping penalty. A run takes
+          about two minutes.
+        </p>
+        <details>
+          <summary>ledges.py, complete</summary>
+          <figure class="nb-code">
+            <div class="nb-code-head">
+              <span class="nb-code-file">ledges.py · complete</span><span>python</span>
+            </div>
+            <pre><code data-language="python"># /// script
+# requires-python = "&gt;=3.10"
+# dependencies = ["gymnasium==1.4.0", "numpy"]
+# ///
+"""In which cells each learner's settled choice of (drive, arm, mast)
+differs from the optimal one, and what it settled on there. --flat removes
+the tipping penalty."""
+import argparse
+from collections import Counter
+
+import numpy as np
+
+from learn import Factored, Joint, train
+from rover import CELLS, LANDER, Rover, solve
+
+SEEDS, STEPS, EPS = range(20), 100_000, 0.1
+
+
+def tables(agent):
+    return agent.Q if isinstance(agent.Q, list) else [agent.Q]
+
+
+def settle(make, env, seed):
+    """Train for STEPS steps and return a learner holding the sum of its
+    tables over the second half. Its greedy choice is that of the average,
+    which a constant step leaves the estimates wandering around."""
+    agent, total = make(CELLS, env.action_space.nvec), make(CELLS, env.action_space.nvec)
+
+    def watch(t, agent):
+        if t &gt; STEPS // 2:
+            for sum_q, q in zip(tables(total), tables(agent)):
+                sum_q += q
+
+    train(agent, env, STEPS, np.random.default_rng(seed), eps=EPS,
+          every=100, watch=watch)
+    return total
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--flat", action="store_true")
+    parser.add_argument("--first-seed", type=int, default=0)
+    args = parser.parse_args()
+    env = Rover(3, ledges=not args.flat)
+    nvec = env.action_space.nvec
+    best = solve(env).argmax(axis=1)
+    print("flat ground" if args.flat else "ledges", f"eps {EPS},",
+          f"{len(SEEDS)} seeds of {STEPS:,} steps")
+    print("runs whose settled choice is not optimal, by cell")
+    print(f"{'':10s}" + "".join(f"{x:5d}" for x in range(LANDER)))
+    wrong = Counter()
+    for name, make in (("joint", Joint), ("factored", Factored)):
+        off = np.zeros(LANDER, dtype=int)
+        for seed in SEEDS:
+            agent = settle(make, env, args.first_seed + seed)
+            for x in range(LANDER):
+                a = tuple(int(i) for i in agent.greedy(x))
+                if np.ravel_multi_index(a, nvec) != best[x]:
+                    off[x] += 1
+                    wrong[name, x, a] += 1
+        print(f"{name:10s}" + "".join(f"{n:5d}" for n in off))
+    for (name, x, a), n in sorted(wrong.items()):
+        print(f"{name} in cell {x} settled on (drive, arm, mast) {a} in {n} runs")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+            <figcaption class="nb-code-cap">
+              Where each learner's settled choice differs from the optimum.
+            </figcaption>
+          </figure>
+        </details>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run ledges.py</span><span>text</span>
+          </div>
+          <pre><code data-language="text">ledges eps 0.1, 20 seeds of 100,000 steps
+runs whose settled choice is not optimal, by cell
+              0    1    2    3    4    5    6
+joint         0    0    0    0    0    0    0
+factored      0    0   20    0    0    0    0
+factored in cell 2 settled on (drive, arm, mast) (2, 1, 0) in 20 runs</code></pre>
+        </figure>
+        <figure class="nb-code">
+          <div class="nb-code-head">
+            <span class="nb-code-file">output of uv run ledges.py --flat</span><span>text</span>
+          </div>
+          <pre><code data-language="text">flat ground eps 0.1, 20 seeds of 100,000 steps
+runs whose settled choice is not optimal, by cell
+              0    1    2    3    4    5    6
+joint         0    0    0    0    0    0    0
+factored      0    0    0    0    0    0    0</code></pre>
+        </figure>
+        <figure class="nb-figure">
+<svg viewBox="0 0 400 144" role="img" aria-label="The track again, with the optimal arm level in each cell and the factored learner's settled arm level. They differ only in cell 2, the steep ledge, where the factored learner keeps the arm at half." style="display: block; width: 100%; max-width: 34rem; margin: 0 auto; height: auto">
+<text x="71.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 0</text>
+<rect x="52" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="114.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 1</text>
+<rect x="95" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="157.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 2</text>
+<rect x="138" y="24" width="39" height="34" rx="3" style="fill: var(--chart-4); fill-opacity: 0.28; stroke: var(--line); stroke-width: 1" />
+<text x="157.5" y="38.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">steep</text>
+<text x="157.5" y="51.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">tip 45</text>
+<text x="200.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 3</text>
+<rect x="181" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="243.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 4</text>
+<rect x="224" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="286.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 5</text>
+<rect x="267" y="24" width="39" height="34" rx="3" style="fill: var(--chart-4); fill-opacity: 0.28; stroke: var(--line); stroke-width: 1" />
+<text x="286.5" y="38.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">shallow</text>
+<text x="286.5" y="51.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">tip 6</text>
+<text x="329.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">cell 6</text>
+<rect x="310" y="24" width="39" height="34" rx="3" style="fill: var(--panel); stroke: var(--line); stroke-width: 1" />
+<text x="372.5" y="18.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">lander</text>
+<rect x="353" y="24" width="39" height="34" rx="3" style="fill: var(--wash); stroke: var(--line); stroke-width: 1" />
+<text x="372.5" y="45.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">end</text>
+<text x="46.0" y="78.0" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">best arm</text>
+<text x="71.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">stow</text>
+<text x="114.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<text x="157.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">ext</text>
+<text x="200.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">ext</text>
+<text x="243.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">stow</text>
+<text x="286.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">ext</text>
+<text x="329.5" y="78.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<text x="46.0" y="98.0" text-anchor="end" style="font-family: var(--sans); font-size: 9.5px; fill: var(--ink-soft)">factored</text>
+<text x="71.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">stow</text>
+<text x="114.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<rect x="136.5" y="87" width="42" height="15" rx="3" style="fill: var(--warn); fill-opacity: 0.3; stroke: var(--warn)" />
+<text x="157.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<text x="200.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">ext</text>
+<text x="243.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">stow</text>
+<text x="286.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">ext</text>
+<text x="329.5" y="98.0" text-anchor="middle" style="font-family: var(--sans); font-size: 9px; fill: var(--ink)">half</text>
+<line x1="52" y1="122" x2="347" y2="122" style="stroke: var(--ink-soft); stroke-width: 1.2" />
+<path d="M347 118 L354 122 L347 126 Z" style="fill: var(--ink-soft)" />
+<text x="52.0" y="135.0" text-anchor="start" style="font-family: var(--sans); font-size: 9px; fill: var(--ink-soft)">drive forward, one cell a step</text>
+</svg>
+          <figcaption>
+            Fig. 4 · The optimal arm level in each cell and the factored
+            learner's settled arm level in all 20 runs. Its drive and mast
+            matched the optimum everywhere. From ledges.py.
+          </figcaption>
+        </figure>
+        <p>
+          The joint learner's settled choice is optimal in every cell of every
+          run. The factored learner's is optimal everywhere except the steep
+          ledge, where all 20 runs settle on forward, half and down, as the
+          average predicted. On the shallow ledge every run keeps the arm
+          extended. With <code>--flat</code> no run departs anywhere. Twenty
+          fresh seeds gave the same counts.
+        </p>
+        <p>
+          The derivation holds the exploration rates fixed. At ε = 0.05 the
+          fixed-rate average puts extended 0.25 ahead on the steep ledge, yet
+          every run still settled on half, and these runs do not show why.
+          Read at the last step instead of averaged, the factored tables also
+          departed in cells 0 and 1 in some runs, more often than the joint
+          tables did.
+        </p>
+        <aside class="nb-note">
+          <span class="nb-note-label">Problems</span>
+          <p>
+            1. Suppose a third ledge where the arm's best level is extended,
+            the mast's best is up, and the tipping penalty of 45 falls on that
+            very pair. Which joint actions are optimal there, and where can the
+            factored learner come to rest with ε = 0.1?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              Extended with the mast at half, and half with the mast up, each
+              cost 1. Neither is a resting point. From extended and half, the
+              mast is up on 1 visit in 30, so extended scores 1 − 45/30 = −0.5
+              against half and the arm moves to half. From half and up, the
+              mast's table puts up 0.5 behind half in the same way. Half with
+              half agrees with both averages and costs 2, worse than either
+              optimum.
+            </p>
+          </details>
+          <p>
+            2. The joint learner explores the same way, so it also tries
+            extended with the mast up on the steep ledge. Why does its settled
+            choice stay optimal there?
+          </p>
+          <details>
+            <summary>Answer</summary>
+            <p>
+              A joint entry moves only on steps that take its own joint action,
+              so tipping lowers only the entries with the arm extended and the
+              mast up. Forward, extended and down still rests at its Q*, −4.10,
+              the largest in the cell. As in the lesson on
+              <a href="../reinforcement-learning/sarsa-and-q-learning.html">Q-learning</a>,
+              the policy that makes the moves decides how often each entry is
+              updated, not where it rests.
+            </p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="nb-bookend" data-nb-section="takeaway" id="takeaway">
+        <p class="nb-bookend-name">The takeaway</p>
+        <div class="nb-bookend-rule"></div>
+        <p>
+          With six components on flat ground, the factored learner needed
+          4,250 steps to the joint learner's 61,000. Its action value sums one
+          table per component, so Q-learning's maximum splits into one maximum
+          per table and each state needs Σ n<sub>d</sub> entries instead of
+          Π n<sub>d</sub>. Trained on one shared TD error, each table ranks its
+          levels by the target averaged over the other components' levels,
+          weighted by how often the agent tries them. The per-component choice
+          is optimal wherever each component has a level that is best whatever the others
+          do. On the steep ledge that average put half ahead of extended, and
+          the factored learner settled on a pair no joint learner chose.
+        </p>
+        <div class="nb-bookend-band">
+          <span class="nb-bookend-label">Go deeper</span>
+          <span class="nb-bookend-note">optional reading</span>
+        </div>
+        <dl class="nb-bookend-reading">
+          <dt>01</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2305.01738">Tang and colleagues, Leveraging Factored Action Spaces for Efficient Offline Reinforcement Learning in Healthcare</a>:
+            Theorem 1 (§3.1) gives conditions under which a sum is exact for a
+            whole MDP, none of them necessary. Section
+            3.3.2 works a two-part bandit whose sum is biased while its greedy
+            choice stays right.
+          </dd>
+          <dt>02</dt>
+          <dd>
+            <a href="https://hal.science/hal-00720669">Matignon, Laurent and Le Fort-Piat, Independent reinforcement learners in cooperative Markov games</a>:
+            §3.6 and eq. 8 (p. 7) work the climbing game, where averaging over
+            another learner's exploration hides the best action, the steep
+            ledge's problem with two agents.
+          </dd>
+          <dt>03</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1711.08946">Tavakoli, Pardo and Kormushev, Action Branching Architectures for Deep Reinforcement Learning</a>:
+            eqs. 6 and 7 (p. 4) define the deep per-branch learner and its
+            averaged target, and Table 1 (p. 7) gives joint and branch counts
+            for four control tasks.
+          </dd>
+          <dt>04</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/1905.05408">Son, Kim, Kang, Hostallero and Yi, QTRAN</a>:
+            §3.5 and Table 1 (p. 6) show a trained sum choosing a pair worth 0
+            in a 3 × 3 game whose best pair is worth 8.
+          </dd>
+          <dt>05</dt>
+          <dd>
+            <a href="https://arxiv.org/abs/2004.00980">Kanervisto, Scheller and Hautamäki, Action Space Shaping in Deep Reinforcement Learning</a>:
+            §III compares MultiDiscrete actions with one Discrete action over
+            all combinations in PPO runs, and §IV advises keeping them
+            multi-discrete.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="nb-sources" data-nb-section="sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+          <li id="s1">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="MultiDiscrete class entry: the cartesian-product definition"
+              href="https://gymnasium.farama.org/api/spaces/fundamental/#gymnasium.spaces.MultiDiscrete"
+              >Farama Foundation · Gymnasium 1.4.0 documentation, Fundamental Spaces: MultiDiscrete</a
+            >
+          </li>
+          <li id="s2">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="the algorithm table at the top of the page, MultiDiscrete column"
+              href="https://stable-baselines3.readthedocs.io/en/master/guide/algos.html"
+              >Stable-Baselines3 · RL Algorithms, Stable Baselines3 2.9.2 documentation</a
+            >
+          </li>
+          <li id="s3">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§2.2 and eq. 1, p. 2: the action value as a sum of per-component terms, each seeing the full state"
+              href="https://papers.neurips.cc/paper_files/paper/2022/file/dda7f9378a210c25e470e19304cce85d-Paper-Conference.pdf"
+              >NeurIPS · Shengpu Tang, Maggie Makar, Michael W. Sjoding, Finale Doshi-Velez and Jenna Wiens, Leveraging Factored Action Spaces for Efficient Offline Reinforcement Learning in Healthcare, 2022</a
+            >
+          </li>
+          <li id="s4">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="§3, p. 4: the decomposition and how the terms are trained"
+              href="https://arxiv.org/abs/1706.05296"
+              >arXiv · Peter Sunehag and colleagues, Value-Decomposition Networks For Cooperative Multi-Agent Learning, 2017</a
+            >
+          </li>
+          <li id="s5">
+            <a
+              data-nb-source
+              data-nb-kind="primary"
+              data-nb-locator="eqs. 6 and 7, p. 4: the mean-of-branches target and the per-branch loss"
+              href="https://arxiv.org/abs/1711.08946"
+              >AAAI · Arash Tavakoli, Fabio Pardo and Petar Kormushev, Action Branching Architectures for Deep Reinforcement Learning, 2018</a
+            >
+          </li>
+        </ol>
+      </section>
+    </article>
+  </body>
+</html>
